@@ -1,0 +1,12 @@
+---
+description: All documentation must be written in English
+alwaysApply: true
+---
+
+# Documentation language: English only
+
+- All documentation must be written in **English**.
+- This includes (non-exhaustive): `README*`, `CHANGELOG*`, `CONTRIBUTING*`, `SECURITY*`, `docs/**`, `**/*.md`, `**/*.mdx`, and any user-facing help text intended as documentation.
+- If existing documentation is in another language, translate it to English rather than adding a new non-English section.
+- Do not add bilingual/multilingual blocks (e.g., French + English). Keep a single English source of truth.
+
