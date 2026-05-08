@@ -37,6 +37,7 @@ dependencies:
   flutter_material_design_icons: ^3.0.0+7447
   go_router: ^16.0.0
   package_info_plus: ^9.0.0
+  shared_preferences: ^2.5.3
   url_launcher: ^6.3.2
   sentry_flutter: ^9.20.0
   connectivity_plus: ^7.1.1
