@@ -1,0 +1,72 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Compartarenta",
+
+  "commonContinue": "Continue",
+  "commonFinishSetup": "Finish setup",
+  "commonRetry": "Retry",
+  "commonRestart": "Restart",
+  "commonComingSoon": "Coming soon",
+  "commonNotSet": "Not set",
+
+  "navHome": "Home",
+  "navSettings": "Settings",
+
+  "settingsTitle": "Settings",
+  "settingsLanguageTitle": "Language",
+  "settingsLanguageSubtitle": "Change the app language",
+  "languageSystem": "System",
+  "languageEnglish": "English",
+  "languageFrench": "French",
+  "languageSpanish": "Spanish",
+  "settingsProfileTitle": "Profile",
+  "settingsCurrencyTitle": "Currency",
+  "settingsDateFormatTitle": "Date format",
+  "settingsDistanceUnitTitle": "Distance unit",
+  "settingsPrivacyPolicyTitle": "Privacy policy",
+  "settingsAppVersionTitle": "App version",
+  "settingsEnvironmentTitle": "Environment",
+  "settingsApiBaseUrlTitle": "API base URL",
+
+  "onboardingTitle": "Setup",
+  "onboardingWelcomeTitle": "Welcome",
+  "onboardingWelcomeCopy": "Thanks for trying Compartarenta.\\n\\nIn the next steps, you’ll configure your sharing plan(s) (shared housing, car sharing, or both) and start a 6‑week real‑mode trial.\\n\\nYour data stays on your device—this app does not collect it.\\n\\nIf these conditions don’t work for you, you can uninstall at any time.",
+  "onboardingPlansTitle": "What do you want to set up?",
+  "onboardingPlanHousingTitle": "Shared housing",
+  "onboardingPlanHousingSubtitle": "Shared rent and household expenses.",
+  "onboardingPlanCarSharingTitle": "Car sharing",
+  "onboardingPlanCarSharingSubtitle": "Track usage, fuel, maintenance, violations, and reservations.",
+  "onboardingProfileTitle": "Your profile",
+  "onboardingNameLabel": "Name",
+  "onboardingNameHint": "Your display name",
+  "onboardingAvatarTitle": "Choose an avatar",
+  "onboardingPreferencesTitle": "Preferences",
+  "prefsCurrencyLabel": "Currency",
+  "prefsDateFormatLabel": "Date format",
+  "prefsDistanceUnitLabel": "Distance unit",
+  "prefsDistanceUnitKm": "Kilometers (km)",
+  "prefsDistanceUnitMiles": "Miles",
+  "prefsTimeZoneLabel": "Time zone",
+  "prefsTimeZoneDevice": "Use device local time",
+  "prefsTimeZoneExplicit": "Choose a specific time zone (later)",
+
+  "errorSomethingWentWrongTitle": "Something went wrong",
+  "errorSomethingWentWrongBody": "Please try again. If this keeps happening, contact support.",
+  "errorUnknownOnboardingStep": "Unknown onboarding step.",
+
+  "homeEnvironment": "Environment: {env}",
+  "@homeEnvironment": {
+    "placeholders": {
+      "env": { "type": "String" }
+    }
+  },
+  "homeApiBaseUrl": "API base URL: {url}",
+  "@homeApiBaseUrl": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+  "homePlaceholderBody": "This is a placeholder home screen for the store-publishable MVP shell."
+}
+

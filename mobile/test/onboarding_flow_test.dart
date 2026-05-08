@@ -13,6 +13,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(
         routerConfig: router,
+        localizationsDelegates: const [],
+        supportedLocales: const [Locale('en')],
         builder: (context, child) => child ?? const SizedBox.shrink(),
       ),
     );

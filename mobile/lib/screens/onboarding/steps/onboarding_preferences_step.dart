@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../prefs/app_preferences.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OnboardingPreferencesStep extends StatefulWidget {
   const OnboardingPreferencesStep({
@@ -30,19 +31,20 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Preferences',
+            l10n.onboardingPreferencesTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _currency.isEmpty ? null : _currency,
-            decoration: const InputDecoration(labelText: 'Currency'),
+            decoration: InputDecoration(labelText: l10n.prefsCurrencyLabel),
             items: _currencies
                 .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                 .toList(),
@@ -51,7 +53,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _dateFormat.isEmpty ? null : _dateFormat,
-            decoration: const InputDecoration(labelText: 'Date format'),
+            decoration: InputDecoration(labelText: l10n.prefsDateFormatLabel),
             items: _dateFormats
                 .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                 .toList(),
@@ -60,20 +62,23 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
           const SizedBox(height: 12),
           DropdownButtonFormField<DistanceUnit>(
             value: _distanceUnit,
-            decoration: const InputDecoration(labelText: 'Distance unit'),
-            items: const [
-              DropdownMenuItem(value: DistanceUnit.km, child: Text('Kilometers (km)')),
-              DropdownMenuItem(value: DistanceUnit.miles, child: Text('Miles')),
+            decoration: InputDecoration(labelText: l10n.prefsDistanceUnitLabel),
+            items: [
+              DropdownMenuItem(value: DistanceUnit.km, child: Text(l10n.prefsDistanceUnitKm)),
+              DropdownMenuItem(
+                value: DistanceUnit.miles,
+                child: Text(l10n.prefsDistanceUnitMiles),
+              ),
             ],
             onChanged: (value) => setState(() => _distanceUnit = value ?? DistanceUnit.km),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _timeZonePolicy,
-            decoration: const InputDecoration(labelText: 'Time zone'),
-            items: const [
-              DropdownMenuItem(value: 'device', child: Text('Use device local time')),
-              DropdownMenuItem(value: 'explicit', child: Text('Choose a specific time zone (later)')),
+            decoration: InputDecoration(labelText: l10n.prefsTimeZoneLabel),
+            items: [
+              DropdownMenuItem(value: 'device', child: Text(l10n.prefsTimeZoneDevice)),
+              DropdownMenuItem(value: 'explicit', child: Text(l10n.prefsTimeZoneExplicit)),
             ],
             onChanged: (value) => setState(() => _timeZonePolicy = value ?? 'device'),
           ),
@@ -88,7 +93,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                     widget.onFinish();
                   }
                 : null,
-            child: const Text('Finish setup'),
+            child: Text(l10n.commonFinishSetup),
           ),
         ],
       ),

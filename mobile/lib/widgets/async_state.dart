@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message});
 
@@ -62,6 +64,7 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -73,7 +76,7 @@ class ErrorView extends StatelessWidget {
             Text(body, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 12),
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
             ],
           ],
         ),

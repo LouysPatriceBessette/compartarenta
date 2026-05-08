@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../prefs/app_preferences.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OnboardingPlansStep extends StatefulWidget {
   const OnboardingPlansStep({
@@ -23,19 +24,20 @@ class _OnboardingPlansStepState extends State<OnboardingPlansStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What do you want to set up?',
+            l10n.onboardingPlansTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
           CheckboxListTile(
-            title: const Text('Shared housing'),
-            subtitle: const Text('Shared rent and household expenses.'),
+            title: Text(l10n.onboardingPlanHousingTitle),
+            subtitle: Text(l10n.onboardingPlanHousingSubtitle),
             value: _selected.contains(PlanType.housing),
             onChanged: (value) => setState(() {
               if (value == true) {
@@ -46,8 +48,8 @@ class _OnboardingPlansStepState extends State<OnboardingPlansStep> {
             }),
           ),
           CheckboxListTile(
-            title: const Text('Car sharing'),
-            subtitle: const Text('Track usage, fuel, maintenance, violations, and reservations.'),
+            title: Text(l10n.onboardingPlanCarSharingTitle),
+            subtitle: Text(l10n.onboardingPlanCarSharingSubtitle),
             value: _selected.contains(PlanType.carSharing),
             onChanged: (value) => setState(() {
               if (value == true) {
@@ -65,7 +67,7 @@ class _OnboardingPlansStepState extends State<OnboardingPlansStep> {
                     widget.onContinue();
                   }
                 : null,
-            child: const Text('Continue'),
+            child: Text(l10n.commonContinue),
           ),
         ],
       ),

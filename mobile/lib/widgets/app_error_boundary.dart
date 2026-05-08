@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 class AppErrorBoundary extends StatefulWidget {
   const AppErrorBoundary({super.key, required this.child});
 
@@ -80,6 +82,7 @@ class _FallbackErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final details = kDebugMode && stackTrace != null
         ? '\n\n$stackTrace'
         : '';
@@ -92,13 +95,11 @@ class _FallbackErrorScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Something went wrong',
+                l10n.errorSomethingWentWrongTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Please try again. If this keeps happening, contact support.',
-              ),
+              Text(l10n.errorSomethingWentWrongBody),
               const SizedBox(height: 12),
               Text(
                 '$error$details',
@@ -109,7 +110,7 @@ class _FallbackErrorScreen extends StatelessWidget {
               const Spacer(),
               FilledButton(
                 onPressed: onRestart,
-                child: const Text('Restart'),
+                child: Text(l10n.commonRestart),
               ),
             ],
           ),

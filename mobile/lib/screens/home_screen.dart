@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../config/app_config.dart';
+import '../l10n/app_localizations.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.config});
@@ -10,14 +11,15 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text(l10n.navHome),
         actions: [
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
+            tooltip: l10n.navSettings,
           ),
         ],
       ),
@@ -27,18 +29,16 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Environment: ${config.environment.name}',
+              l10n.homeEnvironment(config.environment.name),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'API base URL: ${config.apiBaseUrl}',
+              l10n.homeApiBaseUrl(config.apiBaseUrl.toString()),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
-            const Text(
-              'This is a placeholder home screen for the store-publishable MVP shell.',
-            ),
+            Text(l10n.homePlaceholderBody),
           ],
         ),
       ),

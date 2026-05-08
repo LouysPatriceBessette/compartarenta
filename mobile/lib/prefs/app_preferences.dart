@@ -22,6 +22,7 @@ class AppPreferences extends ChangeNotifier {
   static const _kDateFormat = 'prefs.dateFormat';
   static const _kDistanceUnit = 'prefs.distanceUnit';
   static const _kTimeZonePolicy = 'prefs.timeZonePolicy';
+  static const _kLanguageCode = 'prefs.languageCode';
 
   static Future<AppPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -90,6 +91,16 @@ class AppPreferences extends ChangeNotifier {
   String get timeZonePolicy => _prefs.getString(_kTimeZonePolicy) ?? 'device';
   Future<void> setTimeZonePolicy(String value) async {
     await _prefs.setString(_kTimeZonePolicy, value);
+    notifyListeners();
+  }
+
+  String? get languageCode => _prefs.getString(_kLanguageCode);
+  Future<void> setLanguageCode(String? value) async {
+    if (value == null || value.isEmpty) {
+      await _prefs.remove(_kLanguageCode);
+    } else {
+      await _prefs.setString(_kLanguageCode, value);
+    }
     notifyListeners();
   }
 

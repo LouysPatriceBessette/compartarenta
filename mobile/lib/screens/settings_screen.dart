@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
+import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../widgets/async_state.dart';
 
@@ -24,39 +25,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
           ListTile(
-            title: const Text('Language'),
-            subtitle: const Text('Coming soon'),
-          ),
-          ListTile(
-            title: const Text('Profile'),
-            subtitle: Text(
-              widget.prefs.displayName.isEmpty ? 'Not set' : widget.prefs.displayName,
+            title: Text(l10n.settingsLanguageTitle),
+            subtitle: Text(l10n.settingsLanguageSubtitle),
+            trailing: DropdownButton<String?>(
+              value: widget.prefs.languageCode,
+              items: [
+                DropdownMenuItem(value: null, child: Text(l10n.languageSystem)),
+                DropdownMenuItem(value: 'en', child: Text(l10n.languageEnglish)),
+                DropdownMenuItem(value: 'fr', child: Text(l10n.languageFrench)),
+                DropdownMenuItem(value: 'es', child: Text(l10n.languageSpanish)),
+              ],
+              onChanged: (value) async {
+                await widget.prefs.setLanguageCode(value);
+              },
             ),
           ),
           ListTile(
-            title: const Text('Currency'),
-            subtitle: Text(widget.prefs.currency.isEmpty ? 'Not set' : widget.prefs.currency),
+            title: Text(l10n.settingsProfileTitle),
+            subtitle: Text(
+              widget.prefs.displayName.isEmpty
+                  ? l10n.commonNotSet
+                  : widget.prefs.displayName,
+            ),
           ),
           ListTile(
-            title: const Text('Date format'),
-            subtitle: Text(widget.prefs.dateFormat.isEmpty ? 'Not set' : widget.prefs.dateFormat),
+            title: Text(l10n.settingsCurrencyTitle),
+            subtitle: Text(
+              widget.prefs.currency.isEmpty ? l10n.commonNotSet : widget.prefs.currency,
+            ),
           ),
           ListTile(
-            title: const Text('Distance unit'),
-            subtitle: Text(widget.prefs.distanceUnit?.name ?? 'Not set'),
+            title: Text(l10n.settingsDateFormatTitle),
+            subtitle: Text(
+              widget.prefs.dateFormat.isEmpty
+                  ? l10n.commonNotSet
+                  : widget.prefs.dateFormat,
+            ),
+          ),
+          ListTile(
+            title: Text(l10n.settingsDistanceUnitTitle),
+            subtitle: Text(widget.prefs.distanceUnit?.name ?? l10n.commonNotSet),
           ),
           const Divider(),
           ListTile(
-            title: const Text('Environment'),
+            title: Text(l10n.settingsEnvironmentTitle),
             subtitle: Text(widget.config.environment.name),
           ),
           ListTile(
-            title: const Text('API base URL'),
+            title: Text(l10n.settingsApiBaseUrlTitle),
             subtitle: Text(widget.config.apiBaseUrl.toString()),
           ),
           FutureBuilder(
@@ -66,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (snapshot.connectionState != ConnectionState.done) {
                 return const Padding(
                   padding: EdgeInsets.all(16),
-                  child: LoadingView(message: 'Loading app version…'),
+                  child: LoadingView(),
                 );
               }
 
@@ -74,8 +96,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return Padding(
                   padding: const EdgeInsets.all(16),
                   child: ErrorView(
-                    title: 'Unable to load app version',
-                    body: 'Please try again later.',
+                    title: l10n.errorSomethingWentWrongTitle,
+                    body: l10n.errorSomethingWentWrongBody,
                     onRetry: () => setState(() {}),
                   ),
                 );
@@ -86,14 +108,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : '${info.version} (${info.buildNumber})';
 
               return ListTile(
-                title: const Text('App version'),
+                title: Text(l10n.settingsAppVersionTitle),
                 subtitle: Text(subtitle),
               );
             },
           ),
           const Divider(),
           ListTile(
-            title: const Text('Privacy policy'),
+            title: Text(l10n.settingsPrivacyPolicyTitle),
             subtitle: Text(_privacyPolicyUrl.toString()),
             onTap: () async {
               await launchUrl(_privacyPolicyUrl, mode: LaunchMode.externalApplication);

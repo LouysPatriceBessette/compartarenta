@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../../prefs/app_preferences.dart';
+import '../../../l10n/app_localizations.dart';
 
 class OnboardingProfileStep extends StatefulWidget {
   const OnboardingProfileStep({
@@ -62,27 +63,28 @@ class _OnboardingProfileStepState extends State<OnboardingProfileStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your profile',
+            l10n.onboardingProfileTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(
-              labelText: 'Name',
-              hintText: 'Your display name',
+            decoration: InputDecoration(
+              labelText: l10n.onboardingNameLabel,
+              hintText: l10n.onboardingNameHint,
             ),
             textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 16),
           Text(
-            'Choose an avatar',
+            l10n.onboardingAvatarTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -128,7 +130,7 @@ class _OnboardingProfileStepState extends State<OnboardingProfileStep> {
                     widget.onContinue();
                   }
                 : null,
-            child: const Text('Continue'),
+            child: Text(l10n.commonContinue),
           ),
         ],
       ),

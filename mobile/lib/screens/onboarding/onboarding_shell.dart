@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
 import '../../prefs/app_preferences.dart';
+import '../../l10n/app_localizations.dart';
 import 'steps/onboarding_plans_step.dart';
 import 'steps/onboarding_preferences_step.dart';
 import 'steps/onboarding_profile_step.dart';
@@ -38,6 +39,7 @@ class OnboardingShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     Widget child;
     switch (step) {
       case 'welcome':
@@ -76,12 +78,12 @@ class OnboardingShell extends StatelessWidget {
         );
         break;
       default:
-        child = const Center(child: Text('Unknown onboarding step.'));
+        child = Center(child: Text(l10n.errorUnknownOnboardingStep));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup'),
+        title: Text(l10n.onboardingTitle),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(child: child),

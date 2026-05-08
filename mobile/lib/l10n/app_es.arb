@@ -1,0 +1,72 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Compartarenta",
+
+  "commonContinue": "Continuar",
+  "commonFinishSetup": "Finalizar configuración",
+  "commonRetry": "Reintentar",
+  "commonRestart": "Reiniciar",
+  "commonComingSoon": "Próximamente",
+  "commonNotSet": "No configurado",
+
+  "navHome": "Inicio",
+  "navSettings": "Ajustes",
+
+  "settingsTitle": "Ajustes",
+  "settingsLanguageTitle": "Idioma",
+  "settingsLanguageSubtitle": "Cambiar el idioma de la aplicación",
+  "languageSystem": "Sistema",
+  "languageEnglish": "Inglés",
+  "languageFrench": "Francés",
+  "languageSpanish": "Español",
+  "settingsProfileTitle": "Perfil",
+  "settingsCurrencyTitle": "Moneda",
+  "settingsDateFormatTitle": "Formato de fecha",
+  "settingsDistanceUnitTitle": "Unidad de distancia",
+  "settingsPrivacyPolicyTitle": "Política de privacidad",
+  "settingsAppVersionTitle": "Versión de la aplicación",
+  "settingsEnvironmentTitle": "Entorno",
+  "settingsApiBaseUrlTitle": "URL base de la API",
+
+  "onboardingTitle": "Configuración",
+  "onboardingWelcomeTitle": "Bienvenido",
+  "onboardingWelcomeCopy": "Gracias por probar Compartarenta.\\n\\nEn los próximos pasos, configurarás tus planes de reparto (vivienda compartida, coche compartido o ambos) y comenzarás una prueba de 6 semanas en modo real.\\n\\nTus datos se quedan en tu dispositivo: esta aplicación no los recopila.\\n\\nSi estas condiciones no te funcionan, puedes desinstalar en cualquier momento.",
+  "onboardingPlansTitle": "¿Qué quieres configurar?",
+  "onboardingPlanHousingTitle": "Vivienda compartida",
+  "onboardingPlanHousingSubtitle": "Alquiler y gastos del hogar.",
+  "onboardingPlanCarSharingTitle": "Coche compartido",
+  "onboardingPlanCarSharingSubtitle": "Uso, combustible, mantenimiento, infracciones y reservas.",
+  "onboardingProfileTitle": "Tu perfil",
+  "onboardingNameLabel": "Nombre",
+  "onboardingNameHint": "Nombre para mostrar",
+  "onboardingAvatarTitle": "Elige un avatar",
+  "onboardingPreferencesTitle": "Preferencias",
+  "prefsCurrencyLabel": "Moneda",
+  "prefsDateFormatLabel": "Formato de fecha",
+  "prefsDistanceUnitLabel": "Unidad de distancia",
+  "prefsDistanceUnitKm": "Kilómetros (km)",
+  "prefsDistanceUnitMiles": "Millas",
+  "prefsTimeZoneLabel": "Zona horaria",
+  "prefsTimeZoneDevice": "Usar hora local del dispositivo",
+  "prefsTimeZoneExplicit": "Elegir una zona horaria (más tarde)",
+
+  "errorSomethingWentWrongTitle": "Algo salió mal",
+  "errorSomethingWentWrongBody": "Por favor, inténtalo de nuevo. Si continúa, contacta con soporte.",
+  "errorUnknownOnboardingStep": "Paso de configuración desconocido.",
+
+  "homeEnvironment": "Entorno: {env}",
+  "@homeEnvironment": {
+    "placeholders": {
+      "env": { "type": "String" }
+    }
+  },
+  "homeApiBaseUrl": "URL base de la API: {url}",
+  "@homeApiBaseUrl": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+  "homePlaceholderBody": "Esta es una pantalla de inicio provisional para el contenedor MVP publicable."
+}
+

@@ -1,0 +1,72 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Compartarenta",
+
+  "commonContinue": "Continuer",
+  "commonFinishSetup": "Terminer la configuration",
+  "commonRetry": "Réessayer",
+  "commonRestart": "Redémarrer",
+  "commonComingSoon": "Bientôt disponible",
+  "commonNotSet": "Non défini",
+
+  "navHome": "Accueil",
+  "navSettings": "Paramètres",
+
+  "settingsTitle": "Paramètres",
+  "settingsLanguageTitle": "Langue",
+  "settingsLanguageSubtitle": "Changer la langue de l’application",
+  "languageSystem": "Système",
+  "languageEnglish": "Anglais",
+  "languageFrench": "Français",
+  "languageSpanish": "Espagnol",
+  "settingsProfileTitle": "Profil",
+  "settingsCurrencyTitle": "Devise",
+  "settingsDateFormatTitle": "Format de date",
+  "settingsDistanceUnitTitle": "Unité de distance",
+  "settingsPrivacyPolicyTitle": "Politique de confidentialité",
+  "settingsAppVersionTitle": "Version de l’application",
+  "settingsEnvironmentTitle": "Environnement",
+  "settingsApiBaseUrlTitle": "URL de base API",
+
+  "onboardingTitle": "Configuration",
+  "onboardingWelcomeTitle": "Bienvenue",
+  "onboardingWelcomeCopy": "Merci d’essayer Compartarenta.\\n\\nDans les prochaines étapes, vous configurerez vos plans de partage (logement, voiture, ou les deux) et démarrerez une période d’essai de 6 semaines en mode réel.\\n\\nVos données restent sur votre appareil — l’application ne les collecte pas.\\n\\nSi ces conditions ne vous conviennent pas, vous pouvez désinstaller à tout moment.",
+  "onboardingPlansTitle": "Que voulez-vous configurer ?",
+  "onboardingPlanHousingTitle": "Logement partagé",
+  "onboardingPlanHousingSubtitle": "Loyer et dépenses du logement.",
+  "onboardingPlanCarSharingTitle": "Voiture partagée",
+  "onboardingPlanCarSharingSubtitle": "Suivi d’utilisation, essence, entretiens, infractions et réservations.",
+  "onboardingProfileTitle": "Votre profil",
+  "onboardingNameLabel": "Nom",
+  "onboardingNameHint": "Nom affiché",
+  "onboardingAvatarTitle": "Choisissez un avatar",
+  "onboardingPreferencesTitle": "Préférences",
+  "prefsCurrencyLabel": "Devise",
+  "prefsDateFormatLabel": "Format de date",
+  "prefsDistanceUnitLabel": "Unité de distance",
+  "prefsDistanceUnitKm": "Kilomètres (km)",
+  "prefsDistanceUnitMiles": "Miles",
+  "prefsTimeZoneLabel": "Fuseau horaire",
+  "prefsTimeZoneDevice": "Utiliser l’heure locale de l’appareil",
+  "prefsTimeZoneExplicit": "Choisir un fuseau horaire (plus tard)",
+
+  "errorSomethingWentWrongTitle": "Une erreur est survenue",
+  "errorSomethingWentWrongBody": "Veuillez réessayer. Si le problème persiste, contactez le support.",
+  "errorUnknownOnboardingStep": "Étape de configuration inconnue.",
+
+  "homeEnvironment": "Environnement : {env}",
+  "@homeEnvironment": {
+    "placeholders": {
+      "env": { "type": "String" }
+    }
+  },
+  "homeApiBaseUrl": "URL de base API : {url}",
+  "@homeApiBaseUrl": {
+    "placeholders": {
+      "url": { "type": "String" }
+    }
+  },
+  "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique."
+}
+
