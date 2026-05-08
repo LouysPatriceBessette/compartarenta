@@ -6,6 +6,10 @@ Compartatrenta is a work-in-progress project with a Flutter app in `mobile/`.
 
 This project is licensed under the Elastic License 2.0 (ELv2). See `LICENSE`.
 
+## Legal and disputes
+
+See `docs/legal-and-disputes.md` for transparency on licensing, payment failure behavior, and dispute-limited product scope.
+
 ## Repository layout
 
 - `mobile/`: Flutter application (Android, iOS, Web, Windows, Linux, macOS)
