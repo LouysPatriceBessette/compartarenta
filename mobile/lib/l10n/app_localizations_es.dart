@@ -84,27 +84,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingTitle => 'Configuración';
 
   @override
+  String get onboardingLanguageTitle => 'Idioma';
+
+  @override
+  String get onboardingLanguageBody =>
+      'Elige el idioma de la aplicación. Puedes cambiarlo en cualquier momento en Ajustes.';
+
+  @override
   String get onboardingWelcomeTitle => 'Bienvenido';
 
   @override
-  String get onboardingWelcomeCopy =>
-      'Gracias por probar Compartarenta.\\n\\nEn los próximos pasos, configurarás tus planes de reparto (vivienda compartida, coche compartido o ambos) y comenzarás una prueba de 6 semanas en modo real.\\n\\nTus datos se quedan en tu dispositivo: esta aplicación no los recopila.\\n\\nSi estas condiciones no te funcionan, puedes desinstalar en cualquier momento.';
+  String get onboardingWelcomeCopyShort =>
+      'Gracias por probar Compartarenta.\n\nLa aplicación es gratis mientras no se use de forma efectiva. Durante esta fase, puedes configurar tu plan de reparto de gastos con todo el detalle que necesites. Este plan servirá como propuesta de acuerdo para compartir con una o más personas.\n\nUna vez que tu plan sea aceptado y se ponga en servicio, comienza la prueba gratuita de 6 semanas.';
 
   @override
-  String get onboardingPlansTitle => '¿Qué quieres configurar?';
+  String get onboardingReadLater => 'Leer más tarde';
 
   @override
-  String get onboardingPlanHousingTitle => 'Vivienda compartida';
+  String get onboardingWelcomeMoreTitle => 'Sobre la prueba y la licencia';
 
   @override
-  String get onboardingPlanHousingSubtitle => 'Alquiler y gastos del hogar.';
+  String get onboardingWelcomeCopyLong =>
+      'Al finalizar la prueba, tú y tus socios podéis continuar comprando una licencia de 4 \$ por persona. Cada participante del plan debe tener una licencia.\n\nEsta licencia financia el desarrollo y el mantenimiento. NUNCA habrá anuncios en la aplicación.\n\nTus datos no se usan de ninguna forma: permanecen en tu dispositivo (y en los dispositivos de los participantes) y en ningún otro lugar. Los datos te pertenecen.\n\nSi no renuevas la licencia, no podrás añadir datos nuevos, pero podrás exportar los datos existentes.';
 
   @override
-  String get onboardingPlanCarSharingTitle => 'Coche compartido';
-
-  @override
-  String get onboardingPlanCarSharingSubtitle =>
-      'Uso, combustible, mantenimiento, infracciones y reservas.';
+  String get onboardingOk => 'OK';
 
   @override
   String get onboardingProfileTitle => 'Tu perfil';
@@ -123,6 +127,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get prefsCurrencyLabel => 'Moneda';
+
+  @override
+  String get prefsCurrencySearchHint => 'Buscar por código o nombre';
 
   @override
   String get prefsDateFormatLabel => 'Formato de fecha';
@@ -164,6 +171,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String homeApiBaseUrl(String url) {
     return 'URL base de la API: $url';
   }
+
+  @override
+  String get homeHousingPlan => 'Plan de vivienda';
+
+  @override
+  String get homeCarSharingPlan => 'Plan de coche';
 
   @override
   String get homePlaceholderBody =>

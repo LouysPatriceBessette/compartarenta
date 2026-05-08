@@ -4,17 +4,24 @@ import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../prefs/app_preferences.dart';
 import '../../l10n/app_localizations.dart';
-import 'steps/onboarding_plans_step.dart';
 import 'steps/onboarding_preferences_step.dart';
 import 'steps/onboarding_profile_step.dart';
+import 'steps/onboarding_language_step.dart';
+import 'steps/onboarding_splash_step.dart';
 import 'steps/onboarding_welcome_step.dart';
+import 'steps/onboarding_welcome_more_step.dart';
 
 String nextOnboardingLocation(AppPreferences prefs) {
-  if (prefs.onboardingStep == 'welcome') {
-    return '/onboarding/welcome';
+  if (prefs.onboardingStep == null || prefs.onboardingStep == 'splash') {
+    return '/onboarding/splash';
   }
-  if (!prefs.hasPlanSelection) {
-    return '/onboarding/plans';
+  if (!prefs.onboardingLanguageDone) {
+    return '/onboarding/language';
+  }
+  if (!prefs.onboardingWelcomeDone) {
+    return prefs.onboardingStep == 'welcome_more'
+        ? '/onboarding/welcome_more'
+        : '/onboarding/welcome';
   }
   if (!prefs.hasProfile) {
     return '/onboarding/profile';
@@ -42,18 +49,40 @@ class OnboardingShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     Widget child;
     switch (step) {
-      case 'welcome':
-        child = OnboardingWelcomeStep(
-          onContinue: () async {
-            await prefs.setOnboardingStep('plans');
+      case 'splash':
+        child = OnboardingSplashStep(
+          onDone: () async {
+            await prefs.setOnboardingStep('language');
             if (context.mounted) context.go(nextOnboardingLocation(prefs));
           },
         );
         break;
-      case 'plans':
-        child = OnboardingPlansStep(
+      case 'language':
+        child = OnboardingLanguageStep(
           prefs: prefs,
           onContinue: () async {
+            await prefs.setOnboardingStep('welcome');
+            if (context.mounted) context.go(nextOnboardingLocation(prefs));
+          },
+        );
+        break;
+      case 'welcome':
+        child = OnboardingWelcomeStep(
+          onContinue: () {
+            prefs.setOnboardingStep('welcome_more');
+            context.go('/onboarding/welcome_more');
+          },
+          onReadLater: () {
+            prefs.setOnboardingWelcomeDone(true);
+            prefs.setOnboardingStep('profile');
+            context.go(nextOnboardingLocation(prefs));
+          },
+        );
+        break;
+      case 'welcome_more':
+        child = OnboardingWelcomeMoreStep(
+          onOk: () async {
+            await prefs.setOnboardingWelcomeDone(true);
             await prefs.setOnboardingStep('profile');
             if (context.mounted) context.go(nextOnboardingLocation(prefs));
           },
@@ -82,10 +111,12 @@ class OnboardingShell extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.onboardingTitle),
-        automaticallyImplyLeading: false,
-      ),
+      appBar: step == 'splash'
+          ? null
+          : AppBar(
+              title: Text(l10n.onboardingTitle),
+              automaticallyImplyLeading: false,
+            ),
       body: SafeArea(child: child),
     );
   }

@@ -84,27 +84,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingTitle => 'Configuration';
 
   @override
+  String get onboardingLanguageTitle => 'Langue';
+
+  @override
+  String get onboardingLanguageBody =>
+      'Choisissez la langue de l’application. Vous pourrez la changer en tout temps dans les paramètres.';
+
+  @override
   String get onboardingWelcomeTitle => 'Bienvenue';
 
   @override
-  String get onboardingWelcomeCopy =>
-      'Merci d’essayer Compartarenta.\\n\\nDans les prochaines étapes, vous configurerez vos plans de partage (logement, voiture, ou les deux) et démarrerez une période d’essai de 6 semaines en mode réel.\\n\\nVos données restent sur votre appareil — l’application ne les collecte pas.\\n\\nSi ces conditions ne vous conviennent pas, vous pouvez désinstaller à tout moment.';
+  String get onboardingWelcomeCopyShort =>
+      'Merci d’essayer Compartarenta.\n\nL’application est gratuite tant qu’elle n’est pas effectivement utilisée. Pendant cette phase, vous pouvez configurer votre plan de partage des dépenses aussi précisément que nécessaire. Ce plan servira de proposition d’accord à partager avec une ou plusieurs personnes.\n\nUne fois votre plan accepté et mis en service, la période d’essai gratuit de six semaines commence.';
 
   @override
-  String get onboardingPlansTitle => 'Que voulez-vous configurer ?';
+  String get onboardingReadLater => 'Lire plus tard';
 
   @override
-  String get onboardingPlanHousingTitle => 'Logement partagé';
+  String get onboardingWelcomeMoreTitle =>
+      'À propos de l’essai et de la licence';
 
   @override
-  String get onboardingPlanHousingSubtitle => 'Loyer et dépenses du logement.';
+  String get onboardingWelcomeCopyLong =>
+      'À l’issue de l’essai, vous et vos partenaires pourrez choisir de continuer en achetant une licence à 4 \$ par personne. Chaque participant au plan doit posséder une licence.\n\nCette licence permet de financer le développement et la maintenance de l’application. Il n’y aura JAMAIS de publicité dans l’application.\n\nVos données ne seront utilisées en aucune façon : elles restent en permanence sur votre appareil (et sur ceux des participants) et nulle part ailleurs. Les données vous appartiennent.\n\nSi vous ne renouvelez pas la licence, vous ne pourrez plus ajouter de nouvelles données, mais vous pourrez exporter celles qui existent.';
 
   @override
-  String get onboardingPlanCarSharingTitle => 'Voiture partagée';
-
-  @override
-  String get onboardingPlanCarSharingSubtitle =>
-      'Suivi d’utilisation, essence, entretiens, infractions et réservations.';
+  String get onboardingOk => 'Ok';
 
   @override
   String get onboardingProfileTitle => 'Votre profil';
@@ -123,6 +128,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get prefsCurrencyLabel => 'Devise';
+
+  @override
+  String get prefsCurrencySearchHint => 'Rechercher par code ou nom';
 
   @override
   String get prefsDateFormatLabel => 'Format de date';
@@ -164,6 +172,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String homeApiBaseUrl(String url) {
     return 'URL de base API : $url';
   }
+
+  @override
+  String get homeHousingPlan => 'Plan logement';
+
+  @override
+  String get homeCarSharingPlan => 'Plan voiture';
 
   @override
   String get homePlaceholderBody =>

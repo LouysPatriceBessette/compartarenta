@@ -250,47 +250,53 @@ abstract class AppLocalizations {
   /// **'Setup'**
   String get onboardingTitle;
 
+  /// No description provided for @onboardingLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get onboardingLanguageTitle;
+
+  /// No description provided for @onboardingLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app language. You can change it anytime in Settings.'**
+  String get onboardingLanguageBody;
+
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
   /// **'Welcome'**
   String get onboardingWelcomeTitle;
 
-  /// No description provided for @onboardingWelcomeCopy.
+  /// No description provided for @onboardingWelcomeCopyShort.
   ///
   /// In en, this message translates to:
-  /// **'Thanks for trying Compartarenta.\\n\\nIn the next steps, you’ll configure your sharing plan(s) (shared housing, car sharing, or both) and start a 6‑week real‑mode trial.\\n\\nYour data stays on your device—this app does not collect it.\\n\\nIf these conditions don’t work for you, you can uninstall at any time.'**
-  String get onboardingWelcomeCopy;
+  /// **'Thanks for trying Compartarenta.\n\nThe app is free as long as it isn’t actively used. During this phase, you can configure your expense-sharing plan as precisely as you need. This plan will serve as a proposed agreement to share with one or more people.\n\nOnce your plan is accepted and put into service, the 6‑week free trial begins.'**
+  String get onboardingWelcomeCopyShort;
 
-  /// No description provided for @onboardingPlansTitle.
+  /// No description provided for @onboardingReadLater.
   ///
   /// In en, this message translates to:
-  /// **'What do you want to set up?'**
-  String get onboardingPlansTitle;
+  /// **'Read later'**
+  String get onboardingReadLater;
 
-  /// No description provided for @onboardingPlanHousingTitle.
+  /// No description provided for @onboardingWelcomeMoreTitle.
   ///
   /// In en, this message translates to:
-  /// **'Shared housing'**
-  String get onboardingPlanHousingTitle;
+  /// **'About the trial and license'**
+  String get onboardingWelcomeMoreTitle;
 
-  /// No description provided for @onboardingPlanHousingSubtitle.
+  /// No description provided for @onboardingWelcomeCopyLong.
   ///
   /// In en, this message translates to:
-  /// **'Shared rent and household expenses.'**
-  String get onboardingPlanHousingSubtitle;
+  /// **'At the end of the trial, you and your partners can choose to continue by purchasing a \$4 license per person. Each participant in the plan must have a license.\n\nThis license funds development and maintenance. There will NEVER be ads in the app.\n\nYour data is not used in any way: it stays on your device (and the participants’ devices) and nowhere else. The data belongs to you.\n\nIf you don’t renew the license, you won’t be able to add new data, but you will be able to export existing data.'**
+  String get onboardingWelcomeCopyLong;
 
-  /// No description provided for @onboardingPlanCarSharingTitle.
+  /// No description provided for @onboardingOk.
   ///
   /// In en, this message translates to:
-  /// **'Car sharing'**
-  String get onboardingPlanCarSharingTitle;
-
-  /// No description provided for @onboardingPlanCarSharingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Track usage, fuel, maintenance, violations, and reservations.'**
-  String get onboardingPlanCarSharingSubtitle;
+  /// **'OK'**
+  String get onboardingOk;
 
   /// No description provided for @onboardingProfileTitle.
   ///
@@ -327,6 +333,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Currency'**
   String get prefsCurrencyLabel;
+
+  /// No description provided for @prefsCurrencySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by code or name'**
+  String get prefsCurrencySearchHint;
 
   /// No description provided for @prefsDateFormatLabel.
   ///
@@ -399,6 +411,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'API base URL: {url}'**
   String homeApiBaseUrl(String url);
+
+  /// No description provided for @homeHousingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing plan'**
+  String get homeHousingPlan;
+
+  /// No description provided for @homeCarSharingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Car sharing plan'**
+  String get homeCarSharingPlan;
 
   /// No description provided for @homePlaceholderBody.
   ///

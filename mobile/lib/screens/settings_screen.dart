@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
+import '../data/supported_currencies.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../widgets/async_state.dart';
@@ -57,7 +58,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             title: Text(l10n.settingsCurrencyTitle),
             subtitle: Text(
-              widget.prefs.currency.isEmpty ? l10n.commonNotSet : widget.prefs.currency,
+              widget.prefs.currency.isEmpty
+                  ? l10n.commonNotSet
+                  : (supportedCurrencyByCode(widget.prefs.currency)?.displayLine ??
+                      widget.prefs.currency),
             ),
           ),
           ListTile(

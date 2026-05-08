@@ -30,19 +30,21 @@
   "settingsApiBaseUrlTitle": "URL de base API",
 
   "onboardingTitle": "Configuration",
+  "onboardingLanguageTitle": "Langue",
+  "onboardingLanguageBody": "Choisissez la langue de l’application. Vous pourrez la changer en tout temps dans les paramètres.",
   "onboardingWelcomeTitle": "Bienvenue",
-  "onboardingWelcomeCopy": "Merci d’essayer Compartarenta.\\n\\nDans les prochaines étapes, vous configurerez vos plans de partage (logement, voiture, ou les deux) et démarrerez une période d’essai de 6 semaines en mode réel.\\n\\nVos données restent sur votre appareil — l’application ne les collecte pas.\\n\\nSi ces conditions ne vous conviennent pas, vous pouvez désinstaller à tout moment.",
-  "onboardingPlansTitle": "Que voulez-vous configurer ?",
-  "onboardingPlanHousingTitle": "Logement partagé",
-  "onboardingPlanHousingSubtitle": "Loyer et dépenses du logement.",
-  "onboardingPlanCarSharingTitle": "Voiture partagée",
-  "onboardingPlanCarSharingSubtitle": "Suivi d’utilisation, essence, entretiens, infractions et réservations.",
+  "onboardingWelcomeCopyShort": "Merci d’essayer Compartarenta.\n\nL’application est gratuite tant qu’elle n’est pas effectivement utilisée. Pendant cette phase, vous pouvez configurer votre plan de partage des dépenses aussi précisément que nécessaire. Ce plan servira de proposition d’accord à partager avec une ou plusieurs personnes.\n\nUne fois votre plan accepté et mis en service, la période d’essai gratuit de six semaines commence.",
+  "onboardingReadLater": "Lire plus tard",
+  "onboardingWelcomeMoreTitle": "À propos de l’essai et de la licence",
+  "onboardingWelcomeCopyLong": "À l’issue de l’essai, vous et vos partenaires pourrez choisir de continuer en achetant une licence à 4 $ par personne. Chaque participant au plan doit posséder une licence.\n\nCette licence permet de financer le développement et la maintenance de l’application. Il n’y aura JAMAIS de publicité dans l’application.\n\nVos données ne seront utilisées en aucune façon : elles restent en permanence sur votre appareil (et sur ceux des participants) et nulle part ailleurs. Les données vous appartiennent.\n\nSi vous ne renouvelez pas la licence, vous ne pourrez plus ajouter de nouvelles données, mais vous pourrez exporter celles qui existent.",
+  "onboardingOk": "Ok",
   "onboardingProfileTitle": "Votre profil",
   "onboardingNameLabel": "Nom",
   "onboardingNameHint": "Nom affiché",
   "onboardingAvatarTitle": "Choisissez un avatar",
   "onboardingPreferencesTitle": "Préférences",
   "prefsCurrencyLabel": "Devise",
+  "prefsCurrencySearchHint": "Rechercher par code ou nom",
   "prefsDateFormatLabel": "Format de date",
   "prefsDistanceUnitLabel": "Unité de distance",
   "prefsDistanceUnitKm": "Kilomètres (km)",
@@ -67,6 +69,8 @@
       "url": { "type": "String" }
     }
   },
+  "homeHousingPlan": "Plan logement",
+  "homeCarSharingPlan": "Plan voiture",
   "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique."
 }
 

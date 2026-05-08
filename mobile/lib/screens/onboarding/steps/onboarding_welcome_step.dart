@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 
 class OnboardingWelcomeStep extends StatelessWidget {
-  const OnboardingWelcomeStep({super.key, required this.onContinue});
+  const OnboardingWelcomeStep({
+    super.key,
+    required this.onContinue,
+    required this.onReadLater,
+  });
 
   final VoidCallback onContinue;
+  final VoidCallback onReadLater;
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +25,24 @@ class OnboardingWelcomeStep extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 12),
-          Text(l10n.onboardingWelcomeCopy),
+          Text(l10n.onboardingWelcomeCopyShort),
           const Spacer(),
-          FilledButton(
-            onPressed: onContinue,
-            child: Text(l10n.commonContinue),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: onContinue,
+                  child: Text(l10n.commonContinue),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onReadLater,
+                  child: Text(l10n.onboardingReadLater),
+                ),
+              ),
+            ],
           ),
         ],
       ),

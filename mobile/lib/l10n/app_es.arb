@@ -30,19 +30,21 @@
   "settingsApiBaseUrlTitle": "URL base de la API",
 
   "onboardingTitle": "Configuración",
+  "onboardingLanguageTitle": "Idioma",
+  "onboardingLanguageBody": "Elige el idioma de la aplicación. Puedes cambiarlo en cualquier momento en Ajustes.",
   "onboardingWelcomeTitle": "Bienvenido",
-  "onboardingWelcomeCopy": "Gracias por probar Compartarenta.\\n\\nEn los próximos pasos, configurarás tus planes de reparto (vivienda compartida, coche compartido o ambos) y comenzarás una prueba de 6 semanas en modo real.\\n\\nTus datos se quedan en tu dispositivo: esta aplicación no los recopila.\\n\\nSi estas condiciones no te funcionan, puedes desinstalar en cualquier momento.",
-  "onboardingPlansTitle": "¿Qué quieres configurar?",
-  "onboardingPlanHousingTitle": "Vivienda compartida",
-  "onboardingPlanHousingSubtitle": "Alquiler y gastos del hogar.",
-  "onboardingPlanCarSharingTitle": "Coche compartido",
-  "onboardingPlanCarSharingSubtitle": "Uso, combustible, mantenimiento, infracciones y reservas.",
+  "onboardingWelcomeCopyShort": "Gracias por probar Compartarenta.\n\nLa aplicación es gratis mientras no se use de forma efectiva. Durante esta fase, puedes configurar tu plan de reparto de gastos con todo el detalle que necesites. Este plan servirá como propuesta de acuerdo para compartir con una o más personas.\n\nUna vez que tu plan sea aceptado y se ponga en servicio, comienza la prueba gratuita de 6 semanas.",
+  "onboardingReadLater": "Leer más tarde",
+  "onboardingWelcomeMoreTitle": "Sobre la prueba y la licencia",
+  "onboardingWelcomeCopyLong": "Al finalizar la prueba, tú y tus socios podéis continuar comprando una licencia de 4 $ por persona. Cada participante del plan debe tener una licencia.\n\nEsta licencia financia el desarrollo y el mantenimiento. NUNCA habrá anuncios en la aplicación.\n\nTus datos no se usan de ninguna forma: permanecen en tu dispositivo (y en los dispositivos de los participantes) y en ningún otro lugar. Los datos te pertenecen.\n\nSi no renuevas la licencia, no podrás añadir datos nuevos, pero podrás exportar los datos existentes.",
+  "onboardingOk": "OK",
   "onboardingProfileTitle": "Tu perfil",
   "onboardingNameLabel": "Nombre",
   "onboardingNameHint": "Nombre para mostrar",
   "onboardingAvatarTitle": "Elige un avatar",
   "onboardingPreferencesTitle": "Preferencias",
   "prefsCurrencyLabel": "Moneda",
+  "prefsCurrencySearchHint": "Buscar por código o nombre",
   "prefsDateFormatLabel": "Formato de fecha",
   "prefsDistanceUnitLabel": "Unidad de distancia",
   "prefsDistanceUnitKm": "Kilómetros (km)",
@@ -67,6 +69,8 @@
       "url": { "type": "String" }
     }
   },
+  "homeHousingPlan": "Plan de vivienda",
+  "homeCarSharingPlan": "Plan de coche",
   "homePlaceholderBody": "Esta es una pantalla de inicio provisional para el contenedor MVP publicable."
 }
 

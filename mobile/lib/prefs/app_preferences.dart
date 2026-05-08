@@ -12,6 +12,8 @@ class AppPreferences extends ChangeNotifier {
 
   static const _kOnboardingComplete = 'onboarding.complete';
   static const _kOnboardingStep = 'onboarding.step';
+  static const _kOnboardingLanguageDone = 'onboarding.languageDone';
+  static const _kOnboardingWelcomeDone = 'onboarding.welcomeDone';
 
   static const _kDisplayName = 'profile.displayName';
   static const _kAvatarId = 'profile.avatarId';
@@ -38,6 +40,20 @@ class AppPreferences extends ChangeNotifier {
     } else {
       await _prefs.setString(_kOnboardingStep, value);
     }
+    notifyListeners();
+  }
+
+  bool get onboardingLanguageDone =>
+      _prefs.getBool(_kOnboardingLanguageDone) ?? false;
+  Future<void> setOnboardingLanguageDone(bool value) async {
+    await _prefs.setBool(_kOnboardingLanguageDone, value);
+    notifyListeners();
+  }
+
+  bool get onboardingWelcomeDone =>
+      _prefs.getBool(_kOnboardingWelcomeDone) ?? false;
+  Future<void> setOnboardingWelcomeDone(bool value) async {
+    await _prefs.setBool(_kOnboardingWelcomeDone, value);
     notifyListeners();
   }
 
@@ -112,6 +128,8 @@ class AppPreferences extends ChangeNotifier {
   Future<void> completeOnboarding() async {
     await _prefs.setBool(_kOnboardingComplete, true);
     await _prefs.remove(_kOnboardingStep);
+    await _prefs.remove(_kOnboardingLanguageDone);
+    await _prefs.remove(_kOnboardingWelcomeDone);
     notifyListeners();
   }
 }

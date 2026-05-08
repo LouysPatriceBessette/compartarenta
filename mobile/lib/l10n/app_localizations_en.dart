@@ -84,28 +84,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingTitle => 'Setup';
 
   @override
+  String get onboardingLanguageTitle => 'Language';
+
+  @override
+  String get onboardingLanguageBody =>
+      'Choose the app language. You can change it anytime in Settings.';
+
+  @override
   String get onboardingWelcomeTitle => 'Welcome';
 
   @override
-  String get onboardingWelcomeCopy =>
-      'Thanks for trying Compartarenta.\\n\\nIn the next steps, you’ll configure your sharing plan(s) (shared housing, car sharing, or both) and start a 6‑week real‑mode trial.\\n\\nYour data stays on your device—this app does not collect it.\\n\\nIf these conditions don’t work for you, you can uninstall at any time.';
+  String get onboardingWelcomeCopyShort =>
+      'Thanks for trying Compartarenta.\n\nThe app is free as long as it isn’t actively used. During this phase, you can configure your expense-sharing plan as precisely as you need. This plan will serve as a proposed agreement to share with one or more people.\n\nOnce your plan is accepted and put into service, the 6‑week free trial begins.';
 
   @override
-  String get onboardingPlansTitle => 'What do you want to set up?';
+  String get onboardingReadLater => 'Read later';
 
   @override
-  String get onboardingPlanHousingTitle => 'Shared housing';
+  String get onboardingWelcomeMoreTitle => 'About the trial and license';
 
   @override
-  String get onboardingPlanHousingSubtitle =>
-      'Shared rent and household expenses.';
+  String get onboardingWelcomeCopyLong =>
+      'At the end of the trial, you and your partners can choose to continue by purchasing a \$4 license per person. Each participant in the plan must have a license.\n\nThis license funds development and maintenance. There will NEVER be ads in the app.\n\nYour data is not used in any way: it stays on your device (and the participants’ devices) and nowhere else. The data belongs to you.\n\nIf you don’t renew the license, you won’t be able to add new data, but you will be able to export existing data.';
 
   @override
-  String get onboardingPlanCarSharingTitle => 'Car sharing';
-
-  @override
-  String get onboardingPlanCarSharingSubtitle =>
-      'Track usage, fuel, maintenance, violations, and reservations.';
+  String get onboardingOk => 'OK';
 
   @override
   String get onboardingProfileTitle => 'Your profile';
@@ -124,6 +127,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prefsCurrencyLabel => 'Currency';
+
+  @override
+  String get prefsCurrencySearchHint => 'Search by code or name';
 
   @override
   String get prefsDateFormatLabel => 'Date format';
@@ -165,6 +171,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String homeApiBaseUrl(String url) {
     return 'API base URL: $url';
   }
+
+  @override
+  String get homeHousingPlan => 'Housing plan';
+
+  @override
+  String get homeCarSharingPlan => 'Car sharing plan';
 
   @override
   String get homePlaceholderBody =>

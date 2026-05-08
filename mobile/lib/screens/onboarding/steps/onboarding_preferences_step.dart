@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../prefs/app_preferences.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../data/supported_currencies.dart';
+import '../../../widgets/supported_currency_picker_sheet.dart';
 
 class OnboardingPreferencesStep extends StatefulWidget {
   const OnboardingPreferencesStep({
@@ -24,8 +26,28 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
       widget.prefs.distanceUnit ?? DistanceUnit.km;
   late String _timeZonePolicy = widget.prefs.timeZonePolicy;
 
-  static const _currencies = <String>['CAD', 'USD', 'EUR', 'MXN'];
   static const _dateFormats = <String>['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY'];
+
+  late final TextEditingController _currencyField =
+      TextEditingController(text: _currencyLine());
+
+  String _currencyLine() {
+    if (_currency.isEmpty) return '';
+    final opt = supportedCurrencyByCode(_currency);
+    return opt?.displayLine ?? _currency;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _currencyField.text = _currencyLine();
+  }
+
+  @override
+  void dispose() {
+    _currencyField.dispose();
+    super.dispose();
+  }
 
   bool get _canFinish => _currency.isNotEmpty && _dateFormat.isNotEmpty;
 
@@ -42,13 +64,27 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _currency.isEmpty ? null : _currency,
-            decoration: InputDecoration(labelText: l10n.prefsCurrencyLabel),
-            items: _currencies
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (value) => setState(() => _currency = value ?? ''),
+          TextFormField(
+            readOnly: true,
+            controller: _currencyField,
+            decoration: InputDecoration(
+              labelText: l10n.prefsCurrencyLabel,
+              hintText: l10n.prefsCurrencySearchHint,
+              suffixIcon: const Icon(Icons.arrow_drop_down),
+            ),
+            onTap: () async {
+              final code = await showSupportedCurrencyPicker(
+                context,
+                searchHint: l10n.prefsCurrencySearchHint,
+                selectedCode: _currency.isEmpty ? null : _currency,
+              );
+              if (code != null && context.mounted) {
+                setState(() {
+                  _currency = code;
+                  _currencyField.text = _currencyLine();
+                });
+              }
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
