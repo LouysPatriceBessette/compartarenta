@@ -19,13 +19,20 @@ See `docs/legal-and-disputes.md` for transparency on licensing, payment failure 
 ## Getting started (Flutter app)
 
 Prerequisites:
-- Flutter SDK available on your machine
+- A Flutter SDK available on your machine, **or** use the vendored tooling under `tools/`
 
 From the repository root:
 
 ```bash
 cd mobile
 flutter pub get
-flutter run
+flutter run --flavor dev
 ```
+
+Notes:
+- This app defines Android product flavors (`dev`, `staging`, `prod`). Running without `--flavor` can lead to Gradle building `assembleDebug` (no-flavor), which won't produce an APK.
+- Prefer the helper scripts:
+  - `./tool/run_dev.sh`
+  - `./tool/run_staging.sh`
+  - `./tool/run_prod.sh`
 
