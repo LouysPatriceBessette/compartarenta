@@ -7,6 +7,25 @@ The onboarding sequence SHALL communicate, in plain language, that the app helps
 - **WHEN** the user progresses through the first onboarding steps
 - **THEN** they can understand why expense and balance data stays on-device and why peers send proposals, without opening external documentation
 
+### Requirement: Onboarding welcomes the user and sets expectations (trial + privacy)
+At the start of onboarding, the app MUST show a concise welcome message that:
+- thanks the user for trying the app,
+- explains that setup consists of configuring one or more “plans” (e.g., shared housing and/or car sharing),
+- explains the 6-week real-mode trial period,
+- reassures the user that the app does not collect their data,
+- and makes it clear the user can uninstall if they are not satisfied with the conditions.
+
+#### Scenario: User sees concise welcome and privacy reassurance
+- **WHEN** the user opens the app on first launch and onboarding starts
+- **THEN** the first onboarding screen shows a short welcome/trial/privacy message before asking for detailed configuration
+
+### Requirement: Provide an initial concise copy draft
+The specification MUST include an initial concise English copy draft for the welcome message so it can be iterated later.
+
+#### Scenario: Copy exists for later refinement
+- **WHEN** implementers build the first onboarding screen
+- **THEN** they can use the draft copy as an initial baseline and replace/extend it later without changing the flow structure
+
 ### Requirement: Onboarding is structured as a linear or bounded graph with explicit progress
 The onboarding flow SHALL define an ordered set of steps (or a small branching graph) with visible progress (e.g., step indicator or section titles). The user SHALL always understand which step they are on and how to go back when back is allowed.
 
@@ -56,3 +75,15 @@ The onboarding flow SHALL NOT request sensitive OS permissions (e.g., notificati
 #### Scenario: No premature permission dialog
 - **WHEN** the user is on early onboarding slides that do not use a protected capability
 - **THEN** the app does not trigger unrelated OS permission prompts
+
+### Requirement: Welcome message draft copy (initial, concise)
+The app SHALL use the following initial draft copy (English) for the welcome screen, which may be refined later:
+
+“Thanks for trying Compartarenta.
+In the next steps, you’ll configure your sharing plan(s) (shared housing, car sharing, or both) and start a 6‑week real‑mode trial.
+Your data stays on your device—this app does not collect it.
+If these conditions don’t work for you, you can uninstall at any time.”
+
+#### Scenario: Draft copy is shown verbatim initially
+- **WHEN** the onboarding welcome screen is displayed
+- **THEN** the screen shows the draft copy text (or a product-approved refinement) in the user’s selected language

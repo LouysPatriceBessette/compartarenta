@@ -7,6 +7,33 @@ Before or as part of exiting onboarding, the user SHALL be able to set a **displ
 - **WHEN** the product mandates a display name for peer recognition
 - **THEN** the user cannot finish onboarding without providing a non-empty valid display name or an explicitly offered anonymous label option
 
+### Requirement: Initial configuration captures a user avatar selection
+Before finishing onboarding, the user MUST select an avatar image to represent them in peer contexts. For the initial implementation, the app SHALL offer a choice of 20 icons from a predefined collection (placeholder set), and SHALL store the selected avatar identifier (not a raw image file).
+
+#### Scenario: User selects one avatar from 20 choices
+- **WHEN** the user reaches the avatar step during initial configuration
+- **THEN** the app shows 20 selectable avatar icons
+- **THEN** the user must choose exactly one to continue
+
+### Requirement: Initial configuration sets which plan(s) the user is configuring
+The app MUST support configuring shared housing plans only, car-sharing plans only, or both. During initial configuration, the user SHALL choose which plan types they want to set up now, with the ability to add the other later.
+
+#### Scenario: User chooses car sharing only
+- **WHEN** the user selects “Car sharing only” during initial configuration
+- **THEN** the app proceeds to car-sharing plan setup steps and does not require housing plan setup
+
+### Requirement: Initial configuration establishes measurement and regional defaults
+During initial configuration, the app MUST establish defaults for:
+- currency
+- date format
+- distance unit (km vs miles)
+- time zone policy (explicit time zone or device-local semantics)
+Defaults SHOULD be pre-filled from device locale/time zone where possible, and MUST remain editable later in preferences.
+
+#### Scenario: Distance unit defaults from locale with user override
+- **WHEN** the user reaches the measurement preferences step
+- **THEN** the app suggests km or miles based on locale and allows changing it before continuing
+
 ### Requirement: Monetary presentation defaults are set during initial configuration
 The application SHALL establish defaults for how amounts are shown (e.g., **currency** and/or **locale-driven number formatting**) during initial configuration, pre-filled from the device locale where possible, with the user able to change the selection.
 
