@@ -25,7 +25,7 @@ void main() {
 }
 
 GoRouter _testRouter(AppPreferences prefs) {
-  String? redirect(GoRouterState state) {
+  String? redirect(BuildContext context, GoRouterState state) {
     final isOnboarding = state.matchedLocation.startsWith('/onboarding');
     if (prefs.onboardingComplete) {
       return isOnboarding ? '/' : null;

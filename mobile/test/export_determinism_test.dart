@@ -1,5 +1,6 @@
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/export/export_service.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,7 +13,8 @@ void main() {
       PlansCompanion.insert(
         id: 'p2',
         type: 'car',
-        title: 'B',
+        title: drift.Value('B'),
+        currency: drift.Value('CAD'),
         createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       ),
     );
@@ -20,7 +22,8 @@ void main() {
       PlansCompanion.insert(
         id: 'p1',
         type: 'housing',
-        title: 'A',
+        title: drift.Value('A'),
+        currency: drift.Value('CAD'),
         createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       ),
     );

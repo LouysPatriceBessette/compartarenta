@@ -32,7 +32,7 @@ class OnboardingLanguageStep extends StatelessWidget {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String?>(
-                  value: prefs.languageCode,
+                  initialValue: prefs.languageCode,
                   decoration: InputDecoration(labelText: l10n.settingsLanguageTitle),
                   items: [
                     DropdownMenuItem(value: null, child: Text(l10n.languageSystem)),

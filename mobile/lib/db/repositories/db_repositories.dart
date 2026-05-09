@@ -1,4 +1,5 @@
 import '../app_database.dart';
+import 'package:drift/drift.dart' as drift;
 
 class PlansRepository {
   PlansRepository(this._db);
@@ -8,6 +9,7 @@ class PlansRepository {
     required String id,
     required String type,
     required String title,
+    required String currency,
     String? notes,
     required DateTime createdAt,
   }) {
@@ -15,9 +17,10 @@ class PlansRepository {
       PlansCompanion.insert(
         id: id,
         type: type,
-        title: title,
+        title: drift.Value(title),
+        currency: drift.Value(currency),
         createdAt: createdAt,
-        notes: notes == null ? const Value.absent() : Value(notes),
+        notes: notes == null ? const drift.Value.absent() : drift.Value(notes),
       ),
     );
   }

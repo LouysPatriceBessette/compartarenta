@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:compartarenta/db/app_database.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' show QueryExecutor;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -35,7 +35,7 @@ void main() {
     expect(plans.single.id, 'p1');
     expect(plans.single.type, 'housing');
     expect(plans.single.title, 'Test');
-    expect(plans.single.notes, isNull);
+    expect(plans.single.notes, null);
 
     await db.close();
     await executor.close();
@@ -44,6 +44,7 @@ void main() {
 
 /// Test helper to inject an executor.
 class AppDatabaseForTesting extends AppDatabase {
+  // ignore: use_super_parameters
   AppDatabaseForTesting(QueryExecutor e) : super.forTesting(e);
 }
 

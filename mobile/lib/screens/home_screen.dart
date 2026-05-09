@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
                   child: _HomeActionCard(
                     icon: MdiIcons.homeCity,
                     label: l10n.homeHousingPlan,
-                    onTap: () {},
+                    onTap: () => context.push('/housing'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -43,7 +43,7 @@ class HomeScreen extends StatelessWidget {
                   child: _HomeActionCard(
                     icon: MdiIcons.carSide,
                     label: l10n.homeCarSharingPlan,
-                    onTap: () {},
+                    onTap: () => context.push('/car'),
                   ),
                 ),
               ],

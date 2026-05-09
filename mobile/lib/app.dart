@@ -8,6 +8,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
+import 'screens/housing/housing_plan_screen.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/connectivity_banner.dart';
 
@@ -93,6 +94,14 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => SettingsScreen(config: config, prefs: prefs),
+      ),
+      GoRoute(
+        path: '/housing',
+        builder: (context, state) => const HousingPlanScreen(),
+      ),
+      GoRoute(
+        path: '/car',
+        builder: (context, state) => const Scaffold(body: Center(child: Text('Car'))),
       ),
       GoRoute(
         path: '/onboarding/:step',

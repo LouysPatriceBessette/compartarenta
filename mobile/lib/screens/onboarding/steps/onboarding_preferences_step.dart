@@ -88,7 +88,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _dateFormat.isEmpty ? null : _dateFormat,
+            initialValue: _dateFormat.isEmpty ? null : _dateFormat,
             decoration: InputDecoration(labelText: l10n.prefsDateFormatLabel),
             items: _dateFormats
                 .map((f) => DropdownMenuItem(value: f, child: Text(f)))
@@ -97,7 +97,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<DistanceUnit>(
-            value: _distanceUnit,
+            initialValue: _distanceUnit,
             decoration: InputDecoration(labelText: l10n.prefsDistanceUnitLabel),
             items: [
               DropdownMenuItem(value: DistanceUnit.km, child: Text(l10n.prefsDistanceUnitKm)),
@@ -110,7 +110,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _timeZonePolicy,
+            initialValue: _timeZonePolicy,
             decoration: InputDecoration(labelText: l10n.prefsTimeZoneLabel),
             items: [
               DropdownMenuItem(value: 'device', child: Text(l10n.prefsTimeZoneDevice)),
