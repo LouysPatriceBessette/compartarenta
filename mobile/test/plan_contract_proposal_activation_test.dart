@@ -1,5 +1,5 @@
 import 'package:compartarenta/db/app_database.dart';
-import 'package:compartarenta/housing/proposals/plan_contract_proposal_service.dart';
+import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('partial acceptance does not activate a pending revision', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final svc = PlanContractProposalService(db);
+    final svc = PlanAgreementProposalService(db);
 
     // Seed participants (2).
     await db.upsertParticipant(
@@ -38,8 +38,8 @@ void main() {
         notes: const drift.Value.absent(),
       ),
     );
-    await db.upsertContract(
-      AgreementContractsCompanion.insert(
+    await db.upsertAgreement(
+      AgreementsCompanion.insert(
         id: 'c1',
         planId: 'p1',
         periodStart: DateTime.utc(2026, 1, 1),
@@ -57,6 +57,8 @@ void main() {
         title: 'Rent',
         currency: 'CAD',
         amountMinor: drift.Value(1000),
+        recurrenceDayOfMonth: const drift.Value(1),
+        sortOrder: const drift.Value(0),
         createdAt: DateTime.utc(2026, 1, 1),
       ),
     );
@@ -85,7 +87,7 @@ void main() {
 
   test('unanimous acceptance activates the revision', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final svc = PlanContractProposalService(db);
+    final svc = PlanAgreementProposalService(db);
 
     await db.upsertParticipant(
       ParticipantsCompanion.insert(
@@ -114,8 +116,8 @@ void main() {
         notes: const drift.Value.absent(),
       ),
     );
-    await db.upsertContract(
-      AgreementContractsCompanion.insert(
+    await db.upsertAgreement(
+      AgreementsCompanion.insert(
         id: 'c1',
         planId: 'p1',
         periodStart: DateTime.utc(2026, 1, 1),
@@ -133,6 +135,8 @@ void main() {
         title: 'Rent',
         currency: 'CAD',
         amountMinor: drift.Value(1000),
+        recurrenceDayOfMonth: const drift.Value(1),
+        sortOrder: const drift.Value(0),
         createdAt: DateTime.utc(2026, 1, 1),
       ),
     );

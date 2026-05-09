@@ -26,6 +26,9 @@ class AppPreferences extends ChangeNotifier {
   static const _kTimeZonePolicy = 'prefs.timeZonePolicy';
   static const _kLanguageCode = 'prefs.languageCode';
 
+  /// Default housing draft plan reached the post-wizard summary at least once.
+  static const _kHousingDefaultSummaryReached = 'housing.default.summaryReached';
+
   static Future<AppPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
     return AppPreferences._(prefs);
@@ -125,6 +128,14 @@ class AppPreferences extends ChangeNotifier {
       currency.isNotEmpty && dateFormat.isNotEmpty && distanceUnit != null;
   bool get hasPlanSelection => planTypes.isNotEmpty;
 
+  bool get housingDefaultPlanSummaryReached =>
+      _prefs.getBool(_kHousingDefaultSummaryReached) ?? false;
+
+  Future<void> setHousingDefaultPlanSummaryReached(bool value) async {
+    await _prefs.setBool(_kHousingDefaultSummaryReached, value);
+    notifyListeners();
+  }
+
   Future<void> completeOnboarding() async {
     await _prefs.setBool(_kOnboardingComplete, true);
     await _prefs.remove(_kOnboardingStep);
@@ -152,6 +163,8 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kDistanceUnit);
     await _prefs.remove(_kTimeZonePolicy);
     await _prefs.remove(_kLanguageCode);
+
+    await _prefs.remove(_kHousingDefaultSummaryReached);
 
     notifyListeners();
   }

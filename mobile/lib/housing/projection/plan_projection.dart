@@ -1,29 +1,40 @@
 import '../../db/app_database.dart';
 
-/// Projection math for a plan + contract period.
+/// Projection math for a plan + agreement period.
 ///
 /// Assumptions (v1):
 /// - Recurring lines are monthly and multiply by the number of covered months
 ///   (inclusive of both start and end months).
-/// - One-off lines use the midpoint of [minAmountMinor, maxAmountMinor].
+/// - When [PlanLine.amountUsesRange] is true, the midpoint of
+///   [minAmountMinor, maxAmountMinor] is used (recurring: per month, one-off: once).
+/// - When it is false, [amountMinor] is the fixed amount (same semantics).
 /// - Null numeric values are treated as 0.
 class PlanProjection {
+  /// Single period amount in minor units (one month for recurring, total for one-off).
+  static int unitMinor(PlanLine line) {
+    if (line.amountUsesRange) {
+      final minV = line.minAmountMinor ?? 0;
+      final maxV = line.maxAmountMinor ?? 0;
+      return ((minV + maxV) / 2).round();
+    }
+    return line.amountMinor ?? 0;
+  }
+
   static int projectTotalMinor({
     required List<PlanLine> lines,
-    required AgreementContract contract,
+    required Agreement agreement,
     int maxMonths = 120,
   }) {
-    final months = monthsCoveredInclusive(contract.periodStart, contract.periodEnd)
+    final months = monthsCoveredInclusive(agreement.periodStart, agreement.periodEnd)
         .clamp(0, maxMonths);
 
     var total = 0;
     for (final line in lines) {
+      final u = unitMinor(line);
       if (line.isRecurring) {
-        total += (line.amountMinor ?? 0) * months;
+        total += u * months;
       } else {
-        final minV = line.minAmountMinor ?? 0;
-        final maxV = line.maxAmountMinor ?? 0;
-        total += ((minV + maxV) / 2).round();
+        total += u;
       }
     }
     return total;

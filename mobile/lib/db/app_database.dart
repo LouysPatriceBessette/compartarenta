@@ -21,12 +21,26 @@ class PlanLines extends Table {
   TextColumn get currency => text()();
 
   // Amounts stored as integer minor units (e.g., cents).
-  IntColumn get amountMinor => integer().nullable()(); // for recurring fixed
-  IntColumn get minAmountMinor => integer().nullable()(); // for one-off range
-  IntColumn get maxAmountMinor => integer().nullable()(); // for one-off range
+  /// When false: [amountMinor] is the fixed amount (per month if recurring, total if one-off).
+  /// When true: [minAmountMinor] / [maxAmountMinor] define an approximate band (both types).
+  BoolColumn get amountUsesRange =>
+      boolean().withDefault(const Constant(false))();
+
+  IntColumn get amountMinor => integer().nullable()();
+  IntColumn get minAmountMinor => integer().nullable()();
+  IntColumn get maxAmountMinor => integer().nullable()();
+
+  /// Optional longer description for the expense.
+  TextColumn get description => text().withDefault(const Constant(''))();
 
   // Cadence for recurring items (initially monthly only).
   TextColumn get cadence => text().withDefault(const Constant('monthly'))();
+
+  /// Day of month (1–31) when a monthly recurring charge applies.
+  IntColumn get recurrenceDayOfMonth => integer().nullable()();
+
+  /// Display order within the plan (lower first).
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   // Optional group bucket.
   TextColumn get groupId => text().nullable()();
@@ -65,7 +79,11 @@ class PlanRatios extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-class AgreementContracts extends Table {
+@DataClassName('Agreement')
+class Agreements extends Table {
+  @override
+  String get tableName => 'agreement_contracts';
+
   TextColumn get id => text()();
   TextColumn get planId => text()();
 
@@ -79,6 +97,13 @@ class AgreementContracts extends Table {
 
   // Optional flexible clauses (bounded length in UI).
   TextColumn get clauses => text().withDefault(const Constant(''))();
+
+  /// When false: JSON map per participant id -> { minNoticeDays, penaltyMinor }.
+  TextColumn get withdrawalSameForAll =>
+      text().withDefault(const Constant('true'))();
+
+  TextColumn get withdrawalPerParticipantJson =>
+      text().withDefault(const Constant('{}'))();
 
   // Versioning for renegotiation later.
   IntColumn get version => integer().withDefault(const Constant(1))();
@@ -167,7 +192,7 @@ class ProposalResponses extends Table {
   PlanLines,
   PlanGroups,
   PlanRatios,
-  AgreementContracts,
+  Agreements,
   ProposalPackages,
   ProposalRevisions,
   ProposalResponses,
@@ -177,7 +202,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -194,12 +219,43 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(planGroups);
             await m.createTable(planLines);
             await m.createTable(planRatios);
-            await m.createTable(agreementContracts);
+            await m.createTable(agreements);
           }
           if (from < 4) {
             await m.createTable(proposalPackages);
             await m.createTable(proposalRevisions);
             await m.createTable(proposalResponses);
+          }
+          if (from < 5) {
+            await m.addColumn(planLines, planLines.recurrenceDayOfMonth);
+            await m.addColumn(planLines, planLines.sortOrder);
+            await m.addColumn(agreements, agreements.withdrawalSameForAll);
+            await m.addColumn(agreements, agreements.withdrawalPerParticipantJson);
+          }
+          if (from < 6) {
+            await m.addColumn(planLines, planLines.amountUsesRange);
+            await m.addColumn(planLines, planLines.description);
+            await customStatement(
+              '''
+              UPDATE plan_lines
+              SET amount_uses_range = CASE
+                WHEN is_recurring = 0
+                    AND IFNULL(min_amount_minor, -1) != IFNULL(max_amount_minor, -2)
+                THEN 1
+                ELSE 0
+              END
+              ''',
+            );
+            await customStatement(
+              '''
+              UPDATE plan_lines
+              SET amount_minor = min_amount_minor
+              WHERE is_recurring = 0
+                AND amount_uses_range = 0
+                AND amount_minor IS NULL
+                AND min_amount_minor IS NOT NULL
+              ''',
+            );
           }
         },
         beforeOpen: (details) async {
@@ -214,18 +270,93 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Plan>> listPlans() =>
       (select(plans)..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
 
-  Future<void> upsertContract(AgreementContractsCompanion contract) =>
-      into(agreementContracts).insertOnConflictUpdate(contract);
+  Future<void> upsertAgreement(AgreementsCompanion row) =>
+      into(agreements).insertOnConflictUpdate(row);
 
-  Future<AgreementContract?> getContractForPlan(String planId) =>
-      (select(agreementContracts)..where((t) => t.planId.equals(planId)))
-          .getSingleOrNull();
+  Future<Agreement?> getAgreementForPlan(String planId) async {
+    final rows = await (select(agreements)
+          ..where((t) => t.planId.equals(planId))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.version),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
+        .get();
+    if (rows.isEmpty) return null;
+    if (rows.length == 1) return rows.first;
+
+    // `getSingleOrNull` throws when more than one row matches. Duplicates can
+    // appear if older inserts used a different primary key than upserts.
+    final canonicalId = 'agreement:$planId';
+    Agreement? canonicalRow;
+    for (final r in rows) {
+      if (r.id == canonicalId) {
+        canonicalRow = r;
+        break;
+      }
+    }
+    final keep = canonicalRow ?? rows.first;
+
+    await batch((b) {
+      for (final r in rows) {
+        if (r.id != keep.id) {
+          b.deleteWhere(agreements, (t) => t.id.equals(r.id));
+        }
+      }
+    });
+    return keep;
+  }
 
   Future<void> upsertPlanLine(PlanLinesCompanion line) =>
       into(planLines).insertOnConflictUpdate(line);
 
-  Future<List<PlanLine>> listPlanLines(String planId) =>
-      (select(planLines)..where((t) => t.planId.equals(planId))).get();
+  Future<List<PlanLine>> listPlanLines(String planId) => (select(planLines)
+        ..where((t) => t.planId.equals(planId))
+        ..orderBy([
+          (t) => OrderingTerm.asc(t.sortOrder),
+          (t) => OrderingTerm.asc(t.createdAt),
+        ]))
+      .get();
+
+  Future<void> upsertPlanRatio(PlanRatiosCompanion row) =>
+      into(planRatios).insertOnConflictUpdate(row);
+
+  Future<List<PlanRatio>> listPlanRatios(String planId) =>
+      (select(planRatios)..where((t) => t.planId.equals(planId))).get();
+
+  /// Deletes plan lines, ratios, agreement, groups, proposal state, and
+  /// participants whose ids start with `planId:p` (housing draft roster).
+  Future<void> deletePlanRelatedData(String planId) async {
+    await transaction(() async {
+      final pkgs = await (select(proposalPackages)
+            ..where((t) => t.planId.equals(planId)))
+          .get();
+      for (final pkg in pkgs) {
+        final revs = await (select(proposalRevisions)
+              ..where((t) => t.packageId.equals(pkg.id)))
+            .get();
+        for (final r in revs) {
+          await (delete(proposalResponses)
+                ..where((t) => t.revisionId.equals(r.id)))
+              .go();
+        }
+        await (delete(proposalRevisions)
+              ..where((t) => t.packageId.equals(pkg.id)))
+            .go();
+        await (delete(proposalPackages)..where((t) => t.id.equals(pkg.id))).go();
+      }
+      await (delete(planRatios)..where((t) => t.planId.equals(planId))).go();
+      await (delete(planLines)..where((t) => t.planId.equals(planId))).go();
+      await (delete(agreements)..where((t) => t.planId.equals(planId))).go();
+      await (delete(planGroups)..where((t) => t.planId.equals(planId))).go();
+
+      final all = await listParticipants();
+      for (final p in all) {
+        if (p.id.startsWith('$planId:p') || p.id == '$planId:self') {
+          await (delete(participants)..where((t) => t.id.equals(p.id))).go();
+        }
+      }
+    });
+  }
 
   Future<void> upsertParticipant(ParticipantsCompanion participant) =>
       into(participants).insertOnConflictUpdate(participant);

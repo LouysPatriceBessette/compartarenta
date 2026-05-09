@@ -775,6 +775,21 @@ class $PlanLinesTable extends PlanLines
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _amountUsesRangeMeta = const VerificationMeta(
+    'amountUsesRange',
+  );
+  @override
+  late final GeneratedColumn<bool> amountUsesRange = GeneratedColumn<bool>(
+    'amount_uses_range',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("amount_uses_range" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _amountMinorMeta = const VerificationMeta(
     'amountMinor',
   );
@@ -808,6 +823,18 @@ class $PlanLinesTable extends PlanLines
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _cadenceMeta = const VerificationMeta(
     'cadence',
   );
@@ -819,6 +846,28 @@ class $PlanLinesTable extends PlanLines
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     defaultValue: const Constant('monthly'),
+  );
+  static const VerificationMeta _recurrenceDayOfMonthMeta =
+      const VerificationMeta('recurrenceDayOfMonth');
+  @override
+  late final GeneratedColumn<int> recurrenceDayOfMonth = GeneratedColumn<int>(
+    'recurrence_day_of_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _groupIdMeta = const VerificationMeta(
     'groupId',
@@ -849,10 +898,14 @@ class $PlanLinesTable extends PlanLines
     isRecurring,
     title,
     currency,
+    amountUsesRange,
     amountMinor,
     minAmountMinor,
     maxAmountMinor,
+    description,
     cadence,
+    recurrenceDayOfMonth,
+    sortOrder,
     groupId,
     createdAt,
   ];
@@ -908,6 +961,15 @@ class $PlanLinesTable extends PlanLines
     } else if (isInserting) {
       context.missing(_currencyMeta);
     }
+    if (data.containsKey('amount_uses_range')) {
+      context.handle(
+        _amountUsesRangeMeta,
+        amountUsesRange.isAcceptableOrUnknown(
+          data['amount_uses_range']!,
+          _amountUsesRangeMeta,
+        ),
+      );
+    }
     if (data.containsKey('amount_minor')) {
       context.handle(
         _amountMinorMeta,
@@ -935,10 +997,34 @@ class $PlanLinesTable extends PlanLines
         ),
       );
     }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
     if (data.containsKey('cadence')) {
       context.handle(
         _cadenceMeta,
         cadence.isAcceptableOrUnknown(data['cadence']!, _cadenceMeta),
+      );
+    }
+    if (data.containsKey('recurrence_day_of_month')) {
+      context.handle(
+        _recurrenceDayOfMonthMeta,
+        recurrenceDayOfMonth.isAcceptableOrUnknown(
+          data['recurrence_day_of_month']!,
+          _recurrenceDayOfMonthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
     if (data.containsKey('group_id')) {
@@ -984,6 +1070,10 @@ class $PlanLinesTable extends PlanLines
         DriftSqlType.string,
         data['${effectivePrefix}currency'],
       )!,
+      amountUsesRange: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}amount_uses_range'],
+      )!,
       amountMinor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}amount_minor'],
@@ -996,9 +1086,21 @@ class $PlanLinesTable extends PlanLines
         DriftSqlType.int,
         data['${effectivePrefix}max_amount_minor'],
       ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
       cadence: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}cadence'],
+      )!,
+      recurrenceDayOfMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recurrence_day_of_month'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
       )!,
       groupId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1023,10 +1125,23 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
   final bool isRecurring;
   final String title;
   final String currency;
+
+  /// When false: [amountMinor] is the fixed amount (per month if recurring, total if one-off).
+  /// When true: [minAmountMinor] / [maxAmountMinor] define an approximate band (both types).
+  final bool amountUsesRange;
   final int? amountMinor;
   final int? minAmountMinor;
   final int? maxAmountMinor;
+
+  /// Optional longer description for the expense.
+  final String description;
   final String cadence;
+
+  /// Day of month (1–31) when a monthly recurring charge applies.
+  final int? recurrenceDayOfMonth;
+
+  /// Display order within the plan (lower first).
+  final int sortOrder;
   final String? groupId;
   final DateTime createdAt;
   const PlanLine({
@@ -1035,10 +1150,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     required this.isRecurring,
     required this.title,
     required this.currency,
+    required this.amountUsesRange,
     this.amountMinor,
     this.minAmountMinor,
     this.maxAmountMinor,
+    required this.description,
     required this.cadence,
+    this.recurrenceDayOfMonth,
+    required this.sortOrder,
     this.groupId,
     required this.createdAt,
   });
@@ -1050,6 +1169,7 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     map['is_recurring'] = Variable<bool>(isRecurring);
     map['title'] = Variable<String>(title);
     map['currency'] = Variable<String>(currency);
+    map['amount_uses_range'] = Variable<bool>(amountUsesRange);
     if (!nullToAbsent || amountMinor != null) {
       map['amount_minor'] = Variable<int>(amountMinor);
     }
@@ -1059,7 +1179,12 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     if (!nullToAbsent || maxAmountMinor != null) {
       map['max_amount_minor'] = Variable<int>(maxAmountMinor);
     }
+    map['description'] = Variable<String>(description);
     map['cadence'] = Variable<String>(cadence);
+    if (!nullToAbsent || recurrenceDayOfMonth != null) {
+      map['recurrence_day_of_month'] = Variable<int>(recurrenceDayOfMonth);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
     if (!nullToAbsent || groupId != null) {
       map['group_id'] = Variable<String>(groupId);
     }
@@ -1074,6 +1199,7 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       isRecurring: Value(isRecurring),
       title: Value(title),
       currency: Value(currency),
+      amountUsesRange: Value(amountUsesRange),
       amountMinor: amountMinor == null && nullToAbsent
           ? const Value.absent()
           : Value(amountMinor),
@@ -1083,7 +1209,12 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       maxAmountMinor: maxAmountMinor == null && nullToAbsent
           ? const Value.absent()
           : Value(maxAmountMinor),
+      description: Value(description),
       cadence: Value(cadence),
+      recurrenceDayOfMonth: recurrenceDayOfMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceDayOfMonth),
+      sortOrder: Value(sortOrder),
       groupId: groupId == null && nullToAbsent
           ? const Value.absent()
           : Value(groupId),
@@ -1102,10 +1233,16 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       isRecurring: serializer.fromJson<bool>(json['isRecurring']),
       title: serializer.fromJson<String>(json['title']),
       currency: serializer.fromJson<String>(json['currency']),
+      amountUsesRange: serializer.fromJson<bool>(json['amountUsesRange']),
       amountMinor: serializer.fromJson<int?>(json['amountMinor']),
       minAmountMinor: serializer.fromJson<int?>(json['minAmountMinor']),
       maxAmountMinor: serializer.fromJson<int?>(json['maxAmountMinor']),
+      description: serializer.fromJson<String>(json['description']),
       cadence: serializer.fromJson<String>(json['cadence']),
+      recurrenceDayOfMonth: serializer.fromJson<int?>(
+        json['recurrenceDayOfMonth'],
+      ),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
       groupId: serializer.fromJson<String?>(json['groupId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1119,10 +1256,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       'isRecurring': serializer.toJson<bool>(isRecurring),
       'title': serializer.toJson<String>(title),
       'currency': serializer.toJson<String>(currency),
+      'amountUsesRange': serializer.toJson<bool>(amountUsesRange),
       'amountMinor': serializer.toJson<int?>(amountMinor),
       'minAmountMinor': serializer.toJson<int?>(minAmountMinor),
       'maxAmountMinor': serializer.toJson<int?>(maxAmountMinor),
+      'description': serializer.toJson<String>(description),
       'cadence': serializer.toJson<String>(cadence),
+      'recurrenceDayOfMonth': serializer.toJson<int?>(recurrenceDayOfMonth),
+      'sortOrder': serializer.toJson<int>(sortOrder),
       'groupId': serializer.toJson<String?>(groupId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1134,10 +1275,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     bool? isRecurring,
     String? title,
     String? currency,
+    bool? amountUsesRange,
     Value<int?> amountMinor = const Value.absent(),
     Value<int?> minAmountMinor = const Value.absent(),
     Value<int?> maxAmountMinor = const Value.absent(),
+    String? description,
     String? cadence,
+    Value<int?> recurrenceDayOfMonth = const Value.absent(),
+    int? sortOrder,
     Value<String?> groupId = const Value.absent(),
     DateTime? createdAt,
   }) => PlanLine(
@@ -1146,6 +1291,7 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     isRecurring: isRecurring ?? this.isRecurring,
     title: title ?? this.title,
     currency: currency ?? this.currency,
+    amountUsesRange: amountUsesRange ?? this.amountUsesRange,
     amountMinor: amountMinor.present ? amountMinor.value : this.amountMinor,
     minAmountMinor: minAmountMinor.present
         ? minAmountMinor.value
@@ -1153,7 +1299,12 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     maxAmountMinor: maxAmountMinor.present
         ? maxAmountMinor.value
         : this.maxAmountMinor,
+    description: description ?? this.description,
     cadence: cadence ?? this.cadence,
+    recurrenceDayOfMonth: recurrenceDayOfMonth.present
+        ? recurrenceDayOfMonth.value
+        : this.recurrenceDayOfMonth,
+    sortOrder: sortOrder ?? this.sortOrder,
     groupId: groupId.present ? groupId.value : this.groupId,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -1166,6 +1317,9 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           : this.isRecurring,
       title: data.title.present ? data.title.value : this.title,
       currency: data.currency.present ? data.currency.value : this.currency,
+      amountUsesRange: data.amountUsesRange.present
+          ? data.amountUsesRange.value
+          : this.amountUsesRange,
       amountMinor: data.amountMinor.present
           ? data.amountMinor.value
           : this.amountMinor,
@@ -1175,7 +1329,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       maxAmountMinor: data.maxAmountMinor.present
           ? data.maxAmountMinor.value
           : this.maxAmountMinor,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       cadence: data.cadence.present ? data.cadence.value : this.cadence,
+      recurrenceDayOfMonth: data.recurrenceDayOfMonth.present
+          ? data.recurrenceDayOfMonth.value
+          : this.recurrenceDayOfMonth,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -1189,10 +1350,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           ..write('isRecurring: $isRecurring, ')
           ..write('title: $title, ')
           ..write('currency: $currency, ')
+          ..write('amountUsesRange: $amountUsesRange, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('minAmountMinor: $minAmountMinor, ')
           ..write('maxAmountMinor: $maxAmountMinor, ')
+          ..write('description: $description, ')
           ..write('cadence: $cadence, ')
+          ..write('recurrenceDayOfMonth: $recurrenceDayOfMonth, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('groupId: $groupId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1206,10 +1371,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     isRecurring,
     title,
     currency,
+    amountUsesRange,
     amountMinor,
     minAmountMinor,
     maxAmountMinor,
+    description,
     cadence,
+    recurrenceDayOfMonth,
+    sortOrder,
     groupId,
     createdAt,
   );
@@ -1222,10 +1391,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           other.isRecurring == this.isRecurring &&
           other.title == this.title &&
           other.currency == this.currency &&
+          other.amountUsesRange == this.amountUsesRange &&
           other.amountMinor == this.amountMinor &&
           other.minAmountMinor == this.minAmountMinor &&
           other.maxAmountMinor == this.maxAmountMinor &&
+          other.description == this.description &&
           other.cadence == this.cadence &&
+          other.recurrenceDayOfMonth == this.recurrenceDayOfMonth &&
+          other.sortOrder == this.sortOrder &&
           other.groupId == this.groupId &&
           other.createdAt == this.createdAt);
 }
@@ -1236,10 +1409,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
   final Value<bool> isRecurring;
   final Value<String> title;
   final Value<String> currency;
+  final Value<bool> amountUsesRange;
   final Value<int?> amountMinor;
   final Value<int?> minAmountMinor;
   final Value<int?> maxAmountMinor;
+  final Value<String> description;
   final Value<String> cadence;
+  final Value<int?> recurrenceDayOfMonth;
+  final Value<int> sortOrder;
   final Value<String?> groupId;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -1249,10 +1426,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     this.isRecurring = const Value.absent(),
     this.title = const Value.absent(),
     this.currency = const Value.absent(),
+    this.amountUsesRange = const Value.absent(),
     this.amountMinor = const Value.absent(),
     this.minAmountMinor = const Value.absent(),
     this.maxAmountMinor = const Value.absent(),
+    this.description = const Value.absent(),
     this.cadence = const Value.absent(),
+    this.recurrenceDayOfMonth = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.groupId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1263,10 +1444,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     required bool isRecurring,
     required String title,
     required String currency,
+    this.amountUsesRange = const Value.absent(),
     this.amountMinor = const Value.absent(),
     this.minAmountMinor = const Value.absent(),
     this.maxAmountMinor = const Value.absent(),
+    this.description = const Value.absent(),
     this.cadence = const Value.absent(),
+    this.recurrenceDayOfMonth = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.groupId = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -1282,10 +1467,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     Expression<bool>? isRecurring,
     Expression<String>? title,
     Expression<String>? currency,
+    Expression<bool>? amountUsesRange,
     Expression<int>? amountMinor,
     Expression<int>? minAmountMinor,
     Expression<int>? maxAmountMinor,
+    Expression<String>? description,
     Expression<String>? cadence,
+    Expression<int>? recurrenceDayOfMonth,
+    Expression<int>? sortOrder,
     Expression<String>? groupId,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -1296,10 +1485,15 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
       if (isRecurring != null) 'is_recurring': isRecurring,
       if (title != null) 'title': title,
       if (currency != null) 'currency': currency,
+      if (amountUsesRange != null) 'amount_uses_range': amountUsesRange,
       if (amountMinor != null) 'amount_minor': amountMinor,
       if (minAmountMinor != null) 'min_amount_minor': minAmountMinor,
       if (maxAmountMinor != null) 'max_amount_minor': maxAmountMinor,
+      if (description != null) 'description': description,
       if (cadence != null) 'cadence': cadence,
+      if (recurrenceDayOfMonth != null)
+        'recurrence_day_of_month': recurrenceDayOfMonth,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (groupId != null) 'group_id': groupId,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -1312,10 +1506,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     Value<bool>? isRecurring,
     Value<String>? title,
     Value<String>? currency,
+    Value<bool>? amountUsesRange,
     Value<int?>? amountMinor,
     Value<int?>? minAmountMinor,
     Value<int?>? maxAmountMinor,
+    Value<String>? description,
     Value<String>? cadence,
+    Value<int?>? recurrenceDayOfMonth,
+    Value<int>? sortOrder,
     Value<String?>? groupId,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -1326,10 +1524,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
       isRecurring: isRecurring ?? this.isRecurring,
       title: title ?? this.title,
       currency: currency ?? this.currency,
+      amountUsesRange: amountUsesRange ?? this.amountUsesRange,
       amountMinor: amountMinor ?? this.amountMinor,
       minAmountMinor: minAmountMinor ?? this.minAmountMinor,
       maxAmountMinor: maxAmountMinor ?? this.maxAmountMinor,
+      description: description ?? this.description,
       cadence: cadence ?? this.cadence,
+      recurrenceDayOfMonth: recurrenceDayOfMonth ?? this.recurrenceDayOfMonth,
+      sortOrder: sortOrder ?? this.sortOrder,
       groupId: groupId ?? this.groupId,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -1354,6 +1556,9 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     if (currency.present) {
       map['currency'] = Variable<String>(currency.value);
     }
+    if (amountUsesRange.present) {
+      map['amount_uses_range'] = Variable<bool>(amountUsesRange.value);
+    }
     if (amountMinor.present) {
       map['amount_minor'] = Variable<int>(amountMinor.value);
     }
@@ -1363,8 +1568,19 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     if (maxAmountMinor.present) {
       map['max_amount_minor'] = Variable<int>(maxAmountMinor.value);
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
     if (cadence.present) {
       map['cadence'] = Variable<String>(cadence.value);
+    }
+    if (recurrenceDayOfMonth.present) {
+      map['recurrence_day_of_month'] = Variable<int>(
+        recurrenceDayOfMonth.value,
+      );
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     if (groupId.present) {
       map['group_id'] = Variable<String>(groupId.value);
@@ -1386,10 +1602,14 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
           ..write('isRecurring: $isRecurring, ')
           ..write('title: $title, ')
           ..write('currency: $currency, ')
+          ..write('amountUsesRange: $amountUsesRange, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('minAmountMinor: $minAmountMinor, ')
           ..write('maxAmountMinor: $maxAmountMinor, ')
+          ..write('description: $description, ')
           ..write('cadence: $cadence, ')
+          ..write('recurrenceDayOfMonth: $recurrenceDayOfMonth, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('groupId: $groupId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -2169,12 +2389,12 @@ class PlanRatiosCompanion extends UpdateCompanion<PlanRatio> {
   }
 }
 
-class $AgreementContractsTable extends AgreementContracts
-    with TableInfo<$AgreementContractsTable, AgreementContract> {
+class $AgreementsTable extends Agreements
+    with TableInfo<$AgreementsTable, Agreement> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $AgreementContractsTable(this.attachedDatabase, [this._alias]);
+  $AgreementsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -2251,6 +2471,30 @@ class $AgreementContractsTable extends AgreementContracts
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _withdrawalSameForAllMeta =
+      const VerificationMeta('withdrawalSameForAll');
+  @override
+  late final GeneratedColumn<String> withdrawalSameForAll =
+      GeneratedColumn<String>(
+        'withdrawal_same_for_all',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('true'),
+      );
+  static const VerificationMeta _withdrawalPerParticipantJsonMeta =
+      const VerificationMeta('withdrawalPerParticipantJson');
+  @override
+  late final GeneratedColumn<String> withdrawalPerParticipantJson =
+      GeneratedColumn<String>(
+        'withdrawal_per_participant_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -2283,6 +2527,8 @@ class $AgreementContractsTable extends AgreementContracts
     minNoticeDays,
     penaltyMinor,
     clauses,
+    withdrawalSameForAll,
+    withdrawalPerParticipantJson,
     version,
     createdAt,
   ];
@@ -2293,7 +2539,7 @@ class $AgreementContractsTable extends AgreementContracts
   static const String $name = 'agreement_contracts';
   @override
   VerificationContext validateIntegrity(
-    Insertable<AgreementContract> instance, {
+    Insertable<Agreement> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2354,6 +2600,24 @@ class $AgreementContractsTable extends AgreementContracts
         clauses.isAcceptableOrUnknown(data['clauses']!, _clausesMeta),
       );
     }
+    if (data.containsKey('withdrawal_same_for_all')) {
+      context.handle(
+        _withdrawalSameForAllMeta,
+        withdrawalSameForAll.isAcceptableOrUnknown(
+          data['withdrawal_same_for_all']!,
+          _withdrawalSameForAllMeta,
+        ),
+      );
+    }
+    if (data.containsKey('withdrawal_per_participant_json')) {
+      context.handle(
+        _withdrawalPerParticipantJsonMeta,
+        withdrawalPerParticipantJson.isAcceptableOrUnknown(
+          data['withdrawal_per_participant_json']!,
+          _withdrawalPerParticipantJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -2374,9 +2638,9 @@ class $AgreementContractsTable extends AgreementContracts
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  AgreementContract map(Map<String, dynamic> data, {String? tablePrefix}) {
+  Agreement map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AgreementContract(
+    return Agreement(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -2405,6 +2669,14 @@ class $AgreementContractsTable extends AgreementContracts
         DriftSqlType.string,
         data['${effectivePrefix}clauses'],
       )!,
+      withdrawalSameForAll: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}withdrawal_same_for_all'],
+      )!,
+      withdrawalPerParticipantJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}withdrawal_per_participant_json'],
+      )!,
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -2417,13 +2689,12 @@ class $AgreementContractsTable extends AgreementContracts
   }
 
   @override
-  $AgreementContractsTable createAlias(String alias) {
-    return $AgreementContractsTable(attachedDatabase, alias);
+  $AgreementsTable createAlias(String alias) {
+    return $AgreementsTable(attachedDatabase, alias);
   }
 }
 
-class AgreementContract extends DataClass
-    implements Insertable<AgreementContract> {
+class Agreement extends DataClass implements Insertable<Agreement> {
   final String id;
   final String planId;
   final DateTime periodStart;
@@ -2431,9 +2702,13 @@ class AgreementContract extends DataClass
   final int minNoticeDays;
   final int penaltyMinor;
   final String clauses;
+
+  /// When false: JSON map per participant id -> { minNoticeDays, penaltyMinor }.
+  final String withdrawalSameForAll;
+  final String withdrawalPerParticipantJson;
   final int version;
   final DateTime createdAt;
-  const AgreementContract({
+  const Agreement({
     required this.id,
     required this.planId,
     required this.periodStart,
@@ -2441,6 +2716,8 @@ class AgreementContract extends DataClass
     required this.minNoticeDays,
     required this.penaltyMinor,
     required this.clauses,
+    required this.withdrawalSameForAll,
+    required this.withdrawalPerParticipantJson,
     required this.version,
     required this.createdAt,
   });
@@ -2454,13 +2731,17 @@ class AgreementContract extends DataClass
     map['min_notice_days'] = Variable<int>(minNoticeDays);
     map['penalty_minor'] = Variable<int>(penaltyMinor);
     map['clauses'] = Variable<String>(clauses);
+    map['withdrawal_same_for_all'] = Variable<String>(withdrawalSameForAll);
+    map['withdrawal_per_participant_json'] = Variable<String>(
+      withdrawalPerParticipantJson,
+    );
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
-  AgreementContractsCompanion toCompanion(bool nullToAbsent) {
-    return AgreementContractsCompanion(
+  AgreementsCompanion toCompanion(bool nullToAbsent) {
+    return AgreementsCompanion(
       id: Value(id),
       planId: Value(planId),
       periodStart: Value(periodStart),
@@ -2468,17 +2749,19 @@ class AgreementContract extends DataClass
       minNoticeDays: Value(minNoticeDays),
       penaltyMinor: Value(penaltyMinor),
       clauses: Value(clauses),
+      withdrawalSameForAll: Value(withdrawalSameForAll),
+      withdrawalPerParticipantJson: Value(withdrawalPerParticipantJson),
       version: Value(version),
       createdAt: Value(createdAt),
     );
   }
 
-  factory AgreementContract.fromJson(
+  factory Agreement.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AgreementContract(
+    return Agreement(
       id: serializer.fromJson<String>(json['id']),
       planId: serializer.fromJson<String>(json['planId']),
       periodStart: serializer.fromJson<DateTime>(json['periodStart']),
@@ -2486,6 +2769,12 @@ class AgreementContract extends DataClass
       minNoticeDays: serializer.fromJson<int>(json['minNoticeDays']),
       penaltyMinor: serializer.fromJson<int>(json['penaltyMinor']),
       clauses: serializer.fromJson<String>(json['clauses']),
+      withdrawalSameForAll: serializer.fromJson<String>(
+        json['withdrawalSameForAll'],
+      ),
+      withdrawalPerParticipantJson: serializer.fromJson<String>(
+        json['withdrawalPerParticipantJson'],
+      ),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -2501,12 +2790,16 @@ class AgreementContract extends DataClass
       'minNoticeDays': serializer.toJson<int>(minNoticeDays),
       'penaltyMinor': serializer.toJson<int>(penaltyMinor),
       'clauses': serializer.toJson<String>(clauses),
+      'withdrawalSameForAll': serializer.toJson<String>(withdrawalSameForAll),
+      'withdrawalPerParticipantJson': serializer.toJson<String>(
+        withdrawalPerParticipantJson,
+      ),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  AgreementContract copyWith({
+  Agreement copyWith({
     String? id,
     String? planId,
     DateTime? periodStart,
@@ -2514,9 +2807,11 @@ class AgreementContract extends DataClass
     int? minNoticeDays,
     int? penaltyMinor,
     String? clauses,
+    String? withdrawalSameForAll,
+    String? withdrawalPerParticipantJson,
     int? version,
     DateTime? createdAt,
-  }) => AgreementContract(
+  }) => Agreement(
     id: id ?? this.id,
     planId: planId ?? this.planId,
     periodStart: periodStart ?? this.periodStart,
@@ -2524,11 +2819,14 @@ class AgreementContract extends DataClass
     minNoticeDays: minNoticeDays ?? this.minNoticeDays,
     penaltyMinor: penaltyMinor ?? this.penaltyMinor,
     clauses: clauses ?? this.clauses,
+    withdrawalSameForAll: withdrawalSameForAll ?? this.withdrawalSameForAll,
+    withdrawalPerParticipantJson:
+        withdrawalPerParticipantJson ?? this.withdrawalPerParticipantJson,
     version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
   );
-  AgreementContract copyWithCompanion(AgreementContractsCompanion data) {
-    return AgreementContract(
+  Agreement copyWithCompanion(AgreementsCompanion data) {
+    return Agreement(
       id: data.id.present ? data.id.value : this.id,
       planId: data.planId.present ? data.planId.value : this.planId,
       periodStart: data.periodStart.present
@@ -2542,6 +2840,12 @@ class AgreementContract extends DataClass
           ? data.penaltyMinor.value
           : this.penaltyMinor,
       clauses: data.clauses.present ? data.clauses.value : this.clauses,
+      withdrawalSameForAll: data.withdrawalSameForAll.present
+          ? data.withdrawalSameForAll.value
+          : this.withdrawalSameForAll,
+      withdrawalPerParticipantJson: data.withdrawalPerParticipantJson.present
+          ? data.withdrawalPerParticipantJson.value
+          : this.withdrawalPerParticipantJson,
       version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -2549,7 +2853,7 @@ class AgreementContract extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('AgreementContract(')
+    return (StringBuffer('Agreement(')
           ..write('id: $id, ')
           ..write('planId: $planId, ')
           ..write('periodStart: $periodStart, ')
@@ -2557,6 +2861,10 @@ class AgreementContract extends DataClass
           ..write('minNoticeDays: $minNoticeDays, ')
           ..write('penaltyMinor: $penaltyMinor, ')
           ..write('clauses: $clauses, ')
+          ..write('withdrawalSameForAll: $withdrawalSameForAll, ')
+          ..write(
+            'withdrawalPerParticipantJson: $withdrawalPerParticipantJson, ',
+          )
           ..write('version: $version, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2572,13 +2880,15 @@ class AgreementContract extends DataClass
     minNoticeDays,
     penaltyMinor,
     clauses,
+    withdrawalSameForAll,
+    withdrawalPerParticipantJson,
     version,
     createdAt,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is AgreementContract &&
+      (other is Agreement &&
           other.id == this.id &&
           other.planId == this.planId &&
           other.periodStart == this.periodStart &&
@@ -2586,11 +2896,14 @@ class AgreementContract extends DataClass
           other.minNoticeDays == this.minNoticeDays &&
           other.penaltyMinor == this.penaltyMinor &&
           other.clauses == this.clauses &&
+          other.withdrawalSameForAll == this.withdrawalSameForAll &&
+          other.withdrawalPerParticipantJson ==
+              this.withdrawalPerParticipantJson &&
           other.version == this.version &&
           other.createdAt == this.createdAt);
 }
 
-class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
+class AgreementsCompanion extends UpdateCompanion<Agreement> {
   final Value<String> id;
   final Value<String> planId;
   final Value<DateTime> periodStart;
@@ -2598,10 +2911,12 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
   final Value<int> minNoticeDays;
   final Value<int> penaltyMinor;
   final Value<String> clauses;
+  final Value<String> withdrawalSameForAll;
+  final Value<String> withdrawalPerParticipantJson;
   final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
-  const AgreementContractsCompanion({
+  const AgreementsCompanion({
     this.id = const Value.absent(),
     this.planId = const Value.absent(),
     this.periodStart = const Value.absent(),
@@ -2609,11 +2924,13 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
     this.minNoticeDays = const Value.absent(),
     this.penaltyMinor = const Value.absent(),
     this.clauses = const Value.absent(),
+    this.withdrawalSameForAll = const Value.absent(),
+    this.withdrawalPerParticipantJson = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  AgreementContractsCompanion.insert({
+  AgreementsCompanion.insert({
     required String id,
     required String planId,
     required DateTime periodStart,
@@ -2621,6 +2938,8 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
     this.minNoticeDays = const Value.absent(),
     this.penaltyMinor = const Value.absent(),
     this.clauses = const Value.absent(),
+    this.withdrawalSameForAll = const Value.absent(),
+    this.withdrawalPerParticipantJson = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -2629,7 +2948,7 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
        periodStart = Value(periodStart),
        periodEnd = Value(periodEnd),
        createdAt = Value(createdAt);
-  static Insertable<AgreementContract> custom({
+  static Insertable<Agreement> custom({
     Expression<String>? id,
     Expression<String>? planId,
     Expression<DateTime>? periodStart,
@@ -2637,6 +2956,8 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
     Expression<int>? minNoticeDays,
     Expression<int>? penaltyMinor,
     Expression<String>? clauses,
+    Expression<String>? withdrawalSameForAll,
+    Expression<String>? withdrawalPerParticipantJson,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -2649,13 +2970,17 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
       if (minNoticeDays != null) 'min_notice_days': minNoticeDays,
       if (penaltyMinor != null) 'penalty_minor': penaltyMinor,
       if (clauses != null) 'clauses': clauses,
+      if (withdrawalSameForAll != null)
+        'withdrawal_same_for_all': withdrawalSameForAll,
+      if (withdrawalPerParticipantJson != null)
+        'withdrawal_per_participant_json': withdrawalPerParticipantJson,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  AgreementContractsCompanion copyWith({
+  AgreementsCompanion copyWith({
     Value<String>? id,
     Value<String>? planId,
     Value<DateTime>? periodStart,
@@ -2663,11 +2988,13 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
     Value<int>? minNoticeDays,
     Value<int>? penaltyMinor,
     Value<String>? clauses,
+    Value<String>? withdrawalSameForAll,
+    Value<String>? withdrawalPerParticipantJson,
     Value<int>? version,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
-    return AgreementContractsCompanion(
+    return AgreementsCompanion(
       id: id ?? this.id,
       planId: planId ?? this.planId,
       periodStart: periodStart ?? this.periodStart,
@@ -2675,6 +3002,9 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
       minNoticeDays: minNoticeDays ?? this.minNoticeDays,
       penaltyMinor: penaltyMinor ?? this.penaltyMinor,
       clauses: clauses ?? this.clauses,
+      withdrawalSameForAll: withdrawalSameForAll ?? this.withdrawalSameForAll,
+      withdrawalPerParticipantJson:
+          withdrawalPerParticipantJson ?? this.withdrawalPerParticipantJson,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -2705,6 +3035,16 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
     if (clauses.present) {
       map['clauses'] = Variable<String>(clauses.value);
     }
+    if (withdrawalSameForAll.present) {
+      map['withdrawal_same_for_all'] = Variable<String>(
+        withdrawalSameForAll.value,
+      );
+    }
+    if (withdrawalPerParticipantJson.present) {
+      map['withdrawal_per_participant_json'] = Variable<String>(
+        withdrawalPerParticipantJson.value,
+      );
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -2719,7 +3059,7 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
 
   @override
   String toString() {
-    return (StringBuffer('AgreementContractsCompanion(')
+    return (StringBuffer('AgreementsCompanion(')
           ..write('id: $id, ')
           ..write('planId: $planId, ')
           ..write('periodStart: $periodStart, ')
@@ -2727,6 +3067,10 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
           ..write('minNoticeDays: $minNoticeDays, ')
           ..write('penaltyMinor: $penaltyMinor, ')
           ..write('clauses: $clauses, ')
+          ..write('withdrawalSameForAll: $withdrawalSameForAll, ')
+          ..write(
+            'withdrawalPerParticipantJson: $withdrawalPerParticipantJson, ',
+          )
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -3936,8 +4280,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlanLinesTable planLines = $PlanLinesTable(this);
   late final $PlanGroupsTable planGroups = $PlanGroupsTable(this);
   late final $PlanRatiosTable planRatios = $PlanRatiosTable(this);
-  late final $AgreementContractsTable agreementContracts =
-      $AgreementContractsTable(this);
+  late final $AgreementsTable agreements = $AgreementsTable(this);
   late final $ProposalPackagesTable proposalPackages = $ProposalPackagesTable(
     this,
   );
@@ -3955,7 +4298,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     planLines,
     planGroups,
     planRatios,
-    agreementContracts,
+    agreements,
     proposalPackages,
     proposalRevisions,
     proposalResponses,
@@ -4364,10 +4707,14 @@ typedef $$PlanLinesTableCreateCompanionBuilder =
       required bool isRecurring,
       required String title,
       required String currency,
+      Value<bool> amountUsesRange,
       Value<int?> amountMinor,
       Value<int?> minAmountMinor,
       Value<int?> maxAmountMinor,
+      Value<String> description,
       Value<String> cadence,
+      Value<int?> recurrenceDayOfMonth,
+      Value<int> sortOrder,
       Value<String?> groupId,
       required DateTime createdAt,
       Value<int> rowid,
@@ -4379,10 +4726,14 @@ typedef $$PlanLinesTableUpdateCompanionBuilder =
       Value<bool> isRecurring,
       Value<String> title,
       Value<String> currency,
+      Value<bool> amountUsesRange,
       Value<int?> amountMinor,
       Value<int?> minAmountMinor,
       Value<int?> maxAmountMinor,
+      Value<String> description,
       Value<String> cadence,
+      Value<int?> recurrenceDayOfMonth,
+      Value<int> sortOrder,
       Value<String?> groupId,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -4422,6 +4773,11 @@ class $$PlanLinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get amountUsesRange => $composableBuilder(
+    column: $table.amountUsesRange,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get amountMinor => $composableBuilder(
     column: $table.amountMinor,
     builder: (column) => ColumnFilters(column),
@@ -4437,8 +4793,23 @@ class $$PlanLinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get cadence => $composableBuilder(
     column: $table.cadence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get recurrenceDayOfMonth => $composableBuilder(
+    column: $table.recurrenceDayOfMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4487,6 +4858,11 @@ class $$PlanLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get amountUsesRange => $composableBuilder(
+    column: $table.amountUsesRange,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get amountMinor => $composableBuilder(
     column: $table.amountMinor,
     builder: (column) => ColumnOrderings(column),
@@ -4502,8 +4878,23 @@ class $$PlanLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get cadence => $composableBuilder(
     column: $table.cadence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get recurrenceDayOfMonth => $composableBuilder(
+    column: $table.recurrenceDayOfMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4544,6 +4935,11 @@ class $$PlanLinesTableAnnotationComposer
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
 
+  GeneratedColumn<bool> get amountUsesRange => $composableBuilder(
+    column: $table.amountUsesRange,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get amountMinor => $composableBuilder(
     column: $table.amountMinor,
     builder: (column) => column,
@@ -4559,8 +4955,21 @@ class $$PlanLinesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get cadence =>
       $composableBuilder(column: $table.cadence, builder: (column) => column);
+
+  GeneratedColumn<int> get recurrenceDayOfMonth => $composableBuilder(
+    column: $table.recurrenceDayOfMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   GeneratedColumn<String> get groupId =>
       $composableBuilder(column: $table.groupId, builder: (column) => column);
@@ -4602,10 +5011,14 @@ class $$PlanLinesTableTableManager
                 Value<bool> isRecurring = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> currency = const Value.absent(),
+                Value<bool> amountUsesRange = const Value.absent(),
                 Value<int?> amountMinor = const Value.absent(),
                 Value<int?> minAmountMinor = const Value.absent(),
                 Value<int?> maxAmountMinor = const Value.absent(),
+                Value<String> description = const Value.absent(),
                 Value<String> cadence = const Value.absent(),
+                Value<int?> recurrenceDayOfMonth = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4615,10 +5028,14 @@ class $$PlanLinesTableTableManager
                 isRecurring: isRecurring,
                 title: title,
                 currency: currency,
+                amountUsesRange: amountUsesRange,
                 amountMinor: amountMinor,
                 minAmountMinor: minAmountMinor,
                 maxAmountMinor: maxAmountMinor,
+                description: description,
                 cadence: cadence,
+                recurrenceDayOfMonth: recurrenceDayOfMonth,
+                sortOrder: sortOrder,
                 groupId: groupId,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -4630,10 +5047,14 @@ class $$PlanLinesTableTableManager
                 required bool isRecurring,
                 required String title,
                 required String currency,
+                Value<bool> amountUsesRange = const Value.absent(),
                 Value<int?> amountMinor = const Value.absent(),
                 Value<int?> minAmountMinor = const Value.absent(),
                 Value<int?> maxAmountMinor = const Value.absent(),
+                Value<String> description = const Value.absent(),
                 Value<String> cadence = const Value.absent(),
+                Value<int?> recurrenceDayOfMonth = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
@@ -4643,10 +5064,14 @@ class $$PlanLinesTableTableManager
                 isRecurring: isRecurring,
                 title: title,
                 currency: currency,
+                amountUsesRange: amountUsesRange,
                 amountMinor: amountMinor,
                 minAmountMinor: minAmountMinor,
                 maxAmountMinor: maxAmountMinor,
+                description: description,
                 cadence: cadence,
+                recurrenceDayOfMonth: recurrenceDayOfMonth,
+                sortOrder: sortOrder,
                 groupId: groupId,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -5088,8 +5513,8 @@ typedef $$PlanRatiosTableProcessedTableManager =
       PlanRatio,
       PrefetchHooks Function()
     >;
-typedef $$AgreementContractsTableCreateCompanionBuilder =
-    AgreementContractsCompanion Function({
+typedef $$AgreementsTableCreateCompanionBuilder =
+    AgreementsCompanion Function({
       required String id,
       required String planId,
       required DateTime periodStart,
@@ -5097,12 +5522,14 @@ typedef $$AgreementContractsTableCreateCompanionBuilder =
       Value<int> minNoticeDays,
       Value<int> penaltyMinor,
       Value<String> clauses,
+      Value<String> withdrawalSameForAll,
+      Value<String> withdrawalPerParticipantJson,
       Value<int> version,
       required DateTime createdAt,
       Value<int> rowid,
     });
-typedef $$AgreementContractsTableUpdateCompanionBuilder =
-    AgreementContractsCompanion Function({
+typedef $$AgreementsTableUpdateCompanionBuilder =
+    AgreementsCompanion Function({
       Value<String> id,
       Value<String> planId,
       Value<DateTime> periodStart,
@@ -5110,14 +5537,16 @@ typedef $$AgreementContractsTableUpdateCompanionBuilder =
       Value<int> minNoticeDays,
       Value<int> penaltyMinor,
       Value<String> clauses,
+      Value<String> withdrawalSameForAll,
+      Value<String> withdrawalPerParticipantJson,
       Value<int> version,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
 
-class $$AgreementContractsTableFilterComposer
-    extends Composer<_$AppDatabase, $AgreementContractsTable> {
-  $$AgreementContractsTableFilterComposer({
+class $$AgreementsTableFilterComposer
+    extends Composer<_$AppDatabase, $AgreementsTable> {
+  $$AgreementsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5159,6 +5588,16 @@ class $$AgreementContractsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get withdrawalSameForAll => $composableBuilder(
+    column: $table.withdrawalSameForAll,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get withdrawalPerParticipantJson => $composableBuilder(
+    column: $table.withdrawalPerParticipantJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnFilters(column),
@@ -5170,9 +5609,9 @@ class $$AgreementContractsTableFilterComposer
   );
 }
 
-class $$AgreementContractsTableOrderingComposer
-    extends Composer<_$AppDatabase, $AgreementContractsTable> {
-  $$AgreementContractsTableOrderingComposer({
+class $$AgreementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AgreementsTable> {
+  $$AgreementsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5214,6 +5653,17 @@ class $$AgreementContractsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get withdrawalSameForAll => $composableBuilder(
+    column: $table.withdrawalSameForAll,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get withdrawalPerParticipantJson =>
+      $composableBuilder(
+        column: $table.withdrawalPerParticipantJson,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -5225,9 +5675,9 @@ class $$AgreementContractsTableOrderingComposer
   );
 }
 
-class $$AgreementContractsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $AgreementContractsTable> {
-  $$AgreementContractsTableAnnotationComposer({
+class $$AgreementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AgreementsTable> {
+  $$AgreementsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5261,6 +5711,17 @@ class $$AgreementContractsTableAnnotationComposer
   GeneratedColumn<String> get clauses =>
       $composableBuilder(column: $table.clauses, builder: (column) => column);
 
+  GeneratedColumn<String> get withdrawalSameForAll => $composableBuilder(
+    column: $table.withdrawalSameForAll,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get withdrawalPerParticipantJson =>
+      $composableBuilder(
+        column: $table.withdrawalPerParticipantJson,
+        builder: (column) => column,
+      );
+
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
@@ -5268,44 +5729,35 @@ class $$AgreementContractsTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$AgreementContractsTableTableManager
+class $$AgreementsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $AgreementContractsTable,
-          AgreementContract,
-          $$AgreementContractsTableFilterComposer,
-          $$AgreementContractsTableOrderingComposer,
-          $$AgreementContractsTableAnnotationComposer,
-          $$AgreementContractsTableCreateCompanionBuilder,
-          $$AgreementContractsTableUpdateCompanionBuilder,
+          $AgreementsTable,
+          Agreement,
+          $$AgreementsTableFilterComposer,
+          $$AgreementsTableOrderingComposer,
+          $$AgreementsTableAnnotationComposer,
+          $$AgreementsTableCreateCompanionBuilder,
+          $$AgreementsTableUpdateCompanionBuilder,
           (
-            AgreementContract,
-            BaseReferences<
-              _$AppDatabase,
-              $AgreementContractsTable,
-              AgreementContract
-            >,
+            Agreement,
+            BaseReferences<_$AppDatabase, $AgreementsTable, Agreement>,
           ),
-          AgreementContract,
+          Agreement,
           PrefetchHooks Function()
         > {
-  $$AgreementContractsTableTableManager(
-    _$AppDatabase db,
-    $AgreementContractsTable table,
-  ) : super(
+  $$AgreementsTableTableManager(_$AppDatabase db, $AgreementsTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$AgreementContractsTableFilterComposer($db: db, $table: table),
+              $$AgreementsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$AgreementContractsTableOrderingComposer($db: db, $table: table),
+              $$AgreementsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$AgreementContractsTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$AgreementsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -5315,10 +5767,13 @@ class $$AgreementContractsTableTableManager
                 Value<int> minNoticeDays = const Value.absent(),
                 Value<int> penaltyMinor = const Value.absent(),
                 Value<String> clauses = const Value.absent(),
+                Value<String> withdrawalSameForAll = const Value.absent(),
+                Value<String> withdrawalPerParticipantJson =
+                    const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => AgreementContractsCompanion(
+              }) => AgreementsCompanion(
                 id: id,
                 planId: planId,
                 periodStart: periodStart,
@@ -5326,6 +5781,8 @@ class $$AgreementContractsTableTableManager
                 minNoticeDays: minNoticeDays,
                 penaltyMinor: penaltyMinor,
                 clauses: clauses,
+                withdrawalSameForAll: withdrawalSameForAll,
+                withdrawalPerParticipantJson: withdrawalPerParticipantJson,
                 version: version,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -5339,10 +5796,13 @@ class $$AgreementContractsTableTableManager
                 Value<int> minNoticeDays = const Value.absent(),
                 Value<int> penaltyMinor = const Value.absent(),
                 Value<String> clauses = const Value.absent(),
+                Value<String> withdrawalSameForAll = const Value.absent(),
+                Value<String> withdrawalPerParticipantJson =
+                    const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
-              }) => AgreementContractsCompanion.insert(
+              }) => AgreementsCompanion.insert(
                 id: id,
                 planId: planId,
                 periodStart: periodStart,
@@ -5350,6 +5810,8 @@ class $$AgreementContractsTableTableManager
                 minNoticeDays: minNoticeDays,
                 penaltyMinor: penaltyMinor,
                 clauses: clauses,
+                withdrawalSameForAll: withdrawalSameForAll,
+                withdrawalPerParticipantJson: withdrawalPerParticipantJson,
                 version: version,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -5362,25 +5824,18 @@ class $$AgreementContractsTableTableManager
       );
 }
 
-typedef $$AgreementContractsTableProcessedTableManager =
+typedef $$AgreementsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $AgreementContractsTable,
-      AgreementContract,
-      $$AgreementContractsTableFilterComposer,
-      $$AgreementContractsTableOrderingComposer,
-      $$AgreementContractsTableAnnotationComposer,
-      $$AgreementContractsTableCreateCompanionBuilder,
-      $$AgreementContractsTableUpdateCompanionBuilder,
-      (
-        AgreementContract,
-        BaseReferences<
-          _$AppDatabase,
-          $AgreementContractsTable,
-          AgreementContract
-        >,
-      ),
-      AgreementContract,
+      $AgreementsTable,
+      Agreement,
+      $$AgreementsTableFilterComposer,
+      $$AgreementsTableOrderingComposer,
+      $$AgreementsTableAnnotationComposer,
+      $$AgreementsTableCreateCompanionBuilder,
+      $$AgreementsTableUpdateCompanionBuilder,
+      (Agreement, BaseReferences<_$AppDatabase, $AgreementsTable, Agreement>),
+      Agreement,
       PrefetchHooks Function()
     >;
 typedef $$ProposalPackagesTableCreateCompanionBuilder =
@@ -6064,8 +6519,8 @@ class $AppDatabaseManager {
       $$PlanGroupsTableTableManager(_db, _db.planGroups);
   $$PlanRatiosTableTableManager get planRatios =>
       $$PlanRatiosTableTableManager(_db, _db.planRatios);
-  $$AgreementContractsTableTableManager get agreementContracts =>
-      $$AgreementContractsTableTableManager(_db, _db.agreementContracts);
+  $$AgreementsTableTableManager get agreements =>
+      $$AgreementsTableTableManager(_db, _db.agreements);
   $$ProposalPackagesTableTableManager get proposalPackages =>
       $$ProposalPackagesTableTableManager(_db, _db.proposalPackages);
   $$ProposalRevisionsTableTableManager get proposalRevisions =>

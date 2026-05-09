@@ -4,17 +4,15 @@ import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
 
-/// Local-only proposal/renegotiation support.
+/// Local-only proposal / renegotiation support (sync layer TBD).
 ///
-/// This is a stepping stone toward sync-backed proposals:
-/// - We persist self-contained proposal package revisions (payload JSON).
-/// - We persist per-participant responses.
-/// - We activate a revision only when unanimity is reached.
-class PlanContractProposalService {
-  PlanContractProposalService(this._db);
+/// Persists self-contained proposal package revisions (payload JSON),
+/// per-participant responses, and activates a revision only on unanimity.
+class PlanAgreementProposalService {
+  PlanAgreementProposalService(this._db);
   final AppDatabase _db;
 
-  static const String kind = 'expensePlanContractProposal';
+  static const String kind = 'expensePlanAgreementProposal';
 
   Future<String> ensurePackageForPlan(String planId) async {
     final existing = await (_db.select(_db.proposalPackages)
@@ -44,9 +42,9 @@ class PlanContractProposalService {
 
     final plan = await (_db.select(_db.plans)..where((t) => t.id.equals(planId)))
         .getSingle();
-    final contract = await _db.getContractForPlan(planId);
-    if (contract == null) {
-      throw StateError('No contract found for plan $planId');
+    final agreement = await _db.getAgreementForPlan(planId);
+    if (agreement == null) {
+      throw StateError('No agreement found for plan $planId');
     }
     final lines = await _db.listPlanLines(planId);
     final ratios = await (_db.select(_db.planRatios)
@@ -78,14 +76,15 @@ class PlanContractProposalService {
             {
               'id': l.id,
               'title': l.title,
+              'description': l.description,
               'currency': l.currency,
-              if (l.isRecurring)
-                'recurring': {'cadence': l.cadence, 'amountMinor': l.amountMinor ?? 0}
-              else
-                'oneOff': {
-                  'minAmountMinor': l.minAmountMinor ?? 0,
-                  'maxAmountMinor': l.maxAmountMinor ?? 0,
-                },
+              'isRecurring': l.isRecurring,
+              'amountUsesRange': l.amountUsesRange,
+              'amountMinor': l.amountMinor,
+              'minAmountMinor': l.minAmountMinor,
+              'maxAmountMinor': l.maxAmountMinor,
+              'cadence': l.cadence,
+              'recurrenceDayOfMonth': l.recurrenceDayOfMonth,
               if (l.groupId != null) 'groupId': l.groupId,
             }
         ],
@@ -99,13 +98,15 @@ class PlanContractProposalService {
             }
         ],
       },
-      'contract': {
-        'version': contract.version,
-        'periodStart': contract.periodStart.toIso8601String(),
-        'periodEnd': contract.periodEnd.toIso8601String(),
-        'minNoticeDays': contract.minNoticeDays,
-        'penalty': {'currency': plan.currency, 'amountMinor': contract.penaltyMinor},
-        'clauses': contract.clauses,
+      'agreement': {
+        'version': agreement.version,
+        'periodStart': agreement.periodStart.toIso8601String(),
+        'periodEnd': agreement.periodEnd.toIso8601String(),
+        'minNoticeDays': agreement.minNoticeDays,
+        'penalty': {'currency': plan.currency, 'amountMinor': agreement.penaltyMinor},
+        'clauses': agreement.clauses,
+        'withdrawalSameForAll': agreement.withdrawalSameForAll,
+        'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
       },
     };
 
@@ -127,7 +128,6 @@ class PlanContractProposalService {
             pendingRevisionId: drift.Value(revisionId),
           ));
 
-      // Proposer implicitly accepts locally.
       await recordResponse(
         revisionId: revisionId,
         participantId: proposerParticipantId,
@@ -201,4 +201,3 @@ enum ProposalResponseStatus {
   accepted,
   rejected,
 }
-

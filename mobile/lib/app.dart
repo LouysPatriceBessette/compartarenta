@@ -97,7 +97,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       ),
       GoRoute(
         path: '/housing',
-        builder: (context, state) => const HousingPlanScreen(),
+        builder: (context, state) => HousingPlanScreen(prefs: prefs),
       ),
       GoRoute(
         path: '/car',
