@@ -22,6 +22,14 @@ During the trial, the application SHALL notify participants that they must purch
 - **WHEN** the trial has 4 days remaining (inclusive) through day 1 remaining
 - **THEN** the app notifies participants daily until trial end
 
+### Requirement: Payment messaging is reassuring and not intrusive
+Any trial and licensing messaging MUST be clear and reassuring, and MUST avoid aggressive or game-like purchase prompts. The app SHOULD centralize purchase actions in a single licensing screen (or “Data & Licensing management” area) rather than scattering purchase prompts across unrelated workflows.
+
+#### Scenario: Notification links to a single licensing screen
+- **WHEN** a user taps a trial reminder notification
+- **THEN** the app navigates to the licensing screen that explains the trial status and next steps
+- **THEN** the app does not present unrelated paywalls or pop-ups during normal feature use
+
 ### Requirement: Trial end gates plan operation unless all required licenses are paid
 At the end of the 6-week trial, full plan operation SHALL require that all participants linked to that plan have valid paid licenses (per `per-participant-licenses-and-plan-renewal`).
 

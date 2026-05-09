@@ -12,3 +12,19 @@ The repository SHALL include an English documentation page describing the app’
 - **WHEN** the repository is public
 - **THEN** `README.md` links to the legal/disclosures page
 
+### Requirement: Disclose platform-managed payments and “In-App Purchases” labeling
+The product documentation and in-app licensing screen MUST disclose that payments (licenses/subscriptions) are processed by the platform stores (Apple App Store / Google Play) and that the store listing may label this as “In‑App Purchases”. This disclosure MUST be written in reassuring language to reduce user anxiety about payments and data handling.
+
+#### Scenario: Licensing screen reassures users about payments and data
+- **WHEN** a user opens the licensing/trial screen
+- **THEN** the screen explains that payment processing is handled by Apple/Google
+- **THEN** the screen reassures that user operational data stays on-device and is not collected for advertising
+
+### Requirement: Avoid scattered purchase prompts
+The app MUST NOT present purchase prompts in unrelated contexts (e.g., random dialogs across the app) and SHOULD present purchase actions only in a dedicated licensing area (Settings or Data Management).
+
+#### Scenario: Purchase action appears only in the dedicated area
+- **WHEN** a user navigates the app during trial
+- **THEN** purchase actions are reachable from the licensing area
+- **THEN** the user is not repeatedly interrupted by purchase pop-ups
+
