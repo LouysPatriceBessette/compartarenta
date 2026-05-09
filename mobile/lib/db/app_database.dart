@@ -116,6 +116,51 @@ class Participants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class ProposalPackages extends Table {
+  TextColumn get id => text()(); // stable id
+  TextColumn get planId => text()();
+
+  // Active revision becomes binding only after unanimous acceptance.
+  TextColumn get activeRevisionId => text().nullable()();
+
+  // Current pending revision (if any).
+  TextColumn get pendingRevisionId => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProposalRevisions extends Table {
+  TextColumn get id => text()(); // unique per revision
+  TextColumn get packageId => text()();
+  TextColumn get contentHash => text()(); // normalized content hash string
+  TextColumn get proposerParticipantId => text()();
+
+  // Self-contained proposal payload (JSON string for now).
+  TextColumn get payloadJson => text()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class ProposalResponses extends Table {
+  TextColumn get id => text()();
+  TextColumn get revisionId => text()();
+  TextColumn get participantId => text()();
+
+  // 'pending' | 'accepted' | 'rejected'
+  TextColumn get status => text()();
+
+  DateTimeColumn get respondedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Plans,
   Participants,
@@ -123,13 +168,16 @@ class Participants extends Table {
   PlanGroups,
   PlanRatios,
   AgreementContracts,
+  ProposalPackages,
+  ProposalRevisions,
+  ProposalResponses,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -147,6 +195,11 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(planLines);
             await m.createTable(planRatios);
             await m.createTable(agreementContracts);
+          }
+          if (from < 4) {
+            await m.createTable(proposalPackages);
+            await m.createTable(proposalRevisions);
+            await m.createTable(proposalResponses);
           }
         },
         beforeOpen: (details) async {

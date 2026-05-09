@@ -11,10 +11,10 @@
 
 ## 3. Sync and consensus
 
-- [ ] 3.1 Define wire payloads for “plan + contract package” proposals and unanimous acceptance tracking.
-- [ ] 3.2 Implement renegotiation flow: version bumps, pending vs active contract, rollback when not unanimous.
+- [x] 3.1 Define wire payloads for “plan + contract package” proposals and unanimous acceptance tracking.
+- [x] 3.2 Implement renegotiation flow: version bumps, pending vs active contract, rollback when not unanimous.
 
 ## 4. Tests
 
-- [ ] 4.1 Unit tests for projection math given ratios, recurring schedule, and min/max one-offs (document assumptions).
-- [ ] 4.2 Tests that partial acceptance does not activate a new contract version.
+- [x] 4.1 Unit tests for projection math given ratios, recurring schedule, and min/max one-offs (document assumptions).
+- [x] 4.2 Tests that partial acceptance does not activate a new contract version.

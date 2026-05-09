@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
+import '../../housing/projection/plan_projection.dart';
+import '../../housing/proposals/plan_contract_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 
 class HousingPlanScreen extends StatefulWidget {
@@ -13,9 +15,12 @@ class HousingPlanScreen extends StatefulWidget {
 
 class _HousingPlanScreenState extends State<HousingPlanScreen> {
   late final AppDatabase _db = AppDatabase();
+  late final PlanContractProposalService _proposals =
+      PlanContractProposalService(_db);
 
   static const _planId = 'housing:default';
   static const _contractId = 'contract:housing:default';
+  static const _localParticipantId = 'local';
 
   @override
   void dispose() {
@@ -73,6 +78,48 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   Stream<AgreementContract?> _watchContract() => (_db.select(_db.agreementContracts)
         ..where((t) => t.planId.equals(_planId)))
       .watchSingleOrNull();
+
+  Stream<ProposalPackage?> _watchProposalPackage() => (_db.select(_db.proposalPackages)
+        ..where((t) => t.planId.equals(_planId)))
+      .watchSingleOrNull();
+
+  Stream<List<ProposalResponse>> _watchResponses(String revisionId) =>
+      (_db.select(_db.proposalResponses)
+            ..where((t) => t.revisionId.equals(revisionId)))
+          .watch();
+
+  Future<void> _proposeCurrent() async {
+    await _ensureSeed();
+    await _db.upsertParticipant(
+      ParticipantsCompanion.insert(
+        id: _localParticipantId,
+        displayName: 'Local',
+        avatarId: 'mdi:local',
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+    await _proposals.createRevisionFromCurrentDraft(
+      planId: _planId,
+      proposerParticipantId: _localParticipantId,
+    );
+  }
+
+  Future<void> _respondToPending({
+    required ProposalResponseStatus status,
+    required String revisionId,
+  }) async {
+    await _proposals.recordResponse(
+      revisionId: revisionId,
+      participantId: _localParticipantId,
+      status: status,
+    );
+    final participants = await _db.listParticipants();
+    await _proposals.tryActivateIfUnanimous(
+      planId: _planId,
+      revisionId: revisionId,
+      participantIds: participants.map((p) => p.id).toList(),
+    );
+  }
 
   Future<void> _addOrEditLine({PlanLine? existing}) async {
     final result = await showDialog<_LineDraft>(
@@ -162,6 +209,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         onAdd: () => _addOrEditLine(),
                         onEdit: (line) => _addOrEditLine(existing: line),
                         onDelete: _deleteLine,
+                        onPropose: _proposeCurrent,
+                        proposalPackage: _watchProposalPackage(),
+                        responsesForRevision: _watchResponses,
+                        onRespond: _respondToPending,
                       ),
                       _ContractTab(
                         contract: _watchContract(),
@@ -193,12 +244,24 @@ class _PlanTab extends StatelessWidget {
     required this.onAdd,
     required this.onEdit,
     required this.onDelete,
+    required this.onPropose,
+    required this.proposalPackage,
+    required this.responsesForRevision,
+    required this.onRespond,
   });
 
   final Stream<List<PlanLine>> lines;
   final VoidCallback onAdd;
   final void Function(PlanLine line) onEdit;
   final void Function(PlanLine line) onDelete;
+  final Future<void> Function() onPropose;
+  final Stream<ProposalPackage?> proposalPackage;
+  final Stream<List<ProposalResponse>> Function(String revisionId)
+      responsesForRevision;
+  final Future<void> Function({
+    required ProposalResponseStatus status,
+    required String revisionId,
+  }) onRespond;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +280,80 @@ class _PlanTab extends StatelessWidget {
             const SizedBox(height: 8),
             if (missing)
               const Text('Add at least one line item to start.'),
+            StreamBuilder(
+              stream: proposalPackage,
+              builder: (context, AsyncSnapshot<ProposalPackage?> ps) {
+                final pkg = ps.data;
+                final pending = pkg?.pendingRevisionId;
+                final active = pkg?.activeRevisionId;
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Proposal status',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 6),
+                        Text('Active revision: ${active ?? '—'}'),
+                        Text('Pending revision: ${pending ?? '—'}'),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            FilledButton(
+                              onPressed: onPropose,
+                              child: const Text('Propose current draft'),
+                            ),
+                            const SizedBox(width: 8),
+                            if (pending != null) ...[
+                              OutlinedButton(
+                                onPressed: () => onRespond(
+                                  status: ProposalResponseStatus.accepted,
+                                  revisionId: pending,
+                                ),
+                                child: const Text('Accept'),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton(
+                                onPressed: () => onRespond(
+                                  status: ProposalResponseStatus.rejected,
+                                  revisionId: pending,
+                                ),
+                                child: const Text('Reject'),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (pending != null) ...[
+                          const SizedBox(height: 8),
+                          StreamBuilder(
+                            stream: responsesForRevision(pending),
+                            builder: (context,
+                                AsyncSnapshot<List<ProposalResponse>> rs) {
+                              final responses =
+                                  rs.data ?? const <ProposalResponse>[];
+                              if (responses.isEmpty) {
+                                return const Text('No responses yet.');
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Responses:'),
+                                  for (final r in responses)
+                                    Text('${r.participantId}: ${r.status}'),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
             for (final line in items)
               Card(
                 child: ListTile(
@@ -340,7 +477,7 @@ class _PreviewTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Projected total (single participant placeholder): ${_projectTotal(items, c) / 100}',
+                    'Projected total (single participant placeholder): ${PlanProjection.projectTotalMinor(lines: items, contract: c) / 100}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -350,27 +487,6 @@ class _PreviewTab extends StatelessWidget {
         );
       },
     );
-  }
-
-  int _projectTotal(List<PlanLine> lines, AgreementContract c) {
-    final months = _monthsBetween(c.periodStart, c.periodEnd).clamp(0, 120);
-    var total = 0;
-    for (final line in lines) {
-      if (line.isRecurring) {
-        total += (line.amountMinor ?? 0) * months;
-      } else {
-        final minV = line.minAmountMinor ?? 0;
-        final maxV = line.maxAmountMinor ?? 0;
-        total += ((minV + maxV) / 2).round(); // midpoint assumption
-      }
-    }
-    return total;
-  }
-
-  int _monthsBetween(DateTime a, DateTime b) {
-    final start = DateTime(a.year, a.month);
-    final end = DateTime(b.year, b.month);
-    return (end.year - start.year) * 12 + (end.month - start.month) + 1;
   }
 }
 

@@ -2735,6 +2735,1199 @@ class AgreementContractsCompanion extends UpdateCompanion<AgreementContract> {
   }
 }
 
+class $ProposalPackagesTable extends ProposalPackages
+    with TableInfo<$ProposalPackagesTable, ProposalPackage> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProposalPackagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _activeRevisionIdMeta = const VerificationMeta(
+    'activeRevisionId',
+  );
+  @override
+  late final GeneratedColumn<String> activeRevisionId = GeneratedColumn<String>(
+    'active_revision_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pendingRevisionIdMeta = const VerificationMeta(
+    'pendingRevisionId',
+  );
+  @override
+  late final GeneratedColumn<String> pendingRevisionId =
+      GeneratedColumn<String>(
+        'pending_revision_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    activeRevisionId,
+    pendingRevisionId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'proposal_packages';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProposalPackage> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('active_revision_id')) {
+      context.handle(
+        _activeRevisionIdMeta,
+        activeRevisionId.isAcceptableOrUnknown(
+          data['active_revision_id']!,
+          _activeRevisionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_revision_id')) {
+      context.handle(
+        _pendingRevisionIdMeta,
+        pendingRevisionId.isAcceptableOrUnknown(
+          data['pending_revision_id']!,
+          _pendingRevisionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProposalPackage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProposalPackage(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      activeRevisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}active_revision_id'],
+      ),
+      pendingRevisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pending_revision_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ProposalPackagesTable createAlias(String alias) {
+    return $ProposalPackagesTable(attachedDatabase, alias);
+  }
+}
+
+class ProposalPackage extends DataClass implements Insertable<ProposalPackage> {
+  final String id;
+  final String planId;
+  final String? activeRevisionId;
+  final String? pendingRevisionId;
+  final DateTime createdAt;
+  const ProposalPackage({
+    required this.id,
+    required this.planId,
+    this.activeRevisionId,
+    this.pendingRevisionId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    if (!nullToAbsent || activeRevisionId != null) {
+      map['active_revision_id'] = Variable<String>(activeRevisionId);
+    }
+    if (!nullToAbsent || pendingRevisionId != null) {
+      map['pending_revision_id'] = Variable<String>(pendingRevisionId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ProposalPackagesCompanion toCompanion(bool nullToAbsent) {
+    return ProposalPackagesCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      activeRevisionId: activeRevisionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activeRevisionId),
+      pendingRevisionId: pendingRevisionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pendingRevisionId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ProposalPackage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProposalPackage(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      activeRevisionId: serializer.fromJson<String?>(json['activeRevisionId']),
+      pendingRevisionId: serializer.fromJson<String?>(
+        json['pendingRevisionId'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'activeRevisionId': serializer.toJson<String?>(activeRevisionId),
+      'pendingRevisionId': serializer.toJson<String?>(pendingRevisionId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ProposalPackage copyWith({
+    String? id,
+    String? planId,
+    Value<String?> activeRevisionId = const Value.absent(),
+    Value<String?> pendingRevisionId = const Value.absent(),
+    DateTime? createdAt,
+  }) => ProposalPackage(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    activeRevisionId: activeRevisionId.present
+        ? activeRevisionId.value
+        : this.activeRevisionId,
+    pendingRevisionId: pendingRevisionId.present
+        ? pendingRevisionId.value
+        : this.pendingRevisionId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ProposalPackage copyWithCompanion(ProposalPackagesCompanion data) {
+    return ProposalPackage(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      activeRevisionId: data.activeRevisionId.present
+          ? data.activeRevisionId.value
+          : this.activeRevisionId,
+      pendingRevisionId: data.pendingRevisionId.present
+          ? data.pendingRevisionId.value
+          : this.pendingRevisionId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalPackage(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('activeRevisionId: $activeRevisionId, ')
+          ..write('pendingRevisionId: $pendingRevisionId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, planId, activeRevisionId, pendingRevisionId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProposalPackage &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.activeRevisionId == this.activeRevisionId &&
+          other.pendingRevisionId == this.pendingRevisionId &&
+          other.createdAt == this.createdAt);
+}
+
+class ProposalPackagesCompanion extends UpdateCompanion<ProposalPackage> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String?> activeRevisionId;
+  final Value<String?> pendingRevisionId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const ProposalPackagesCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.activeRevisionId = const Value.absent(),
+    this.pendingRevisionId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProposalPackagesCompanion.insert({
+    required String id,
+    required String planId,
+    this.activeRevisionId = const Value.absent(),
+    this.pendingRevisionId = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       createdAt = Value(createdAt);
+  static Insertable<ProposalPackage> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? activeRevisionId,
+    Expression<String>? pendingRevisionId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (activeRevisionId != null) 'active_revision_id': activeRevisionId,
+      if (pendingRevisionId != null) 'pending_revision_id': pendingRevisionId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProposalPackagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String?>? activeRevisionId,
+    Value<String?>? pendingRevisionId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return ProposalPackagesCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      activeRevisionId: activeRevisionId ?? this.activeRevisionId,
+      pendingRevisionId: pendingRevisionId ?? this.pendingRevisionId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (activeRevisionId.present) {
+      map['active_revision_id'] = Variable<String>(activeRevisionId.value);
+    }
+    if (pendingRevisionId.present) {
+      map['pending_revision_id'] = Variable<String>(pendingRevisionId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalPackagesCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('activeRevisionId: $activeRevisionId, ')
+          ..write('pendingRevisionId: $pendingRevisionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProposalRevisionsTable extends ProposalRevisions
+    with TableInfo<$ProposalRevisionsTable, ProposalRevision> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProposalRevisionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _packageIdMeta = const VerificationMeta(
+    'packageId',
+  );
+  @override
+  late final GeneratedColumn<String> packageId = GeneratedColumn<String>(
+    'package_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proposerParticipantIdMeta =
+      const VerificationMeta('proposerParticipantId');
+  @override
+  late final GeneratedColumn<String> proposerParticipantId =
+      GeneratedColumn<String>(
+        'proposer_participant_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    packageId,
+    contentHash,
+    proposerParticipantId,
+    payloadJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'proposal_revisions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProposalRevision> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('package_id')) {
+      context.handle(
+        _packageIdMeta,
+        packageId.isAcceptableOrUnknown(data['package_id']!, _packageIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_packageIdMeta);
+    }
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('proposer_participant_id')) {
+      context.handle(
+        _proposerParticipantIdMeta,
+        proposerParticipantId.isAcceptableOrUnknown(
+          data['proposer_participant_id']!,
+          _proposerParticipantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_proposerParticipantIdMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProposalRevision map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProposalRevision(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      packageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}package_id'],
+      )!,
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      proposerParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}proposer_participant_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ProposalRevisionsTable createAlias(String alias) {
+    return $ProposalRevisionsTable(attachedDatabase, alias);
+  }
+}
+
+class ProposalRevision extends DataClass
+    implements Insertable<ProposalRevision> {
+  final String id;
+  final String packageId;
+  final String contentHash;
+  final String proposerParticipantId;
+  final String payloadJson;
+  final DateTime createdAt;
+  const ProposalRevision({
+    required this.id,
+    required this.packageId,
+    required this.contentHash,
+    required this.proposerParticipantId,
+    required this.payloadJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['package_id'] = Variable<String>(packageId);
+    map['content_hash'] = Variable<String>(contentHash);
+    map['proposer_participant_id'] = Variable<String>(proposerParticipantId);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ProposalRevisionsCompanion toCompanion(bool nullToAbsent) {
+    return ProposalRevisionsCompanion(
+      id: Value(id),
+      packageId: Value(packageId),
+      contentHash: Value(contentHash),
+      proposerParticipantId: Value(proposerParticipantId),
+      payloadJson: Value(payloadJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ProposalRevision.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProposalRevision(
+      id: serializer.fromJson<String>(json['id']),
+      packageId: serializer.fromJson<String>(json['packageId']),
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      proposerParticipantId: serializer.fromJson<String>(
+        json['proposerParticipantId'],
+      ),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'packageId': serializer.toJson<String>(packageId),
+      'contentHash': serializer.toJson<String>(contentHash),
+      'proposerParticipantId': serializer.toJson<String>(proposerParticipantId),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ProposalRevision copyWith({
+    String? id,
+    String? packageId,
+    String? contentHash,
+    String? proposerParticipantId,
+    String? payloadJson,
+    DateTime? createdAt,
+  }) => ProposalRevision(
+    id: id ?? this.id,
+    packageId: packageId ?? this.packageId,
+    contentHash: contentHash ?? this.contentHash,
+    proposerParticipantId: proposerParticipantId ?? this.proposerParticipantId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ProposalRevision copyWithCompanion(ProposalRevisionsCompanion data) {
+    return ProposalRevision(
+      id: data.id.present ? data.id.value : this.id,
+      packageId: data.packageId.present ? data.packageId.value : this.packageId,
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      proposerParticipantId: data.proposerParticipantId.present
+          ? data.proposerParticipantId.value
+          : this.proposerParticipantId,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalRevision(')
+          ..write('id: $id, ')
+          ..write('packageId: $packageId, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('proposerParticipantId: $proposerParticipantId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    packageId,
+    contentHash,
+    proposerParticipantId,
+    payloadJson,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProposalRevision &&
+          other.id == this.id &&
+          other.packageId == this.packageId &&
+          other.contentHash == this.contentHash &&
+          other.proposerParticipantId == this.proposerParticipantId &&
+          other.payloadJson == this.payloadJson &&
+          other.createdAt == this.createdAt);
+}
+
+class ProposalRevisionsCompanion extends UpdateCompanion<ProposalRevision> {
+  final Value<String> id;
+  final Value<String> packageId;
+  final Value<String> contentHash;
+  final Value<String> proposerParticipantId;
+  final Value<String> payloadJson;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const ProposalRevisionsCompanion({
+    this.id = const Value.absent(),
+    this.packageId = const Value.absent(),
+    this.contentHash = const Value.absent(),
+    this.proposerParticipantId = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProposalRevisionsCompanion.insert({
+    required String id,
+    required String packageId,
+    required String contentHash,
+    required String proposerParticipantId,
+    required String payloadJson,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       packageId = Value(packageId),
+       contentHash = Value(contentHash),
+       proposerParticipantId = Value(proposerParticipantId),
+       payloadJson = Value(payloadJson),
+       createdAt = Value(createdAt);
+  static Insertable<ProposalRevision> custom({
+    Expression<String>? id,
+    Expression<String>? packageId,
+    Expression<String>? contentHash,
+    Expression<String>? proposerParticipantId,
+    Expression<String>? payloadJson,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (packageId != null) 'package_id': packageId,
+      if (contentHash != null) 'content_hash': contentHash,
+      if (proposerParticipantId != null)
+        'proposer_participant_id': proposerParticipantId,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProposalRevisionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? packageId,
+    Value<String>? contentHash,
+    Value<String>? proposerParticipantId,
+    Value<String>? payloadJson,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return ProposalRevisionsCompanion(
+      id: id ?? this.id,
+      packageId: packageId ?? this.packageId,
+      contentHash: contentHash ?? this.contentHash,
+      proposerParticipantId:
+          proposerParticipantId ?? this.proposerParticipantId,
+      payloadJson: payloadJson ?? this.payloadJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (packageId.present) {
+      map['package_id'] = Variable<String>(packageId.value);
+    }
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (proposerParticipantId.present) {
+      map['proposer_participant_id'] = Variable<String>(
+        proposerParticipantId.value,
+      );
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalRevisionsCompanion(')
+          ..write('id: $id, ')
+          ..write('packageId: $packageId, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('proposerParticipantId: $proposerParticipantId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProposalResponsesTable extends ProposalResponses
+    with TableInfo<$ProposalResponsesTable, ProposalResponse> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProposalResponsesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta(
+    'participantId',
+  );
+  @override
+  late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
+    'participant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _respondedAtMeta = const VerificationMeta(
+    'respondedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> respondedAt = GeneratedColumn<DateTime>(
+    'responded_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    revisionId,
+    participantId,
+    status,
+    respondedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'proposal_responses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProposalResponse> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_revisionIdMeta);
+    }
+    if (data.containsKey('participant_id')) {
+      context.handle(
+        _participantIdMeta,
+        participantId.isAcceptableOrUnknown(
+          data['participant_id']!,
+          _participantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_participantIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('responded_at')) {
+      context.handle(
+        _respondedAtMeta,
+        respondedAt.isAcceptableOrUnknown(
+          data['responded_at']!,
+          _respondedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProposalResponse map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProposalResponse(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      )!,
+      participantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}participant_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      respondedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}responded_at'],
+      ),
+    );
+  }
+
+  @override
+  $ProposalResponsesTable createAlias(String alias) {
+    return $ProposalResponsesTable(attachedDatabase, alias);
+  }
+}
+
+class ProposalResponse extends DataClass
+    implements Insertable<ProposalResponse> {
+  final String id;
+  final String revisionId;
+  final String participantId;
+  final String status;
+  final DateTime? respondedAt;
+  const ProposalResponse({
+    required this.id,
+    required this.revisionId,
+    required this.participantId,
+    required this.status,
+    this.respondedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['revision_id'] = Variable<String>(revisionId);
+    map['participant_id'] = Variable<String>(participantId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || respondedAt != null) {
+      map['responded_at'] = Variable<DateTime>(respondedAt);
+    }
+    return map;
+  }
+
+  ProposalResponsesCompanion toCompanion(bool nullToAbsent) {
+    return ProposalResponsesCompanion(
+      id: Value(id),
+      revisionId: Value(revisionId),
+      participantId: Value(participantId),
+      status: Value(status),
+      respondedAt: respondedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(respondedAt),
+    );
+  }
+
+  factory ProposalResponse.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProposalResponse(
+      id: serializer.fromJson<String>(json['id']),
+      revisionId: serializer.fromJson<String>(json['revisionId']),
+      participantId: serializer.fromJson<String>(json['participantId']),
+      status: serializer.fromJson<String>(json['status']),
+      respondedAt: serializer.fromJson<DateTime?>(json['respondedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'revisionId': serializer.toJson<String>(revisionId),
+      'participantId': serializer.toJson<String>(participantId),
+      'status': serializer.toJson<String>(status),
+      'respondedAt': serializer.toJson<DateTime?>(respondedAt),
+    };
+  }
+
+  ProposalResponse copyWith({
+    String? id,
+    String? revisionId,
+    String? participantId,
+    String? status,
+    Value<DateTime?> respondedAt = const Value.absent(),
+  }) => ProposalResponse(
+    id: id ?? this.id,
+    revisionId: revisionId ?? this.revisionId,
+    participantId: participantId ?? this.participantId,
+    status: status ?? this.status,
+    respondedAt: respondedAt.present ? respondedAt.value : this.respondedAt,
+  );
+  ProposalResponse copyWithCompanion(ProposalResponsesCompanion data) {
+    return ProposalResponse(
+      id: data.id.present ? data.id.value : this.id,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      participantId: data.participantId.present
+          ? data.participantId.value
+          : this.participantId,
+      status: data.status.present ? data.status.value : this.status,
+      respondedAt: data.respondedAt.present
+          ? data.respondedAt.value
+          : this.respondedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalResponse(')
+          ..write('id: $id, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('respondedAt: $respondedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, revisionId, participantId, status, respondedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProposalResponse &&
+          other.id == this.id &&
+          other.revisionId == this.revisionId &&
+          other.participantId == this.participantId &&
+          other.status == this.status &&
+          other.respondedAt == this.respondedAt);
+}
+
+class ProposalResponsesCompanion extends UpdateCompanion<ProposalResponse> {
+  final Value<String> id;
+  final Value<String> revisionId;
+  final Value<String> participantId;
+  final Value<String> status;
+  final Value<DateTime?> respondedAt;
+  final Value<int> rowid;
+  const ProposalResponsesCompanion({
+    this.id = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.participantId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.respondedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProposalResponsesCompanion.insert({
+    required String id,
+    required String revisionId,
+    required String participantId,
+    required String status,
+    this.respondedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       revisionId = Value(revisionId),
+       participantId = Value(participantId),
+       status = Value(status);
+  static Insertable<ProposalResponse> custom({
+    Expression<String>? id,
+    Expression<String>? revisionId,
+    Expression<String>? participantId,
+    Expression<String>? status,
+    Expression<DateTime>? respondedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (participantId != null) 'participant_id': participantId,
+      if (status != null) 'status': status,
+      if (respondedAt != null) 'responded_at': respondedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProposalResponsesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? revisionId,
+    Value<String>? participantId,
+    Value<String>? status,
+    Value<DateTime?>? respondedAt,
+    Value<int>? rowid,
+  }) {
+    return ProposalResponsesCompanion(
+      id: id ?? this.id,
+      revisionId: revisionId ?? this.revisionId,
+      participantId: participantId ?? this.participantId,
+      status: status ?? this.status,
+      respondedAt: respondedAt ?? this.respondedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (participantId.present) {
+      map['participant_id'] = Variable<String>(participantId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (respondedAt.present) {
+      map['responded_at'] = Variable<DateTime>(respondedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProposalResponsesCompanion(')
+          ..write('id: $id, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('respondedAt: $respondedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2745,6 +3938,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlanRatiosTable planRatios = $PlanRatiosTable(this);
   late final $AgreementContractsTable agreementContracts =
       $AgreementContractsTable(this);
+  late final $ProposalPackagesTable proposalPackages = $ProposalPackagesTable(
+    this,
+  );
+  late final $ProposalRevisionsTable proposalRevisions =
+      $ProposalRevisionsTable(this);
+  late final $ProposalResponsesTable proposalResponses =
+      $ProposalResponsesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2756,6 +3956,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     planGroups,
     planRatios,
     agreementContracts,
+    proposalPackages,
+    proposalRevisions,
+    proposalResponses,
   ];
 }
 
@@ -4180,6 +5383,673 @@ typedef $$AgreementContractsTableProcessedTableManager =
       AgreementContract,
       PrefetchHooks Function()
     >;
+typedef $$ProposalPackagesTableCreateCompanionBuilder =
+    ProposalPackagesCompanion Function({
+      required String id,
+      required String planId,
+      Value<String?> activeRevisionId,
+      Value<String?> pendingRevisionId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$ProposalPackagesTableUpdateCompanionBuilder =
+    ProposalPackagesCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String?> activeRevisionId,
+      Value<String?> pendingRevisionId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$ProposalPackagesTableFilterComposer
+    extends Composer<_$AppDatabase, $ProposalPackagesTable> {
+  $$ProposalPackagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activeRevisionId => $composableBuilder(
+    column: $table.activeRevisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pendingRevisionId => $composableBuilder(
+    column: $table.pendingRevisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProposalPackagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProposalPackagesTable> {
+  $$ProposalPackagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activeRevisionId => $composableBuilder(
+    column: $table.activeRevisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pendingRevisionId => $composableBuilder(
+    column: $table.pendingRevisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProposalPackagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProposalPackagesTable> {
+  $$ProposalPackagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get activeRevisionId => $composableBuilder(
+    column: $table.activeRevisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pendingRevisionId => $composableBuilder(
+    column: $table.pendingRevisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$ProposalPackagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProposalPackagesTable,
+          ProposalPackage,
+          $$ProposalPackagesTableFilterComposer,
+          $$ProposalPackagesTableOrderingComposer,
+          $$ProposalPackagesTableAnnotationComposer,
+          $$ProposalPackagesTableCreateCompanionBuilder,
+          $$ProposalPackagesTableUpdateCompanionBuilder,
+          (
+            ProposalPackage,
+            BaseReferences<
+              _$AppDatabase,
+              $ProposalPackagesTable,
+              ProposalPackage
+            >,
+          ),
+          ProposalPackage,
+          PrefetchHooks Function()
+        > {
+  $$ProposalPackagesTableTableManager(
+    _$AppDatabase db,
+    $ProposalPackagesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProposalPackagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProposalPackagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProposalPackagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String?> activeRevisionId = const Value.absent(),
+                Value<String?> pendingRevisionId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalPackagesCompanion(
+                id: id,
+                planId: planId,
+                activeRevisionId: activeRevisionId,
+                pendingRevisionId: pendingRevisionId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                Value<String?> activeRevisionId = const Value.absent(),
+                Value<String?> pendingRevisionId = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalPackagesCompanion.insert(
+                id: id,
+                planId: planId,
+                activeRevisionId: activeRevisionId,
+                pendingRevisionId: pendingRevisionId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProposalPackagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProposalPackagesTable,
+      ProposalPackage,
+      $$ProposalPackagesTableFilterComposer,
+      $$ProposalPackagesTableOrderingComposer,
+      $$ProposalPackagesTableAnnotationComposer,
+      $$ProposalPackagesTableCreateCompanionBuilder,
+      $$ProposalPackagesTableUpdateCompanionBuilder,
+      (
+        ProposalPackage,
+        BaseReferences<_$AppDatabase, $ProposalPackagesTable, ProposalPackage>,
+      ),
+      ProposalPackage,
+      PrefetchHooks Function()
+    >;
+typedef $$ProposalRevisionsTableCreateCompanionBuilder =
+    ProposalRevisionsCompanion Function({
+      required String id,
+      required String packageId,
+      required String contentHash,
+      required String proposerParticipantId,
+      required String payloadJson,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$ProposalRevisionsTableUpdateCompanionBuilder =
+    ProposalRevisionsCompanion Function({
+      Value<String> id,
+      Value<String> packageId,
+      Value<String> contentHash,
+      Value<String> proposerParticipantId,
+      Value<String> payloadJson,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$ProposalRevisionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProposalRevisionsTable> {
+  $$ProposalRevisionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get proposerParticipantId => $composableBuilder(
+    column: $table.proposerParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProposalRevisionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProposalRevisionsTable> {
+  $$ProposalRevisionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get proposerParticipantId => $composableBuilder(
+    column: $table.proposerParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProposalRevisionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProposalRevisionsTable> {
+  $$ProposalRevisionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get packageId =>
+      $composableBuilder(column: $table.packageId, builder: (column) => column);
+
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get proposerParticipantId => $composableBuilder(
+    column: $table.proposerParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$ProposalRevisionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProposalRevisionsTable,
+          ProposalRevision,
+          $$ProposalRevisionsTableFilterComposer,
+          $$ProposalRevisionsTableOrderingComposer,
+          $$ProposalRevisionsTableAnnotationComposer,
+          $$ProposalRevisionsTableCreateCompanionBuilder,
+          $$ProposalRevisionsTableUpdateCompanionBuilder,
+          (
+            ProposalRevision,
+            BaseReferences<
+              _$AppDatabase,
+              $ProposalRevisionsTable,
+              ProposalRevision
+            >,
+          ),
+          ProposalRevision,
+          PrefetchHooks Function()
+        > {
+  $$ProposalRevisionsTableTableManager(
+    _$AppDatabase db,
+    $ProposalRevisionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProposalRevisionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProposalRevisionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProposalRevisionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> packageId = const Value.absent(),
+                Value<String> contentHash = const Value.absent(),
+                Value<String> proposerParticipantId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalRevisionsCompanion(
+                id: id,
+                packageId: packageId,
+                contentHash: contentHash,
+                proposerParticipantId: proposerParticipantId,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String packageId,
+                required String contentHash,
+                required String proposerParticipantId,
+                required String payloadJson,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalRevisionsCompanion.insert(
+                id: id,
+                packageId: packageId,
+                contentHash: contentHash,
+                proposerParticipantId: proposerParticipantId,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProposalRevisionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProposalRevisionsTable,
+      ProposalRevision,
+      $$ProposalRevisionsTableFilterComposer,
+      $$ProposalRevisionsTableOrderingComposer,
+      $$ProposalRevisionsTableAnnotationComposer,
+      $$ProposalRevisionsTableCreateCompanionBuilder,
+      $$ProposalRevisionsTableUpdateCompanionBuilder,
+      (
+        ProposalRevision,
+        BaseReferences<
+          _$AppDatabase,
+          $ProposalRevisionsTable,
+          ProposalRevision
+        >,
+      ),
+      ProposalRevision,
+      PrefetchHooks Function()
+    >;
+typedef $$ProposalResponsesTableCreateCompanionBuilder =
+    ProposalResponsesCompanion Function({
+      required String id,
+      required String revisionId,
+      required String participantId,
+      required String status,
+      Value<DateTime?> respondedAt,
+      Value<int> rowid,
+    });
+typedef $$ProposalResponsesTableUpdateCompanionBuilder =
+    ProposalResponsesCompanion Function({
+      Value<String> id,
+      Value<String> revisionId,
+      Value<String> participantId,
+      Value<String> status,
+      Value<DateTime?> respondedAt,
+      Value<int> rowid,
+    });
+
+class $$ProposalResponsesTableFilterComposer
+    extends Composer<_$AppDatabase, $ProposalResponsesTable> {
+  $$ProposalResponsesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get respondedAt => $composableBuilder(
+    column: $table.respondedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProposalResponsesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProposalResponsesTable> {
+  $$ProposalResponsesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get respondedAt => $composableBuilder(
+    column: $table.respondedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProposalResponsesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProposalResponsesTable> {
+  $$ProposalResponsesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get respondedAt => $composableBuilder(
+    column: $table.respondedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$ProposalResponsesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProposalResponsesTable,
+          ProposalResponse,
+          $$ProposalResponsesTableFilterComposer,
+          $$ProposalResponsesTableOrderingComposer,
+          $$ProposalResponsesTableAnnotationComposer,
+          $$ProposalResponsesTableCreateCompanionBuilder,
+          $$ProposalResponsesTableUpdateCompanionBuilder,
+          (
+            ProposalResponse,
+            BaseReferences<
+              _$AppDatabase,
+              $ProposalResponsesTable,
+              ProposalResponse
+            >,
+          ),
+          ProposalResponse,
+          PrefetchHooks Function()
+        > {
+  $$ProposalResponsesTableTableManager(
+    _$AppDatabase db,
+    $ProposalResponsesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProposalResponsesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProposalResponsesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProposalResponsesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> revisionId = const Value.absent(),
+                Value<String> participantId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> respondedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalResponsesCompanion(
+                id: id,
+                revisionId: revisionId,
+                participantId: participantId,
+                status: status,
+                respondedAt: respondedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String revisionId,
+                required String participantId,
+                required String status,
+                Value<DateTime?> respondedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProposalResponsesCompanion.insert(
+                id: id,
+                revisionId: revisionId,
+                participantId: participantId,
+                status: status,
+                respondedAt: respondedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProposalResponsesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProposalResponsesTable,
+      ProposalResponse,
+      $$ProposalResponsesTableFilterComposer,
+      $$ProposalResponsesTableOrderingComposer,
+      $$ProposalResponsesTableAnnotationComposer,
+      $$ProposalResponsesTableCreateCompanionBuilder,
+      $$ProposalResponsesTableUpdateCompanionBuilder,
+      (
+        ProposalResponse,
+        BaseReferences<
+          _$AppDatabase,
+          $ProposalResponsesTable,
+          ProposalResponse
+        >,
+      ),
+      ProposalResponse,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4196,4 +6066,10 @@ class $AppDatabaseManager {
       $$PlanRatiosTableTableManager(_db, _db.planRatios);
   $$AgreementContractsTableTableManager get agreementContracts =>
       $$AgreementContractsTableTableManager(_db, _db.agreementContracts);
+  $$ProposalPackagesTableTableManager get proposalPackages =>
+      $$ProposalPackagesTableTableManager(_db, _db.proposalPackages);
+  $$ProposalRevisionsTableTableManager get proposalRevisions =>
+      $$ProposalRevisionsTableTableManager(_db, _db.proposalRevisions);
+  $$ProposalResponsesTableTableManager get proposalResponses =>
+      $$ProposalResponsesTableTableManager(_db, _db.proposalResponses);
 }
