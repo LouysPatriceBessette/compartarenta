@@ -132,6 +132,29 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kOnboardingWelcomeDone);
     notifyListeners();
   }
+
+  /// Development convenience: clears onboarding and user preferences.
+  ///
+  /// This is meant to help iterate during development. It MUST NOT be triggered
+  /// automatically in release builds.
+  Future<void> resetOnboardingAndPreferences() async {
+    await _prefs.remove(_kOnboardingComplete);
+    await _prefs.remove(_kOnboardingStep);
+    await _prefs.remove(_kOnboardingLanguageDone);
+    await _prefs.remove(_kOnboardingWelcomeDone);
+
+    await _prefs.remove(_kDisplayName);
+    await _prefs.remove(_kAvatarId);
+    await _prefs.remove(_kPlanTypes);
+
+    await _prefs.remove(_kCurrency);
+    await _prefs.remove(_kDateFormat);
+    await _prefs.remove(_kDistanceUnit);
+    await _prefs.remove(_kTimeZonePolicy);
+    await _prefs.remove(_kLanguageCode);
+
+    notifyListeners();
+  }
 }
 
 extension<T> on Iterable<T> {

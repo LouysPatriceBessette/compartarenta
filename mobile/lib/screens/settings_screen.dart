@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
 import '../data/supported_currencies.dart';
+import '../db/db_reset.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../widgets/async_state.dart';
@@ -27,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final showDevTools = widget.config.environment != AppEnvironment.prod;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
@@ -125,6 +127,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
               await launchUrl(_privacyPolicyUrl, mode: LaunchMode.externalApplication);
             },
           ),
+          if (showDevTools) ...[
+            const Divider(),
+            ListTile(
+              title: const Text('Developer tools'),
+              subtitle: const Text('Development-only actions'),
+            ),
+            ListTile(
+              title: const Text('Reset onboarding & preferences'),
+              subtitle: const Text('Clears onboarding progress and saved preferences.'),
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Reset onboarding & preferences?'),
+                    content: const Text(
+                      'This will clear onboarding progress and preferences stored on this device. '
+                      'Use only during development.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Reset'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed != true) return;
+                await widget.prefs.resetOnboardingAndPreferences();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Onboarding and preferences reset.')),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Reset local database'),
+              subtitle: const Text('Deletes the on-device SQLite database files.'),
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Reset local database?'),
+                    content: const Text(
+                      'This will delete local database files on this device. '
+                      'Use only during development.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Reset'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed != true) return;
+                await DbReset.deleteLocalDbFiles();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Local database deleted.')),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
