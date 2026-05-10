@@ -1,0 +1,59 @@
+name: compartarenta_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.11.5
+
+workspace:
+  - mobile
+
+dev_dependencies:
+  melos: ^7.7.0
+
+melos:
+  # Vendored Flutter SDK (same as many scripts in this repo).
+  sdkPath: tools/flutter
+
+  scripts:
+    # Scripts run from the workspace root (this directory). Use `cd mobile` so
+    # Flutter/Dart resolve the app package even without `melos` on PATH.
+    analyze:
+      description: Run Flutter analyzer in the mobile package
+      run: cd mobile && flutter analyze .
+
+    get:
+      description: Resolve dependencies (flutter pub get) in mobile
+      run: cd mobile && flutter pub get
+
+    codegen:
+      description: Run build_runner (Drift, etc.) in mobile
+      run: cd mobile && dart run build_runner build --delete-conflicting-outputs
+
+    clean:
+      description: Flutter clean in mobile
+      run: cd mobile && flutter clean
+
+    refresh:
+      description: Clean, pub get, then codegen in mobile
+      run: |
+        set -e
+        cd mobile
+        flutter clean
+        flutter pub get
+        dart run build_runner build --delete-conflicting-outputs
+
+    run:dev:
+      description: Run the app (dev flavor) from mobile
+      run: cd mobile && flutter run --flavor dev
+
+    build:apk:prod:
+      description: Release APK (prod); output under mobile/build/app/outputs/flutter-apk/
+      run: cd mobile && flutter build apk --release --flavor prod
+
+    build:apk:dev:
+      description: Release APK (dev) for internal demos
+      run: cd mobile && flutter build apk --release --flavor dev
+
+    apk:list:
+      description: List APK outputs (from repo root; run a build:apk:* script first)
+      run: ls -lah mobile/build/app/outputs/flutter-apk/ || true
