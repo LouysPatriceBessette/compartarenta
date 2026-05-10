@@ -424,6 +424,408 @@ abstract class AppLocalizations {
   /// **'Monthly total'**
   String get housingPlanSummaryMonthlyTotal;
 
+  /// No description provided for @housingPlanLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load plan data.\n{error}'**
+  String housingPlanLoadError(String error);
+
+  /// No description provided for @housingPlanStepParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get housingPlanStepParticipants;
+
+  /// No description provided for @housingPlanStepPlanDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan dates'**
+  String get housingPlanStepPlanDates;
+
+  /// No description provided for @housingPlanStepExpenseCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense categories'**
+  String get housingPlanStepExpenseCategories;
+
+  /// No description provided for @housingPlanStepExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get housingPlanStepExpenses;
+
+  /// No description provided for @housingPlanStepSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get housingPlanStepSplit;
+
+  /// No description provided for @housingPlanStepWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal'**
+  String get housingPlanStepWithdrawal;
+
+  /// No description provided for @housingPlanParticipantsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} participants'**
+  String housingPlanParticipantsCount(int count);
+
+  /// No description provided for @housingPlanFewerParticipantsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer participants'**
+  String get housingPlanFewerParticipantsTooltip;
+
+  /// No description provided for @housingPlanMoreParticipantsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More participants'**
+  String get housingPlanMoreParticipantsTooltip;
+
+  /// No description provided for @housingPlanAddCategoryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense category'**
+  String get housingPlanAddCategoryTooltip;
+
+  /// No description provided for @housingPlanAddExpenseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense'**
+  String get housingPlanAddExpenseTooltip;
+
+  /// No description provided for @housingPlanBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get housingPlanBack;
+
+  /// No description provided for @housingPlanNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get housingPlanNext;
+
+  /// No description provided for @housingPlanFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get housingPlanFinish;
+
+  /// No description provided for @housingPlanExpenseValidationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.'**
+  String get housingPlanExpenseValidationMessage;
+
+  /// No description provided for @housingPlanSplitValidationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Each expense or category must total 100% across participants.'**
+  String get housingPlanSplitValidationMessage;
+
+  /// No description provided for @housingPlanCouldNotContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not continue: {error}'**
+  String housingPlanCouldNotContinue(String error);
+
+  /// No description provided for @housingPlanInviteComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite participants (coming soon)'**
+  String get housingPlanInviteComingSoon;
+
+  /// No description provided for @housingPlanPreviousPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous person'**
+  String get housingPlanPreviousPerson;
+
+  /// No description provided for @housingPlanNextPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Next person'**
+  String get housingPlanNextPerson;
+
+  /// No description provided for @housingPlanParticipantNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get housingPlanParticipantNameLabel;
+
+  /// No description provided for @housingPlanParticipantsPlaceholderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Names and avatars are placeholders until someone joins for real.'**
+  String get housingPlanParticipantsPlaceholderNote;
+
+  /// No description provided for @housingPlanYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get housingPlanYou;
+
+  /// No description provided for @housingPlanCoParticipantUnnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Co-participant {index}'**
+  String housingPlanCoParticipantUnnamed(int index);
+
+  /// No description provided for @housingPlanPlanStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan start'**
+  String get housingPlanPlanStart;
+
+  /// No description provided for @housingPlanPlanEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan end'**
+  String get housingPlanPlanEnd;
+
+  /// No description provided for @housingPlanEndDateError.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be after start date (by at least one calendar day).'**
+  String get housingPlanEndDateError;
+
+  /// No description provided for @housingPlanCategoriesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.'**
+  String get housingPlanCategoriesEmptyHint;
+
+  /// No description provided for @housingPlanDeleteCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete category'**
+  String get housingPlanDeleteCategoryTitle;
+
+  /// No description provided for @housingPlanDeleteCategoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses in this category will be unassigned from it. This does not delete the expenses.'**
+  String get housingPlanDeleteCategoryBody;
+
+  /// No description provided for @housingPlanCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get housingPlanCancel;
+
+  /// No description provided for @housingPlanDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get housingPlanDelete;
+
+  /// No description provided for @housingPlanTapToAddExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add an expense.'**
+  String get housingPlanTapToAddExpense;
+
+  /// No description provided for @housingPlanAddExpensesFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expenses first.'**
+  String get housingPlanAddExpensesFirst;
+
+  /// No description provided for @housingPlanSplitNoCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No category'**
+  String get housingPlanSplitNoCategory;
+
+  /// No description provided for @housingPlanWithdrawalIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Early withdrawal rules.'**
+  String get housingPlanWithdrawalIntro;
+
+  /// No description provided for @housingPlanWithdrawalSameForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Same rule for all participants'**
+  String get housingPlanWithdrawalSameForAll;
+
+  /// No description provided for @housingPlanMinimumNoticeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum notice (days)'**
+  String get housingPlanMinimumNoticeDays;
+
+  /// No description provided for @housingPlanPenaltyAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Penalty amount'**
+  String get housingPlanPenaltyAmount;
+
+  /// No description provided for @housingPlanSummaryMissingAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing agreement'**
+  String get housingPlanSummaryMissingAgreement;
+
+  /// No description provided for @housingPlanSummaryEditPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit plan'**
+  String get housingPlanSummaryEditPlan;
+
+  /// No description provided for @housingPlanSummaryInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite my participants'**
+  String get housingPlanSummaryInvite;
+
+  /// No description provided for @housingPlanSummaryDestroy.
+  ///
+  /// In en, this message translates to:
+  /// **'Destroy plan'**
+  String get housingPlanSummaryDestroy;
+
+  /// No description provided for @housingPlanDestroyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Destroy plan'**
+  String get housingPlanDestroyTitle;
+
+  /// No description provided for @housingPlanDestroyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes this housing plan, expenses, ratios, agreement, and draft participants from this device.'**
+  String get housingPlanDestroyBody;
+
+  /// No description provided for @housingPlanDestroyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Destroy'**
+  String get housingPlanDestroyConfirm;
+
+  /// No description provided for @housingPlanRemovedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan removed'**
+  String get housingPlanRemovedSnackbar;
+
+  /// No description provided for @housingPlanAddCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category'**
+  String get housingPlanAddCategoryTitle;
+
+  /// No description provided for @housingPlanEditCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get housingPlanEditCategoryTitle;
+
+  /// No description provided for @housingPlanCategoryNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name'**
+  String get housingPlanCategoryNameLabel;
+
+  /// No description provided for @housingPlanCategoryDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What belongs here (optional)'**
+  String get housingPlanCategoryDescriptionLabel;
+
+  /// No description provided for @housingPlanSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get housingPlanSave;
+
+  /// No description provided for @housingPlanAddExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense'**
+  String get housingPlanAddExpenseTitle;
+
+  /// No description provided for @housingPlanEditExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit expense'**
+  String get housingPlanEditExpenseTitle;
+
+  /// No description provided for @housingPlanRecurringSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get housingPlanRecurringSwitch;
+
+  /// No description provided for @housingPlanApproximateAmountSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate amount'**
+  String get housingPlanApproximateAmountSwitch;
+
+  /// No description provided for @housingPlanExpenseTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get housingPlanExpenseTitleLabel;
+
+  /// No description provided for @housingPlanCategoryOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category (optional)'**
+  String get housingPlanCategoryOptionalLabel;
+
+  /// No description provided for @housingPlanCategoryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get housingPlanCategoryNone;
+
+  /// No description provided for @housingPlanExpenseDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get housingPlanExpenseDescriptionLabel;
+
+  /// No description provided for @housingPlanDayOfMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day of month'**
+  String get housingPlanDayOfMonthLabel;
+
+  /// No description provided for @housingPlanMinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get housingPlanMinLabel;
+
+  /// No description provided for @housingPlanMaxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get housingPlanMaxLabel;
+
+  /// No description provided for @housingPlanAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get housingPlanAmountLabel;
+
+  /// Months segment of plan calendar duration (step 2).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 month} other{{count} months}}'**
+  String housingPlanDurationMonthsCount(int count);
+
+  /// Days segment of plan calendar duration (step 2).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 day} other{{count} days}}'**
+  String housingPlanDurationDaysCount(int count);
+
   /// No description provided for @homeCarSharingPlan.
   ///
   /// In en, this message translates to:

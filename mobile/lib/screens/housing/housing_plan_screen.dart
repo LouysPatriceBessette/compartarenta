@@ -66,16 +66,26 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     MdiIcons.fish,
   ];
 
-  static const _stepTitles = <String>[
-    'Participants',
-    'Plan dates',
-    'Expense categories',
-    'Expenses',
-    'Split',
-    'Withdrawal',
-  ];
+  static const int _housingPlanStepCount = 6;
 
-  /// 0–4 = wizard steps; summary when true.
+  List<String> _housingStepTitles(AppLocalizations l10n) => [
+        l10n.housingPlanStepParticipants,
+        l10n.housingPlanStepPlanDates,
+        l10n.housingPlanStepExpenseCategories,
+        l10n.housingPlanStepExpenses,
+        l10n.housingPlanStepSplit,
+        l10n.housingPlanStepWithdrawal,
+      ];
+
+  AppLocalizations _lookupAppLocalizationsSync() {
+    final loc = WidgetsBinding.instance.platformDispatcher.locale;
+    final code = loc.languageCode;
+    if (code == 'fr') return lookupAppLocalizations(const Locale('fr'));
+    if (code == 'es') return lookupAppLocalizations(const Locale('es'));
+    return lookupAppLocalizations(const Locale('en'));
+  }
+
+  /// 0–5 = wizard steps; summary when true.
   bool _showSummary = false;
   int _stepIndex = 0;
   int _linesEpoch = 0;
@@ -473,19 +483,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _resizeWithdrawalEditors(1 + n);
   }
 
-  String _ratioParticipantLabel(int index) {
-    if (index == 0) return 'You';
+  String _ratioParticipantLabel(AppLocalizations l10n, int index) {
+    if (index == 0) return l10n.housingPlanYou;
     final nm = _nameControllers[index - 1].text.trim();
-    return nm.isEmpty ? 'Co-participant $index' : nm;
+    return nm.isEmpty ? l10n.housingPlanCoParticipantUnnamed(index) : nm;
   }
 
   Future<void> _ensurePlanShell() async {
+    final l10n = _lookupAppLocalizationsSync();
     await _db.upsertPlan(
       PlansCompanion.insert(
         id: _planId,
         type: 'housing',
         createdAt: DateTime.now().toUtc(),
-        title: drift.Value('Housing plan'),
+        title: drift.Value(l10n.homeHousingPlan),
         currency: drift.Value('CAD'),
         notes: const drift.Value.absent(),
       ),
@@ -727,7 +738,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     await _db.upsertParticipant(
       ParticipantsCompanion.insert(
         id: _selfParticipantId,
-        displayName: selfName.isEmpty ? 'You' : selfName,
+        displayName: selfName.isEmpty ? _lookupAppLocalizationsSync().housingPlanYou : selfName,
         avatarId: selfAvatar.isEmpty ? 'mdi:0' : selfAvatar,
         createdAt: DateTime.now().toUtc(),
       ),
@@ -924,16 +935,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Future<void> _onDestroyPlan() async {
+    final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Destroy plan'),
-        content: const Text(
-          'This removes this housing plan, expenses, ratios, agreement, and draft participants from this device.',
-        ),
+        title: Text(l10n.housingPlanDestroyTitle),
+        content: Text(l10n.housingPlanDestroyBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Destroy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.housingPlanCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.housingPlanDestroyConfirm)),
         ],
       ),
     );
@@ -951,7 +961,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     await _loadFromDb();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plan removed')),
+        SnackBar(content: Text(l10n.housingPlanRemovedSnackbar)),
       );
     }
   }
@@ -963,7 +973,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         padding: const EdgeInsets.fromLTRB(8, 16, 0, 16),
         child: Column(
           children: [
-            for (var i = 0; i < _stepTitles.length; i++) ...[
+            for (var i = 0; i < _housingPlanStepCount; i++) ...[
               if (i > 0)
                 SizedBox(
                   height: 12,
@@ -1028,7 +1038,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Could not load plan data.\n${snap.error}',
+                  l10n.housingPlanLoadError('${snap.error}'),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -1046,7 +1056,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               }),
               onInvite: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invite participants (coming soon)')),
+                  SnackBar(content: Text(l10n.housingPlanInviteComingSoon)),
                 );
               },
               onDestroy: _onDestroyPlan,
@@ -1070,7 +1080,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               child: Row(
                                 children: [
                                   IconButton.filledTonal(
-                                    tooltip: 'Fewer participants',
+                                    tooltip: l10n.housingPlanFewerParticipantsTooltip,
                                     onPressed: _otherParticipantCount <= 1
                                         ? null
                                         : () => _applyOtherParticipantCount(_otherParticipantCount - 1),
@@ -1078,13 +1088,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                   ),
                                   Expanded(
                                     child: Text(
-                                      '${1 + _otherParticipantCount} Participants',
+                                      l10n.housingPlanParticipantsCount(1 + _otherParticipantCount),
                                       textAlign: TextAlign.center,
                                       style: Theme.of(context).textTheme.headlineSmall,
                                     ),
                                   ),
                                   IconButton.filledTonal(
-                                    tooltip: 'More participants',
+                                    tooltip: l10n.housingPlanMoreParticipantsTooltip,
                                     onPressed: _otherParticipantCount >= 7
                                         ? null
                                         : () => _applyOtherParticipantCount(_otherParticipantCount + 1),
@@ -1096,13 +1106,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           else
                             Expanded(
                               child: Text(
-                                _stepTitles[_stepIndex],
+                                _housingStepTitles(l10n)[_stepIndex],
                                 style: Theme.of(context).textTheme.headlineSmall,
                               ),
                             ),
                           if (_stepIndex == 2)
                             IconButton.filledTonal(
-                              tooltip: 'Add expense category',
+                              tooltip: l10n.housingPlanAddCategoryTooltip,
                               onPressed: () async {
                                 await _editPlanCategory(null);
                                 if (mounted) setState(() => _groupsEpoch++);
@@ -1111,7 +1121,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             ),
                           if (_stepIndex == 3)
                             IconButton.filledTonal(
-                              tooltip: 'Add expense',
+                              tooltip: l10n.housingPlanAddExpenseTooltip,
                               onPressed: () async {
                                 await _editLine(null);
                                 if (mounted) setState(() => _linesEpoch++);
@@ -1137,7 +1147,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           if (_stepIndex > 0) ...[
                             OutlinedButton(
                               onPressed: () => setState(() => _stepIndex--),
-                              child: const Text('Back'),
+                              child: Text(l10n.housingPlanBack),
                             ),
                             const SizedBox(width: 12),
                           ],
@@ -1152,10 +1162,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                         if (!await _validateStep2Expenses()) {
                                           if (mounted) {
                                             messenger.showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.',
-                                                ),
+                                              SnackBar(
+                                                content: Text(l10n.housingPlanExpenseValidationMessage),
                                               ),
                                             );
                                           }
@@ -1169,10 +1177,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                         if (!await _validateStep3Ratios(lines, groups, pids)) {
                                           if (mounted) {
                                             messenger.showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Each expense or category must total 100% across participants.',
-                                                ),
+                                              SnackBar(
+                                                content: Text(l10n.housingPlanSplitValidationMessage),
                                               ),
                                             );
                                           }
@@ -1199,14 +1205,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                       if (mounted) {
                                         messenger.showSnackBar(
                                           SnackBar(
-                                            content: Text('Could not continue: $e'),
+                                            content: Text(l10n.housingPlanCouldNotContinue('$e')),
                                           ),
                                         );
                                       }
                                     }
                                   }
                                 : null,
-                            child: Text(_stepIndex == 5 ? 'Finish' : 'Next'),
+                            child: Text(_stepIndex == 5 ? l10n.housingPlanFinish : l10n.housingPlanNext),
                           ),
                         ],
                       ),
@@ -1253,6 +1259,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Widget _stepParticipants() {
+    final l10n = AppLocalizations.of(context);
     final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1262,14 +1269,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             children: [
               OutlinedButton(
                 onPressed: _coEditorIndex > 0 ? () => setState(() => _coEditorIndex--) : null,
-                child: const Text('Previous person'),
+                child: Text(l10n.housingPlanPreviousPerson),
               ),
               const Spacer(),
               OutlinedButton(
                 onPressed: _coEditorIndex < _otherParticipantCount - 1
                     ? () => setState(() => _coEditorIndex++)
                     : null,
-                child: const Text('Next person'),
+                child: Text(l10n.housingPlanNextPerson),
               ),
             ],
           ),
@@ -1277,7 +1284,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         ],
         TextField(
           controller: _nameControllers[i],
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: l10n.housingPlanParticipantNameLabel),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 8),
@@ -1312,7 +1319,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Names and avatars are placeholders until someone joins for real.',
+          l10n.housingPlanParticipantsPlaceholderNote,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
@@ -1323,8 +1330,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return ListenableBuilder(
       listenable: widget.prefs,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final fmt = widget.prefs.dateFormat;
-        final durationText = formatContractCalendarDuration(_periodStart, _periodEnd);
+        final durationText = formatContractCalendarDuration(_periodStart, _periodEnd, l10n);
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -1334,7 +1342,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 children: [
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Plan start', textAlign: TextAlign.center),
+                    title: Text(l10n.housingPlanPlanStart, textAlign: TextAlign.center),
                     subtitle: Text(
                       formatPreferenceDate(_periodStart, fmt),
                       textAlign: TextAlign.center,
@@ -1357,7 +1365,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Plan end', textAlign: TextAlign.center),
+                    title: Text(l10n.housingPlanPlanEnd, textAlign: TextAlign.center),
                     subtitle: Text(
                       formatPreferenceDate(_periodEnd, fmt),
                       textAlign: TextAlign.center,
@@ -1397,7 +1405,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'End date must be after start date (by at least one calendar day).',
+                  l10n.housingPlanEndDateError,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                   textAlign: TextAlign.center,
                 ),
@@ -1412,16 +1420,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return FutureBuilder<List<PlanGroup>>(
       future: _planGroupsFuture(),
       builder: (context, snap) {
+        final l10n = AppLocalizations.of(context);
         final groups = snap.data ?? [];
         return Column(
           children: [
             Expanded(
               child: groups.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(24),
                         child: Text(
-                          'Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.',
+                          l10n.housingPlanCategoriesEmptyHint,
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -1446,22 +1455,23 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               onPressed: () async {
                                 final ok = await showDialog<bool>(
                                   context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Delete category'),
-                                    content: const Text(
-                                      'Expenses in this category will be unassigned from it. This does not delete the expenses.',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      FilledButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
+                                  builder: (ctx) {
+                                    final d10n = AppLocalizations.of(ctx);
+                                    return AlertDialog(
+                                      title: Text(d10n.housingPlanDeleteCategoryTitle),
+                                      content: Text(d10n.housingPlanDeleteCategoryBody),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, false),
+                                          child: Text(d10n.housingPlanCancel),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          child: Text(d10n.housingPlanDelete),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
                                 if (ok == true) {
                                   await _unassignLinesAndDeletePlanGroup(g.id);
@@ -1488,6 +1498,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return FutureBuilder<List<dynamic>>(
       future: Future.wait([_planLinesFuture(), _planGroupsFuture()]),
       builder: (context, snap) {
+        final l10n = AppLocalizations.of(context);
         final lines = (snap.data?[0] as List<PlanLine>?) ?? [];
         final groups = (snap.data?[1] as List<PlanGroup>?) ?? [];
         final groupTitle = <String, String>{for (final g in groups) g.id: g.title};
@@ -1495,7 +1506,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           children: [
             Expanded(
               child: lines.isEmpty
-                  ? const Center(child: Text('Tap + to add an expense.'))
+                  ? Center(child: Text(l10n.housingPlanTapToAddExpense))
                   : ReorderableListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: lines.length,
@@ -2134,12 +2145,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         return FutureBuilder<Agreement?>(
           future: _db.getAgreementForPlan(_planId),
           builder: (context, snapAgr) {
+            final l10n = AppLocalizations.of(context);
             final combined = snapLinesAndGroups.data;
             final lines = combined == null ? <PlanLine>[] : combined[0] as List<PlanLine>;
             final groups = combined == null ? <PlanGroup>[] : combined[1] as List<PlanGroup>;
             final agr = snapAgr.data;
             if (lines.isEmpty || agr == null) {
-              return const Center(child: Text('Add expenses first.'));
+              return Center(child: Text(l10n.housingPlanAddExpensesFirst));
             }
             final pids = _allParticipantIds();
             final entries = _splitDisplayEntries(lines, groups);
@@ -2172,7 +2184,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     children: [
                       for (var i = 0; i < pids.length; i++)
                         ChoiceChip(
-                          label: Text(_ratioParticipantLabel(i)),
+                          label: Text(_ratioParticipantLabel(l10n, i)),
                           selected: _ratioParticipantIndex == i,
                           onSelected: (sel) {
                             if (!sel) return;
@@ -2201,7 +2213,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                 Padding(
                                   padding: EdgeInsets.fromLTRB(4, i == 0 ? 8 : 18, 4, 6),
                                   child: Text(
-                                    'No category',
+                                    l10n.housingPlanSplitNoCategory,
                                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -2263,10 +2275,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Widget _stepWithdrawal() {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('Early withdrawal rules.'),
+        Text(l10n.housingPlanWithdrawalIntro),
         const SizedBox(height: 12),
         CheckboxListTile(
           value: _withdrawalSameForAll,
@@ -2279,33 +2292,33 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               }
             });
           },
-          title: const Text('Same rule for all participants'),
+          title: Text(l10n.housingPlanWithdrawalSameForAll),
           controlAffinity: ListTileControlAffinity.leading,
         ),
         if (_withdrawalSameForAll) ...[
           TextField(
             controller: _globalNotice,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Minimum notice (days)'),
+            decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
             onChanged: (_) => setState(() {}),
           ),
           TextField(
             controller: _globalPenalty,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Penalty amount'),
+            decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
             onChanged: (_) => setState(() {}),
           ),
         ] else ...[
           TextField(
             controller: _perParticipantNotice[_withdrawalParticipantIndex],
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Minimum notice (days)'),
+            decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
             onChanged: (_) => setState(() {}),
           ),
           TextField(
             controller: _perParticipantPenalty[_withdrawalParticipantIndex],
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Penalty amount'),
+            decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
             onChanged: (_) => setState(() {}),
           ),
           Padding(
@@ -2316,7 +2329,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               children: [
                 for (var i = 0; i < 1 + _otherParticipantCount; i++)
                   ChoiceChip(
-                    label: Text(_ratioParticipantLabel(i)),
+                    label: Text(_ratioParticipantLabel(l10n, i)),
                     selected: _withdrawalParticipantIndex == i,
                     onSelected: (sel) {
                       if (!sel) return;
@@ -2373,6 +2386,7 @@ class _SummaryView extends StatelessWidget {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
+        final l10n = AppLocalizations.of(context);
         int rosterOrder(String id) {
           if (id.endsWith(':self')) return -1;
           final tail = id.split(':p').last;
@@ -2387,9 +2401,8 @@ class _SummaryView extends StatelessWidget {
         final agr = snap.data![2] as Agreement?;
         final ratios = snap.data![3] as List<PlanRatio>;
         final planGroups = snap.data![4] as List<PlanGroup>;
-        if (agr == null) return const Center(child: Text('Missing agreement'));
+        if (agr == null) return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
 
-        final l10n = AppLocalizations.of(context);
         var planMonthlyTotalMinor = 0;
         for (final line in lines) {
           planMonthlyTotalMinor += PlanProjection.unitMinor(line);
@@ -2511,13 +2524,13 @@ class _SummaryView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton.tonal(onPressed: onEditPlan, child: const Text('Edit plan')),
+                  FilledButton.tonal(onPressed: onEditPlan, child: Text(l10n.housingPlanSummaryEditPlan)),
                   const SizedBox(height: 8),
-                  FilledButton(onPressed: onInvite, child: const Text('Invite my participants')),
+                  FilledButton(onPressed: onInvite, child: Text(l10n.housingPlanSummaryInvite)),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: onDestroy,
-                    child: const Text('Destroy plan'),
+                    child: Text(l10n.housingPlanSummaryDestroy),
                   ),
                 ],
               ),
@@ -2560,9 +2573,10 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final canSave = _title.text.trim().isNotEmpty;
     return AlertDialog(
-      title: Text(widget.initial == null ? 'Add category' : 'Edit category'),
+      title: Text(widget.initial == null ? l10n.housingPlanAddCategoryTitle : l10n.housingPlanEditCategoryTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2570,14 +2584,25 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
           children: [
             TextField(
               controller: _title,
-              decoration: const InputDecoration(labelText: 'Category name'),
+              decoration: InputDecoration(labelText: l10n.housingPlanCategoryNameLabel),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                l10n.housingPlanCategoryDescriptionLabel,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                maxLines: 2,
+                softWrap: true,
+              ),
+            ),
+            const SizedBox(height: 6),
             TextField(
               controller: _description,
               decoration: const InputDecoration(
-                labelText: 'What belongs here (optional)',
                 alignLabelWithHint: true,
               ),
               maxLines: 5,
@@ -2588,7 +2613,7 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.housingPlanCancel)),
         FilledButton(
           onPressed: canSave
               ? () {
@@ -2600,7 +2625,7 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                   );
                 }
               : null,
-          child: const Text('Save'),
+          child: Text(l10n.housingPlanSave),
         ),
       ],
     );
@@ -2685,29 +2710,30 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final canSave = _title.text.trim().isNotEmpty &&
         (!_isRecurring || (_dayOfMonth >= 1 && _dayOfMonth <= 31)) &&
         (_amountUsesRange ? _rangeValid() : _fixedOk);
     return AlertDialog(
-      title: Text(widget.initial == null ? 'Add expense' : 'Edit expense'),
+      title: Text(widget.initial == null ? l10n.housingPlanAddExpenseTitle : l10n.housingPlanEditExpenseTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SwitchListTile(
-              title: const Text('Recurring'),
+              title: Text(l10n.housingPlanRecurringSwitch),
               value: _isRecurring,
               onChanged: (v) => setState(() => _isRecurring = v),
             ),
             SwitchListTile(
-              title: const Text('Approximate amount'),
+              title: Text(l10n.housingPlanApproximateAmountSwitch),
               value: _amountUsesRange,
               onChanged: (v) => setState(() => _amountUsesRange = v),
             ),
             TextField(
               controller: _title,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(labelText: l10n.housingPlanExpenseTitleLabel),
               onChanged: (_) => setState(() {}),
             ),
             if (widget.groups.isNotEmpty) ...[
@@ -2715,9 +2741,9 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               DropdownButtonFormField<String?>(
                 key: ValueKey<String?>(_groupId),
                 initialValue: _groupId,
-                decoration: const InputDecoration(labelText: 'Category (optional)'),
+                decoration: InputDecoration(labelText: l10n.housingPlanCategoryOptionalLabel),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('None')),
+                  DropdownMenuItem(value: null, child: Text(l10n.housingPlanCategoryNone)),
                   ...widget.groups.map(
                     (g) => DropdownMenuItem(value: g.id, child: Text(g.title)),
                   ),
@@ -2728,8 +2754,8 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
             const SizedBox(height: 8),
             TextField(
               controller: _description,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
+              decoration: InputDecoration(
+                labelText: l10n.housingPlanExpenseDescriptionLabel,
                 alignLabelWithHint: true,
               ),
               maxLines: 4,
@@ -2740,7 +2766,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 initialValue: _dayOfMonth,
-                decoration: const InputDecoration(labelText: 'Day of month'),
+                decoration: InputDecoration(labelText: l10n.housingPlanDayOfMonthLabel),
                 items: [for (var d = 1; d <= 31; d++) DropdownMenuItem(value: d, child: Text('$d'))],
                 onChanged: (v) => setState(() => _dayOfMonth = v ?? 1),
               ),
@@ -2750,13 +2776,13 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _min,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Min'),
+                decoration: InputDecoration(labelText: l10n.housingPlanMinLabel),
                 onChanged: (_) => setState(() {}),
               ),
               TextField(
                 controller: _max,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Max'),
+                decoration: InputDecoration(labelText: l10n.housingPlanMaxLabel),
                 onChanged: (_) => setState(() {}),
               ),
             ] else ...[
@@ -2764,7 +2790,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _amount,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: InputDecoration(labelText: l10n.housingPlanAmountLabel),
                 onChanged: (_) => setState(() {}),
               ),
             ],
@@ -2772,7 +2798,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.housingPlanCancel)),
         FilledButton(
           onPressed: canSave
               ? () {
@@ -2793,7 +2819,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
                   );
                 }
               : null,
-          child: const Text('Save'),
+          child: Text(l10n.housingPlanSave),
         ),
       ],
     );

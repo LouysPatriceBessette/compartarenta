@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// Formats a stored instant as a **calendar date** in the user's locale,
 /// following the same pattern strings as onboarding (`YYYY-MM-DD`, etc.).
 String formatPreferenceDate(DateTime? utc, String format) {
@@ -26,7 +28,11 @@ bool isStrictlyBeforeCalendarDate(DateTime a, DateTime b) {
 }
 
 /// Inclusive calendar span from [startUtc] to [endUtc] (local dates), e.g. "7 months, 2 days".
-String formatContractCalendarDuration(DateTime? startUtc, DateTime? endUtc) {
+String formatContractCalendarDuration(
+  DateTime? startUtc,
+  DateTime? endUtc,
+  AppLocalizations l10n,
+) {
   if (startUtc == null || endUtc == null) return '';
   final s = DateUtils.dateOnly(startUtc.toLocal());
   final e = DateUtils.dateOnly(endUtc.toLocal());
@@ -43,13 +49,13 @@ String formatContractCalendarDuration(DateTime? startUtc, DateTime? endUtc) {
   if (days < 0) days = 0;
   final parts = <String>[];
   if (months > 0) {
-    parts.add(months == 1 ? '1 month' : '$months months');
+    parts.add(l10n.housingPlanDurationMonthsCount(months));
   }
   if (days > 0) {
-    parts.add(days == 1 ? '1 day' : '$days days');
+    parts.add(l10n.housingPlanDurationDaysCount(days));
   }
   if (parts.isEmpty) {
-    parts.add('0 days');
+    parts.add(l10n.housingPlanDurationDaysCount(0));
   }
   return parts.join(', ');
 }

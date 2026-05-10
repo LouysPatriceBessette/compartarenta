@@ -71,6 +71,105 @@
   },
   "homeHousingPlan": "Plan logement",
   "housingPlanSummaryMonthlyTotal": "Total mensuel",
+
+  "housingPlanLoadError": "Impossible de charger les données du plan.\n{error}",
+  "@housingPlanLoadError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "housingPlanStepParticipants": "Participants",
+  "housingPlanStepPlanDates": "Dates du plan",
+  "housingPlanStepExpenseCategories": "Catégories de dépenses",
+  "housingPlanStepExpenses": "Dépenses",
+  "housingPlanStepSplit": "Répartition",
+  "housingPlanStepWithdrawal": "Retrait anticipé",
+  "housingPlanParticipantsCount": "{count} participants",
+  "@housingPlanParticipantsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingPlanFewerParticipantsTooltip": "Moins de participants",
+  "housingPlanMoreParticipantsTooltip": "Plus de participants",
+  "housingPlanAddCategoryTooltip": "Ajouter une catégorie de dépense",
+  "housingPlanAddExpenseTooltip": "Ajouter une dépense",
+  "housingPlanBack": "Retour",
+  "housingPlanNext": "Suivant",
+  "housingPlanFinish": "Terminer",
+  "housingPlanExpenseValidationMessage": "Ajoutez au moins une dépense. Chacune doit avoir un montant valide (fixe ou fourchette min/max) et les dépenses récurrentes nécessitent un jour du mois.",
+  "housingPlanSplitValidationMessage": "Chaque dépense ou catégorie doit totaliser 100 % entre les participants.",
+  "housingPlanCouldNotContinue": "Impossible de continuer : {error}",
+  "@housingPlanCouldNotContinue": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "housingPlanInviteComingSoon": "Inviter les participants (bientôt)",
+  "housingPlanPreviousPerson": "Personne précédente",
+  "housingPlanNextPerson": "Personne suivante",
+  "housingPlanParticipantNameLabel": "Nom",
+  "housingPlanParticipantsPlaceholderNote": "Les noms et avatars sont provisoires jusqu’à ce que quelqu’un rejoigne pour de vrai.",
+  "housingPlanYou": "Vous",
+  "housingPlanCoParticipantUnnamed": "Co-participant {index}",
+  "@housingPlanCoParticipantUnnamed": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "housingPlanPlanStart": "Début du plan",
+  "housingPlanPlanEnd": "Fin du plan",
+  "housingPlanEndDateError": "La date de fin doit être après la date de début (d’au moins un jour calendaire).",
+  "housingPlanCategoriesEmptyHint": "Appuyez sur + pour ajouter une catégorie. À l’étape suivante, vous pourrez rattacher chaque dépense à une catégorie pour garder les postes liés ensemble.",
+  "housingPlanDeleteCategoryTitle": "Supprimer la catégorie",
+  "housingPlanDeleteCategoryBody": "Les dépenses de cette catégorie n’y seront plus rattachées. Les dépenses elles-mêmes ne sont pas supprimées.",
+  "housingPlanCancel": "Annuler",
+  "housingPlanDelete": "Supprimer",
+  "housingPlanTapToAddExpense": "Appuyez sur + pour ajouter une dépense.",
+  "housingPlanAddExpensesFirst": "Ajoutez d’abord des dépenses.",
+  "housingPlanSplitNoCategory": "Sans catégorie",
+  "housingPlanWithdrawalIntro": "Règles de retrait anticipé.",
+  "housingPlanWithdrawalSameForAll": "Même règle pour tous les participants",
+  "housingPlanMinimumNoticeDays": "Préavis minimum (jours)",
+  "housingPlanPenaltyAmount": "Montant de la pénalité",
+  "housingPlanSummaryMissingAgreement": "Accord manquant",
+  "housingPlanSummaryEditPlan": "Modifier le plan",
+  "housingPlanSummaryInvite": "Inviter mes participants",
+  "housingPlanSummaryDestroy": "Supprimer le plan",
+  "housingPlanDestroyTitle": "Supprimer le plan",
+  "housingPlanDestroyBody": "Cela supprime sur cet appareil ce plan logement, les dépenses, les ratios, l’accord et les participants brouillon.",
+  "housingPlanDestroyConfirm": "Supprimer",
+  "housingPlanRemovedSnackbar": "Plan supprimé",
+  "housingPlanAddCategoryTitle": "Ajouter une catégorie",
+  "housingPlanEditCategoryTitle": "Modifier la catégorie",
+  "housingPlanCategoryNameLabel": "Nom de la catégorie",
+  "housingPlanCategoryDescriptionLabel": "Que doit contenir cette catégorie (optionnel)",
+  "housingPlanSave": "Enregistrer",
+  "housingPlanAddExpenseTitle": "Ajouter une dépense",
+  "housingPlanEditExpenseTitle": "Modifier la dépense",
+  "housingPlanRecurringSwitch": "Récurrent",
+  "housingPlanApproximateAmountSwitch": "Montant approximatif",
+  "housingPlanExpenseTitleLabel": "Titre",
+  "housingPlanCategoryOptionalLabel": "Catégorie (optionnel)",
+  "housingPlanCategoryNone": "Aucune",
+  "housingPlanExpenseDescriptionLabel": "Description (optionnel)",
+  "housingPlanDayOfMonthLabel": "Jour du mois",
+  "housingPlanMinLabel": "Min",
+  "housingPlanMaxLabel": "Max",
+  "housingPlanAmountLabel": "Montant",
+  "housingPlanDurationMonthsCount": "{count, plural, one{1 mois} other{{count} mois}}",
+  "@housingPlanDurationMonthsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingPlanDurationDaysCount": "{count, plural, one{1 jour} other{{count} jours}}",
+  "@housingPlanDurationDaysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
   "homeCarSharingPlan": "Plan voiture",
   "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique."
 }

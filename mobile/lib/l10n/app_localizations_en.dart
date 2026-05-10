@@ -179,6 +179,240 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanSummaryMonthlyTotal => 'Monthly total';
 
   @override
+  String housingPlanLoadError(String error) {
+    return 'Could not load plan data.\n$error';
+  }
+
+  @override
+  String get housingPlanStepParticipants => 'Participants';
+
+  @override
+  String get housingPlanStepPlanDates => 'Plan dates';
+
+  @override
+  String get housingPlanStepExpenseCategories => 'Expense categories';
+
+  @override
+  String get housingPlanStepExpenses => 'Expenses';
+
+  @override
+  String get housingPlanStepSplit => 'Split';
+
+  @override
+  String get housingPlanStepWithdrawal => 'Withdrawal';
+
+  @override
+  String housingPlanParticipantsCount(int count) {
+    return '$count participants';
+  }
+
+  @override
+  String get housingPlanFewerParticipantsTooltip => 'Fewer participants';
+
+  @override
+  String get housingPlanMoreParticipantsTooltip => 'More participants';
+
+  @override
+  String get housingPlanAddCategoryTooltip => 'Add expense category';
+
+  @override
+  String get housingPlanAddExpenseTooltip => 'Add expense';
+
+  @override
+  String get housingPlanBack => 'Back';
+
+  @override
+  String get housingPlanNext => 'Next';
+
+  @override
+  String get housingPlanFinish => 'Finish';
+
+  @override
+  String get housingPlanExpenseValidationMessage =>
+      'Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.';
+
+  @override
+  String get housingPlanSplitValidationMessage =>
+      'Each expense or category must total 100% across participants.';
+
+  @override
+  String housingPlanCouldNotContinue(String error) {
+    return 'Could not continue: $error';
+  }
+
+  @override
+  String get housingPlanInviteComingSoon => 'Invite participants (coming soon)';
+
+  @override
+  String get housingPlanPreviousPerson => 'Previous person';
+
+  @override
+  String get housingPlanNextPerson => 'Next person';
+
+  @override
+  String get housingPlanParticipantNameLabel => 'Name';
+
+  @override
+  String get housingPlanParticipantsPlaceholderNote =>
+      'Names and avatars are placeholders until someone joins for real.';
+
+  @override
+  String get housingPlanYou => 'You';
+
+  @override
+  String housingPlanCoParticipantUnnamed(int index) {
+    return 'Co-participant $index';
+  }
+
+  @override
+  String get housingPlanPlanStart => 'Plan start';
+
+  @override
+  String get housingPlanPlanEnd => 'Plan end';
+
+  @override
+  String get housingPlanEndDateError =>
+      'End date must be after start date (by at least one calendar day).';
+
+  @override
+  String get housingPlanCategoriesEmptyHint =>
+      'Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.';
+
+  @override
+  String get housingPlanDeleteCategoryTitle => 'Delete category';
+
+  @override
+  String get housingPlanDeleteCategoryBody =>
+      'Expenses in this category will be unassigned from it. This does not delete the expenses.';
+
+  @override
+  String get housingPlanCancel => 'Cancel';
+
+  @override
+  String get housingPlanDelete => 'Delete';
+
+  @override
+  String get housingPlanTapToAddExpense => 'Tap + to add an expense.';
+
+  @override
+  String get housingPlanAddExpensesFirst => 'Add expenses first.';
+
+  @override
+  String get housingPlanSplitNoCategory => 'No category';
+
+  @override
+  String get housingPlanWithdrawalIntro => 'Early withdrawal rules.';
+
+  @override
+  String get housingPlanWithdrawalSameForAll =>
+      'Same rule for all participants';
+
+  @override
+  String get housingPlanMinimumNoticeDays => 'Minimum notice (days)';
+
+  @override
+  String get housingPlanPenaltyAmount => 'Penalty amount';
+
+  @override
+  String get housingPlanSummaryMissingAgreement => 'Missing agreement';
+
+  @override
+  String get housingPlanSummaryEditPlan => 'Edit plan';
+
+  @override
+  String get housingPlanSummaryInvite => 'Invite my participants';
+
+  @override
+  String get housingPlanSummaryDestroy => 'Destroy plan';
+
+  @override
+  String get housingPlanDestroyTitle => 'Destroy plan';
+
+  @override
+  String get housingPlanDestroyBody =>
+      'This removes this housing plan, expenses, ratios, agreement, and draft participants from this device.';
+
+  @override
+  String get housingPlanDestroyConfirm => 'Destroy';
+
+  @override
+  String get housingPlanRemovedSnackbar => 'Plan removed';
+
+  @override
+  String get housingPlanAddCategoryTitle => 'Add category';
+
+  @override
+  String get housingPlanEditCategoryTitle => 'Edit category';
+
+  @override
+  String get housingPlanCategoryNameLabel => 'Category name';
+
+  @override
+  String get housingPlanCategoryDescriptionLabel =>
+      'What belongs here (optional)';
+
+  @override
+  String get housingPlanSave => 'Save';
+
+  @override
+  String get housingPlanAddExpenseTitle => 'Add expense';
+
+  @override
+  String get housingPlanEditExpenseTitle => 'Edit expense';
+
+  @override
+  String get housingPlanRecurringSwitch => 'Recurring';
+
+  @override
+  String get housingPlanApproximateAmountSwitch => 'Approximate amount';
+
+  @override
+  String get housingPlanExpenseTitleLabel => 'Title';
+
+  @override
+  String get housingPlanCategoryOptionalLabel => 'Category (optional)';
+
+  @override
+  String get housingPlanCategoryNone => 'None';
+
+  @override
+  String get housingPlanExpenseDescriptionLabel => 'Description (optional)';
+
+  @override
+  String get housingPlanDayOfMonthLabel => 'Day of month';
+
+  @override
+  String get housingPlanMinLabel => 'Min';
+
+  @override
+  String get housingPlanMaxLabel => 'Max';
+
+  @override
+  String get housingPlanAmountLabel => 'Amount';
+
+  @override
+  String housingPlanDurationMonthsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months',
+      one: '1 month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String housingPlanDurationDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get homeCarSharingPlan => 'Car sharing plan';
 
   @override

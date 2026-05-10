@@ -71,6 +71,107 @@
   },
   "homeHousingPlan": "Housing plan",
   "housingPlanSummaryMonthlyTotal": "Monthly total",
+
+  "housingPlanLoadError": "Could not load plan data.\n{error}",
+  "@housingPlanLoadError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "housingPlanStepParticipants": "Participants",
+  "housingPlanStepPlanDates": "Plan dates",
+  "housingPlanStepExpenseCategories": "Expense categories",
+  "housingPlanStepExpenses": "Expenses",
+  "housingPlanStepSplit": "Split",
+  "housingPlanStepWithdrawal": "Withdrawal",
+  "housingPlanParticipantsCount": "{count} participants",
+  "@housingPlanParticipantsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingPlanFewerParticipantsTooltip": "Fewer participants",
+  "housingPlanMoreParticipantsTooltip": "More participants",
+  "housingPlanAddCategoryTooltip": "Add expense category",
+  "housingPlanAddExpenseTooltip": "Add expense",
+  "housingPlanBack": "Back",
+  "housingPlanNext": "Next",
+  "housingPlanFinish": "Finish",
+  "housingPlanExpenseValidationMessage": "Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.",
+  "housingPlanSplitValidationMessage": "Each expense or category must total 100% across participants.",
+  "housingPlanCouldNotContinue": "Could not continue: {error}",
+  "@housingPlanCouldNotContinue": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "housingPlanInviteComingSoon": "Invite participants (coming soon)",
+  "housingPlanPreviousPerson": "Previous person",
+  "housingPlanNextPerson": "Next person",
+  "housingPlanParticipantNameLabel": "Name",
+  "housingPlanParticipantsPlaceholderNote": "Names and avatars are placeholders until someone joins for real.",
+  "housingPlanYou": "You",
+  "housingPlanCoParticipantUnnamed": "Co-participant {index}",
+  "@housingPlanCoParticipantUnnamed": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "housingPlanPlanStart": "Plan start",
+  "housingPlanPlanEnd": "Plan end",
+  "housingPlanEndDateError": "End date must be after start date (by at least one calendar day).",
+  "housingPlanCategoriesEmptyHint": "Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.",
+  "housingPlanDeleteCategoryTitle": "Delete category",
+  "housingPlanDeleteCategoryBody": "Expenses in this category will be unassigned from it. This does not delete the expenses.",
+  "housingPlanCancel": "Cancel",
+  "housingPlanDelete": "Delete",
+  "housingPlanTapToAddExpense": "Tap + to add an expense.",
+  "housingPlanAddExpensesFirst": "Add expenses first.",
+  "housingPlanSplitNoCategory": "No category",
+  "housingPlanWithdrawalIntro": "Early withdrawal rules.",
+  "housingPlanWithdrawalSameForAll": "Same rule for all participants",
+  "housingPlanMinimumNoticeDays": "Minimum notice (days)",
+  "housingPlanPenaltyAmount": "Penalty amount",
+  "housingPlanSummaryMissingAgreement": "Missing agreement",
+  "housingPlanSummaryEditPlan": "Edit plan",
+  "housingPlanSummaryInvite": "Invite my participants",
+  "housingPlanSummaryDestroy": "Destroy plan",
+  "housingPlanDestroyTitle": "Destroy plan",
+  "housingPlanDestroyBody": "This removes this housing plan, expenses, ratios, agreement, and draft participants from this device.",
+  "housingPlanDestroyConfirm": "Destroy",
+  "housingPlanRemovedSnackbar": "Plan removed",
+  "housingPlanAddCategoryTitle": "Add category",
+  "housingPlanEditCategoryTitle": "Edit category",
+  "housingPlanCategoryNameLabel": "Category name",
+  "housingPlanCategoryDescriptionLabel": "What belongs here (optional)",
+  "housingPlanSave": "Save",
+  "housingPlanAddExpenseTitle": "Add expense",
+  "housingPlanEditExpenseTitle": "Edit expense",
+  "housingPlanRecurringSwitch": "Recurring",
+  "housingPlanApproximateAmountSwitch": "Approximate amount",
+  "housingPlanExpenseTitleLabel": "Title",
+  "housingPlanCategoryOptionalLabel": "Category (optional)",
+  "housingPlanCategoryNone": "None",
+  "housingPlanExpenseDescriptionLabel": "Description (optional)",
+  "housingPlanDayOfMonthLabel": "Day of month",
+  "housingPlanMinLabel": "Min",
+  "housingPlanMaxLabel": "Max",
+  "housingPlanAmountLabel": "Amount",
+  "housingPlanDurationMonthsCount": "{count, plural, one{1 month} other{{count} months}}",
+  "@housingPlanDurationMonthsCount": {
+    "description": "Months segment of plan calendar duration (step 2).",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingPlanDurationDaysCount": "{count, plural, one{1 day} other{{count} days}}",
+  "@housingPlanDurationDaysCount": {
+    "description": "Days segment of plan calendar duration (step 2).",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
   "homeCarSharingPlan": "Car sharing plan",
   "homePlaceholderBody": "This is a placeholder home screen for the store-publishable MVP shell."
 }
