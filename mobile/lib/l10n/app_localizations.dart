@@ -418,6 +418,12 @@ abstract class AppLocalizations {
   /// **'Housing plan'**
   String get homeHousingPlan;
 
+  /// No description provided for @housingPlanSummaryMonthlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly total'**
+  String get housingPlanSummaryMonthlyTotal;
+
   /// No description provided for @homeCarSharingPlan.
   ///
   /// In en, this message translates to:

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
@@ -86,6 +88,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   final List<TextEditingController> _perParticipantNotice = [];
   final List<TextEditingController> _perParticipantPenalty = [];
 
+  final Map<String, TextEditingController> _shareAmountControllers = {};
+  final Map<String, int> _draftRatioWeightsBps = {};
+  /// Minor units to show after a manual amount commit when the persisted
+  /// weight grid cannot round-trip to the typed cents exactly.
+  final Map<String, int> _shareAmountMinorOverride = {};
+
   late final Future<void> _boot;
 
   @override
@@ -107,10 +115,211 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     for (final c in _perParticipantPenalty) {
       c.dispose();
     }
+    for (final c in _shareAmountControllers.values) {
+      c.dispose();
+    }
+    _shareAmountControllers.clear();
     _globalNotice.dispose();
     _globalPenalty.dispose();
     _db.close();
     super.dispose();
+  }
+
+  TextEditingController _shareAmountControllerFor(String lineId, String participantId) {
+    final key = '$lineId:$participantId';
+    return _shareAmountControllers.putIfAbsent(key, () => TextEditingController());
+  }
+
+  /// Major units string with exactly two decimals; invalid / NaN → `0.00`.
+  String _formatMoneyMajorTwoDecimals(String raw) {
+    final t = raw.trim().replaceAll(',', '.');
+    if (t.isEmpty) return '0.00';
+    final v = double.tryParse(t);
+    if (v == null || v.isNaN) return '0.00';
+    return v.toStringAsFixed(2);
+  }
+
+  /// Horizontal inset and track width matching [Slider] / [BaseSliderTrackShape.getPreferredRect].
+  (double leftInset, double trackWidth) _sliderTrackHorizontalMetrics(
+    BuildContext context,
+    double parentWidth, {
+    required bool sliderInteractive,
+  }) {
+    final st = SliderTheme.of(context);
+    final thumbShape = st.thumbShape;
+    final overlayShape = st.overlayShape;
+    if (thumbShape == null || overlayShape == null) {
+      const pad = 12.0;
+      return (pad, math.max(0.0, parentWidth - 2 * pad));
+    }
+    final discrete = false;
+    final thumbW = thumbShape.getPreferredSize(sliderInteractive, discrete).width;
+    final overlayW = overlayShape.getPreferredSize(sliderInteractive, discrete).width;
+    if (st.padding != null) {
+      return (0, math.max(0.0, parentWidth));
+    }
+    final leftInset = math.max(overlayW / 2, thumbW / 2);
+    final trackWidth = parentWidth - math.max(thumbW, overlayW);
+    return (leftInset, math.max(0.0, trackWidth));
+  }
+
+  EdgeInsets _sliderThemeOuterPadding(BuildContext context) {
+    return SliderTheme.of(context).padding?.resolve(Directionality.of(context)) ?? EdgeInsets.zero;
+  }
+
+  double _snapToDevicePixels(BuildContext context, double logicalX) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return (logicalX * dpr).round() / dpr;
+  }
+
+  /// Picks a weight in `[0, assignable]` that minimizes
+  /// `|(basisMinor * w / 10000).round() - targetMinor|`.
+  int _bestWeightBpsForShareMinor(int targetMinor, int basisMinor, int assignable) {
+    if (basisMinor <= 0 || assignable <= 0) return 0;
+    var bestW = 0;
+    var bestErr = 1 << 30;
+    for (var w = 0; w <= assignable; w++) {
+      final got = (basisMinor * w / 10000).round();
+      final err = (got - targetMinor).abs();
+      if (err < bestErr) {
+        bestErr = err;
+        bestW = w;
+      }
+    }
+    return bestW;
+  }
+
+  Future<void> _commitShareAmountTextField(
+    PlanLine line,
+    List<String> pids,
+    int participantIndex,
+    int basisMinor,
+    int assignable,
+    String controllerKey,
+  ) async {
+    final ctrl = _shareAmountControllers[controllerKey];
+    if (ctrl == null) return;
+    final formatted = _formatMoneyMajorTwoDecimals(ctrl.text);
+    ctrl.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
+    var minor = (major * 100).round();
+    final maxShareMinor = basisMinor <= 0 ? 0 : (basisMinor * assignable / 10000).round();
+    minor = minor.clamp(0, maxShareMinor);
+    final display = (minor / 100).toStringAsFixed(2);
+    if (display != formatted) {
+      ctrl.value = TextEditingValue(
+        text: display,
+        selection: TextSelection.collapsed(offset: display.length),
+      );
+    }
+    final wClamped = _bestWeightBpsForShareMinor(minor, basisMinor, assignable);
+    await _setRatioWeightBps(line, pids, participantIndex, wClamped);
+    if (mounted) {
+      setState(() {
+        _shareAmountMinorOverride[controllerKey] = minor;
+      });
+    }
+  }
+
+  List<double> _splitTickFractionsForParticipantCount(int n) {
+    final s = <double>{};
+    void add(int a, int b) => s.add(a / b);
+
+    add(1, 2);
+    add(1, 3);
+    add(2, 3);
+    add(1, 4);
+    add(3, 4);
+
+    if (n >= 5) {
+      add(1, 5);
+      add(2, 5);
+      add(3, 5);
+      add(4, 5);
+    }
+    if (n >= 6) {
+      add(1, 6);
+      add(5, 6);
+    }
+    if (n >= 7) {
+      add(1, 7);
+      add(2, 7);
+      add(3, 7);
+      add(4, 7);
+      add(5, 7);
+      add(6, 7);
+    }
+    if (n >= 8) {
+      add(1, 8);
+      add(3, 8);
+      add(5, 8);
+      add(7, 8);
+    }
+
+    final out = s.toList()..sort();
+    return out;
+  }
+
+  double _nearestTick(double v, List<double> ticks) {
+    var best = ticks.first;
+    var bestD = (v - best).abs();
+    for (final t in ticks.skip(1)) {
+      final d = (v - t).abs();
+      if (d < bestD) {
+        bestD = d;
+        best = t;
+      }
+    }
+    return best;
+  }
+
+  Future<void> _setRatioWeightBps(
+    PlanLine line,
+    List<String> pids,
+    int participantIndex,
+    int newW,
+  ) async {
+    final last = pids.last;
+    if (participantIndex >= pids.length - 1) return;
+
+    var assignedBefore = 0;
+    for (var i = 0; i < participantIndex; i++) {
+      assignedBefore += await _ratioWeight(line.id, pids[i]);
+    }
+    final assignable = (10000 - assignedBefore).clamp(0, 10000);
+    final clampedW = newW.clamp(0, assignable);
+    final pid = pids[participantIndex];
+    await _db.upsertPlanRatio(
+      PlanRatiosCompanion.insert(
+        id: 'ratio:$_planId:${line.id}:$pid',
+        planId: _planId,
+        participantId: pid,
+        lineId: drift.Value(line.id),
+        groupId: const drift.Value.absent(),
+        weight: clampedW,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+
+    var sumExceptLast = 0;
+    for (var i = 0; i < pids.length - 1; i++) {
+      sumExceptLast += await _ratioWeight(line.id, pids[i]);
+    }
+    final lastW = (10000 - sumExceptLast).clamp(0, 10000);
+    await _db.upsertPlanRatio(
+      PlanRatiosCompanion.insert(
+        id: 'ratio:$_planId:${line.id}:$last',
+        planId: _planId,
+        participantId: last,
+        lineId: drift.Value(line.id),
+        groupId: const drift.Value.absent(),
+        weight: lastW,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
   }
 
   String get _selfParticipantId => '$_planId:self';
@@ -187,6 +396,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   Future<void> _loadFromDb() async {
     await _ensurePlanShell();
+    _shareAmountMinorOverride.clear();
     final roster = await _db.listParticipants();
     final coRows = roster.where((p) => p.id.startsWith('$_planId:p')).toList()
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -449,62 +659,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         .fold<int>(0, (a, r) => a + r.weight);
   }
 
-  Future<void> _setRatioForParticipant(
-    PlanLine line,
-    List<String> pids,
-    int participantIndex,
-    double fractionOfAssignable,
-  ) async {
-    final last = pids.last;
-    if (participantIndex >= pids.length - 1) return;
+  /// Amount this line contributes to **monthly** split math (one month for recurring).
+  int _splitBasisMinor(PlanLine line) => PlanProjection.unitMinor(line);
 
-    var assignedBefore = 0;
-    for (var i = 0; i < participantIndex; i++) {
-      assignedBefore += await _ratioWeight(line.id, pids[i]);
-    }
-    final assignable = 10000 - assignedBefore;
-    final newW = (fractionOfAssignable * assignable).round().clamp(0, assignable);
-    final pid = pids[participantIndex];
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:${line.id}:$pid',
-        planId: _planId,
-        participantId: pid,
-        lineId: drift.Value(line.id),
-        groupId: const drift.Value.absent(),
-        weight: newW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-    var sumExceptLast = 0;
-    for (var i = 0; i < pids.length - 1; i++) {
-      sumExceptLast += await _ratioWeight(line.id, pids[i]);
-    }
-    final lastW = (10000 - sumExceptLast).clamp(0, 10000);
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:${line.id}:$last',
-        planId: _planId,
-        participantId: last,
-        lineId: drift.Value(line.id),
-        groupId: const drift.Value.absent(),
-        weight: lastW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-  }
-
-  int _lineTotalMinor(PlanLine line, Agreement agr) {
-    final months = PlanProjection.monthsCoveredInclusive(
-      agr.periodStart,
-      agr.periodEnd,
-    ).clamp(0, 120);
-    final unit = PlanProjection.unitMinor(line);
-    if (line.isRecurring) {
-      return unit * months;
-    }
-    return unit;
-  }
+  String _money2FromMinor(int minor) => (minor / 100).toStringAsFixed(2);
 
   Future<void> _persistWithdrawal() async {
     final cur = await _db.getAgreementForPlan(_planId);
@@ -569,6 +727,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _stepIndex = 0;
       _ratioParticipantIndex = 0;
       _withdrawalParticipantIndex = 0;
+      _shareAmountMinorOverride.clear();
     });
     await _loadFromDb();
     if (mounted) {
@@ -638,7 +797,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.homeHousingPlan)),
+      appBar: AppBar(centerTitle: true, title: Text(l10n.homeHousingPlan)),
       body: FutureBuilder<void>(
         future: _boot,
         builder: (context, snap) {
@@ -661,6 +820,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               db: _db,
               planId: _planId,
               avatarIcons: _avatarIcons,
+              shareMinorOverrides: _shareAmountMinorOverride,
               onEditPlan: () => setState(() {
                 _showSummary = false;
                 _stepIndex = 0;
@@ -686,12 +846,41 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Text(
-                              _stepTitles[_stepIndex],
-                              style: Theme.of(context).textTheme.headlineSmall,
+                          if (_stepIndex == 0)
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  IconButton.filledTonal(
+                                    tooltip: 'Fewer participants',
+                                    onPressed: _otherParticipantCount <= 1
+                                        ? null
+                                        : () => _applyOtherParticipantCount(_otherParticipantCount - 1),
+                                    icon: const Icon(Icons.remove),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      '${1 + _otherParticipantCount} Participants',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context).textTheme.headlineSmall,
+                                    ),
+                                  ),
+                                  IconButton.filledTonal(
+                                    tooltip: 'More participants',
+                                    onPressed: _otherParticipantCount >= 7
+                                        ? null
+                                        : () => _applyOtherParticipantCount(_otherParticipantCount + 1),
+                                    icon: const Icon(Icons.add),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Expanded(
+                              child: Text(
+                                _stepTitles[_stepIndex],
+                                style: Theme.of(context).textTheme.headlineSmall,
+                              ),
                             ),
-                          ),
                           if (_stepIndex == 2)
                             IconButton.filledTonal(
                               tooltip: 'Add expense',
@@ -715,13 +904,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         16 + MediaQuery.viewPaddingOf(context).bottom,
                       ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          if (_stepIndex > 0)
+                          if (_stepIndex > 0) ...[
                             OutlinedButton(
                               onPressed: () => setState(() => _stepIndex--),
                               child: const Text('Back'),
                             ),
-                          const Spacer(),
+                            const SizedBox(width: 12),
+                          ],
                           FilledButton(
                             onPressed: _validateStep(_stepIndex)
                                 ? () async {
@@ -818,47 +1009,24 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
   }
 
+  void _applyOtherParticipantCount(int next) {
+    final v = next.clamp(1, 7);
+    setState(() {
+      _otherParticipantCount = v;
+      _resizeParticipantEditors(v);
+      _coEditorIndex = _coEditorIndex.clamp(0, v - 1);
+      final maxPid = v;
+      _ratioParticipantIndex = _ratioParticipantIndex.clamp(0, maxPid);
+      _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(0, maxPid);
+    });
+  }
+
   Widget _stepParticipants() {
     final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
-          'You are always included. Choose how many additional people will share this plan.',
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Text('Additional people: '),
-            DropdownButton<int>(
-              value: _otherParticipantCount,
-              items: [
-                for (var n = 1; n <= 7; n++) DropdownMenuItem(value: n, child: Text('$n')),
-              ],
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() {
-                  _otherParticipantCount = v;
-                  _resizeParticipantEditors(v);
-                  _coEditorIndex = _coEditorIndex.clamp(0, v - 1);
-                  final maxPid = v;
-                  _ratioParticipantIndex = _ratioParticipantIndex.clamp(0, maxPid);
-                  _withdrawalParticipantIndex =
-                      _withdrawalParticipantIndex.clamp(0, maxPid);
-                });
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        const Text('Names and avatars are placeholders until someone joins for real.'),
-        const SizedBox(height: 12),
         if (_otherParticipantCount > 1) ...[
-          Text(
-            'Person ${_coEditorIndex + 1} of $_otherParticipantCount',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
           Row(
             children: [
               OutlinedButton(
@@ -876,11 +1044,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           ),
           const SizedBox(height: 12),
         ],
-        Text(
-          _otherParticipantCount > 1 ? 'Co-participant ${_coEditorIndex + 1}' : 'Co-participant',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 6),
         TextField(
           controller: _nameControllers[i],
           decoration: const InputDecoration(labelText: 'Name'),
@@ -916,6 +1079,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             },
           ),
         ),
+        const SizedBox(height: 24),
+        Text(
+          'Names and avatars are placeholders until someone joins for real.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
@@ -925,44 +1093,73 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       listenable: widget.prefs,
       builder: (context, _) {
         final fmt = widget.prefs.dateFormat;
+        final durationText = formatContractCalendarDuration(_periodStart, _periodEnd);
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            ListTile(
-              title: const Text('Plan start'),
-              subtitle: Text(formatPreferenceDate(_periodStart, fmt)),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2100),
-                  initialDate: (_periodStart ?? DateTime.now()).toLocal(),
-                );
-                if (picked != null) {
-                  setState(() {
-                    _periodStart = DateTime(picked.year, picked.month, picked.day).toUtc();
-                    _ensureEndAfterStartCalendar();
-                  });
-                }
-              },
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Plan start', textAlign: TextAlign.center),
+                    subtitle: Text(
+                      formatPreferenceDate(_periodStart, fmt),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                        initialDate: (_periodStart ?? DateTime.now()).toLocal(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _periodStart = DateTime(picked.year, picked.month, picked.day).toUtc();
+                          _ensureEndAfterStartCalendar();
+                        });
+                      }
+                    },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Plan end', textAlign: TextAlign.center),
+                    subtitle: Text(
+                      formatPreferenceDate(_periodEnd, fmt),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        firstDate: _endDatePickerFirstDate(),
+                        lastDate: DateTime(2100),
+                        initialDate: _endDatePickerInitialDate(),
+                      );
+                      if (picked != null) {
+                        setState(
+                          () => _periodEnd = DateTime(picked.year, picked.month, picked.day).toUtc(),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-            ListTile(
-              title: const Text('Plan end'),
-              subtitle: Text(formatPreferenceDate(_periodEnd, fmt)),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  firstDate: _endDatePickerFirstDate(),
-                  lastDate: DateTime(2100),
-                  initialDate: _endDatePickerInitialDate(),
-                );
-                if (picked != null) {
-                  setState(
-                    () => _periodEnd = DateTime(picked.year, picked.month, picked.day).toUtc(),
-                  );
-                }
-              },
-            ),
+            if (durationText.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Center(
+                  child: Text(
+                    durationText,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
             if (_periodStart != null &&
                 _periodEnd != null &&
                 !isStrictlyBeforeCalendarDate(_periodStart!, _periodEnd!))
@@ -971,6 +1168,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 child: Text(
                   'End date must be after start date (by at least one calendar day).',
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  textAlign: TextAlign.center,
                 ),
               ),
           ],
@@ -1029,13 +1227,21 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           child: Card(
                             child: ListTile(
                               title: Text(line.title),
-                              subtitle: Text(_expenseLineSubtitle(line)),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () async {
-                                  await (_db.delete(_db.planLines)..where((t) => t.id.equals(line.id))).go();
-                                  if (mounted) setState(() => _linesEpoch++);
-                                },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${_money2FromMinor(_splitBasisMinor(line))} ${line.currency}',
+                                    style: Theme.of(context).textTheme.titleSmall,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () async {
+                                      await (_db.delete(_db.planLines)..where((t) => t.id.equals(line.id))).go();
+                                      if (mounted) setState(() => _linesEpoch++);
+                                    },
+                                  ),
+                                ],
                               ),
                               onTap: () async {
                                 await _editLine(line);
@@ -1051,27 +1257,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         );
       },
     );
-  }
-
-  String _expenseLineSubtitle(PlanLine line) {
-    final bits = <String>[];
-    if (line.isRecurring) {
-      bits.add('Recurring • day ${line.recurrenceDayOfMonth ?? '?'}');
-    } else {
-      bits.add('One-off');
-    }
-    if (line.amountUsesRange) {
-      final lo = ((line.minAmountMinor ?? 0) / 100).toStringAsFixed(2);
-      final hi = ((line.maxAmountMinor ?? 0) / 100).toStringAsFixed(2);
-      bits.add('Approx $lo–$hi ${line.currency}');
-    } else {
-      bits.add('Fixed ${((line.amountMinor ?? 0) / 100).toStringAsFixed(2)} ${line.currency}');
-    }
-    final d = line.description.trim();
-    if (d.isNotEmpty) {
-      bits.add(d);
-    }
-    return bits.join(' • ');
   }
 
   Future<void> _editLine(PlanLine? existing) async {
@@ -1133,103 +1318,25 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    isLast
-                        ? '${_ratioParticipantLabel(_ratioParticipantIndex)} (remainder, read-only)'
-                        : '${_ratioParticipantLabel(_ratioParticipantIndex)}: set your share of each expense',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: lines.length,
-                    itemBuilder: (context, i) {
-                      final line = lines[i];
-                      final totalMinor = _lineTotalMinor(line, agr);
-                      return FutureBuilder<List<int>>(
-                        future: Future.wait([
-                          for (final pid in pids) _ratioWeight(line.id, pid),
-                        ]),
-                        builder: (context, snapW) {
-                          final weights = snapW.data ?? List.filled(pids.length, 0);
-                          var before = 0;
-                          for (var j = 0; j < _ratioParticipantIndex; j++) {
-                            before += weights[j];
-                          }
-                          final assignable = (10000 - before).clamp(0, 10000);
-                          final wCur = weights[_ratioParticipantIndex];
-                          final frac = assignable > 0 ? wCur / assignable : 0.0;
-                          final amountThis = (totalMinor * wCur / 10000).round() / 100.0;
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(child: Text(line.title, style: Theme.of(context).textTheme.titleSmall)),
-                                      Text(
-                                        '${(totalMinor / 100).toStringAsFixed(2)} ${line.currency}',
-                                        style: Theme.of(context).textTheme.titleSmall,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (!isLast)
-                                    Slider(
-                                      value: frac.clamp(0.0, 1.0),
-                                      divisions: assignable > 0 ? assignable : 1,
-                                      onChanged: assignable <= 0
-                                          ? null
-                                          : (v) async {
-                                              await _setRatioForParticipant(
-                                                line,
-                                                pids,
-                                                _ratioParticipantIndex,
-                                                v,
-                                              );
-                                              setState(() {});
-                                            },
-                                    )
-                                  else
-                                    Slider(
-                                      value: (wCur / 10000).clamp(0.0, 1.0),
-                                      onChanged: null,
-                                    ),
-                                  Text(
-                                    'Share: ${(wCur / 100).toStringAsFixed(1)}%  →  $amountThis ${line.currency}',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: FutureBuilder<double>(
+                    future: _participantTotalMinor(pids[_ratioParticipantIndex], lines),
+                    builder: (context, snapT) {
+                      final t = snapT.data ?? 0;
+                      return Text(
+                        '${t.toStringAsFixed(2)} ${lines.first.currency}',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
-                          );
-                        },
                       );
                     },
                   ),
                 ),
-                FutureBuilder<double>(
-                  future: _participantTotalMinor(pids[_ratioParticipantIndex], lines, agr),
-                  builder: (context, snapT) {
-                    final t = snapT.data ?? 0;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Text(
-                        'Total for this participant: ${t.toStringAsFixed(2)} (plan currency minor / 100)',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    );
-                  },
-                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
                   child: Wrap(
+                    alignment: WrapAlignment.center,
                     spacing: 6,
                     runSpacing: 6,
                     children: [
@@ -1248,6 +1355,245 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     ],
                   ),
                 ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: lines.length,
+                    itemBuilder: (context, i) {
+                      final line = lines[i];
+                      final basisMinor = _splitBasisMinor(line);
+                      return FutureBuilder<List<int>>(
+                        future: Future.wait([
+                          for (final pid in pids) _ratioWeight(line.id, pid),
+                        ]),
+                        builder: (context, snapW) {
+                          final weights = snapW.data ?? List.filled(pids.length, 0);
+                          var before = 0;
+                          for (var j = 0; j < _ratioParticipantIndex; j++) {
+                            before += weights[j];
+                          }
+                          final assignable = (10000 - before).clamp(0, 10000);
+                          final pidCur = pids[_ratioParticipantIndex];
+                          final key = '${line.id}:$pidCur';
+                          final wDb = weights[_ratioParticipantIndex];
+                          final wEff = _draftRatioWeightsBps[key] ?? wDb;
+                          final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
+                          final amountShareMinor =
+                              _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
+                          final percentEff =
+                              basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
+
+                          final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
+                          final shareText = _money2FromMinor(amountShareMinor);
+
+                          final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
+                          final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
+                          final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]
+                            ..sort();
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(child: Text(line.title, style: Theme.of(context).textTheme.titleSmall)),
+                                      SizedBox(
+                                        width: 86,
+                                        child: Focus(
+                                          onFocusChange: (hasFocus) {
+                                            if (!hasFocus) {
+                                              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                                                if (!mounted) return;
+                                                await _commitShareAmountTextField(
+                                                  line,
+                                                  pids,
+                                                  _ratioParticipantIndex,
+                                                  basisMinor,
+                                                  assignable,
+                                                  key,
+                                                );
+                                              });
+                                            }
+                                          },
+                                          child: Builder(
+                                            builder: (focusCtx) {
+                                              final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
+                                              if (!typing && shareCtrl.text != shareText) {
+                                                shareCtrl.value = TextEditingValue(
+                                                  text: shareText,
+                                                  selection: TextSelection.collapsed(offset: shareText.length),
+                                                );
+                                              }
+                                              return TextField(
+                                                controller: shareCtrl,
+                                                enabled: !isLast && assignable > 0,
+                                                textAlign: TextAlign.right,
+                                                textInputAction: TextInputAction.done,
+                                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                decoration: const InputDecoration(
+                                                  isDense: true,
+                                                  border: InputBorder.none,
+                                                  contentPadding: EdgeInsets.zero,
+                                                ),
+                                                onEditingComplete: () {
+                                                  Future.microtask(() async {
+                                                    if (!mounted) return;
+                                                    await _commitShareAmountTextField(
+                                                      line,
+                                                      pids,
+                                                      _ratioParticipantIndex,
+                                                      basisMinor,
+                                                      assignable,
+                                                      key,
+                                                    );
+                                                    FocusManager.instance.primaryFocus?.unfocus();
+                                                  });
+                                                },
+                                                onTapOutside: (_) {
+                                                  Future.microtask(() async {
+                                                    if (!mounted) return;
+                                                    await _commitShareAmountTextField(
+                                                      line,
+                                                      pids,
+                                                      _ratioParticipantIndex,
+                                                      basisMinor,
+                                                      assignable,
+                                                      key,
+                                                    );
+                                                  });
+                                                },
+                                                onSubmitted: (_) {
+                                                  Future.microtask(() async {
+                                                    if (!mounted) return;
+                                                    await _commitShareAmountTextField(
+                                                      line,
+                                                      pids,
+                                                      _ratioParticipantIndex,
+                                                      basisMinor,
+                                                      assignable,
+                                                      key,
+                                                    );
+                                                    FocusManager.instance.primaryFocus?.unfocus();
+                                                  });
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        ' / ${_money2FromMinor(basisMinor)} ${line.currency}',
+                                        style: Theme.of(context).textTheme.titleSmall,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        child: Text(
+                                          '${percentEff.toStringAsFixed(1)}%',
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (!isLast)
+                                    SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: [
+                                          Slider(
+                                            min: 0,
+                                            max: maxFrac > 0 ? maxFrac : 1,
+                                            value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
+                                            onChanged: assignable <= 0
+                                                ? null
+                                                : (v) {
+                                                    final w = (v * 10000).round().clamp(0, assignable);
+                                                    setState(() {
+                                                      _shareAmountMinorOverride.remove(key);
+                                                      _draftRatioWeightsBps[key] = w;
+                                                    });
+                                                  },
+                                            onChangeEnd: assignable <= 0
+                                                ? null
+                                                : (v) async {
+                                                    final snapped = _nearestTick(v, ticks);
+                                                    final w = (snapped * 10000).round().clamp(0, assignable);
+                                                    setState(() => _draftRatioWeightsBps[key] = w);
+                                                    await _setRatioWeightBps(line, pids, _ratioParticipantIndex, w);
+                                                    if (mounted) {
+                                                      setState(() {
+                                                        _draftRatioWeightsBps.remove(key);
+                                                        _shareAmountMinorOverride.remove(key);
+                                                      });
+                                                    }
+                                                  },
+                                          ),
+                                          const SizedBox(height: 2),
+                                          LayoutBuilder(
+                                            builder: (context, c) {
+                                              final outer = _sliderThemeOuterPadding(context);
+                                              final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
+                                              final sliderInteractive = assignable > 0 && !isLast;
+                                              final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
+                                                context,
+                                                innerW,
+                                                sliderInteractive: sliderInteractive,
+                                              );
+                                              final color = Theme.of(context).colorScheme.outlineVariant;
+                                              return SizedBox(
+                                                height: 10,
+                                                child: Stack(
+                                                  clipBehavior: Clip.none,
+                                                  children: [
+                                                    if (maxFrac > 0 && trackWidth > 0)
+                                                      for (final t in ticks.where((e) => e > 0 && e < maxFrac))
+                                                        Positioned(
+                                                          left: _snapToDevicePixels(
+                                                            context,
+                                                            outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
+                                                          ),
+                                                          top: 0,
+                                                          bottom: 0,
+                                                          child: Container(width: 2, color: color),
+                                                        ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  else
+                                    Slider(
+                                      value: (wDb / 10000).clamp(0.0, 1.0),
+                                      onChanged: null,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
               ],
             );
           },
@@ -1259,22 +1605,27 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   Future<double> _participantTotalMinor(
     String participantId,
     List<PlanLine> lines,
-    Agreement agr,
   ) async {
-    var sum = 0;
+    var sumMinor = 0;
     for (final line in lines) {
+      final key = '${line.id}:$participantId';
+      final o = _shareAmountMinorOverride[key];
+      if (o != null) {
+        sumMinor += o;
+        continue;
+      }
       final w = await _ratioWeight(line.id, participantId);
-      final lineTot = _lineTotalMinor(line, agr);
-      sum += (lineTot * w / 10000).round();
+      final basis = _splitBasisMinor(line);
+      sumMinor += (basis * w / 10000).round();
     }
-    return sum / 100.0;
+    return sumMinor / 100.0;
   }
 
   Widget _stepWithdrawal() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('Early withdrawal rules (minimum notice and/or penalty).'),
+        const Text('Early withdrawal rules.'),
         const SizedBox(height: 12),
         CheckboxListTile(
           value: _withdrawalSameForAll,
@@ -1304,13 +1655,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             onChanged: (_) => setState(() {}),
           ),
         ] else ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-            child: Text(
-              '${_ratioParticipantLabel(_withdrawalParticipantIndex)}: notice and penalty',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
           TextField(
             controller: _perParticipantNotice[_withdrawalParticipantIndex],
             keyboardType: TextInputType.number,
@@ -1352,6 +1696,7 @@ class _SummaryView extends StatelessWidget {
     required this.db,
     required this.planId,
     required this.avatarIcons,
+    required this.shareMinorOverrides,
     required this.onEditPlan,
     required this.onInvite,
     required this.onDestroy,
@@ -1360,6 +1705,8 @@ class _SummaryView extends StatelessWidget {
   final AppDatabase db;
   final String planId;
   final List<IconData> avatarIcons;
+  /// Keys `lineId:participantId`; same map as split-step manual amount pins.
+  final Map<String, int> shareMinorOverrides;
   final VoidCallback onEditPlan;
   final VoidCallback onInvite;
   final VoidCallback onDestroy;
@@ -1399,6 +1746,12 @@ class _SummaryView extends StatelessWidget {
         final ratios = snap.data![3] as List<PlanRatio>;
         if (agr == null) return const Center(child: Text('Missing agreement'));
 
+        final l10n = AppLocalizations.of(context);
+        var planMonthlyTotalMinor = 0;
+        for (final line in lines) {
+          planMonthlyTotalMinor += PlanProjection.unitMinor(line);
+        }
+
         return Column(
           children: [
             Expanded(
@@ -1407,20 +1760,24 @@ class _SummaryView extends StatelessWidget {
                 itemCount: roster.length,
                 itemBuilder: (context, i) {
                   final p = roster[i];
-                  var planTotal = 0;
+                  var participantMonthlyMinor = 0;
                   for (final line in lines) {
-                    planTotal += _lineTot(line, agr);
-                  }
-                  var moneySum = 0;
-                  for (final line in lines) {
+                    final key = '${line.id}:${p.id}';
+                    final o = shareMinorOverrides[key];
+                    if (o != null) {
+                      participantMonthlyMinor += o;
+                      continue;
+                    }
                     final w = ratios
                         .where((r) => r.lineId == line.id && r.participantId == p.id)
                         .fold<int>(0, (a, r) => a + r.weight);
-                    final lineTot = _lineTot(line, agr);
-                    moneySum += (lineTot * w / 10000).round();
+                    final basis = PlanProjection.unitMinor(line);
+                    participantMonthlyMinor += (basis * w / 10000).round();
                   }
-                  final sharePct =
-                      planTotal > 0 ? (moneySum / planTotal) * 100 : 0.0;
+                  final sharePct = planMonthlyTotalMinor > 0
+                      ? (participantMonthlyMinor / planMonthlyTotalMinor) * 100
+                      : 0.0;
+                  final currency = lines.isEmpty ? '' : lines.first.currency;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: Padding(
@@ -1434,11 +1791,38 @@ class _SummaryView extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(p.displayName, style: Theme.of(context).textTheme.titleMedium),
-                                Text('Share of plan total: ${sharePct.toStringAsFixed(1)}%'),
-                                Text('Total amount: ${(moneySum / 100).toStringAsFixed(2)}'),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        p.displayName,
+                                        style: Theme.of(context).textTheme.titleMedium,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${sharePct.toStringAsFixed(2)}%',
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  l10n.housingPlanSummaryMonthlyTotal,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${(participantMonthlyMinor / 100).toStringAsFixed(2)} $currency',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
                               ],
                             ),
                           ),
@@ -1474,16 +1858,6 @@ class _SummaryView extends StatelessWidget {
         );
       },
     );
-  }
-
-  static int _lineTot(PlanLine line, Agreement agr) {
-    final months = PlanProjection.monthsCoveredInclusive(
-      agr.periodStart,
-      agr.periodEnd,
-    ).clamp(0, 120);
-    final unit = PlanProjection.unitMinor(line);
-    if (line.isRecurring) return unit * months;
-    return unit;
   }
 }
 
@@ -1569,13 +1943,12 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SwitchListTile(
-              title: const Text('Recurring (monthly)'),
+              title: const Text('Recurring'),
               value: _isRecurring,
               onChanged: (v) => setState(() => _isRecurring = v),
             ),
             SwitchListTile(
-              title: const Text('Approximate amount (min–max range)'),
-              subtitle: const Text('Off = single fixed amount'),
+              title: const Text('Approximate amount'),
               value: _amountUsesRange,
               onChanged: (v) => setState(() => _amountUsesRange = v),
             ),
@@ -1609,13 +1982,13 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _min,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Min amount'),
+                decoration: const InputDecoration(labelText: 'Min'),
                 onChanged: (_) => setState(() {}),
               ),
               TextField(
                 controller: _max,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Max amount'),
+                decoration: const InputDecoration(labelText: 'Max'),
                 onChanged: (_) => setState(() {}),
               ),
             ] else ...[
@@ -1623,7 +1996,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _amount,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount (e.g. 1200.00)'),
+                decoration: const InputDecoration(labelText: 'Amount'),
                 onChanged: (_) => setState(() {}),
               ),
             ],

@@ -24,3 +24,32 @@ bool isStrictlyBeforeCalendarDate(DateTime a, DateTime b) {
   final db = DateUtils.dateOnly(b.toLocal());
   return da.isBefore(db);
 }
+
+/// Inclusive calendar span from [startUtc] to [endUtc] (local dates), e.g. "7 months, 2 days".
+String formatContractCalendarDuration(DateTime? startUtc, DateTime? endUtc) {
+  if (startUtc == null || endUtc == null) return '';
+  final s = DateUtils.dateOnly(startUtc.toLocal());
+  final e = DateUtils.dateOnly(endUtc.toLocal());
+  if (!e.isAfter(s)) return '';
+  var months = 0;
+  var cur = DateTime(s.year, s.month, s.day);
+  while (true) {
+    final nxt = DateTime(cur.year, cur.month + 1, cur.day);
+    if (nxt.isAfter(e)) break;
+    months++;
+    cur = nxt;
+  }
+  var days = e.difference(cur).inDays;
+  if (days < 0) days = 0;
+  final parts = <String>[];
+  if (months > 0) {
+    parts.add(months == 1 ? '1 month' : '$months months');
+  }
+  if (days > 0) {
+    parts.add(days == 1 ? '1 day' : '$days days');
+  }
+  if (parts.isEmpty) {
+    parts.add('0 days');
+  }
+  return parts.join(', ');
+}

@@ -70,6 +70,7 @@
     }
   },
   "homeHousingPlan": "Housing plan",
+  "housingPlanSummaryMonthlyTotal": "Monthly total",
   "homeCarSharingPlan": "Car sharing plan",
   "homePlaceholderBody": "This is a placeholder home screen for the store-publishable MVP shell."
 }

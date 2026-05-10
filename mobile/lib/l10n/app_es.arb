@@ -70,6 +70,7 @@
     }
   },
   "homeHousingPlan": "Plan de vivienda",
+  "housingPlanSummaryMonthlyTotal": "Total mensual",
   "homeCarSharingPlan": "Plan de coche",
   "homePlaceholderBody": "Esta es una pantalla de inicio provisional para el contenedor MVP publicable."
 }

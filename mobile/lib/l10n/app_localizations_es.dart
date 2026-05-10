@@ -176,6 +176,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeHousingPlan => 'Plan de vivienda';
 
   @override
+  String get housingPlanSummaryMonthlyTotal => 'Total mensual';
+
+  @override
   String get homeCarSharingPlan => 'Plan de coche';
 
   @override

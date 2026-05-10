@@ -70,6 +70,7 @@
     }
   },
   "homeHousingPlan": "Plan logement",
+  "housingPlanSummaryMonthlyTotal": "Total mensuel",
   "homeCarSharingPlan": "Plan voiture",
   "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique."
 }
