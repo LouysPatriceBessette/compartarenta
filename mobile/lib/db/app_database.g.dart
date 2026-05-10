@@ -1651,6 +1651,18 @@ class $PlanGroupsTable extends PlanGroups
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1663,7 +1675,13 @@ class $PlanGroupsTable extends PlanGroups
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, planId, title, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    title,
+    description,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1697,6 +1715,15 @@ class $PlanGroupsTable extends PlanGroups
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1726,6 +1753,10 @@ class $PlanGroupsTable extends PlanGroups
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1743,11 +1774,15 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
   final String id;
   final String planId;
   final String title;
+
+  /// Optional guidance for what expenses belong in this category.
+  final String description;
   final DateTime createdAt;
   const PlanGroup({
     required this.id,
     required this.planId,
     required this.title,
+    required this.description,
     required this.createdAt,
   });
   @override
@@ -1756,6 +1791,7 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
     map['id'] = Variable<String>(id);
     map['plan_id'] = Variable<String>(planId);
     map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1765,6 +1801,7 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
       id: Value(id),
       planId: Value(planId),
       title: Value(title),
+      description: Value(description),
       createdAt: Value(createdAt),
     );
   }
@@ -1778,6 +1815,7 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
       id: serializer.fromJson<String>(json['id']),
       planId: serializer.fromJson<String>(json['planId']),
       title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1788,6 +1826,7 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
       'id': serializer.toJson<String>(id),
       'planId': serializer.toJson<String>(planId),
       'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1796,11 +1835,13 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
     String? id,
     String? planId,
     String? title,
+    String? description,
     DateTime? createdAt,
   }) => PlanGroup(
     id: id ?? this.id,
     planId: planId ?? this.planId,
     title: title ?? this.title,
+    description: description ?? this.description,
     createdAt: createdAt ?? this.createdAt,
   );
   PlanGroup copyWithCompanion(PlanGroupsCompanion data) {
@@ -1808,6 +1849,9 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
       id: data.id.present ? data.id.value : this.id,
       planId: data.planId.present ? data.planId.value : this.planId,
       title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1818,13 +1862,14 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
           ..write('id: $id, ')
           ..write('planId: $planId, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, planId, title, createdAt);
+  int get hashCode => Object.hash(id, planId, title, description, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1832,6 +1877,7 @@ class PlanGroup extends DataClass implements Insertable<PlanGroup> {
           other.id == this.id &&
           other.planId == this.planId &&
           other.title == this.title &&
+          other.description == this.description &&
           other.createdAt == this.createdAt);
 }
 
@@ -1839,12 +1885,14 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
   final Value<String> id;
   final Value<String> planId;
   final Value<String> title;
+  final Value<String> description;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const PlanGroupsCompanion({
     this.id = const Value.absent(),
     this.planId = const Value.absent(),
     this.title = const Value.absent(),
+    this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1852,6 +1900,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
     required String id,
     required String planId,
     required String title,
+    this.description = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1862,6 +1911,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
     Expression<String>? id,
     Expression<String>? planId,
     Expression<String>? title,
+    Expression<String>? description,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -1869,6 +1919,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
       if (id != null) 'id': id,
       if (planId != null) 'plan_id': planId,
       if (title != null) 'title': title,
+      if (description != null) 'description': description,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1878,6 +1929,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
     Value<String>? id,
     Value<String>? planId,
     Value<String>? title,
+    Value<String>? description,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -1885,6 +1937,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
       id: id ?? this.id,
       planId: planId ?? this.planId,
       title: title ?? this.title,
+      description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1902,6 +1955,9 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
     if (title.present) {
       map['title'] = Variable<String>(title.value);
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1917,6 +1973,7 @@ class PlanGroupsCompanion extends UpdateCompanion<PlanGroup> {
           ..write('id: $id, ')
           ..write('planId: $planId, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5103,6 +5160,7 @@ typedef $$PlanGroupsTableCreateCompanionBuilder =
       required String id,
       required String planId,
       required String title,
+      Value<String> description,
       required DateTime createdAt,
       Value<int> rowid,
     });
@@ -5111,6 +5169,7 @@ typedef $$PlanGroupsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> planId,
       Value<String> title,
+      Value<String> description,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -5136,6 +5195,11 @@ class $$PlanGroupsTableFilterComposer
 
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5169,6 +5233,11 @@ class $$PlanGroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5192,6 +5261,11 @@ class $$PlanGroupsTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5231,12 +5305,14 @@ class $$PlanGroupsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> planId = const Value.absent(),
                 Value<String> title = const Value.absent(),
+                Value<String> description = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlanGroupsCompanion(
                 id: id,
                 planId: planId,
                 title: title,
+                description: description,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -5245,12 +5321,14 @@ class $$PlanGroupsTableTableManager
                 required String id,
                 required String planId,
                 required String title,
+                Value<String> description = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => PlanGroupsCompanion.insert(
                 id: id,
                 planId: planId,
                 title: title,
+                description: description,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

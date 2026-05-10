@@ -12,7 +12,22 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 
-/// Housing plan setup: vertical stepper (1–5) then summary (step 6).
+sealed class _SplitListEntry {}
+
+final class _SplitListGroup extends _SplitListEntry {
+  _SplitListGroup(this.group, this.memberLines);
+  final PlanGroup group;
+  final List<PlanLine> memberLines;
+}
+
+/// Uncategorized lines (no group, or unknown group id).
+final class _SplitUncategorized extends _SplitListEntry {
+  _SplitUncategorized(this.lines, {this.showHeading = true});
+  final List<PlanLine> lines;
+  final bool showHeading;
+}
+
+/// Housing plan setup: vertical stepper (1–6) then summary.
 class HousingPlanScreen extends StatefulWidget {
   const HousingPlanScreen({super.key, required this.prefs});
 
@@ -54,6 +69,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   static const _stepTitles = <String>[
     'Participants',
     'Plan dates',
+    'Expense categories',
     'Expenses',
     'Split',
     'Withdrawal',
@@ -65,6 +81,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   int _linesEpoch = 0;
   int _linesFutureSerial = -1;
   Future<List<PlanLine>>? _cachedPlanLinesFuture;
+
+  int _groupsEpoch = 0;
+  int _groupsFutureSerial = -1;
+  Future<List<PlanGroup>>? _cachedPlanGroupsFuture;
 
   /// Other people on the plan (not including the signed-in profile).
   int _otherParticipantCount = 1;
@@ -224,6 +244,52 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
   }
 
+  String _shareSplitControllerKeyForGroup(String groupId, String participantId) =>
+      'g:$groupId:$participantId';
+
+  TextEditingController _shareAmountControllerForGroup(String groupId, String participantId) {
+    final key = _shareSplitControllerKeyForGroup(groupId, participantId);
+    return _shareAmountControllers.putIfAbsent(key, () => TextEditingController());
+  }
+
+  Future<void> _commitShareGroupAmountTextField(
+    PlanGroup group,
+    List<String> pids,
+    int participantIndex,
+    int basisMinor,
+    int assignable,
+    String controllerKey,
+  ) async {
+    final ctrl = _shareAmountControllers[controllerKey];
+    if (ctrl == null) return;
+    final formatted = _formatMoneyMajorTwoDecimals(ctrl.text);
+    ctrl.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
+    var minor = (major * 100).round();
+    final maxShareMinor = basisMinor <= 0 ? 0 : (basisMinor * assignable / 10000).round();
+    minor = minor.clamp(0, maxShareMinor);
+    final display = (minor / 100).toStringAsFixed(2);
+    if (display != formatted) {
+      ctrl.value = TextEditingValue(
+        text: display,
+        selection: TextSelection.collapsed(offset: display.length),
+      );
+    }
+    final wClamped = _bestWeightBpsForShareMinor(minor, basisMinor, assignable);
+    await _setGroupRatioWeightBps(group, pids, participantIndex, wClamped);
+    if (mounted) {
+      setState(() {
+        _shareAmountMinorOverride[controllerKey] = minor;
+      });
+    }
+  }
+
+  int _groupBasisMinor(List<PlanLine> memberLines) =>
+      memberLines.fold<int>(0, (a, l) => a + _splitBasisMinor(l));
+
   List<double> _splitTickFractionsForParticipantCount(int n) {
     final s = <double>{};
     void add(int a, int b) => s.add(a / b);
@@ -316,6 +382,52 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         participantId: last,
         lineId: drift.Value(line.id),
         groupId: const drift.Value.absent(),
+        weight: lastW,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<void> _setGroupRatioWeightBps(
+    PlanGroup group,
+    List<String> pids,
+    int participantIndex,
+    int newW,
+  ) async {
+    final last = pids.last;
+    if (participantIndex >= pids.length - 1) return;
+
+    var assignedBefore = 0;
+    for (var i = 0; i < participantIndex; i++) {
+      assignedBefore += await _ratioWeightGroup(group.id, pids[i]);
+    }
+    final assignable = (10000 - assignedBefore).clamp(0, 10000);
+    final clampedW = newW.clamp(0, assignable);
+    final pid = pids[participantIndex];
+    await _db.upsertPlanRatio(
+      PlanRatiosCompanion.insert(
+        id: 'ratio:$_planId:grp:${group.id}:$pid',
+        planId: _planId,
+        participantId: pid,
+        lineId: const drift.Value.absent(),
+        groupId: drift.Value(group.id),
+        weight: clampedW,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+
+    var sumExceptLast = 0;
+    for (var i = 0; i < pids.length - 1; i++) {
+      sumExceptLast += await _ratioWeightGroup(group.id, pids[i]);
+    }
+    final lastW = (10000 - sumExceptLast).clamp(0, 10000);
+    await _db.upsertPlanRatio(
+      PlanRatiosCompanion.insert(
+        id: 'ratio:$_planId:grp:${group.id}:$last',
+        planId: _planId,
+        participantId: last,
+        lineId: const drift.Value.absent(),
+        groupId: drift.Value(group.id),
         weight: lastW,
         createdAt: DateTime.now().toUtc(),
       ),
@@ -447,6 +559,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return _cachedPlanLinesFuture!;
   }
 
+  Future<List<PlanGroup>> _planGroupsFuture() {
+    if (_groupsFutureSerial != _groupsEpoch) {
+      _groupsFutureSerial = _groupsEpoch;
+      _cachedPlanGroupsFuture = _db.listPlanGroups(_planId);
+    }
+    return _cachedPlanGroupsFuture!;
+  }
+
   bool _stepDone(int i) {
     if (_showSummary) return true;
     return i < _stepIndex;
@@ -495,10 +615,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 1:
         return _datesStepValid();
       case 2:
-        return true; // validated async: at least one line
+        return true; // categories are optional (see expense plan specs)
       case 3:
-        return true; // validated async: ratios sum to 100%
+        return true; // validated async: at least one expense line
       case 4:
+        return true; // validated async: ratios sum to 100%
+      case 5:
         final n = int.tryParse(_globalNotice.text.trim()) ?? 0;
         final p = _parseMinor(_globalPenalty.text) ?? 0;
         if (_withdrawalSameForAll) {
@@ -514,6 +636,32 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       default:
         return true;
     }
+  }
+
+  Future<void> _unassignLinesAndDeletePlanGroup(String groupId) async {
+    await (_db.update(_db.planLines)..where((t) => t.groupId.equals(groupId))).write(
+      PlanLinesCompanion(groupId: const drift.Value(null)),
+    );
+    await (_db.delete(_db.planGroups)..where((t) => t.id.equals(groupId))).go();
+  }
+
+  Future<void> _editPlanCategory(PlanGroup? existing) async {
+    final result = await showDialog<_CategoryDraft>(
+      context: context,
+      builder: (context) => _CategoryEditorDialog(initial: existing),
+    );
+    if (result == null) return;
+    final now = DateTime.now().toUtc();
+    final id = existing?.id ?? 'group:${now.microsecondsSinceEpoch}';
+    await _db.upsertPlanGroup(
+      PlanGroupsCompanion(
+        id: drift.Value(id),
+        planId: drift.Value(_planId),
+        title: drift.Value(result.title),
+        description: drift.Value(result.description),
+        createdAt: drift.Value(existing?.createdAt ?? now),
+      ),
+    );
   }
 
   Future<bool> _validateStep2Expenses() async {
@@ -537,9 +685,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return true;
   }
 
-  Future<bool> _validateStep3Ratios(List<PlanLine> lines, List<String> pids) async {
+  Future<bool> _validateStep3Ratios(
+    List<PlanLine> lines,
+    List<PlanGroup> groups,
+    List<String> pids,
+  ) async {
     final ratios = await _db.listPlanRatios(_planId);
+    final knownGroupIds = groups.map((g) => g.id).toSet();
+
+    for (final g in groups) {
+      final members = lines.where((l) => l.groupId == g.id).toList();
+      if (members.isEmpty) continue;
+      var sum = 0;
+      for (final pid in pids) {
+        final w = ratios
+            .where((r) => r.groupId == g.id && r.participantId == pid)
+            .fold<int>(0, (a, r) => a + r.weight);
+        sum += w;
+      }
+      if (sum != 10000) return false;
+    }
+
     for (final line in lines) {
+      final gid = line.groupId;
+      if (gid != null && knownGroupIds.contains(gid)) continue;
       var sum = 0;
       for (final pid in pids) {
         final w = ratios
@@ -613,18 +782,61 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   Future<void> _initRatiosIfNeeded() async {
     final lines = await _db.listPlanLines(_planId);
+    final groups = await _db.listPlanGroups(_planId);
     final pids = _allParticipantIds();
     if (pids.length < 2) return;
     final existing = await _db.listPlanRatios(_planId);
+    final knownGroupIds = groups.map((g) => g.id).toSet();
+    final last = pids.last;
+
+    for (final g in groups) {
+      final members = lines.where((l) => l.groupId == g.id).toList();
+      if (members.isEmpty) continue;
+      var sum = 0;
+      for (final pid in pids) {
+        sum += existing
+            .where((r) => r.groupId == g.id && r.participantId == pid)
+            .fold<int>(0, (a, r) => a + r.weight);
+      }
+      if (sum == 10000) continue;
+      await (_db.delete(_db.planRatios)..where((t) => t.groupId.equals(g.id))).go();
+      for (var i = 0; i < pids.length - 1; i++) {
+        await _db.upsertPlanRatio(
+          PlanRatiosCompanion.insert(
+            id: 'ratio:$_planId:grp:${g.id}:${pids[i]}',
+            planId: _planId,
+            participantId: pids[i],
+            lineId: const drift.Value.absent(),
+            groupId: drift.Value(g.id),
+            weight: 0,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      }
+      await _db.upsertPlanRatio(
+        PlanRatiosCompanion.insert(
+          id: 'ratio:$_planId:grp:${g.id}:$last',
+          planId: _planId,
+          participantId: last,
+          lineId: const drift.Value.absent(),
+          groupId: drift.Value(g.id),
+          weight: 10000,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
     for (final line in lines) {
-      final sum = existing
+      final gid = line.groupId;
+      if (gid != null && knownGroupIds.contains(gid)) {
+        await (_db.delete(_db.planRatios)..where((t) => t.lineId.equals(line.id))).go();
+        continue;
+      }
+      final lineSum = existing
           .where((r) => r.lineId == line.id)
           .fold<int>(0, (a, r) => a + r.weight);
-      if (sum == 10000) continue;
-      await (_db.delete(_db.planRatios)
-            ..where((t) => t.lineId.equals(line.id)))
-          .go();
-      final last = pids.last;
+      if (lineSum == 10000) continue;
+      await (_db.delete(_db.planRatios)..where((t) => t.lineId.equals(line.id))).go();
       for (var i = 0; i < pids.length - 1; i++) {
         await _db.upsertPlanRatio(
           PlanRatiosCompanion.insert(
@@ -650,6 +862,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         ),
       );
     }
+  }
+
+  Future<int> _ratioWeightGroup(String groupId, String participantId) async {
+    final rows = await _db.listPlanRatios(_planId);
+    return rows
+        .where((r) => r.groupId == groupId && r.participantId == participantId)
+        .fold<int>(0, (a, r) => a + r.weight);
   }
 
   Future<int> _ratioWeight(String lineId, String participantId) async {
@@ -883,6 +1102,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             ),
                           if (_stepIndex == 2)
                             IconButton.filledTonal(
+                              tooltip: 'Add expense category',
+                              onPressed: () async {
+                                await _editPlanCategory(null);
+                                if (mounted) setState(() => _groupsEpoch++);
+                              },
+                              icon: const Icon(Icons.add),
+                            ),
+                          if (_stepIndex == 3)
+                            IconButton.filledTonal(
                               tooltip: 'Add expense',
                               onPressed: () async {
                                 await _editLine(null);
@@ -920,7 +1148,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                     try {
                                       if (_stepIndex == 0) await _persistParticipants();
                                       if (_stepIndex == 1) await _persistPeriod();
-                                      if (_stepIndex == 2) {
+                                      if (_stepIndex == 3) {
                                         if (!await _validateStep2Expenses()) {
                                           if (mounted) {
                                             messenger.showSnackBar(
@@ -934,15 +1162,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                           return;
                                         }
                                       }
-                                      if (_stepIndex == 3) {
+                                      if (_stepIndex == 4) {
                                         final lines = await _db.listPlanLines(_planId);
+                                        final groups = await _db.listPlanGroups(_planId);
                                         final pids = _allParticipantIds();
-                                        if (!await _validateStep3Ratios(lines, pids)) {
+                                        if (!await _validateStep3Ratios(lines, groups, pids)) {
                                           if (mounted) {
                                             messenger.showSnackBar(
                                               const SnackBar(
                                                 content: Text(
-                                                  'Each expense must total 100% across participants.',
+                                                  'Each expense or category must total 100% across participants.',
                                                 ),
                                               ),
                                             );
@@ -950,7 +1179,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                           return;
                                         }
                                       }
-                                      if (_stepIndex == 4) {
+                                      if (_stepIndex == 5) {
                                         await _persistWithdrawal();
                                         await widget.prefs.setHousingDefaultPlanSummaryReached(true);
                                         if (mounted) {
@@ -958,7 +1187,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                         }
                                         return;
                                       }
-                                      if (_stepIndex == 2) {
+                                      if (_stepIndex == 3) {
                                         await _initRatiosIfNeeded();
                                       }
                                       if (mounted) setState(() => _stepIndex++);
@@ -977,7 +1206,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                     }
                                   }
                                 : null,
-                            child: Text(_stepIndex == 4 ? 'Finish' : 'Next'),
+                            child: Text(_stepIndex == 5 ? 'Finish' : 'Next'),
                           ),
                         ],
                       ),
@@ -999,10 +1228,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 1:
         return _stepDates();
       case 2:
-        return _stepExpenses();
+        return _stepExpenseCategories();
       case 3:
-        return _stepRatios();
+        return _stepExpenses();
       case 4:
+        return _stepRatios();
+      case 5:
         return _stepWithdrawal();
       default:
         return const SizedBox.shrink();
@@ -1177,11 +1408,89 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
   }
 
-  Widget _stepExpenses() {
-    return FutureBuilder<List<PlanLine>>(
-      future: _planLinesFuture(),
+  Widget _stepExpenseCategories() {
+    return FutureBuilder<List<PlanGroup>>(
+      future: _planGroupsFuture(),
       builder: (context, snap) {
-        final lines = snap.data ?? [];
+        final groups = snap.data ?? [];
+        return Column(
+          children: [
+            Expanded(
+              child: groups.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: groups.length,
+                      itemBuilder: (context, i) {
+                        final g = groups[i];
+                        return Card(
+                          child: ListTile(
+                            title: Text(g.title),
+                            subtitle: g.description.isNotEmpty
+                                ? Text(
+                                    g.description,
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                : null,
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () async {
+                                final ok = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Delete category'),
+                                    content: const Text(
+                                      'Expenses in this category will be unassigned from it. This does not delete the expenses.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (ok == true) {
+                                  await _unassignLinesAndDeletePlanGroup(g.id);
+                                  if (mounted) setState(() => _groupsEpoch++);
+                                }
+                              },
+                            ),
+                            onTap: () async {
+                              await _editPlanCategory(g);
+                              if (mounted) setState(() => _groupsEpoch++);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _stepExpenses() {
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([_planLinesFuture(), _planGroupsFuture()]),
+      builder: (context, snap) {
+        final lines = (snap.data?[0] as List<PlanLine>?) ?? [];
+        final groups = (snap.data?[1] as List<PlanGroup>?) ?? [];
+        final groupTitle = <String, String>{for (final g in groups) g.id: g.title};
         return Column(
           children: [
             Expanded(
@@ -1227,6 +1536,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           child: Card(
                             child: ListTile(
                               title: Text(line.title),
+                              subtitle: line.groupId != null && groupTitle[line.groupId!] != null
+                                  ? Text('(${groupTitle[line.groupId!]})')
+                                  : null,
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1260,9 +1572,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Future<void> _editLine(PlanLine? existing) async {
+    final groups = await _db.listPlanGroups(_planId);
+    if (!mounted) return;
     final result = await showDialog<_LineDraft>(
       context: context,
-      builder: (context) => _LineEditorDialog(initial: existing),
+      builder: (context) => _LineEditorDialog(initial: existing, groups: groups),
     );
     if (result == null) return;
     final now = DateTime.now().toUtc();
@@ -1292,27 +1606,543 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             ? drift.Value(result.recurrenceDayOfMonth)
             : const drift.Value.absent(),
         sortOrder: drift.Value(existing?.sortOrder ?? nextOrder),
-        groupId: const drift.Value.absent(),
+        groupId: drift.Value(result.groupId),
         createdAt: existing?.createdAt ?? now,
       ),
     );
   }
 
+  List<_SplitListEntry> _splitDisplayEntries(List<PlanLine> lines, List<PlanGroup> groups) {
+    final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final knownGroupIds = groups.map((g) => g.id).toSet();
+    final out = <_SplitListEntry>[];
+    for (final g in groups) {
+      final inGroup = sorted.where((l) => l.groupId == g.id).toList();
+      if (inGroup.isEmpty) continue;
+      out.add(_SplitListGroup(g, inGroup));
+    }
+    final uncategorized = sorted.where((l) {
+      final gid = l.groupId;
+      return gid == null || !knownGroupIds.contains(gid);
+    }).toList();
+    if (uncategorized.isNotEmpty) {
+      out.add(_SplitUncategorized(uncategorized, showHeading: groups.isNotEmpty));
+    }
+    return out;
+  }
+
+  Widget _buildSplitRatioLineCard(BuildContext context, PlanLine line, List<String> pids) {
+    final lastIdx = pids.length - 1;
+    final isLast = _ratioParticipantIndex >= lastIdx;
+    final basisMinor = _splitBasisMinor(line);
+    return FutureBuilder<List<int>>(
+      future: Future.wait([
+        for (final pid in pids) _ratioWeight(line.id, pid),
+      ]),
+      builder: (context, snapW) {
+        final weights = snapW.data ?? List.filled(pids.length, 0);
+        var before = 0;
+        for (var j = 0; j < _ratioParticipantIndex; j++) {
+          before += weights[j];
+        }
+        final assignable = (10000 - before).clamp(0, 10000);
+        final pidCur = pids[_ratioParticipantIndex];
+        final key = '${line.id}:$pidCur';
+        final wDb = weights[_ratioParticipantIndex];
+        final wEff = _draftRatioWeightsBps[key] ?? wDb;
+        final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
+        final amountShareMinor = _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
+        final percentEff = basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
+
+        final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
+        final shareText = _money2FromMinor(amountShareMinor);
+
+        final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
+        final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
+        final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]..sort();
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(line.title, style: Theme.of(context).textTheme.titleSmall)),
+                    SizedBox(
+                      width: 86,
+                      child: Focus(
+                        onFocusChange: (hasFocus) {
+                          if (!hasFocus) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                              if (!mounted) return;
+                              await _commitShareAmountTextField(
+                                line,
+                                pids,
+                                _ratioParticipantIndex,
+                                basisMinor,
+                                assignable,
+                                key,
+                              );
+                            });
+                          }
+                        },
+                        child: Builder(
+                          builder: (focusCtx) {
+                            final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
+                            if (!typing && shareCtrl.text != shareText) {
+                              shareCtrl.value = TextEditingValue(
+                                text: shareText,
+                                selection: TextSelection.collapsed(offset: shareText.length),
+                              );
+                            }
+                            return TextField(
+                              controller: shareCtrl,
+                              enabled: !isLast && assignable > 0,
+                              textAlign: TextAlign.right,
+                              textInputAction: TextInputAction.done,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onEditingComplete: () {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareAmountTextField(
+                                    line,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                });
+                              },
+                              onTapOutside: (_) {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareAmountTextField(
+                                    line,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                });
+                              },
+                              onSubmitted: (_) {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareAmountTextField(
+                                    line,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      ' / ${_money2FromMinor(basisMinor)} ${line.currency}',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Text(
+                        '${percentEff.toStringAsFixed(1)}%',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                ),
+                if (!isLast)
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Slider(
+                          min: 0,
+                          max: maxFrac > 0 ? maxFrac : 1,
+                          value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
+                          onChanged: assignable <= 0
+                              ? null
+                              : (v) {
+                                  final w = (v * 10000).round().clamp(0, assignable);
+                                  setState(() {
+                                    _shareAmountMinorOverride.remove(key);
+                                    _draftRatioWeightsBps[key] = w;
+                                  });
+                                },
+                          onChangeEnd: assignable <= 0
+                              ? null
+                              : (v) async {
+                                  final snapped = _nearestTick(v, ticks);
+                                  final w = (snapped * 10000).round().clamp(0, assignable);
+                                  setState(() => _draftRatioWeightsBps[key] = w);
+                                  await _setRatioWeightBps(line, pids, _ratioParticipantIndex, w);
+                                  if (mounted) {
+                                    setState(() {
+                                      _draftRatioWeightsBps.remove(key);
+                                      _shareAmountMinorOverride.remove(key);
+                                    });
+                                  }
+                                },
+                        ),
+                        const SizedBox(height: 2),
+                        LayoutBuilder(
+                          builder: (context, c) {
+                            final outer = _sliderThemeOuterPadding(context);
+                            final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
+                            final sliderInteractive = assignable > 0 && !isLast;
+                            final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
+                              context,
+                              innerW,
+                              sliderInteractive: sliderInteractive,
+                            );
+                            final color = Theme.of(context).colorScheme.outlineVariant;
+                            return SizedBox(
+                              height: 10,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (maxFrac > 0 && trackWidth > 0)
+                                    for (final t in ticks.where((e) => e > 0 && e < maxFrac))
+                                      Positioned(
+                                        left: _snapToDevicePixels(
+                                          context,
+                                          outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
+                                        ),
+                                        top: 0,
+                                        bottom: 0,
+                                        child: Container(width: 2, color: color),
+                                      ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Slider(
+                    value: (wDb / 10000).clamp(0.0, 1.0),
+                    onChanged: null,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSplitRatioGroupCard(
+    BuildContext context,
+    PlanGroup group,
+    List<PlanLine> memberLines,
+    List<String> pids,
+  ) {
+    final lastIdx = pids.length - 1;
+    final isLast = _ratioParticipantIndex >= lastIdx;
+    final basisMinor = _groupBasisMinor(memberLines);
+    final currency = memberLines.isEmpty ? '' : memberLines.first.currency;
+    final memberLabel = memberLines.map((l) => l.title).join(' · ');
+
+    return FutureBuilder<List<int>>(
+      future: Future.wait([
+        for (final pid in pids) _ratioWeightGroup(group.id, pid),
+      ]),
+      builder: (context, snapW) {
+        final weights = snapW.data ?? List.filled(pids.length, 0);
+        var before = 0;
+        for (var j = 0; j < _ratioParticipantIndex; j++) {
+          before += weights[j];
+        }
+        final assignable = (10000 - before).clamp(0, 10000);
+        final pidCur = pids[_ratioParticipantIndex];
+        final key = _shareSplitControllerKeyForGroup(group.id, pidCur);
+        final wDb = weights[_ratioParticipantIndex];
+        final wEff = _draftRatioWeightsBps[key] ?? wDb;
+        final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
+        final amountShareMinor = _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
+        final percentEff = basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
+
+        final shareCtrl = _shareAmountControllerForGroup(group.id, pidCur);
+        final shareText = _money2FromMinor(amountShareMinor);
+
+        final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
+        final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
+        final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]..sort();
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        group.title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 86,
+                      child: Focus(
+                        onFocusChange: (hasFocus) {
+                          if (!hasFocus) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                              if (!mounted) return;
+                              await _commitShareGroupAmountTextField(
+                                group,
+                                pids,
+                                _ratioParticipantIndex,
+                                basisMinor,
+                                assignable,
+                                key,
+                              );
+                            });
+                          }
+                        },
+                        child: Builder(
+                          builder: (focusCtx) {
+                            final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
+                            if (!typing && shareCtrl.text != shareText) {
+                              shareCtrl.value = TextEditingValue(
+                                text: shareText,
+                                selection: TextSelection.collapsed(offset: shareText.length),
+                              );
+                            }
+                            return TextField(
+                              controller: shareCtrl,
+                              enabled: !isLast && assignable > 0,
+                              textAlign: TextAlign.right,
+                              textInputAction: TextInputAction.done,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onEditingComplete: () {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareGroupAmountTextField(
+                                    group,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                });
+                              },
+                              onTapOutside: (_) {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareGroupAmountTextField(
+                                    group,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                });
+                              },
+                              onSubmitted: (_) {
+                                Future.microtask(() async {
+                                  if (!mounted) return;
+                                  await _commitShareGroupAmountTextField(
+                                    group,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    basisMinor,
+                                    assignable,
+                                    key,
+                                  );
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Text(
+                      ' / ${_money2FromMinor(basisMinor)} $currency',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ],
+                ),
+                if (memberLabel.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: 0.75,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        memberLabel,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Text(
+                        '${percentEff.toStringAsFixed(1)}%',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
+                ),
+                if (!isLast)
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Slider(
+                          min: 0,
+                          max: maxFrac > 0 ? maxFrac : 1,
+                          value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
+                          onChanged: assignable <= 0
+                              ? null
+                              : (v) {
+                                  final w = (v * 10000).round().clamp(0, assignable);
+                                  setState(() {
+                                    _shareAmountMinorOverride.remove(key);
+                                    _draftRatioWeightsBps[key] = w;
+                                  });
+                                },
+                          onChangeEnd: assignable <= 0
+                              ? null
+                              : (v) async {
+                                  final snapped = _nearestTick(v, ticks);
+                                  final w = (snapped * 10000).round().clamp(0, assignable);
+                                  setState(() => _draftRatioWeightsBps[key] = w);
+                                  await _setGroupRatioWeightBps(group, pids, _ratioParticipantIndex, w);
+                                  if (mounted) {
+                                    setState(() {
+                                      _draftRatioWeightsBps.remove(key);
+                                      _shareAmountMinorOverride.remove(key);
+                                    });
+                                  }
+                                },
+                        ),
+                        const SizedBox(height: 2),
+                        LayoutBuilder(
+                          builder: (context, c) {
+                            final outer = _sliderThemeOuterPadding(context);
+                            final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
+                            final sliderInteractive = assignable > 0 && !isLast;
+                            final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
+                              context,
+                              innerW,
+                              sliderInteractive: sliderInteractive,
+                            );
+                            final color = Theme.of(context).colorScheme.outlineVariant;
+                            return SizedBox(
+                              height: 10,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (maxFrac > 0 && trackWidth > 0)
+                                    for (final t in ticks.where((e) => e > 0 && e < maxFrac))
+                                      Positioned(
+                                        left: _snapToDevicePixels(
+                                          context,
+                                          outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
+                                        ),
+                                        top: 0,
+                                        bottom: 0,
+                                        child: Container(width: 2, color: color),
+                                      ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Slider(
+                    value: (wDb / 10000).clamp(0.0, 1.0),
+                    onChanged: null,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _stepRatios() {
-    return FutureBuilder<List<PlanLine>>(
-      future: _db.listPlanLines(_planId),
-      builder: (context, snapLines) {
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        _db.listPlanLines(_planId),
+        _db.listPlanGroups(_planId),
+      ]),
+      builder: (context, snapLinesAndGroups) {
         return FutureBuilder<Agreement?>(
           future: _db.getAgreementForPlan(_planId),
           builder: (context, snapAgr) {
-            final lines = snapLines.data ?? [];
+            final combined = snapLinesAndGroups.data;
+            final lines = combined == null ? <PlanLine>[] : combined[0] as List<PlanLine>;
+            final groups = combined == null ? <PlanGroup>[] : combined[1] as List<PlanGroup>;
             final agr = snapAgr.data;
             if (lines.isEmpty || agr == null) {
               return const Center(child: Text('Add expenses first.'));
             }
             final pids = _allParticipantIds();
-            final lastIdx = pids.length - 1;
-            final isLast = _ratioParticipantIndex >= lastIdx;
+            final entries = _splitDisplayEntries(lines, groups);
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1320,7 +2150,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: FutureBuilder<double>(
-                    future: _participantTotalMinor(pids[_ratioParticipantIndex], lines),
+                    future: _participantTotalMinor(pids[_ratioParticipantIndex], lines, groups),
                     builder: (context, snapT) {
                       final t = snapT.data ?? 0;
                       return Text(
@@ -1358,239 +2188,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: lines.length,
+                    itemCount: entries.length,
                     itemBuilder: (context, i) {
-                      final line = lines[i];
-                      final basisMinor = _splitBasisMinor(line);
-                      return FutureBuilder<List<int>>(
-                        future: Future.wait([
-                          for (final pid in pids) _ratioWeight(line.id, pid),
-                        ]),
-                        builder: (context, snapW) {
-                          final weights = snapW.data ?? List.filled(pids.length, 0);
-                          var before = 0;
-                          for (var j = 0; j < _ratioParticipantIndex; j++) {
-                            before += weights[j];
-                          }
-                          final assignable = (10000 - before).clamp(0, 10000);
-                          final pidCur = pids[_ratioParticipantIndex];
-                          final key = '${line.id}:$pidCur';
-                          final wDb = weights[_ratioParticipantIndex];
-                          final wEff = _draftRatioWeightsBps[key] ?? wDb;
-                          final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
-                          final amountShareMinor =
-                              _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-                          final percentEff =
-                              basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
-
-                          final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
-                          final shareText = _money2FromMinor(amountShareMinor);
-
-                          final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
-                          final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
-                          final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]
-                            ..sort();
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(child: Text(line.title, style: Theme.of(context).textTheme.titleSmall)),
-                                      SizedBox(
-                                        width: 86,
-                                        child: Focus(
-                                          onFocusChange: (hasFocus) {
-                                            if (!hasFocus) {
-                                              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                                                if (!mounted) return;
-                                                await _commitShareAmountTextField(
-                                                  line,
-                                                  pids,
-                                                  _ratioParticipantIndex,
-                                                  basisMinor,
-                                                  assignable,
-                                                  key,
-                                                );
-                                              });
-                                            }
-                                          },
-                                          child: Builder(
-                                            builder: (focusCtx) {
-                                              final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
-                                              if (!typing && shareCtrl.text != shareText) {
-                                                shareCtrl.value = TextEditingValue(
-                                                  text: shareText,
-                                                  selection: TextSelection.collapsed(offset: shareText.length),
-                                                );
-                                              }
-                                              return TextField(
-                                                controller: shareCtrl,
-                                                enabled: !isLast && assignable > 0,
-                                                textAlign: TextAlign.right,
-                                                textInputAction: TextInputAction.done,
-                                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                decoration: const InputDecoration(
-                                                  isDense: true,
-                                                  border: InputBorder.none,
-                                                  contentPadding: EdgeInsets.zero,
-                                                ),
-                                                onEditingComplete: () {
-                                                  Future.microtask(() async {
-                                                    if (!mounted) return;
-                                                    await _commitShareAmountTextField(
-                                                      line,
-                                                      pids,
-                                                      _ratioParticipantIndex,
-                                                      basisMinor,
-                                                      assignable,
-                                                      key,
-                                                    );
-                                                    FocusManager.instance.primaryFocus?.unfocus();
-                                                  });
-                                                },
-                                                onTapOutside: (_) {
-                                                  Future.microtask(() async {
-                                                    if (!mounted) return;
-                                                    await _commitShareAmountTextField(
-                                                      line,
-                                                      pids,
-                                                      _ratioParticipantIndex,
-                                                      basisMinor,
-                                                      assignable,
-                                                      key,
-                                                    );
-                                                  });
-                                                },
-                                                onSubmitted: (_) {
-                                                  Future.microtask(() async {
-                                                    if (!mounted) return;
-                                                    await _commitShareAmountTextField(
-                                                      line,
-                                                      pids,
-                                                      _ratioParticipantIndex,
-                                                      basisMinor,
-                                                      assignable,
-                                                      key,
-                                                    );
-                                                    FocusManager.instance.primaryFocus?.unfocus();
-                                                  });
-                                                },
-                                              );
-                                            },
-                                          ),
+                      final e = entries[i];
+                      return switch (e) {
+                        _SplitListGroup(:final group, :final memberLines) =>
+                          _buildSplitRatioGroupCard(context, group, memberLines, pids),
+                        _SplitUncategorized(:final lines, :final showHeading) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (showHeading)
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(4, i == 0 ? 8 : 18, 4, 6),
+                                  child: Text(
+                                    'No category',
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                      ),
-                                      Text(
-                                        ' / ${_money2FromMinor(basisMinor)} ${line.currency}',
-                                        style: Theme.of(context).textTheme.titleSmall,
-                                      ),
-                                    ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                        child: Text(
-                                          '${percentEff.toStringAsFixed(1)}%',
-                                          style: Theme.of(context).textTheme.bodySmall,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (!isLast)
-                                    SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: [
-                                          Slider(
-                                            min: 0,
-                                            max: maxFrac > 0 ? maxFrac : 1,
-                                            value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
-                                            onChanged: assignable <= 0
-                                                ? null
-                                                : (v) {
-                                                    final w = (v * 10000).round().clamp(0, assignable);
-                                                    setState(() {
-                                                      _shareAmountMinorOverride.remove(key);
-                                                      _draftRatioWeightsBps[key] = w;
-                                                    });
-                                                  },
-                                            onChangeEnd: assignable <= 0
-                                                ? null
-                                                : (v) async {
-                                                    final snapped = _nearestTick(v, ticks);
-                                                    final w = (snapped * 10000).round().clamp(0, assignable);
-                                                    setState(() => _draftRatioWeightsBps[key] = w);
-                                                    await _setRatioWeightBps(line, pids, _ratioParticipantIndex, w);
-                                                    if (mounted) {
-                                                      setState(() {
-                                                        _draftRatioWeightsBps.remove(key);
-                                                        _shareAmountMinorOverride.remove(key);
-                                                      });
-                                                    }
-                                                  },
-                                          ),
-                                          const SizedBox(height: 2),
-                                          LayoutBuilder(
-                                            builder: (context, c) {
-                                              final outer = _sliderThemeOuterPadding(context);
-                                              final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
-                                              final sliderInteractive = assignable > 0 && !isLast;
-                                              final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
-                                                context,
-                                                innerW,
-                                                sliderInteractive: sliderInteractive,
-                                              );
-                                              final color = Theme.of(context).colorScheme.outlineVariant;
-                                              return SizedBox(
-                                                height: 10,
-                                                child: Stack(
-                                                  clipBehavior: Clip.none,
-                                                  children: [
-                                                    if (maxFrac > 0 && trackWidth > 0)
-                                                      for (final t in ticks.where((e) => e > 0 && e < maxFrac))
-                                                        Positioned(
-                                                          left: _snapToDevicePixels(
-                                                            context,
-                                                            outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
-                                                          ),
-                                                          top: 0,
-                                                          bottom: 0,
-                                                          child: Container(width: 2, color: color),
-                                                        ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  else
-                                    Slider(
-                                      value: (wDb / 10000).clamp(0.0, 1.0),
-                                      onChanged: null,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                                ),
+                              for (final line in lines)
+                                _buildSplitRatioLineCard(context, line, pids),
+                            ],
+                          ),
+                      };
                     },
                   ),
                 ),
@@ -1605,9 +2226,29 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   Future<double> _participantTotalMinor(
     String participantId,
     List<PlanLine> lines,
+    List<PlanGroup> groups,
   ) async {
     var sumMinor = 0;
-    for (final line in lines) {
+    final knownGroupIds = groups.map((g) => g.id).toSet();
+    final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    for (final g in groups) {
+      final members = sorted.where((l) => l.groupId == g.id).toList();
+      if (members.isEmpty) continue;
+      final basis = _groupBasisMinor(members);
+      final key = _shareSplitControllerKeyForGroup(g.id, participantId);
+      final o = _shareAmountMinorOverride[key];
+      if (o != null) {
+        sumMinor += o;
+        continue;
+      }
+      final w = await _ratioWeightGroup(g.id, participantId);
+      sumMinor += (basis * w / 10000).round();
+    }
+
+    for (final line in sorted) {
+      final gid = line.groupId;
+      if (gid != null && knownGroupIds.contains(gid)) continue;
       final key = '${line.id}:$participantId';
       final o = _shareAmountMinorOverride[key];
       if (o != null) {
@@ -1726,6 +2367,7 @@ class _SummaryView extends StatelessWidget {
         db.listPlanLines(planId),
         db.getAgreementForPlan(planId),
         db.listPlanRatios(planId),
+        db.listPlanGroups(planId),
       ]),
       builder: (context, AsyncSnapshot<List<dynamic>> snap) {
         if (!snap.hasData) {
@@ -1744,12 +2386,51 @@ class _SummaryView extends StatelessWidget {
         final lines = snap.data![1] as List<PlanLine>;
         final agr = snap.data![2] as Agreement?;
         final ratios = snap.data![3] as List<PlanRatio>;
+        final planGroups = snap.data![4] as List<PlanGroup>;
         if (agr == null) return const Center(child: Text('Missing agreement'));
 
         final l10n = AppLocalizations.of(context);
         var planMonthlyTotalMinor = 0;
         for (final line in lines) {
           planMonthlyTotalMinor += PlanProjection.unitMinor(line);
+        }
+
+        final knownGroupIds = planGroups.map((g) => g.id).toSet();
+        final sortedLines = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+        int participantShareMinor(String participantId) {
+          var participantMonthlyMinor = 0;
+          for (final g in planGroups) {
+            final mem = sortedLines.where((l) => l.groupId == g.id).toList();
+            if (mem.isEmpty) continue;
+            final basis = mem.fold<int>(0, (a, l) => a + PlanProjection.unitMinor(l));
+            final gKey = 'g:${g.id}:$participantId';
+            final o = shareMinorOverrides[gKey];
+            if (o != null) {
+              participantMonthlyMinor += o;
+              continue;
+            }
+            final w = ratios
+                .where((r) => r.groupId == g.id && r.participantId == participantId)
+                .fold<int>(0, (a, r) => a + r.weight);
+            participantMonthlyMinor += (basis * w / 10000).round();
+          }
+          for (final line in sortedLines) {
+            final gid = line.groupId;
+            if (gid != null && knownGroupIds.contains(gid)) continue;
+            final key = '${line.id}:$participantId';
+            final o = shareMinorOverrides[key];
+            if (o != null) {
+              participantMonthlyMinor += o;
+              continue;
+            }
+            final w = ratios
+                .where((r) => r.lineId == line.id && r.participantId == participantId)
+                .fold<int>(0, (a, r) => a + r.weight);
+            final basis = PlanProjection.unitMinor(line);
+            participantMonthlyMinor += (basis * w / 10000).round();
+          }
+          return participantMonthlyMinor;
         }
 
         return Column(
@@ -1760,20 +2441,7 @@ class _SummaryView extends StatelessWidget {
                 itemCount: roster.length,
                 itemBuilder: (context, i) {
                   final p = roster[i];
-                  var participantMonthlyMinor = 0;
-                  for (final line in lines) {
-                    final key = '${line.id}:${p.id}';
-                    final o = shareMinorOverrides[key];
-                    if (o != null) {
-                      participantMonthlyMinor += o;
-                      continue;
-                    }
-                    final w = ratios
-                        .where((r) => r.lineId == line.id && r.participantId == p.id)
-                        .fold<int>(0, (a, r) => a + r.weight);
-                    final basis = PlanProjection.unitMinor(line);
-                    participantMonthlyMinor += (basis * w / 10000).round();
-                  }
+                  final participantMonthlyMinor = participantShareMinor(p.id);
                   final sharePct = planMonthlyTotalMinor > 0
                       ? (participantMonthlyMinor / planMonthlyTotalMinor) * 100
                       : 0.0;
@@ -1861,6 +2529,84 @@ class _SummaryView extends StatelessWidget {
   }
 }
 
+class _CategoryDraft {
+  const _CategoryDraft({required this.title, required this.description});
+
+  final String title;
+  final String description;
+}
+
+class _CategoryEditorDialog extends StatefulWidget {
+  const _CategoryEditorDialog({this.initial});
+
+  final PlanGroup? initial;
+
+  @override
+  State<_CategoryEditorDialog> createState() => _CategoryEditorDialogState();
+}
+
+class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
+  late final TextEditingController _title =
+      TextEditingController(text: widget.initial?.title ?? '');
+  late final TextEditingController _description =
+      TextEditingController(text: widget.initial?.description ?? '');
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSave = _title.text.trim().isNotEmpty;
+    return AlertDialog(
+      title: Text(widget.initial == null ? 'Add category' : 'Edit category'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _title,
+              decoration: const InputDecoration(labelText: 'Category name'),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _description,
+              decoration: const InputDecoration(
+                labelText: 'What belongs here (optional)',
+                alignLabelWithHint: true,
+              ),
+              maxLines: 5,
+              minLines: 2,
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        FilledButton(
+          onPressed: canSave
+              ? () {
+                  Navigator.of(context).pop(
+                    _CategoryDraft(
+                      title: _title.text.trim(),
+                      description: _description.text.trim(),
+                    ),
+                  );
+                }
+              : null,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
 class _LineDraft {
   const _LineDraft({
     required this.title,
@@ -1873,6 +2619,7 @@ class _LineDraft {
     required this.description,
     required this.cadence,
     required this.recurrenceDayOfMonth,
+    this.groupId,
   });
 
   final String title;
@@ -1885,11 +2632,14 @@ class _LineDraft {
   final String description;
   final String cadence;
   final int recurrenceDayOfMonth;
+  final String? groupId;
 }
 
 class _LineEditorDialog extends StatefulWidget {
-  const _LineEditorDialog({this.initial});
+  const _LineEditorDialog({this.initial, this.groups = const []});
+
   final PlanLine? initial;
+  final List<PlanGroup> groups;
 
   @override
   State<_LineEditorDialog> createState() => _LineEditorDialogState();
@@ -1910,12 +2660,15 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
       TextEditingController(text: widget.initial?.description ?? '');
   late int _dayOfMonth;
   late String _currency;
+  String? _groupId;
 
   @override
   void initState() {
     super.initState();
     _dayOfMonth = widget.initial?.recurrenceDayOfMonth ?? 1;
     _currency = widget.initial?.currency ?? 'CAD';
+    final gid = widget.initial?.groupId;
+    _groupId = gid != null && widget.groups.any((g) => g.id == gid) ? gid : null;
   }
 
   @override
@@ -1957,6 +2710,21 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               decoration: const InputDecoration(labelText: 'Title'),
               onChanged: (_) => setState(() {}),
             ),
+            if (widget.groups.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String?>(
+                key: ValueKey<String?>(_groupId),
+                initialValue: _groupId,
+                decoration: const InputDecoration(labelText: 'Category (optional)'),
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('None')),
+                  ...widget.groups.map(
+                    (g) => DropdownMenuItem(value: g.id, child: Text(g.title)),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _groupId = v),
+              ),
+            ],
             const SizedBox(height: 8),
             TextField(
               controller: _description,
@@ -2020,6 +2788,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
                       description: _description.text.trim(),
                       cadence: 'monthly',
                       recurrenceDayOfMonth: _dayOfMonth,
+                      groupId: _groupId,
                     ),
                   );
                 }

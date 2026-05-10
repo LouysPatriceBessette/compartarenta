@@ -55,6 +55,10 @@ class PlanGroups extends Table {
   TextColumn get id => text()();
   TextColumn get planId => text()();
   TextColumn get title => text()();
+
+  /// Optional guidance for what expenses belong in this category.
+  TextColumn get description => text().withDefault(const Constant(''))();
+
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -202,7 +206,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -256,6 +260,9 @@ class AppDatabase extends _$AppDatabase {
                 AND min_amount_minor IS NOT NULL
               ''',
             );
+          }
+          if (from < 7) {
+            await m.addColumn(planGroups, planGroups.description);
           }
         },
         beforeOpen: (details) async {
@@ -316,6 +323,14 @@ class AppDatabase extends _$AppDatabase {
           (t) => OrderingTerm.asc(t.createdAt),
         ]))
       .get();
+
+  Future<List<PlanGroup>> listPlanGroups(String planId) => (select(planGroups)
+        ..where((t) => t.planId.equals(planId))
+        ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+      .get();
+
+  Future<void> upsertPlanGroup(PlanGroupsCompanion row) =>
+      into(planGroups).insertOnConflictUpdate(row);
 
   Future<void> upsertPlanRatio(PlanRatiosCompanion row) =>
       into(planRatios).insertOnConflictUpdate(row);
