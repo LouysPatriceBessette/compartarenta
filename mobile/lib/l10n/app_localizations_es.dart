@@ -331,10 +331,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Invitar a los participantes (próximamente)';
 
   @override
-  String get housingPlanPreviousPerson => 'Persona anterior';
+  String get housingPlanPreviousPerson => 'Anterior';
 
   @override
-  String get housingPlanNextPerson => 'Persona siguiente';
+  String get housingPlanNextPerson => 'Siguiente';
 
   @override
   String get housingPlanParticipantNameLabel => 'Nombre';

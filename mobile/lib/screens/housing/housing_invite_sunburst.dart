@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../l10n/app_localizations.dart';
+import '../../util/format_money.dart';
 
 /// One inner-ring category (or uncategorized bucket) with total and focused participant share.
 class InviteSunburstSlice {
@@ -21,7 +21,7 @@ class InviteSunburstSlice {
   final int totalMinor;
   final int userMinor;
   final Color baseColor;
-  /// ISO currency code from plan lines (e.g. CAD); used only for legend formatting.
+  /// ISO currency code used for legend formatting (plan or user preference).
   final String currency;
 
   double get userFraction =>
@@ -47,6 +47,7 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   required List<PlanRatio> ratios,
   required String participantId,
   required AppLocalizations l10n,
+  required String displayCurrency,
 }) {
   const palette = <Color>[
     Color(0xFF1E88E5),
@@ -79,7 +80,7 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
         totalMinor: basis,
         userMinor: userPart,
         baseColor: nextColor(),
-        currency: members.first.currency,
+        currency: displayCurrency,
       ),
     );
   }
@@ -99,21 +100,12 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
         totalMinor: b,
         userMinor: userPart,
         baseColor: nextColor(),
-        currency: line.currency,
+        currency: displayCurrency,
       ),
     );
   }
 
   return out;
-}
-
-String _formatMinorMoney(BuildContext context, int minor, String currencyCode) {
-  final localeName = Localizations.localeOf(context).toString();
-  final code = currencyCode.trim();
-  if (code.isEmpty) {
-    return NumberFormat('#,##0.00', localeName).format(minor / 100.0);
-  }
-  return NumberFormat.simpleCurrency(locale: localeName, name: code).format(minor / 100.0);
 }
 
 void _addAnnulusSector(Path path, Offset c, double rInner, double rOuter, double start, double sweep) {
@@ -353,8 +345,8 @@ class HousingInviteSunburstChart extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         l10n.housingInviteSunburstLegendYouParticipation(
-                          _formatMinorMoney(context, s.userMinor, s.currency),
-                          _formatMinorMoney(context, s.totalMinor, s.currency),
+                          formatMinorAsMoney(context, s.userMinor, s.currency),
+                          formatMinorAsMoney(context, s.totalMinor, s.currency),
                           userPctOfCategory.toStringAsFixed(0),
                         ),
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),

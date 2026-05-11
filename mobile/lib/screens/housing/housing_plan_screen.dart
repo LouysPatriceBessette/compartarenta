@@ -14,6 +14,7 @@ import '../../housing/projection/plan_projection.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../util/format_money.dart';
 
 sealed class _SplitListEntry {}
 
@@ -533,7 +534,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         type: 'housing',
         createdAt: DateTime.now().toUtc(),
         title: drift.Value(l10n.homeHousingPlan),
-        currency: drift.Value('CAD'),
+        currency: drift.Value(
+          widget.prefs.currency.trim().isEmpty ? 'CAD' : widget.prefs.currency.trim(),
+        ),
         notes: const drift.Value.absent(),
       ),
     );
@@ -1118,6 +1121,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             return _SummaryView(
               db: _db,
               planId: _planId,
+              prefs: widget.prefs,
               avatarIcons: _avatarIcons,
               shareMinorOverrides: _shareAmountMinorOverride,
               onEditPlan: () => setState(() {
@@ -1634,7 +1638,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${_money2FromMinor(_splitBasisMinor(line))} ${line.currency}',
+                                    formatMinorAsMoney(
+                                      context,
+                                      _splitBasisMinor(line),
+                                      displayCurrencyCodeForPlan(widget.prefs, lines),
+                                    ),
                                     style: Theme.of(context).textTheme.titleSmall,
                                   ),
                                   IconButton(
@@ -1667,7 +1675,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (!mounted) return;
     final result = await showDialog<_LineDraft>(
       context: context,
-      builder: (context) => _LineEditorDialog(initial: existing, groups: groups),
+      builder: (context) => _LineEditorDialog(
+        initial: existing,
+        groups: groups,
+        defaultCurrency: widget.prefs.currency.trim().isEmpty ? 'CAD' : widget.prefs.currency.trim(),
+      ),
     );
     if (result == null) return;
     final now = DateTime.now().toUtc();
@@ -1847,7 +1859,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       ),
                     ),
                     Text(
-                      ' / ${_money2FromMinor(basisMinor)} ${line.currency}',
+                      ' / ${formatMinorAsMoney(context, basisMinor, displayCurrencyCodeForPlan(widget.prefs, [line]))}',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ],
@@ -1963,7 +1975,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final lastIdx = pids.length - 1;
     final isLast = _ratioParticipantIndex >= lastIdx;
     final basisMinor = _groupBasisMinor(memberLines);
-    final currency = memberLines.isEmpty ? '' : memberLines.first.currency;
+    final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, memberLines);
     final memberLabel = memberLines.map((l) => l.title).join(' · ');
 
     return FutureBuilder<List<int>>(
@@ -2092,7 +2104,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       ),
                     ),
                     Text(
-                      ' / ${_money2FromMinor(basisMinor)} $currency',
+                      ' / ${formatMinorAsMoney(context, basisMinor, displayCurrency)}',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ],
@@ -2245,8 +2257,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     future: _participantTotalMinor(pids[_ratioParticipantIndex], lines, groups),
                     builder: (context, snapT) {
                       final t = snapT.data ?? 0;
+                      final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, lines);
                       return Text(
-                        '${t.toStringAsFixed(2)} ${lines.first.currency}',
+                        formatMajorDoubleAsMoney(context, t, displayCurrency),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w600,
@@ -3136,6 +3149,7 @@ class _SummaryView extends StatelessWidget {
   const _SummaryView({
     required this.db,
     required this.planId,
+    required this.prefs,
     required this.avatarIcons,
     required this.shareMinorOverrides,
     required this.onEditPlan,
@@ -3145,6 +3159,7 @@ class _SummaryView extends StatelessWidget {
 
   final AppDatabase db;
   final String planId;
+  final AppPreferences prefs;
   final List<IconData> avatarIcons;
   /// Keys `lineId:participantId`; same map as split-step manual amount pins.
   final Map<String, int> shareMinorOverrides;
@@ -3245,7 +3260,7 @@ class _SummaryView extends StatelessWidget {
                   final sharePct = planMonthlyTotalMinor > 0
                       ? (participantMonthlyMinor / planMonthlyTotalMinor) * 100
                       : 0.0;
-                  final currency = lines.isEmpty ? '' : lines.first.currency;
+                  final displayCurrency = displayCurrencyCodeForPlan(prefs, lines);
                   return Card(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: Padding(
@@ -3285,7 +3300,7 @@ class _SummaryView extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${(participantMonthlyMinor / 100).toStringAsFixed(2)} $currency',
+                                  formatMinorAsMoney(context, participantMonthlyMinor, displayCurrency),
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                                         fontWeight: FontWeight.w600,
@@ -3448,10 +3463,15 @@ class _LineDraft {
 }
 
 class _LineEditorDialog extends StatefulWidget {
-  const _LineEditorDialog({this.initial, this.groups = const []});
+  const _LineEditorDialog({
+    this.initial,
+    this.groups = const [],
+    this.defaultCurrency = 'CAD',
+  });
 
   final PlanLine? initial;
   final List<PlanGroup> groups;
+  final String defaultCurrency;
 
   @override
   State<_LineEditorDialog> createState() => _LineEditorDialogState();
@@ -3478,7 +3498,7 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
   void initState() {
     super.initState();
     _dayOfMonth = widget.initial?.recurrenceDayOfMonth ?? 1;
-    _currency = widget.initial?.currency ?? 'CAD';
+    _currency = widget.initial?.currency ?? widget.defaultCurrency;
     final gid = widget.initial?.groupId;
     _groupId = gid != null && widget.groups.any((g) => g.id == gid) ? gid : null;
   }

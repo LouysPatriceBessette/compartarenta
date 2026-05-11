@@ -11,6 +11,7 @@ import 'housing_invite_sunburst.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../util/format_money.dart';
 
 /// Per-participant response to a housing proposal (local UI state until relay exists).
 enum HousingInviteParticipantUiStatus {
@@ -191,6 +192,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     Agreement agr,
     AgreementRulesDraft rules,
     List<Participant> roster,
+    String displayCurrency,
   ) {
     final theme = Theme.of(context);
     final perMap = () {
@@ -232,11 +234,13 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
           if (!rules.earlyWithdrawalEnabled)
-            Text(l10n.housingAgreementRuleEarlyWithdrawalDisabledHint, style: theme.textTheme.bodySmall)
+            Text(l10n.housingInviteRuleOffHint, style: theme.textTheme.bodySmall)
           else ...[
             if (agr.withdrawalSameForAll == 'true') ...[
               Text('${l10n.housingPlanMinimumNoticeDays}: ${agr.minNoticeDays}'),
-              Text('${l10n.housingPlanPenaltyAmount}: ${(agr.penaltyMinor / 100).toStringAsFixed(2)}'),
+              Text(
+                '${l10n.housingPlanPenaltyAmount}: ${formatMinorAsMoney(context, agr.penaltyMinor, displayCurrency)}',
+              ),
             ] else ...[
               Text(l10n.housingInviteWithdrawalPerParticipantIntro, style: theme.textTheme.bodySmall),
               if (perMap.isNotEmpty)
@@ -250,7 +254,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                     child: Text(
                       '${_displayNameForParticipantId(e.key.toString(), roster)}: '
                       '${l10n.housingPlanMinimumNoticeDays} $notice; '
-                      '${l10n.housingPlanPenaltyAmount} ${(pen / 100).toStringAsFixed(2)}',
+                      '${l10n.housingPlanPenaltyAmount} ${formatMinorAsMoney(context, pen, displayCurrency)}',
                     ),
                   );
                 }),
@@ -262,9 +266,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
         title: Text(l10n.housingAgreementRuleBuildingTitle),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
-          if (!rules.buildingRulesEnabled &&
-              rules.buildingRulesText.trim().isEmpty &&
-              agr.clauses.trim().isEmpty)
+          if (!rules.buildingRulesEnabled)
             Text(l10n.housingInviteRuleOffHint, style: theme.textTheme.bodySmall)
           else
             Text(
@@ -437,6 +439,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             ratios: ratios,
             participantId: pids[idx],
             l10n: l10n,
+            displayCurrency: displayCurrencyCodeForPlan(widget.prefs, lines),
           );
 
           return Column(
@@ -502,7 +505,14 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                       slices: sunSlices,
                     ),
                     const SizedBox(height: 20),
-                    _readOnlyRules(context, l10n, agr, rules, roster),
+                    _readOnlyRules(
+                      context,
+                      l10n,
+                      agr,
+                      rules,
+                      roster,
+                      displayCurrencyCodeForPlan(widget.prefs, lines),
+                    ),
                     if (!_isAuthorPreview) ...[
                       const SizedBox(height: 24),
                       if (_locksInviteeResponses(roster.length)) ...[

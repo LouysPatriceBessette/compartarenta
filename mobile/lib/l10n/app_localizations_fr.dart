@@ -333,10 +333,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Inviter les participants (bientôt)';
 
   @override
-  String get housingPlanPreviousPerson => 'Personne précédente';
+  String get housingPlanPreviousPerson => 'Précédent';
 
   @override
-  String get housingPlanNextPerson => 'Personne suivante';
+  String get housingPlanNextPerson => 'Suivant';
 
   @override
   String get housingPlanParticipantNameLabel => 'Nom';

@@ -691,13 +691,13 @@ abstract class AppLocalizations {
   /// No description provided for @housingPlanPreviousPerson.
   ///
   /// In en, this message translates to:
-  /// **'Previous person'**
+  /// **'Previous'**
   String get housingPlanPreviousPerson;
 
   /// No description provided for @housingPlanNextPerson.
   ///
   /// In en, this message translates to:
-  /// **'Next person'**
+  /// **'Next'**
   String get housingPlanNextPerson;
 
   /// No description provided for @housingPlanParticipantNameLabel.

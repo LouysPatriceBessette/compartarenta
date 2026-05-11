@@ -131,8 +131,8 @@
     }
   },
   "housingPlanInviteComingSoon": "Invitar a los participantes (próximamente)",
-  "housingPlanPreviousPerson": "Persona anterior",
-  "housingPlanNextPerson": "Persona siguiente",
+  "housingPlanPreviousPerson": "Anterior",
+  "housingPlanNextPerson": "Siguiente",
   "housingPlanParticipantNameLabel": "Nombre",
   "housingPlanParticipantsPlaceholderNote": "Los nombres y avatares son provisionales hasta que alguien se una de verdad.",
   "housingPlanYou": "Tú",
