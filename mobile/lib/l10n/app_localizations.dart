@@ -832,6 +832,132 @@ abstract class AppLocalizations {
   /// **'Invite my participants'**
   String get housingPlanSummaryInvite;
 
+  /// No description provided for @housingInviteProposalAppBarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation proposal'**
+  String get housingInviteProposalAppBarTitle;
+
+  /// No description provided for @housingInviteProposalIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here is the proposal that will be sent to each of your participants.'**
+  String get housingInviteProposalIntroTitle;
+
+  /// No description provided for @housingInviteParticipantsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get housingInviteParticipantsSectionTitle;
+
+  /// No description provided for @housingInviteExpensesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses and split'**
+  String get housingInviteExpensesSectionTitle;
+
+  /// No description provided for @housingInviteRulesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement rules'**
+  String get housingInviteRulesSectionTitle;
+
+  /// No description provided for @housingInviteStatusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get housingInviteStatusAccepted;
+
+  /// No description provided for @housingInviteStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get housingInviteStatusPending;
+
+  /// No description provided for @housingInviteStatusNegotiating.
+  ///
+  /// In en, this message translates to:
+  /// **'In negotiation'**
+  String get housingInviteStatusNegotiating;
+
+  /// No description provided for @housingInviteStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get housingInviteStatusRejected;
+
+  /// No description provided for @housingInviteAcceptFull.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept in full'**
+  String get housingInviteAcceptFull;
+
+  /// No description provided for @housingInviteNegotiate.
+  ///
+  /// In en, this message translates to:
+  /// **'I would like to negotiate'**
+  String get housingInviteNegotiate;
+
+  /// No description provided for @housingInviteRejectBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'I reject outright'**
+  String get housingInviteRejectBlock;
+
+  /// No description provided for @housingInviteNegotiateMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message to send with your negotiation request'**
+  String get housingInviteNegotiateMessageLabel;
+
+  /// No description provided for @housingInviteProposalLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.'**
+  String get housingInviteProposalLockedHint;
+
+  /// No description provided for @housingInviteGenerateCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate invitation codes'**
+  String get housingInviteGenerateCodes;
+
+  /// No description provided for @housingInviteCodesDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation codes'**
+  String get housingInviteCodesDialogTitle;
+
+  /// No description provided for @housingInviteCodesDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each code is for one co-participant. Share them however you prefer; registering codes with the relay server will be added later.'**
+  String get housingInviteCodesDialogBody;
+
+  /// No description provided for @housingInviteCodesCopyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get housingInviteCodesCopyAll;
+
+  /// No description provided for @housingInviteCodesCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get housingInviteCodesCopied;
+
+  /// No description provided for @housingInviteRuleOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This rule is turned off for this proposal.'**
+  String get housingInviteRuleOffHint;
+
+  /// No description provided for @housingInviteWithdrawalPerParticipantIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Notice and penalty differ by participant (see below).'**
+  String get housingInviteWithdrawalPerParticipantIntro;
+
   /// No description provided for @housingPlanSummaryDestroy.
   ///
   /// In en, this message translates to:

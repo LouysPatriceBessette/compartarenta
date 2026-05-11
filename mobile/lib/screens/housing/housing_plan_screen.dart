@@ -9,6 +9,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
+import 'housing_invite_proposal_screen.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -1124,8 +1125,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 _stepIndex = 0;
               }),
               onInvite: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.housingPlanInviteComingSoon)),
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (ctx) => HousingInviteProposalScreen(
+                      db: _db,
+                      planId: _planId,
+                      prefs: widget.prefs,
+                    ),
+                  ),
                 );
               },
               onDestroy: _onDestroyPlan,

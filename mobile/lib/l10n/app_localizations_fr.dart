@@ -413,6 +413,75 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanSummaryInvite => 'Inviter mes participants';
 
   @override
+  String get housingInviteProposalAppBarTitle => 'Proposition d\'invitation';
+
+  @override
+  String get housingInviteProposalIntroTitle =>
+      'Voici la proposition qui sera envoyée à chacun de vos participants.';
+
+  @override
+  String get housingInviteParticipantsSectionTitle => 'Participants';
+
+  @override
+  String get housingInviteExpensesSectionTitle => 'Dépenses et répartition';
+
+  @override
+  String get housingInviteRulesSectionTitle => 'Règles de l\'accord';
+
+  @override
+  String get housingInviteStatusAccepted => 'Accepté';
+
+  @override
+  String get housingInviteStatusPending => 'En attente';
+
+  @override
+  String get housingInviteStatusNegotiating => 'En négociation';
+
+  @override
+  String get housingInviteStatusRejected => 'Rejeté';
+
+  @override
+  String get housingInviteAcceptFull => 'J\'accepte en totalité';
+
+  @override
+  String get housingInviteNegotiate => 'J\'aimerais négocier';
+
+  @override
+  String get housingInviteRejectBlock => 'Je refuse en bloc';
+
+  @override
+  String get housingInviteNegotiateMessageLabel =>
+      'Message à envoyer avec la demande de négociation';
+
+  @override
+  String get housingInviteProposalLockedHint =>
+      'Un autre participant est en négociation ou a rejeté cette proposition. Les réponses sont suspendues jusqu\'à révision du plan.';
+
+  @override
+  String get housingInviteGenerateCodes => 'Générer les codes d\'invitation';
+
+  @override
+  String get housingInviteCodesDialogTitle => 'Codes d\'invitation';
+
+  @override
+  String get housingInviteCodesDialogBody =>
+      'Chaque code est destiné à un co-participant. Partagez-les comme vous voulez ; l\'enregistrement sur le serveur relais sera ajouté ultérieurement.';
+
+  @override
+  String get housingInviteCodesCopyAll => 'Tout copier';
+
+  @override
+  String get housingInviteCodesCopied => 'Copié dans le presse-papiers';
+
+  @override
+  String get housingInviteRuleOffHint =>
+      'Cette règle est désactivée pour cette proposition.';
+
+  @override
+  String get housingInviteWithdrawalPerParticipantIntro =>
+      'Préavis et pénalité varient selon le participant (voir ci-dessous).';
+
+  @override
   String get housingPlanSummaryDestroy => 'Supprimer le plan';
 
   @override
