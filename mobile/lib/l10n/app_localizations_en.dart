@@ -476,6 +476,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notice and penalty differ by participant (see below).';
 
   @override
+  String get housingInviteHousingAgreementTitle => 'Housing agreement';
+
+  @override
+  String get housingInviteDateRangeSeparator => ' to ';
+
+  @override
+  String get housingInviteSunburstCenterLabel => 'Overall';
+
+  @override
+  String housingInviteSunburstCenterParticipation(String pct) {
+    return 'Overall participation $pct%';
+  }
+
+  @override
+  String get housingInviteSunburstEmptyHint =>
+      'No expense data to chart for this plan.';
+
+  @override
+  String housingInviteSunburstLegendAgreementShare(String name, String pct) {
+    return '$name - $pct% of the agreement';
+  }
+
+  @override
+  String housingInviteSunburstLegendYouParticipation(
+    String userAmount,
+    String totalAmount,
+    String pct,
+  ) {
+    return 'Your participation: $userAmount/$totalAmount ($pct%)';
+  }
+
+  @override
   String get housingPlanSummaryDestroy => 'Destroy plan';
 
   @override

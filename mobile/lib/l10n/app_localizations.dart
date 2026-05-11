@@ -958,6 +958,52 @@ abstract class AppLocalizations {
   /// **'Notice and penalty differ by participant (see below).'**
   String get housingInviteWithdrawalPerParticipantIntro;
 
+  /// No description provided for @housingInviteHousingAgreementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing agreement'**
+  String get housingInviteHousingAgreementTitle;
+
+  /// No description provided for @housingInviteDateRangeSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **' to '**
+  String get housingInviteDateRangeSeparator;
+
+  /// No description provided for @housingInviteSunburstCenterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall'**
+  String get housingInviteSunburstCenterLabel;
+
+  /// No description provided for @housingInviteSunburstCenterParticipation.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall participation {pct}%'**
+  String housingInviteSunburstCenterParticipation(String pct);
+
+  /// No description provided for @housingInviteSunburstEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No expense data to chart for this plan.'**
+  String get housingInviteSunburstEmptyHint;
+
+  /// No description provided for @housingInviteSunburstLegendAgreementShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} - {pct}% of the agreement'**
+  String housingInviteSunburstLegendAgreementShare(String name, String pct);
+
+  /// No description provided for @housingInviteSunburstLegendYouParticipation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your participation: {userAmount}/{totalAmount} ({pct}%)'**
+  String housingInviteSunburstLegendYouParticipation(
+    String userAmount,
+    String totalAmount,
+    String pct,
+  );
+
   /// No description provided for @housingPlanSummaryDestroy.
   ///
   /// In en, this message translates to:

@@ -181,6 +181,31 @@
   "housingInviteCodesCopied": "Copié dans le presse-papiers",
   "housingInviteRuleOffHint": "Cette règle est désactivée pour cette proposition.",
   "housingInviteWithdrawalPerParticipantIntro": "Préavis et pénalité varient selon le participant (voir ci-dessous).",
+  "housingInviteHousingAgreementTitle": "Entente de logement",
+  "housingInviteDateRangeSeparator": " au ",
+  "housingInviteSunburstCenterLabel": "Globalement",
+  "housingInviteSunburstCenterParticipation": "Participation globale {pct}%",
+  "@housingInviteSunburstCenterParticipation": {
+    "placeholders": {
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstEmptyHint": "Aucune donnée de dépense à afficher pour ce plan.",
+  "housingInviteSunburstLegendAgreementShare": "{name} - {pct} % de l'entente",
+  "@housingInviteSunburstLegendAgreementShare": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstLegendYouParticipation": "Votre participation : {userAmount}/{totalAmount} ({pct} %)",
+  "@housingInviteSunburstLegendYouParticipation": {
+    "placeholders": {
+      "userAmount": { "type": "String" },
+      "totalAmount": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
   "housingPlanSummaryDestroy": "Supprimer le plan",
   "housingPlanDestroyTitle": "Supprimer le plan",
   "housingPlanDestroyBody": "Cela supprime sur cet appareil ce plan logement, les dépenses, les ratios, l’accord et les participants brouillon.",

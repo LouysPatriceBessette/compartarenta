@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
-import '../../housing/projection/plan_projection.dart';
 import '../../housing/quiet_hours_week_grid.dart';
+import 'housing_invite_sunburst.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
@@ -18,20 +18,6 @@ enum HousingInviteParticipantUiStatus {
   pending,
   negotiating,
   rejected,
-}
-
-sealed class _InviteSplitEntry {}
-
-final class _InviteSplitGroup extends _InviteSplitEntry {
-  _InviteSplitGroup(this.group, this.memberLines);
-  final PlanGroup group;
-  final List<PlanLine> memberLines;
-}
-
-final class _InviteSplitUncategorized extends _InviteSplitEntry {
-  _InviteSplitUncategorized(this.lines, {this.showHeading = true});
-  final List<PlanLine> lines;
-  final bool showHeading;
 }
 
 /// Full-scroll proposal preview for the plan author, or read-only + response UI for an invitee.
@@ -97,46 +83,6 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     return roster;
   }
 
-  List<_InviteSplitEntry> _splitEntries(List<PlanLine> lines, List<PlanGroup> groups) {
-    final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final known = groups.map((g) => g.id).toSet();
-    final out = <_InviteSplitEntry>[];
-    for (final g in groups) {
-      final inGroup = sorted.where((l) => l.groupId == g.id).toList();
-      if (inGroup.isEmpty) continue;
-      out.add(_InviteSplitGroup(g, inGroup));
-    }
-    final unc = sorted.where((l) {
-      final gid = l.groupId;
-      return gid == null || !known.contains(gid);
-    }).toList();
-    if (unc.isNotEmpty) {
-      out.add(_InviteSplitUncategorized(unc, showHeading: groups.isNotEmpty));
-    }
-    return out;
-  }
-
-  int _groupBasisMinor(List<PlanLine> memberLines) =>
-      memberLines.fold<int>(0, (a, l) => a + PlanProjection.unitMinor(l));
-
-  int _weightLine(List<PlanRatio> ratios, String lineId, String pid) => ratios
-      .where((r) => r.lineId == lineId && r.participantId == pid)
-      .fold<int>(0, (a, r) => a + r.weight);
-
-  int _weightGroup(List<PlanRatio> ratios, String groupId, String pid) => ratios
-      .where((r) => r.groupId == groupId && r.participantId == pid)
-      .fold<int>(0, (a, r) => a + r.weight);
-
-  bool _participantInLine(List<PlanRatio> ratios, PlanLine line, List<String> pids, int idx) {
-    final w = _weightLine(ratios, line.id, pids[idx]);
-    return w > 0;
-  }
-
-  bool _participantInGroup(List<PlanRatio> ratios, PlanGroup group, List<String> pids, int idx) {
-    final w = _weightGroup(ratios, group.id, pids[idx]);
-    return w > 0;
-  }
-
   HousingInviteParticipantUiStatus _statusFor(int rosterIndex) {
     if (rosterIndex == 0) return HousingInviteParticipantUiStatus.pending;
     return _statusByRosterIndex[rosterIndex] ?? HousingInviteParticipantUiStatus.pending;
@@ -175,13 +121,16 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     int index,
     String label,
     bool enabled,
+    bool showParticipantStatus,
   ) {
     final isAuthorRoster = index == 0;
     final selected = _focusedParticipantIndex == index;
     final status = _statusFor(index);
     final (chipBg, chipFg) = isAuthorRoster
         ? (theme.colorScheme.surface, theme.colorScheme.onSurface)
-        : _statusColors(theme, status);
+        : (!showParticipantStatus
+            ? (theme.colorScheme.surfaceContainerHighest, theme.colorScheme.onSurface)
+            : _statusColors(theme, status));
     final statusLabel = switch (status) {
       HousingInviteParticipantUiStatus.accepted => l10n.housingInviteStatusAccepted,
       HousingInviteParticipantUiStatus.pending => l10n.housingInviteStatusPending,
@@ -214,7 +163,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            if (!isAuthorRoster)
+            if (showParticipantStatus && !isAuthorRoster)
               Text(
                 statusLabel,
                 maxLines: 1,
@@ -223,127 +172,6 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                   color: chipFg.withOpacity(0.85),
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _readOnlyLineCard(
-    BuildContext context,
-    PlanLine line,
-    List<String> pids,
-    List<PlanRatio> ratios,
-    int idx,
-  ) {
-    final theme = Theme.of(context);
-    final basis = PlanProjection.unitMinor(line);
-    final pid = pids[idx];
-    final w = _weightLine(ratios, line.id, pid);
-    final shareMinor = (basis * w / 10000).round();
-    final pct = basis > 0 ? (shareMinor / basis) * 100 : 0.0;
-    final frac = (w / 10000.0).clamp(0.0, 1.0);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(line.title, style: theme.textTheme.titleSmall)),
-                Text(
-                  '${(shareMinor / 100).toStringAsFixed(2)} / ${(basis / 100).toStringAsFixed(2)} ${line.currency}',
-                  style: theme.textTheme.titleSmall,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Text('${pct.toStringAsFixed(1)}%', style: theme.textTheme.bodySmall),
-                ),
-              ),
-            ),
-            Slider(value: frac, onChanged: null),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _readOnlyGroupCard(
-    BuildContext context,
-    PlanGroup group,
-    List<PlanLine> memberLines,
-    List<String> pids,
-    List<PlanRatio> ratios,
-    int idx,
-  ) {
-    final theme = Theme.of(context);
-    final basis = _groupBasisMinor(memberLines);
-    final currency = memberLines.isEmpty ? '' : memberLines.first.currency;
-    final memberLabel = memberLines.map((l) => l.title).join(' · ');
-    final pid = pids[idx];
-    final w = _weightGroup(ratios, group.id, pid);
-    final shareMinor = (basis * w / 10000).round();
-    final pct = basis > 0 ? (shareMinor / basis) * 100 : 0.0;
-    final frac = (w / 10000.0).clamp(0.0, 1.0);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    group.title,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                Text(
-                  '${(shareMinor / 100).toStringAsFixed(2)} / ${(basis / 100).toStringAsFixed(2)} $currency',
-                  style: theme.textTheme.titleSmall,
-                ),
-              ],
-            ),
-            if (memberLabel.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                memberLabel,
-                style: theme.textTheme.bodySmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Text('${pct.toStringAsFixed(1)}%', style: theme.textTheme.bodySmall),
-                ),
-              ),
-            ),
-            Slider(value: frac, onChanged: null),
           ],
         ),
       ),
@@ -563,7 +391,6 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final fmt = widget.prefs.dateFormat.isEmpty ? 'YYYY-MM-DD' : widget.prefs.dateFormat;
 
     return Scaffold(
       appBar: AppBar(
@@ -599,8 +426,18 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(0, pids.length - 1);
           }
 
-          final entries = _splitEntries(lines, groups);
           final idx = _focusedParticipantIndex;
+          final showParticipantStatus = widget.viewerParticipantIndex != null;
+          const dateIso = 'YYYY-MM-DD';
+          final dateRangeLine =
+              '${formatPreferenceDate(agr.periodStart, dateIso)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateIso)}';
+          final sunSlices = buildInviteSunburstSlices(
+            lines: lines,
+            groups: groups,
+            ratios: ratios,
+            participantId: pids[idx],
+            l10n: l10n,
+          );
 
           return Column(
             children: [
@@ -612,18 +449,31 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                       l10n.housingInviteProposalIntroTitle,
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
+                    const Divider(height: 32),
+                    Center(
+                      child: Text(
+                        l10n.housingInviteHousingAgreementTitle,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    Text(
-                      '${l10n.housingPlanPlanStart}: ${formatPreferenceDate(agr.periodStart, fmt)}',
-                      style: theme.textTheme.bodyLarge,
+                    Center(
+                      child: Text(
+                        dateRangeLine,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge,
+                      ),
                     ),
-                    Text(
-                      '${l10n.housingPlanPlanEnd}: ${formatPreferenceDate(agr.periodEnd, fmt)}',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                    Text(
-                      formatContractCalendarDuration(agr.periodStart, agr.periodEnd, l10n),
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        formatContractCalendarDuration(agr.periodStart, agr.periodEnd, l10n),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Text(
@@ -642,45 +492,16 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                             i,
                             roster[i].displayName,
                             _isAuthorPreview,
+                            showParticipantStatus,
                           ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(
-                      l10n.housingInviteExpensesSectionTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    HousingInviteSunburstChart(
+                      l10n: l10n,
+                      slices: sunSlices,
                     ),
-                    const SizedBox(height: 8),
-                    ...() {
-                      final w = <Widget>[];
-                      for (final e in entries) {
-                        switch (e) {
-                          case _InviteSplitGroup(:final group, :final memberLines):
-                            if (_participantInGroup(ratios, group, pids, idx)) {
-                              w.add(_readOnlyGroupCard(context, group, memberLines, pids, ratios, idx));
-                            }
-                          case _InviteSplitUncategorized(:final lines, :final showHeading):
-                            if (showHeading &&
-                                lines.any((ln) => _participantInLine(ratios, ln, pids, idx))) {
-                              w.add(
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 6),
-                                  child: Text(
-                                    l10n.housingPlanSplitNoCategory,
-                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              );
-                            }
-                            for (final line in lines) {
-                              if (!_participantInLine(ratios, line, pids, idx)) continue;
-                              w.add(_readOnlyLineCard(context, line, pids, ratios, idx));
-                            }
-                        }
-                      }
-                      return w;
-                    }(),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 20),
                     _readOnlyRules(context, l10n, agr, rules, roster),
                     if (!_isAuthorPreview) ...[
                       const SizedBox(height: 24),

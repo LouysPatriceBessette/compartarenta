@@ -181,6 +181,31 @@
   "housingInviteCodesCopied": "Copiado al portapapeles",
   "housingInviteRuleOffHint": "Esta norma está desactivada en esta propuesta.",
   "housingInviteWithdrawalPerParticipantIntro": "Preaviso y penalización varían por participante (ver abajo).",
+  "housingInviteHousingAgreementTitle": "Acuerdo de vivienda",
+  "housingInviteDateRangeSeparator": " a ",
+  "housingInviteSunburstCenterLabel": "En conjunto",
+  "housingInviteSunburstCenterParticipation": "Participación global {pct} %",
+  "@housingInviteSunburstCenterParticipation": {
+    "placeholders": {
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstEmptyHint": "No hay datos de gastos para este gráfico en este plan.",
+  "housingInviteSunburstLegendAgreementShare": "{name} - {pct} % del acuerdo",
+  "@housingInviteSunburstLegendAgreementShare": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstLegendYouParticipation": "Tu participación: {userAmount}/{totalAmount} ({pct} %)",
+  "@housingInviteSunburstLegendYouParticipation": {
+    "placeholders": {
+      "userAmount": { "type": "String" },
+      "totalAmount": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
   "housingPlanSummaryDestroy": "Eliminar plan",
   "housingPlanDestroyTitle": "Eliminar plan",
   "housingPlanDestroyBody": "Esto elimina en este dispositivo este plan de vivienda, los gastos, las ratios, el acuerdo y los participantes borrador.",

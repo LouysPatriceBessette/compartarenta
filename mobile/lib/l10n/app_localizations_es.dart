@@ -479,6 +479,38 @@ class AppLocalizationsEs extends AppLocalizations {
       'Preaviso y penalización varían por participante (ver abajo).';
 
   @override
+  String get housingInviteHousingAgreementTitle => 'Acuerdo de vivienda';
+
+  @override
+  String get housingInviteDateRangeSeparator => ' a ';
+
+  @override
+  String get housingInviteSunburstCenterLabel => 'En conjunto';
+
+  @override
+  String housingInviteSunburstCenterParticipation(String pct) {
+    return 'Participación global $pct %';
+  }
+
+  @override
+  String get housingInviteSunburstEmptyHint =>
+      'No hay datos de gastos para este gráfico en este plan.';
+
+  @override
+  String housingInviteSunburstLegendAgreementShare(String name, String pct) {
+    return '$name - $pct % del acuerdo';
+  }
+
+  @override
+  String housingInviteSunburstLegendYouParticipation(
+    String userAmount,
+    String totalAmount,
+    String pct,
+  ) {
+    return 'Tu participación: $userAmount/$totalAmount ($pct %)';
+  }
+
+  @override
   String get housingPlanSummaryDestroy => 'Eliminar plan';
 
   @override

@@ -181,6 +181,31 @@
   "housingInviteCodesCopied": "Copied to clipboard",
   "housingInviteRuleOffHint": "This rule is turned off for this proposal.",
   "housingInviteWithdrawalPerParticipantIntro": "Notice and penalty differ by participant (see below).",
+  "housingInviteHousingAgreementTitle": "Housing agreement",
+  "housingInviteDateRangeSeparator": " to ",
+  "housingInviteSunburstCenterLabel": "Overall",
+  "housingInviteSunburstCenterParticipation": "Overall participation {pct}%",
+  "@housingInviteSunburstCenterParticipation": {
+    "placeholders": {
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstEmptyHint": "No expense data to chart for this plan.",
+  "housingInviteSunburstLegendAgreementShare": "{name} - {pct}% of the agreement",
+  "@housingInviteSunburstLegendAgreementShare": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
+  "housingInviteSunburstLegendYouParticipation": "Your participation: {userAmount}/{totalAmount} ({pct}%)",
+  "@housingInviteSunburstLegendYouParticipation": {
+    "placeholders": {
+      "userAmount": { "type": "String" },
+      "totalAmount": { "type": "String" },
+      "pct": { "type": "String" }
+    }
+  },
   "housingPlanSummaryDestroy": "Destroy plan",
   "housingPlanDestroyTitle": "Destroy plan",
   "housingPlanDestroyBody": "This removes this housing plan, expenses, ratios, agreement, and draft participants from this device.",
