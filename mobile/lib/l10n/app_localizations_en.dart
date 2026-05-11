@@ -199,7 +199,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanStepSplit => 'Split';
 
   @override
-  String get housingPlanStepWithdrawal => 'Withdrawal';
+  String get housingPlanStepAgreementRules => 'Agreement rules';
+
+  @override
+  String get housingAgreementRulesIntro =>
+      'Turn rules on or off. Fixed rules stay listed even when off so everyone sees what was negotiated. You can add your own rules and remove them until a proposal has been accepted.';
+
+  @override
+  String get housingAgreementRuleCurfewTitle => 'Quiet hours calendar';
+
+  @override
+  String get housingAgreementRuleCurfewPlaceholder =>
+      'A week-view calendar for quiet hours will be added here. For now, use this rule as a placeholder in negotiations.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalTitle => 'Early withdrawal';
+
+  @override
+  String get housingAgreementRuleBuildingTitle => 'Building / household rules';
+
+  @override
+  String get housingAgreementRuleBuildingHint =>
+      'Suggested topics you can copy or adapt:\n• Non-smoking\n• No pets\n• Nothing stored in hallways\n• …';
+
+  @override
+  String get housingAgreementRuleEdit => 'Edit';
+
+  @override
+  String get housingAgreementRuleFinishEditing => 'Done editing';
+
+  @override
+  String get housingAgreementRuleTitleRequired =>
+      'Enter a title for this rule.';
+
+  @override
+  String get housingAgreementSuggestionLabel => 'Suggestion';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessTitle =>
+      'Common area cleanliness';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessBody =>
+      '• Keep clothing in assigned storage only.\n• Clean the shower and toilet after each use.\n• Wipe kitchen counters after cooking.\n• …';
+
+  @override
+  String get housingAgreementSuggestionFridgeTitle => 'Fridge management';
+
+  @override
+  String get housingAgreementSuggestionFridgeBody =>
+      '• Label food you do not want to share.\n• Throw away expired items regularly.\n• Keep shelves and door clean.\n• …';
+
+  @override
+  String get housingAgreementRuleRemove => 'Remove rule';
+
+  @override
+  String get housingAgreementRuleDismissSuggestion => 'Remove from list';
+
+  @override
+  String get housingAgreementRuleAdd => 'Add rule';
+
+  @override
+  String get housingAgreementRuleAddTitle => 'Add agreement rule';
+
+  @override
+  String get housingAgreementRuleCustomTitleLabel => 'Title';
+
+  @override
+  String get housingAgreementRuleCustomBodyLabel => 'Details (optional)';
+
+  @override
+  String get housingAgreementRulesRemovalLockedHint =>
+      'Rules that were part of an accepted proposal cannot be removed; you can still turn them off.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalDisabledHint =>
+      'Turn this rule on to set minimum notice and penalty.';
 
   @override
   String housingPlanParticipantsCount(int count) {

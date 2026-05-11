@@ -109,6 +109,10 @@ class Agreements extends Table {
   TextColumn get withdrawalPerParticipantJson =>
       text().withDefault(const Constant('{}'))();
 
+  /// Structured agreement rules (curfew, toggles, custom rules, dismissed suggestions).
+  TextColumn get agreementRulesJson =>
+      text().withDefault(const Constant('{}'))();
+
   // Versioning for renegotiation later.
   IntColumn get version => integer().withDefault(const Constant(1))();
 
@@ -206,7 +210,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -264,6 +268,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await m.addColumn(planGroups, planGroups.description);
           }
+          if (from < 8) {
+            await m.addColumn(agreements, agreements.agreementRulesJson);
+          }
         },
         beforeOpen: (details) async {
           // Drift will run onCreate/onUpgrade automatically.
@@ -279,6 +286,15 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertAgreement(AgreementsCompanion row) =>
       into(agreements).insertOnConflictUpdate(row);
+
+  /// True when a proposal package for [planId] has an active (accepted) revision.
+  /// Used to lock removal of agreement rules that were part of a binding package.
+  Future<bool> planHasActiveAcceptedProposal(String planId) async {
+    final row = await (select(proposalPackages)
+          ..where((t) => t.planId.equals(planId)))
+        .getSingleOrNull();
+    return row?.activeRevisionId != null;
+  }
 
   Future<Agreement?> getAgreementForPlan(String planId) async {
     final rows = await (select(agreements)

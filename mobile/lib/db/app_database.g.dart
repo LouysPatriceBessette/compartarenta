@@ -2552,6 +2552,18 @@ class $AgreementsTable extends Agreements
         requiredDuringInsert: false,
         defaultValue: const Constant('{}'),
       );
+  static const VerificationMeta _agreementRulesJsonMeta =
+      const VerificationMeta('agreementRulesJson');
+  @override
+  late final GeneratedColumn<String> agreementRulesJson =
+      GeneratedColumn<String>(
+        'agreement_rules_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -2586,6 +2598,7 @@ class $AgreementsTable extends Agreements
     clauses,
     withdrawalSameForAll,
     withdrawalPerParticipantJson,
+    agreementRulesJson,
     version,
     createdAt,
   ];
@@ -2675,6 +2688,15 @@ class $AgreementsTable extends Agreements
         ),
       );
     }
+    if (data.containsKey('agreement_rules_json')) {
+      context.handle(
+        _agreementRulesJsonMeta,
+        agreementRulesJson.isAcceptableOrUnknown(
+          data['agreement_rules_json']!,
+          _agreementRulesJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -2734,6 +2756,10 @@ class $AgreementsTable extends Agreements
         DriftSqlType.string,
         data['${effectivePrefix}withdrawal_per_participant_json'],
       )!,
+      agreementRulesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}agreement_rules_json'],
+      )!,
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -2763,6 +2789,9 @@ class Agreement extends DataClass implements Insertable<Agreement> {
   /// When false: JSON map per participant id -> { minNoticeDays, penaltyMinor }.
   final String withdrawalSameForAll;
   final String withdrawalPerParticipantJson;
+
+  /// Structured agreement rules (curfew, toggles, custom rules, dismissed suggestions).
+  final String agreementRulesJson;
   final int version;
   final DateTime createdAt;
   const Agreement({
@@ -2775,6 +2804,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
     required this.clauses,
     required this.withdrawalSameForAll,
     required this.withdrawalPerParticipantJson,
+    required this.agreementRulesJson,
     required this.version,
     required this.createdAt,
   });
@@ -2792,6 +2822,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
     map['withdrawal_per_participant_json'] = Variable<String>(
       withdrawalPerParticipantJson,
     );
+    map['agreement_rules_json'] = Variable<String>(agreementRulesJson);
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -2808,6 +2839,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
       clauses: Value(clauses),
       withdrawalSameForAll: Value(withdrawalSameForAll),
       withdrawalPerParticipantJson: Value(withdrawalPerParticipantJson),
+      agreementRulesJson: Value(agreementRulesJson),
       version: Value(version),
       createdAt: Value(createdAt),
     );
@@ -2832,6 +2864,9 @@ class Agreement extends DataClass implements Insertable<Agreement> {
       withdrawalPerParticipantJson: serializer.fromJson<String>(
         json['withdrawalPerParticipantJson'],
       ),
+      agreementRulesJson: serializer.fromJson<String>(
+        json['agreementRulesJson'],
+      ),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -2851,6 +2886,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
       'withdrawalPerParticipantJson': serializer.toJson<String>(
         withdrawalPerParticipantJson,
       ),
+      'agreementRulesJson': serializer.toJson<String>(agreementRulesJson),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -2866,6 +2902,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
     String? clauses,
     String? withdrawalSameForAll,
     String? withdrawalPerParticipantJson,
+    String? agreementRulesJson,
     int? version,
     DateTime? createdAt,
   }) => Agreement(
@@ -2879,6 +2916,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
     withdrawalSameForAll: withdrawalSameForAll ?? this.withdrawalSameForAll,
     withdrawalPerParticipantJson:
         withdrawalPerParticipantJson ?? this.withdrawalPerParticipantJson,
+    agreementRulesJson: agreementRulesJson ?? this.agreementRulesJson,
     version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -2903,6 +2941,9 @@ class Agreement extends DataClass implements Insertable<Agreement> {
       withdrawalPerParticipantJson: data.withdrawalPerParticipantJson.present
           ? data.withdrawalPerParticipantJson.value
           : this.withdrawalPerParticipantJson,
+      agreementRulesJson: data.agreementRulesJson.present
+          ? data.agreementRulesJson.value
+          : this.agreementRulesJson,
       version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -2922,6 +2963,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
           ..write(
             'withdrawalPerParticipantJson: $withdrawalPerParticipantJson, ',
           )
+          ..write('agreementRulesJson: $agreementRulesJson, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2939,6 +2981,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
     clauses,
     withdrawalSameForAll,
     withdrawalPerParticipantJson,
+    agreementRulesJson,
     version,
     createdAt,
   );
@@ -2956,6 +2999,7 @@ class Agreement extends DataClass implements Insertable<Agreement> {
           other.withdrawalSameForAll == this.withdrawalSameForAll &&
           other.withdrawalPerParticipantJson ==
               this.withdrawalPerParticipantJson &&
+          other.agreementRulesJson == this.agreementRulesJson &&
           other.version == this.version &&
           other.createdAt == this.createdAt);
 }
@@ -2970,6 +3014,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
   final Value<String> clauses;
   final Value<String> withdrawalSameForAll;
   final Value<String> withdrawalPerParticipantJson;
+  final Value<String> agreementRulesJson;
   final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -2983,6 +3028,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
     this.clauses = const Value.absent(),
     this.withdrawalSameForAll = const Value.absent(),
     this.withdrawalPerParticipantJson = const Value.absent(),
+    this.agreementRulesJson = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2997,6 +3043,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
     this.clauses = const Value.absent(),
     this.withdrawalSameForAll = const Value.absent(),
     this.withdrawalPerParticipantJson = const Value.absent(),
+    this.agreementRulesJson = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -3015,6 +3062,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
     Expression<String>? clauses,
     Expression<String>? withdrawalSameForAll,
     Expression<String>? withdrawalPerParticipantJson,
+    Expression<String>? agreementRulesJson,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -3031,6 +3079,8 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
         'withdrawal_same_for_all': withdrawalSameForAll,
       if (withdrawalPerParticipantJson != null)
         'withdrawal_per_participant_json': withdrawalPerParticipantJson,
+      if (agreementRulesJson != null)
+        'agreement_rules_json': agreementRulesJson,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -3047,6 +3097,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
     Value<String>? clauses,
     Value<String>? withdrawalSameForAll,
     Value<String>? withdrawalPerParticipantJson,
+    Value<String>? agreementRulesJson,
     Value<int>? version,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -3062,6 +3113,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
       withdrawalSameForAll: withdrawalSameForAll ?? this.withdrawalSameForAll,
       withdrawalPerParticipantJson:
           withdrawalPerParticipantJson ?? this.withdrawalPerParticipantJson,
+      agreementRulesJson: agreementRulesJson ?? this.agreementRulesJson,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -3102,6 +3154,9 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
         withdrawalPerParticipantJson.value,
       );
     }
+    if (agreementRulesJson.present) {
+      map['agreement_rules_json'] = Variable<String>(agreementRulesJson.value);
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -3128,6 +3183,7 @@ class AgreementsCompanion extends UpdateCompanion<Agreement> {
           ..write(
             'withdrawalPerParticipantJson: $withdrawalPerParticipantJson, ',
           )
+          ..write('agreementRulesJson: $agreementRulesJson, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -5602,6 +5658,7 @@ typedef $$AgreementsTableCreateCompanionBuilder =
       Value<String> clauses,
       Value<String> withdrawalSameForAll,
       Value<String> withdrawalPerParticipantJson,
+      Value<String> agreementRulesJson,
       Value<int> version,
       required DateTime createdAt,
       Value<int> rowid,
@@ -5617,6 +5674,7 @@ typedef $$AgreementsTableUpdateCompanionBuilder =
       Value<String> clauses,
       Value<String> withdrawalSameForAll,
       Value<String> withdrawalPerParticipantJson,
+      Value<String> agreementRulesJson,
       Value<int> version,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -5673,6 +5731,11 @@ class $$AgreementsTableFilterComposer
 
   ColumnFilters<String> get withdrawalPerParticipantJson => $composableBuilder(
     column: $table.withdrawalPerParticipantJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get agreementRulesJson => $composableBuilder(
+    column: $table.agreementRulesJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5742,6 +5805,11 @@ class $$AgreementsTableOrderingComposer
         builder: (column) => ColumnOrderings(column),
       );
 
+  ColumnOrderings<String> get agreementRulesJson => $composableBuilder(
+    column: $table.agreementRulesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -5800,6 +5868,11 @@ class $$AgreementsTableAnnotationComposer
         builder: (column) => column,
       );
 
+  GeneratedColumn<String> get agreementRulesJson => $composableBuilder(
+    column: $table.agreementRulesJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
@@ -5848,6 +5921,7 @@ class $$AgreementsTableTableManager
                 Value<String> withdrawalSameForAll = const Value.absent(),
                 Value<String> withdrawalPerParticipantJson =
                     const Value.absent(),
+                Value<String> agreementRulesJson = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5861,6 +5935,7 @@ class $$AgreementsTableTableManager
                 clauses: clauses,
                 withdrawalSameForAll: withdrawalSameForAll,
                 withdrawalPerParticipantJson: withdrawalPerParticipantJson,
+                agreementRulesJson: agreementRulesJson,
                 version: version,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -5877,6 +5952,7 @@ class $$AgreementsTableTableManager
                 Value<String> withdrawalSameForAll = const Value.absent(),
                 Value<String> withdrawalPerParticipantJson =
                     const Value.absent(),
+                Value<String> agreementRulesJson = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
@@ -5890,6 +5966,7 @@ class $$AgreementsTableTableManager
                 clauses: clauses,
                 withdrawalSameForAll: withdrawalSameForAll,
                 withdrawalPerParticipantJson: withdrawalPerParticipantJson,
+                agreementRulesJson: agreementRulesJson,
                 version: version,
                 createdAt: createdAt,
                 rowid: rowid,

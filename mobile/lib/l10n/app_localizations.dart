@@ -460,11 +460,143 @@ abstract class AppLocalizations {
   /// **'Split'**
   String get housingPlanStepSplit;
 
-  /// No description provided for @housingPlanStepWithdrawal.
+  /// No description provided for @housingPlanStepAgreementRules.
   ///
   /// In en, this message translates to:
-  /// **'Withdrawal'**
-  String get housingPlanStepWithdrawal;
+  /// **'Agreement rules'**
+  String get housingPlanStepAgreementRules;
+
+  /// No description provided for @housingAgreementRulesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn rules on or off. Fixed rules stay listed even when off so everyone sees what was negotiated. You can add your own rules and remove them until a proposal has been accepted.'**
+  String get housingAgreementRulesIntro;
+
+  /// No description provided for @housingAgreementRuleCurfewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours calendar'**
+  String get housingAgreementRuleCurfewTitle;
+
+  /// No description provided for @housingAgreementRuleCurfewPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'A week-view calendar for quiet hours will be added here. For now, use this rule as a placeholder in negotiations.'**
+  String get housingAgreementRuleCurfewPlaceholder;
+
+  /// No description provided for @housingAgreementRuleEarlyWithdrawalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Early withdrawal'**
+  String get housingAgreementRuleEarlyWithdrawalTitle;
+
+  /// No description provided for @housingAgreementRuleBuildingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Building / household rules'**
+  String get housingAgreementRuleBuildingTitle;
+
+  /// No description provided for @housingAgreementRuleBuildingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested topics you can copy or adapt:\n• Non-smoking\n• No pets\n• Nothing stored in hallways\n• …'**
+  String get housingAgreementRuleBuildingHint;
+
+  /// No description provided for @housingAgreementRuleEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get housingAgreementRuleEdit;
+
+  /// No description provided for @housingAgreementRuleFinishEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Done editing'**
+  String get housingAgreementRuleFinishEditing;
+
+  /// No description provided for @housingAgreementRuleTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a title for this rule.'**
+  String get housingAgreementRuleTitleRequired;
+
+  /// No description provided for @housingAgreementSuggestionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestion'**
+  String get housingAgreementSuggestionLabel;
+
+  /// No description provided for @housingAgreementSuggestionCleanlinessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Common area cleanliness'**
+  String get housingAgreementSuggestionCleanlinessTitle;
+
+  /// No description provided for @housingAgreementSuggestionCleanlinessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Keep clothing in assigned storage only.\n• Clean the shower and toilet after each use.\n• Wipe kitchen counters after cooking.\n• …'**
+  String get housingAgreementSuggestionCleanlinessBody;
+
+  /// No description provided for @housingAgreementSuggestionFridgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fridge management'**
+  String get housingAgreementSuggestionFridgeTitle;
+
+  /// No description provided for @housingAgreementSuggestionFridgeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Label food you do not want to share.\n• Throw away expired items regularly.\n• Keep shelves and door clean.\n• …'**
+  String get housingAgreementSuggestionFridgeBody;
+
+  /// No description provided for @housingAgreementRuleRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove rule'**
+  String get housingAgreementRuleRemove;
+
+  /// No description provided for @housingAgreementRuleDismissSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from list'**
+  String get housingAgreementRuleDismissSuggestion;
+
+  /// No description provided for @housingAgreementRuleAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rule'**
+  String get housingAgreementRuleAdd;
+
+  /// No description provided for @housingAgreementRuleAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add agreement rule'**
+  String get housingAgreementRuleAddTitle;
+
+  /// No description provided for @housingAgreementRuleCustomTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get housingAgreementRuleCustomTitleLabel;
+
+  /// No description provided for @housingAgreementRuleCustomBodyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details (optional)'**
+  String get housingAgreementRuleCustomBodyLabel;
+
+  /// No description provided for @housingAgreementRulesRemovalLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules that were part of an accepted proposal cannot be removed; you can still turn them off.'**
+  String get housingAgreementRulesRemovalLockedHint;
+
+  /// No description provided for @housingAgreementRuleEarlyWithdrawalDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn this rule on to set minimum notice and penalty.'**
+  String get housingAgreementRuleEarlyWithdrawalDisabledHint;
 
   /// No description provided for @housingPlanParticipantsCount.
   ///

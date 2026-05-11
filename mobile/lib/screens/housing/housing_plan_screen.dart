@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/agreement_rules_json.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -74,7 +75,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         l10n.housingPlanStepExpenseCategories,
         l10n.housingPlanStepExpenses,
         l10n.housingPlanStepSplit,
-        l10n.housingPlanStepWithdrawal,
+        l10n.housingPlanStepAgreementRules,
       ];
 
   AppLocalizations _lookupAppLocalizationsSync() {
@@ -118,6 +119,36 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   final List<TextEditingController> _perParticipantNotice = [];
   final List<TextEditingController> _perParticipantPenalty = [];
 
+  AgreementRulesDraft _rulesDraft = AgreementRulesDraft();
+  bool _rulesRemovalLocked = false;
+  final TextEditingController _buildingRulesBody = TextEditingController();
+  bool _buildingRulesEditing = false;
+  String? _customRuleEditingId;
+  TextEditingController? _customRuleEditTitle;
+  TextEditingController? _customRuleEditBody;
+
+  static const double _kAgreementRuleHPad = 8;
+
+  final TextEditingController _curfewNotes = TextEditingController();
+  bool _curfewExpanded = false;
+  bool _curfewEditing = false;
+  String _curfewEditSnapshot = '';
+
+  bool _withdrawalExpanded = false;
+  bool _withdrawalEditing = false;
+  bool _wdSnapSameForAll = true;
+  int _wdSnapWithdrawalParticipantIndex = 0;
+  String _wdSnapGlobalNotice = '';
+  String _wdSnapGlobalPenalty = '';
+  List<String> _wdSnapPerNotice = [];
+  List<String> _wdSnapPerPenalty = [];
+
+  bool _buildingExpanded = false;
+  String _buildingEditSnapshot = '';
+
+  final Set<String> _expandedCustomRuleIds = {};
+  final Set<String> _expandedSuggestionIds = {};
+
   final Map<String, TextEditingController> _shareAmountControllers = {};
   final Map<String, int> _draftRatioWeightsBps = {};
   /// Minor units to show after a manual amount commit when the persisted
@@ -151,6 +182,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _shareAmountControllers.clear();
     _globalNotice.dispose();
     _globalPenalty.dispose();
+    _buildingRulesBody.dispose();
+    _curfewNotes.dispose();
+    _customRuleEditTitle?.dispose();
+    _customRuleEditBody?.dispose();
     _db.close();
     super.dispose();
   }
@@ -555,7 +590,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           }
         }
       } catch (_) {}
+
+      _rulesDraft = AgreementRulesDraft.parseStored(
+        agreementRulesJson: agr.agreementRulesJson,
+        clausesFallback: agr.clauses,
+      );
+      _buildingRulesBody.text = _rulesDraft.buildingRulesText;
+      if (_buildingRulesBody.text.trim().isEmpty) {
+        _buildingRulesBody.text =
+            _lookupAppLocalizationsSync().housingAgreementRuleBuildingHint;
+      }
+      _curfewNotes.text = _rulesDraft.curfewNotes;
     }
+
+    _rulesRemovalLocked = await _db.planHasActiveAcceptedProposal(_planId);
 
     if (widget.prefs.housingDefaultPlanSummaryReached) {
       _showSummary = true;
@@ -582,6 +630,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (_showSummary) return true;
     return i < _stepIndex;
   }
+
+  bool get _anyAgreementRuleEditing =>
+      _curfewEditing || _withdrawalEditing || _buildingRulesEditing || _customRuleEditingId != null;
+
+  /// While editing agreement rule content, block wizard navigation on step 6.
+  bool get _agreementRulesStepFooterLocked => _stepIndex == 5 && _anyAgreementRuleEditing;
 
   bool _datesStepValid() {
     if (_periodStart == null || _periodEnd == null) return false;
@@ -632,6 +686,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 4:
         return true; // validated async: ratios sum to 100%
       case 5:
+        if (!_rulesDraft.earlyWithdrawalEnabled) return true;
         final n = int.tryParse(_globalNotice.text.trim()) ?? 0;
         final p = _parseMinor(_globalPenalty.text) ?? 0;
         if (_withdrawalSameForAll) {
@@ -785,6 +840,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         clauses: drift.Value(cur.clauses),
         withdrawalSameForAll: drift.Value(cur.withdrawalSameForAll),
         withdrawalPerParticipantJson: drift.Value(cur.withdrawalPerParticipantJson),
+        agreementRulesJson: drift.Value(cur.agreementRulesJson),
         version: drift.Value(cur.version),
         createdAt: drift.Value(cur.createdAt),
       ),
@@ -894,32 +950,47 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   String _money2FromMinor(int minor) => (minor / 100).toStringAsFixed(2);
 
-  Future<void> _persistWithdrawal() async {
+  Future<void> _persistAgreementRules() async {
     final cur = await _db.getAgreementForPlan(_planId);
-    final notice = int.tryParse(_globalNotice.text.trim()) ?? 0;
-    final penalty = _parseMinor(_globalPenalty.text) ?? 0;
-    Map<String, dynamic> per = {};
-    if (!_withdrawalSameForAll) {
-      final total = 1 + _otherParticipantCount;
-      for (var i = 0; i < total; i++) {
-        final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
-        per[pid] = {
-          'minNoticeDays': int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
-          'penaltyMinor': _parseMinor(_perParticipantPenalty[i].text) ?? 0,
-        };
+    if (cur == null) throw StateError('No agreement row for $_planId');
+
+    _rulesDraft.curfewNotes = _curfewNotes.text;
+    _rulesDraft.buildingRulesText = _buildingRulesBody.text;
+
+    var notice = 0;
+    var penalty = 0;
+    var per = <String, dynamic>{};
+    if (_rulesDraft.earlyWithdrawalEnabled) {
+      notice = int.tryParse(_globalNotice.text.trim()) ?? 0;
+      penalty = _parseMinor(_globalPenalty.text) ?? 0;
+      if (!_withdrawalSameForAll) {
+        final total = 1 + _otherParticipantCount;
+        for (var i = 0; i < total; i++) {
+          final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
+          per[pid] = {
+            'minNoticeDays': int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
+            'penaltyMinor': _parseMinor(_perParticipantPenalty[i].text) ?? 0,
+          };
+        }
       }
     }
+
     await _db.upsertAgreement(
       AgreementsCompanion.insert(
         id: _agreementId,
         planId: _planId,
-        periodStart: cur!.periodStart,
+        periodStart: cur.periodStart,
         periodEnd: cur.periodEnd,
-        minNoticeDays: drift.Value(_withdrawalSameForAll ? notice : 0),
-        penaltyMinor: drift.Value(_withdrawalSameForAll ? penalty : 0),
-        clauses: drift.Value(cur.clauses),
+        minNoticeDays: drift.Value(
+          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll ? notice : 0,
+        ),
+        penaltyMinor: drift.Value(
+          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll ? penalty : 0,
+        ),
+        clauses: drift.Value(_buildingRulesBody.text),
         withdrawalSameForAll: drift.Value(_withdrawalSameForAll ? 'true' : 'false'),
         withdrawalPerParticipantJson: drift.Value(jsonEncode(per)),
+        agreementRulesJson: drift.Value(_rulesDraft.encode()),
         version: drift.Value(cur.version + 1),
         createdAt: cur.createdAt,
       ),
@@ -1146,13 +1217,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         children: [
                           if (_stepIndex > 0) ...[
                             OutlinedButton(
-                              onPressed: () => setState(() => _stepIndex--),
+                              onPressed: _agreementRulesStepFooterLocked
+                                  ? null
+                                  : () => setState(() => _stepIndex--),
                               child: Text(l10n.housingPlanBack),
                             ),
                             const SizedBox(width: 12),
                           ],
                           FilledButton(
-                            onPressed: _validateStep(_stepIndex)
+                            onPressed: _agreementRulesStepFooterLocked
+                                ? null
+                                : (_validateStep(_stepIndex)
                                 ? () async {
                                     final messenger = ScaffoldMessenger.of(context);
                                     try {
@@ -1186,7 +1261,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                         }
                                       }
                                       if (_stepIndex == 5) {
-                                        await _persistWithdrawal();
+                                        await _persistAgreementRules();
                                         await widget.prefs.setHousingDefaultPlanSummaryReached(true);
                                         if (mounted) {
                                           setState(() => _showSummary = true);
@@ -1211,7 +1286,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                       }
                                     }
                                   }
-                                : null,
+                                : null),
                             child: Text(_stepIndex == 5 ? l10n.housingPlanFinish : l10n.housingPlanNext),
                           ),
                         ],
@@ -1240,7 +1315,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 4:
         return _stepRatios();
       case 5:
-        return _stepWithdrawal();
+        return _stepAgreementRules();
       default:
         return const SizedBox.shrink();
     }
@@ -2274,72 +2349,774 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return sumMinor / 100.0;
   }
 
-  Widget _stepWithdrawal() {
+  List<Widget> _earlyWithdrawalRuleContent(AppLocalizations l10n) {
+    if (!_rulesDraft.earlyWithdrawalEnabled) {
+      return [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            l10n.housingAgreementRuleEarlyWithdrawalDisabledHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ];
+    }
+    return [
+      CheckboxListTile(
+        contentPadding: const EdgeInsetsDirectional.fromSTEB(_kAgreementRuleHPad, 0, _kAgreementRuleHPad, 0),
+        value: _withdrawalSameForAll,
+        onChanged: (v) {
+          final same = v ?? true;
+          setState(() {
+            _withdrawalSameForAll = same;
+            if (!same) {
+              _withdrawalParticipantIndex = 0;
+            }
+          });
+        },
+        title: Text(l10n.housingPlanWithdrawalSameForAll),
+        controlAffinity: ListTileControlAffinity.leading,
+      ),
+      if (_withdrawalSameForAll) ...[
+        TextField(
+          controller: _globalNotice,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _globalPenalty,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
+          onChanged: (_) => setState(() {}),
+        ),
+      ] else ...[
+        TextField(
+          controller: _perParticipantNotice[_withdrawalParticipantIndex],
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _perParticipantPenalty[_withdrawalParticipantIndex],
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
+          onChanged: (_) => setState(() {}),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var i = 0; i < 1 + _otherParticipantCount; i++)
+                ChoiceChip(
+                  label: Text(_ratioParticipantLabel(l10n, i)),
+                  selected: _withdrawalParticipantIndex == i,
+                  onSelected: (sel) {
+                    if (!sel) return;
+                    setState(() => _withdrawalParticipantIndex = i);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
+    ];
+  }
+
+  void _captureWithdrawalSnapshot() {
+    _wdSnapSameForAll = _withdrawalSameForAll;
+    _wdSnapWithdrawalParticipantIndex = _withdrawalParticipantIndex;
+    _wdSnapGlobalNotice = _globalNotice.text;
+    _wdSnapGlobalPenalty = _globalPenalty.text;
+    _wdSnapPerNotice = [for (final c in _perParticipantNotice) c.text];
+    _wdSnapPerPenalty = [for (final c in _perParticipantPenalty) c.text];
+  }
+
+  void _restoreWithdrawalSnapshot() {
+    _withdrawalSameForAll = _wdSnapSameForAll;
+    _withdrawalParticipantIndex = _wdSnapWithdrawalParticipantIndex;
+    _globalNotice.text = _wdSnapGlobalNotice;
+    _globalPenalty.text = _wdSnapGlobalPenalty;
+    final n = _perParticipantNotice.length;
+    for (var i = 0; i < n; i++) {
+      if (i < _wdSnapPerNotice.length) {
+        _perParticipantNotice[i].text = _wdSnapPerNotice[i];
+      }
+      if (i < _wdSnapPerPenalty.length) {
+        _perParticipantPenalty[i].text = _wdSnapPerPenalty[i];
+      }
+    }
+  }
+
+  Widget _withdrawalReadOnlySummary(AppLocalizations l10n) {
+    if (!_rulesDraft.earlyWithdrawalEnabled) {
+      return Text(
+        l10n.housingAgreementRuleEarlyWithdrawalDisabledHint,
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+    if (_withdrawalSameForAll) {
+      return Text(
+        '${l10n.housingPlanMinimumNoticeDays}: ${_globalNotice.text.trim()}\n'
+        '${l10n.housingPlanPenaltyAmount}: ${_globalPenalty.text.trim()}',
+        style: Theme.of(context).textTheme.bodyMedium,
+      );
+    }
+    final lines = <String>[];
+    final total = 1 + _otherParticipantCount;
+    for (var i = 0; i < total; i++) {
+      final label = _ratioParticipantLabel(l10n, i);
+      final n = i < _perParticipantNotice.length ? _perParticipantNotice[i].text.trim() : '';
+      final p = i < _perParticipantPenalty.length ? _perParticipantPenalty[i].text.trim() : '';
+      lines.add('$label — ${l10n.housingPlanMinimumNoticeDays}: $n; ${l10n.housingPlanPenaltyAmount}: $p');
+    }
+    return Text(lines.join('\n'), style: Theme.of(context).textTheme.bodyMedium);
+  }
+
+  Widget _agreementLeadingCheckbox({
+    required bool value,
+    required ValueChanged<bool?>? onChanged,
+  }) {
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Center(
+        child: Checkbox(
+          value: value,
+          onChanged: onChanged,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+      ),
+    );
+  }
+
+  Widget _agreementLeadingSuggestionCheckbox() {
+    return _agreementLeadingCheckbox(
+      value: true,
+      onChanged: null,
+    );
+  }
+
+  Widget _agreementRuleAccordionShell({
+    required Widget leading,
+    required Widget title,
+    required bool expanded,
+    required VoidCallback onHeaderTap,
+    required List<Widget> expandedChildren,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: onHeaderTap,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(_kAgreementRuleHPad, 4, _kAgreementRuleHPad, 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  leading,
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: title,
+                    ),
+                  ),
+                  Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                ],
+              ),
+            ),
+          ),
+          if (expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_kAgreementRuleHPad, 0, _kAgreementRuleHPad, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: expandedChildren,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _agreementRulesActionRow({
+    required AppLocalizations l10n,
+    required bool pencilEnabled,
+    required VoidCallback? onPencil,
+    required bool trashEnabled,
+    required VoidCallback? onTrash,
+    required String trashTooltip,
+  }) {
+    return Align(
+      alignment: AlignmentDirectional.topEnd,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: l10n.housingAgreementRuleEdit,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: pencilEnabled ? onPencil : null,
+            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 2, 4),
+            ),
+          ),
+          IconButton(
+            tooltip: trashTooltip,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: trashEnabled ? onTrash : null,
+            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsetsDirectional.fromSTEB(2, 4, 4, 4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _disposeTextControllersNextFrame(TextEditingController? a, TextEditingController? b) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      a?.dispose();
+      b?.dispose();
+    });
+  }
+
+  void _cancelEditingCustomRule() {
+    if (_customRuleEditingId == null) return;
+    final a = _customRuleEditTitle;
+    final b = _customRuleEditBody;
+    setState(() {
+      _customRuleEditingId = null;
+      _customRuleEditTitle = null;
+      _customRuleEditBody = null;
+    });
+    _disposeTextControllersNextFrame(a, b);
+  }
+
+  void _startEditingCustomRule(AgreementCustomRule rule) {
+    if (_customRuleEditingId == rule.id) return;
+    final oldTitle = _customRuleEditTitle;
+    final oldBody = _customRuleEditBody;
+    setState(() {
+      _customRuleEditingId = rule.id;
+      _expandedCustomRuleIds.add(rule.id);
+      _customRuleEditTitle = TextEditingController(text: rule.title);
+      _customRuleEditBody = TextEditingController(text: rule.body);
+    });
+    _disposeTextControllersNextFrame(oldTitle, oldBody);
+  }
+
+  void _saveEditingCustomRule(AppLocalizations l10n, AgreementCustomRule rule) {
+    if (_customRuleEditingId != rule.id || _customRuleEditTitle == null || _customRuleEditBody == null) {
+      return;
+    }
+    final t = _customRuleEditTitle!.text.trim();
+    if (t.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingAgreementRuleTitleRequired)),
+      );
+      return;
+    }
+    final a = _customRuleEditTitle;
+    final b = _customRuleEditBody;
+    setState(() {
+      rule.title = t;
+      rule.body = b!.text.trim();
+      _customRuleEditingId = null;
+      _customRuleEditTitle = null;
+      _customRuleEditBody = null;
+    });
+    _disposeTextControllersNextFrame(a, b);
+  }
+
+  Widget _buildingRulesReadOnlyContent(AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium;
+    final raw = _buildingRulesBody.text;
+    final display = raw.trim().isEmpty ? l10n.housingAgreementRuleBuildingHint : raw;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: SelectableText(display, style: bodyStyle),
+      ),
+    );
+  }
+
+  Widget _agreementCurfewCard(AppLocalizations l10n) {
+    void onHeaderTap() {
+      if (_curfewExpanded && _curfewEditing) return;
+      setState(() => _curfewExpanded = !_curfewExpanded);
+    }
+
+    return _agreementRuleAccordionShell(
+      leading: _agreementLeadingCheckbox(
+        value: _rulesDraft.curfewEnabled,
+        onChanged: _curfewEditing ? null : (v) => setState(() => _rulesDraft.curfewEnabled = v ?? false),
+      ),
+      title: Text(l10n.housingAgreementRuleCurfewTitle),
+      expanded: _curfewExpanded,
+      onHeaderTap: onHeaderTap,
+      expandedChildren: [
+        _agreementRulesActionRow(
+          l10n: l10n,
+          pencilEnabled: !_curfewEditing,
+          onPencil: () => setState(() {
+            _curfewEditSnapshot = _curfewNotes.text;
+            _curfewEditing = true;
+            _curfewExpanded = true;
+          }),
+          trashEnabled: false,
+          onTrash: null,
+          trashTooltip: l10n.housingAgreementRuleRemove,
+        ),
+        if (_curfewEditing)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _curfewNotes,
+                maxLines: 6,
+                minLines: 3,
+                decoration: InputDecoration(
+                  hintText: l10n.housingAgreementRuleCurfewPlaceholder,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _curfewNotes.text = _curfewEditSnapshot;
+                      _curfewEditing = false;
+                    }),
+                    child: Text(l10n.housingPlanCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => setState(() {
+                      _rulesDraft.curfewNotes = _curfewNotes.text;
+                      _curfewEditing = false;
+                    }),
+                    child: Text(l10n.housingPlanSave),
+                  ),
+                ],
+              ),
+            ],
+          )
+        else
+          _curfewNotes.text.trim().isEmpty
+              ? Text(
+                  l10n.housingAgreementRuleCurfewPlaceholder,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              : SelectableText(
+                  _curfewNotes.text,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+      ],
+    );
+  }
+
+  Widget _agreementEarlyWithdrawalCard(AppLocalizations l10n) {
+    void onHeaderTap() {
+      if (_withdrawalExpanded && _withdrawalEditing) return;
+      setState(() => _withdrawalExpanded = !_withdrawalExpanded);
+    }
+
+    return _agreementRuleAccordionShell(
+      leading: _agreementLeadingCheckbox(
+        value: _rulesDraft.earlyWithdrawalEnabled,
+        onChanged: _withdrawalEditing
+            ? null
+            : (v) => setState(() => _rulesDraft.earlyWithdrawalEnabled = v ?? false),
+      ),
+      title: Text(l10n.housingAgreementRuleEarlyWithdrawalTitle),
+      expanded: _withdrawalExpanded,
+      onHeaderTap: onHeaderTap,
+      expandedChildren: [
+        _agreementRulesActionRow(
+          l10n: l10n,
+          pencilEnabled: !_withdrawalEditing,
+          onPencil: () => setState(() {
+            _captureWithdrawalSnapshot();
+            _withdrawalEditing = true;
+            _withdrawalExpanded = true;
+          }),
+          trashEnabled: false,
+          onTrash: null,
+          trashTooltip: l10n.housingAgreementRuleRemove,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(l10n.housingPlanWithdrawalIntro, style: Theme.of(context).textTheme.bodySmall),
+        ),
+        if (_withdrawalEditing)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ..._earlyWithdrawalRuleContent(l10n),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _restoreWithdrawalSnapshot();
+                      _withdrawalEditing = false;
+                    }),
+                    child: Text(l10n.housingPlanCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => setState(() => _withdrawalEditing = false),
+                    child: Text(l10n.housingPlanSave),
+                  ),
+                ],
+              ),
+            ],
+          )
+        else
+          _withdrawalReadOnlySummary(l10n),
+      ],
+    );
+  }
+
+  Widget _agreementBuildingRulesCard(AppLocalizations l10n) {
+    void onHeaderTap() {
+      if (_buildingExpanded && _buildingRulesEditing) return;
+      setState(() => _buildingExpanded = !_buildingExpanded);
+    }
+
+    return _agreementRuleAccordionShell(
+      leading: _agreementLeadingCheckbox(
+        value: _rulesDraft.buildingRulesEnabled,
+        onChanged: _buildingRulesEditing
+            ? null
+            : (v) => setState(() => _rulesDraft.buildingRulesEnabled = v ?? false),
+      ),
+      title: Text(l10n.housingAgreementRuleBuildingTitle),
+      expanded: _buildingExpanded,
+      onHeaderTap: onHeaderTap,
+      expandedChildren: [
+        _agreementRulesActionRow(
+          l10n: l10n,
+          pencilEnabled: !_buildingRulesEditing,
+          onPencil: () => setState(() {
+            _buildingEditSnapshot = _buildingRulesBody.text;
+            _buildingRulesEditing = true;
+            _buildingExpanded = true;
+          }),
+          trashEnabled: false,
+          onTrash: null,
+          trashTooltip: l10n.housingAgreementRuleRemove,
+        ),
+        if (_buildingRulesEditing)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _buildingRulesBody,
+                maxLines: 8,
+                minLines: 4,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() {
+                      _buildingRulesBody.text = _buildingEditSnapshot;
+                      _buildingRulesEditing = false;
+                    }),
+                    child: Text(l10n.housingPlanCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => setState(() => _buildingRulesEditing = false),
+                    child: Text(l10n.housingPlanSave),
+                  ),
+                ],
+              ),
+            ],
+          )
+        else
+          _buildingRulesReadOnlyContent(l10n),
+      ],
+    );
+  }
+
+  Widget _customAgreementRuleTile(AppLocalizations l10n, int index) {
+    final rule = _rulesDraft.customRules[index];
+    final isEditing = _customRuleEditingId == rule.id;
+    final expanded = _expandedCustomRuleIds.contains(rule.id);
+
+    void onHeaderTap() {
+      if (expanded && isEditing) return;
+      setState(() {
+        if (expanded) {
+          _expandedCustomRuleIds.remove(rule.id);
+        } else {
+          _expandedCustomRuleIds.add(rule.id);
+        }
+      });
+    }
+
+    return _agreementRuleAccordionShell(
+      leading: _agreementLeadingCheckbox(
+        value: rule.enabled,
+        onChanged: isEditing ? null : (v) => setState(() => rule.enabled = v ?? true),
+      ),
+      title: Text(
+        rule.title.isEmpty ? l10n.housingAgreementRuleCustomTitleLabel : rule.title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      expanded: expanded,
+      onHeaderTap: onHeaderTap,
+      expandedChildren: [
+        _agreementRulesActionRow(
+          l10n: l10n,
+          pencilEnabled: !isEditing,
+          onPencil: () => _startEditingCustomRule(rule),
+          trashEnabled: !isEditing && !_rulesRemovalLocked,
+          onTrash: !isEditing && !_rulesRemovalLocked
+              ? () {
+                  setState(() {
+                    _expandedCustomRuleIds.remove(rule.id);
+                    if (_customRuleEditingId == rule.id) {
+                      _cancelEditingCustomRule();
+                    }
+                    _rulesDraft.customRules.removeAt(index);
+                  });
+                }
+              : null,
+          trashTooltip: l10n.housingAgreementRuleRemove,
+        ),
+        if (isEditing)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _customRuleEditTitle,
+                decoration: InputDecoration(labelText: l10n.housingAgreementRuleCustomTitleLabel),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _customRuleEditBody,
+                decoration: InputDecoration(
+                  labelText: l10n.housingAgreementRuleCustomBodyLabel,
+                  alignLabelWithHint: true,
+                ),
+                minLines: 3,
+                maxLines: 8,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: _cancelEditingCustomRule,
+                    child: Text(l10n.housingPlanCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => _saveEditingCustomRule(l10n, rule),
+                    child: Text(l10n.housingPlanSave),
+                  ),
+                ],
+              ),
+            ],
+          )
+        else
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: rule.body.trim().isEmpty
+                ? Text(
+                    l10n.housingAgreementRuleCustomBodyLabel,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                  )
+                : Text(rule.body, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+      ],
+    );
+  }
+
+  Widget _suggestionAgreementRuleTile(
+    AppLocalizations l10n, {
+    required String suggestionId,
+    required String title,
+    required String body,
+  }) {
+    final expanded = _expandedSuggestionIds.contains(suggestionId);
+
+    void onHeaderTap() {
+      setState(() {
+        if (expanded) {
+          _expandedSuggestionIds.remove(suggestionId);
+        } else {
+          _expandedSuggestionIds.add(suggestionId);
+        }
+      });
+    }
+
+    return _agreementRuleAccordionShell(
+      leading: _agreementLeadingSuggestionCheckbox(),
+      title: Text(title),
+      expanded: expanded,
+      onHeaderTap: onHeaderTap,
+      expandedChildren: [
+        _agreementRulesActionRow(
+          l10n: l10n,
+          pencilEnabled: false,
+          onPencil: null,
+          trashEnabled: !_rulesRemovalLocked,
+          onTrash: !_rulesRemovalLocked
+              ? () => setState(() {
+                    if (!_rulesDraft.dismissedSuggestionIds.contains(suggestionId)) {
+                      _rulesDraft.dismissedSuggestionIds.add(suggestionId);
+                    }
+                  })
+              : null,
+          trashTooltip: l10n.housingAgreementRuleDismissSuggestion,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            l10n.housingAgreementSuggestionLabel,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+        Text(body, style: Theme.of(context).textTheme.bodyMedium),
+      ],
+    );
+  }
+
+  Future<void> _showAddAgreementRuleDialog() async {
+    final titleCtrl = TextEditingController();
+    final bodyCtrl = TextEditingController();
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          final d10n = AppLocalizations.of(ctx);
+          return AlertDialog(
+            title: Text(d10n.housingAgreementRuleAddTitle),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    decoration: InputDecoration(labelText: d10n.housingAgreementRuleCustomTitleLabel),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: bodyCtrl,
+                    decoration: InputDecoration(
+                      labelText: d10n.housingAgreementRuleCustomBodyLabel,
+                      alignLabelWithHint: true,
+                    ),
+                    minLines: 3,
+                    maxLines: 6,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(d10n.housingPlanCancel)),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(d10n.housingPlanSave)),
+            ],
+          );
+        },
+      );
+      if (ok != true || !mounted) return;
+      final t = titleCtrl.text.trim();
+      if (t.isEmpty) return;
+      setState(() {
+        _rulesDraft.customRules.add(
+          AgreementCustomRule(
+            id: 'rule:${DateTime.now().microsecondsSinceEpoch}',
+            title: t,
+            body: bodyCtrl.text.trim(),
+            enabled: true,
+          ),
+        );
+      });
+    } finally {
+      // Dispose after the dialog route has torn down its subtree; otherwise
+      // TextFields may still depend on inherited widgets while controllers are disposed.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        titleCtrl.dispose();
+        bodyCtrl.dispose();
+      });
+    }
+  }
+
+  Widget _stepAgreementRules() {
     final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(l10n.housingPlanWithdrawalIntro),
-        const SizedBox(height: 12),
-        CheckboxListTile(
-          value: _withdrawalSameForAll,
-          onChanged: (v) {
-            final same = v ?? true;
-            setState(() {
-              _withdrawalSameForAll = same;
-              if (!same) {
-                _withdrawalParticipantIndex = 0;
-              }
-            });
-          },
-          title: Text(l10n.housingPlanWithdrawalSameForAll),
-          controlAffinity: ListTileControlAffinity.leading,
-        ),
-        if (_withdrawalSameForAll) ...[
-          TextField(
-            controller: _globalNotice,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
-            onChanged: (_) => setState(() {}),
-          ),
-          TextField(
-            controller: _globalPenalty,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
-            onChanged: (_) => setState(() {}),
-          ),
-        ] else ...[
-          TextField(
-            controller: _perParticipantNotice[_withdrawalParticipantIndex],
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
-            onChanged: (_) => setState(() {}),
-          ),
-          TextField(
-            controller: _perParticipantPenalty[_withdrawalParticipantIndex],
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
-            onChanged: (_) => setState(() {}),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (var i = 0; i < 1 + _otherParticipantCount; i++)
-                  ChoiceChip(
-                    label: Text(_ratioParticipantLabel(l10n, i)),
-                    selected: _withdrawalParticipantIndex == i,
-                    onSelected: (sel) {
-                      if (!sel) return;
-                      setState(() => _withdrawalParticipantIndex = i);
-                    },
-                  ),
-              ],
-            ),
+        Text(l10n.housingAgreementRulesIntro, style: Theme.of(context).textTheme.bodyMedium),
+        if (_rulesRemovalLocked) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.housingAgreementRulesRemovalLockedHint,
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
         ],
+        const SizedBox(height: 16),
+        _agreementCurfewCard(l10n),
+        _agreementEarlyWithdrawalCard(l10n),
+        _agreementBuildingRulesCard(l10n),
+        for (var i = 0; i < _rulesDraft.customRules.length; i++)
+          _customAgreementRuleTile(l10n, i),
+        if (!_rulesDraft.dismissedSuggestionIds.contains(kAgreementSuggestionCommonCleanliness))
+          _suggestionAgreementRuleTile(
+            l10n,
+            suggestionId: kAgreementSuggestionCommonCleanliness,
+            title: l10n.housingAgreementSuggestionCleanlinessTitle,
+            body: l10n.housingAgreementSuggestionCleanlinessBody,
+          ),
+        if (!_rulesDraft.dismissedSuggestionIds.contains(kAgreementSuggestionFridgeManagement))
+          _suggestionAgreementRuleTile(
+            l10n,
+            suggestionId: kAgreementSuggestionFridgeManagement,
+            title: l10n.housingAgreementSuggestionFridgeTitle,
+            body: l10n.housingAgreementSuggestionFridgeBody,
+          ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: FilledButton.tonalIcon(
+            onPressed: _rulesRemovalLocked ? null : () => _showAddAgreementRuleDialog(),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.housingAgreementRuleAdd),
+          ),
+        ),
       ],
     );
   }

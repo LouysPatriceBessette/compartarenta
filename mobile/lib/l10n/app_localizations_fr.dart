@@ -200,7 +200,84 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanStepSplit => 'Répartition';
 
   @override
-  String get housingPlanStepWithdrawal => 'Retrait anticipé';
+  String get housingPlanStepAgreementRules => 'Règles de l\'accord';
+
+  @override
+  String get housingAgreementRulesIntro =>
+      'Activez ou désactivez chaque règle. Les règles fixes restent visibles même désactivées pour montrer ce qui a été négocié. Vous pouvez ajouter des règles et les retirer tant qu\'aucune proposition n\'a été acceptée.';
+
+  @override
+  String get housingAgreementRuleCurfewTitle => 'Calendrier de couvre-feu';
+
+  @override
+  String get housingAgreementRuleCurfewPlaceholder =>
+      'Un calendrier sur une semaine pour les heures calmes sera ajouté ici. Pour l\'instant, cette règle sert de marqueur dans les négociations.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalTitle => 'Retrait anticipé';
+
+  @override
+  String get housingAgreementRuleBuildingTitle =>
+      'Règles de l\'immeuble / du logement';
+
+  @override
+  String get housingAgreementRuleBuildingHint =>
+      'Exemples à adapter :\n• Logement non-fumeur\n• Pas d\'animaux\n• Rien dans les couloirs\n• …';
+
+  @override
+  String get housingAgreementRuleEdit => 'Modifier';
+
+  @override
+  String get housingAgreementRuleFinishEditing => 'Terminer l\'édition';
+
+  @override
+  String get housingAgreementRuleTitleRequired =>
+      'Saisissez un titre pour cette règle.';
+
+  @override
+  String get housingAgreementSuggestionLabel => 'Suggestion';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessTitle =>
+      'Propreté des espaces communs';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessBody =>
+      '• Gardez vos vêtements aux emplacements prévus.\n• Nettoyez douche et toilettes après usage.\n• Essuyez le plan de travail après cuisine.\n• …';
+
+  @override
+  String get housingAgreementSuggestionFridgeTitle =>
+      'Gestion du réfrigérateur';
+
+  @override
+  String get housingAgreementSuggestionFridgeBody =>
+      '• Identifiez clairement ce que vous ne partagez pas.\n• Jetez régulièrement ce qui n\'est plus bon.\n• Gardez tablettes et portes propres.\n• …';
+
+  @override
+  String get housingAgreementRuleRemove => 'Retirer la règle';
+
+  @override
+  String get housingAgreementRuleDismissSuggestion => 'Retirer de la liste';
+
+  @override
+  String get housingAgreementRuleAdd => 'Ajouter une règle';
+
+  @override
+  String get housingAgreementRuleAddTitle => 'Ajouter une règle à l\'accord';
+
+  @override
+  String get housingAgreementRuleCustomTitleLabel => 'Titre';
+
+  @override
+  String get housingAgreementRuleCustomBodyLabel => 'Détails (optionnel)';
+
+  @override
+  String get housingAgreementRulesRemovalLockedHint =>
+      'Les règles ayant fait partie d\'une proposition acceptée ne peuvent pas être retirées ; vous pouvez encore les désactiver.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalDisabledHint =>
+      'Activez la règle pour renseigner préavis et pénalité.';
 
   @override
   String housingPlanParticipantsCount(int count) {

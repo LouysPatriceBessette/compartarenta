@@ -199,7 +199,84 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingPlanStepSplit => 'Reparto';
 
   @override
-  String get housingPlanStepWithdrawal => 'Retirada anticipada';
+  String get housingPlanStepAgreementRules => 'Reglas del acuerdo';
+
+  @override
+  String get housingAgreementRulesIntro =>
+      'Activa o desactiva cada regla. Las reglas fijas siguen listadas aunque estén desactivadas para dejar claro qué se negoció. Puedes añadir reglas y quitarlas mientras no haya una propuesta aceptada.';
+
+  @override
+  String get housingAgreementRuleCurfewTitle =>
+      'Calendario de horas de silencio';
+
+  @override
+  String get housingAgreementRuleCurfewPlaceholder =>
+      'Aquí se añadirá una vista semanal del calendario. Por ahora, esta regla sirve como marcador en la negociación.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalTitle => 'Retirada anticipada';
+
+  @override
+  String get housingAgreementRuleBuildingTitle =>
+      'Normas del edificio / vivienda';
+
+  @override
+  String get housingAgreementRuleBuildingHint =>
+      'Sugerencias que puedes copiar o adaptar:\n• No fumadores\n• Sin mascotas\n• Nada en los pasillos\n• …';
+
+  @override
+  String get housingAgreementRuleEdit => 'Editar';
+
+  @override
+  String get housingAgreementRuleFinishEditing => 'Terminar edición';
+
+  @override
+  String get housingAgreementRuleTitleRequired =>
+      'Escribe un título para esta regla.';
+
+  @override
+  String get housingAgreementSuggestionLabel => 'Sugerencia';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessTitle =>
+      'Limpieza de zonas comunes';
+
+  @override
+  String get housingAgreementSuggestionCleanlinessBody =>
+      '• Guarda la ropa solo en los espacios asignados.\n• Limpia ducha e inodoro tras usar.\n• Seca la encimera tras cocinar.\n• …';
+
+  @override
+  String get housingAgreementSuggestionFridgeTitle => 'Gestión del frigorífico';
+
+  @override
+  String get housingAgreementSuggestionFridgeBody =>
+      '• Etiqueta lo que no compartes.\n• Tira lo caducado con regularidad.\n• Mantén baldas y puerta limpias.\n• …';
+
+  @override
+  String get housingAgreementRuleRemove => 'Quitar regla';
+
+  @override
+  String get housingAgreementRuleDismissSuggestion => 'Quitar de la lista';
+
+  @override
+  String get housingAgreementRuleAdd => 'Añadir regla';
+
+  @override
+  String get housingAgreementRuleAddTitle => 'Añadir regla al acuerdo';
+
+  @override
+  String get housingAgreementRuleCustomTitleLabel => 'Título';
+
+  @override
+  String get housingAgreementRuleCustomBodyLabel => 'Detalles (opcional)';
+
+  @override
+  String get housingAgreementRulesRemovalLockedHint =>
+      'Las reglas incluidas en una propuesta aceptada no se pueden quitar; aún puedes desactivarlas.';
+
+  @override
+  String get housingAgreementRuleEarlyWithdrawalDisabledHint =>
+      'Activa la regla para indicar preaviso y penalización.';
 
   @override
   String housingPlanParticipantsCount(int count) {
