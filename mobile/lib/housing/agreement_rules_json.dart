@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'quiet_hours_week_grid.dart';
+
 /// Built-in suggestion panels (user may dismiss until a binding proposal exists).
 const String kAgreementSuggestionCommonCleanliness = 'suggestion:common_cleanliness';
 const String kAgreementSuggestionFridgeManagement = 'suggestion:fridge_management';
@@ -44,17 +46,25 @@ class AgreementRulesDraft {
     this.buildingRulesText = '',
     List<String>? dismissedSuggestionIds,
     List<AgreementCustomRule>? customRules,
+    List<List<int>>? quietHalfHours,
   })  : dismissedSuggestionIds = List<String>.from(dismissedSuggestionIds ?? const []),
-        customRules = List<AgreementCustomRule>.from(customRules ?? const []);
+        customRules = List<AgreementCustomRule>.from(customRules ?? const []),
+        quietHalfHours = quietHoursDeepCopy(
+          quietHalfHours ?? quietHoursEmptyGrid(),
+        );
 
   bool curfewEnabled;
-  /// Optional notes for the quiet-hours rule (placeholder UI until a calendar exists).
+  /// Legacy text field; kept for decode compatibility.
   String curfewNotes;
   bool earlyWithdrawalEnabled;
   bool buildingRulesEnabled;
   String buildingRulesText;
   final List<String> dismissedSuggestionIds;
   final List<AgreementCustomRule> customRules;
+
+  /// 7 UI columns (first column = [MaterialLocalizations.firstDayOfWeek]) × 48 half-hours.
+  /// Values: 0 = none, 1 = absolute quiet, 2 = moderate quiet.
+  List<List<int>> quietHalfHours;
 
   Map<String, dynamic> toJson() => {
         'v': 1,
@@ -65,6 +75,7 @@ class AgreementRulesDraft {
         'buildingRulesText': buildingRulesText,
         'dismissedSuggestionIds': dismissedSuggestionIds,
         'customRules': customRules.map((e) => e.toJson()).toList(),
+        'quietHalfHours': quietHalfHours.map((e) => List<int>.from(e)).toList(),
       };
 
   String encode() => jsonEncode(toJson());
@@ -83,6 +94,7 @@ class AgreementRulesDraft {
         }
       }
     }
+    final qh = quietHoursParseFromJson(m['quietHalfHours']) ?? quietHoursEmptyGrid();
     return AgreementRulesDraft(
       curfewEnabled: m['curfewEnabled'] as bool? ?? false,
       curfewNotes: m['curfewNotes'] as String? ?? '',
@@ -91,6 +103,7 @@ class AgreementRulesDraft {
       buildingRulesText: m['buildingRulesText'] as String? ?? '',
       dismissedSuggestionIds: dismissed,
       customRules: rules,
+      quietHalfHours: qh,
     );
   }
 
@@ -119,6 +132,7 @@ class AgreementRulesDraft {
           buildingRulesText: clausesFallback,
           dismissedSuggestionIds: draft.dismissedSuggestionIds,
           customRules: draft.customRules,
+          quietHalfHours: quietHoursDeepCopy(draft.quietHalfHours),
         );
       }
       return draft;

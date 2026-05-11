@@ -8,6 +8,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/quiet_hours_week_grid.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -129,10 +130,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   static const double _kAgreementRuleHPad = 8;
 
-  final TextEditingController _curfewNotes = TextEditingController();
   bool _curfewExpanded = false;
   bool _curfewEditing = false;
-  String _curfewEditSnapshot = '';
+  int _quietUiDayIndex = 0;
+  List<List<int>>? _quietGridSnapshotForEdit;
 
   bool _withdrawalExpanded = false;
   bool _withdrawalEditing = false;
@@ -183,7 +184,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _globalNotice.dispose();
     _globalPenalty.dispose();
     _buildingRulesBody.dispose();
-    _curfewNotes.dispose();
     _customRuleEditTitle?.dispose();
     _customRuleEditBody?.dispose();
     _db.close();
@@ -600,7 +600,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         _buildingRulesBody.text =
             _lookupAppLocalizationsSync().housingAgreementRuleBuildingHint;
       }
-      _curfewNotes.text = _rulesDraft.curfewNotes;
     }
 
     _rulesRemovalLocked = await _db.planHasActiveAcceptedProposal(_planId);
@@ -954,7 +953,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final cur = await _db.getAgreementForPlan(_planId);
     if (cur == null) throw StateError('No agreement row for $_planId');
 
-    _rulesDraft.curfewNotes = _curfewNotes.text;
     _rulesDraft.buildingRulesText = _buildingRulesBody.text;
 
     var notice = 0;
@@ -2637,6 +2635,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _disposeTextControllersNextFrame(a, b);
   }
 
+  void _toggleQuietHalfHour(int uiDay, int slot) {
+    setState(() {
+      final v = _rulesDraft.quietHalfHours[uiDay][slot];
+      _rulesDraft.quietHalfHours[uiDay][slot] = (v + 1) % 3;
+    });
+  }
+
   Widget _buildingRulesReadOnlyContent(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     final bodyStyle = Theme.of(context).textTheme.bodyMedium;
@@ -2673,7 +2678,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           l10n: l10n,
           pencilEnabled: !_curfewEditing,
           onPencil: () => setState(() {
-            _curfewEditSnapshot = _curfewNotes.text;
+            _quietGridSnapshotForEdit = quietHoursDeepCopy(_rulesDraft.quietHalfHours);
             _curfewEditing = true;
             _curfewExpanded = true;
           }),
@@ -2681,53 +2686,51 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           onTrash: null,
           trashTooltip: l10n.housingAgreementRuleRemove,
         ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            l10n.housingAgreementRuleCurfewPlaceholder,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        QuietHoursWeekDayEditor(
+          grid: _rulesDraft.quietHalfHours,
+          uiSelectedDayIndex: _quietUiDayIndex,
+          onSelectDay: (i) => setState(() => _quietUiDayIndex = i),
+          editing: _curfewEditing,
+          onToggleCell: _toggleQuietHalfHour,
+          labelAbsolute: l10n.housingQuietHoursAbsolute,
+          labelModerate: l10n.housingQuietHoursModerate,
+          emptyDayLabel: l10n.housingQuietHoursNoneThisDay,
+        ),
         if (_curfewEditing)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _curfewNotes,
-                maxLines: 6,
-                minLines: 3,
-                decoration: InputDecoration(
-                  hintText: l10n.housingAgreementRuleCurfewPlaceholder,
-                  border: const OutlineInputBorder(),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                TextButton(
+                  onPressed: () => setState(() {
+                    if (_quietGridSnapshotForEdit != null) {
+                      quietHoursReplaceFrom(_rulesDraft.quietHalfHours, _quietGridSnapshotForEdit!);
+                    }
+                    _quietGridSnapshotForEdit = null;
+                    _curfewEditing = false;
+                  }),
+                  child: Text(l10n.housingPlanCancel),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  TextButton(
-                    onPressed: () => setState(() {
-                      _curfewNotes.text = _curfewEditSnapshot;
-                      _curfewEditing = false;
-                    }),
-                    child: Text(l10n.housingPlanCancel),
-                  ),
-                  FilledButton(
-                    onPressed: () => setState(() {
-                      _rulesDraft.curfewNotes = _curfewNotes.text;
-                      _curfewEditing = false;
-                    }),
-                    child: Text(l10n.housingPlanSave),
-                  ),
-                ],
-              ),
-            ],
-          )
-        else
-          _curfewNotes.text.trim().isEmpty
-              ? Text(
-                  l10n.housingAgreementRuleCurfewPlaceholder,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                )
-              : SelectableText(
-                  _curfewNotes.text,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                FilledButton(
+                  onPressed: () => setState(() {
+                    _quietGridSnapshotForEdit = null;
+                    _curfewEditing = false;
+                  }),
+                  child: Text(l10n.housingPlanSave),
                 ),
+              ],
+            ),
+          ),
       ],
     );
   }

@@ -211,7 +211,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAgreementRuleCurfewPlaceholder =>
-      'Un calendrier sur une semaine pour les heures calmes sera ajouté ici. Pour l\'instant, cette règle sert de marqueur dans les négociations.';
+      'Semaine indicative (sans dates) : choisissez un jour, puis la grille. En édition, touchez une case de 30 minutes pour faire défiler aucune règle → calme absolu (rouge) → calme modéré (jaune).';
+
+  @override
+  String get housingQuietHoursAbsolute => 'Calme absolu';
+
+  @override
+  String get housingQuietHoursModerate => 'Calme modéré';
+
+  @override
+  String get housingQuietHoursNoneThisDay => 'Aucun horaire';
 
   @override
   String get housingAgreementRuleEarlyWithdrawalTitle => 'Retrait anticipé';

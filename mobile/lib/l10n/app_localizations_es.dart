@@ -211,7 +211,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingAgreementRuleCurfewPlaceholder =>
-      'Aquí se añadirá una vista semanal del calendario. Por ahora, esta regla sirve como marcador en la negociación.';
+      'Semana orientativa (sin fechas): elige la letra del día y usa la cuadrícula. En edición, toca una celda de 30 minutos para alternar sin regla → silencio absoluto (rojo) → silencio moderado (amarillo).';
+
+  @override
+  String get housingQuietHoursAbsolute => 'Silencio absoluto';
+
+  @override
+  String get housingQuietHoursModerate => 'Silencio moderado';
+
+  @override
+  String get housingQuietHoursNoneThisDay => 'Sin horario';
 
   @override
   String get housingAgreementRuleEarlyWithdrawalTitle => 'Retirada anticipada';

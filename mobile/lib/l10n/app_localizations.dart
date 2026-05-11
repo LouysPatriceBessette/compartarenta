@@ -481,8 +481,26 @@ abstract class AppLocalizations {
   /// No description provided for @housingAgreementRuleCurfewPlaceholder.
   ///
   /// In en, this message translates to:
-  /// **'A week-view calendar for quiet hours will be added here. For now, use this rule as a placeholder in negotiations.'**
+  /// **'Indicative week (no dates): tap a day letter, then use the grid. In edit mode, tap a 30-minute cell to cycle no rule → absolute quiet (red) → moderate quiet (yellow).'**
   String get housingAgreementRuleCurfewPlaceholder;
+
+  /// No description provided for @housingQuietHoursAbsolute.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute quiet'**
+  String get housingQuietHoursAbsolute;
+
+  /// No description provided for @housingQuietHoursModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate quiet'**
+  String get housingQuietHoursModerate;
+
+  /// No description provided for @housingQuietHoursNoneThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No quiet hours'**
+  String get housingQuietHoursNoneThisDay;
 
   /// No description provided for @housingAgreementRuleEarlyWithdrawalTitle.
   ///

@@ -210,7 +210,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingAgreementRuleCurfewPlaceholder =>
-      'A week-view calendar for quiet hours will be added here. For now, use this rule as a placeholder in negotiations.';
+      'Indicative week (no dates): tap a day letter, then use the grid. In edit mode, tap a 30-minute cell to cycle no rule → absolute quiet (red) → moderate quiet (yellow).';
+
+  @override
+  String get housingQuietHoursAbsolute => 'Absolute quiet';
+
+  @override
+  String get housingQuietHoursModerate => 'Moderate quiet';
+
+  @override
+  String get housingQuietHoursNoneThisDay => 'No quiet hours';
 
   @override
   String get housingAgreementRuleEarlyWithdrawalTitle => 'Early withdrawal';
