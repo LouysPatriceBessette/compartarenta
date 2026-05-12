@@ -1,0 +1,103 @@
+# Compartarenta relay reference compose manifest.
+#
+# This file is the public, version-controlled deployment topology
+# (`relay-deployment-topology` / "Deployment manifests reproduce the
+# environment"). Operators deploy from this file; deviations are an
+# audit finding per `relay-public-auditability` /
+# "Configuration drift between deployed and documented is itself a
+# finding".
+#
+# Notable invariants enforced here:
+#   * The database container has NO `ports:` mapping. It is only
+#     reachable from the relay container via the private `relay-net`
+#     network.
+#   * Persistent state lives on named volumes. No bind mounts.
+#   * Containers run as non-root with a read-only root filesystem.
+#   * Secrets come from the host environment / a secret store via
+#     `.env`; no live secret values live in this repository.
+#
+# In production the public listener is fronted by a reverse proxy that
+# terminates TLS on the dedicated sub-domain (e.g., Caddy / nginx /
+# traefik). The proxy is documented in `docs/relay-deployment.md` and
+# is operator-side; this compose file is the relay + DB pair only.
+
+name: compartarenta-relay
+
+networks:
+  # Private network used only by relay <-> postgres. No published ports.
+  relay-net:
+    driver: bridge
+
+volumes:
+  # PostgreSQL data directory. Named volume so it is enumerated and
+  # bounded per `relay-deployment-topology` / "Persistent state lives on
+  # named volumes with documented retention".
+  pgdata: {}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: compartarenta-relay-db
+    restart: unless-stopped
+    networks: [relay-net]
+    # NO `ports:` mapping. The database is private to relay-net.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    user: "70:70"  # alpine postgres image's postgres user
+    read_only: false  # postgres needs to write to its data dir + sockets
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  relay:
+    image: compartarenta-relay:${RELAY_TAG:-dev}
+    build:
+      context: .
+      args:
+        BUILD_DIGEST: ${BUILD_DIGEST:-dev}
+    container_name: compartarenta-relay
+    restart: unless-stopped
+    networks: [relay-net]
+    # Public port. In production this is bound only to the reverse-proxy
+    # network, not the public interface. The compose file binds 127.0.0.1
+    # by default so local builds do not accidentally expose the relay.
+    ports:
+      - "127.0.0.1:8080:8080"
+      # /metrics listener stays on loopback for dev; production scrapers
+      # reach it via SSH-tunnel or an internal collector network.
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      PUBLIC_LISTEN_ADDR: "0.0.0.0:8080"
+      PRIVATE_LISTEN_ADDR: "0.0.0.0:9090"
+      ENVELOPE_MAX_BYTES: "65536"
+      ENVELOPE_TTL_MIN: "24h"
+      ENVELOPE_TTL_MAX: "168h"
+      IDEMPOTENCY_TTL: "24h"
+      DISCONNECT_GRACE: "5m"
+      ROUTING_INACTIVITY_TTL: "4368h"  # ~26 weeks
+      SWEEPER_INTERVAL: "1m"
+      RATE_LIMIT_PER_IDENTITY: "5"
+      RATE_LIMIT_PER_IP: "20"
+      SHUTDOWN_TIMEOUT: "30s"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    # No container-level healthcheck: the `scratch` image has no curl/wget,
+    # and adding a probe binary inflates the audit surface. The
+    # orchestrator (or the reverse proxy above the relay) probes /healthz
+    # and /readyz over HTTP; this is documented in
+    # docs/relay-deployment.md.

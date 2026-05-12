@@ -148,6 +148,41 @@ Rollback strategy: contacts data is purely additive. The migration that mirrors 
 
 ## Open Questions
 
-- Exact rendering of the human-readable invitation code (length, alphabet, grouping). The spec sets a minimum entropy and a checksum requirement; the precise letters/grouping is a UX decision.
 - Whether to allow a contact to live "across multiple devices" of the same user (multi-device identity is a separate concern; flagged for a future change).
 - Whether the inviter is shown a final "name as the contact will appear in my app" override after handshake or always takes the invitee's chosen self-name (UX, not specification).
+
+## Implementation Decisions
+
+### Decision: Cryptographic primitive selection (locked)
+
+The handshake and steady-state envelopes between connected contacts use:
+
+- **X25519** for ephemeral key agreement during the handshake.
+- **HKDF-SHA-256** for deriving symmetric keys from the X25519 shared secret (`hello` direction key, `ack` direction key, and the long-term steady-state direction keys after the handshake completes).
+- **ChaCha20-Poly1305 (IETF, 96-bit nonce)** as the AEAD for every encrypted envelope: handshake `hello`, handshake `ack`, profile updates, disconnect notice, and the housing/vehicle proposal/accept/reject envelopes that subsequent modules will dispatch over the same connection.
+
+Concrete consequences for the data model already on disk:
+
+- `Contacts.peerPublicMaterial` stores the **peer's long-term X25519 public key** captured at the end of the handshake, in base64url (no padding). The local user's own long-term X25519 keypair is generated on first run and stored outside the contacts table (in a future change for app identity), so this column never holds local private material.
+- `Contacts.relayRoutingId` stores the **opaque routing identifier** derived from `HKDF-SHA-256(public_peer_material || public_self_material, "compartarenta/relay-routing/v1")` truncated to 16 bytes, base64url-encoded. This is what the relay sees; it is not a hash of any user-presented attribute.
+- Invitation `nonce` bytes (already on disk via `ContactInvitations.nonce`) are mixed into the HKDF salt for the `hello` envelope so a leaked nonce that does not match the corresponding invitation row on the inviter device produces a different derived key and fails decryption.
+
+Rationale:
+
+- ChaCha20-Poly1305 + X25519 + HKDF-SHA-256 is the same primitive set used by Signal, WireGuard, and Noise IK; it has the strongest mainstream-implementation footprint and is well-supported in Go's `crypto/...` packages (relay side, even though the relay never decrypts) and via `package:cryptography` in Dart (client side).
+- 96-bit IETF nonces are sufficient because each direction key has its own monotonically-increasing counter; counter-rollover protection is part of the steady-state envelope rules described in `end-to-end-encryption` and is enforced on the client.
+- No new primitive selection ever escapes this decision: every future module envelope reuses the same AEAD and key-derivation chain.
+
+Implementation status: locked. The relay does not implement crypto (it routes opaque ciphertext); this decision is recorded here because the on-disk shape of `Contacts.peerPublicMaterial` and `Contacts.relayRoutingId` depend on it.
+
+### Decision: Human-readable invitation code format (locked)
+
+The invitation code shipped in Wave A is fixed as:
+
+- **Payload:** 1 byte version (currently `0x01`) + 8 bytes invitation id + 12 bytes invitation nonce = 21 bytes.
+- **Encoding:** Crockford base32 over the payload (34 chars) + one mod-37 checksum character (35 chars total).
+- **Rendering:** chunked into groups of 5 with `-` separators (`XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`).
+- **Parser tolerance:** case-insensitive; ignores spaces, dashes, and whitespace; rejects forbidden Crockford characters (`U`); reports `tooShort`/`tooLong`/`invalidCharacters`/`badChecksum`/`unsupportedVersion` separately so the UI can give meaningful feedback.
+- **Deep-link form:** `compartarenta://contact/invite?v=<version>&c=<urlsafe-b64 payload>` for share sheets and QR encoders.
+
+Rationale: 35 characters carries 168 bits of payload + 5 bits of checksum, well above the entropy needed for a single-use, time-bounded, locally-revocable code, while staying dictate-able over the phone. The mod-37 checksum catches the most common typing mistake (one transposed character) before the code ever reaches the relay.
