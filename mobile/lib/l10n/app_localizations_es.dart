@@ -604,6 +604,157 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeCarSharingPlan => 'Plan de coche';
 
   @override
+  String get carSharingPlanTitle => 'Plan de coche compartido';
+
+  @override
+  String get carSharingPlanFinish => 'Listo';
+
+  @override
+  String carSharingOwnerPrompt(String name) {
+    return '$name: indica si es tu vehículo o un alquiler.';
+  }
+
+  @override
+  String get carSharingStepVehicle => 'Vehículo';
+
+  @override
+  String get carSharingStepOwner => 'Propietario';
+
+  @override
+  String get carSharingStepParticipants => 'Participantes';
+
+  @override
+  String get carSharingStepInsurance => 'Seguro y matrícula';
+
+  @override
+  String get carSharingStepCurrentState => 'Estado actual';
+
+  @override
+  String get carSharingStepMaintenance => 'Mantenimiento previsto';
+
+  @override
+  String get carSharingStepAvailability => 'Disponibilidad ofrecida';
+
+  @override
+  String get carSharingStepFuel => 'Gestión de combustible';
+
+  @override
+  String get carSharingStepClauses => 'Otras cláusulas';
+
+  @override
+  String get carSharingFieldMake => 'Marca';
+
+  @override
+  String get carSharingFieldModel => 'Modelo';
+
+  @override
+  String get carSharingFieldColor => 'Color';
+
+  @override
+  String get carSharingFieldYear => 'Año';
+
+  @override
+  String get carSharingOwnerIsOwner => 'Vehículo propio';
+
+  @override
+  String get carSharingOwnerIsRental => 'Vehículo de alquiler';
+
+  @override
+  String get carSharingRentalSharePermission =>
+      'Derecho de compartir obtenido del arrendador';
+
+  @override
+  String get carSharingRentalContractCopy =>
+      'Entregará copia del contrato de alquiler al aceptar el acuerdo';
+
+  @override
+  String get carSharingInsuranceNotify =>
+      'Informará a las aseguradoras al aceptar el acuerdo';
+
+  @override
+  String get carSharingInsuranceAssumeIncrease =>
+      'Asumirá un posible aumento de prima (si no, y sube la prima, el acuerdo puede renegociarse)';
+
+  @override
+  String get carSharingInsuranceProvideDocs =>
+      'Entregará copias de seguro y matrícula al aceptar el acuerdo';
+
+  @override
+  String get carSharingEstimatedValueLabel => 'Valor estimado';
+
+  @override
+  String get carSharingPhotoFront => 'Foto frontal — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoLeft => 'Foto lado izquierdo — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoRight => 'Foto lado derecho — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoRear => 'Foto trasera — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoSeatsFront =>
+      'Foto asientos delanteros — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoSeatsRear =>
+      'Foto asientos traseros — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoDashboard => 'Foto salpicadero — ruta (opcional)';
+
+  @override
+  String get carSharingPhotoOdometer => 'Foto odómetro — ruta (opcional)';
+
+  @override
+  String get carSharingMaintenanceIntro =>
+      'Como los gastos del plan de vivienda; contarán en la categoría «mantenimiento».';
+
+  @override
+  String get carSharingMaintenanceAdd => 'Añadir mantenimiento';
+
+  @override
+  String get carSharingMaintenanceEditTitle => 'Editar mantenimiento';
+
+  @override
+  String get carSharingMaintenanceEmpty =>
+      'Aún no hay partidas de mantenimiento.';
+
+  @override
+  String get carSharingMaintenanceTitleLabel => 'Título';
+
+  @override
+  String get carSharingMaintenanceAmountLabel => 'Importe';
+
+  @override
+  String get carSharingAvailabilityIntro =>
+      'Marca medias horas en las que el coche se ofrece a los coparticipantes; el resto del tiempo queda para el propietario.';
+
+  @override
+  String get carSharingAvailabilityAvailable => 'Ofrecido a coparticipantes';
+
+  @override
+  String get carSharingAvailabilityOwner => 'Uso del propietario';
+
+  @override
+  String get carSharingFuelIntro =>
+      'Con el seguimiento en la app, cada compra guarda: fecha/hora, coste total, volumen, odómetro y si fue llenado completo. Los llenados completos anclan el consumo entre repostajes. El odómetro también sirve para la distancia por uso.';
+
+  @override
+  String get carSharingFuelUseAppTracking =>
+      'Usar seguimiento de combustible y odómetro de la app';
+
+  @override
+  String get carSharingFuelCustomHint =>
+      'Describe otro modo (no gestionado por la app)';
+
+  @override
+  String get carSharingClausesIntro =>
+      'Cláusulas opcionales y sugerencias. No se incluyen reglas específicas de vivienda (toque de queda, retirada anticipada, edificio).';
+
+  @override
   String get homePlaceholderBody =>
       'Esta es una pantalla de inicio provisional para el contenedor MVP publicable.';
 }

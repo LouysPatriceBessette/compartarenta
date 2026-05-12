@@ -244,6 +244,58 @@
   },
 
   "homeCarSharingPlan": "Car sharing plan",
+
+  "carSharingPlanTitle": "Car sharing plan",
+  "carSharingPlanFinish": "Done",
+  "carSharingOwnerPrompt": "{name}: specify whether this is your owned vehicle or a rental.",
+  "@carSharingOwnerPrompt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "carSharingStepVehicle": "Vehicle",
+  "carSharingStepOwner": "Owner",
+  "carSharingStepParticipants": "Participants",
+  "carSharingStepInsurance": "Insurance & registration",
+  "carSharingStepCurrentState": "Current condition",
+  "carSharingStepMaintenance": "Maintenance estimates",
+  "carSharingStepAvailability": "Offered availability",
+  "carSharingStepFuel": "Fuel management",
+  "carSharingStepClauses": "Other clauses",
+  "carSharingFieldMake": "Make",
+  "carSharingFieldModel": "Model",
+  "carSharingFieldColor": "Color",
+  "carSharingFieldYear": "Year",
+  "carSharingOwnerIsOwner": "Owner vehicle",
+  "carSharingOwnerIsRental": "Rental vehicle",
+  "carSharingRentalSharePermission": "Sharing right obtained from the lessor",
+  "carSharingRentalContractCopy": "Will provide a copy of the lease when the agreement is accepted",
+  "carSharingInsuranceNotify": "Will notify insurers when the agreement is accepted",
+  "carSharingInsuranceAssumeIncrease": "Will assume any insurance premium increase (if not, and premiums rise, this agreement is subject to renegotiation)",
+  "carSharingInsuranceProvideDocs": "Will provide copies of insurance and registration papers when the agreement is accepted",
+  "carSharingEstimatedValueLabel": "Estimated value",
+  "carSharingPhotoFront": "Front photo path (optional)",
+  "carSharingPhotoLeft": "Left side photo path (optional)",
+  "carSharingPhotoRight": "Right side photo path (optional)",
+  "carSharingPhotoRear": "Rear photo path (optional)",
+  "carSharingPhotoSeatsFront": "Front seats photo path (optional)",
+  "carSharingPhotoSeatsRear": "Rear seats photo path (optional)",
+  "carSharingPhotoDashboard": "Dashboard photo path (optional)",
+  "carSharingPhotoOdometer": "Odometer photo path (optional)",
+  "carSharingMaintenanceIntro": "Planned maintenance items count toward the “maintenance” category when sharing costs.",
+  "carSharingMaintenanceAdd": "Add maintenance item",
+  "carSharingMaintenanceEditTitle": "Edit maintenance item",
+  "carSharingMaintenanceEmpty": "No maintenance items yet.",
+  "carSharingMaintenanceTitleLabel": "Title",
+  "carSharingMaintenanceAmountLabel": "Amount",
+  "carSharingAvailabilityIntro": "Tap half-hour cells for the selected day: highlighted slots are when the vehicle is offered to co-sharers. Other times are assumed to stay with the owner.",
+  "carSharingAvailabilityAvailable": "Offered to co-sharers",
+  "carSharingAvailabilityOwner": "Owner use",
+  "carSharingFuelIntro": "When using in-app fuel tracking, each purchase records: date/time, total cost, fuel volume, odometer reading, and whether it was a full tank. Full-tank entries anchor consumption between refills. Odometer readings also support distance per trip.",
+  "carSharingFuelUseAppTracking": "Use in-app fuel and odometer tracking",
+  "carSharingFuelCustomHint": "Describe a different arrangement (not tracked by the app)",
+  "carSharingClausesIntro": "Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.",
+
   "homePlaceholderBody": "This is a placeholder home screen for the store-publishable MVP shell."
 }
 

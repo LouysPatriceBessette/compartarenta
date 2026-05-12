@@ -1154,6 +1154,276 @@ abstract class AppLocalizations {
   /// **'Car sharing plan'**
   String get homeCarSharingPlan;
 
+  /// No description provided for @carSharingPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Car sharing plan'**
+  String get carSharingPlanTitle;
+
+  /// No description provided for @carSharingPlanFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get carSharingPlanFinish;
+
+  /// No description provided for @carSharingOwnerPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: specify whether this is your owned vehicle or a rental.'**
+  String carSharingOwnerPrompt(String name);
+
+  /// No description provided for @carSharingStepVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get carSharingStepVehicle;
+
+  /// No description provided for @carSharingStepOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get carSharingStepOwner;
+
+  /// No description provided for @carSharingStepParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get carSharingStepParticipants;
+
+  /// No description provided for @carSharingStepInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance & registration'**
+  String get carSharingStepInsurance;
+
+  /// No description provided for @carSharingStepCurrentState.
+  ///
+  /// In en, this message translates to:
+  /// **'Current condition'**
+  String get carSharingStepCurrentState;
+
+  /// No description provided for @carSharingStepMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance estimates'**
+  String get carSharingStepMaintenance;
+
+  /// No description provided for @carSharingStepAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered availability'**
+  String get carSharingStepAvailability;
+
+  /// No description provided for @carSharingStepFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel management'**
+  String get carSharingStepFuel;
+
+  /// No description provided for @carSharingStepClauses.
+  ///
+  /// In en, this message translates to:
+  /// **'Other clauses'**
+  String get carSharingStepClauses;
+
+  /// No description provided for @carSharingFieldMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get carSharingFieldMake;
+
+  /// No description provided for @carSharingFieldModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get carSharingFieldModel;
+
+  /// No description provided for @carSharingFieldColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get carSharingFieldColor;
+
+  /// No description provided for @carSharingFieldYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get carSharingFieldYear;
+
+  /// No description provided for @carSharingOwnerIsOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner vehicle'**
+  String get carSharingOwnerIsOwner;
+
+  /// No description provided for @carSharingOwnerIsRental.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental vehicle'**
+  String get carSharingOwnerIsRental;
+
+  /// No description provided for @carSharingRentalSharePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing right obtained from the lessor'**
+  String get carSharingRentalSharePermission;
+
+  /// No description provided for @carSharingRentalContractCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Will provide a copy of the lease when the agreement is accepted'**
+  String get carSharingRentalContractCopy;
+
+  /// No description provided for @carSharingInsuranceNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Will notify insurers when the agreement is accepted'**
+  String get carSharingInsuranceNotify;
+
+  /// No description provided for @carSharingInsuranceAssumeIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Will assume any insurance premium increase (if not, and premiums rise, this agreement is subject to renegotiation)'**
+  String get carSharingInsuranceAssumeIncrease;
+
+  /// No description provided for @carSharingInsuranceProvideDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Will provide copies of insurance and registration papers when the agreement is accepted'**
+  String get carSharingInsuranceProvideDocs;
+
+  /// No description provided for @carSharingEstimatedValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated value'**
+  String get carSharingEstimatedValueLabel;
+
+  /// No description provided for @carSharingPhotoFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Front photo path (optional)'**
+  String get carSharingPhotoFront;
+
+  /// No description provided for @carSharingPhotoLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left side photo path (optional)'**
+  String get carSharingPhotoLeft;
+
+  /// No description provided for @carSharingPhotoRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right side photo path (optional)'**
+  String get carSharingPhotoRight;
+
+  /// No description provided for @carSharingPhotoRear.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear photo path (optional)'**
+  String get carSharingPhotoRear;
+
+  /// No description provided for @carSharingPhotoSeatsFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Front seats photo path (optional)'**
+  String get carSharingPhotoSeatsFront;
+
+  /// No description provided for @carSharingPhotoSeatsRear.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear seats photo path (optional)'**
+  String get carSharingPhotoSeatsRear;
+
+  /// No description provided for @carSharingPhotoDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard photo path (optional)'**
+  String get carSharingPhotoDashboard;
+
+  /// No description provided for @carSharingPhotoOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer photo path (optional)'**
+  String get carSharingPhotoOdometer;
+
+  /// No description provided for @carSharingMaintenanceIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned maintenance items count toward the “maintenance” category when sharing costs.'**
+  String get carSharingMaintenanceIntro;
+
+  /// No description provided for @carSharingMaintenanceAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add maintenance item'**
+  String get carSharingMaintenanceAdd;
+
+  /// No description provided for @carSharingMaintenanceEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit maintenance item'**
+  String get carSharingMaintenanceEditTitle;
+
+  /// No description provided for @carSharingMaintenanceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No maintenance items yet.'**
+  String get carSharingMaintenanceEmpty;
+
+  /// No description provided for @carSharingMaintenanceTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get carSharingMaintenanceTitleLabel;
+
+  /// No description provided for @carSharingMaintenanceAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get carSharingMaintenanceAmountLabel;
+
+  /// No description provided for @carSharingAvailabilityIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap half-hour cells for the selected day: highlighted slots are when the vehicle is offered to co-sharers. Other times are assumed to stay with the owner.'**
+  String get carSharingAvailabilityIntro;
+
+  /// No description provided for @carSharingAvailabilityAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offered to co-sharers'**
+  String get carSharingAvailabilityAvailable;
+
+  /// No description provided for @carSharingAvailabilityOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner use'**
+  String get carSharingAvailabilityOwner;
+
+  /// No description provided for @carSharingFuelIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When using in-app fuel tracking, each purchase records: date/time, total cost, fuel volume, odometer reading, and whether it was a full tank. Full-tank entries anchor consumption between refills. Odometer readings also support distance per trip.'**
+  String get carSharingFuelIntro;
+
+  /// No description provided for @carSharingFuelUseAppTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Use in-app fuel and odometer tracking'**
+  String get carSharingFuelUseAppTracking;
+
+  /// No description provided for @carSharingFuelCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe a different arrangement (not tracked by the app)'**
+  String get carSharingFuelCustomHint;
+
+  /// No description provided for @carSharingClausesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.'**
+  String get carSharingClausesIntro;
+
   /// No description provided for @homePlaceholderBody.
   ///
   /// In en, this message translates to:

@@ -601,6 +601,154 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCarSharingPlan => 'Car sharing plan';
 
   @override
+  String get carSharingPlanTitle => 'Car sharing plan';
+
+  @override
+  String get carSharingPlanFinish => 'Done';
+
+  @override
+  String carSharingOwnerPrompt(String name) {
+    return '$name: specify whether this is your owned vehicle or a rental.';
+  }
+
+  @override
+  String get carSharingStepVehicle => 'Vehicle';
+
+  @override
+  String get carSharingStepOwner => 'Owner';
+
+  @override
+  String get carSharingStepParticipants => 'Participants';
+
+  @override
+  String get carSharingStepInsurance => 'Insurance & registration';
+
+  @override
+  String get carSharingStepCurrentState => 'Current condition';
+
+  @override
+  String get carSharingStepMaintenance => 'Maintenance estimates';
+
+  @override
+  String get carSharingStepAvailability => 'Offered availability';
+
+  @override
+  String get carSharingStepFuel => 'Fuel management';
+
+  @override
+  String get carSharingStepClauses => 'Other clauses';
+
+  @override
+  String get carSharingFieldMake => 'Make';
+
+  @override
+  String get carSharingFieldModel => 'Model';
+
+  @override
+  String get carSharingFieldColor => 'Color';
+
+  @override
+  String get carSharingFieldYear => 'Year';
+
+  @override
+  String get carSharingOwnerIsOwner => 'Owner vehicle';
+
+  @override
+  String get carSharingOwnerIsRental => 'Rental vehicle';
+
+  @override
+  String get carSharingRentalSharePermission =>
+      'Sharing right obtained from the lessor';
+
+  @override
+  String get carSharingRentalContractCopy =>
+      'Will provide a copy of the lease when the agreement is accepted';
+
+  @override
+  String get carSharingInsuranceNotify =>
+      'Will notify insurers when the agreement is accepted';
+
+  @override
+  String get carSharingInsuranceAssumeIncrease =>
+      'Will assume any insurance premium increase (if not, and premiums rise, this agreement is subject to renegotiation)';
+
+  @override
+  String get carSharingInsuranceProvideDocs =>
+      'Will provide copies of insurance and registration papers when the agreement is accepted';
+
+  @override
+  String get carSharingEstimatedValueLabel => 'Estimated value';
+
+  @override
+  String get carSharingPhotoFront => 'Front photo path (optional)';
+
+  @override
+  String get carSharingPhotoLeft => 'Left side photo path (optional)';
+
+  @override
+  String get carSharingPhotoRight => 'Right side photo path (optional)';
+
+  @override
+  String get carSharingPhotoRear => 'Rear photo path (optional)';
+
+  @override
+  String get carSharingPhotoSeatsFront => 'Front seats photo path (optional)';
+
+  @override
+  String get carSharingPhotoSeatsRear => 'Rear seats photo path (optional)';
+
+  @override
+  String get carSharingPhotoDashboard => 'Dashboard photo path (optional)';
+
+  @override
+  String get carSharingPhotoOdometer => 'Odometer photo path (optional)';
+
+  @override
+  String get carSharingMaintenanceIntro =>
+      'Planned maintenance items count toward the “maintenance” category when sharing costs.';
+
+  @override
+  String get carSharingMaintenanceAdd => 'Add maintenance item';
+
+  @override
+  String get carSharingMaintenanceEditTitle => 'Edit maintenance item';
+
+  @override
+  String get carSharingMaintenanceEmpty => 'No maintenance items yet.';
+
+  @override
+  String get carSharingMaintenanceTitleLabel => 'Title';
+
+  @override
+  String get carSharingMaintenanceAmountLabel => 'Amount';
+
+  @override
+  String get carSharingAvailabilityIntro =>
+      'Tap half-hour cells for the selected day: highlighted slots are when the vehicle is offered to co-sharers. Other times are assumed to stay with the owner.';
+
+  @override
+  String get carSharingAvailabilityAvailable => 'Offered to co-sharers';
+
+  @override
+  String get carSharingAvailabilityOwner => 'Owner use';
+
+  @override
+  String get carSharingFuelIntro =>
+      'When using in-app fuel tracking, each purchase records: date/time, total cost, fuel volume, odometer reading, and whether it was a full tank. Full-tank entries anchor consumption between refills. Odometer readings also support distance per trip.';
+
+  @override
+  String get carSharingFuelUseAppTracking =>
+      'Use in-app fuel and odometer tracking';
+
+  @override
+  String get carSharingFuelCustomHint =>
+      'Describe a different arrangement (not tracked by the app)';
+
+  @override
+  String get carSharingClausesIntro =>
+      'Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.';
+
+  @override
   String get homePlaceholderBody =>
       'This is a placeholder home screen for the store-publishable MVP shell.';
 }

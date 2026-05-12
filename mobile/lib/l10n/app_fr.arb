@@ -242,6 +242,58 @@
   },
 
   "homeCarSharingPlan": "Plan voiture",
+
+  "carSharingPlanTitle": "Plan partage de voiture",
+  "carSharingPlanFinish": "Terminer",
+  "carSharingOwnerPrompt": "{name} : indiquez s’il s’agit de votre véhicule ou d’une location.",
+  "@carSharingOwnerPrompt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "carSharingStepVehicle": "Le véhicule",
+  "carSharingStepOwner": "Le propriétaire",
+  "carSharingStepParticipants": "Participants",
+  "carSharingStepInsurance": "Assurances et immatriculations",
+  "carSharingStepCurrentState": "État actuel",
+  "carSharingStepMaintenance": "Entretiens à faire",
+  "carSharingStepAvailability": "Disponibilités offertes",
+  "carSharingStepFuel": "Gestion de l’essence",
+  "carSharingStepClauses": "Autres clauses",
+  "carSharingFieldMake": "Marque",
+  "carSharingFieldModel": "Modèle",
+  "carSharingFieldColor": "Couleur",
+  "carSharingFieldYear": "Année",
+  "carSharingOwnerIsOwner": "Véhicule en propriété",
+  "carSharingOwnerIsRental": "Véhicule de location",
+  "carSharingRentalSharePermission": "Droit de partage obtenu de la part du locateur",
+  "carSharingRentalContractCopy": "Fournira une copie du contrat de location lors de l’acceptation de l’entente",
+  "carSharingInsuranceNotify": "Informera les assureurs lors de l’acceptation de l’entente",
+  "carSharingInsuranceAssumeIncrease": "Assumera l’éventuelle augmentation du prix d’assurance (si non et qu’il y a une augmentation, ce contrat est sujet à renégociation)",
+  "carSharingInsuranceProvideDocs": "Fournira une copie des papiers d’assurance et d’immatriculation lors de l’acceptation de l’entente",
+  "carSharingEstimatedValueLabel": "Valeur estimée",
+  "carSharingPhotoFront": "Photo avant — chemin (optionnel)",
+  "carSharingPhotoLeft": "Photo côté gauche — chemin (optionnel)",
+  "carSharingPhotoRight": "Photo côté droit — chemin (optionnel)",
+  "carSharingPhotoRear": "Photo arrière — chemin (optionnel)",
+  "carSharingPhotoSeatsFront": "Photo sièges avant — chemin (optionnel)",
+  "carSharingPhotoSeatsRear": "Photo sièges arrière — chemin (optionnel)",
+  "carSharingPhotoDashboard": "Photo tableau de bord — chemin (optionnel)",
+  "carSharingPhotoOdometer": "Photo kilométrage — chemin (optionnel)",
+  "carSharingMaintenanceIntro": "Comme pour les dépenses du plan logement ; elles compteront dans la catégorie « entretien ».",
+  "carSharingMaintenanceAdd": "Ajouter un entretien",
+  "carSharingMaintenanceEditTitle": "Modifier l’entretien",
+  "carSharingMaintenanceEmpty": "Aucun entretien prévu pour l’instant.",
+  "carSharingMaintenanceTitleLabel": "Titre",
+  "carSharingMaintenanceAmountLabel": "Montant",
+  "carSharingAvailabilityIntro": "Comme la grille du couvre-feu : indiquez les plages où le véhicule est offert aux co-participants. Le reste du temps, il reste à l’usage du propriétaire.",
+  "carSharingAvailabilityAvailable": "Offert aux co-participants",
+  "carSharingAvailabilityOwner": "Usage propriétaire",
+  "carSharingFuelIntro": "En mode suivi dans l’app, chaque achat enregistre : date/heure, coût total, volume de carburant, relevé d’odomètre, et s’il s’agit d’un plein. Les pleins servent d’ancrage pour la consommation entre ravitaillements. L’odomètre sert aussi à la distance par utilisation.",
+  "carSharingFuelUseAppTracking": "Utiliser le suivi essence et odomètre de l’app",
+  "carSharingFuelCustomHint": "Décrivez un autre mode (non géré par l’app)",
+  "carSharingClausesIntro": "Clauses facultatives et suggestions. Les règles propres au logement (couvre-feu, retrait anticipé, immeuble) ne figurent pas ici.",
+
   "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique."
 }
 

@@ -9,6 +9,7 @@ import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_plan_screen.dart';
+import 'screens/car_sharing/car_sharing_plan_screen.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/connectivity_banner.dart';
 
@@ -101,7 +102,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       ),
       GoRoute(
         path: '/car',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('Car'))),
+        builder: (context, state) => CarSharingPlanScreen(prefs: prefs),
       ),
       GoRoute(
         path: '/onboarding/:step',

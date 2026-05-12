@@ -28,6 +28,7 @@ class AppPreferences extends ChangeNotifier {
 
   /// Default housing draft plan reached the post-wizard summary at least once.
   static const _kHousingDefaultSummaryReached = 'housing.default.summaryReached';
+  static const _kCarSharingPlanDraft = 'carSharing.planDraftJson';
 
   static Future<AppPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -136,6 +137,13 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get carSharingPlanDraftJson => _prefs.getString(_kCarSharingPlanDraft) ?? '';
+
+  Future<void> setCarSharingPlanDraftJson(String value, {bool notify = true}) async {
+    await _prefs.setString(_kCarSharingPlanDraft, value);
+    if (notify) notifyListeners();
+  }
+
   Future<void> completeOnboarding() async {
     await _prefs.setBool(_kOnboardingComplete, true);
     await _prefs.remove(_kOnboardingStep);
@@ -165,6 +173,7 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kLanguageCode);
 
     await _prefs.remove(_kHousingDefaultSummaryReached);
+    await _prefs.remove(_kCarSharingPlanDraft);
 
     notifyListeners();
   }

@@ -607,6 +607,159 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeCarSharingPlan => 'Plan voiture';
 
   @override
+  String get carSharingPlanTitle => 'Plan partage de voiture';
+
+  @override
+  String get carSharingPlanFinish => 'Terminer';
+
+  @override
+  String carSharingOwnerPrompt(String name) {
+    return '$name : indiquez s’il s’agit de votre véhicule ou d’une location.';
+  }
+
+  @override
+  String get carSharingStepVehicle => 'Le véhicule';
+
+  @override
+  String get carSharingStepOwner => 'Le propriétaire';
+
+  @override
+  String get carSharingStepParticipants => 'Participants';
+
+  @override
+  String get carSharingStepInsurance => 'Assurances et immatriculations';
+
+  @override
+  String get carSharingStepCurrentState => 'État actuel';
+
+  @override
+  String get carSharingStepMaintenance => 'Entretiens à faire';
+
+  @override
+  String get carSharingStepAvailability => 'Disponibilités offertes';
+
+  @override
+  String get carSharingStepFuel => 'Gestion de l’essence';
+
+  @override
+  String get carSharingStepClauses => 'Autres clauses';
+
+  @override
+  String get carSharingFieldMake => 'Marque';
+
+  @override
+  String get carSharingFieldModel => 'Modèle';
+
+  @override
+  String get carSharingFieldColor => 'Couleur';
+
+  @override
+  String get carSharingFieldYear => 'Année';
+
+  @override
+  String get carSharingOwnerIsOwner => 'Véhicule en propriété';
+
+  @override
+  String get carSharingOwnerIsRental => 'Véhicule de location';
+
+  @override
+  String get carSharingRentalSharePermission =>
+      'Droit de partage obtenu de la part du locateur';
+
+  @override
+  String get carSharingRentalContractCopy =>
+      'Fournira une copie du contrat de location lors de l’acceptation de l’entente';
+
+  @override
+  String get carSharingInsuranceNotify =>
+      'Informera les assureurs lors de l’acceptation de l’entente';
+
+  @override
+  String get carSharingInsuranceAssumeIncrease =>
+      'Assumera l’éventuelle augmentation du prix d’assurance (si non et qu’il y a une augmentation, ce contrat est sujet à renégociation)';
+
+  @override
+  String get carSharingInsuranceProvideDocs =>
+      'Fournira une copie des papiers d’assurance et d’immatriculation lors de l’acceptation de l’entente';
+
+  @override
+  String get carSharingEstimatedValueLabel => 'Valeur estimée';
+
+  @override
+  String get carSharingPhotoFront => 'Photo avant — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoLeft => 'Photo côté gauche — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoRight => 'Photo côté droit — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoRear => 'Photo arrière — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoSeatsFront =>
+      'Photo sièges avant — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoSeatsRear =>
+      'Photo sièges arrière — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoDashboard =>
+      'Photo tableau de bord — chemin (optionnel)';
+
+  @override
+  String get carSharingPhotoOdometer =>
+      'Photo kilométrage — chemin (optionnel)';
+
+  @override
+  String get carSharingMaintenanceIntro =>
+      'Comme pour les dépenses du plan logement ; elles compteront dans la catégorie « entretien ».';
+
+  @override
+  String get carSharingMaintenanceAdd => 'Ajouter un entretien';
+
+  @override
+  String get carSharingMaintenanceEditTitle => 'Modifier l’entretien';
+
+  @override
+  String get carSharingMaintenanceEmpty =>
+      'Aucun entretien prévu pour l’instant.';
+
+  @override
+  String get carSharingMaintenanceTitleLabel => 'Titre';
+
+  @override
+  String get carSharingMaintenanceAmountLabel => 'Montant';
+
+  @override
+  String get carSharingAvailabilityIntro =>
+      'Comme la grille du couvre-feu : indiquez les plages où le véhicule est offert aux co-participants. Le reste du temps, il reste à l’usage du propriétaire.';
+
+  @override
+  String get carSharingAvailabilityAvailable => 'Offert aux co-participants';
+
+  @override
+  String get carSharingAvailabilityOwner => 'Usage propriétaire';
+
+  @override
+  String get carSharingFuelIntro =>
+      'En mode suivi dans l’app, chaque achat enregistre : date/heure, coût total, volume de carburant, relevé d’odomètre, et s’il s’agit d’un plein. Les pleins servent d’ancrage pour la consommation entre ravitaillements. L’odomètre sert aussi à la distance par utilisation.';
+
+  @override
+  String get carSharingFuelUseAppTracking =>
+      'Utiliser le suivi essence et odomètre de l’app';
+
+  @override
+  String get carSharingFuelCustomHint =>
+      'Décrivez un autre mode (non géré par l’app)';
+
+  @override
+  String get carSharingClausesIntro =>
+      'Clauses facultatives et suggestions. Les règles propres au logement (couvre-feu, retrait anticipé, immeuble) ne figurent pas ici.';
+
+  @override
   String get homePlaceholderBody =>
       'Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique.';
 }

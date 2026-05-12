@@ -242,6 +242,58 @@
   },
 
   "homeCarSharingPlan": "Plan de coche",
+
+  "carSharingPlanTitle": "Plan de coche compartido",
+  "carSharingPlanFinish": "Listo",
+  "carSharingOwnerPrompt": "{name}: indica si es tu vehículo o un alquiler.",
+  "@carSharingOwnerPrompt": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "carSharingStepVehicle": "Vehículo",
+  "carSharingStepOwner": "Propietario",
+  "carSharingStepParticipants": "Participantes",
+  "carSharingStepInsurance": "Seguro y matrícula",
+  "carSharingStepCurrentState": "Estado actual",
+  "carSharingStepMaintenance": "Mantenimiento previsto",
+  "carSharingStepAvailability": "Disponibilidad ofrecida",
+  "carSharingStepFuel": "Gestión de combustible",
+  "carSharingStepClauses": "Otras cláusulas",
+  "carSharingFieldMake": "Marca",
+  "carSharingFieldModel": "Modelo",
+  "carSharingFieldColor": "Color",
+  "carSharingFieldYear": "Año",
+  "carSharingOwnerIsOwner": "Vehículo propio",
+  "carSharingOwnerIsRental": "Vehículo de alquiler",
+  "carSharingRentalSharePermission": "Derecho de compartir obtenido del arrendador",
+  "carSharingRentalContractCopy": "Entregará copia del contrato de alquiler al aceptar el acuerdo",
+  "carSharingInsuranceNotify": "Informará a las aseguradoras al aceptar el acuerdo",
+  "carSharingInsuranceAssumeIncrease": "Asumirá un posible aumento de prima (si no, y sube la prima, el acuerdo puede renegociarse)",
+  "carSharingInsuranceProvideDocs": "Entregará copias de seguro y matrícula al aceptar el acuerdo",
+  "carSharingEstimatedValueLabel": "Valor estimado",
+  "carSharingPhotoFront": "Foto frontal — ruta (opcional)",
+  "carSharingPhotoLeft": "Foto lado izquierdo — ruta (opcional)",
+  "carSharingPhotoRight": "Foto lado derecho — ruta (opcional)",
+  "carSharingPhotoRear": "Foto trasera — ruta (opcional)",
+  "carSharingPhotoSeatsFront": "Foto asientos delanteros — ruta (opcional)",
+  "carSharingPhotoSeatsRear": "Foto asientos traseros — ruta (opcional)",
+  "carSharingPhotoDashboard": "Foto salpicadero — ruta (opcional)",
+  "carSharingPhotoOdometer": "Foto odómetro — ruta (opcional)",
+  "carSharingMaintenanceIntro": "Como los gastos del plan de vivienda; contarán en la categoría «mantenimiento».",
+  "carSharingMaintenanceAdd": "Añadir mantenimiento",
+  "carSharingMaintenanceEditTitle": "Editar mantenimiento",
+  "carSharingMaintenanceEmpty": "Aún no hay partidas de mantenimiento.",
+  "carSharingMaintenanceTitleLabel": "Título",
+  "carSharingMaintenanceAmountLabel": "Importe",
+  "carSharingAvailabilityIntro": "Marca medias horas en las que el coche se ofrece a los coparticipantes; el resto del tiempo queda para el propietario.",
+  "carSharingAvailabilityAvailable": "Ofrecido a coparticipantes",
+  "carSharingAvailabilityOwner": "Uso del propietario",
+  "carSharingFuelIntro": "Con el seguimiento en la app, cada compra guarda: fecha/hora, coste total, volumen, odómetro y si fue llenado completo. Los llenados completos anclan el consumo entre repostajes. El odómetro también sirve para la distancia por uso.",
+  "carSharingFuelUseAppTracking": "Usar seguimiento de combustible y odómetro de la app",
+  "carSharingFuelCustomHint": "Describe otro modo (no gestionado por la app)",
+  "carSharingClausesIntro": "Cláusulas opcionales y sugerencias. No se incluyen reglas específicas de vivienda (toque de queda, retirada anticipada, edificio).",
+
   "homePlaceholderBody": "Esta es una pantalla de inicio provisional para el contenedor MVP publicable."
 }
 
