@@ -1,0 +1,40 @@
+## 1. Specification and store-mapping reference
+
+- [ ] 1.1 Confirm the canonical module identifier list at launch (e.g., `housing`, `vehicle`) and document the rule for adding new modules.
+- [ ] 1.2 Author a `docs/store-mapping.md` reference that lists module → Apple subscription group identifier and module → Google Play subscription product identifier (placeholders until products are created).
+- [ ] 1.3 Document the bundle policy (which combinations are sold) and define the bundle product identifiers per platform.
+- [ ] 1.4 Cross-link this change with `licensing-trial-and-plan-entitlement` so the housing lifecycle remains the canonical instance of the per-module model.
+
+## 2. App entitlement layer
+
+- [ ] 2.1 Introduce a module identifier enumeration in the app code (housing first, vehicle deferred).
+- [ ] 2.2 Refactor the entitlement state holder so it maintains one effective state per module (rather than a single global state).
+- [ ] 2.3 Implement the "most favorable source wins" rule combining per-module receipts, bundle receipt projection, and local lifecycle, with a documented deterministic evaluation order.
+- [ ] 2.4 Implement receipt validation paths that route per-module and bundle receipts into the correct module's effective state.
+- [ ] 2.5 Persist captured receipt metadata per module (Apple identifiers, Google Play identifiers) consistent with `store-product-mapping-per-module`.
+
+## 3. Module enable/disable and isolation
+
+- [ ] 3.1 Add a per-module enable/disable toggle in settings, with copy explaining the difference between in-app disable and store cancellation.
+- [ ] 3.2 Wire the disable toggle to stop module-scoped relay traffic for that module while leaving local data intact.
+- [ ] 3.3 Implement re-enable behavior that resumes relay subscriptions without resurrecting expired proposals.
+- [ ] 3.4 Verify on-device storage scoping ensures one module's queries never read another module's data.
+
+## 4. Per-module export
+
+- [ ] 4.1 Generalize the export action so each module exposes its own export, governed only by its own entitlement state.
+- [ ] 4.2 Add module identification to export output (filename, header, or manifest entry).
+
+## 5. Store-side provisioning (when a module is actually about to ship)
+
+- [ ] 5.1 For the housing module: create its dedicated Apple subscription group and its Google Play subscription product (and base plans) when housing licensing is implemented (this is the existing `licensing-trial-and-plan-entitlement` work; this change confirms the layout).
+- [ ] 5.2 Document the resulting identifiers in `docs/store-mapping.md`.
+- [ ] 5.3 For future bundles: create the dedicated bundle subscription group on Apple and the bundle subscription product on Google Play; document identifiers.
+
+## 6. Tests
+
+- [ ] 6.1 Unit tests for the "most favorable source wins" evaluation, including ties and overlap between standalone and bundle receipts.
+- [ ] 6.2 Unit tests for per-module state machine isolation (a delinquency on one module does not transition state on another).
+- [ ] 6.3 Unit tests for disable/enable behavior on relay traffic (no module-scoped envelopes generated while disabled; expired inbound proposals are not resurrected at re-enable).
+- [ ] 6.4 Integration test verifying export availability under various per-module entitlement combinations (active-paid, read-only, delinquent).
+- [ ] 6.5 Documentation test that confirms `docs/store-mapping.md` lists each currently-shipping module and bundle.
