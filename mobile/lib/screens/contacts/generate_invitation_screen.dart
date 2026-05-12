@@ -1,0 +1,225 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../contacts/contact_invitations_repository.dart';
+import '../../contacts/invitation_code.dart';
+import '../../db/app_database.dart';
+import '../../l10n/app_localizations.dart';
+
+/// Screen that generates a new invitation code on-device and presents it
+/// for out-of-band sharing. Never contacts the network.
+class GenerateInvitationScreen extends StatefulWidget {
+  const GenerateInvitationScreen({super.key});
+
+  @override
+  State<GenerateInvitationScreen> createState() =>
+      _GenerateInvitationScreenState();
+}
+
+class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
+  late final AppDatabase _db = AppDatabase();
+  late final ContactInvitationsRepository _repo =
+      ContactInvitationsRepository(_db);
+
+  Duration _validFor = const Duration(hours: 24);
+  ({ContactInvitation row, InvitationCode code, String shortCode, String deepLink})?
+      _generated;
+  bool _generating = false;
+
+  static const _options = <(Duration, String)>[
+    (Duration(hours: 1), '1h'),
+    (Duration(hours: 24), '24h'),
+    (Duration(days: 7), '7d'),
+  ];
+
+  Future<void> _generate() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    final result = await _repo.generate(validFor: _validFor);
+    if (!mounted) return;
+    setState(() {
+      _generated = result;
+      _generating = false;
+    });
+  }
+
+  Future<void> _revoke() async {
+    final invitation = _generated;
+    if (invitation == null) return;
+    await _repo.revoke(invitation.row.id);
+    if (!mounted) return;
+    setState(() => _generated = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final generated = _generated;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.contactsInviteTitle)),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: generated == null
+              ? _IntroForm(
+                  selected: _validFor,
+                  options: _options,
+                  onSelect: (d) => setState(() => _validFor = d),
+                  onGenerate: _generate,
+                  busy: _generating,
+                )
+              : _GeneratedView(
+                  shortCode: generated.shortCode,
+                  deepLink: generated.deepLink,
+                  expiresAt: generated.row.expiresAt,
+                  onRevoke: _revoke,
+                  onDone: () => context.pop(),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroForm extends StatelessWidget {
+  const _IntroForm({
+    required this.selected,
+    required this.options,
+    required this.onSelect,
+    required this.onGenerate,
+    required this.busy,
+  });
+
+  final Duration selected;
+  final List<(Duration, String)> options;
+  final ValueChanged<Duration> onSelect;
+  final VoidCallback onGenerate;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.contactsInviteIntroTitle,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 8),
+        Text(l10n.contactsInviteIntroBody),
+        const SizedBox(height: 16),
+        Text(
+          l10n.contactsInviteValidityLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        SegmentedButton<Duration>(
+          segments: [
+            for (final (duration, label) in options)
+              ButtonSegment(value: duration, label: Text(label)),
+          ],
+          selected: {selected},
+          onSelectionChanged: (s) => onSelect(s.first),
+        ),
+        const Spacer(),
+        FilledButton.icon(
+          icon: const Icon(Icons.send),
+          label: Text(l10n.contactsInviteGenerateAction),
+          onPressed: busy ? null : onGenerate,
+        ),
+      ],
+    );
+  }
+}
+
+class _GeneratedView extends StatelessWidget {
+  const _GeneratedView({
+    required this.shortCode,
+    required this.deepLink,
+    required this.expiresAt,
+    required this.onRevoke,
+    required this.onDone,
+  });
+
+  final String shortCode;
+  final String deepLink;
+  final DateTime expiresAt;
+  final VoidCallback onRevoke;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.contactsInviteShareWarning,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.contactsInviteShortCodeLabel,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                SelectableText(
+                  shortCode,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.copy),
+                      label: Text(l10n.commonCopy),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: shortCode));
+                      },
+                    ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.link),
+                      label: Text(l10n.contactsInviteCopyDeepLink),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: deepLink));
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.contactsInviteExpiresAt(expiresAt.toLocal().toString()),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const Spacer(),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.cancel_outlined),
+          label: Text(l10n.contactsInviteRevokeAction),
+          onPressed: onRevoke,
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          onPressed: onDone,
+          child: Text(l10n.commonDone),
+        ),
+      ],
+    );
+  }
+}

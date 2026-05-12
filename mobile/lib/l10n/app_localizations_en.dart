@@ -30,6 +30,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonNotSet => 'Not set';
 
   @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get commonDelete => 'Delete';
+
+  @override
+  String get commonEdit => 'Edit';
+
+  @override
+  String get commonDone => 'Done';
+
+  @override
+  String get commonCopy => 'Copy';
+
+  @override
+  String get commonPaste => 'Paste';
+
+  @override
+  String get commonBlock => 'Block';
+
+  @override
+  String get commonUnblock => 'Unblock';
+
+  @override
   String get navHome => 'Home';
 
   @override
@@ -751,4 +778,194 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homePlaceholderBody =>
       'This is a placeholder home screen for the store-publishable MVP shell.';
+
+  @override
+  String get homeContacts => 'Contacts';
+
+  @override
+  String get contactsTitle => 'Contacts';
+
+  @override
+  String get contactsEmptyTitle => 'No contacts yet';
+
+  @override
+  String get contactsEmptyBody =>
+      'Add someone you know to reuse them across modules, or invite a contact to connect through the relay.';
+
+  @override
+  String get contactsAddLocalOnlyAction => 'Add a contact';
+
+  @override
+  String get contactsAddLocalOnlyTitle => 'New contact';
+
+  @override
+  String get contactsEditTitle => 'Edit contact';
+
+  @override
+  String get contactsDetailTitle => 'Contact';
+
+  @override
+  String get contactsDetailMissing => 'This contact no longer exists.';
+
+  @override
+  String get contactsInviteAction => 'Invite a contact';
+
+  @override
+  String get contactsInviteTitle => 'Invite a contact';
+
+  @override
+  String get contactsInviteIntroTitle => 'Share a one-time code';
+
+  @override
+  String get contactsInviteIntroBody =>
+      'Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can request to connect with you. You will confirm before they are added.';
+
+  @override
+  String get contactsInviteValidityLabel => 'Code valid for';
+
+  @override
+  String get contactsInviteGenerateAction => 'Generate code';
+
+  @override
+  String get contactsInviteShareWarning =>
+      'Share this code with one person only. It expires automatically and stops working after being used or revoked.';
+
+  @override
+  String get contactsInviteShortCodeLabel => 'Code';
+
+  @override
+  String get contactsInviteCopyDeepLink => 'Copy link';
+
+  @override
+  String contactsInviteExpiresAt(String when) {
+    return 'Expires $when';
+  }
+
+  @override
+  String get contactsInviteRevokeAction => 'Revoke';
+
+  @override
+  String get contactsInvitationsTitle => 'Sent invitations';
+
+  @override
+  String get contactsInvitationsEmpty => 'No invitations sent yet.';
+
+  @override
+  String contactsInvitationsItemTitle(String createdAt) {
+    return 'Invitation · $createdAt';
+  }
+
+  @override
+  String get contactsInvitationsStatusPending => 'Pending';
+
+  @override
+  String get contactsInvitationsStatusUsed => 'Used';
+
+  @override
+  String get contactsInvitationsStatusExpired => 'Expired';
+
+  @override
+  String get contactsInvitationsStatusRevoked => 'Revoked';
+
+  @override
+  String get contactsEnterInviteCodeTitle => 'Enter a code';
+
+  @override
+  String get contactsEnterInviteCodeIntro =>
+      'Paste or type the code you received from a contact. The app checks the format locally before doing anything else.';
+
+  @override
+  String get contactsEnterInviteCodeFieldLabel => 'Invitation code';
+
+  @override
+  String get contactsEnterInviteCodeSubmit => 'Connect';
+
+  @override
+  String get contactsEnterInviteCodeWaveBNote =>
+      'The encrypted handshake with the relay will be enabled once the relay infrastructure is deployed.';
+
+  @override
+  String get contactsEnterInviteCodeValid => 'Code format is valid';
+
+  @override
+  String contactsEnterInviteCodeInvitationId(String id) {
+    return 'Invitation id: $id';
+  }
+
+  @override
+  String get contactsHandshakeNotAvailableYet =>
+      'The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.';
+
+  @override
+  String get contactsCodeErrorEmpty => 'Enter a code to continue.';
+
+  @override
+  String get contactsCodeErrorTooShort => 'This code is too short.';
+
+  @override
+  String get contactsCodeErrorTooLong => 'This code is too long.';
+
+  @override
+  String get contactsCodeErrorInvalidCharacters =>
+      'This code contains characters that are not allowed.';
+
+  @override
+  String get contactsCodeErrorBadChecksum =>
+      'This code looks mistyped. Check the characters and try again.';
+
+  @override
+  String get contactsCodeErrorUnsupportedVersion =>
+      'This code was created by a newer version of the app.';
+
+  @override
+  String get contactsKindLocalOnly => 'Local only';
+
+  @override
+  String get contactsKindConnected => 'Connected';
+
+  @override
+  String get contactsKindBlocked => 'Blocked';
+
+  @override
+  String get contactsKindDeleted => 'Deleted';
+
+  @override
+  String get contactsFieldNameLabel => 'Name';
+
+  @override
+  String get contactsFieldNameHint => 'How this person appears in the app';
+
+  @override
+  String get contactsFieldAvatarLabel => 'Avatar';
+
+  @override
+  String get contactsFieldNotesLabel => 'Notes';
+
+  @override
+  String get contactsFieldNotesHint => 'Personal reminder, not shared';
+
+  @override
+  String get contactsDeleteTitle => 'Delete contact?';
+
+  @override
+  String get contactsDeleteBody =>
+      'Existing housing or vehicle entries that reference this contact will keep their stored name and avatar. You can re-add the contact later.';
+
+  @override
+  String get contactsDeletePreservesHistory =>
+      'Existing entries that reference this contact keep their stored name and avatar.';
+
+  @override
+  String get contactsBlockTitle => 'Block this contact?';
+
+  @override
+  String get contactsBlockBody =>
+      'Incoming messages from this contact will be ignored locally. The relay is not informed of the block.';
+
+  @override
+  String get contactsUnblockTitle => 'Unblock this contact?';
+
+  @override
+  String get contactsUnblockBody =>
+      'Incoming messages from this contact will be processed again.';
 }

@@ -450,8 +450,25 @@ class $ParticipantsTable extends Participants
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, displayName, avatarId, createdAt];
+  late final GeneratedColumn<String> contactId = GeneratedColumn<String>(
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    displayName,
+    avatarId,
+    createdAt,
+    contactId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -496,6 +513,12 @@ class $ParticipantsTable extends Participants
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    }
     return context;
   }
 
@@ -521,6 +544,10 @@ class $ParticipantsTable extends Participants
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contact_id'],
+      ),
     );
   }
 
@@ -535,11 +562,18 @@ class Participant extends DataClass implements Insertable<Participant> {
   final String displayName;
   final String avatarId;
   final DateTime createdAt;
+
+  /// Reference to the authoritative identity in [Contacts]. Nullable for
+  /// legacy rows that existed before the Contacts module shipped. The
+  /// `displayName` and `avatarId` columns on this row act as the historical
+  /// display snapshot if the referenced Contact is later deleted.
+  final String? contactId;
   const Participant({
     required this.id,
     required this.displayName,
     required this.avatarId,
     required this.createdAt,
+    this.contactId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -548,6 +582,9 @@ class Participant extends DataClass implements Insertable<Participant> {
     map['display_name'] = Variable<String>(displayName);
     map['avatar_id'] = Variable<String>(avatarId);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<String>(contactId);
+    }
     return map;
   }
 
@@ -557,6 +594,9 @@ class Participant extends DataClass implements Insertable<Participant> {
       displayName: Value(displayName),
       avatarId: Value(avatarId),
       createdAt: Value(createdAt),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
     );
   }
 
@@ -570,6 +610,7 @@ class Participant extends DataClass implements Insertable<Participant> {
       displayName: serializer.fromJson<String>(json['displayName']),
       avatarId: serializer.fromJson<String>(json['avatarId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      contactId: serializer.fromJson<String?>(json['contactId']),
     );
   }
   @override
@@ -580,6 +621,7 @@ class Participant extends DataClass implements Insertable<Participant> {
       'displayName': serializer.toJson<String>(displayName),
       'avatarId': serializer.toJson<String>(avatarId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'contactId': serializer.toJson<String?>(contactId),
     };
   }
 
@@ -588,11 +630,13 @@ class Participant extends DataClass implements Insertable<Participant> {
     String? displayName,
     String? avatarId,
     DateTime? createdAt,
+    Value<String?> contactId = const Value.absent(),
   }) => Participant(
     id: id ?? this.id,
     displayName: displayName ?? this.displayName,
     avatarId: avatarId ?? this.avatarId,
     createdAt: createdAt ?? this.createdAt,
+    contactId: contactId.present ? contactId.value : this.contactId,
   );
   Participant copyWithCompanion(ParticipantsCompanion data) {
     return Participant(
@@ -602,6 +646,7 @@ class Participant extends DataClass implements Insertable<Participant> {
           : this.displayName,
       avatarId: data.avatarId.present ? data.avatarId.value : this.avatarId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
     );
   }
 
@@ -611,13 +656,15 @@ class Participant extends DataClass implements Insertable<Participant> {
           ..write('id: $id, ')
           ..write('displayName: $displayName, ')
           ..write('avatarId: $avatarId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('contactId: $contactId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, displayName, avatarId, createdAt);
+  int get hashCode =>
+      Object.hash(id, displayName, avatarId, createdAt, contactId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -625,7 +672,8 @@ class Participant extends DataClass implements Insertable<Participant> {
           other.id == this.id &&
           other.displayName == this.displayName &&
           other.avatarId == this.avatarId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.contactId == this.contactId);
 }
 
 class ParticipantsCompanion extends UpdateCompanion<Participant> {
@@ -633,12 +681,14 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
   final Value<String> displayName;
   final Value<String> avatarId;
   final Value<DateTime> createdAt;
+  final Value<String?> contactId;
   final Value<int> rowid;
   const ParticipantsCompanion({
     this.id = const Value.absent(),
     this.displayName = const Value.absent(),
     this.avatarId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.contactId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ParticipantsCompanion.insert({
@@ -646,6 +696,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
     required String displayName,
     required String avatarId,
     required DateTime createdAt,
+    this.contactId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        displayName = Value(displayName),
@@ -656,6 +707,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
     Expression<String>? displayName,
     Expression<String>? avatarId,
     Expression<DateTime>? createdAt,
+    Expression<String>? contactId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -663,6 +715,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
       if (displayName != null) 'display_name': displayName,
       if (avatarId != null) 'avatar_id': avatarId,
       if (createdAt != null) 'created_at': createdAt,
+      if (contactId != null) 'contact_id': contactId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -672,6 +725,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
     Value<String>? displayName,
     Value<String>? avatarId,
     Value<DateTime>? createdAt,
+    Value<String?>? contactId,
     Value<int>? rowid,
   }) {
     return ParticipantsCompanion(
@@ -679,6 +733,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
       displayName: displayName ?? this.displayName,
       avatarId: avatarId ?? this.avatarId,
       createdAt: createdAt ?? this.createdAt,
+      contactId: contactId ?? this.contactId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -698,6 +753,9 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (contactId.present) {
+      map['contact_id'] = Variable<String>(contactId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -711,6 +769,7 @@ class ParticipantsCompanion extends UpdateCompanion<Participant> {
           ..write('displayName: $displayName, ')
           ..write('avatarId: $avatarId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('contactId: $contactId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4385,6 +4444,1181 @@ class ProposalResponsesCompanion extends UpdateCompanion<ProposalResponse> {
   }
 }
 
+class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContactsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _avatarIdMeta = const VerificationMeta(
+    'avatarId',
+  );
+  @override
+  late final GeneratedColumn<String> avatarId = GeneratedColumn<String>(
+    'avatar_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _isBlockedMeta = const VerificationMeta(
+    'isBlocked',
+  );
+  @override
+  late final GeneratedColumn<bool> isBlocked = GeneratedColumn<bool>(
+    'is_blocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_blocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _relayRoutingIdMeta = const VerificationMeta(
+    'relayRoutingId',
+  );
+  @override
+  late final GeneratedColumn<String> relayRoutingId = GeneratedColumn<String>(
+    'relay_routing_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _peerPublicMaterialMeta =
+      const VerificationMeta('peerPublicMaterial');
+  @override
+  late final GeneratedColumn<String> peerPublicMaterial =
+      GeneratedColumn<String>(
+        'peer_public_material',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    kind,
+    displayName,
+    avatarId,
+    notes,
+    isBlocked,
+    relayRoutingId,
+    peerPublicMaterial,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contacts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Contact> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('avatar_id')) {
+      context.handle(
+        _avatarIdMeta,
+        avatarId.isAcceptableOrUnknown(data['avatar_id']!, _avatarIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_avatarIdMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('is_blocked')) {
+      context.handle(
+        _isBlockedMeta,
+        isBlocked.isAcceptableOrUnknown(data['is_blocked']!, _isBlockedMeta),
+      );
+    }
+    if (data.containsKey('relay_routing_id')) {
+      context.handle(
+        _relayRoutingIdMeta,
+        relayRoutingId.isAcceptableOrUnknown(
+          data['relay_routing_id']!,
+          _relayRoutingIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('peer_public_material')) {
+      context.handle(
+        _peerPublicMaterialMeta,
+        peerPublicMaterial.isAcceptableOrUnknown(
+          data['peer_public_material']!,
+          _peerPublicMaterialMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Contact map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Contact(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      avatarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_id'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      isBlocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_blocked'],
+      )!,
+      relayRoutingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relay_routing_id'],
+      ),
+      peerPublicMaterial: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_public_material'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $ContactsTable createAlias(String alias) {
+    return $ContactsTable(attachedDatabase, alias);
+  }
+}
+
+class Contact extends DataClass implements Insertable<Contact> {
+  final String id;
+
+  /// `local-only` | `connected` | `archived`.
+  final String kind;
+  final String displayName;
+  final String avatarId;
+
+  /// Free-text notes the local user keeps about this contact.
+  final String notes;
+
+  /// Local-only flag. When true, inbound envelopes from this contact are
+  /// dropped on receipt regardless of their kind.
+  final bool isBlocked;
+
+  /// Opaque relay routing identifier exchanged during the handshake.
+  /// Populated only when kind = connected.
+  final String? relayRoutingId;
+
+  /// Peer public key material (base64 or similar) exchanged during the
+  /// handshake. Populated only when kind = connected.
+  final String? peerPublicMaterial;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  /// When the Contact was logically deleted by the local user.
+  /// Module participant rows that referenced this contact continue to render
+  /// from their stored snapshot (`Participants.displayName` / `avatarId`).
+  final DateTime? deletedAt;
+  const Contact({
+    required this.id,
+    required this.kind,
+    required this.displayName,
+    required this.avatarId,
+    required this.notes,
+    required this.isBlocked,
+    this.relayRoutingId,
+    this.peerPublicMaterial,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    map['display_name'] = Variable<String>(displayName);
+    map['avatar_id'] = Variable<String>(avatarId);
+    map['notes'] = Variable<String>(notes);
+    map['is_blocked'] = Variable<bool>(isBlocked);
+    if (!nullToAbsent || relayRoutingId != null) {
+      map['relay_routing_id'] = Variable<String>(relayRoutingId);
+    }
+    if (!nullToAbsent || peerPublicMaterial != null) {
+      map['peer_public_material'] = Variable<String>(peerPublicMaterial);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  ContactsCompanion toCompanion(bool nullToAbsent) {
+    return ContactsCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      displayName: Value(displayName),
+      avatarId: Value(avatarId),
+      notes: Value(notes),
+      isBlocked: Value(isBlocked),
+      relayRoutingId: relayRoutingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(relayRoutingId),
+      peerPublicMaterial: peerPublicMaterial == null && nullToAbsent
+          ? const Value.absent()
+          : Value(peerPublicMaterial),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory Contact.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Contact(
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      avatarId: serializer.fromJson<String>(json['avatarId']),
+      notes: serializer.fromJson<String>(json['notes']),
+      isBlocked: serializer.fromJson<bool>(json['isBlocked']),
+      relayRoutingId: serializer.fromJson<String?>(json['relayRoutingId']),
+      peerPublicMaterial: serializer.fromJson<String?>(
+        json['peerPublicMaterial'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'displayName': serializer.toJson<String>(displayName),
+      'avatarId': serializer.toJson<String>(avatarId),
+      'notes': serializer.toJson<String>(notes),
+      'isBlocked': serializer.toJson<bool>(isBlocked),
+      'relayRoutingId': serializer.toJson<String?>(relayRoutingId),
+      'peerPublicMaterial': serializer.toJson<String?>(peerPublicMaterial),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  Contact copyWith({
+    String? id,
+    String? kind,
+    String? displayName,
+    String? avatarId,
+    String? notes,
+    bool? isBlocked,
+    Value<String?> relayRoutingId = const Value.absent(),
+    Value<String?> peerPublicMaterial = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => Contact(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    displayName: displayName ?? this.displayName,
+    avatarId: avatarId ?? this.avatarId,
+    notes: notes ?? this.notes,
+    isBlocked: isBlocked ?? this.isBlocked,
+    relayRoutingId: relayRoutingId.present
+        ? relayRoutingId.value
+        : this.relayRoutingId,
+    peerPublicMaterial: peerPublicMaterial.present
+        ? peerPublicMaterial.value
+        : this.peerPublicMaterial,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  Contact copyWithCompanion(ContactsCompanion data) {
+    return Contact(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      avatarId: data.avatarId.present ? data.avatarId.value : this.avatarId,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      isBlocked: data.isBlocked.present ? data.isBlocked.value : this.isBlocked,
+      relayRoutingId: data.relayRoutingId.present
+          ? data.relayRoutingId.value
+          : this.relayRoutingId,
+      peerPublicMaterial: data.peerPublicMaterial.present
+          ? data.peerPublicMaterial.value
+          : this.peerPublicMaterial,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Contact(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('displayName: $displayName, ')
+          ..write('avatarId: $avatarId, ')
+          ..write('notes: $notes, ')
+          ..write('isBlocked: $isBlocked, ')
+          ..write('relayRoutingId: $relayRoutingId, ')
+          ..write('peerPublicMaterial: $peerPublicMaterial, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    kind,
+    displayName,
+    avatarId,
+    notes,
+    isBlocked,
+    relayRoutingId,
+    peerPublicMaterial,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Contact &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.displayName == this.displayName &&
+          other.avatarId == this.avatarId &&
+          other.notes == this.notes &&
+          other.isBlocked == this.isBlocked &&
+          other.relayRoutingId == this.relayRoutingId &&
+          other.peerPublicMaterial == this.peerPublicMaterial &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class ContactsCompanion extends UpdateCompanion<Contact> {
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<String> displayName;
+  final Value<String> avatarId;
+  final Value<String> notes;
+  final Value<bool> isBlocked;
+  final Value<String?> relayRoutingId;
+  final Value<String?> peerPublicMaterial;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const ContactsCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.avatarId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isBlocked = const Value.absent(),
+    this.relayRoutingId = const Value.absent(),
+    this.peerPublicMaterial = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContactsCompanion.insert({
+    required String id,
+    required String kind,
+    required String displayName,
+    required String avatarId,
+    this.notes = const Value.absent(),
+    this.isBlocked = const Value.absent(),
+    this.relayRoutingId = const Value.absent(),
+    this.peerPublicMaterial = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       kind = Value(kind),
+       displayName = Value(displayName),
+       avatarId = Value(avatarId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Contact> custom({
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<String>? displayName,
+    Expression<String>? avatarId,
+    Expression<String>? notes,
+    Expression<bool>? isBlocked,
+    Expression<String>? relayRoutingId,
+    Expression<String>? peerPublicMaterial,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (displayName != null) 'display_name': displayName,
+      if (avatarId != null) 'avatar_id': avatarId,
+      if (notes != null) 'notes': notes,
+      if (isBlocked != null) 'is_blocked': isBlocked,
+      if (relayRoutingId != null) 'relay_routing_id': relayRoutingId,
+      if (peerPublicMaterial != null)
+        'peer_public_material': peerPublicMaterial,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContactsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? kind,
+    Value<String>? displayName,
+    Value<String>? avatarId,
+    Value<String>? notes,
+    Value<bool>? isBlocked,
+    Value<String?>? relayRoutingId,
+    Value<String?>? peerPublicMaterial,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return ContactsCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      displayName: displayName ?? this.displayName,
+      avatarId: avatarId ?? this.avatarId,
+      notes: notes ?? this.notes,
+      isBlocked: isBlocked ?? this.isBlocked,
+      relayRoutingId: relayRoutingId ?? this.relayRoutingId,
+      peerPublicMaterial: peerPublicMaterial ?? this.peerPublicMaterial,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (avatarId.present) {
+      map['avatar_id'] = Variable<String>(avatarId.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (isBlocked.present) {
+      map['is_blocked'] = Variable<bool>(isBlocked.value);
+    }
+    if (relayRoutingId.present) {
+      map['relay_routing_id'] = Variable<String>(relayRoutingId.value);
+    }
+    if (peerPublicMaterial.present) {
+      map['peer_public_material'] = Variable<String>(peerPublicMaterial.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactsCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('displayName: $displayName, ')
+          ..write('avatarId: $avatarId, ')
+          ..write('notes: $notes, ')
+          ..write('isBlocked: $isBlocked, ')
+          ..write('relayRoutingId: $relayRoutingId, ')
+          ..write('peerPublicMaterial: $peerPublicMaterial, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ContactInvitationsTable extends ContactInvitations
+    with TableInfo<$ContactInvitationsTable, ContactInvitation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContactInvitationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nonceMeta = const VerificationMeta('nonce');
+  @override
+  late final GeneratedColumn<String> nonce = GeneratedColumn<String>(
+    'nonce',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consumedAtMeta = const VerificationMeta(
+    'consumedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> consumedAt = GeneratedColumn<DateTime>(
+    'consumed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _contactStubIdMeta = const VerificationMeta(
+    'contactStubId',
+  );
+  @override
+  late final GeneratedColumn<String> contactStubId = GeneratedColumn<String>(
+    'contact_stub_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    nonce,
+    status,
+    createdAt,
+    expiresAt,
+    consumedAt,
+    contactStubId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contact_invitations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContactInvitation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('nonce')) {
+      context.handle(
+        _nonceMeta,
+        nonce.isAcceptableOrUnknown(data['nonce']!, _nonceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nonceMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    if (data.containsKey('consumed_at')) {
+      context.handle(
+        _consumedAtMeta,
+        consumedAt.isAcceptableOrUnknown(data['consumed_at']!, _consumedAtMeta),
+      );
+    }
+    if (data.containsKey('contact_stub_id')) {
+      context.handle(
+        _contactStubIdMeta,
+        contactStubId.isAcceptableOrUnknown(
+          data['contact_stub_id']!,
+          _contactStubIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ContactInvitation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContactInvitation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      nonce: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nonce'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      )!,
+      consumedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}consumed_at'],
+      ),
+      contactStubId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contact_stub_id'],
+      ),
+    );
+  }
+
+  @override
+  $ContactInvitationsTable createAlias(String alias) {
+    return $ContactInvitationsTable(attachedDatabase, alias);
+  }
+}
+
+class ContactInvitation extends DataClass
+    implements Insertable<ContactInvitation> {
+  /// Stable identifier; not the human-readable code.
+  final String id;
+
+  /// Opaque local copy of the nonce embedded in the invitation code.
+  /// Consumed when a matching `hello` envelope is validated locally.
+  final String nonce;
+
+  /// `pending` | `used` | `expired` | `revoked`.
+  final String status;
+  final DateTime createdAt;
+  final DateTime expiresAt;
+
+  /// Set when the invitation has been consumed (used/revoked/expired).
+  final DateTime? consumedAt;
+
+  /// When the handshake completes, points to the Contact stub on this
+  /// device that should be promoted to `connected`.
+  final String? contactStubId;
+  const ContactInvitation({
+    required this.id,
+    required this.nonce,
+    required this.status,
+    required this.createdAt,
+    required this.expiresAt,
+    this.consumedAt,
+    this.contactStubId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['nonce'] = Variable<String>(nonce);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    if (!nullToAbsent || consumedAt != null) {
+      map['consumed_at'] = Variable<DateTime>(consumedAt);
+    }
+    if (!nullToAbsent || contactStubId != null) {
+      map['contact_stub_id'] = Variable<String>(contactStubId);
+    }
+    return map;
+  }
+
+  ContactInvitationsCompanion toCompanion(bool nullToAbsent) {
+    return ContactInvitationsCompanion(
+      id: Value(id),
+      nonce: Value(nonce),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      expiresAt: Value(expiresAt),
+      consumedAt: consumedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(consumedAt),
+      contactStubId: contactStubId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactStubId),
+    );
+  }
+
+  factory ContactInvitation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContactInvitation(
+      id: serializer.fromJson<String>(json['id']),
+      nonce: serializer.fromJson<String>(json['nonce']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+      consumedAt: serializer.fromJson<DateTime?>(json['consumedAt']),
+      contactStubId: serializer.fromJson<String?>(json['contactStubId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'nonce': serializer.toJson<String>(nonce),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+      'consumedAt': serializer.toJson<DateTime?>(consumedAt),
+      'contactStubId': serializer.toJson<String?>(contactStubId),
+    };
+  }
+
+  ContactInvitation copyWith({
+    String? id,
+    String? nonce,
+    String? status,
+    DateTime? createdAt,
+    DateTime? expiresAt,
+    Value<DateTime?> consumedAt = const Value.absent(),
+    Value<String?> contactStubId = const Value.absent(),
+  }) => ContactInvitation(
+    id: id ?? this.id,
+    nonce: nonce ?? this.nonce,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    expiresAt: expiresAt ?? this.expiresAt,
+    consumedAt: consumedAt.present ? consumedAt.value : this.consumedAt,
+    contactStubId: contactStubId.present
+        ? contactStubId.value
+        : this.contactStubId,
+  );
+  ContactInvitation copyWithCompanion(ContactInvitationsCompanion data) {
+    return ContactInvitation(
+      id: data.id.present ? data.id.value : this.id,
+      nonce: data.nonce.present ? data.nonce.value : this.nonce,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      consumedAt: data.consumedAt.present
+          ? data.consumedAt.value
+          : this.consumedAt,
+      contactStubId: data.contactStubId.present
+          ? data.contactStubId.value
+          : this.contactStubId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactInvitation(')
+          ..write('id: $id, ')
+          ..write('nonce: $nonce, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('consumedAt: $consumedAt, ')
+          ..write('contactStubId: $contactStubId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    nonce,
+    status,
+    createdAt,
+    expiresAt,
+    consumedAt,
+    contactStubId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContactInvitation &&
+          other.id == this.id &&
+          other.nonce == this.nonce &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.expiresAt == this.expiresAt &&
+          other.consumedAt == this.consumedAt &&
+          other.contactStubId == this.contactStubId);
+}
+
+class ContactInvitationsCompanion extends UpdateCompanion<ContactInvitation> {
+  final Value<String> id;
+  final Value<String> nonce;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> expiresAt;
+  final Value<DateTime?> consumedAt;
+  final Value<String?> contactStubId;
+  final Value<int> rowid;
+  const ContactInvitationsCompanion({
+    this.id = const Value.absent(),
+    this.nonce = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.consumedAt = const Value.absent(),
+    this.contactStubId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContactInvitationsCompanion.insert({
+    required String id,
+    required String nonce,
+    required String status,
+    required DateTime createdAt,
+    required DateTime expiresAt,
+    this.consumedAt = const Value.absent(),
+    this.contactStubId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       nonce = Value(nonce),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       expiresAt = Value(expiresAt);
+  static Insertable<ContactInvitation> custom({
+    Expression<String>? id,
+    Expression<String>? nonce,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? expiresAt,
+    Expression<DateTime>? consumedAt,
+    Expression<String>? contactStubId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (nonce != null) 'nonce': nonce,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (consumedAt != null) 'consumed_at': consumedAt,
+      if (contactStubId != null) 'contact_stub_id': contactStubId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContactInvitationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? nonce,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? expiresAt,
+    Value<DateTime?>? consumedAt,
+    Value<String?>? contactStubId,
+    Value<int>? rowid,
+  }) {
+    return ContactInvitationsCompanion(
+      id: id ?? this.id,
+      nonce: nonce ?? this.nonce,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      consumedAt: consumedAt ?? this.consumedAt,
+      contactStubId: contactStubId ?? this.contactStubId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (nonce.present) {
+      map['nonce'] = Variable<String>(nonce.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (consumedAt.present) {
+      map['consumed_at'] = Variable<DateTime>(consumedAt.value);
+    }
+    if (contactStubId.present) {
+      map['contact_stub_id'] = Variable<String>(contactStubId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactInvitationsCompanion(')
+          ..write('id: $id, ')
+          ..write('nonce: $nonce, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('consumedAt: $consumedAt, ')
+          ..write('contactStubId: $contactStubId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4401,6 +5635,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProposalRevisionsTable(this);
   late final $ProposalResponsesTable proposalResponses =
       $ProposalResponsesTable(this);
+  late final $ContactsTable contacts = $ContactsTable(this);
+  late final $ContactInvitationsTable contactInvitations =
+      $ContactInvitationsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4415,6 +5652,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     proposalPackages,
     proposalRevisions,
     proposalResponses,
+    contacts,
+    contactInvitations,
   ];
 }
 
@@ -4636,6 +5875,7 @@ typedef $$ParticipantsTableCreateCompanionBuilder =
       required String displayName,
       required String avatarId,
       required DateTime createdAt,
+      Value<String?> contactId,
       Value<int> rowid,
     });
 typedef $$ParticipantsTableUpdateCompanionBuilder =
@@ -4644,6 +5884,7 @@ typedef $$ParticipantsTableUpdateCompanionBuilder =
       Value<String> displayName,
       Value<String> avatarId,
       Value<DateTime> createdAt,
+      Value<String?> contactId,
       Value<int> rowid,
     });
 
@@ -4673,6 +5914,11 @@ class $$ParticipantsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contactId => $composableBuilder(
+    column: $table.contactId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4705,6 +5951,11 @@ class $$ParticipantsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get contactId => $composableBuilder(
+    column: $table.contactId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ParticipantsTableAnnotationComposer
@@ -4729,6 +5980,9 @@ class $$ParticipantsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get contactId =>
+      $composableBuilder(column: $table.contactId, builder: (column) => column);
 }
 
 class $$ParticipantsTableTableManager
@@ -4766,12 +6020,14 @@ class $$ParticipantsTableTableManager
                 Value<String> displayName = const Value.absent(),
                 Value<String> avatarId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> contactId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ParticipantsCompanion(
                 id: id,
                 displayName: displayName,
                 avatarId: avatarId,
                 createdAt: createdAt,
+                contactId: contactId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4780,12 +6036,14 @@ class $$ParticipantsTableTableManager
                 required String displayName,
                 required String avatarId,
                 required DateTime createdAt,
+                Value<String?> contactId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ParticipantsCompanion.insert(
                 id: id,
                 displayName: displayName,
                 avatarId: avatarId,
                 createdAt: createdAt,
+                contactId: contactId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6660,6 +7918,575 @@ typedef $$ProposalResponsesTableProcessedTableManager =
       ProposalResponse,
       PrefetchHooks Function()
     >;
+typedef $$ContactsTableCreateCompanionBuilder =
+    ContactsCompanion Function({
+      required String id,
+      required String kind,
+      required String displayName,
+      required String avatarId,
+      Value<String> notes,
+      Value<bool> isBlocked,
+      Value<String?> relayRoutingId,
+      Value<String?> peerPublicMaterial,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$ContactsTableUpdateCompanionBuilder =
+    ContactsCompanion Function({
+      Value<String> id,
+      Value<String> kind,
+      Value<String> displayName,
+      Value<String> avatarId,
+      Value<String> notes,
+      Value<bool> isBlocked,
+      Value<String?> relayRoutingId,
+      Value<String?> peerPublicMaterial,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$ContactsTableFilterComposer
+    extends Composer<_$AppDatabase, $ContactsTable> {
+  $$ContactsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarId => $composableBuilder(
+    column: $table.avatarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isBlocked => $composableBuilder(
+    column: $table.isBlocked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relayRoutingId => $composableBuilder(
+    column: $table.relayRoutingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerPublicMaterial => $composableBuilder(
+    column: $table.peerPublicMaterial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ContactsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ContactsTable> {
+  $$ContactsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get avatarId => $composableBuilder(
+    column: $table.avatarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isBlocked => $composableBuilder(
+    column: $table.isBlocked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relayRoutingId => $composableBuilder(
+    column: $table.relayRoutingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerPublicMaterial => $composableBuilder(
+    column: $table.peerPublicMaterial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContactsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ContactsTable> {
+  $$ContactsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get avatarId =>
+      $composableBuilder(column: $table.avatarId, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<bool> get isBlocked =>
+      $composableBuilder(column: $table.isBlocked, builder: (column) => column);
+
+  GeneratedColumn<String> get relayRoutingId => $composableBuilder(
+    column: $table.relayRoutingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerPublicMaterial => $composableBuilder(
+    column: $table.peerPublicMaterial,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$ContactsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ContactsTable,
+          Contact,
+          $$ContactsTableFilterComposer,
+          $$ContactsTableOrderingComposer,
+          $$ContactsTableAnnotationComposer,
+          $$ContactsTableCreateCompanionBuilder,
+          $$ContactsTableUpdateCompanionBuilder,
+          (Contact, BaseReferences<_$AppDatabase, $ContactsTable, Contact>),
+          Contact,
+          PrefetchHooks Function()
+        > {
+  $$ContactsTableTableManager(_$AppDatabase db, $ContactsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContactsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContactsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContactsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> avatarId = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<bool> isBlocked = const Value.absent(),
+                Value<String?> relayRoutingId = const Value.absent(),
+                Value<String?> peerPublicMaterial = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContactsCompanion(
+                id: id,
+                kind: kind,
+                displayName: displayName,
+                avatarId: avatarId,
+                notes: notes,
+                isBlocked: isBlocked,
+                relayRoutingId: relayRoutingId,
+                peerPublicMaterial: peerPublicMaterial,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String kind,
+                required String displayName,
+                required String avatarId,
+                Value<String> notes = const Value.absent(),
+                Value<bool> isBlocked = const Value.absent(),
+                Value<String?> relayRoutingId = const Value.absent(),
+                Value<String?> peerPublicMaterial = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContactsCompanion.insert(
+                id: id,
+                kind: kind,
+                displayName: displayName,
+                avatarId: avatarId,
+                notes: notes,
+                isBlocked: isBlocked,
+                relayRoutingId: relayRoutingId,
+                peerPublicMaterial: peerPublicMaterial,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContactsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ContactsTable,
+      Contact,
+      $$ContactsTableFilterComposer,
+      $$ContactsTableOrderingComposer,
+      $$ContactsTableAnnotationComposer,
+      $$ContactsTableCreateCompanionBuilder,
+      $$ContactsTableUpdateCompanionBuilder,
+      (Contact, BaseReferences<_$AppDatabase, $ContactsTable, Contact>),
+      Contact,
+      PrefetchHooks Function()
+    >;
+typedef $$ContactInvitationsTableCreateCompanionBuilder =
+    ContactInvitationsCompanion Function({
+      required String id,
+      required String nonce,
+      required String status,
+      required DateTime createdAt,
+      required DateTime expiresAt,
+      Value<DateTime?> consumedAt,
+      Value<String?> contactStubId,
+      Value<int> rowid,
+    });
+typedef $$ContactInvitationsTableUpdateCompanionBuilder =
+    ContactInvitationsCompanion Function({
+      Value<String> id,
+      Value<String> nonce,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<DateTime> expiresAt,
+      Value<DateTime?> consumedAt,
+      Value<String?> contactStubId,
+      Value<int> rowid,
+    });
+
+class $$ContactInvitationsTableFilterComposer
+    extends Composer<_$AppDatabase, $ContactInvitationsTable> {
+  $$ContactInvitationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nonce => $composableBuilder(
+    column: $table.nonce,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get consumedAt => $composableBuilder(
+    column: $table.consumedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ContactInvitationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ContactInvitationsTable> {
+  $$ContactInvitationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nonce => $composableBuilder(
+    column: $table.nonce,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get consumedAt => $composableBuilder(
+    column: $table.consumedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContactInvitationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ContactInvitationsTable> {
+  $$ContactInvitationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get nonce =>
+      $composableBuilder(column: $table.nonce, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get consumedAt => $composableBuilder(
+    column: $table.consumedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => column,
+  );
+}
+
+class $$ContactInvitationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ContactInvitationsTable,
+          ContactInvitation,
+          $$ContactInvitationsTableFilterComposer,
+          $$ContactInvitationsTableOrderingComposer,
+          $$ContactInvitationsTableAnnotationComposer,
+          $$ContactInvitationsTableCreateCompanionBuilder,
+          $$ContactInvitationsTableUpdateCompanionBuilder,
+          (
+            ContactInvitation,
+            BaseReferences<
+              _$AppDatabase,
+              $ContactInvitationsTable,
+              ContactInvitation
+            >,
+          ),
+          ContactInvitation,
+          PrefetchHooks Function()
+        > {
+  $$ContactInvitationsTableTableManager(
+    _$AppDatabase db,
+    $ContactInvitationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContactInvitationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContactInvitationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContactInvitationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> nonce = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> expiresAt = const Value.absent(),
+                Value<DateTime?> consumedAt = const Value.absent(),
+                Value<String?> contactStubId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContactInvitationsCompanion(
+                id: id,
+                nonce: nonce,
+                status: status,
+                createdAt: createdAt,
+                expiresAt: expiresAt,
+                consumedAt: consumedAt,
+                contactStubId: contactStubId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String nonce,
+                required String status,
+                required DateTime createdAt,
+                required DateTime expiresAt,
+                Value<DateTime?> consumedAt = const Value.absent(),
+                Value<String?> contactStubId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContactInvitationsCompanion.insert(
+                id: id,
+                nonce: nonce,
+                status: status,
+                createdAt: createdAt,
+                expiresAt: expiresAt,
+                consumedAt: consumedAt,
+                contactStubId: contactStubId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContactInvitationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ContactInvitationsTable,
+      ContactInvitation,
+      $$ContactInvitationsTableFilterComposer,
+      $$ContactInvitationsTableOrderingComposer,
+      $$ContactInvitationsTableAnnotationComposer,
+      $$ContactInvitationsTableCreateCompanionBuilder,
+      $$ContactInvitationsTableUpdateCompanionBuilder,
+      (
+        ContactInvitation,
+        BaseReferences<
+          _$AppDatabase,
+          $ContactInvitationsTable,
+          ContactInvitation
+        >,
+      ),
+      ContactInvitation,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6682,4 +8509,8 @@ class $AppDatabaseManager {
       $$ProposalRevisionsTableTableManager(_db, _db.proposalRevisions);
   $$ProposalResponsesTableTableManager get proposalResponses =>
       $$ProposalResponsesTableTableManager(_db, _db.proposalResponses);
+  $$ContactsTableTableManager get contacts =>
+      $$ContactsTableTableManager(_db, _db.contacts);
+  $$ContactInvitationsTableTableManager get contactInvitations =>
+      $$ContactInvitationsTableTableManager(_db, _db.contactInvitations);
 }

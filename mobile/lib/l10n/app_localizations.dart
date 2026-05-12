@@ -142,6 +142,60 @@ abstract class AppLocalizations {
   /// **'Not set'**
   String get commonNotSet;
 
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
+  /// No description provided for @commonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get commonSave;
+
+  /// No description provided for @commonDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get commonDelete;
+
+  /// No description provided for @commonEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get commonEdit;
+
+  /// No description provided for @commonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
+  /// No description provided for @commonCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get commonCopy;
+
+  /// No description provided for @commonPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get commonPaste;
+
+  /// No description provided for @commonBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get commonBlock;
+
+  /// No description provided for @commonUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get commonUnblock;
+
   /// No description provided for @navHome.
   ///
   /// In en, this message translates to:
@@ -1429,6 +1483,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This is a placeholder home screen for the store-publishable MVP shell.'**
   String get homePlaceholderBody;
+
+  /// No description provided for @homeContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get homeContacts;
+
+  /// No description provided for @contactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contactsTitle;
+
+  /// No description provided for @contactsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts yet'**
+  String get contactsEmptyTitle;
+
+  /// No description provided for @contactsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add someone you know to reuse them across modules, or invite a contact to connect through the relay.'**
+  String get contactsEmptyBody;
+
+  /// No description provided for @contactsAddLocalOnlyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a contact'**
+  String get contactsAddLocalOnlyAction;
+
+  /// No description provided for @contactsAddLocalOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New contact'**
+  String get contactsAddLocalOnlyTitle;
+
+  /// No description provided for @contactsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact'**
+  String get contactsEditTitle;
+
+  /// No description provided for @contactsDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get contactsDetailTitle;
+
+  /// No description provided for @contactsDetailMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact no longer exists.'**
+  String get contactsDetailMissing;
+
+  /// No description provided for @contactsInviteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a contact'**
+  String get contactsInviteAction;
+
+  /// No description provided for @contactsInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a contact'**
+  String get contactsInviteTitle;
+
+  /// No description provided for @contactsInviteIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a one-time code'**
+  String get contactsInviteIntroTitle;
+
+  /// No description provided for @contactsInviteIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can request to connect with you. You will confirm before they are added.'**
+  String get contactsInviteIntroBody;
+
+  /// No description provided for @contactsInviteValidityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code valid for'**
+  String get contactsInviteValidityLabel;
+
+  /// No description provided for @contactsInviteGenerateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate code'**
+  String get contactsInviteGenerateAction;
+
+  /// No description provided for @contactsInviteShareWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code with one person only. It expires automatically and stops working after being used or revoked.'**
+  String get contactsInviteShareWarning;
+
+  /// No description provided for @contactsInviteShortCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get contactsInviteShortCodeLabel;
+
+  /// No description provided for @contactsInviteCopyDeepLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get contactsInviteCopyDeepLink;
+
+  /// No description provided for @contactsInviteExpiresAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {when}'**
+  String contactsInviteExpiresAt(String when);
+
+  /// No description provided for @contactsInviteRevokeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get contactsInviteRevokeAction;
+
+  /// No description provided for @contactsInvitationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent invitations'**
+  String get contactsInvitationsTitle;
+
+  /// No description provided for @contactsInvitationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No invitations sent yet.'**
+  String get contactsInvitationsEmpty;
+
+  /// No description provided for @contactsInvitationsItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation · {createdAt}'**
+  String contactsInvitationsItemTitle(String createdAt);
+
+  /// No description provided for @contactsInvitationsStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get contactsInvitationsStatusPending;
+
+  /// No description provided for @contactsInvitationsStatusUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get contactsInvitationsStatusUsed;
+
+  /// No description provided for @contactsInvitationsStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get contactsInvitationsStatusExpired;
+
+  /// No description provided for @contactsInvitationsStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get contactsInvitationsStatusRevoked;
+
+  /// No description provided for @contactsEnterInviteCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a code'**
+  String get contactsEnterInviteCodeTitle;
+
+  /// No description provided for @contactsEnterInviteCodeIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste or type the code you received from a contact. The app checks the format locally before doing anything else.'**
+  String get contactsEnterInviteCodeIntro;
+
+  /// No description provided for @contactsEnterInviteCodeFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation code'**
+  String get contactsEnterInviteCodeFieldLabel;
+
+  /// No description provided for @contactsEnterInviteCodeSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get contactsEnterInviteCodeSubmit;
+
+  /// No description provided for @contactsEnterInviteCodeWaveBNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The encrypted handshake with the relay will be enabled once the relay infrastructure is deployed.'**
+  String get contactsEnterInviteCodeWaveBNote;
+
+  /// No description provided for @contactsEnterInviteCodeValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Code format is valid'**
+  String get contactsEnterInviteCodeValid;
+
+  /// No description provided for @contactsEnterInviteCodeInvitationId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation id: {id}'**
+  String contactsEnterInviteCodeInvitationId(String id);
+
+  /// No description provided for @contactsHandshakeNotAvailableYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.'**
+  String get contactsHandshakeNotAvailableYet;
+
+  /// No description provided for @contactsCodeErrorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a code to continue.'**
+  String get contactsCodeErrorEmpty;
+
+  /// No description provided for @contactsCodeErrorTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is too short.'**
+  String get contactsCodeErrorTooShort;
+
+  /// No description provided for @contactsCodeErrorTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is too long.'**
+  String get contactsCodeErrorTooLong;
+
+  /// No description provided for @contactsCodeErrorInvalidCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'This code contains characters that are not allowed.'**
+  String get contactsCodeErrorInvalidCharacters;
+
+  /// No description provided for @contactsCodeErrorBadChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'This code looks mistyped. Check the characters and try again.'**
+  String get contactsCodeErrorBadChecksum;
+
+  /// No description provided for @contactsCodeErrorUnsupportedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This code was created by a newer version of the app.'**
+  String get contactsCodeErrorUnsupportedVersion;
+
+  /// No description provided for @contactsKindLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only'**
+  String get contactsKindLocalOnly;
+
+  /// No description provided for @contactsKindConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get contactsKindConnected;
+
+  /// No description provided for @contactsKindBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get contactsKindBlocked;
+
+  /// No description provided for @contactsKindDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get contactsKindDeleted;
+
+  /// No description provided for @contactsFieldNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get contactsFieldNameLabel;
+
+  /// No description provided for @contactsFieldNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How this person appears in the app'**
+  String get contactsFieldNameHint;
+
+  /// No description provided for @contactsFieldAvatarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get contactsFieldAvatarLabel;
+
+  /// No description provided for @contactsFieldNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get contactsFieldNotesLabel;
+
+  /// No description provided for @contactsFieldNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal reminder, not shared'**
+  String get contactsFieldNotesHint;
+
+  /// No description provided for @contactsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete contact?'**
+  String get contactsDeleteTitle;
+
+  /// No description provided for @contactsDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing housing or vehicle entries that reference this contact will keep their stored name and avatar. You can re-add the contact later.'**
+  String get contactsDeleteBody;
+
+  /// No description provided for @contactsDeletePreservesHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing entries that reference this contact keep their stored name and avatar.'**
+  String get contactsDeletePreservesHistory;
+
+  /// No description provided for @contactsBlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this contact?'**
+  String get contactsBlockTitle;
+
+  /// No description provided for @contactsBlockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming messages from this contact will be ignored locally. The relay is not informed of the block.'**
+  String get contactsBlockBody;
+
+  /// No description provided for @contactsUnblockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock this contact?'**
+  String get contactsUnblockTitle;
+
+  /// No description provided for @contactsUnblockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming messages from this contact will be processed again.'**
+  String get contactsUnblockBody;
 }
 
 class _AppLocalizationsDelegate

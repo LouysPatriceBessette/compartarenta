@@ -30,6 +30,33 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonNotSet => 'No configurado';
 
   @override
+  String get commonCancel => 'Cancelar';
+
+  @override
+  String get commonSave => 'Guardar';
+
+  @override
+  String get commonDelete => 'Eliminar';
+
+  @override
+  String get commonEdit => 'Editar';
+
+  @override
+  String get commonDone => 'Listo';
+
+  @override
+  String get commonCopy => 'Copiar';
+
+  @override
+  String get commonPaste => 'Pegar';
+
+  @override
+  String get commonBlock => 'Bloquear';
+
+  @override
+  String get commonUnblock => 'Desbloquear';
+
+  @override
   String get navHome => 'Inicio';
 
   @override
@@ -757,4 +784,194 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get homePlaceholderBody =>
       'Esta es una pantalla de inicio provisional para el contenedor MVP publicable.';
+
+  @override
+  String get homeContacts => 'Contactos';
+
+  @override
+  String get contactsTitle => 'Contactos';
+
+  @override
+  String get contactsEmptyTitle => 'Aún no hay contactos';
+
+  @override
+  String get contactsEmptyBody =>
+      'Añade a alguien que conozcas para reutilizarlo entre módulos, o invita a un contacto a conectarse mediante el relevo.';
+
+  @override
+  String get contactsAddLocalOnlyAction => 'Añadir contacto';
+
+  @override
+  String get contactsAddLocalOnlyTitle => 'Nuevo contacto';
+
+  @override
+  String get contactsEditTitle => 'Editar contacto';
+
+  @override
+  String get contactsDetailTitle => 'Contacto';
+
+  @override
+  String get contactsDetailMissing => 'Este contacto ya no existe.';
+
+  @override
+  String get contactsInviteAction => 'Invitar a un contacto';
+
+  @override
+  String get contactsInviteTitle => 'Invitar a un contacto';
+
+  @override
+  String get contactsInviteIntroTitle => 'Compartir un código de un solo uso';
+
+  @override
+  String get contactsInviteIntroBody =>
+      'Genera un código de un solo uso y compártelo fuera de la app (SMS, correo, en persona). Quien reciba el código podrá pedir conectarse contigo. Confirmarás antes de añadirlo.';
+
+  @override
+  String get contactsInviteValidityLabel => 'Código válido durante';
+
+  @override
+  String get contactsInviteGenerateAction => 'Generar código';
+
+  @override
+  String get contactsInviteShareWarning =>
+      'Comparte este código solo con una persona. Expira automáticamente y deja de funcionar tras su uso o revocación.';
+
+  @override
+  String get contactsInviteShortCodeLabel => 'Código';
+
+  @override
+  String get contactsInviteCopyDeepLink => 'Copiar enlace';
+
+  @override
+  String contactsInviteExpiresAt(String when) {
+    return 'Expira $when';
+  }
+
+  @override
+  String get contactsInviteRevokeAction => 'Revocar';
+
+  @override
+  String get contactsInvitationsTitle => 'Invitaciones enviadas';
+
+  @override
+  String get contactsInvitationsEmpty => 'Aún no se han enviado invitaciones.';
+
+  @override
+  String contactsInvitationsItemTitle(String createdAt) {
+    return 'Invitación · $createdAt';
+  }
+
+  @override
+  String get contactsInvitationsStatusPending => 'Pendiente';
+
+  @override
+  String get contactsInvitationsStatusUsed => 'Usada';
+
+  @override
+  String get contactsInvitationsStatusExpired => 'Expirada';
+
+  @override
+  String get contactsInvitationsStatusRevoked => 'Revocada';
+
+  @override
+  String get contactsEnterInviteCodeTitle => 'Introducir un código';
+
+  @override
+  String get contactsEnterInviteCodeIntro =>
+      'Pega o escribe el código recibido de un contacto. La app verifica primero su formato localmente.';
+
+  @override
+  String get contactsEnterInviteCodeFieldLabel => 'Código de invitación';
+
+  @override
+  String get contactsEnterInviteCodeSubmit => 'Conectar';
+
+  @override
+  String get contactsEnterInviteCodeWaveBNote =>
+      'El intercambio cifrado con el relevo se habilitará cuando la infraestructura del relevo esté desplegada.';
+
+  @override
+  String get contactsEnterInviteCodeValid => 'El formato del código es válido';
+
+  @override
+  String contactsEnterInviteCodeInvitationId(String id) {
+    return 'ID de invitación: $id';
+  }
+
+  @override
+  String get contactsHandshakeNotAvailableYet =>
+      'El intercambio con el relevo aún no está disponible. El código es válido localmente, pero no se puede canjear hasta que el relevo esté en línea.';
+
+  @override
+  String get contactsCodeErrorEmpty => 'Introduce un código para continuar.';
+
+  @override
+  String get contactsCodeErrorTooShort => 'Este código es demasiado corto.';
+
+  @override
+  String get contactsCodeErrorTooLong => 'Este código es demasiado largo.';
+
+  @override
+  String get contactsCodeErrorInvalidCharacters =>
+      'Este código contiene caracteres no permitidos.';
+
+  @override
+  String get contactsCodeErrorBadChecksum =>
+      'Este código parece mal escrito. Revisa los caracteres e inténtalo de nuevo.';
+
+  @override
+  String get contactsCodeErrorUnsupportedVersion =>
+      'Este código se creó con una versión más reciente de la app.';
+
+  @override
+  String get contactsKindLocalOnly => 'Solo local';
+
+  @override
+  String get contactsKindConnected => 'Conectado';
+
+  @override
+  String get contactsKindBlocked => 'Bloqueado';
+
+  @override
+  String get contactsKindDeleted => 'Eliminado';
+
+  @override
+  String get contactsFieldNameLabel => 'Nombre';
+
+  @override
+  String get contactsFieldNameHint => 'Cómo aparece esta persona en la app';
+
+  @override
+  String get contactsFieldAvatarLabel => 'Avatar';
+
+  @override
+  String get contactsFieldNotesLabel => 'Notas';
+
+  @override
+  String get contactsFieldNotesHint => 'Recordatorio personal, no compartido';
+
+  @override
+  String get contactsDeleteTitle => '¿Eliminar este contacto?';
+
+  @override
+  String get contactsDeleteBody =>
+      'Las entradas existentes (vivienda o vehículo) que hacen referencia a este contacto conservarán su nombre y avatar guardados. Podrás volver a añadirlo más tarde.';
+
+  @override
+  String get contactsDeletePreservesHistory =>
+      'Las entradas existentes que hacen referencia a este contacto conservan su nombre y avatar.';
+
+  @override
+  String get contactsBlockTitle => '¿Bloquear este contacto?';
+
+  @override
+  String get contactsBlockBody =>
+      'Los mensajes entrantes de este contacto se ignorarán localmente. El relevo no recibe ninguna información del bloqueo.';
+
+  @override
+  String get contactsUnblockTitle => '¿Desbloquear este contacto?';
+
+  @override
+  String get contactsUnblockBody =>
+      'Los mensajes entrantes de este contacto se procesarán de nuevo.';
 }

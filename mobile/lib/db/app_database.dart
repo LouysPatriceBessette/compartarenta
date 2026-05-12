@@ -145,6 +145,79 @@ class Participants extends Table {
   TextColumn get avatarId => text()();
   DateTimeColumn get createdAt => dateTime()();
 
+  /// Reference to the authoritative identity in [Contacts]. Nullable for
+  /// legacy rows that existed before the Contacts module shipped. The
+  /// `displayName` and `avatarId` columns on this row act as the historical
+  /// display snapshot if the referenced Contact is later deleted.
+  TextColumn get contactId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Identity record for a person the local user knows.
+///
+/// A Contact is either `local-only` (no relay routing material; cannot
+/// receive module proposals) or `connected` (has the routing identifier
+/// and public key material populated and may receive proposals).
+class Contacts extends Table {
+  TextColumn get id => text()();
+
+  /// `local-only` | `connected` | `archived`.
+  TextColumn get kind => text()();
+
+  TextColumn get displayName => text()();
+  TextColumn get avatarId => text()();
+
+  /// Free-text notes the local user keeps about this contact.
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
+  /// Local-only flag. When true, inbound envelopes from this contact are
+  /// dropped on receipt regardless of their kind.
+  BoolColumn get isBlocked => boolean().withDefault(const Constant(false))();
+
+  /// Opaque relay routing identifier exchanged during the handshake.
+  /// Populated only when kind = connected.
+  TextColumn get relayRoutingId => text().nullable()();
+
+  /// Peer public key material (base64 or similar) exchanged during the
+  /// handshake. Populated only when kind = connected.
+  TextColumn get peerPublicMaterial => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  /// When the Contact was logically deleted by the local user.
+  /// Module participant rows that referenced this contact continue to render
+  /// from their stored snapshot (`Participants.displayName` / `avatarId`).
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// One row per outstanding outgoing invitation code.
+class ContactInvitations extends Table {
+  /// Stable identifier; not the human-readable code.
+  TextColumn get id => text()();
+
+  /// Opaque local copy of the nonce embedded in the invitation code.
+  /// Consumed when a matching `hello` envelope is validated locally.
+  TextColumn get nonce => text()();
+
+  /// `pending` | `used` | `expired` | `revoked`.
+  TextColumn get status => text()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get expiresAt => dateTime()();
+
+  /// Set when the invitation has been consumed (used/revoked/expired).
+  DateTimeColumn get consumedAt => dateTime().nullable()();
+
+  /// When the handshake completes, points to the Contact stub on this
+  /// device that should be promoted to `connected`.
+  TextColumn get contactStubId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -204,13 +277,15 @@ class ProposalResponses extends Table {
   ProposalPackages,
   ProposalRevisions,
   ProposalResponses,
+  Contacts,
+  ContactInvitations,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -270,6 +345,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 8) {
             await m.addColumn(agreements, agreements.agreementRulesJson);
+          }
+          if (from < 9) {
+            await m.createTable(contacts);
+            await m.createTable(contactInvitations);
+            await m.addColumn(participants, participants.contactId);
+            await _mirrorParticipantsIntoContacts();
           }
         },
         beforeOpen: (details) async {
@@ -395,6 +476,69 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Participant>> listParticipants() => (select(participants)
         ..orderBy([(t) => OrderingTerm.asc(t.id)]))
       .get();
+
+  Future<void> upsertContact(ContactsCompanion row) =>
+      into(contacts).insertOnConflictUpdate(row);
+
+  Future<Contact?> getContact(String id) =>
+      (select(contacts)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// Returns visible contacts (not deleted). Deleted contacts remain in the
+  /// database so historical module ledger snapshots stay readable.
+  Future<List<Contact>> listContacts({bool includeDeleted = false}) {
+    final q = select(contacts);
+    if (!includeDeleted) {
+      q.where((t) => t.deletedAt.isNull());
+    }
+    q.orderBy([
+      (t) => OrderingTerm.asc(t.displayName),
+      (t) => OrderingTerm.asc(t.id),
+    ]);
+    return q.get();
+  }
+
+  Future<void> upsertContactInvitation(ContactInvitationsCompanion row) =>
+      into(contactInvitations).insertOnConflictUpdate(row);
+
+  Future<List<ContactInvitation>> listContactInvitations() =>
+      (select(contactInvitations)
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .get();
+
+  /// Mirrors every existing `participants` row into a `contacts` row and
+  /// re-points the participant's `contact_id` foreign key. Identical
+  /// `(displayName, avatarId)` pairs are unified into a single Contact;
+  /// otherwise distinct Contacts are created. Runs only when invoked from
+  /// the v9 migration and is idempotent against repeated invocations.
+  Future<void> _mirrorParticipantsIntoContacts() async {
+    final now = DateTime.now().toUtc();
+    final partRows = await select(participants).get();
+    if (partRows.isEmpty) return;
+
+    final indexByKey = <String, String>{};
+    for (final p in partRows) {
+      if (p.contactId != null) continue;
+      final key = '${p.displayName}\u0000${p.avatarId}';
+      var contactId = indexByKey[key];
+      if (contactId == null) {
+        contactId = 'contact:p:${p.id}';
+        indexByKey[key] = contactId;
+        await into(contacts).insertOnConflictUpdate(
+          ContactsCompanion.insert(
+            id: contactId,
+            kind: 'local-only',
+            displayName: p.displayName,
+            avatarId: p.avatarId,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+      await (update(participants)..where((t) => t.id.equals(p.id))).write(
+        ParticipantsCompanion(contactId: Value(contactId)),
+      );
+    }
+  }
 }
 
 QueryExecutor _openConnection() {

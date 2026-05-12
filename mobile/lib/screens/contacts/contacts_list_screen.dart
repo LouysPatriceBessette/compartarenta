@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../contacts/avatar_palette.dart';
+import '../../db/app_database.dart';
+import '../../db/repositories/contacts_repository.dart';
+import '../../l10n/app_localizations.dart';
+
+/// Main entry point for the Contacts area.
+class ContactsListScreen extends StatefulWidget {
+  const ContactsListScreen({super.key});
+
+  @override
+  State<ContactsListScreen> createState() => _ContactsListScreenState();
+}
+
+class _ContactsListScreenState extends State<ContactsListScreen> {
+  late final AppDatabase _db = AppDatabase();
+  late final ContactsRepository _repo = ContactsRepository(_db);
+
+  Future<List<Contact>>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    setState(() {
+      _future = _repo.list();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.contactsTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.contactsInvitationsTitle,
+            icon: const Icon(Icons.outgoing_mail),
+            onPressed: () =>
+                context.push('/contacts/invitations').then((_) => _reload()),
+          ),
+          IconButton(
+            tooltip: l10n.contactsEnterInviteCodeTitle,
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () =>
+                context.push('/contacts/redeem').then((_) => _reload()),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.person_add),
+        label: Text(l10n.contactsAddLocalOnlyAction),
+        onPressed: () =>
+            context.push('/contacts/new').then((_) => _reload()),
+      ),
+      body: FutureBuilder<List<Contact>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final items = snapshot.data ?? const <Contact>[];
+          if (items.isEmpty) {
+            return _ContactsEmptyState(
+              onAddLocalOnly: () =>
+                  context.push('/contacts/new').then((_) => _reload()),
+              onInviteContact: () =>
+                  context.push('/contacts/invite/new').then((_) => _reload()),
+            );
+          }
+          return ListView.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const Divider(height: 0),
+            itemBuilder: (context, index) {
+              final contact = items[index];
+              return _ContactTile(
+                contact: contact,
+                onTap: () => context
+                    .push('/contacts/${contact.id}')
+                    .then((_) => _reload()),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ContactsEmptyState extends StatelessWidget {
+  const _ContactsEmptyState({
+    required this.onAddLocalOnly,
+    required this.onInviteContact,
+  });
+
+  final VoidCallback onAddLocalOnly;
+  final VoidCallback onInviteContact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(MdiIcons.accountMultipleOutline, size: 64),
+          const SizedBox(height: 16),
+          Text(
+            l10n.contactsEmptyTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.contactsEmptyBody,
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            icon: const Icon(Icons.person_add),
+            label: Text(l10n.contactsAddLocalOnlyAction),
+            onPressed: onAddLocalOnly,
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.send),
+            label: Text(l10n.contactsInviteAction),
+            onPressed: onInviteContact,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactTile extends StatelessWidget {
+  const _ContactTile({required this.contact, required this.onTap});
+
+  final Contact contact;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final blocked = contact.isBlocked;
+    final connected = contact.kind == 'connected';
+    return ListTile(
+      onTap: onTap,
+      leading: CircleAvatar(
+        backgroundColor: blocked
+            ? Theme.of(context).colorScheme.errorContainer
+            : Theme.of(context).colorScheme.primaryContainer,
+        child: Icon(AvatarPalette.iconFor(contact.avatarId)),
+      ),
+      title: Text(contact.displayName),
+      subtitle: Text(
+        blocked
+            ? l10n.contactsKindBlocked
+            : connected
+                ? l10n.contactsKindConnected
+                : l10n.contactsKindLocalOnly,
+      ),
+      trailing: connected
+          ? Icon(
+              Icons.link,
+              size: 18,
+              color: Theme.of(context).colorScheme.primary,
+            )
+          : const Icon(Icons.chevron_right),
+    );
+  }
+}

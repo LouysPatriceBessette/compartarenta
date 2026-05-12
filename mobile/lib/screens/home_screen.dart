@@ -48,6 +48,12 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            _HomeActionCard(
+              icon: MdiIcons.accountMultipleOutline,
+              label: l10n.homeContacts,
+              onTap: () => context.push('/contacts'),
+            ),
             const SizedBox(height: 24),
             Text(
               l10n.homeEnvironment(config.environment.name),

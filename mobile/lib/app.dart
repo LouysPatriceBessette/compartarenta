@@ -10,6 +10,12 @@ import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_plan_screen.dart';
 import 'screens/car_sharing/car_sharing_plan_screen.dart';
+import 'screens/contacts/contact_detail_screen.dart';
+import 'screens/contacts/contact_editor_screen.dart';
+import 'screens/contacts/contacts_list_screen.dart';
+import 'screens/contacts/generate_invitation_screen.dart';
+import 'screens/contacts/outstanding_invitations_screen.dart';
+import 'screens/contacts/redeem_invitation_screen.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/connectivity_banner.dart';
 
@@ -103,6 +109,42 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       GoRoute(
         path: '/car',
         builder: (context, state) => CarSharingPlanScreen(prefs: prefs),
+      ),
+      GoRoute(
+        path: '/contacts',
+        builder: (context, state) => const ContactsListScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const ContactEditorScreen(),
+          ),
+          GoRoute(
+            path: 'invite/new',
+            builder: (context, state) => const GenerateInvitationScreen(),
+          ),
+          GoRoute(
+            path: 'invitations',
+            builder: (context, state) => const OutstandingInvitationsScreen(),
+          ),
+          GoRoute(
+            path: 'redeem',
+            builder: (context, state) => const RedeemInvitationScreen(),
+          ),
+          GoRoute(
+            path: ':contactId',
+            builder: (context, state) => ContactDetailScreen(
+              contactId: state.pathParameters['contactId']!,
+            ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => ContactEditorScreen(
+                  contactId: state.pathParameters['contactId'],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/onboarding/:step',

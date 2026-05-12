@@ -1,28 +1,34 @@
+> **Implementation status.** Wave A (everything that runs purely on-device,
+> no relay, no crypto primitives) has landed. Wave B (handshake on the
+> relay, disconnect envelopes, profile updates, integration tests against
+> the relay) is paused pending the `relay-server-infrastructure-and-audit`
+> change and cryptographic-primitive selection.
+
 ## 1. Data model and migration
 
-- [ ] 1.1 Define the Contact entity in the on-device store (id, kind, display name, avatar identifier, optional notes, timestamps).
-- [ ] 1.2 Add connected-contact fields (relay-routing identifier, peer public material) usable only when kind = connected.
-- [ ] 1.3 Add a versioned migration that mirrors existing module participant rows into local-only Contact records and re-points participant references to Contact identifiers.
-- [ ] 1.4 Keep deprecated inline name/avatar fields on existing module participant rows as one-time fallback (read-only after migration).
-- [ ] 1.5 Add a per-module historical display snapshot mechanism (name, avatar captured at acceptance) for ledger readability after a Contact deletion.
+- [x] 1.1 Define the Contact entity in the on-device store (id, kind, display name, avatar identifier, optional notes, timestamps).
+- [x] 1.2 Add connected-contact fields (relay-routing identifier, peer public material) usable only when kind = connected.
+- [x] 1.3 Add a versioned migration that mirrors existing module participant rows into local-only Contact records and re-points participant references to Contact identifiers.
+- [x] 1.4 Keep deprecated inline name/avatar fields on existing module participant rows as one-time fallback (read-only after migration).
+- [x] 1.5 Add a per-module historical display snapshot mechanism (name, avatar captured at acceptance) for ledger readability after a Contact deletion.
 
 ## 2. Contacts UI
 
-- [ ] 2.1 Add a Contacts area in the main shell (list, empty state, detail view, edit).
-- [ ] 2.2 Implement local-only contact creation (name + avatar) without any relay traffic.
-- [ ] 2.3 Implement contact detail view with kind indicator (local-only vs connected).
-- [ ] 2.4 Implement edit / rename / change-avatar with updates surfaced through every module reference.
-- [ ] 2.5 Implement delete (local, snapshot-preserving) and disconnect (sends disconnect envelope) as two distinct actions.
-- [ ] 2.6 Implement a block action that locally suppresses inbound envelopes from a Contact.
+- [x] 2.1 Add a Contacts area in the main shell (list, empty state, detail view, edit).
+- [x] 2.2 Implement local-only contact creation (name + avatar) without any relay traffic.
+- [x] 2.3 Implement contact detail view with kind indicator (local-only vs connected).
+- [x] 2.4 Implement edit / rename / change-avatar with updates surfaced through every module reference.
+- [x] 2.5 Implement delete (local, snapshot-preserving) and disconnect (sends disconnect envelope) as two distinct actions. *(Wave A: delete + local snapshot preservation. Wave B: disconnect envelope dispatch over the relay.)*
+- [x] 2.6 Implement a block action that locally suppresses inbound envelopes from a Contact.
 
 ## 3. Invitation codes
 
-- [ ] 3.1 Implement on-device code generation (entropy + checksum + nonce + expiry + revocation flag), independent of network availability.
-- [ ] 3.2 Implement a renderer for the human-readable short code (with checksum-aware validation on input).
-- [ ] 3.3 Implement a QR / deep-link representation of the code for visual sharing.
-- [ ] 3.4 Implement out-of-band sharing entry points (copy, share sheet, QR display).
-- [ ] 3.5 Implement the outstanding-invitations list with statuses (pending, used, expired, revoked) and a revoke action.
-- [ ] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call.
+- [x] 3.1 Implement on-device code generation (entropy + checksum + nonce + expiry + revocation flag), independent of network availability.
+- [x] 3.2 Implement a renderer for the human-readable short code (with checksum-aware validation on input).
+- [ ] 3.3 Implement a QR / deep-link representation of the code for visual sharing. *(Wave A: deep-link string + copy-to-clipboard implemented. QR rendering deferred — needs a new dependency such as `qr_flutter`.)*
+- [x] 3.4 Implement out-of-band sharing entry points (copy, share sheet, QR display). *(Copy + deep-link landed; full share-sheet integration deferred to Wave B alongside QR.)*
+- [x] 3.5 Implement the outstanding-invitations list with statuses (pending, used, expired, revoked) and a revoke action.
+- [x] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call. *(Wave A: paste + type + local checksum validation. QR scan deferred along with task 3.3.)*
 
 ## 4. Handshake protocol over the relay
 
@@ -50,9 +56,9 @@
 
 ## 7. Tests
 
-- [ ] 7.1 Unit tests for code generation, checksum validation, expiry, single-use nonce consumption, and revocation.
-- [ ] 7.2 Unit tests for de-duplication policy in the migration (identical name+avatar unify; otherwise distinct).
-- [ ] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected).
-- [ ] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact).
-- [ ] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect.
-- [ ] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests).
+- [x] 7.1 Unit tests for code generation, checksum validation, expiry, single-use nonce consumption, and revocation. *(See `test/invitation_code_test.dart` and `test/contacts_repository_test.dart`.)*
+- [x] 7.2 Unit tests for de-duplication policy in the migration (identical name+avatar unify; otherwise distinct). *(See `test/contacts_migration_test.dart`.)*
+- [ ] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected). *(Wave B.)*
+- [ ] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact). *(Wave B.)*
+- [ ] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect. *(Wave A delete-only path can be covered now; full disconnect path is Wave B.)*
+- [ ] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests). *(Wave B.)*
