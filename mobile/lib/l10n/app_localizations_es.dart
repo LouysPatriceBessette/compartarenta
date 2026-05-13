@@ -947,6 +947,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solicitud enviada. Esperando la confirmación del anfitrión.';
 
   @override
+  String get contactsHandshakeCompleted =>
+      'Conectado. El contacto se ha añadido a tu lista.';
+
+  @override
+  String get contactsHandshakeRejected =>
+      'La otra persona rechazó la conexión. Pídele una nueva invitación si lo necesitas.';
+
+  @override
+  String get contactsHandshakeFailed =>
+      'El intento de conexión falló. Puedes reintentar con una nueva invitación.';
+
+  @override
   String get contactsHandshakeErrorRelayUnavailable =>
       'No se puede conectar con el relevo. Verifica tu red e inténtalo de nuevo.';
 
@@ -1044,11 +1056,36 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactsDeleteBody =>
-      'Las entradas existentes (vivienda o vehículo) que hacen referencia a este contacto conservarán su nombre y avatar guardados. Podrás volver a añadirlo más tarde.';
+      'Las entradas existentes (vivienda o vehículo) que hacen referencia a este contacto conservarán el nombre y el avatar guardados en el momento de su creación. Para volver a trabajar con esta persona, crea un nuevo contacto local o envíale una nueva invitación.';
 
   @override
   String get contactsDeletePreservesHistory =>
       'Las entradas existentes que hacen referencia a este contacto conservan su nombre y avatar.';
+
+  @override
+  String get contactsDeleteBlockedByPlansTitle =>
+      'Aún no se puede eliminar este contacto';
+
+  @override
+  String contactsDeleteBlockedByPlansBody(int count, String plans) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count planes',
+      one: 'un plan',
+    );
+    return 'Este contacto sigue figurando como participante en $_temp0: $plans. Retíralo primero de esos planes y luego podrás eliminar el contacto.';
+  }
+
+  @override
+  String get contactsDeleteBlockedConnectedTitle => 'Usa Desconectar primero';
+
+  @override
+  String get contactsDeleteBlockedConnectedBody =>
+      'Este contacto está actualmente conectado. Eliminarlo solo en este dispositivo dejaría a la otra persona pensando que la conexión sigue activa. Usa primero «Desconectar»: se envía una señal de desconexión cifrada al par a través del relevo y el contacto pasa a ser solo local en este dispositivo. Luego podrás eliminarlo normalmente.';
+
+  @override
+  String get contactsDeleteBlockedConnectedAction => 'Desconectar primero';
 
   @override
   String get contactsBlockTitle => '¿Bloquear este contacto?';

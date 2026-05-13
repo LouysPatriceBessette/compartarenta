@@ -127,16 +127,16 @@ class HandshakeOrchestrator {
     Duration ackTtl = const Duration(hours: 24),
     Duration steadyTtl = const Duration(hours: 24),
     DateTime Function() now = DateTime.now,
-  })  : _db = db,
-        _identity = identity,
-        _relay = relay,
-        _contacts = contacts,
-        _invitations = invitations,
-        _pollInterval = pollInterval,
-        _helloTtl = helloTtl,
-        _ackTtl = ackTtl,
-        _steadyTtl = steadyTtl,
-        _now = now;
+  }) : _db = db,
+       _identity = identity,
+       _relay = relay,
+       _contacts = contacts,
+       _invitations = invitations,
+       _pollInterval = pollInterval,
+       _helloTtl = helloTtl,
+       _ackTtl = ackTtl,
+       _steadyTtl = steadyTtl,
+       _now = now;
 
   final AppDatabase _db;
   final IdentityKeystore _identity;
@@ -203,10 +203,7 @@ class HandshakeOrchestrator {
   /// avoids races between the unawaited startup poll and an explicit
   /// caller (especially tests) running on the same orchestrator.
   void startPolling() {
-    _pollTimer ??= Timer.periodic(
-      _pollInterval,
-      (_) => unawaited(_safePoll()),
-    );
+    _pollTimer ??= Timer.periodic(_pollInterval, (_) => unawaited(_safePoll()));
   }
 
   /// Stops the periodic polling timer.
@@ -238,12 +235,15 @@ class HandshakeOrchestrator {
   /// has a non-empty Contact to look at while the invitee thinks about
   /// the request. The display name will be **replaced** by the invitee's
   /// chosen self-name on accept.
-  Future<({
-    ContactInvitation invitation,
-    String localContactId,
-    String shortCode,
-    String deepLink,
-  })> generateInvitation({
+  Future<
+    ({
+      ContactInvitation invitation,
+      String localContactId,
+      String shortCode,
+      String deepLink,
+    })
+  >
+  generateInvitation({
     required Duration validFor,
     required String stubDisplayName,
     required String stubAvatarId,
@@ -300,7 +300,10 @@ class HandshakeOrchestrator {
     }
 
     // 4) Pending handshake row keeps the orchestrator polling.
-    final pendingId = _pendingHandshakeId(invitationIdHex, HandshakeRole.inviter);
+    final pendingId = _pendingHandshakeId(
+      invitationIdHex,
+      HandshakeRole.inviter,
+    );
     await _db.upsertPendingHandshake(
       PendingHandshakesCompanion.insert(
         id: pendingId,
@@ -317,9 +320,9 @@ class HandshakeOrchestrator {
 
     startPolling();
 
-    final row = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(invitationIdHex)))
-        .getSingle();
+    final row = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(invitationIdHex))).getSingle();
     return (
       invitation: row,
       localContactId: stubContactId,
@@ -421,10 +424,7 @@ class HandshakeOrchestrator {
     // Drop the local stub: rejection means no relationship was formed.
     await _contacts.deleteLocally(row.contactStubId);
 
-    await _markHandshake(
-      row.id,
-      state: HandshakeState.rejected,
-    );
+    await _markHandshake(row.id, state: HandshakeState.rejected);
     await _decommissionHandshakeAddresses(
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
@@ -449,7 +449,10 @@ class HandshakeOrchestrator {
     final invitationIdHex = code.invitationIdHex();
     final stubContactId = 'contact:redeemed:$invitationIdHex';
 
-    final pendingId = _pendingHandshakeId(invitationIdHex, HandshakeRole.invitee);
+    final pendingId = _pendingHandshakeId(
+      invitationIdHex,
+      HandshakeRole.invitee,
+    );
     final existing = await _db.getPendingHandshake(pendingId);
     if (existing != null && existing.state != HandshakeState.failed) {
       throw HandshakeOrchestratorError('already_completed');
@@ -548,6 +551,25 @@ class HandshakeOrchestrator {
   // Polling loop
   // ---------------------------------------------------------------------
 
+  /// Returns the current state of the pending handshake row with the given
+  /// id, or `null` if the row has been removed (e.g. cleaned up after
+  /// completion in a future revision). The returned value is one of the
+  /// [HandshakeState] constants. Used by the invitee side to observe the
+  /// outcome of an in-flight redeem so the UI can react when the ack
+  /// lands (completed) or the inviter rejects (rejected).
+  Future<String?> pendingHandshakeState(String handshakeId) async {
+    final row = await _db.getPendingHandshake(handshakeId);
+    return row?.state;
+  }
+
+  /// Returns the `lastErrorCode` recorded on the pending handshake row, or
+  /// `null` if no error was stored. Used together with [pendingHandshakeState]
+  /// to surface specific failure reasons to the UI.
+  Future<String?> pendingHandshakeErrorCode(String handshakeId) async {
+    final row = await _db.getPendingHandshake(handshakeId);
+    return row?.lastErrorCode;
+  }
+
   /// Fetches each non-terminal handshake's inbox and processes any
   /// envelope it finds. Safe to call from a Timer or manually from a
   /// pull-to-refresh action.
@@ -580,8 +602,11 @@ class HandshakeOrchestrator {
 
   Future<void> _processOne(PendingHandshake row) async {
     if (row.expiresAt.isBefore(_now().toUtc())) {
-      await _markHandshake(row.id, state: HandshakeState.failed,
-          lastErrorCode: 'expired');
+      await _markHandshake(
+        row.id,
+        state: HandshakeState.failed,
+        lastErrorCode: 'expired',
+      );
       return;
     }
     final invitationIdBytes = _hexDecode(row.invitationIdHex);
@@ -612,7 +637,8 @@ class HandshakeOrchestrator {
 
     for (final env in envs) {
       try {
-        if (row.role == HandshakeRole.inviter && env.kind == EnvelopeKind.hello) {
+        if (row.role == HandshakeRole.inviter &&
+            env.kind == EnvelopeKind.hello) {
           await _handleHelloAsInviter(
             row: row,
             envelope: env,
@@ -620,7 +646,8 @@ class HandshakeOrchestrator {
             nonceBytes: nonceBytes,
             listenAddr: addrInviter,
           );
-        } else if (row.role == HandshakeRole.invitee && env.kind == EnvelopeKind.ack) {
+        } else if (row.role == HandshakeRole.invitee &&
+            env.kind == EnvelopeKind.ack) {
           await _handleAckAsInvitee(
             row: row,
             envelope: env,
@@ -658,10 +685,11 @@ class HandshakeOrchestrator {
     // hello has been validated (whether the inviter accepted or
     // rejected), the nonce is consumed: subsequent hellos referencing
     // the same invitation are dropped here.
-    final invitationRow = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(row.invitationIdHex)))
-        .getSingleOrNull();
-    if (invitationRow == null || invitationRow.status != InvitationStatus.pending) {
+    final invitationRow = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(row.invitationIdHex))).getSingleOrNull();
+    if (invitationRow == null ||
+        invitationRow.status != InvitationStatus.pending) {
       await _relay.ackEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: listenAddr,
@@ -698,8 +726,9 @@ class HandshakeOrchestrator {
     await _markHandshake(
       row.id,
       state: HandshakeState.helloReceived,
-      peerLongTermPublicMaterialB64:
-          RelayRouting.b64(hello.inviteeLongTermPublicKey),
+      peerLongTermPublicMaterialB64: RelayRouting.b64(
+        hello.inviteeLongTermPublicKey,
+      ),
       peerDisplayName: hello.displayName,
       peerAvatarId: hello.avatarId,
     );
@@ -737,18 +766,16 @@ class HandshakeOrchestrator {
     }
 
     if (ack.accepted) {
-      await _finalizeInviteeAccept(
-        row: row,
-        ack: ack,
-      );
+      await _finalizeInviteeAccept(row: row, ack: ack);
     } else {
       // Inviter rejected: drop the local stub, mark row rejected.
       await _contacts.deleteLocally(row.contactStubId);
       await _markHandshake(
         row.id,
         state: HandshakeState.rejected,
-        peerLongTermPublicMaterialB64:
-            RelayRouting.b64(ack.inviterLongTermPublicKey),
+        peerLongTermPublicMaterialB64: RelayRouting.b64(
+          ack.inviterLongTermPublicKey,
+        ),
       );
     }
     await _relay.ackEnvelope(
@@ -846,10 +873,7 @@ class HandshakeOrchestrator {
       avatarId: peerAvatarId,
     );
 
-    await _markHandshake(
-      handshakeRow.id,
-      state: HandshakeState.completed,
-    );
+    await _markHandshake(handshakeRow.id, state: HandshakeState.completed);
     await _decommissionHandshakeAddresses(
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
@@ -883,8 +907,7 @@ class HandshakeOrchestrator {
     await _contacts.promoteToConnected(
       id: row.contactStubId,
       relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
-      peerPublicMaterialB64:
-          RelayRouting.b64(ack.inviterLongTermPublicKey),
+      peerPublicMaterialB64: RelayRouting.b64(ack.inviterLongTermPublicKey),
       displayName: ack.displayName.isEmpty ? null : ack.displayName,
       avatarId: ack.avatarId.isEmpty ? null : ack.avatarId,
     );
@@ -892,8 +915,9 @@ class HandshakeOrchestrator {
     await _markHandshake(
       row.id,
       state: HandshakeState.completed,
-      peerLongTermPublicMaterialB64:
-          RelayRouting.b64(ack.inviterLongTermPublicKey),
+      peerLongTermPublicMaterialB64: RelayRouting.b64(
+        ack.inviterLongTermPublicKey,
+      ),
     );
   }
 
@@ -1047,8 +1071,9 @@ class HandshakeOrchestrator {
     String? lastErrorCode,
   }) async {
     final now = _now().toUtc();
-    await (_db.update(_db.pendingHandshakes)..where((t) => t.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.pendingHandshakes,
+    )..where((t) => t.id.equals(id))).write(
       PendingHandshakesCompanion(
         state: state == null ? const drift.Value.absent() : drift.Value(state),
         peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64 == null
@@ -1077,15 +1102,17 @@ class HandshakeOrchestrator {
       if (row.role != HandshakeRole.inviter) continue;
       final peerPubB64 = row.peerLongTermPublicMaterialB64;
       if (peerPubB64 == null) continue;
-      views.add(IncomingHandshakeView(
-        handshakeId: row.id,
-        invitationIdHex: row.invitationIdHex,
-        peerDisplayName: row.peerDisplayName,
-        peerAvatarId: row.peerAvatarId,
-        peerPublicMaterialB64: peerPubB64,
-        contactStubId: row.contactStubId,
-        receivedAt: row.updatedAt,
-      ));
+      views.add(
+        IncomingHandshakeView(
+          handshakeId: row.id,
+          invitationIdHex: row.invitationIdHex,
+          peerDisplayName: row.peerDisplayName,
+          peerAvatarId: row.peerAvatarId,
+          peerPublicMaterialB64: peerPubB64,
+          contactStubId: row.contactStubId,
+          receivedAt: row.updatedAt,
+        ),
+      );
     }
     incomingHandshakes.value = List.unmodifiable(views);
   }
@@ -1118,9 +1145,6 @@ class HandshakeOrchestrator {
     String stubContactId,
   ) async {
     final c = await _contacts.get(stubContactId);
-    return (
-      displayName: c?.displayName ?? '',
-      avatarId: c?.avatarId ?? '',
-    );
+    return (displayName: c?.displayName ?? '', avatarId: c?.avatarId ?? '');
   }
 }

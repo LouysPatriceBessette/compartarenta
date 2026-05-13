@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
@@ -26,9 +29,24 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   bool _dispatching = false;
   String? _dispatchError;
   bool _dispatched = false;
+  bool _completed = false;
+  bool _rejected = false;
+  String? _redeemHandshakeId;
+  Timer? _outcomePollTimer;
+  bool _outcomePollInFlight = false;
+  bool _navigatingAfterCompletion = false;
+
+  /// Local polling cadence used while the invitee is sitting on this
+  /// screen waiting for the inviter to accept/reject. The orchestrator's
+  /// own poller already ticks every 10s; the short cadence here lets us
+  /// react within ~2s when both peers are physically together (the QR
+  /// case), without churning the relay when the screen is hidden — the
+  /// timer is cancelled in [dispose].
+  static const Duration _outcomePollInterval = Duration(seconds: 2);
 
   @override
   void dispose() {
+    _outcomePollTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -39,6 +57,11 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _result = parseInvitationInput(value);
       _dispatchError = null;
       _dispatched = false;
+      _completed = false;
+      _rejected = false;
+      _outcomePollTimer?.cancel();
+      _outcomePollTimer = null;
+      _redeemHandshakeId = null;
     });
   }
 
@@ -53,12 +76,16 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _dispatching = true;
       _dispatchError = null;
       _dispatched = false;
+      _completed = false;
+      _rejected = false;
     });
     try {
       final prefs = await AppPreferences.load();
-      final selfName = prefs.displayName.isEmpty ? 'Unknown' : prefs.displayName;
+      final selfName = prefs.displayName.isEmpty
+          ? 'Unknown'
+          : prefs.displayName;
       final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
-      await orchestrator.redeemInvitation(
+      final redeem = await orchestrator.redeemInvitation(
         code: code,
         selfDisplayName: selfName,
         selfAvatarId: selfAvatar,
@@ -72,7 +99,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       setState(() {
         _dispatching = false;
         _dispatched = true;
+        _redeemHandshakeId = redeem.handshakeId;
       });
+      _startOutcomePolling(orchestrator);
     } on HandshakeOrchestratorError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -88,6 +117,92 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     }
   }
 
+  void _startOutcomePolling(HandshakeOrchestrator orchestrator) {
+    _outcomePollTimer?.cancel();
+    _outcomePollTimer = Timer.periodic(
+      _outcomePollInterval,
+      (_) => unawaited(_pollOutcome(orchestrator)),
+    );
+    unawaited(_pollOutcome(orchestrator));
+  }
+
+  Future<void> _pollOutcome(HandshakeOrchestrator orchestrator) async {
+    if (_outcomePollInFlight || _navigatingAfterCompletion) return;
+    final handshakeId = _redeemHandshakeId;
+    if (handshakeId == null) return;
+    _outcomePollInFlight = true;
+    try {
+      await orchestrator.processAllPendingHandshakes();
+      final state = await orchestrator.pendingHandshakeState(handshakeId);
+      if (!mounted || state == null) return;
+      switch (state) {
+        case HandshakeState.completed:
+          _onHandshakeCompleted();
+        case HandshakeState.rejected:
+          _onHandshakeRejected();
+        case HandshakeState.failed:
+          final code = await orchestrator.pendingHandshakeErrorCode(
+            handshakeId,
+          );
+          if (!mounted) return;
+          _onHandshakeFailed(code);
+      }
+    } on HandshakeOrchestratorError catch (e) {
+      debugPrint('Outcome polling failed: ${e.code}');
+    } catch (error, stack) {
+      debugPrint('Outcome polling failed: $error\n$stack');
+    } finally {
+      _outcomePollInFlight = false;
+    }
+  }
+
+  void _onHandshakeCompleted() {
+    if (_navigatingAfterCompletion) return;
+    _navigatingAfterCompletion = true;
+    _outcomePollTimer?.cancel();
+    setState(() {
+      _completed = true;
+      _rejected = false;
+      _dispatched = false;
+    });
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.contactsHandshakeCompleted)));
+    // Defer navigation by one frame so the snackbar is enqueued on the
+    // root messenger before we leave this route. Only navigate when the
+    // user is still on this screen — `mounted` guards the post-frame
+    // callback, so a manual return mid-flight keeps the user wherever
+    // they navigated to.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/contacts');
+      }
+    });
+  }
+
+  void _onHandshakeRejected() {
+    _outcomePollTimer?.cancel();
+    setState(() {
+      _rejected = true;
+      _completed = false;
+      _dispatched = false;
+    });
+  }
+
+  void _onHandshakeFailed(String? code) {
+    _outcomePollTimer?.cancel();
+    setState(() {
+      _completed = false;
+      _rejected = false;
+      _dispatched = false;
+      _dispatchError = (code == null || code.isEmpty) ? 'failed' : code;
+    });
+  }
+
   String _errorLabel(BuildContext context, String code) {
     final l10n = AppLocalizations.of(context);
     return switch (code) {
@@ -95,7 +210,8 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       'relay_error' => l10n.contactsHandshakeErrorRelayUnavailable,
       'already_completed' => l10n.contactsHandshakeErrorAlreadyCompleted,
       'nonce_already_consumed' => l10n.contactsHandshakeErrorNonceConsumed,
-      'expired_code' => l10n.contactsHandshakeErrorExpired,
+      'expired_code' || 'expired' => l10n.contactsHandshakeErrorExpired,
+      'failed' => l10n.contactsHandshakeFailed,
       _ => l10n.contactsHandshakeErrorUnknown,
     };
   }
@@ -190,6 +306,26 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                   ),
                 ),
               ],
+              if (_rejected) ...[
+                const SizedBox(height: 8),
+                Card(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.cancel_outlined),
+                    title: Text(l10n.contactsHandshakeRejected),
+                  ),
+                ),
+              ],
+              if (_completed) ...[
+                const SizedBox(height: 8),
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.check_circle_outline),
+                    title: Text(l10n.contactsHandshakeCompleted),
+                  ),
+                ),
+              ],
               const Spacer(),
               FilledButton.icon(
                 icon: _dispatching
@@ -203,7 +339,12 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                       ? l10n.contactsHandshakeDispatching
                       : l10n.contactsEnterInviteCodeSubmit,
                 ),
-                onPressed: (result is InvitationCodeOk && !_dispatching && !_dispatched)
+                onPressed:
+                    (result is InvitationCodeOk &&
+                        !_dispatching &&
+                        !_dispatched &&
+                        !_completed &&
+                        !_rejected)
                     ? () => _connect(result.code)
                     : null,
               ),

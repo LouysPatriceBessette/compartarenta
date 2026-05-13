@@ -56,6 +56,13 @@ class ContactsRepository {
     );
   }
 
+  /// Returns the module plans currently referencing this contact as a
+  /// participant. Used by the UI to block deletion of a contact that still
+  /// anchors a plan; per `contact-privacy-and-deletion`, the user must
+  /// remove the contact from each plan first.
+  Future<List<Plan>> plansReferencing(String id) =>
+      _db.listPlansContainingContact(id);
+
   /// Marks the contact as deleted locally. Module participant rows keep their
   /// historical snapshot via `Participants.displayName` / `avatarId`.
   Future<void> deleteLocally(String id) async {

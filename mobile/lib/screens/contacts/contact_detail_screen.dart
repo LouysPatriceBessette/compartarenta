@@ -69,6 +69,65 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   Future<void> _confirmAndDelete(Contact contact) async {
     final l10n = AppLocalizations.of(context);
+
+    // Per `contact-privacy-and-deletion`: a Contact still referenced as a
+    // module-plan participant must be removed from those plans first, so the
+    // user has an explicit chance to reassign or close them. We surface the
+    // current set of plan titles in the blocked-deletion dialog.
+    final blockingPlans = await _repo.plansReferencing(contact.id);
+    if (!mounted) return;
+    if (blockingPlans.isNotEmpty) {
+      final titles = blockingPlans
+          .map((p) => p.title.isEmpty ? p.id : p.title)
+          .toList(growable: false);
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.contactsDeleteBlockedByPlansTitle),
+          content: Text(
+            l10n.contactsDeleteBlockedByPlansBody(
+              titles.length,
+              titles.join(', '),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.commonDone),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Per the same spec, a connected Contact must go through the explicit
+    // Disconnect path before it can be deleted, otherwise the peer would be
+    // left believing the relationship is still active. We point the user at
+    // the Disconnect action and let them trigger it from the dialog.
+    if (contact.kind == 'connected') {
+      final goDisconnect = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.contactsDeleteBlockedConnectedTitle),
+          content: Text(l10n.contactsDeleteBlockedConnectedBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.contactsDeleteBlockedConnectedAction),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || goDisconnect != true) return;
+      await _confirmAndDisconnect(contact);
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

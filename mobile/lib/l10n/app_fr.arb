@@ -363,6 +363,9 @@
   "contactsHandshakeNotAvailableYet": "La poignée de main du relais n’est pas encore disponible. Le code est valide localement, mais il ne peut pas être utilisé tant que le relais n’est pas en ligne.",
   "contactsHandshakeDispatching": "Envoi de la requête au relais…",
   "contactsHandshakeDispatched": "Requête envoyée. En attente de la confirmation de l’hôte.",
+  "contactsHandshakeCompleted": "Connecté. Le contact a été ajouté à votre liste.",
+  "contactsHandshakeRejected": "Votre interlocuteur a refusé la connexion. Demandez-lui une nouvelle invitation si besoin.",
+  "contactsHandshakeFailed": "La tentative de connexion a échoué. Vous pouvez réessayer avec une nouvelle invitation.",
   "contactsHandshakeErrorRelayUnavailable": "Relais injoignable. Vérifiez votre connexion et réessayez.",
   "contactsHandshakeErrorAlreadyCompleted": "Ce code a déjà été utilisé.",
   "contactsHandshakeErrorNonceConsumed": "Cette invitation a déjà été honorée.",
@@ -398,8 +401,19 @@
   "contactsFieldNotesLabel": "Notes",
   "contactsFieldNotesHint": "Rappel personnel, non partagé",
   "contactsDeleteTitle": "Supprimer ce contact ?",
-  "contactsDeleteBody": "Les entrées existantes (logement ou véhicule) qui réfèrent à ce contact conserveront leur nom et avatar enregistrés. Vous pourrez le rajouter plus tard.",
+  "contactsDeleteBody": "Les entrées existantes (logement ou véhicule) qui réfèrent à ce contact conserveront le nom et l'avatar enregistrés au moment de leur création. Pour travailler à nouveau avec cette personne, créez un nouveau contact local ou envoyez-lui une nouvelle invitation.",
   "contactsDeletePreservesHistory": "Les entrées existantes qui réfèrent à ce contact conservent leur nom et avatar.",
+  "contactsDeleteBlockedByPlansTitle": "Impossible de supprimer ce contact",
+  "contactsDeleteBlockedByPlansBody": "Ce contact est encore listé comme participant dans {count, plural, =1{un plan} other{{count} plans}} : {plans}. Retirez-le d'abord de ces plans, puis vous pourrez supprimer le contact.",
+  "@contactsDeleteBlockedByPlansBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plans": { "type": "String" }
+    }
+  },
+  "contactsDeleteBlockedConnectedTitle": "Utilisez Se déconnecter d'abord",
+  "contactsDeleteBlockedConnectedBody": "Ce contact est actuellement connecté. Le supprimer sur cet appareil seulement laisserait l'autre personne penser que la connexion est toujours active. Utilisez d'abord « Se déconnecter » : un signal de déconnexion chiffré est envoyé au correspondant via le relais et le contact repasse en « local uniquement » sur cet appareil. Vous pourrez ensuite le supprimer normalement.",
+  "contactsDeleteBlockedConnectedAction": "Se déconnecter d'abord",
   "contactsBlockTitle": "Bloquer ce contact ?",
   "contactsBlockBody": "Les messages entrants de ce contact seront ignorés localement. Le relais n’est pas informé du blocage.",
   "contactsUnblockTitle": "Débloquer ce contact ?",

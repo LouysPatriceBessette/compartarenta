@@ -547,6 +547,36 @@ class AppDatabase extends _$AppDatabase {
         ..orderBy([(t) => OrderingTerm.asc(t.id)]))
       .get();
 
+  /// Returns the distinct list of [Plan]s in which [contactId] is currently
+  /// referenced as a participant (other than as the local user's own "self"
+  /// slot). Used to block destructive Contact operations such as deletion
+  /// when the contact still anchors a module plan; see
+  /// `contact-privacy-and-deletion` spec.
+  ///
+  /// Participant rows are stored with composite ids of the form
+  /// `<planId>:self` and `<planId>:p<n>`. The plan id is recovered by
+  /// stripping everything from the last `:` onward.
+  Future<List<Plan>> listPlansContainingContact(String contactId) async {
+    final rows =
+        await (select(participants)..where((t) => t.contactId.equals(contactId)))
+            .get();
+    final planIds = <String>{};
+    for (final p in rows) {
+      final i = p.id.lastIndexOf(':');
+      if (i <= 0) continue;
+      planIds.add(p.id.substring(0, i));
+    }
+    if (planIds.isEmpty) return const <Plan>[];
+    final result =
+        await (select(plans)..where((t) => t.id.isIn(planIds))).get();
+    result.sort((a, b) {
+      final ta = a.title.isEmpty ? a.id : a.title;
+      final tb = b.title.isEmpty ? b.id : b.title;
+      return ta.toLowerCase().compareTo(tb.toLowerCase());
+    });
+    return result;
+  }
+
   Future<void> upsertContact(ContactsCompanion row) =>
       into(contacts).insertOnConflictUpdate(row);
 

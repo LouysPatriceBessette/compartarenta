@@ -942,6 +942,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Request sent. Waiting for the inviter to confirm.';
 
   @override
+  String get contactsHandshakeCompleted =>
+      'Connected. The contact has been added to your list.';
+
+  @override
+  String get contactsHandshakeRejected =>
+      'The other person declined the connection. You can ask them for a new invitation if needed.';
+
+  @override
+  String get contactsHandshakeFailed =>
+      'The connection attempt failed. You can try again with a fresh invitation.';
+
+  @override
   String get contactsHandshakeErrorRelayUnavailable =>
       'Unable to reach the relay. Check your network and try again.';
 
@@ -1038,11 +1050,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsDeleteBody =>
-      'Existing housing or vehicle entries that reference this contact will keep their stored name and avatar. You can re-add the contact later.';
+      'Existing housing or vehicle entries that reference this contact will keep the name and avatar stored at the time they were added. To work with this person again, create a new local contact, or send them a new invitation.';
 
   @override
   String get contactsDeletePreservesHistory =>
       'Existing entries that reference this contact keep their stored name and avatar.';
+
+  @override
+  String get contactsDeleteBlockedByPlansTitle =>
+      'Can\'t delete this contact yet';
+
+  @override
+  String contactsDeleteBlockedByPlansBody(int count, String plans) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: 'one plan',
+    );
+    return 'This contact is still listed as a participant in $_temp0: $plans. Remove them from those plans first, then you\'ll be able to delete the contact.';
+  }
+
+  @override
+  String get contactsDeleteBlockedConnectedTitle => 'Use Disconnect first';
+
+  @override
+  String get contactsDeleteBlockedConnectedBody =>
+      'This contact is currently connected. Just deleting it on this device would leave the other side thinking the connection is still up. Use Disconnect first: it sends an encrypted disconnect signal to the peer through the relay and downgrades the contact to local-only on this device. You can then delete the contact normally.';
+
+  @override
+  String get contactsDeleteBlockedConnectedAction => 'Disconnect first';
 
   @override
   String get contactsBlockTitle => 'Block this contact?';

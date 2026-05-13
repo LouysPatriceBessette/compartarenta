@@ -363,6 +363,9 @@
   "contactsHandshakeNotAvailableYet": "El intercambio con el relevo aún no está disponible. El código es válido localmente, pero no se puede canjear hasta que el relevo esté en línea.",
   "contactsHandshakeDispatching": "Enviando la solicitud al relevo…",
   "contactsHandshakeDispatched": "Solicitud enviada. Esperando la confirmación del anfitrión.",
+  "contactsHandshakeCompleted": "Conectado. El contacto se ha añadido a tu lista.",
+  "contactsHandshakeRejected": "La otra persona rechazó la conexión. Pídele una nueva invitación si lo necesitas.",
+  "contactsHandshakeFailed": "El intento de conexión falló. Puedes reintentar con una nueva invitación.",
   "contactsHandshakeErrorRelayUnavailable": "No se puede conectar con el relevo. Verifica tu red e inténtalo de nuevo.",
   "contactsHandshakeErrorAlreadyCompleted": "Este código ya se ha utilizado.",
   "contactsHandshakeErrorNonceConsumed": "Esta invitación ya se ha canjeado.",
@@ -398,8 +401,19 @@
   "contactsFieldNotesLabel": "Notas",
   "contactsFieldNotesHint": "Recordatorio personal, no compartido",
   "contactsDeleteTitle": "¿Eliminar este contacto?",
-  "contactsDeleteBody": "Las entradas existentes (vivienda o vehículo) que hacen referencia a este contacto conservarán su nombre y avatar guardados. Podrás volver a añadirlo más tarde.",
+  "contactsDeleteBody": "Las entradas existentes (vivienda o vehículo) que hacen referencia a este contacto conservarán el nombre y el avatar guardados en el momento de su creación. Para volver a trabajar con esta persona, crea un nuevo contacto local o envíale una nueva invitación.",
   "contactsDeletePreservesHistory": "Las entradas existentes que hacen referencia a este contacto conservan su nombre y avatar.",
+  "contactsDeleteBlockedByPlansTitle": "Aún no se puede eliminar este contacto",
+  "contactsDeleteBlockedByPlansBody": "Este contacto sigue figurando como participante en {count, plural, =1{un plan} other{{count} planes}}: {plans}. Retíralo primero de esos planes y luego podrás eliminar el contacto.",
+  "@contactsDeleteBlockedByPlansBody": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "plans": { "type": "String" }
+    }
+  },
+  "contactsDeleteBlockedConnectedTitle": "Usa Desconectar primero",
+  "contactsDeleteBlockedConnectedBody": "Este contacto está actualmente conectado. Eliminarlo solo en este dispositivo dejaría a la otra persona pensando que la conexión sigue activa. Usa primero «Desconectar»: se envía una señal de desconexión cifrada al par a través del relevo y el contacto pasa a ser solo local en este dispositivo. Luego podrás eliminarlo normalmente.",
+  "contactsDeleteBlockedConnectedAction": "Desconectar primero",
   "contactsBlockTitle": "¿Bloquear este contacto?",
   "contactsBlockBody": "Los mensajes entrantes de este contacto se ignorarán localmente. El relevo no recibe ninguna información del bloqueo.",
   "contactsUnblockTitle": "¿Desbloquear este contacto?",

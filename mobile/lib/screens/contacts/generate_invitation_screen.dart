@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -9,8 +11,8 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 
-/// Screen that generates a new invitation code on-device and presents it
-/// for out-of-band sharing. Never contacts the network.
+/// Screen that generates a new invitation code and presents it for out-of-band
+/// sharing.
 class GenerateInvitationScreen extends StatefulWidget {
   const GenerateInvitationScreen({super.key});
 
@@ -27,7 +29,11 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
 
   Duration _validFor = const Duration(hours: 24);
   _GeneratedInvitation? _generated;
+  HandshakeOrchestrator? _incomingListenerOrchestrator;
+  Timer? _generatedPollTimer;
   bool _generating = false;
+  bool _processingGeneratedPoll = false;
+  bool _routingToIncoming = false;
   String? _error;
 
   static const _options = <(Duration, String)>[
@@ -35,6 +41,85 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     (Duration(hours: 24), '24h'),
     (Duration(days: 7), '7d'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _attachIncomingListener();
+  }
+
+  @override
+  void dispose() {
+    _generatedPollTimer?.cancel();
+    _incomingListenerOrchestrator?.incomingHandshakes.removeListener(
+      _onIncomingHandshakesChanged,
+    );
+    super.dispose();
+  }
+
+  void _attachIncomingListener() {
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null ||
+        identical(orchestrator, _incomingListenerOrchestrator)) {
+      return;
+    }
+    _incomingListenerOrchestrator?.incomingHandshakes.removeListener(
+      _onIncomingHandshakesChanged,
+    );
+    _incomingListenerOrchestrator = orchestrator;
+    orchestrator.incomingHandshakes.addListener(_onIncomingHandshakesChanged);
+  }
+
+  void _onIncomingHandshakesChanged() {
+    _routeToIncomingIfCurrentInvitationHasRequest();
+  }
+
+  void _startGeneratedPolling(HandshakeOrchestrator orchestrator) {
+    _generatedPollTimer?.cancel();
+    _generatedPollTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => unawaited(_pollGeneratedInvitation(orchestrator)),
+    );
+    unawaited(_pollGeneratedInvitation(orchestrator));
+  }
+
+  Future<void> _pollGeneratedInvitation(
+    HandshakeOrchestrator orchestrator,
+  ) async {
+    if (_processingGeneratedPoll || _routingToIncoming || _generated == null) {
+      return;
+    }
+    _processingGeneratedPoll = true;
+    try {
+      await orchestrator.processAllPendingHandshakes();
+      _routeToIncomingIfCurrentInvitationHasRequest();
+    } on HandshakeOrchestratorError catch (e) {
+      debugPrint('Generated invitation polling failed: ${e.code}');
+    } catch (error, stack) {
+      debugPrint('Generated invitation polling failed: $error\n$stack');
+    } finally {
+      _processingGeneratedPoll = false;
+    }
+  }
+
+  void _routeToIncomingIfCurrentInvitationHasRequest() {
+    if (!mounted || _routingToIncoming) return;
+    final generated = _generated;
+    if (generated == null) return;
+    final orchestrator =
+        _incomingListenerOrchestrator ?? HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) return;
+    final hasIncomingRequest = orchestrator.incomingHandshakes.value.any(
+      (view) => view.invitationIdHex == generated.row.id,
+    );
+    if (!hasIncomingRequest) return;
+    _routingToIncoming = true;
+    _generatedPollTimer?.cancel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/contacts/incoming');
+    });
+  }
 
   Future<void> _generate() async {
     if (_generating) return;
@@ -74,6 +159,11 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
         _generated = result;
         _generating = false;
       });
+      if (orchestrator != null) {
+        _attachIncomingListener();
+        _startGeneratedPolling(orchestrator);
+        _routeToIncomingIfCurrentInvitationHasRequest();
+      }
     } on HandshakeOrchestratorError catch (e) {
       if (!mounted) return;
       setState(() {
@@ -94,6 +184,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     if (invitation == null) return;
     await _repo.revoke(invitation.row.id);
     if (!mounted) return;
+    _generatedPollTimer?.cancel();
     setState(() => _generated = null);
   }
 
@@ -267,10 +358,12 @@ class _GeneratedView extends StatelessWidget {
                         const SizedBox(height: 8),
                         SelectableText(
                           shortCode,
-                          style:
-                              Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
@@ -283,7 +376,8 @@ class _GeneratedView extends StatelessWidget {
                               label: Text(l10n.commonCopy),
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: shortCode));
+                                  ClipboardData(text: shortCode),
+                                );
                               },
                             ),
                             OutlinedButton.icon(
@@ -291,7 +385,8 @@ class _GeneratedView extends StatelessWidget {
                               label: Text(l10n.contactsInviteCopyDeepLink),
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: deepLink));
+                                  ClipboardData(text: deepLink),
+                                );
                               },
                             ),
                           ],

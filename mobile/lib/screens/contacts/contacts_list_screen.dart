@@ -127,10 +127,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       ),
       body: Column(
         children: [
-          _IncomingBanner(
-            orchestrator: _orchestrator,
-            onTap: _openIncoming,
-          ),
+          _IncomingBanner(orchestrator: _orchestrator, onTap: _openIncoming),
           Expanded(
             child: FutureBuilder<List<Contact>>(
               future: _future,
@@ -140,13 +137,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                 }
                 final items = snapshot.data ?? const <Contact>[];
                 if (items.isEmpty) {
-                  return _ContactsEmptyState(
-                    onAddLocalOnly: () =>
-                        context.push('/contacts/new').then((_) => _reload()),
-                    onInviteContact: () => context
-                        .push('/contacts/invite/new')
-                        .then((_) => _reload()),
-                  );
+                  return const _ContactsEmptyState();
                 }
                 return ListView.separated(
                   itemCount: items.length,
@@ -218,13 +209,7 @@ class _IncomingBanner extends StatelessWidget {
 }
 
 class _ContactsEmptyState extends StatelessWidget {
-  const _ContactsEmptyState({
-    required this.onAddLocalOnly,
-    required this.onInviteContact,
-  });
-
-  final VoidCallback onAddLocalOnly;
-  final VoidCallback onInviteContact;
+  const _ContactsEmptyState();
 
   @override
   Widget build(BuildContext context) {
@@ -247,18 +232,6 @@ class _ContactsEmptyState extends StatelessWidget {
             l10n.contactsEmptyBody,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            icon: const Icon(Icons.person_add),
-            label: Text(l10n.contactsAddLocalOnlyAction),
-            onPressed: onAddLocalOnly,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.send),
-            label: Text(l10n.contactsInviteAction),
-            onPressed: onInviteContact,
           ),
         ],
       ),
@@ -290,8 +263,8 @@ class _ContactTile extends StatelessWidget {
         blocked
             ? l10n.contactsKindBlocked
             : connected
-                ? l10n.contactsKindConnected
-                : l10n.contactsKindLocalOnly,
+            ? l10n.contactsKindConnected
+            : l10n.contactsKindLocalOnly,
       ),
       trailing: connected
           ? Icon(

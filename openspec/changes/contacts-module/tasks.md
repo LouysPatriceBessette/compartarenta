@@ -20,7 +20,7 @@
 - [x] 2.2 Implement local-only contact creation (name + avatar) without any relay traffic.
 - [x] 2.3 Implement contact detail view with kind indicator (local-only vs connected).
 - [x] 2.4 Implement edit / rename / change-avatar with updates surfaced through every module reference.
-- [x] 2.5 Implement delete (local, snapshot-preserving) and disconnect (sends disconnect envelope) as two distinct actions. *(Wave A: delete + local snapshot preservation. Wave B: disconnect envelope dispatch over the relay.)*
+- [x] 2.5 Implement delete (local, snapshot-preserving) and disconnect (sends disconnect envelope) as two distinct actions. *(Wave A: delete + local snapshot preservation. Wave B: disconnect envelope dispatch over the relay. Wave B follow-up: deletion is now refused while a Contact is still referenced by a module plan or is currently `connected`; the UI redirects to plan reassignment or the explicit Disconnect action — see `contact-privacy-and-deletion`.)*
 - [x] 2.6 Implement a block action that locally suppresses inbound envelopes from a Contact.
 
 ## 3. Invitation codes

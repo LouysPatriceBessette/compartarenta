@@ -1772,6 +1772,24 @@ abstract class AppLocalizations {
   /// **'Request sent. Waiting for the inviter to confirm.'**
   String get contactsHandshakeDispatched;
 
+  /// No description provided for @contactsHandshakeCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected. The contact has been added to your list.'**
+  String get contactsHandshakeCompleted;
+
+  /// No description provided for @contactsHandshakeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The other person declined the connection. You can ask them for a new invitation if needed.'**
+  String get contactsHandshakeRejected;
+
+  /// No description provided for @contactsHandshakeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection attempt failed. You can try again with a fresh invitation.'**
+  String get contactsHandshakeFailed;
+
   /// No description provided for @contactsHandshakeErrorRelayUnavailable.
   ///
   /// In en, this message translates to:
@@ -1943,7 +1961,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsDeleteBody.
   ///
   /// In en, this message translates to:
-  /// **'Existing housing or vehicle entries that reference this contact will keep their stored name and avatar. You can re-add the contact later.'**
+  /// **'Existing housing or vehicle entries that reference this contact will keep the name and avatar stored at the time they were added. To work with this person again, create a new local contact, or send them a new invitation.'**
   String get contactsDeleteBody;
 
   /// No description provided for @contactsDeletePreservesHistory.
@@ -1951,6 +1969,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Existing entries that reference this contact keep their stored name and avatar.'**
   String get contactsDeletePreservesHistory;
+
+  /// No description provided for @contactsDeleteBlockedByPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t delete this contact yet'**
+  String get contactsDeleteBlockedByPlansTitle;
+
+  /// No description provided for @contactsDeleteBlockedByPlansBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact is still listed as a participant in {count, plural, =1{one plan} other{{count} plans}}: {plans}. Remove them from those plans first, then you\'ll be able to delete the contact.'**
+  String contactsDeleteBlockedByPlansBody(int count, String plans);
+
+  /// No description provided for @contactsDeleteBlockedConnectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Disconnect first'**
+  String get contactsDeleteBlockedConnectedTitle;
+
+  /// No description provided for @contactsDeleteBlockedConnectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact is currently connected. Just deleting it on this device would leave the other side thinking the connection is still up. Use Disconnect first: it sends an encrypted disconnect signal to the peer through the relay and downgrades the contact to local-only on this device. You can then delete the contact normally.'**
+  String get contactsDeleteBlockedConnectedBody;
+
+  /// No description provided for @contactsDeleteBlockedConnectedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect first'**
+  String get contactsDeleteBlockedConnectedAction;
 
   /// No description provided for @contactsBlockTitle.
   ///

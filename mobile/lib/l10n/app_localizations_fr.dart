@@ -954,6 +954,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Requête envoyée. En attente de la confirmation de l’hôte.';
 
   @override
+  String get contactsHandshakeCompleted =>
+      'Connecté. Le contact a été ajouté à votre liste.';
+
+  @override
+  String get contactsHandshakeRejected =>
+      'Votre interlocuteur a refusé la connexion. Demandez-lui une nouvelle invitation si besoin.';
+
+  @override
+  String get contactsHandshakeFailed =>
+      'La tentative de connexion a échoué. Vous pouvez réessayer avec une nouvelle invitation.';
+
+  @override
   String get contactsHandshakeErrorRelayUnavailable =>
       'Relais injoignable. Vérifiez votre connexion et réessayez.';
 
@@ -1051,11 +1063,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsDeleteBody =>
-      'Les entrées existantes (logement ou véhicule) qui réfèrent à ce contact conserveront leur nom et avatar enregistrés. Vous pourrez le rajouter plus tard.';
+      'Les entrées existantes (logement ou véhicule) qui réfèrent à ce contact conserveront le nom et l\'avatar enregistrés au moment de leur création. Pour travailler à nouveau avec cette personne, créez un nouveau contact local ou envoyez-lui une nouvelle invitation.';
 
   @override
   String get contactsDeletePreservesHistory =>
       'Les entrées existantes qui réfèrent à ce contact conservent leur nom et avatar.';
+
+  @override
+  String get contactsDeleteBlockedByPlansTitle =>
+      'Impossible de supprimer ce contact';
+
+  @override
+  String contactsDeleteBlockedByPlansBody(int count, String plans) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: 'un plan',
+    );
+    return 'Ce contact est encore listé comme participant dans $_temp0 : $plans. Retirez-le d\'abord de ces plans, puis vous pourrez supprimer le contact.';
+  }
+
+  @override
+  String get contactsDeleteBlockedConnectedTitle =>
+      'Utilisez Se déconnecter d\'abord';
+
+  @override
+  String get contactsDeleteBlockedConnectedBody =>
+      'Ce contact est actuellement connecté. Le supprimer sur cet appareil seulement laisserait l\'autre personne penser que la connexion est toujours active. Utilisez d\'abord « Se déconnecter » : un signal de déconnexion chiffré est envoyé au correspondant via le relais et le contact repasse en « local uniquement » sur cet appareil. Vous pourrez ensuite le supprimer normalement.';
+
+  @override
+  String get contactsDeleteBlockedConnectedAction => 'Se déconnecter d\'abord';
 
   @override
   String get contactsBlockTitle => 'Bloquer ce contact ?';
