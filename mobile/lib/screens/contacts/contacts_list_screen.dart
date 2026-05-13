@@ -60,6 +60,45 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     _reload();
   }
 
+  Future<void> _openAddSheet() async {
+    final l10n = AppLocalizations.of(context);
+    final choice = await showModalBottomSheet<_AddContactChoice>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.person_add_alt),
+              title: Text(l10n.contactsAddLocalOnlyAction),
+              subtitle: Text(l10n.contactsKindLocalOnly),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_AddContactChoice.localOnly),
+            ),
+            ListTile(
+              leading: const Icon(Icons.send),
+              title: Text(l10n.contactsInviteAction),
+              subtitle: Text(l10n.contactsKindConnected),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_AddContactChoice.invite),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case _AddContactChoice.localOnly:
+        await context.push('/contacts/new');
+      case _AddContactChoice.invite:
+        await context.push('/contacts/invite/new');
+    }
+    if (!mounted) return;
+    _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -83,9 +122,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add),
-        label: Text(l10n.contactsAddLocalOnlyAction),
-        onPressed: () =>
-            context.push('/contacts/new').then((_) => _reload()),
+        label: Text(l10n.contactsAddContactAction),
+        onPressed: _openAddSheet,
       ),
       body: Column(
         children: [
@@ -131,6 +169,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     );
   }
 }
+
+enum _AddContactChoice { localOnly, invite }
 
 class _IncomingBanner extends StatelessWidget {
   const _IncomingBanner({required this.orchestrator, required this.onTap});

@@ -1544,10 +1544,16 @@ abstract class AppLocalizations {
   /// **'Add someone you know to reuse them across modules, or invite a contact to connect through the relay.'**
   String get contactsEmptyBody;
 
-  /// No description provided for @contactsAddLocalOnlyAction.
+  /// No description provided for @contactsAddContactAction.
   ///
   /// In en, this message translates to:
   /// **'Add a contact'**
+  String get contactsAddContactAction;
+
+  /// No description provided for @contactsAddLocalOnlyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add local contact'**
   String get contactsAddLocalOnlyAction;
 
   /// No description provided for @contactsAddLocalOnlyTitle.

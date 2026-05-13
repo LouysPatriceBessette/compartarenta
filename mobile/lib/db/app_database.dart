@@ -642,6 +642,15 @@ QueryExecutor _openConnection() {
         return Directory(p.join(dir.path));
       },
     ),
+    // Web build: drift loads sqlite3 as WebAssembly and offloads queries
+    // to a background worker. Both assets ship under `mobile/web/` and
+    // must match the versions of the `drift` and `sqlite3` packages
+    // pinned in `pubspec.lock` (see docs/development-roadmap.md for the
+    // refresh recipe).
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.dart.js'),
+    ),
   );
 }
 

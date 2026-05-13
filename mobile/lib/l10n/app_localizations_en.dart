@@ -813,7 +813,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add someone you know to reuse them across modules, or invite a contact to connect through the relay.';
 
   @override
-  String get contactsAddLocalOnlyAction => 'Add a contact';
+  String get contactsAddContactAction => 'Add a contact';
+
+  @override
+  String get contactsAddLocalOnlyAction => 'Add local contact';
 
   @override
   String get contactsAddLocalOnlyTitle => 'New contact';

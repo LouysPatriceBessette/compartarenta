@@ -219,81 +219,96 @@ class _GeneratedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // The QR card + buttons easily exceed a phone viewport. Make the
+    // upper portion scrollable so it never overflows, then keep the
+    // action buttons docked at the bottom of the available space.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.contactsInviteShareWarning,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Semantics(
-                    label: l10n.contactsInviteQrSemantics,
-                    child: QrImageView(
-                      data: deepLink,
-                      version: QrVersions.auto,
-                      size: 192,
-                      backgroundColor: Colors.white,
+                Text(
+                  l10n.contactsInviteShareWarning,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Semantics(
+                            label: l10n.contactsInviteQrSemantics,
+                            child: QrImageView(
+                              data: deepLink,
+                              version: QrVersions.auto,
+                              size: 192,
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.contactsInviteQrLabel,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.contactsInviteShortCodeLabel,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          shortCode,
+                          style:
+                              Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          children: [
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.copy),
+                              label: Text(l10n.commonCopy),
+                              onPressed: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: shortCode));
+                              },
+                            ),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.link),
+                              label: Text(l10n.contactsInviteCopyDeepLink),
+                              onPressed: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: deepLink));
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.contactsInviteQrLabel,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  l10n.contactsInviteShortCodeLabel,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                SelectableText(
-                  shortCode,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  children: [
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.copy),
-                      label: Text(l10n.commonCopy),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: shortCode));
-                      },
-                    ),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.link),
-                      label: Text(l10n.contactsInviteCopyDeepLink),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: deepLink));
-                      },
-                    ),
-                  ],
+                  l10n.contactsInviteExpiresAt(expiresAt.toLocal().toString()),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Text(
-          l10n.contactsInviteExpiresAt(expiresAt.toLocal().toString()),
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const Spacer(),
         OutlinedButton.icon(
           icon: const Icon(Icons.cancel_outlined),
           label: Text(l10n.contactsInviteRevokeAction),

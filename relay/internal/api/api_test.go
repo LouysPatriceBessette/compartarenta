@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -116,5 +118,114 @@ func TestFirstNonNilReturnsFirstError(t *testing.T) {
 	}
 	if got := firstNonNil(nil, nil); got != nil {
 		t.Fatalf("expected nil for all-nil input, got %v", got)
+	}
+}
+
+func TestCORSDisabledByDefault(t *testing.T) {
+	s := &Server{cfg: config.Config{}}
+	called := false
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusNoContent)
+	})
+	h := s.cors(inner)
+
+	r := httptest.NewRequest(http.MethodGet, "/v1/inbox/whatever", nil)
+	r.Header.Set("Origin", "http://localhost:5001")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+
+	if !called {
+		t.Fatal("expected inner handler to run when CORS is disabled")
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected no Access-Control-Allow-Origin, got %q", got)
+	}
+}
+
+func TestCORSEchoesMatchingOrigin(t *testing.T) {
+	s := &Server{cfg: config.Config{
+		CORSAllowedOrigins: []string{"http://localhost:5001", "https://app.example.tld"},
+	}}
+	h := s.cors(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	r := httptest.NewRequest(http.MethodPost, "/v1/handshake/establish", nil)
+	r.Header.Set("Origin", "http://localhost:5001")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:5001" {
+		t.Errorf("ACAO mismatch: got %q", got)
+	}
+	if got := rec.Header().Get("Vary"); !strings.Contains(got, "Origin") {
+		t.Errorf("Vary should contain Origin, got %q", got)
+	}
+}
+
+func TestCORSRejectsUnknownOrigin(t *testing.T) {
+	s := &Server{cfg: config.Config{
+		CORSAllowedOrigins: []string{"http://localhost:5001"},
+	}}
+	h := s.cors(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	r := httptest.NewRequest(http.MethodPost, "/v1/handshake/establish", nil)
+	r.Header.Set("Origin", "https://evil.example")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("non-allow-listed origin should get no ACAO, got %q", got)
+	}
+}
+
+func TestCORSWildcardAllowsAny(t *testing.T) {
+	s := &Server{cfg: config.Config{
+		CORSAllowedOrigins: []string{"*"},
+	}}
+	h := s.cors(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	r := httptest.NewRequest(http.MethodPost, "/v1/handshake/establish", nil)
+	r.Header.Set("Origin", "https://random.example")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Errorf("wildcard origin should yield '*', got %q", got)
+	}
+}
+
+func TestCORSPreflightShortCircuits(t *testing.T) {
+	s := &Server{cfg: config.Config{
+		CORSAllowedOrigins: []string{"http://localhost:5001"},
+	}}
+	innerCalled := false
+	h := s.cors(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		innerCalled = true
+	}))
+
+	r := httptest.NewRequest(http.MethodOptions, "/v1/handshake/establish", nil)
+	r.Header.Set("Origin", "http://localhost:5001")
+	r.Header.Set("Access-Control-Request-Method", "POST")
+	r.Header.Set("Access-Control-Request-Headers", "content-type")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, r)
+
+	if innerCalled {
+		t.Fatal("preflight must not reach inner handler")
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("preflight should respond 204, got %d", rec.Code)
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Methods"); !strings.Contains(got, "POST") {
+		t.Errorf("ACAM should include POST, got %q", got)
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Headers"); !strings.Contains(got, "content-type") {
+		t.Errorf("ACAH should include content-type, got %q", got)
 	}
 }

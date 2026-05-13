@@ -825,7 +825,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ajoutez une personne que vous connaissez pour la réutiliser entre modules, ou invitez un contact à se connecter via le relais.';
 
   @override
-  String get contactsAddLocalOnlyAction => 'Ajouter un contact';
+  String get contactsAddContactAction => 'Ajouter un contact';
+
+  @override
+  String get contactsAddLocalOnlyAction => 'Ajouter un contact local';
 
   @override
   String get contactsAddLocalOnlyTitle => 'Nouveau contact';

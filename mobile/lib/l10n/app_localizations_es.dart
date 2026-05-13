@@ -819,7 +819,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Añade a alguien que conozcas para reutilizarlo entre módulos, o invita a un contacto a conectarse mediante el relevo.';
 
   @override
-  String get contactsAddLocalOnlyAction => 'Añadir contacto';
+  String get contactsAddContactAction => 'Añadir contacto';
+
+  @override
+  String get contactsAddLocalOnlyAction => 'Añadir contacto local';
 
   @override
   String get contactsAddLocalOnlyTitle => 'Nuevo contacto';

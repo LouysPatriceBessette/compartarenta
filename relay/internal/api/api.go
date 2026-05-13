@@ -72,7 +72,73 @@ func (s *Server) PublicHandler() http.Handler {
 	mux.HandleFunc("/healthz", s.handleHealthz)
 	mux.HandleFunc("/readyz", s.handleReadyz)
 	mux.HandleFunc("/", s.handleNotFound)
-	return s.middleware(mux)
+	return s.cors(s.middleware(mux))
+}
+
+// cors wraps a handler with CORS handling for browser callers.
+//
+// Behaviour:
+//   - When `CORS_ALLOWED_ORIGINS` is empty (default), the middleware is a
+//     no-op and browser clients are blocked at the same-origin boundary,
+//     same as before this feature existed.
+//   - When configured, the middleware adds `Access-Control-Allow-Origin`
+//     on every response whose `Origin` matches the allow-list (echoing
+//     the request's origin exactly, or `*` if the operator opted in to
+//     wildcarding). It also handles CORS preflight (`OPTIONS`) requests
+//     directly with a 204 response and the appropriate
+//     `Access-Control-Allow-Methods` / `Access-Control-Allow-Headers` /
+//     `Access-Control-Max-Age` headers.
+//   - Responses always carry `Vary: Origin` when CORS is active, so
+//     caches don't smush together responses across different callers.
+func (s *Server) cors(next http.Handler) http.Handler {
+	allowed := s.cfg.CORSAllowedOrigins
+	if len(allowed) == 0 {
+		return next
+	}
+	wildcard := false
+	allowSet := make(map[string]struct{}, len(allowed))
+	for _, o := range allowed {
+		if o == "*" {
+			wildcard = true
+			continue
+		}
+		allowSet[o] = struct{}{}
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		allow := ""
+		switch {
+		case origin == "":
+			// Non-browser caller: don't bother emitting CORS headers.
+		case wildcard:
+			allow = "*"
+		default:
+			if _, ok := allowSet[origin]; ok {
+				allow = origin
+			}
+		}
+		if allow != "" {
+			w.Header().Set("Access-Control-Allow-Origin", allow)
+			w.Header().Add("Vary", "Origin")
+		}
+		if r.Method == http.MethodOptions && origin != "" {
+			// Preflight: short-circuit even when the origin does not
+			// match so the browser surfaces a clear "blocked" error
+			// rather than the generic "Failed to fetch".
+			if allow != "" {
+				reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+				if reqHeaders == "" {
+					reqHeaders = "content-type"
+				}
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+				w.Header().Set("Access-Control-Max-Age", "600")
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // SetClock replaces the wall-clock source. Tests only.

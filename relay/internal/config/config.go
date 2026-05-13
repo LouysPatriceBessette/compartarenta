@@ -75,6 +75,17 @@ type Config struct {
 	// ShutdownTimeout caps the time the relay waits for in-flight
 	// requests to complete on SIGTERM/SIGINT. Default: 30s.
 	ShutdownTimeout time.Duration
+
+	// CORSAllowedOrigins is the explicit allow-list of browser origins
+	// authorised to issue cross-origin XHR / fetch requests against the
+	// public protocol endpoints. Each value is matched verbatim against
+	// the request's `Origin` header (scheme + host + optional port).
+	// The special value `*` allows any origin (intended for development
+	// only — browsers reject `*` for requests that send credentials).
+	// Loaded from the env var `CORS_ALLOWED_ORIGINS` (comma-separated).
+	// Default: empty (no CORS headers are emitted; browser callers are
+	// blocked).
+	CORSAllowedOrigins []string
 }
 
 // Load reads configuration from environment variables. Errors are
@@ -95,6 +106,7 @@ func Load() (Config, error) {
 		RateLimitPerIdentity: floatEnv(&errs, "RATE_LIMIT_PER_IDENTITY", 5),
 		RateLimitPerIP:       floatEnv(&errs, "RATE_LIMIT_PER_IP", 20),
 		ShutdownTimeout:      durEnv(&errs, "SHUTDOWN_TIMEOUT", 30*time.Second),
+		CORSAllowedOrigins:   listEnv("CORS_ALLOWED_ORIGINS"),
 	}
 	if c.DatabaseURL == "" {
 		errs = append(errs, errors.New("DATABASE_URL is required and must come from an explicit secret store (not committed)"))
@@ -151,6 +163,26 @@ func floatEnv(errs *[]error, key string, def float64) float64 {
 		return def
 	}
 	return v
+}
+
+func listEnv(key string) []string {
+	raw, ok := os.LookupEnv(key)
+	if !ok {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		s := strings.TrimSpace(p)
+		if s == "" {
+			continue
+		}
+		out = append(out, s)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func durEnv(errs *[]error, key string, def time.Duration) time.Duration {

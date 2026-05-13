@@ -59,6 +59,13 @@ melos:
           dart run melos run run:dev:web -- --web-port=5001
       run: cd mobile && ./tool/run_dev_web.sh
 
+    web:assets:
+      description: |
+        Refresh Drift's web runtime assets (sqlite3.wasm + drift_worker)
+        under mobile/web/ using the versions pinned in pubspec.lock. Run
+        after a `drift` or `sqlite3` version bump.
+      run: cd mobile && ./tool/install_web_assets.sh
+
     build:apk:prod:
       description: Release APK (prod); output under mobile/build/app/outputs/flutter-apk/
       run: cd mobile && flutter build apk --release --flavor prod

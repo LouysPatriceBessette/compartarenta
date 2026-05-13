@@ -55,6 +55,10 @@ When this step is started, it will:
 
 > Implementation note: although this step is listed after Steps 1 and 2 in product terms, the relay deployment must be **live** before Step 1's handshake can complete its first end-to-end run with two real devices. In practice, Step 4's repository skeleton, schema, audit checklist, and a development-environment deployment land **in parallel with** Step 1, and the production deployment goes live before Step 1's handshake feature ships to users.
 
+#### Step 1 follow-ups (developer workflow)
+
+- **Drift web runtime assets.** When the app is run in a desktop browser, Drift loads `sqlite3` as a WebAssembly module and offloads queries to a background worker. Both assets — `mobile/web/sqlite3.wasm` and `mobile/web/drift_worker.dart.js` — must match the `sqlite3` and `drift` versions pinned in `pubspec.lock`. The helper `mobile/tool/install_web_assets.sh` (also exposed as `melos run web:assets`) fetches the matching files from GitHub releases. Refresh after any bump of those two packages.
+
 #### Step 4 follow-ups (deferred until before the first public mobile release)
 
 These items are NOT required for the development deployment of the relay (which is already live and serving `/healthz` end-to-end behind the documented Apache vhost). They MUST be resolved before the first public release of the mobile app that talks to this relay.

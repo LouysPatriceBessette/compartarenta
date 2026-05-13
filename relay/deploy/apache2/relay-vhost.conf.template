@@ -83,6 +83,32 @@
     ProxyPass        /readyz   http://127.0.0.1:8080/readyz
     ProxyPassReverse /readyz   http://127.0.0.1:8080/readyz
 
+    # --- CORS for in-browser builds of the mobile app -----------------
+    # The Flutter Web variant runs on a developer laptop at
+    # http://localhost:<port> and issues cross-origin fetch() calls
+    # against /v1/*. Browsers require CORS preflight on POST with a
+    # JSON body. The relay binary itself supports CORS via
+    # `CORS_ALLOWED_ORIGINS` (preferred), but for vhosts that prefer to
+    # handle CORS at the edge, the snippet below does the same job at
+    # the Apache layer. Remove (or constrain) it once production browser
+    # callers are no longer needed.
+    #
+    # Allow only the dev origins you actually use; do NOT leave `*` in a
+    # production vhost.
+    <LocationMatch "^/v1/">
+        SetEnvIfNoCase Origin "^http://localhost:(5001|5002)$" ALLOWED_ORIGIN=$0
+        Header always set Access-Control-Allow-Origin "%{ALLOWED_ORIGIN}e" env=ALLOWED_ORIGIN
+        Header always append Vary "Origin"
+        # Preflight (OPTIONS) is answered by Apache directly. mod_rewrite
+        # short-circuits the request before it hits the proxy.
+        RewriteEngine On
+        RewriteCond %{REQUEST_METHOD} =OPTIONS
+        RewriteRule ^ - [R=204,L]
+        Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+        Header always set Access-Control-Allow-Headers "Content-Type" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+        Header always set Access-Control-Max-Age "600" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+    </LocationMatch>
+
     # --- Defense-in-depth: block introspection paths at the proxy ---
     # The relay's public listener does not serve /metrics, /admin,
     # /debug, or /pprof in the first place — the metrics endpoint is on
