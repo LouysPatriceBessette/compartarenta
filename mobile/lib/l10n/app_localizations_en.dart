@@ -931,6 +931,68 @@ class AppLocalizationsEn extends AppLocalizations {
       'The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.';
 
   @override
+  String get contactsHandshakeDispatching => 'Sending the request to the relay…';
+
+  @override
+  String get contactsHandshakeDispatched =>
+      'Request sent. Waiting for the inviter to confirm.';
+
+  @override
+  String get contactsHandshakeErrorRelayUnavailable =>
+      'Unable to reach the relay. Check your network and try again.';
+
+  @override
+  String get contactsHandshakeErrorAlreadyCompleted =>
+      'This code has already been used.';
+
+  @override
+  String get contactsHandshakeErrorNonceConsumed =>
+      'This invitation has already been redeemed.';
+
+  @override
+  String get contactsHandshakeErrorExpired => 'This invitation has expired.';
+
+  @override
+  String get contactsHandshakeErrorUnknown =>
+      'Something went wrong while contacting the relay.';
+
+  @override
+  String get contactsIncomingTitle => 'Connection requests';
+
+  @override
+  String get contactsIncomingEmpty => 'No pending connection requests.';
+
+  @override
+  String contactsIncomingBody(String name) => '$name wants to connect.';
+
+  @override
+  String get contactsIncomingAccept => 'Accept';
+
+  @override
+  String get contactsIncomingReject => 'Reject';
+
+  @override
+  String get contactsIncomingBannerOne => '1 new connection request';
+
+  @override
+  String contactsIncomingBannerMany(int count) =>
+      '$count new connection requests';
+
+  @override
+  String get contactsDisconnectAction => 'Disconnect';
+
+  @override
+  String get contactsDisconnectTitle => 'Disconnect from this contact?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Disconnect notice sent. Contact is now local-only.';
+
+  @override
   String get contactsCodeErrorEmpty => 'Enter a code to continue.';
 
   @override

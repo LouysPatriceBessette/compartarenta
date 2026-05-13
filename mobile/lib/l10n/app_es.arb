@@ -360,6 +360,26 @@
     "placeholders": { "id": { "type": "String" } }
   },
   "contactsHandshakeNotAvailableYet": "El intercambio con el relevo aún no está disponible. El código es válido localmente, pero no se puede canjear hasta que el relevo esté en línea.",
+  "contactsHandshakeDispatching": "Enviando la solicitud al relevo…",
+  "contactsHandshakeDispatched": "Solicitud enviada. Esperando la confirmación del anfitrión.",
+  "contactsHandshakeErrorRelayUnavailable": "No se puede conectar con el relevo. Verifica tu red e inténtalo de nuevo.",
+  "contactsHandshakeErrorAlreadyCompleted": "Este código ya se ha utilizado.",
+  "contactsHandshakeErrorNonceConsumed": "Esta invitación ya se ha canjeado.",
+  "contactsHandshakeErrorExpired": "Esta invitación ha expirado.",
+  "contactsHandshakeErrorUnknown": "Algo salió mal al contactar con el relevo.",
+  "contactsIncomingTitle": "Solicitudes de conexión",
+  "contactsIncomingEmpty": "No hay solicitudes de conexión pendientes.",
+  "contactsIncomingBody": "{name} quiere conectarse.",
+  "@contactsIncomingBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "contactsIncomingAccept": "Aceptar",
+  "contactsIncomingReject": "Rechazar",
+  "contactsIncomingBannerOne": "1 nueva solicitud de conexión",
+  "contactsIncomingBannerMany": "{count} nuevas solicitudes de conexión",
+  "@contactsIncomingBannerMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "contactsCodeErrorEmpty": "Introduce un código para continuar.",
   "contactsCodeErrorTooShort": "Este código es demasiado corto.",
   "contactsCodeErrorTooLong": "Este código es demasiado largo.",
@@ -382,6 +402,10 @@
   "contactsBlockTitle": "¿Bloquear este contacto?",
   "contactsBlockBody": "Los mensajes entrantes de este contacto se ignorarán localmente. El relevo no recibe ninguna información del bloqueo.",
   "contactsUnblockTitle": "¿Desbloquear este contacto?",
-  "contactsUnblockBody": "Los mensajes entrantes de este contacto se procesarán de nuevo."
+  "contactsUnblockBody": "Los mensajes entrantes de este contacto se procesarán de nuevo.",
+  "contactsDisconnectAction": "Desconectar",
+  "contactsDisconnectTitle": "¿Desconectar de este contacto?",
+  "contactsDisconnectBody": "Se enviará un aviso de desconexión al relevo. Ambos lados volverán a ser contactos solo locales.",
+  "contactsDisconnectSent": "Aviso de desconexión enviado. El contacto ahora es solo local."
 }
 

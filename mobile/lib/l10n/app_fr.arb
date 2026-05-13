@@ -360,6 +360,26 @@
     "placeholders": { "id": { "type": "String" } }
   },
   "contactsHandshakeNotAvailableYet": "La poignée de main du relais n’est pas encore disponible. Le code est valide localement, mais il ne peut pas être utilisé tant que le relais n’est pas en ligne.",
+  "contactsHandshakeDispatching": "Envoi de la requête au relais…",
+  "contactsHandshakeDispatched": "Requête envoyée. En attente de la confirmation de l’hôte.",
+  "contactsHandshakeErrorRelayUnavailable": "Relais injoignable. Vérifiez votre connexion et réessayez.",
+  "contactsHandshakeErrorAlreadyCompleted": "Ce code a déjà été utilisé.",
+  "contactsHandshakeErrorNonceConsumed": "Cette invitation a déjà été honorée.",
+  "contactsHandshakeErrorExpired": "Cette invitation a expiré.",
+  "contactsHandshakeErrorUnknown": "Une erreur est survenue lors de la communication avec le relais.",
+  "contactsIncomingTitle": "Demandes de connexion",
+  "contactsIncomingEmpty": "Aucune demande de connexion en attente.",
+  "contactsIncomingBody": "{name} souhaite se connecter.",
+  "@contactsIncomingBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "contactsIncomingAccept": "Accepter",
+  "contactsIncomingReject": "Refuser",
+  "contactsIncomingBannerOne": "1 nouvelle demande de connexion",
+  "contactsIncomingBannerMany": "{count} nouvelles demandes de connexion",
+  "@contactsIncomingBannerMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "contactsCodeErrorEmpty": "Saisissez un code pour continuer.",
   "contactsCodeErrorTooShort": "Ce code est trop court.",
   "contactsCodeErrorTooLong": "Ce code est trop long.",
@@ -382,6 +402,10 @@
   "contactsBlockTitle": "Bloquer ce contact ?",
   "contactsBlockBody": "Les messages entrants de ce contact seront ignorés localement. Le relais n’est pas informé du blocage.",
   "contactsUnblockTitle": "Débloquer ce contact ?",
-  "contactsUnblockBody": "Les messages entrants de ce contact seront à nouveau traités."
+  "contactsUnblockBody": "Les messages entrants de ce contact seront à nouveau traités.",
+  "contactsDisconnectAction": "Se déconnecter",
+  "contactsDisconnectTitle": "Se déconnecter de ce contact ?",
+  "contactsDisconnectBody": "Un avis de déconnexion sera envoyé au relais. Les deux côtés repasseront à des contacts locaux uniquement.",
+  "contactsDisconnectSent": "Avis de déconnexion envoyé. Le contact est maintenant local uniquement."
 }
 

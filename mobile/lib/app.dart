@@ -14,8 +14,10 @@ import 'screens/contacts/contact_detail_screen.dart';
 import 'screens/contacts/contact_editor_screen.dart';
 import 'screens/contacts/contacts_list_screen.dart';
 import 'screens/contacts/generate_invitation_screen.dart';
+import 'screens/contacts/incoming_handshakes_screen.dart';
 import 'screens/contacts/outstanding_invitations_screen.dart';
 import 'screens/contacts/redeem_invitation_screen.dart';
+import 'relay/handshake_orchestrator.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/connectivity_banner.dart';
 
@@ -29,7 +31,32 @@ class CompartarentaApp extends StatefulWidget {
 }
 
 class _CompartarentaAppState extends State<CompartarentaApp> {
-  late final Future<AppPreferences> _prefs = AppPreferences.load();
+  late final Future<AppPreferences> _prefs = _loadPrefs();
+
+  Future<AppPreferences> _loadPrefs() async {
+    final prefs = await AppPreferences.load();
+    _wireProfileBroadcaster(prefs);
+    return prefs;
+  }
+
+  String _lastProfileSignature = '';
+  void _wireProfileBroadcaster(AppPreferences prefs) {
+    _lastProfileSignature = '${prefs.displayName}|${prefs.avatarId}';
+    prefs.addListener(() {
+      final sig = '${prefs.displayName}|${prefs.avatarId}';
+      if (sig == _lastProfileSignature) return;
+      _lastProfileSignature = sig;
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch == null) return;
+      if (prefs.displayName.isEmpty || prefs.avatarId.isEmpty) return;
+      // Fire and forget — broadcaster catches its own errors.
+      // ignore: unawaited_futures
+      orch.broadcastProfileUpdate(
+        displayName: prefs.displayName,
+        avatarId: prefs.avatarId,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +156,10 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
           GoRoute(
             path: 'redeem',
             builder: (context, state) => const RedeemInvitationScreen(),
+          ),
+          GoRoute(
+            path: 'incoming',
+            builder: (context, state) => const IncomingHandshakesScreen(),
           ),
           GoRoute(
             path: ':contactId',

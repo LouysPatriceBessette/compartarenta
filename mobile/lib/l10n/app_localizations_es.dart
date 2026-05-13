@@ -937,6 +937,68 @@ class AppLocalizationsEs extends AppLocalizations {
       'El intercambio con el relevo aún no está disponible. El código es válido localmente, pero no se puede canjear hasta que el relevo esté en línea.';
 
   @override
+  String get contactsHandshakeDispatching => 'Enviando la solicitud al relevo…';
+
+  @override
+  String get contactsHandshakeDispatched =>
+      'Solicitud enviada. Esperando la confirmación del anfitrión.';
+
+  @override
+  String get contactsHandshakeErrorRelayUnavailable =>
+      'No se puede conectar con el relevo. Verifica tu red e inténtalo de nuevo.';
+
+  @override
+  String get contactsHandshakeErrorAlreadyCompleted =>
+      'Este código ya se ha utilizado.';
+
+  @override
+  String get contactsHandshakeErrorNonceConsumed =>
+      'Esta invitación ya se ha canjeado.';
+
+  @override
+  String get contactsHandshakeErrorExpired => 'Esta invitación ha expirado.';
+
+  @override
+  String get contactsHandshakeErrorUnknown =>
+      'Algo salió mal al contactar con el relevo.';
+
+  @override
+  String get contactsIncomingTitle => 'Solicitudes de conexión';
+
+  @override
+  String get contactsIncomingEmpty => 'No hay solicitudes de conexión pendientes.';
+
+  @override
+  String contactsIncomingBody(String name) => '$name quiere conectarse.';
+
+  @override
+  String get contactsIncomingAccept => 'Aceptar';
+
+  @override
+  String get contactsIncomingReject => 'Rechazar';
+
+  @override
+  String get contactsIncomingBannerOne => '1 nueva solicitud de conexión';
+
+  @override
+  String contactsIncomingBannerMany(int count) =>
+      '$count nuevas solicitudes de conexión';
+
+  @override
+  String get contactsDisconnectAction => 'Desconectar';
+
+  @override
+  String get contactsDisconnectTitle => '¿Desconectar de este contacto?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'Se enviará un aviso de desconexión al relevo. Ambos lados volverán a ser contactos solo locales.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Aviso de desconexión enviado. El contacto ahora es solo local.';
+
+  @override
   String get contactsCodeErrorEmpty => 'Introduce un código para continuar.';
 
   @override

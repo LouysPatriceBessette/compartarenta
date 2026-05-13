@@ -1,8 +1,10 @@
 > **Implementation status.** Wave A (everything that runs purely on-device,
 > no relay, no crypto primitives) has landed. Wave B (handshake on the
-> relay, disconnect envelopes, profile updates, integration tests against
-> the relay) is paused pending the `relay-server-infrastructure-and-audit`
-> change and cryptographic-primitive selection.
+> relay, disconnect envelopes, profile updates) has now landed on the
+> client side: see `lib/relay/*`, `HandshakeOrchestrator`, and the
+> updated invite/redeem/contact-detail screens. End-to-end integration
+> tests against a live relay (tasks 7.3–7.6) remain pending until the
+> relay deployment is reachable from CI.
 
 ## 1. Data model and migration
 
@@ -32,15 +34,15 @@
 
 ## 4. Handshake protocol over the relay
 
-- [ ] 4.1 Implement the `hello` envelope encoder (invitee → inviter) including invitee's public material, display name, avatar identifier, and echoed nonce.
-- [ ] 4.2 Implement the `ack` envelope encoder (inviter → invitee) including inviter's public material, display name, avatar identifier, and stable relay-routing identifier.
-- [ ] 4.3 Implement the inviter's incoming-handshake confirmation UI (clearly labeled "Incoming connection request", accept / reject).
-- [ ] 4.4 Implement nonce consumption: a nonce becomes invalid as soon as a `hello` envelope referencing it has been validated by the inviter's device, whether the inviter accepts or rejects.
-- [ ] 4.5 Implement the rejection path (no `ack` sent; documented signal back to the invitee).
-- [ ] 4.6 Implement decommissioning of the one-time handshake routing address after the handshake completes (accept or reject).
-- [ ] 4.7 Implement promotion of the local Contact stub to connected on both sides after a successful handshake.
-- [ ] 4.8 Implement profile-update envelopes for connected contacts (display name / avatar changes propagate to peers via encrypted envelopes).
-- [ ] 4.9 Implement disconnect envelope dispatch on the explicit Disconnect action.
+- [x] 4.1 Implement the `hello` envelope encoder (invitee → inviter) including invitee's public material, display name, avatar identifier, and echoed nonce. *(See `lib/relay/envelopes.dart` `EnvelopeCodec.encryptHello/decryptHello` and `relay_envelopes_test.dart`.)*
+- [x] 4.2 Implement the `ack` envelope encoder (inviter → invitee) including inviter's public material, display name, avatar identifier, and stable relay-routing identifier. *(See `EnvelopeCodec.encryptAck/decryptAck`; the steady-state routing id is derived from both long-term keys in `RelayRouting.steadyStateAddress`.)*
+- [x] 4.3 Implement the inviter's incoming-handshake confirmation UI (clearly labeled "Incoming connection request", accept / reject). *(See `IncomingHandshakesScreen` and the banner on `ContactsListScreen`.)*
+- [x] 4.4 Implement nonce consumption: a nonce becomes invalid as soon as a `hello` envelope referencing it has been validated by the inviter's device, whether the inviter accepts or rejects. *(See `HandshakeOrchestrator._consumeInvitation` invoked on hello decryption.)*
+- [x] 4.5 Implement the rejection path (no `ack` sent; documented signal back to the invitee). *(See `HandshakeOrchestrator.rejectIncoming`; the ack frame carries `accepted=false`.)*
+- [x] 4.6 Implement decommissioning of the one-time handshake routing address after the handshake completes (accept or reject). *(See `_decommissionHandshakeAddresses`.)*
+- [x] 4.7 Implement promotion of the local Contact stub to connected on both sides after a successful handshake. *(See `ContactsRepository.promoteToConnected` and the orchestrator's `_finalize*` methods.)*
+- [x] 4.8 Implement profile-update envelopes for connected contacts (display name / avatar changes propagate to peers via encrypted envelopes). *(See `HandshakeOrchestrator.broadcastProfileUpdate` wired in `app.dart` via the prefs listener.)*
+- [x] 4.9 Implement disconnect envelope dispatch on the explicit Disconnect action. *(See `HandshakeOrchestrator.sendDisconnect` and the Disconnect button on `ContactDetailScreen` for connected contacts.)*
 
 ## 5. Module integration contract
 
@@ -51,7 +53,7 @@
 ## 6. Privacy compliance and audit alignment
 
 - [ ] 6.1 Update `mobile-app-privacy-compliance` (or its successor doc) to describe Contacts data and confirm no OS-address-book permission usage.
-- [ ] 6.2 Add a documentation entry describing the relay-payload surface for Contacts (handshake envelopes, profile updates, disconnect) so it can be reviewed alongside `relay-state-schema-and-retention`.
+- [x] 6.2 Add a documentation entry describing the relay-payload surface for Contacts (handshake envelopes, profile updates, disconnect) so it can be reviewed alongside `relay-state-schema-and-retention`. *(See `docs/contacts-module-relay-payload.md`.)*
 - [ ] 6.3 Confirm via code review and tests that no relay request body, header, or query parameter carries plaintext contact metadata.
 
 ## 7. Tests

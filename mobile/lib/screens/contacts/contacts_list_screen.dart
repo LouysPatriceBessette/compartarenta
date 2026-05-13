@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import '../../contacts/avatar_palette.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../relay/handshake_orchestrator.dart';
 
 /// Main entry point for the Contacts area.
 class ContactsListScreen extends StatefulWidget {
@@ -18,6 +21,8 @@ class ContactsListScreen extends StatefulWidget {
 class _ContactsListScreenState extends State<ContactsListScreen> {
   late final AppDatabase _db = AppDatabase();
   late final ContactsRepository _repo = ContactsRepository(_db);
+  HandshakeOrchestrator? get _orchestrator =>
+      HandshakeOrchestrator.maybeInstance;
 
   Future<List<Contact>>? _future;
 
@@ -25,12 +30,34 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   void initState() {
     super.initState();
     _reload();
+    final orch = _orchestrator;
+    if (orch != null) {
+      orch.incomingHandshakes.addListener(_onIncomingChanged);
+      unawaited(orch.processAllPendingHandshakes());
+    }
+  }
+
+  @override
+  void dispose() {
+    _orchestrator?.incomingHandshakes.removeListener(_onIncomingChanged);
+    super.dispose();
+  }
+
+  void _onIncomingChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   void _reload() {
     setState(() {
       _future = _repo.list();
     });
+  }
+
+  Future<void> _openIncoming() async {
+    await context.push('/contacts/incoming');
+    if (!mounted) return;
+    _reload();
   }
 
   @override
@@ -60,36 +87,92 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
         onPressed: () =>
             context.push('/contacts/new').then((_) => _reload()),
       ),
-      body: FutureBuilder<List<Contact>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final items = snapshot.data ?? const <Contact>[];
-          if (items.isEmpty) {
-            return _ContactsEmptyState(
-              onAddLocalOnly: () =>
-                  context.push('/contacts/new').then((_) => _reload()),
-              onInviteContact: () =>
-                  context.push('/contacts/invite/new').then((_) => _reload()),
-            );
-          }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 0),
-            itemBuilder: (context, index) {
-              final contact = items[index];
-              return _ContactTile(
-                contact: contact,
-                onTap: () => context
-                    .push('/contacts/${contact.id}')
-                    .then((_) => _reload()),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          _IncomingBanner(
+            orchestrator: _orchestrator,
+            onTap: _openIncoming,
+          ),
+          Expanded(
+            child: FutureBuilder<List<Contact>>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final items = snapshot.data ?? const <Contact>[];
+                if (items.isEmpty) {
+                  return _ContactsEmptyState(
+                    onAddLocalOnly: () =>
+                        context.push('/contacts/new').then((_) => _reload()),
+                    onInviteContact: () => context
+                        .push('/contacts/invite/new')
+                        .then((_) => _reload()),
+                  );
+                }
+                return ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const Divider(height: 0),
+                  itemBuilder: (context, index) {
+                    final contact = items[index];
+                    return _ContactTile(
+                      contact: contact,
+                      onTap: () => context
+                          .push('/contacts/${contact.id}')
+                          .then((_) => _reload()),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _IncomingBanner extends StatelessWidget {
+  const _IncomingBanner({required this.orchestrator, required this.onTap});
+
+  final HandshakeOrchestrator? orchestrator;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final orch = orchestrator;
+    if (orch == null) return const SizedBox.shrink();
+    return ValueListenableBuilder<List<IncomingHandshakeView>>(
+      valueListenable: orch.incomingHandshakes,
+      builder: (context, value, _) {
+        if (value.isEmpty) return const SizedBox.shrink();
+        final count = value.length;
+        return Material(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.notifications_active_outlined),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      count == 1
+                          ? l10n.contactsIncomingBannerOne
+                          : l10n.contactsIncomingBannerMany(count),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

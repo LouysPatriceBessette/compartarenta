@@ -4,13 +4,15 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 
 /// Screen for the invitee to enter a received invitation code.
 ///
-/// At this stage (Wave A) the screen only performs **local** checksum
-/// validation and stores the parsed code in the local state — it never
-/// dispatches a `hello` envelope to the relay. The actual relay handshake
-/// is wired in Wave B together with the cryptographic primitives.
+/// Performs a local checksum validation, then — when the user taps
+/// Connect — dispatches the encrypted `hello` envelope to the relay via
+/// [HandshakeOrchestrator]. The accepted/rejected outcome is surfaced
+/// later by the orchestrator's poller (see `ContactsListScreen`).
 class RedeemInvitationScreen extends StatefulWidget {
   const RedeemInvitationScreen({super.key});
 
@@ -21,6 +23,9 @@ class RedeemInvitationScreen extends StatefulWidget {
 class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   final _controller = TextEditingController();
   InvitationCodeParseResult? _result;
+  bool _dispatching = false;
+  String? _dispatchError;
+  bool _dispatched = false;
 
   @override
   void dispose() {
@@ -30,7 +35,69 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
 
   void _validate() {
     final value = _controller.text;
-    setState(() => _result = parseInvitationInput(value));
+    setState(() {
+      _result = parseInvitationInput(value);
+      _dispatchError = null;
+      _dispatched = false;
+    });
+  }
+
+  Future<void> _connect(InvitationCode code) async {
+    if (_dispatching) return;
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) {
+      _showHandshakeUnavailable(context);
+      return;
+    }
+    setState(() {
+      _dispatching = true;
+      _dispatchError = null;
+      _dispatched = false;
+    });
+    try {
+      final prefs = await AppPreferences.load();
+      final selfName = prefs.displayName.isEmpty ? 'Unknown' : prefs.displayName;
+      final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+      await orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: selfName,
+        selfAvatarId: selfAvatar,
+      );
+      // Kick the poller immediately so the invitee sees the ack as soon
+      // as it lands. Errors here are swallowed and surfaced through
+      // the steady-state poller instead.
+      // ignore: unawaited_futures
+      orchestrator.processAllPendingHandshakes();
+      if (!mounted) return;
+      setState(() {
+        _dispatching = false;
+        _dispatched = true;
+      });
+    } on HandshakeOrchestratorError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _dispatching = false;
+        _dispatchError = e.code;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _dispatching = false;
+        _dispatchError = e.toString();
+      });
+    }
+  }
+
+  String _errorLabel(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context);
+    return switch (code) {
+      'relay_unavailable' => l10n.contactsHandshakeErrorRelayUnavailable,
+      'relay_error' => l10n.contactsHandshakeErrorRelayUnavailable,
+      'already_completed' => l10n.contactsHandshakeErrorAlreadyCompleted,
+      'nonce_already_consumed' => l10n.contactsHandshakeErrorNonceConsumed,
+      'expired_code' => l10n.contactsHandshakeErrorExpired,
+      _ => l10n.contactsHandshakeErrorUnknown,
+    };
   }
 
   Future<void> _pasteFromClipboard() async {
@@ -103,14 +170,41 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               if (result is InvitationCodeOk)
                 _OkResult(invitationIdHex: result.code.invitationIdHex()),
               if (result is InvitationCodeBad) _BadResult(error: result.error),
+              if (_dispatchError != null) ...[
+                const SizedBox(height: 8),
+                Card(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.cloud_off_outlined),
+                    title: Text(_errorLabel(context, _dispatchError!)),
+                  ),
+                ),
+              ],
+              if (_dispatched) ...[
+                const SizedBox(height: 8),
+                Card(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.hourglass_top_outlined),
+                    title: Text(l10n.contactsHandshakeDispatched),
+                  ),
+                ),
+              ],
               const Spacer(),
               FilledButton.icon(
-                icon: const Icon(Icons.send_outlined),
-                label: Text(l10n.contactsEnterInviteCodeSubmit),
-                onPressed: result is InvitationCodeOk
-                    ? () {
-                        _showHandshakeUnavailable(context);
-                      }
+                icon: _dispatching
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_outlined),
+                label: Text(
+                  _dispatching
+                      ? l10n.contactsHandshakeDispatching
+                      : l10n.contactsEnterInviteCodeSubmit,
+                ),
+                onPressed: (result is InvitationCodeOk && !_dispatching && !_dispatched)
+                    ? () => _connect(result.code)
                     : null,
               ),
               const SizedBox(height: 4),

@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
-import '../../contacts/invitation_code.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 
 /// Screen that generates a new invitation code on-device and presents it
 /// for out-of-band sharing. Never contacts the network.
@@ -25,14 +26,9 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   );
 
   Duration _validFor = const Duration(hours: 24);
-  ({
-    ContactInvitation row,
-    InvitationCode code,
-    String shortCode,
-    String deepLink,
-  })?
-  _generated;
+  _GeneratedInvitation? _generated;
   bool _generating = false;
+  String? _error;
 
   static const _options = <(Duration, String)>[
     (Duration(hours: 1), '1h'),
@@ -42,13 +38,55 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
 
   Future<void> _generate() async {
     if (_generating) return;
-    setState(() => _generating = true);
-    final result = await _repo.generate(validFor: _validFor);
-    if (!mounted) return;
     setState(() {
-      _generated = result;
-      _generating = false;
+      _generating = true;
+      _error = null;
     });
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    try {
+      _GeneratedInvitation result;
+      if (orchestrator != null) {
+        final prefs = await AppPreferences.load();
+        final stubName = prefs.displayName.isEmpty
+            ? 'Pending invitation'
+            : '${prefs.displayName}\u2019s contact';
+        final stubAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+        final r = await orchestrator.generateInvitation(
+          validFor: _validFor,
+          stubDisplayName: stubName,
+          stubAvatarId: stubAvatar,
+        );
+        result = _GeneratedInvitation(
+          row: r.invitation,
+          shortCode: r.shortCode,
+          deepLink: r.deepLink,
+        );
+      } else {
+        final r = await _repo.generate(validFor: _validFor);
+        result = _GeneratedInvitation(
+          row: r.row,
+          shortCode: r.shortCode,
+          deepLink: r.deepLink,
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _generated = result;
+        _generating = false;
+      });
+    } on HandshakeOrchestratorError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _generating = false;
+        _error = e.code;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _generating = false;
+        _error = e.toString();
+      });
+    }
   }
 
   Future<void> _revoke() async {
@@ -75,6 +113,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
                   onSelect: (d) => setState(() => _validFor = d),
                   onGenerate: _generate,
                   busy: _generating,
+                  error: _error,
                 )
               : _GeneratedView(
                   shortCode: generated.shortCode,
@@ -89,6 +128,18 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   }
 }
 
+class _GeneratedInvitation {
+  const _GeneratedInvitation({
+    required this.row,
+    required this.shortCode,
+    required this.deepLink,
+  });
+
+  final ContactInvitation row;
+  final String shortCode;
+  final String deepLink;
+}
+
 class _IntroForm extends StatelessWidget {
   const _IntroForm({
     required this.selected,
@@ -96,6 +147,7 @@ class _IntroForm extends StatelessWidget {
     required this.onSelect,
     required this.onGenerate,
     required this.busy,
+    this.error,
   });
 
   final Duration selected;
@@ -103,6 +155,7 @@ class _IntroForm extends StatelessWidget {
   final ValueChanged<Duration> onSelect;
   final VoidCallback onGenerate;
   final bool busy;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +183,13 @@ class _IntroForm extends StatelessWidget {
           selected: {selected},
           onSelectionChanged: (s) => onSelect(s.first),
         ),
+        if (error != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
         const Spacer(),
         FilledButton.icon(
           icon: const Icon(Icons.send),

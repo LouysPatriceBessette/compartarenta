@@ -5619,6 +5619,831 @@ class ContactInvitationsCompanion extends UpdateCompanion<ContactInvitation> {
   }
 }
 
+class $PendingHandshakesTable extends PendingHandshakes
+    with TableInfo<$PendingHandshakesTable, PendingHandshake> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingHandshakesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _invitationIdHexMeta = const VerificationMeta(
+    'invitationIdHex',
+  );
+  @override
+  late final GeneratedColumn<String> invitationIdHex = GeneratedColumn<String>(
+    'invitation_id_hex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nonceHexMeta = const VerificationMeta(
+    'nonceHex',
+  );
+  @override
+  late final GeneratedColumn<String> nonceHex = GeneratedColumn<String>(
+    'nonce_hex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contactStubIdMeta = const VerificationMeta(
+    'contactStubId',
+  );
+  @override
+  late final GeneratedColumn<String> contactStubId = GeneratedColumn<String>(
+    'contact_stub_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _peerLongTermPublicMaterialB64Meta =
+      const VerificationMeta('peerLongTermPublicMaterialB64');
+  @override
+  late final GeneratedColumn<String> peerLongTermPublicMaterialB64 =
+      GeneratedColumn<String>(
+        'peer_long_term_public_material_b64',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _peerDisplayNameMeta = const VerificationMeta(
+    'peerDisplayName',
+  );
+  @override
+  late final GeneratedColumn<String> peerDisplayName = GeneratedColumn<String>(
+    'peer_display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _peerAvatarIdMeta = const VerificationMeta(
+    'peerAvatarId',
+  );
+  @override
+  late final GeneratedColumn<String> peerAvatarId = GeneratedColumn<String>(
+    'peer_avatar_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta(
+    'lastErrorCode',
+  );
+  @override
+  late final GeneratedColumn<String> lastErrorCode = GeneratedColumn<String>(
+    'last_error_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    invitationIdHex,
+    nonceHex,
+    role,
+    state,
+    contactStubId,
+    peerLongTermPublicMaterialB64,
+    peerDisplayName,
+    peerAvatarId,
+    lastErrorCode,
+    createdAt,
+    updatedAt,
+    expiresAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_handshakes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingHandshake> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('invitation_id_hex')) {
+      context.handle(
+        _invitationIdHexMeta,
+        invitationIdHex.isAcceptableOrUnknown(
+          data['invitation_id_hex']!,
+          _invitationIdHexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_invitationIdHexMeta);
+    }
+    if (data.containsKey('nonce_hex')) {
+      context.handle(
+        _nonceHexMeta,
+        nonceHex.isAcceptableOrUnknown(data['nonce_hex']!, _nonceHexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nonceHexMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stateMeta);
+    }
+    if (data.containsKey('contact_stub_id')) {
+      context.handle(
+        _contactStubIdMeta,
+        contactStubId.isAcceptableOrUnknown(
+          data['contact_stub_id']!,
+          _contactStubIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contactStubIdMeta);
+    }
+    if (data.containsKey('peer_long_term_public_material_b64')) {
+      context.handle(
+        _peerLongTermPublicMaterialB64Meta,
+        peerLongTermPublicMaterialB64.isAcceptableOrUnknown(
+          data['peer_long_term_public_material_b64']!,
+          _peerLongTermPublicMaterialB64Meta,
+        ),
+      );
+    }
+    if (data.containsKey('peer_display_name')) {
+      context.handle(
+        _peerDisplayNameMeta,
+        peerDisplayName.isAcceptableOrUnknown(
+          data['peer_display_name']!,
+          _peerDisplayNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('peer_avatar_id')) {
+      context.handle(
+        _peerAvatarIdMeta,
+        peerAvatarId.isAcceptableOrUnknown(
+          data['peer_avatar_id']!,
+          _peerAvatarIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error_code')) {
+      context.handle(
+        _lastErrorCodeMeta,
+        lastErrorCode.isAcceptableOrUnknown(
+          data['last_error_code']!,
+          _lastErrorCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingHandshake map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingHandshake(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      invitationIdHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}invitation_id_hex'],
+      )!,
+      nonceHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nonce_hex'],
+      )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      contactStubId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contact_stub_id'],
+      )!,
+      peerLongTermPublicMaterialB64: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_long_term_public_material_b64'],
+      ),
+      peerDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_display_name'],
+      )!,
+      peerAvatarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_avatar_id'],
+      )!,
+      lastErrorCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error_code'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingHandshakesTable createAlias(String alias) {
+    return $PendingHandshakesTable(attachedDatabase, alias);
+  }
+}
+
+class PendingHandshake extends DataClass
+    implements Insertable<PendingHandshake> {
+  /// `${invitationIdHex}:${role}` — uniquely identifies a row even if
+  /// the same user happens to generate AND receive a code with the same
+  /// invitation id (collision probability ≈ 1/2^64).
+  final String id;
+
+  /// Hex of the 8-byte invitation id.
+  final String invitationIdHex;
+
+  /// Hex of the 12-byte invitation nonce. Stored on both sides so the
+  /// orchestrator does not need to re-derive it from the code on every
+  /// envelope decryption.
+  final String nonceHex;
+
+  /// `inviter` (we generated the code) | `invitee` (we received it).
+  final String role;
+
+  /// Lifecycle. `awaiting_hello` and `awaiting_ack` are the polling
+  /// states; the rest are terminal.
+  ///   * inviter: `awaiting_hello` → `accepted`|`rejected` → `completed`
+  ///   * invitee: `awaiting_ack`   → `accepted`|`rejected`
+  ///   * either:  `failed` on unrecoverable error (e.g., expired code).
+  final String state;
+
+  /// Local Contact id to promote on success. On the inviter side this is
+  /// the stub created when the code was generated. On the invitee side
+  /// it is the stub created when the hello was dispatched.
+  final String contactStubId;
+
+  /// Filled when the peer's long-term X25519 public key is known. For
+  /// the inviter, after the hello is decrypted. For the invitee, after
+  /// the ack is decrypted.
+  final String? peerLongTermPublicMaterialB64;
+
+  /// Self-reported display name from the peer (informational; the local
+  /// Contact's displayName is the authoritative one).
+  final String peerDisplayName;
+
+  /// Self-reported avatar id from the peer.
+  final String peerAvatarId;
+
+  /// Last error code captured by the orchestrator (for diagnostics).
+  /// Empty string when no error.
+  final String lastErrorCode;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime expiresAt;
+  const PendingHandshake({
+    required this.id,
+    required this.invitationIdHex,
+    required this.nonceHex,
+    required this.role,
+    required this.state,
+    required this.contactStubId,
+    this.peerLongTermPublicMaterialB64,
+    required this.peerDisplayName,
+    required this.peerAvatarId,
+    required this.lastErrorCode,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.expiresAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['invitation_id_hex'] = Variable<String>(invitationIdHex);
+    map['nonce_hex'] = Variable<String>(nonceHex);
+    map['role'] = Variable<String>(role);
+    map['state'] = Variable<String>(state);
+    map['contact_stub_id'] = Variable<String>(contactStubId);
+    if (!nullToAbsent || peerLongTermPublicMaterialB64 != null) {
+      map['peer_long_term_public_material_b64'] = Variable<String>(
+        peerLongTermPublicMaterialB64,
+      );
+    }
+    map['peer_display_name'] = Variable<String>(peerDisplayName);
+    map['peer_avatar_id'] = Variable<String>(peerAvatarId);
+    map['last_error_code'] = Variable<String>(lastErrorCode);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    return map;
+  }
+
+  PendingHandshakesCompanion toCompanion(bool nullToAbsent) {
+    return PendingHandshakesCompanion(
+      id: Value(id),
+      invitationIdHex: Value(invitationIdHex),
+      nonceHex: Value(nonceHex),
+      role: Value(role),
+      state: Value(state),
+      contactStubId: Value(contactStubId),
+      peerLongTermPublicMaterialB64:
+          peerLongTermPublicMaterialB64 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(peerLongTermPublicMaterialB64),
+      peerDisplayName: Value(peerDisplayName),
+      peerAvatarId: Value(peerAvatarId),
+      lastErrorCode: Value(lastErrorCode),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      expiresAt: Value(expiresAt),
+    );
+  }
+
+  factory PendingHandshake.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingHandshake(
+      id: serializer.fromJson<String>(json['id']),
+      invitationIdHex: serializer.fromJson<String>(json['invitationIdHex']),
+      nonceHex: serializer.fromJson<String>(json['nonceHex']),
+      role: serializer.fromJson<String>(json['role']),
+      state: serializer.fromJson<String>(json['state']),
+      contactStubId: serializer.fromJson<String>(json['contactStubId']),
+      peerLongTermPublicMaterialB64: serializer.fromJson<String?>(
+        json['peerLongTermPublicMaterialB64'],
+      ),
+      peerDisplayName: serializer.fromJson<String>(json['peerDisplayName']),
+      peerAvatarId: serializer.fromJson<String>(json['peerAvatarId']),
+      lastErrorCode: serializer.fromJson<String>(json['lastErrorCode']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'invitationIdHex': serializer.toJson<String>(invitationIdHex),
+      'nonceHex': serializer.toJson<String>(nonceHex),
+      'role': serializer.toJson<String>(role),
+      'state': serializer.toJson<String>(state),
+      'contactStubId': serializer.toJson<String>(contactStubId),
+      'peerLongTermPublicMaterialB64': serializer.toJson<String?>(
+        peerLongTermPublicMaterialB64,
+      ),
+      'peerDisplayName': serializer.toJson<String>(peerDisplayName),
+      'peerAvatarId': serializer.toJson<String>(peerAvatarId),
+      'lastErrorCode': serializer.toJson<String>(lastErrorCode),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+    };
+  }
+
+  PendingHandshake copyWith({
+    String? id,
+    String? invitationIdHex,
+    String? nonceHex,
+    String? role,
+    String? state,
+    String? contactStubId,
+    Value<String?> peerLongTermPublicMaterialB64 = const Value.absent(),
+    String? peerDisplayName,
+    String? peerAvatarId,
+    String? lastErrorCode,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? expiresAt,
+  }) => PendingHandshake(
+    id: id ?? this.id,
+    invitationIdHex: invitationIdHex ?? this.invitationIdHex,
+    nonceHex: nonceHex ?? this.nonceHex,
+    role: role ?? this.role,
+    state: state ?? this.state,
+    contactStubId: contactStubId ?? this.contactStubId,
+    peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64.present
+        ? peerLongTermPublicMaterialB64.value
+        : this.peerLongTermPublicMaterialB64,
+    peerDisplayName: peerDisplayName ?? this.peerDisplayName,
+    peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+    lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    expiresAt: expiresAt ?? this.expiresAt,
+  );
+  PendingHandshake copyWithCompanion(PendingHandshakesCompanion data) {
+    return PendingHandshake(
+      id: data.id.present ? data.id.value : this.id,
+      invitationIdHex: data.invitationIdHex.present
+          ? data.invitationIdHex.value
+          : this.invitationIdHex,
+      nonceHex: data.nonceHex.present ? data.nonceHex.value : this.nonceHex,
+      role: data.role.present ? data.role.value : this.role,
+      state: data.state.present ? data.state.value : this.state,
+      contactStubId: data.contactStubId.present
+          ? data.contactStubId.value
+          : this.contactStubId,
+      peerLongTermPublicMaterialB64: data.peerLongTermPublicMaterialB64.present
+          ? data.peerLongTermPublicMaterialB64.value
+          : this.peerLongTermPublicMaterialB64,
+      peerDisplayName: data.peerDisplayName.present
+          ? data.peerDisplayName.value
+          : this.peerDisplayName,
+      peerAvatarId: data.peerAvatarId.present
+          ? data.peerAvatarId.value
+          : this.peerAvatarId,
+      lastErrorCode: data.lastErrorCode.present
+          ? data.lastErrorCode.value
+          : this.lastErrorCode,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingHandshake(')
+          ..write('id: $id, ')
+          ..write('invitationIdHex: $invitationIdHex, ')
+          ..write('nonceHex: $nonceHex, ')
+          ..write('role: $role, ')
+          ..write('state: $state, ')
+          ..write('contactStubId: $contactStubId, ')
+          ..write(
+            'peerLongTermPublicMaterialB64: $peerLongTermPublicMaterialB64, ',
+          )
+          ..write('peerDisplayName: $peerDisplayName, ')
+          ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    invitationIdHex,
+    nonceHex,
+    role,
+    state,
+    contactStubId,
+    peerLongTermPublicMaterialB64,
+    peerDisplayName,
+    peerAvatarId,
+    lastErrorCode,
+    createdAt,
+    updatedAt,
+    expiresAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingHandshake &&
+          other.id == this.id &&
+          other.invitationIdHex == this.invitationIdHex &&
+          other.nonceHex == this.nonceHex &&
+          other.role == this.role &&
+          other.state == this.state &&
+          other.contactStubId == this.contactStubId &&
+          other.peerLongTermPublicMaterialB64 ==
+              this.peerLongTermPublicMaterialB64 &&
+          other.peerDisplayName == this.peerDisplayName &&
+          other.peerAvatarId == this.peerAvatarId &&
+          other.lastErrorCode == this.lastErrorCode &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.expiresAt == this.expiresAt);
+}
+
+class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
+  final Value<String> id;
+  final Value<String> invitationIdHex;
+  final Value<String> nonceHex;
+  final Value<String> role;
+  final Value<String> state;
+  final Value<String> contactStubId;
+  final Value<String?> peerLongTermPublicMaterialB64;
+  final Value<String> peerDisplayName;
+  final Value<String> peerAvatarId;
+  final Value<String> lastErrorCode;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> expiresAt;
+  final Value<int> rowid;
+  const PendingHandshakesCompanion({
+    this.id = const Value.absent(),
+    this.invitationIdHex = const Value.absent(),
+    this.nonceHex = const Value.absent(),
+    this.role = const Value.absent(),
+    this.state = const Value.absent(),
+    this.contactStubId = const Value.absent(),
+    this.peerLongTermPublicMaterialB64 = const Value.absent(),
+    this.peerDisplayName = const Value.absent(),
+    this.peerAvatarId = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingHandshakesCompanion.insert({
+    required String id,
+    required String invitationIdHex,
+    required String nonceHex,
+    required String role,
+    required String state,
+    required String contactStubId,
+    this.peerLongTermPublicMaterialB64 = const Value.absent(),
+    this.peerDisplayName = const Value.absent(),
+    this.peerAvatarId = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required DateTime expiresAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       invitationIdHex = Value(invitationIdHex),
+       nonceHex = Value(nonceHex),
+       role = Value(role),
+       state = Value(state),
+       contactStubId = Value(contactStubId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       expiresAt = Value(expiresAt);
+  static Insertable<PendingHandshake> custom({
+    Expression<String>? id,
+    Expression<String>? invitationIdHex,
+    Expression<String>? nonceHex,
+    Expression<String>? role,
+    Expression<String>? state,
+    Expression<String>? contactStubId,
+    Expression<String>? peerLongTermPublicMaterialB64,
+    Expression<String>? peerDisplayName,
+    Expression<String>? peerAvatarId,
+    Expression<String>? lastErrorCode,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? expiresAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (invitationIdHex != null) 'invitation_id_hex': invitationIdHex,
+      if (nonceHex != null) 'nonce_hex': nonceHex,
+      if (role != null) 'role': role,
+      if (state != null) 'state': state,
+      if (contactStubId != null) 'contact_stub_id': contactStubId,
+      if (peerLongTermPublicMaterialB64 != null)
+        'peer_long_term_public_material_b64': peerLongTermPublicMaterialB64,
+      if (peerDisplayName != null) 'peer_display_name': peerDisplayName,
+      if (peerAvatarId != null) 'peer_avatar_id': peerAvatarId,
+      if (lastErrorCode != null) 'last_error_code': lastErrorCode,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingHandshakesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? invitationIdHex,
+    Value<String>? nonceHex,
+    Value<String>? role,
+    Value<String>? state,
+    Value<String>? contactStubId,
+    Value<String?>? peerLongTermPublicMaterialB64,
+    Value<String>? peerDisplayName,
+    Value<String>? peerAvatarId,
+    Value<String>? lastErrorCode,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime>? expiresAt,
+    Value<int>? rowid,
+  }) {
+    return PendingHandshakesCompanion(
+      id: id ?? this.id,
+      invitationIdHex: invitationIdHex ?? this.invitationIdHex,
+      nonceHex: nonceHex ?? this.nonceHex,
+      role: role ?? this.role,
+      state: state ?? this.state,
+      contactStubId: contactStubId ?? this.contactStubId,
+      peerLongTermPublicMaterialB64:
+          peerLongTermPublicMaterialB64 ?? this.peerLongTermPublicMaterialB64,
+      peerDisplayName: peerDisplayName ?? this.peerDisplayName,
+      peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+      lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (invitationIdHex.present) {
+      map['invitation_id_hex'] = Variable<String>(invitationIdHex.value);
+    }
+    if (nonceHex.present) {
+      map['nonce_hex'] = Variable<String>(nonceHex.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (contactStubId.present) {
+      map['contact_stub_id'] = Variable<String>(contactStubId.value);
+    }
+    if (peerLongTermPublicMaterialB64.present) {
+      map['peer_long_term_public_material_b64'] = Variable<String>(
+        peerLongTermPublicMaterialB64.value,
+      );
+    }
+    if (peerDisplayName.present) {
+      map['peer_display_name'] = Variable<String>(peerDisplayName.value);
+    }
+    if (peerAvatarId.present) {
+      map['peer_avatar_id'] = Variable<String>(peerAvatarId.value);
+    }
+    if (lastErrorCode.present) {
+      map['last_error_code'] = Variable<String>(lastErrorCode.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingHandshakesCompanion(')
+          ..write('id: $id, ')
+          ..write('invitationIdHex: $invitationIdHex, ')
+          ..write('nonceHex: $nonceHex, ')
+          ..write('role: $role, ')
+          ..write('state: $state, ')
+          ..write('contactStubId: $contactStubId, ')
+          ..write(
+            'peerLongTermPublicMaterialB64: $peerLongTermPublicMaterialB64, ',
+          )
+          ..write('peerDisplayName: $peerDisplayName, ')
+          ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5638,6 +6463,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $ContactInvitationsTable contactInvitations =
       $ContactInvitationsTable(this);
+  late final $PendingHandshakesTable pendingHandshakes =
+      $PendingHandshakesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5654,6 +6481,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     proposalResponses,
     contacts,
     contactInvitations,
+    pendingHandshakes,
   ];
 }
 
@@ -8487,6 +9315,387 @@ typedef $$ContactInvitationsTableProcessedTableManager =
       ContactInvitation,
       PrefetchHooks Function()
     >;
+typedef $$PendingHandshakesTableCreateCompanionBuilder =
+    PendingHandshakesCompanion Function({
+      required String id,
+      required String invitationIdHex,
+      required String nonceHex,
+      required String role,
+      required String state,
+      required String contactStubId,
+      Value<String?> peerLongTermPublicMaterialB64,
+      Value<String> peerDisplayName,
+      Value<String> peerAvatarId,
+      Value<String> lastErrorCode,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      required DateTime expiresAt,
+      Value<int> rowid,
+    });
+typedef $$PendingHandshakesTableUpdateCompanionBuilder =
+    PendingHandshakesCompanion Function({
+      Value<String> id,
+      Value<String> invitationIdHex,
+      Value<String> nonceHex,
+      Value<String> role,
+      Value<String> state,
+      Value<String> contactStubId,
+      Value<String?> peerLongTermPublicMaterialB64,
+      Value<String> peerDisplayName,
+      Value<String> peerAvatarId,
+      Value<String> lastErrorCode,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime> expiresAt,
+      Value<int> rowid,
+    });
+
+class $$PendingHandshakesTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingHandshakesTable> {
+  $$PendingHandshakesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get invitationIdHex => $composableBuilder(
+    column: $table.invitationIdHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nonceHex => $composableBuilder(
+    column: $table.nonceHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerLongTermPublicMaterialB64 => $composableBuilder(
+    column: $table.peerLongTermPublicMaterialB64,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingHandshakesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingHandshakesTable> {
+  $$PendingHandshakesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get invitationIdHex => $composableBuilder(
+    column: $table.invitationIdHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nonceHex => $composableBuilder(
+    column: $table.nonceHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerLongTermPublicMaterialB64 =>
+      $composableBuilder(
+        column: $table.peerLongTermPublicMaterialB64,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingHandshakesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingHandshakesTable> {
+  $$PendingHandshakesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get invitationIdHex => $composableBuilder(
+    column: $table.invitationIdHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nonceHex =>
+      $composableBuilder(column: $table.nonceHex, builder: (column) => column);
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumn<String> get contactStubId => $composableBuilder(
+    column: $table.contactStubId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerLongTermPublicMaterialB64 =>
+      $composableBuilder(
+        column: $table.peerLongTermPublicMaterialB64,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+}
+
+class $$PendingHandshakesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingHandshakesTable,
+          PendingHandshake,
+          $$PendingHandshakesTableFilterComposer,
+          $$PendingHandshakesTableOrderingComposer,
+          $$PendingHandshakesTableAnnotationComposer,
+          $$PendingHandshakesTableCreateCompanionBuilder,
+          $$PendingHandshakesTableUpdateCompanionBuilder,
+          (
+            PendingHandshake,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingHandshakesTable,
+              PendingHandshake
+            >,
+          ),
+          PendingHandshake,
+          PrefetchHooks Function()
+        > {
+  $$PendingHandshakesTableTableManager(
+    _$AppDatabase db,
+    $PendingHandshakesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingHandshakesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingHandshakesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingHandshakesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> invitationIdHex = const Value.absent(),
+                Value<String> nonceHex = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<String> contactStubId = const Value.absent(),
+                Value<String?> peerLongTermPublicMaterialB64 =
+                    const Value.absent(),
+                Value<String> peerDisplayName = const Value.absent(),
+                Value<String> peerAvatarId = const Value.absent(),
+                Value<String> lastErrorCode = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime> expiresAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingHandshakesCompanion(
+                id: id,
+                invitationIdHex: invitationIdHex,
+                nonceHex: nonceHex,
+                role: role,
+                state: state,
+                contactStubId: contactStubId,
+                peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64,
+                peerDisplayName: peerDisplayName,
+                peerAvatarId: peerAvatarId,
+                lastErrorCode: lastErrorCode,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String invitationIdHex,
+                required String nonceHex,
+                required String role,
+                required String state,
+                required String contactStubId,
+                Value<String?> peerLongTermPublicMaterialB64 =
+                    const Value.absent(),
+                Value<String> peerDisplayName = const Value.absent(),
+                Value<String> peerAvatarId = const Value.absent(),
+                Value<String> lastErrorCode = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                required DateTime expiresAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingHandshakesCompanion.insert(
+                id: id,
+                invitationIdHex: invitationIdHex,
+                nonceHex: nonceHex,
+                role: role,
+                state: state,
+                contactStubId: contactStubId,
+                peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64,
+                peerDisplayName: peerDisplayName,
+                peerAvatarId: peerAvatarId,
+                lastErrorCode: lastErrorCode,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingHandshakesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingHandshakesTable,
+      PendingHandshake,
+      $$PendingHandshakesTableFilterComposer,
+      $$PendingHandshakesTableOrderingComposer,
+      $$PendingHandshakesTableAnnotationComposer,
+      $$PendingHandshakesTableCreateCompanionBuilder,
+      $$PendingHandshakesTableUpdateCompanionBuilder,
+      (
+        PendingHandshake,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingHandshakesTable,
+          PendingHandshake
+        >,
+      ),
+      PendingHandshake,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8513,4 +9722,6 @@ class $AppDatabaseManager {
       $$ContactsTableTableManager(_db, _db.contacts);
   $$ContactInvitationsTableTableManager get contactInvitations =>
       $$ContactInvitationsTableTableManager(_db, _db.contactInvitations);
+  $$PendingHandshakesTableTableManager get pendingHandshakes =>
+      $$PendingHandshakesTableTableManager(_db, _db.pendingHandshakes);
 }

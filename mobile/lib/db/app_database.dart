@@ -222,6 +222,72 @@ class ContactInvitations extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// One row per in-flight Contacts handshake on this device. Created on
+/// both sides:
+///
+/// * On the **inviter** side, immediately after generating a code and
+///   pre-registering the handshake routing on the relay.
+/// * On the **invitee** side, immediately after the invitee taps "Send
+///   request" in the redeem screen and the hello envelope is being
+///   dispatched.
+///
+/// Rows are removed (or marked `completed` / `rejected` / `failed`) once
+/// the handshake reaches a terminal state. The orchestrator inspects
+/// non-terminal rows on app start, and periodically while the app is in
+/// the foreground, to drive the polling loop.
+class PendingHandshakes extends Table {
+  /// `${invitationIdHex}:${role}` — uniquely identifies a row even if
+  /// the same user happens to generate AND receive a code with the same
+  /// invitation id (collision probability ≈ 1/2^64).
+  TextColumn get id => text()();
+
+  /// Hex of the 8-byte invitation id.
+  TextColumn get invitationIdHex => text()();
+
+  /// Hex of the 12-byte invitation nonce. Stored on both sides so the
+  /// orchestrator does not need to re-derive it from the code on every
+  /// envelope decryption.
+  TextColumn get nonceHex => text()();
+
+  /// `inviter` (we generated the code) | `invitee` (we received it).
+  TextColumn get role => text()();
+
+  /// Lifecycle. `awaiting_hello` and `awaiting_ack` are the polling
+  /// states; the rest are terminal.
+  ///   * inviter: `awaiting_hello` → `accepted`|`rejected` → `completed`
+  ///   * invitee: `awaiting_ack`   → `accepted`|`rejected`
+  ///   * either:  `failed` on unrecoverable error (e.g., expired code).
+  TextColumn get state => text()();
+
+  /// Local Contact id to promote on success. On the inviter side this is
+  /// the stub created when the code was generated. On the invitee side
+  /// it is the stub created when the hello was dispatched.
+  TextColumn get contactStubId => text()();
+
+  /// Filled when the peer's long-term X25519 public key is known. For
+  /// the inviter, after the hello is decrypted. For the invitee, after
+  /// the ack is decrypted.
+  TextColumn get peerLongTermPublicMaterialB64 => text().nullable()();
+
+  /// Self-reported display name from the peer (informational; the local
+  /// Contact's displayName is the authoritative one).
+  TextColumn get peerDisplayName => text().withDefault(const Constant(''))();
+
+  /// Self-reported avatar id from the peer.
+  TextColumn get peerAvatarId => text().withDefault(const Constant(''))();
+
+  /// Last error code captured by the orchestrator (for diagnostics).
+  /// Empty string when no error.
+  TextColumn get lastErrorCode => text().withDefault(const Constant(''))();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get expiresAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class ProposalPackages extends Table {
   TextColumn get id => text()(); // stable id
   TextColumn get planId => text()();
@@ -279,13 +345,14 @@ class ProposalResponses extends Table {
   ProposalResponses,
   Contacts,
   ContactInvitations,
+  PendingHandshakes,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -351,6 +418,9 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(contactInvitations);
             await m.addColumn(participants, participants.contactId);
             await _mirrorParticipantsIntoContacts();
+          }
+          if (from < 10) {
+            await m.createTable(pendingHandshakes);
           }
         },
         beforeOpen: (details) async {
@@ -504,6 +574,28 @@ class AppDatabase extends _$AppDatabase {
       (select(contactInvitations)
             ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
           .get();
+
+  Future<void> upsertPendingHandshake(PendingHandshakesCompanion row) =>
+      into(pendingHandshakes).insertOnConflictUpdate(row);
+
+  Future<PendingHandshake?> getPendingHandshake(String id) =>
+      (select(pendingHandshakes)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<List<PendingHandshake>> listPendingHandshakes({
+    Iterable<String>? statesIn,
+  }) {
+    final q = select(pendingHandshakes);
+    if (statesIn != null && statesIn.isNotEmpty) {
+      q.where((t) => t.state.isIn(statesIn));
+    }
+    q.orderBy([(t) => OrderingTerm.asc(t.createdAt)]);
+    return q.get();
+  }
+
+  Future<void> deletePendingHandshake(String id) async {
+    await (delete(pendingHandshakes)..where((t) => t.id.equals(id))).go();
+  }
 
   /// Mirrors every existing `participants` row into a `contacts` row and
   /// re-points the participant's `contact_id` foreign key. Identical

@@ -5,11 +5,10 @@ import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../contacts/avatar_palette.dart';
+import '../../relay/handshake_orchestrator.dart';
 
-/// Detail view for a Contact. Exposes edit, delete, and block actions.
-///
-/// Disconnect is intentionally NOT wired here yet: it requires the relay
-/// to be live to send the disconnect envelope and is part of Wave B.
+/// Detail view for a Contact. Exposes edit, delete, block, and (when
+/// connected) disconnect actions.
 class ContactDetailScreen extends StatefulWidget {
   const ContactDetailScreen({super.key, required this.contactId});
 
@@ -59,6 +58,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                 .then((_) => _reload()),
             onDelete: () => _confirmAndDelete(contact),
             onToggleBlock: () => _confirmAndToggleBlock(contact),
+            onDisconnect: contact.kind == 'connected'
+                ? () => _confirmAndDisconnect(contact)
+                : null,
           );
         },
       ),
@@ -119,6 +121,51 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     await _repo.setBlocked(id: contact.id, blocked: next);
     _reload();
   }
+
+  Future<void> _confirmAndDisconnect(Contact contact) async {
+    final l10n = AppLocalizations.of(context);
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.contactsHandshakeNotAvailableYet)),
+      );
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.contactsDisconnectTitle),
+        content: Text(l10n.contactsDisconnectBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.contactsDisconnectAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await orchestrator.sendDisconnect(contact.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.contactsDisconnectSent)),
+      );
+    } on HandshakeOrchestratorError {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.contactsHandshakeErrorRelayUnavailable)),
+      );
+    }
+    _reload();
+  }
 }
 
 class _ContactDetail extends StatelessWidget {
@@ -127,12 +174,14 @@ class _ContactDetail extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onToggleBlock,
+    this.onDisconnect,
   });
 
   final Contact contact;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onToggleBlock;
+  final VoidCallback? onDisconnect;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +265,14 @@ class _ContactDetail extends StatelessWidget {
           ),
           onPressed: deleted ? null : onToggleBlock,
         ),
+        if (onDisconnect != null && !deleted) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.link_off),
+            label: Text(l10n.contactsDisconnectAction),
+            onPressed: onDisconnect,
+          ),
+        ],
         const SizedBox(height: 8),
         OutlinedButton.icon(
           icon: const Icon(Icons.delete_outline),

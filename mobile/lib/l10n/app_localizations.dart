@@ -1754,6 +1754,60 @@ abstract class AppLocalizations {
   /// **'The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.'**
   String get contactsHandshakeNotAvailableYet;
 
+  /// No description provided for @contactsHandshakeDispatching.
+  String get contactsHandshakeDispatching;
+
+  /// No description provided for @contactsHandshakeDispatched.
+  String get contactsHandshakeDispatched;
+
+  /// No description provided for @contactsHandshakeErrorRelayUnavailable.
+  String get contactsHandshakeErrorRelayUnavailable;
+
+  /// No description provided for @contactsHandshakeErrorAlreadyCompleted.
+  String get contactsHandshakeErrorAlreadyCompleted;
+
+  /// No description provided for @contactsHandshakeErrorNonceConsumed.
+  String get contactsHandshakeErrorNonceConsumed;
+
+  /// No description provided for @contactsHandshakeErrorExpired.
+  String get contactsHandshakeErrorExpired;
+
+  /// No description provided for @contactsHandshakeErrorUnknown.
+  String get contactsHandshakeErrorUnknown;
+
+  /// No description provided for @contactsIncomingTitle.
+  String get contactsIncomingTitle;
+
+  /// No description provided for @contactsIncomingEmpty.
+  String get contactsIncomingEmpty;
+
+  /// No description provided for @contactsIncomingBody.
+  String contactsIncomingBody(String name);
+
+  /// No description provided for @contactsIncomingAccept.
+  String get contactsIncomingAccept;
+
+  /// No description provided for @contactsIncomingReject.
+  String get contactsIncomingReject;
+
+  /// No description provided for @contactsIncomingBannerOne.
+  String get contactsIncomingBannerOne;
+
+  /// No description provided for @contactsIncomingBannerMany.
+  String contactsIncomingBannerMany(int count);
+
+  /// No description provided for @contactsDisconnectAction.
+  String get contactsDisconnectAction;
+
+  /// No description provided for @contactsDisconnectTitle.
+  String get contactsDisconnectTitle;
+
+  /// No description provided for @contactsDisconnectBody.
+  String get contactsDisconnectBody;
+
+  /// No description provided for @contactsDisconnectSent.
+  String get contactsDisconnectSent;
+
   /// No description provided for @contactsCodeErrorEmpty.
   ///
   /// In en, this message translates to:

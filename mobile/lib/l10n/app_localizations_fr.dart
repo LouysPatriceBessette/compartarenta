@@ -944,6 +944,69 @@ class AppLocalizationsFr extends AppLocalizations {
       'La poignée de main du relais n’est pas encore disponible. Le code est valide localement, mais il ne peut pas être utilisé tant que le relais n’est pas en ligne.';
 
   @override
+  String get contactsHandshakeDispatching =>
+      'Envoi de la requête au relais…';
+
+  @override
+  String get contactsHandshakeDispatched =>
+      'Requête envoyée. En attente de la confirmation de l’hôte.';
+
+  @override
+  String get contactsHandshakeErrorRelayUnavailable =>
+      'Relais injoignable. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get contactsHandshakeErrorAlreadyCompleted =>
+      'Ce code a déjà été utilisé.';
+
+  @override
+  String get contactsHandshakeErrorNonceConsumed =>
+      'Cette invitation a déjà été honorée.';
+
+  @override
+  String get contactsHandshakeErrorExpired => 'Cette invitation a expiré.';
+
+  @override
+  String get contactsHandshakeErrorUnknown =>
+      'Une erreur est survenue lors de la communication avec le relais.';
+
+  @override
+  String get contactsIncomingTitle => 'Demandes de connexion';
+
+  @override
+  String get contactsIncomingEmpty => 'Aucune demande de connexion en attente.';
+
+  @override
+  String contactsIncomingBody(String name) => '$name souhaite se connecter.';
+
+  @override
+  String get contactsIncomingAccept => 'Accepter';
+
+  @override
+  String get contactsIncomingReject => 'Refuser';
+
+  @override
+  String get contactsIncomingBannerOne => '1 nouvelle demande de connexion';
+
+  @override
+  String contactsIncomingBannerMany(int count) =>
+      '$count nouvelles demandes de connexion';
+
+  @override
+  String get contactsDisconnectAction => 'Se déconnecter';
+
+  @override
+  String get contactsDisconnectTitle => 'Se déconnecter de ce contact ?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'Un avis de déconnexion sera envoyé au relais. Les deux côtés repasseront à des contacts locaux uniquement.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Avis de déconnexion envoyé. Le contact est maintenant local uniquement.';
+
+  @override
   String get contactsCodeErrorEmpty => 'Saisissez un code pour continuer.';
 
   @override

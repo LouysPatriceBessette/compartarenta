@@ -79,4 +79,48 @@ class ContactsRepository {
       ),
     );
   }
+
+  /// Promotes a `local-only` Contact to `connected` after a successful
+  /// handshake. Writes the relay routing identifier and the peer's
+  /// long-term X25519 public key material (both base64url-encoded). The
+  /// stable on-device `id` is preserved per `contacts-domain-model`.
+  Future<void> promoteToConnected({
+    required String id,
+    required String relayRoutingIdB64,
+    required String peerPublicMaterialB64,
+    String? displayName,
+    String? avatarId,
+  }) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        kind: const drift.Value('connected'),
+        relayRoutingId: drift.Value(relayRoutingIdB64),
+        peerPublicMaterial: drift.Value(peerPublicMaterialB64),
+        displayName: displayName == null
+            ? const drift.Value.absent()
+            : drift.Value(displayName),
+        avatarId: avatarId == null
+            ? const drift.Value.absent()
+            : drift.Value(avatarId),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
+
+  /// Demotes a `connected` Contact back to `local-only` after a peer
+  /// disconnect or a locally-initiated disconnect. Clears routing
+  /// material so the row no longer participates in steady-state envelope
+  /// dispatch.
+  Future<void> demoteToLocalOnly(String id) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        kind: const drift.Value('local-only'),
+        relayRoutingId: const drift.Value(null),
+        peerPublicMaterial: const drift.Value(null),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
 }

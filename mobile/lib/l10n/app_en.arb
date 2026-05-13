@@ -355,13 +355,33 @@
   "contactsEnterInviteCodeScanQr": "Scan QR code",
   "contactsEnterInviteCodeScanQrHint": "Point the camera at a Compartarenta invitation QR code.",
   "contactsEnterInviteCodeSubmit": "Connect",
-  "contactsEnterInviteCodeWaveBNote": "The encrypted handshake with the relay will be enabled once the relay infrastructure is deployed.",
+  "contactsEnterInviteCodeWaveBNote": "After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.",
   "contactsEnterInviteCodeValid": "Code format is valid",
   "contactsEnterInviteCodeInvitationId": "Invitation id: {id}",
   "@contactsEnterInviteCodeInvitationId": {
     "placeholders": { "id": { "type": "String" } }
   },
   "contactsHandshakeNotAvailableYet": "The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.",
+  "contactsHandshakeDispatching": "Sending the request to the relay…",
+  "contactsHandshakeDispatched": "Request sent. Waiting for the inviter to confirm.",
+  "contactsHandshakeErrorRelayUnavailable": "Unable to reach the relay. Check your network and try again.",
+  "contactsHandshakeErrorAlreadyCompleted": "This code has already been used.",
+  "contactsHandshakeErrorNonceConsumed": "This invitation has already been redeemed.",
+  "contactsHandshakeErrorExpired": "This invitation has expired.",
+  "contactsHandshakeErrorUnknown": "Something went wrong while contacting the relay.",
+  "contactsIncomingTitle": "Connection requests",
+  "contactsIncomingEmpty": "No pending connection requests.",
+  "contactsIncomingBody": "{name} wants to connect.",
+  "@contactsIncomingBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "contactsIncomingAccept": "Accept",
+  "contactsIncomingReject": "Reject",
+  "contactsIncomingBannerOne": "1 new connection request",
+  "contactsIncomingBannerMany": "{count} new connection requests",
+  "@contactsIncomingBannerMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "contactsCodeErrorEmpty": "Enter a code to continue.",
   "contactsCodeErrorTooShort": "This code is too short.",
   "contactsCodeErrorTooLong": "This code is too long.",
@@ -384,6 +404,10 @@
   "contactsBlockTitle": "Block this contact?",
   "contactsBlockBody": "Incoming messages from this contact will be ignored locally. The relay is not informed of the block.",
   "contactsUnblockTitle": "Unblock this contact?",
-  "contactsUnblockBody": "Incoming messages from this contact will be processed again."
+  "contactsUnblockBody": "Incoming messages from this contact will be processed again.",
+  "contactsDisconnectAction": "Disconnect",
+  "contactsDisconnectTitle": "Disconnect from this contact?",
+  "contactsDisconnectBody": "A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.",
+  "contactsDisconnectSent": "Disconnect notice sent. Contact is now local-only."
 }
 
