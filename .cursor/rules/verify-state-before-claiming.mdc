@@ -1,0 +1,26 @@
+---
+description: Verify git and deployment state before claiming it
+alwaysApply: true
+---
+
+# Verify Repository And Deployment State
+
+Before stating what is committed, pushed, tagged, built, deployed, or
+still pending, verify the actual state instead of relying only on the
+conversation history. Conversation summaries and earlier turns are useful
+for intent, but they are not authoritative for current state.
+
+When the user is in a multi-step deployment, audit, release, or upgrade:
+
+- Before listing files to commit, inspect the real git state and exclude
+  files that are already committed or pushed.
+- Before saying "you have not done X yet", check the relevant command
+  first (`git status`, `git log`, `git tag`, `git rev-parse`, or the
+  deployment command that proves it).
+- Before suggesting build or deploy commands, explicitly distinguish
+  files that affect the binary/image from files that only affect docs,
+  audit materials, vhost templates, or static landing pages.
+- When the previous plan included a step the user may have completed,
+  ask or verify before treating it as pending.
+- If the user points out a contradiction with earlier guidance, accept
+  the correction, re-check state, and continue from the corrected model.
