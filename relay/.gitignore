@@ -3,9 +3,13 @@
 /dist/
 
 # Real env files (only the `.env.example` template is checked in).
+# The repo-root .gitignore has a broad `.env.*` pattern that would
+# also exclude `.env.example`; re-include it explicitly here so the
+# deployment template stays reviewable in the repository.
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # Editor / OS noise.
 .DS_Store
