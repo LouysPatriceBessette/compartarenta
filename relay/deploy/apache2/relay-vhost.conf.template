@@ -50,6 +50,14 @@
     SSLCertificateKeyFile   /etc/letsencrypt/live/relay.example.tld/privkey.pem
     Protocols h2 http/1.1
 
+    # Apache's recommended SSL parameters, as managed by Let's Encrypt's
+    # `certbot --apache` plugin. `IncludeOptional` makes the directive a
+    # no-op on hosts that do not run certbot, so the template stays
+    # portable while keeping the audit A.4.c diff clean on hosts that
+    # do (otherwise certbot inserts this line itself, which would show
+    # up as a drift between deployed and documented).
+    IncludeOptional /etc/letsencrypt/options-ssl-apache.conf
+
     # The relay vhost has its OWN certificate. Per
     # `relay-deployment-topology` / "TLS material is not shared with
     # unrelated services", do NOT reference a wildcard cert that also
