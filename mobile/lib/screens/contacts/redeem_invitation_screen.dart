@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
 import '../../l10n/app_localizations.dart';
@@ -29,15 +30,32 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
 
   void _validate() {
     final value = _controller.text;
-    setState(() => _result = parseInvitationCode(value));
+    setState(() => _result = parseInvitationInput(value));
   }
 
   Future<void> _pasteFromClipboard() async {
     final data = await Clipboard.getData('text/plain');
     if (!mounted) return;
-    final text = data?.text ?? '';
+    final text = _displayTextForScannedValue(data?.text ?? '');
     _controller.text = text;
     _validate();
+  }
+
+  Future<void> _scanQrCode() async {
+    final scanned = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const _InvitationQrScannerScreen()),
+    );
+    if (!mounted || scanned == null) return;
+    _controller.text = _displayTextForScannedValue(scanned);
+    _validate();
+  }
+
+  String _displayTextForScannedValue(String value) {
+    final parsed = parseInvitationInput(value);
+    if (parsed is InvitationCodeOk) {
+      return parsed.code.renderShort();
+    }
+    return value;
   }
 
   @override
@@ -75,11 +93,16 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.qr_code_scanner),
+                label: Text(l10n.contactsEnterInviteCodeScanQr),
+                onPressed: _scanQrCode,
+              ),
               const SizedBox(height: 16),
               if (result is InvitationCodeOk)
                 _OkResult(invitationIdHex: result.code.invitationIdHex()),
-              if (result is InvitationCodeBad)
-                _BadResult(error: result.error),
+              if (result is InvitationCodeBad) _BadResult(error: result.error),
               const Spacer(),
               FilledButton.icon(
                 icon: const Icon(Icons.send_outlined),
@@ -106,6 +129,68 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.contactsHandshakeNotAvailableYet)),
+    );
+  }
+}
+
+class _InvitationQrScannerScreen extends StatefulWidget {
+  const _InvitationQrScannerScreen();
+
+  @override
+  State<_InvitationQrScannerScreen> createState() =>
+      _InvitationQrScannerScreenState();
+}
+
+class _InvitationQrScannerScreenState
+    extends State<_InvitationQrScannerScreen> {
+  final MobileScannerController _controller = MobileScannerController(
+    formats: const [BarcodeFormat.qrCode],
+  );
+  bool _returned = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDetect(BarcodeCapture capture) {
+    if (_returned) return;
+    for (final barcode in capture.barcodes) {
+      final value = barcode.rawValue;
+      if (value == null || value.trim().isEmpty) continue;
+      _returned = true;
+      Navigator.of(context).pop(value);
+      return;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.contactsEnterInviteCodeScanQr)),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          MobileScanner(controller: _controller, onDetect: _handleDetect),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: Card(
+                margin: const EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.contactsEnterInviteCodeScanQrHint,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

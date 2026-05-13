@@ -369,8 +369,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanParticipantNameLabel => 'Nom';
 
   @override
+  String get housingPlanChooseContactAction => 'Choisir un contact';
+
+  @override
+  String get housingPlanChangeContactAction => 'Changer de contact';
+
+  @override
+  String get housingPlanContactRequired =>
+      'Choisissez un contact pour chaque participant avant de continuer.';
+
+  @override
   String get housingPlanParticipantsPlaceholderNote =>
-      'Les noms et avatars sont provisoires jusqu’à ce que quelqu’un rejoigne pour de vrai.';
+      'Les participants viennent maintenant des Contacts. Le plan logement conserve une copie du nom et de l’avatar pour garder l’historique lisible.';
 
   @override
   String get housingPlanYou => 'Vous';
@@ -797,6 +807,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsTitle => 'Contacts';
 
   @override
+  String get contactsPickerTitle => 'Choisir un contact';
+
+  @override
+  String get contactsPickerEmptyTitle =>
+      'Aucun contact sélectionnable pour l’instant';
+
+  @override
+  String get contactsPickerEmptyBody =>
+      'Ajoutez un contact local ou invitez quelqu’un avant de l’ajouter à ce module.';
+
+  @override
   String get contactsEmptyTitle => 'Aucun contact pour l’instant';
 
   @override
@@ -840,6 +861,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get contactsInviteShareWarning =>
       'Partagez ce code avec une seule personne. Il expire automatiquement et ne fonctionne plus après usage ou révocation.';
+
+  @override
+  String get contactsInviteQrLabel =>
+      'Scannez ce code QR depuis l’autre appareil, ou utilisez le code texte ci-dessous.';
+
+  @override
+  String get contactsInviteQrSemantics => 'Code QR d’invitation';
 
   @override
   String get contactsInviteShortCodeLabel => 'Code';
@@ -888,6 +916,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeFieldLabel => 'Code d’invitation';
+
+  @override
+  String get contactsEnterInviteCodeScanQr => 'Scanner le code QR';
+
+  @override
+  String get contactsEnterInviteCodeScanQrHint =>
+      'Pointez la caméra vers un code QR d’invitation Compartarenta.';
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Se connecter';

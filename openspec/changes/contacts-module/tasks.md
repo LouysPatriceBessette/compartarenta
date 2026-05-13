@@ -25,10 +25,10 @@
 
 - [x] 3.1 Implement on-device code generation (entropy + checksum + nonce + expiry + revocation flag), independent of network availability.
 - [x] 3.2 Implement a renderer for the human-readable short code (with checksum-aware validation on input).
-- [ ] 3.3 Implement a QR / deep-link representation of the code for visual sharing. *(Wave A: deep-link string + copy-to-clipboard implemented. QR rendering deferred — needs a new dependency such as `qr_flutter`.)*
+- [x] 3.3 Implement a QR / deep-link representation of the code for visual sharing. *(QR rendering is implemented with `qr_flutter`; QR scan uses the existing deep-link representation and normalizes it back to the short code before local validation.)*
 - [x] 3.4 Implement out-of-band sharing entry points (copy, share sheet, QR display). *(Copy + deep-link landed; full share-sheet integration deferred to Wave B alongside QR.)*
 - [x] 3.5 Implement the outstanding-invitations list with statuses (pending, used, expired, revoked) and a revoke action.
-- [x] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call. *(Wave A: paste + type + local checksum validation. QR scan deferred along with task 3.3.)*
+- [x] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call.
 
 ## 4. Handshake protocol over the relay
 
@@ -44,9 +44,9 @@
 
 ## 5. Module integration contract
 
-- [ ] 5.1 Document the `contacts-module-integration` contract for adopting modules (housing first), including picker UX, snapshot rules, and per-module alias storage.
-- [ ] 5.2 Provide a participant picker widget that lists Contacts, surfaces kind, and offers "Add new contact" + "Invite contact" entry points.
-- [ ] 5.3 Ensure no parallel "inline temporary participant" path remains accessible from inside adopting modules.
+- [x] 5.1 Document the `contacts-module-integration` contract for adopting modules (housing first), including picker UX, snapshot rules, and per-module alias storage. *(See `docs/contacts-module-integration.md`.)*
+- [x] 5.2 Provide a participant picker widget that lists Contacts, surfaces kind, and offers "Add new contact" + "Invite contact" entry points.
+- [x] 5.3 Ensure no parallel "inline temporary participant" path remains accessible from inside adopting modules. *(Housing now routes participant selection through the Contacts picker and stores the selected `contactId` plus a snapshot.)*
 
 ## 6. Privacy compliance and audit alignment
 

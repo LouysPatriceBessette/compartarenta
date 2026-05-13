@@ -28,8 +28,8 @@ class InvitationCode {
     required this.version,
     required this.invitationId,
     required this.nonce,
-  })  : assert(invitationId.length == invitationIdBytes),
-        assert(nonce.length == nonceBytes);
+  }) : assert(invitationId.length == invitationIdBytes),
+       assert(nonce.length == nonceBytes);
 
   static const int currentVersion = 1;
   static const int nonceBytes = 12;
@@ -88,8 +88,7 @@ class InvitationCode {
   /// Deep-link representation suitable for OS share sheets and QR encoders.
   /// The scheme is intentionally app-local; the relay does not parse it.
   String renderDeepLink() {
-    final encoded =
-        base64Url.encode(_payloadBytes()).replaceAll('=', '');
+    final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
     return 'compartarenta://contact/invite?v=$version&c=$encoded';
   }
 
@@ -202,12 +201,86 @@ InvitationCodeParseResult parseInvitationCode(String input) {
   );
 }
 
+/// Parses either a human-readable invitation code or the app-local deep link
+/// produced by [InvitationCode.renderDeepLink].
+InvitationCodeParseResult parseInvitationInput(String input) {
+  final trimmed = input.trim();
+  if (trimmed.startsWith('compartarenta://')) {
+    return parseInvitationDeepLink(trimmed);
+  }
+  return parseInvitationCode(trimmed);
+}
+
+/// Parses a `compartarenta://contact/invite` deep link.
+///
+/// The deep-link payload is intended for QR/share-sheet transport. It carries
+/// the same version + invitation id + nonce bytes as the short code; it does
+/// not carry the human checksum because a QR scan is machine-read.
+InvitationCodeParseResult parseInvitationDeepLink(String input) {
+  final Uri uri;
+  try {
+    uri = Uri.parse(input.trim());
+  } on FormatException {
+    return const InvitationCodeBad(InvitationCodeError.invalidCharacters);
+  }
+
+  if (uri.scheme != 'compartarenta' ||
+      uri.host != 'contact' ||
+      uri.path != '/invite') {
+    return const InvitationCodeBad(InvitationCodeError.invalidCharacters);
+  }
+
+  final version = int.tryParse(uri.queryParameters['v'] ?? '');
+  if (version != InvitationCode.currentVersion) {
+    return const InvitationCodeBad(InvitationCodeError.unsupportedVersion);
+  }
+
+  final encoded = uri.queryParameters['c'];
+  if (encoded == null || encoded.isEmpty) {
+    return const InvitationCodeBad(InvitationCodeError.empty);
+  }
+
+  final Uint8List payload;
+  try {
+    final normalized = encoded.padRight(
+      encoded.length + ((4 - encoded.length % 4) % 4),
+      '=',
+    );
+    payload = Uint8List.fromList(base64Url.decode(normalized));
+  } on FormatException {
+    return const InvitationCodeBad(InvitationCodeError.invalidCharacters);
+  }
+
+  const expectedPayloadLength =
+      1 + InvitationCode.invitationIdBytes + InvitationCode.nonceBytes;
+  if (payload.length < expectedPayloadLength) {
+    return const InvitationCodeBad(InvitationCodeError.tooShort);
+  }
+  if (payload.length > expectedPayloadLength) {
+    return const InvitationCodeBad(InvitationCodeError.tooLong);
+  }
+  if ((payload[0] & 0x0F) != InvitationCode.currentVersion) {
+    return const InvitationCodeBad(InvitationCodeError.unsupportedVersion);
+  }
+
+  final invId = Uint8List.fromList(
+    payload.sublist(1, 1 + InvitationCode.invitationIdBytes),
+  );
+  final nonce = Uint8List.fromList(
+    payload.sublist(1 + InvitationCode.invitationIdBytes),
+  );
+  return InvitationCodeOk(
+    InvitationCode._(version: version!, invitationId: invId, nonce: nonce),
+  );
+}
+
 // ---------- Crockford base32 with mod-37 checksum ----------
 //
 // Crockford alphabet: 0-9, A-Z minus I L O U. Case-insensitive on input.
 
 const String _crockfordAlphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const String _crockfordChecksumAlphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ*~\$=U';
+const String _crockfordChecksumAlphabet =
+    '0123456789ABCDEFGHJKMNPQRSTVWXYZ*~\$=U';
 
 String _crockfordEncode(Uint8List input) {
   final out = StringBuffer();

@@ -77,9 +77,7 @@ void main() {
       // Pick a replacement that is different and is in the Crockford alphabet.
       const alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
       final original = chars[targetIndex];
-      final replacement = alphabet.split('').firstWhere(
-            (c) => c != original,
-          );
+      final replacement = alphabet.split('').firstWhere((c) => c != original);
       chars[targetIndex] = replacement;
       final flipped = chars.join();
 
@@ -107,8 +105,7 @@ void main() {
       final truncated = compact.substring(0, compact.length - 1);
       final parsed = parseInvitationCode(truncated);
       expect(parsed, isA<InvitationCodeBad>());
-      expect((parsed as InvitationCodeBad).error,
-          InvitationCodeError.tooShort);
+      expect((parsed as InvitationCodeBad).error, InvitationCodeError.tooShort);
     });
 
     test('a code with an extra character is rejected as too long', () {
@@ -118,8 +115,7 @@ void main() {
       final short = code.renderShort();
       final parsed = parseInvitationCode('${short}A');
       expect(parsed, isA<InvitationCodeBad>());
-      expect((parsed as InvitationCodeBad).error,
-          InvitationCodeError.tooLong);
+      expect((parsed as InvitationCodeBad).error, InvitationCodeError.tooLong);
     });
 
     test('a code with a forbidden character (U) is rejected', () {
@@ -149,6 +145,32 @@ void main() {
       expect(link, startsWith('compartarenta://contact/invite?'));
       expect(link, contains('v=${InvitationCode.currentVersion}'));
       expect(link, contains('c='));
+    });
+
+    test('parseInvitationDeepLink round-trips a generated deep link', () {
+      InvitationCode.setRandomForTesting(_SeededRandom(12));
+      addTearDown(InvitationCode.resetRandomForTesting);
+      final code = InvitationCode.generate();
+
+      final parsed = parseInvitationDeepLink(code.renderDeepLink());
+
+      expect(parsed, isA<InvitationCodeOk>());
+      final ok = parsed as InvitationCodeOk;
+      expect(ok.code.invitationIdHex(), code.invitationIdHex());
+      expect(ok.code.nonceHex(), code.nonceHex());
+      expect(ok.code.renderShort(), code.renderShort());
+    });
+
+    test('parseInvitationInput accepts short code and deep link', () {
+      InvitationCode.setRandomForTesting(_SeededRandom(13));
+      addTearDown(InvitationCode.resetRandomForTesting);
+      final code = InvitationCode.generate();
+
+      expect(parseInvitationInput(code.renderShort()), isA<InvitationCodeOk>());
+      expect(
+        parseInvitationInput(code.renderDeepLink()),
+        isA<InvitationCodeOk>(),
+      );
     });
 
     test('nonce hex and invitation-id hex match expected byte lengths', () {

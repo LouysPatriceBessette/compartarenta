@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
 import '../../contacts/invitation_code.dart';
@@ -19,12 +20,18 @@ class GenerateInvitationScreen extends StatefulWidget {
 
 class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   late final AppDatabase _db = AppDatabase();
-  late final ContactInvitationsRepository _repo =
-      ContactInvitationsRepository(_db);
+  late final ContactInvitationsRepository _repo = ContactInvitationsRepository(
+    _db,
+  );
 
   Duration _validFor = const Duration(hours: 24);
-  ({ContactInvitation row, InvitationCode code, String shortCode, String deepLink})?
-      _generated;
+  ({
+    ContactInvitation row,
+    InvitationCode code,
+    String shortCode,
+    String deepLink,
+  })?
+  _generated;
   bool _generating = false;
 
   static const _options = <(Duration, String)>[
@@ -166,6 +173,24 @@ class _GeneratedView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Center(
+                  child: Semantics(
+                    label: l10n.contactsInviteQrSemantics,
+                    child: QrImageView(
+                      data: deepLink,
+                      version: QrVersions.auto,
+                      size: 192,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.contactsInviteQrLabel,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
                 Text(
                   l10n.contactsInviteShortCodeLabel,
                   style: Theme.of(context).textTheme.titleSmall,
@@ -174,8 +199,8 @@ class _GeneratedView extends StatelessWidget {
                 SelectableText(
                   shortCode,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -215,10 +240,7 @@ class _GeneratedView extends StatelessWidget {
           onPressed: onRevoke,
         ),
         const SizedBox(height: 8),
-        FilledButton(
-          onPressed: onDone,
-          child: Text(l10n.commonDone),
-        ),
+        FilledButton(onPressed: onDone, child: Text(l10n.commonDone)),
       ],
     );
   }

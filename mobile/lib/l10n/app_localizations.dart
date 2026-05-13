@@ -760,10 +760,28 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get housingPlanParticipantNameLabel;
 
+  /// No description provided for @housingPlanChooseContactAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose contact'**
+  String get housingPlanChooseContactAction;
+
+  /// No description provided for @housingPlanChangeContactAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change contact'**
+  String get housingPlanChangeContactAction;
+
+  /// No description provided for @housingPlanContactRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a contact for each participant before continuing.'**
+  String get housingPlanContactRequired;
+
   /// No description provided for @housingPlanParticipantsPlaceholderNote.
   ///
   /// In en, this message translates to:
-  /// **'Names and avatars are placeholders until someone joins for real.'**
+  /// **'Participants now come from Contacts. The housing plan keeps a name and avatar snapshot for historical readability.'**
   String get housingPlanParticipantsPlaceholderNote;
 
   /// No description provided for @housingPlanYou.
@@ -1496,6 +1514,24 @@ abstract class AppLocalizations {
   /// **'Contacts'**
   String get contactsTitle;
 
+  /// No description provided for @contactsPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a contact'**
+  String get contactsPickerTitle;
+
+  /// No description provided for @contactsPickerEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No selectable contacts yet'**
+  String get contactsPickerEmptyTitle;
+
+  /// No description provided for @contactsPickerEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a local contact or invite someone before adding them to this module.'**
+  String get contactsPickerEmptyBody;
+
   /// No description provided for @contactsEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -1580,6 +1616,18 @@ abstract class AppLocalizations {
   /// **'Share this code with one person only. It expires automatically and stops working after being used or revoked.'**
   String get contactsInviteShareWarning;
 
+  /// No description provided for @contactsInviteQrLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QR code from the other device, or use the text code below.'**
+  String get contactsInviteQrLabel;
+
+  /// No description provided for @contactsInviteQrSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation QR code'**
+  String get contactsInviteQrSemantics;
+
   /// No description provided for @contactsInviteShortCodeLabel.
   ///
   /// In en, this message translates to:
@@ -1663,6 +1711,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invitation code'**
   String get contactsEnterInviteCodeFieldLabel;
+
+  /// No description provided for @contactsEnterInviteCodeScanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get contactsEnterInviteCodeScanQr;
+
+  /// No description provided for @contactsEnterInviteCodeScanQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a Compartarenta invitation QR code.'**
+  String get contactsEnterInviteCodeScanQrHint;
 
   /// No description provided for @contactsEnterInviteCodeSubmit.
   ///

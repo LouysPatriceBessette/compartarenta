@@ -364,8 +364,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanParticipantNameLabel => 'Name';
 
   @override
+  String get housingPlanChooseContactAction => 'Choose contact';
+
+  @override
+  String get housingPlanChangeContactAction => 'Change contact';
+
+  @override
+  String get housingPlanContactRequired =>
+      'Choose a contact for each participant before continuing.';
+
+  @override
   String get housingPlanParticipantsPlaceholderNote =>
-      'Names and avatars are placeholders until someone joins for real.';
+      'Participants now come from Contacts. The housing plan keeps a name and avatar snapshot for historical readability.';
 
   @override
   String get housingPlanYou => 'You';
@@ -786,6 +796,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactsTitle => 'Contacts';
 
   @override
+  String get contactsPickerTitle => 'Choose a contact';
+
+  @override
+  String get contactsPickerEmptyTitle => 'No selectable contacts yet';
+
+  @override
+  String get contactsPickerEmptyBody =>
+      'Add a local contact or invite someone before adding them to this module.';
+
+  @override
   String get contactsEmptyTitle => 'No contacts yet';
 
   @override
@@ -829,6 +849,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactsInviteShareWarning =>
       'Share this code with one person only. It expires automatically and stops working after being used or revoked.';
+
+  @override
+  String get contactsInviteQrLabel =>
+      'Scan this QR code from the other device, or use the text code below.';
+
+  @override
+  String get contactsInviteQrSemantics => 'Invitation QR code';
 
   @override
   String get contactsInviteShortCodeLabel => 'Code';
@@ -876,6 +903,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeFieldLabel => 'Invitation code';
+
+  @override
+  String get contactsEnterInviteCodeScanQr => 'Scan QR code';
+
+  @override
+  String get contactsEnterInviteCodeScanQrHint =>
+      'Point the camera at a Compartarenta invitation QR code.';
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Connect';

@@ -15,6 +15,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../contacts/contact_picker_sheet.dart';
 
 sealed class _SplitListEntry {}
 
@@ -73,13 +74,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   static const int _housingPlanStepCount = 6;
 
   List<String> _housingStepTitles(AppLocalizations l10n) => [
-        l10n.housingPlanStepParticipants,
-        l10n.housingPlanStepPlanDates,
-        l10n.housingPlanStepExpenseCategories,
-        l10n.housingPlanStepExpenses,
-        l10n.housingPlanStepSplit,
-        l10n.housingPlanStepAgreementRules,
-      ];
+    l10n.housingPlanStepParticipants,
+    l10n.housingPlanStepPlanDates,
+    l10n.housingPlanStepExpenseCategories,
+    l10n.housingPlanStepExpenses,
+    l10n.housingPlanStepSplit,
+    l10n.housingPlanStepAgreementRules,
+  ];
 
   AppLocalizations _lookupAppLocalizationsSync() {
     final loc = WidgetsBinding.instance.platformDispatcher.locale;
@@ -102,11 +103,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   /// Other people on the plan (not including the signed-in profile).
   int _otherParticipantCount = 1;
+
   /// Which co-participant form is shown when [_otherParticipantCount] > 1.
   int _coEditorIndex = 0;
 
   final List<TextEditingController> _nameControllers = [];
   final List<String> _avatarIds = [];
+  final List<String?> _contactIds = [];
 
   DateTime? _periodStart;
   DateTime? _periodEnd;
@@ -154,6 +157,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   final Map<String, TextEditingController> _shareAmountControllers = {};
   final Map<String, int> _draftRatioWeightsBps = {};
+
   /// Minor units to show after a manual amount commit when the persisted
   /// weight grid cannot round-trip to the typed cents exactly.
   final Map<String, int> _shareAmountMinorOverride = {};
@@ -192,9 +196,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     super.dispose();
   }
 
-  TextEditingController _shareAmountControllerFor(String lineId, String participantId) {
+  TextEditingController _shareAmountControllerFor(
+    String lineId,
+    String participantId,
+  ) {
     final key = '$lineId:$participantId';
-    return _shareAmountControllers.putIfAbsent(key, () => TextEditingController());
+    return _shareAmountControllers.putIfAbsent(
+      key,
+      () => TextEditingController(),
+    );
   }
 
   /// Major units string with exactly two decimals; invalid / NaN → `0.00`.
@@ -220,8 +230,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return (pad, math.max(0.0, parentWidth - 2 * pad));
     }
     final discrete = false;
-    final thumbW = thumbShape.getPreferredSize(sliderInteractive, discrete).width;
-    final overlayW = overlayShape.getPreferredSize(sliderInteractive, discrete).width;
+    final thumbW = thumbShape
+        .getPreferredSize(sliderInteractive, discrete)
+        .width;
+    final overlayW = overlayShape
+        .getPreferredSize(sliderInteractive, discrete)
+        .width;
     if (st.padding != null) {
       return (0, math.max(0.0, parentWidth));
     }
@@ -231,7 +245,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   EdgeInsets _sliderThemeOuterPadding(BuildContext context) {
-    return SliderTheme.of(context).padding?.resolve(Directionality.of(context)) ?? EdgeInsets.zero;
+    return SliderTheme.of(
+          context,
+        ).padding?.resolve(Directionality.of(context)) ??
+        EdgeInsets.zero;
   }
 
   double _snapToDevicePixels(BuildContext context, double logicalX) {
@@ -241,7 +258,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   /// Picks a weight in `[0, assignable]` that minimizes
   /// `|(basisMinor * w / 10000).round() - targetMinor|`.
-  int _bestWeightBpsForShareMinor(int targetMinor, int basisMinor, int assignable) {
+  int _bestWeightBpsForShareMinor(
+    int targetMinor,
+    int basisMinor,
+    int assignable,
+  ) {
     if (basisMinor <= 0 || assignable <= 0) return 0;
     var bestW = 0;
     var bestErr = 1 << 30;
@@ -273,7 +294,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
     final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
     var minor = (major * 100).round();
-    final maxShareMinor = basisMinor <= 0 ? 0 : (basisMinor * assignable / 10000).round();
+    final maxShareMinor = basisMinor <= 0
+        ? 0
+        : (basisMinor * assignable / 10000).round();
     minor = minor.clamp(0, maxShareMinor);
     final display = (minor / 100).toStringAsFixed(2);
     if (display != formatted) {
@@ -291,12 +314,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
   }
 
-  String _shareSplitControllerKeyForGroup(String groupId, String participantId) =>
-      'g:$groupId:$participantId';
+  String _shareSplitControllerKeyForGroup(
+    String groupId,
+    String participantId,
+  ) => 'g:$groupId:$participantId';
 
-  TextEditingController _shareAmountControllerForGroup(String groupId, String participantId) {
+  TextEditingController _shareAmountControllerForGroup(
+    String groupId,
+    String participantId,
+  ) {
     final key = _shareSplitControllerKeyForGroup(groupId, participantId);
-    return _shareAmountControllers.putIfAbsent(key, () => TextEditingController());
+    return _shareAmountControllers.putIfAbsent(
+      key,
+      () => TextEditingController(),
+    );
   }
 
   Future<void> _commitShareGroupAmountTextField(
@@ -316,7 +347,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
     final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
     var minor = (major * 100).round();
-    final maxShareMinor = basisMinor <= 0 ? 0 : (basisMinor * assignable / 10000).round();
+    final maxShareMinor = basisMinor <= 0
+        ? 0
+        : (basisMinor * assignable / 10000).round();
     minor = minor.clamp(0, maxShareMinor);
     final display = (minor / 100).toStringAsFixed(2);
     if (display != formatted) {
@@ -486,18 +519,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   String _coParticipantId(int i) => '$_planId:p$i';
 
   List<String> _allParticipantIds() => [
-        _selfParticipantId,
-        ...List.generate(_otherParticipantCount, _coParticipantId),
-      ];
+    _selfParticipantId,
+    ...List.generate(_otherParticipantCount, _coParticipantId),
+  ];
 
   void _resizeCoParticipantEditors(int n) {
     while (_nameControllers.length < n) {
       _nameControllers.add(TextEditingController());
       _avatarIds.add('mdi:0');
+      _contactIds.add(null);
     }
     while (_nameControllers.length > n) {
       _nameControllers.removeLast().dispose();
       _avatarIds.removeLast();
+      _contactIds.removeLast();
     }
     if (_coEditorIndex >= n) {
       _coEditorIndex = n > 0 ? n - 1 : 0;
@@ -526,6 +561,32 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return nm.isEmpty ? l10n.housingPlanCoParticipantUnnamed(index) : nm;
   }
 
+  IconData _avatarIconFor(String avatarId) {
+    final idx = int.tryParse(avatarId.split(':').last);
+    if (idx == null || idx < 0 || idx >= _avatarIcons.length) {
+      return MdiIcons.account;
+    }
+    return _avatarIcons[idx];
+  }
+
+  Future<void> _chooseContactForParticipant(int index) async {
+    final excluded = <String>{
+      for (var i = 0; i < _contactIds.length; i++)
+        if (i != index && _contactIds[i] != null) _contactIds[i]!,
+    };
+    final selected = await showContactPickerSheet(
+      context: context,
+      db: _db,
+      excludeContactIds: excluded,
+    );
+    if (selected == null || !mounted) return;
+    setState(() {
+      _contactIds[index] = selected.id;
+      _nameControllers[index].text = selected.displayName;
+      _avatarIds[index] = selected.avatarId;
+    });
+  }
+
   Future<void> _ensurePlanShell() async {
     final l10n = _lookupAppLocalizationsSync();
     await _db.upsertPlan(
@@ -535,7 +596,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         createdAt: DateTime.now().toUtc(),
         title: drift.Value(l10n.homeHousingPlan),
         currency: drift.Value(
-          widget.prefs.currency.trim().isEmpty ? 'CAD' : widget.prefs.currency.trim(),
+          widget.prefs.currency.trim().isEmpty
+              ? 'CAD'
+              : widget.prefs.currency.trim(),
         ),
         notes: const drift.Value.absent(),
       ),
@@ -568,6 +631,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       for (var i = 0; i < coRows.length; i++) {
         _nameControllers[i].text = coRows[i].displayName;
         _avatarIds[i] = coRows[i].avatarId;
+        _contactIds[i] = coRows[i].contactId;
       }
     }
 
@@ -579,7 +643,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _globalNotice.text = agr.minNoticeDays.toString();
       _globalPenalty.text = (agr.penaltyMinor / 100).toStringAsFixed(2);
       try {
-        final map = jsonDecode(agr.withdrawalPerParticipantJson) as Map<String, dynamic>?;
+        final map =
+            jsonDecode(agr.withdrawalPerParticipantJson)
+                as Map<String, dynamic>?;
         if (map != null) {
           final total = 1 + _otherParticipantCount;
           for (var i = 0; i < total && i < _perParticipantNotice.length; i++) {
@@ -635,10 +701,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   bool get _anyAgreementRuleEditing =>
-      _curfewEditing || _withdrawalEditing || _buildingRulesEditing || _customRuleEditingId != null;
+      _curfewEditing ||
+      _withdrawalEditing ||
+      _buildingRulesEditing ||
+      _customRuleEditingId != null;
 
   /// While editing agreement rule content, block wizard navigation on step 6.
-  bool get _agreementRulesStepFooterLocked => _stepIndex == 5 && _anyAgreementRuleEditing;
+  bool get _agreementRulesStepFooterLocked =>
+      _stepIndex == 5 && _anyAgreementRuleEditing;
 
   bool _datesStepValid() {
     if (_periodStart == null || _periodEnd == null) return false;
@@ -652,13 +722,19 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (s == null || e == null) return;
     if (isStrictlyBeforeCalendarDate(s, e)) return;
     final sd = DateUtils.dateOnly(s.toLocal());
-    e = DateTime(sd.year, sd.month, sd.day).add(const Duration(days: 1)).toUtc();
+    e = DateTime(
+      sd.year,
+      sd.month,
+      sd.day,
+    ).add(const Duration(days: 1)).toUtc();
     _periodEnd = e;
   }
 
   DateTime _endDatePickerFirstDate() {
     if (_periodStart == null) return DateTime(2020);
-    return DateUtils.dateOnly(_periodStart!.toLocal()).add(const Duration(days: 1));
+    return DateUtils.dateOnly(
+      _periodStart!.toLocal(),
+    ).add(const Duration(days: 1));
   }
 
   DateTime _endDatePickerInitialDate() {
@@ -676,6 +752,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 0:
         if (_otherParticipantCount < 1) return false;
         for (var j = 0; j < _otherParticipantCount; j++) {
+          if (_contactIds[j] == null) return false;
           if (_nameControllers[j].text.trim().isEmpty) return false;
           if (_avatarIds[j].isEmpty) return false;
         }
@@ -708,9 +785,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Future<void> _unassignLinesAndDeletePlanGroup(String groupId) async {
-    await (_db.update(_db.planLines)..where((t) => t.groupId.equals(groupId))).write(
-      PlanLinesCompanion(groupId: const drift.Value(null)),
-    );
+    await (_db.update(_db.planLines)..where((t) => t.groupId.equals(groupId)))
+        .write(PlanLinesCompanion(groupId: const drift.Value(null)));
     await (_db.delete(_db.planGroups)..where((t) => t.id.equals(groupId))).go();
   }
 
@@ -796,7 +872,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     await _db.upsertParticipant(
       ParticipantsCompanion.insert(
         id: _selfParticipantId,
-        displayName: selfName.isEmpty ? _lookupAppLocalizationsSync().housingPlanYou : selfName,
+        displayName: selfName.isEmpty
+            ? _lookupAppLocalizationsSync().housingPlanYou
+            : selfName,
         avatarId: selfAvatar.isEmpty ? 'mdi:0' : selfAvatar,
         createdAt: DateTime.now().toUtc(),
       ),
@@ -808,6 +886,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           displayName: _nameControllers[i].text.trim(),
           avatarId: _avatarIds[i],
           createdAt: DateTime.now().toUtc(),
+          contactId: drift.Value(_contactIds[i]),
         ),
       );
     }
@@ -816,7 +895,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       if (p.id.startsWith('$_planId:p')) {
         final idx = int.tryParse(p.id.split(':p').last);
         if (idx == null || idx >= _otherParticipantCount) {
-          await (_db.delete(_db.participants)..where((t) => t.id.equals(p.id))).go();
+          await (_db.delete(
+            _db.participants,
+          )..where((t) => t.id.equals(p.id))).go();
         }
       }
     }
@@ -842,7 +923,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         penaltyMinor: drift.Value(cur.penaltyMinor),
         clauses: drift.Value(cur.clauses),
         withdrawalSameForAll: drift.Value(cur.withdrawalSameForAll),
-        withdrawalPerParticipantJson: drift.Value(cur.withdrawalPerParticipantJson),
+        withdrawalPerParticipantJson: drift.Value(
+          cur.withdrawalPerParticipantJson,
+        ),
         agreementRulesJson: drift.Value(cur.agreementRulesJson),
         version: drift.Value(cur.version),
         createdAt: drift.Value(cur.createdAt),
@@ -869,7 +952,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             .fold<int>(0, (a, r) => a + r.weight);
       }
       if (sum == 10000) continue;
-      await (_db.delete(_db.planRatios)..where((t) => t.groupId.equals(g.id))).go();
+      await (_db.delete(
+        _db.planRatios,
+      )..where((t) => t.groupId.equals(g.id))).go();
       for (var i = 0; i < pids.length - 1; i++) {
         await _db.upsertPlanRatio(
           PlanRatiosCompanion.insert(
@@ -899,14 +984,18 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     for (final line in lines) {
       final gid = line.groupId;
       if (gid != null && knownGroupIds.contains(gid)) {
-        await (_db.delete(_db.planRatios)..where((t) => t.lineId.equals(line.id))).go();
+        await (_db.delete(
+          _db.planRatios,
+        )..where((t) => t.lineId.equals(line.id))).go();
         continue;
       }
       final lineSum = existing
           .where((r) => r.lineId == line.id)
           .fold<int>(0, (a, r) => a + r.weight);
       if (lineSum == 10000) continue;
-      await (_db.delete(_db.planRatios)..where((t) => t.lineId.equals(line.id))).go();
+      await (_db.delete(
+        _db.planRatios,
+      )..where((t) => t.lineId.equals(line.id))).go();
       for (var i = 0; i < pids.length - 1; i++) {
         await _db.upsertPlanRatio(
           PlanRatiosCompanion.insert(
@@ -970,7 +1059,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         for (var i = 0; i < total; i++) {
           final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
           per[pid] = {
-            'minNoticeDays': int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
+            'minNoticeDays':
+                int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
             'penaltyMinor': _parseMinor(_perParticipantPenalty[i].text) ?? 0,
           };
         }
@@ -984,13 +1074,19 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         periodStart: cur.periodStart,
         periodEnd: cur.periodEnd,
         minNoticeDays: drift.Value(
-          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll ? notice : 0,
+          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+              ? notice
+              : 0,
         ),
         penaltyMinor: drift.Value(
-          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll ? penalty : 0,
+          _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+              ? penalty
+              : 0,
         ),
         clauses: drift.Value(_buildingRulesBody.text),
-        withdrawalSameForAll: drift.Value(_withdrawalSameForAll ? 'true' : 'false'),
+        withdrawalSameForAll: drift.Value(
+          _withdrawalSameForAll ? 'true' : 'false',
+        ),
         withdrawalPerParticipantJson: drift.Value(jsonEncode(per)),
         agreementRulesJson: drift.Value(_rulesDraft.encode()),
         version: drift.Value(cur.version + 1),
@@ -1015,8 +1111,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         title: Text(l10n.housingPlanDestroyTitle),
         content: Text(l10n.housingPlanDestroyBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.housingPlanCancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.housingPlanDestroyConfirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.housingPlanCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.housingPlanDestroyConfirm),
+          ),
         ],
       ),
     );
@@ -1033,9 +1135,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     });
     await _loadFromDb();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.housingPlanRemovedSnackbar)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.housingPlanRemovedSnackbar)));
     }
   }
 
@@ -1070,7 +1172,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       radius: 15,
                       backgroundColor: i == _stepIndex && !_showSummary
                           ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       child: _stepDone(i) || (i < _stepIndex)
                           ? Icon(
                               Icons.check,
@@ -1160,24 +1264,34 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               child: Row(
                                 children: [
                                   IconButton.filledTonal(
-                                    tooltip: l10n.housingPlanFewerParticipantsTooltip,
+                                    tooltip: l10n
+                                        .housingPlanFewerParticipantsTooltip,
                                     onPressed: _otherParticipantCount <= 1
                                         ? null
-                                        : () => _applyOtherParticipantCount(_otherParticipantCount - 1),
+                                        : () => _applyOtherParticipantCount(
+                                            _otherParticipantCount - 1,
+                                          ),
                                     icon: const Icon(Icons.remove),
                                   ),
                                   Expanded(
                                     child: Text(
-                                      l10n.housingPlanParticipantsCount(1 + _otherParticipantCount),
+                                      l10n.housingPlanParticipantsCount(
+                                        1 + _otherParticipantCount,
+                                      ),
                                       textAlign: TextAlign.center,
-                                      style: Theme.of(context).textTheme.headlineSmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.headlineSmall,
                                     ),
                                   ),
                                   IconButton.filledTonal(
-                                    tooltip: l10n.housingPlanMoreParticipantsTooltip,
+                                    tooltip:
+                                        l10n.housingPlanMoreParticipantsTooltip,
                                     onPressed: _otherParticipantCount >= 7
                                         ? null
-                                        : () => _applyOtherParticipantCount(_otherParticipantCount + 1),
+                                        : () => _applyOtherParticipantCount(
+                                            _otherParticipantCount + 1,
+                                          ),
                                     icon: const Icon(Icons.add),
                                   ),
                                 ],
@@ -1187,7 +1301,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             Expanded(
                               child: Text(
                                 _housingStepTitles(l10n)[_stepIndex],
-                                style: Theme.of(context).textTheme.headlineSmall,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
                               ),
                             ),
                           if (_stepIndex == 2)
@@ -1211,9 +1327,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         ],
                       ),
                     ),
-                    Expanded(
-                      child: _buildStepBody(),
-                    ),
+                    Expanded(child: _buildStepBody()),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
                         16,
@@ -1237,66 +1351,98 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             onPressed: _agreementRulesStepFooterLocked
                                 ? null
                                 : (_validateStep(_stepIndex)
-                                ? () async {
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    try {
-                                      if (_stepIndex == 0) await _persistParticipants();
-                                      if (_stepIndex == 1) await _persistPeriod();
-                                      if (_stepIndex == 3) {
-                                        if (!await _validateStep2Expenses()) {
-                                          if (mounted) {
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text(l10n.housingPlanExpenseValidationMessage),
-                                              ),
-                                            );
+                                      ? () async {
+                                          final messenger =
+                                              ScaffoldMessenger.of(context);
+                                          try {
+                                            if (_stepIndex == 0) {
+                                              await _persistParticipants();
+                                            }
+                                            if (_stepIndex == 1) {
+                                              await _persistPeriod();
+                                            }
+                                            if (_stepIndex == 3) {
+                                              if (!await _validateStep2Expenses()) {
+                                                if (mounted) {
+                                                  messenger.showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        l10n.housingPlanExpenseValidationMessage,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                            }
+                                            if (_stepIndex == 4) {
+                                              final lines = await _db
+                                                  .listPlanLines(_planId);
+                                              final groups = await _db
+                                                  .listPlanGroups(_planId);
+                                              final pids = _allParticipantIds();
+                                              if (!await _validateStep3Ratios(
+                                                lines,
+                                                groups,
+                                                pids,
+                                              )) {
+                                                if (mounted) {
+                                                  messenger.showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        l10n.housingPlanSplitValidationMessage,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                            }
+                                            if (_stepIndex == 5) {
+                                              await _persistAgreementRules();
+                                              await widget.prefs
+                                                  .setHousingDefaultPlanSummaryReached(
+                                                    true,
+                                                  );
+                                              if (mounted) {
+                                                setState(
+                                                  () => _showSummary = true,
+                                                );
+                                              }
+                                              return;
+                                            }
+                                            if (_stepIndex == 3) {
+                                              await _initRatiosIfNeeded();
+                                            }
+                                            if (mounted) {
+                                              setState(() => _stepIndex++);
+                                            }
+                                          } catch (e, st) {
+                                            assert(() {
+                                              debugPrint(
+                                                'Housing plan Next: $e\n$st',
+                                              );
+                                              return true;
+                                            }());
+                                            if (mounted) {
+                                              messenger.showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    l10n.housingPlanCouldNotContinue(
+                                                      '$e',
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }
                                           }
-                                          return;
                                         }
-                                      }
-                                      if (_stepIndex == 4) {
-                                        final lines = await _db.listPlanLines(_planId);
-                                        final groups = await _db.listPlanGroups(_planId);
-                                        final pids = _allParticipantIds();
-                                        if (!await _validateStep3Ratios(lines, groups, pids)) {
-                                          if (mounted) {
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text(l10n.housingPlanSplitValidationMessage),
-                                              ),
-                                            );
-                                          }
-                                          return;
-                                        }
-                                      }
-                                      if (_stepIndex == 5) {
-                                        await _persistAgreementRules();
-                                        await widget.prefs.setHousingDefaultPlanSummaryReached(true);
-                                        if (mounted) {
-                                          setState(() => _showSummary = true);
-                                        }
-                                        return;
-                                      }
-                                      if (_stepIndex == 3) {
-                                        await _initRatiosIfNeeded();
-                                      }
-                                      if (mounted) setState(() => _stepIndex++);
-                                    } catch (e, st) {
-                                      assert(() {
-                                        debugPrint('Housing plan Next: $e\n$st');
-                                        return true;
-                                      }());
-                                      if (mounted) {
-                                        messenger.showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.housingPlanCouldNotContinue('$e')),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  }
-                                : null),
-                            child: Text(_stepIndex == 5 ? l10n.housingPlanFinish : l10n.housingPlanNext),
+                                      : null),
+                            child: Text(
+                              _stepIndex == 5
+                                  ? l10n.housingPlanFinish
+                                  : l10n.housingPlanNext,
+                            ),
                           ),
                         ],
                       ),
@@ -1338,7 +1484,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _coEditorIndex = _coEditorIndex.clamp(0, v - 1);
       final maxPid = v;
       _ratioParticipantIndex = _ratioParticipantIndex.clamp(0, maxPid);
-      _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(0, maxPid);
+      _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(
+        0,
+        maxPid,
+      );
     });
   }
 
@@ -1352,7 +1501,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           Row(
             children: [
               OutlinedButton(
-                onPressed: _coEditorIndex > 0 ? () => setState(() => _coEditorIndex--) : null,
+                onPressed: _coEditorIndex > 0
+                    ? () => setState(() => _coEditorIndex--)
+                    : null,
                 child: Text(l10n.housingPlanPreviousPerson),
               ),
               const Spacer(),
@@ -1366,40 +1517,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           ),
           const SizedBox(height: 12),
         ],
-        TextField(
-          controller: _nameControllers[i],
-          decoration: InputDecoration(labelText: l10n.housingPlanParticipantNameLabel),
-          onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 88,
-          child: GridView.builder(
-            scrollDirection: Axis.horizontal,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 6,
-              crossAxisSpacing: 6,
-            ),
-            itemCount: _avatarIcons.length,
-            itemBuilder: (context, idx) {
-              final id = 'mdi:$idx';
-              final sel = _avatarIds[i] == id;
-              return InkWell(
-                onTap: () => setState(() => _avatarIds[i] = id),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: sel ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
-                      width: sel ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(_avatarIcons[idx]),
-                ),
-              );
-            },
-          ),
+        _HousingContactParticipantCard(
+          title: l10n.housingPlanCoParticipantUnnamed(i + 1),
+          displayName: _nameControllers[i].text.trim(),
+          avatarId: _avatarIds[i],
+          hasContact: _contactIds[i] != null,
+          avatarIconFor: _avatarIconFor,
+          onChooseContact: () => _chooseContactForParticipant(i),
         ),
         const SizedBox(height: 24),
         Text(
@@ -1416,7 +1540,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
         final fmt = widget.prefs.dateFormat;
-        final durationText = formatContractCalendarDuration(_periodStart, _periodEnd, l10n);
+        final durationText = formatContractCalendarDuration(
+          _periodStart,
+          _periodEnd,
+          l10n,
+        );
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -1426,7 +1554,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 children: [
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.housingPlanPlanStart, textAlign: TextAlign.center),
+                    title: Text(
+                      l10n.housingPlanPlanStart,
+                      textAlign: TextAlign.center,
+                    ),
                     subtitle: Text(
                       formatPreferenceDate(_periodStart, fmt),
                       textAlign: TextAlign.center,
@@ -1441,7 +1572,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       );
                       if (picked != null) {
                         setState(() {
-                          _periodStart = DateTime(picked.year, picked.month, picked.day).toUtc();
+                          _periodStart = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                          ).toUtc();
                           _ensureEndAfterStartCalendar();
                         });
                       }
@@ -1449,7 +1584,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.housingPlanPlanEnd, textAlign: TextAlign.center),
+                    title: Text(
+                      l10n.housingPlanPlanEnd,
+                      textAlign: TextAlign.center,
+                    ),
                     subtitle: Text(
                       formatPreferenceDate(_periodEnd, fmt),
                       textAlign: TextAlign.center,
@@ -1464,7 +1602,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       );
                       if (picked != null) {
                         setState(
-                          () => _periodEnd = DateTime(picked.year, picked.month, picked.day).toUtc(),
+                          () => _periodEnd = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                          ).toUtc(),
                         );
                       }
                     },
@@ -1542,15 +1684,21 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                   builder: (ctx) {
                                     final d10n = AppLocalizations.of(ctx);
                                     return AlertDialog(
-                                      title: Text(d10n.housingPlanDeleteCategoryTitle),
-                                      content: Text(d10n.housingPlanDeleteCategoryBody),
+                                      title: Text(
+                                        d10n.housingPlanDeleteCategoryTitle,
+                                      ),
+                                      content: Text(
+                                        d10n.housingPlanDeleteCategoryBody,
+                                      ),
                                       actions: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(ctx, false),
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, false),
                                           child: Text(d10n.housingPlanCancel),
                                         ),
                                         FilledButton(
-                                          onPressed: () => Navigator.pop(ctx, true),
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, true),
                                           child: Text(d10n.housingPlanDelete),
                                         ),
                                       ],
@@ -1585,7 +1733,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final l10n = AppLocalizations.of(context);
         final lines = (snap.data?[0] as List<PlanLine>?) ?? [];
         final groups = (snap.data?[1] as List<PlanGroup>?) ?? [];
-        final groupTitle = <String, String>{for (final g in groups) g.id: g.title};
+        final groupTitle = <String, String>{
+          for (final g in groups) g.id: g.title,
+        };
         return Column(
           children: [
             Expanded(
@@ -1612,7 +1762,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               minAmountMinor: drift.Value(c.minAmountMinor),
                               maxAmountMinor: drift.Value(c.maxAmountMinor),
                               cadence: drift.Value(c.cadence),
-                              recurrenceDayOfMonth: drift.Value(c.recurrenceDayOfMonth),
+                              recurrenceDayOfMonth: drift.Value(
+                                c.recurrenceDayOfMonth,
+                              ),
                               sortOrder: drift.Value(i),
                               groupId: drift.Value(c.groupId),
                               amountUsesRange: drift.Value(c.amountUsesRange),
@@ -1631,7 +1783,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           child: Card(
                             child: ListTile(
                               title: Text(line.title),
-                              subtitle: line.groupId != null && groupTitle[line.groupId!] != null
+                              subtitle:
+                                  line.groupId != null &&
+                                      groupTitle[line.groupId!] != null
                                   ? Text('(${groupTitle[line.groupId!]})')
                                   : null,
                               trailing: Row(
@@ -1641,15 +1795,25 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                     formatMinorAsMoney(
                                       context,
                                       _splitBasisMinor(line),
-                                      displayCurrencyCodeForPlan(widget.prefs, lines),
+                                      displayCurrencyCodeForPlan(
+                                        widget.prefs,
+                                        lines,
+                                      ),
                                     ),
-                                    style: Theme.of(context).textTheme.titleSmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline),
                                     onPressed: () async {
-                                      await (_db.delete(_db.planLines)..where((t) => t.id.equals(line.id))).go();
-                                      if (mounted) setState(() => _linesEpoch++);
+                                      await (_db.delete(
+                                            _db.planLines,
+                                          )..where((t) => t.id.equals(line.id)))
+                                          .go();
+                                      if (mounted) {
+                                        setState(() => _linesEpoch++);
+                                      }
                                     },
                                   ),
                                 ],
@@ -1678,13 +1842,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       builder: (context) => _LineEditorDialog(
         initial: existing,
         groups: groups,
-        defaultCurrency: widget.prefs.currency.trim().isEmpty ? 'CAD' : widget.prefs.currency.trim(),
+        defaultCurrency: widget.prefs.currency.trim().isEmpty
+            ? 'CAD'
+            : widget.prefs.currency.trim(),
       ),
     );
     if (result == null) return;
     final now = DateTime.now().toUtc();
     final lines = await _db.listPlanLines(_planId);
-    final nextOrder = lines.isEmpty ? 0 : lines.map((e) => e.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+    final nextOrder = lines.isEmpty
+        ? 0
+        : lines.map((e) => e.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
     final id = existing?.id ?? 'line:${now.microsecondsSinceEpoch}';
     await _db.upsertPlanLine(
       PlanLinesCompanion.insert(
@@ -1715,8 +1883,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
   }
 
-  List<_SplitListEntry> _splitDisplayEntries(List<PlanLine> lines, List<PlanGroup> groups) {
-    final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  List<_SplitListEntry> _splitDisplayEntries(
+    List<PlanLine> lines,
+    List<PlanGroup> groups,
+  ) {
+    final sorted = [...lines]
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     final knownGroupIds = groups.map((g) => g.id).toSet();
     final out = <_SplitListEntry>[];
     for (final g in groups) {
@@ -1729,19 +1901,23 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return gid == null || !knownGroupIds.contains(gid);
     }).toList();
     if (uncategorized.isNotEmpty) {
-      out.add(_SplitUncategorized(uncategorized, showHeading: groups.isNotEmpty));
+      out.add(
+        _SplitUncategorized(uncategorized, showHeading: groups.isNotEmpty),
+      );
     }
     return out;
   }
 
-  Widget _buildSplitRatioLineCard(BuildContext context, PlanLine line, List<String> pids) {
+  Widget _buildSplitRatioLineCard(
+    BuildContext context,
+    PlanLine line,
+    List<String> pids,
+  ) {
     final lastIdx = pids.length - 1;
     final isLast = _ratioParticipantIndex >= lastIdx;
     final basisMinor = _splitBasisMinor(line);
     return FutureBuilder<List<int>>(
-      future: Future.wait([
-        for (final pid in pids) _ratioWeight(line.id, pid),
-      ]),
+      future: Future.wait([for (final pid in pids) _ratioWeight(line.id, pid)]),
       builder: (context, snapW) {
         final weights = snapW.data ?? List.filled(pids.length, 0);
         var before = 0;
@@ -1754,15 +1930,24 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final wDb = weights[_ratioParticipantIndex];
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
         final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
-        final amountShareMinor = _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-        final percentEff = basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
+        final amountShareMinor =
+            _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
+        final percentEff = basisMinor > 0
+            ? (amountShareMinor / basisMinor) * 100
+            : 0.0;
 
         final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
         final shareText = _money2FromMinor(amountShareMinor);
 
-        final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
+        final tickFractions = _splitTickFractionsForParticipantCount(
+          pids.length,
+        );
         final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
-        final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]..sort();
+        final ticks = <double>[
+          0,
+          ...tickFractions.where((t) => t <= maxFrac),
+          maxFrac,
+        ]..sort();
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -1773,13 +1958,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text(line.title, style: Theme.of(context).textTheme.titleSmall)),
+                    Expanded(
+                      child: Text(
+                        line.title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
                     SizedBox(
                       width: 86,
                       child: Focus(
                         onFocusChange: (hasFocus) {
                           if (!hasFocus) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                            WidgetsBinding.instance.addPostFrameCallback((
+                              _,
+                            ) async {
                               if (!mounted) return;
                               await _commitShareAmountTextField(
                                 line,
@@ -1794,11 +1986,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         },
                         child: Builder(
                           builder: (focusCtx) {
-                            final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
+                            final typing =
+                                Focus.maybeOf(focusCtx)?.hasFocus ?? false;
                             if (!typing && shareCtrl.text != shareText) {
                               shareCtrl.value = TextEditingValue(
                                 text: shareText,
-                                selection: TextSelection.collapsed(offset: shareText.length),
+                                selection: TextSelection.collapsed(
+                                  offset: shareText.length,
+                                ),
                               );
                             }
                             return TextField(
@@ -1806,7 +2001,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               enabled: !isLast && assignable > 0,
                               textAlign: TextAlign.right,
                               textInputAction: TextInputAction.done,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 border: InputBorder.none,
@@ -1869,11 +2067,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                   alignment: Alignment.centerRight,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       child: Text(
                         '${percentEff.toStringAsFixed(1)}%',
                         style: Theme.of(context).textTheme.bodySmall,
@@ -1884,7 +2087,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 if (!isLast)
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 10,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1892,11 +2097,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         Slider(
                           min: 0,
                           max: maxFrac > 0 ? maxFrac : 1,
-                          value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
+                          value: (wEff / 10000.0).clamp(
+                            0.0,
+                            maxFrac > 0 ? maxFrac : 1,
+                          ),
                           onChanged: assignable <= 0
                               ? null
                               : (v) {
-                                  final w = (v * 10000).round().clamp(0, assignable);
+                                  final w = (v * 10000).round().clamp(
+                                    0,
+                                    assignable,
+                                  );
                                   setState(() {
                                     _shareAmountMinorOverride.remove(key);
                                     _draftRatioWeightsBps[key] = w;
@@ -1906,9 +2117,19 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               ? null
                               : (v) async {
                                   final snapped = _nearestTick(v, ticks);
-                                  final w = (snapped * 10000).round().clamp(0, assignable);
-                                  setState(() => _draftRatioWeightsBps[key] = w);
-                                  await _setRatioWeightBps(line, pids, _ratioParticipantIndex, w);
+                                  final w = (snapped * 10000).round().clamp(
+                                    0,
+                                    assignable,
+                                  );
+                                  setState(
+                                    () => _draftRatioWeightsBps[key] = w,
+                                  );
+                                  await _setRatioWeightBps(
+                                    line,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    w,
+                                  );
                                   if (mounted) {
                                     setState(() {
                                       _draftRatioWeightsBps.remove(key);
@@ -1921,29 +2142,45 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         LayoutBuilder(
                           builder: (context, c) {
                             final outer = _sliderThemeOuterPadding(context);
-                            final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
+                            final innerW = math.max(
+                              0.0,
+                              c.maxWidth - outer.horizontal,
+                            );
                             final sliderInteractive = assignable > 0 && !isLast;
-                            final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
+                            final (
+                              leftInset,
+                              trackWidth,
+                            ) = _sliderTrackHorizontalMetrics(
                               context,
                               innerW,
                               sliderInteractive: sliderInteractive,
                             );
-                            final color = Theme.of(context).colorScheme.outlineVariant;
+                            final color = Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant;
                             return SizedBox(
                               height: 10,
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
                                   if (maxFrac > 0 && trackWidth > 0)
-                                    for (final t in ticks.where((e) => e > 0 && e < maxFrac))
+                                    for (final t in ticks.where(
+                                      (e) => e > 0 && e < maxFrac,
+                                    ))
                                       Positioned(
                                         left: _snapToDevicePixels(
                                           context,
-                                          outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
+                                          outer.left +
+                                              leftInset +
+                                              (t / maxFrac) * trackWidth -
+                                              1,
                                         ),
                                         top: 0,
                                         bottom: 0,
-                                        child: Container(width: 2, color: color),
+                                        child: Container(
+                                          width: 2,
+                                          color: color,
+                                        ),
                                       ),
                                 ],
                               ),
@@ -1954,10 +2191,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     ),
                   )
                 else
-                  Slider(
-                    value: (wDb / 10000).clamp(0.0, 1.0),
-                    onChanged: null,
-                  ),
+                  Slider(value: (wDb / 10000).clamp(0.0, 1.0), onChanged: null),
               ],
             ),
           ),
@@ -1975,7 +2209,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final lastIdx = pids.length - 1;
     final isLast = _ratioParticipantIndex >= lastIdx;
     final basisMinor = _groupBasisMinor(memberLines);
-    final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, memberLines);
+    final displayCurrency = displayCurrencyCodeForPlan(
+      widget.prefs,
+      memberLines,
+    );
     final memberLabel = memberLines.map((l) => l.title).join(' · ');
 
     return FutureBuilder<List<int>>(
@@ -1994,15 +2231,24 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final wDb = weights[_ratioParticipantIndex];
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
         final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
-        final amountShareMinor = _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-        final percentEff = basisMinor > 0 ? (amountShareMinor / basisMinor) * 100 : 0.0;
+        final amountShareMinor =
+            _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
+        final percentEff = basisMinor > 0
+            ? (amountShareMinor / basisMinor) * 100
+            : 0.0;
 
         final shareCtrl = _shareAmountControllerForGroup(group.id, pidCur);
         final shareText = _money2FromMinor(amountShareMinor);
 
-        final tickFractions = _splitTickFractionsForParticipantCount(pids.length);
+        final tickFractions = _splitTickFractionsForParticipantCount(
+          pids.length,
+        );
         final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
-        final ticks = <double>[0, ...tickFractions.where((t) => t <= maxFrac), maxFrac]..sort();
+        final ticks = <double>[
+          0,
+          ...tickFractions.where((t) => t <= maxFrac),
+          maxFrac,
+        ]..sort();
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -2016,7 +2262,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     Expanded(
                       child: Text(
                         group.title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -2024,7 +2272,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       child: Focus(
                         onFocusChange: (hasFocus) {
                           if (!hasFocus) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                            WidgetsBinding.instance.addPostFrameCallback((
+                              _,
+                            ) async {
                               if (!mounted) return;
                               await _commitShareGroupAmountTextField(
                                 group,
@@ -2039,11 +2289,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         },
                         child: Builder(
                           builder: (focusCtx) {
-                            final typing = Focus.maybeOf(focusCtx)?.hasFocus ?? false;
+                            final typing =
+                                Focus.maybeOf(focusCtx)?.hasFocus ?? false;
                             if (!typing && shareCtrl.text != shareText) {
                               shareCtrl.value = TextEditingValue(
                                 text: shareText,
-                                selection: TextSelection.collapsed(offset: shareText.length),
+                                selection: TextSelection.collapsed(
+                                  offset: shareText.length,
+                                ),
                               );
                             }
                             return TextField(
@@ -2051,7 +2304,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               enabled: !isLast && assignable > 0,
                               textAlign: TextAlign.right,
                               textInputAction: TextInputAction.done,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               decoration: const InputDecoration(
                                 isDense: true,
                                 border: InputBorder.none,
@@ -2130,11 +2386,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                   alignment: Alignment.centerRight,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       child: Text(
                         '${percentEff.toStringAsFixed(1)}%',
                         style: Theme.of(context).textTheme.bodySmall,
@@ -2145,7 +2406,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 if (!isLast)
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 10,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2153,11 +2416,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         Slider(
                           min: 0,
                           max: maxFrac > 0 ? maxFrac : 1,
-                          value: (wEff / 10000.0).clamp(0.0, maxFrac > 0 ? maxFrac : 1),
+                          value: (wEff / 10000.0).clamp(
+                            0.0,
+                            maxFrac > 0 ? maxFrac : 1,
+                          ),
                           onChanged: assignable <= 0
                               ? null
                               : (v) {
-                                  final w = (v * 10000).round().clamp(0, assignable);
+                                  final w = (v * 10000).round().clamp(
+                                    0,
+                                    assignable,
+                                  );
                                   setState(() {
                                     _shareAmountMinorOverride.remove(key);
                                     _draftRatioWeightsBps[key] = w;
@@ -2167,9 +2436,19 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               ? null
                               : (v) async {
                                   final snapped = _nearestTick(v, ticks);
-                                  final w = (snapped * 10000).round().clamp(0, assignable);
-                                  setState(() => _draftRatioWeightsBps[key] = w);
-                                  await _setGroupRatioWeightBps(group, pids, _ratioParticipantIndex, w);
+                                  final w = (snapped * 10000).round().clamp(
+                                    0,
+                                    assignable,
+                                  );
+                                  setState(
+                                    () => _draftRatioWeightsBps[key] = w,
+                                  );
+                                  await _setGroupRatioWeightBps(
+                                    group,
+                                    pids,
+                                    _ratioParticipantIndex,
+                                    w,
+                                  );
                                   if (mounted) {
                                     setState(() {
                                       _draftRatioWeightsBps.remove(key);
@@ -2182,29 +2461,45 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         LayoutBuilder(
                           builder: (context, c) {
                             final outer = _sliderThemeOuterPadding(context);
-                            final innerW = math.max(0.0, c.maxWidth - outer.horizontal);
+                            final innerW = math.max(
+                              0.0,
+                              c.maxWidth - outer.horizontal,
+                            );
                             final sliderInteractive = assignable > 0 && !isLast;
-                            final (leftInset, trackWidth) = _sliderTrackHorizontalMetrics(
+                            final (
+                              leftInset,
+                              trackWidth,
+                            ) = _sliderTrackHorizontalMetrics(
                               context,
                               innerW,
                               sliderInteractive: sliderInteractive,
                             );
-                            final color = Theme.of(context).colorScheme.outlineVariant;
+                            final color = Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant;
                             return SizedBox(
                               height: 10,
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
                                   if (maxFrac > 0 && trackWidth > 0)
-                                    for (final t in ticks.where((e) => e > 0 && e < maxFrac))
+                                    for (final t in ticks.where(
+                                      (e) => e > 0 && e < maxFrac,
+                                    ))
                                       Positioned(
                                         left: _snapToDevicePixels(
                                           context,
-                                          outer.left + leftInset + (t / maxFrac) * trackWidth - 1,
+                                          outer.left +
+                                              leftInset +
+                                              (t / maxFrac) * trackWidth -
+                                              1,
                                         ),
                                         top: 0,
                                         bottom: 0,
-                                        child: Container(width: 2, color: color),
+                                        child: Container(
+                                          width: 2,
+                                          color: color,
+                                        ),
                                       ),
                                 ],
                               ),
@@ -2215,10 +2510,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     ),
                   )
                 else
-                  Slider(
-                    value: (wDb / 10000).clamp(0.0, 1.0),
-                    onChanged: null,
-                  ),
+                  Slider(value: (wDb / 10000).clamp(0.0, 1.0), onChanged: null),
               ],
             ),
           ),
@@ -2239,8 +2531,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           builder: (context, snapAgr) {
             final l10n = AppLocalizations.of(context);
             final combined = snapLinesAndGroups.data;
-            final lines = combined == null ? <PlanLine>[] : combined[0] as List<PlanLine>;
-            final groups = combined == null ? <PlanGroup>[] : combined[1] as List<PlanGroup>;
+            final lines = combined == null
+                ? <PlanLine>[]
+                : combined[0] as List<PlanLine>;
+            final groups = combined == null
+                ? <PlanGroup>[]
+                : combined[1] as List<PlanGroup>;
             final agr = snapAgr.data;
             if (lines.isEmpty || agr == null) {
               return Center(child: Text(l10n.housingPlanAddExpensesFirst));
@@ -2254,16 +2550,22 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: FutureBuilder<double>(
-                    future: _participantTotalMinor(pids[_ratioParticipantIndex], lines, groups),
+                    future: _participantTotalMinor(
+                      pids[_ratioParticipantIndex],
+                      lines,
+                      groups,
+                    ),
                     builder: (context, snapT) {
                       final t = snapT.data ?? 0;
-                      final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, lines);
+                      final displayCurrency = displayCurrencyCodeForPlan(
+                        widget.prefs,
+                        lines,
+                      );
                       return Text(
                         formatMajorDoubleAsMoney(context, t, displayCurrency),
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       );
                     },
                   ),
@@ -2298,18 +2600,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                       final e = entries[i];
                       return switch (e) {
                         _SplitListGroup(:final group, :final memberLines) =>
-                          _buildSplitRatioGroupCard(context, group, memberLines, pids),
-                        _SplitUncategorized(:final lines, :final showHeading) => Column(
+                          _buildSplitRatioGroupCard(
+                            context,
+                            group,
+                            memberLines,
+                            pids,
+                          ),
+                        _SplitUncategorized(:final lines, :final showHeading) =>
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (showHeading)
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(4, i == 0 ? 8 : 18, 4, 6),
+                                  padding: EdgeInsets.fromLTRB(
+                                    4,
+                                    i == 0 ? 8 : 18,
+                                    4,
+                                    6,
+                                  ),
                                   child: Text(
                                     l10n.housingPlanSplitNoCategory,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               for (final line in lines)
@@ -2335,7 +2649,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   ) async {
     var sumMinor = 0;
     final knownGroupIds = groups.map((g) => g.id).toSet();
-    final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final sorted = [...lines]
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     for (final g in groups) {
       final members = sorted.where((l) => l.groupId == g.id).toList();
@@ -2381,7 +2696,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
     return [
       CheckboxListTile(
-        contentPadding: const EdgeInsetsDirectional.fromSTEB(_kAgreementRuleHPad, 0, _kAgreementRuleHPad, 0),
+        contentPadding: const EdgeInsetsDirectional.fromSTEB(
+          _kAgreementRuleHPad,
+          0,
+          _kAgreementRuleHPad,
+          0,
+        ),
         value: _withdrawalSameForAll,
         onChanged: (v) {
           final same = v ?? true;
@@ -2399,7 +2719,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         TextField(
           controller: _globalNotice,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
+          decoration: InputDecoration(
+            labelText: l10n.housingPlanMinimumNoticeDays,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         TextField(
@@ -2412,7 +2734,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         TextField(
           controller: _perParticipantNotice[_withdrawalParticipantIndex],
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.housingPlanMinimumNoticeDays),
+          decoration: InputDecoration(
+            labelText: l10n.housingPlanMinimumNoticeDays,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         TextField(
@@ -2486,11 +2810,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final total = 1 + _otherParticipantCount;
     for (var i = 0; i < total; i++) {
       final label = _ratioParticipantLabel(l10n, i);
-      final n = i < _perParticipantNotice.length ? _perParticipantNotice[i].text.trim() : '';
-      final p = i < _perParticipantPenalty.length ? _perParticipantPenalty[i].text.trim() : '';
-      lines.add('$label — ${l10n.housingPlanMinimumNoticeDays}: $n; ${l10n.housingPlanPenaltyAmount}: $p');
+      final n = i < _perParticipantNotice.length
+          ? _perParticipantNotice[i].text.trim()
+          : '';
+      final p = i < _perParticipantPenalty.length
+          ? _perParticipantPenalty[i].text.trim()
+          : '';
+      lines.add(
+        '$label — ${l10n.housingPlanMinimumNoticeDays}: $n; ${l10n.housingPlanPenaltyAmount}: $p',
+      );
     }
-    return Text(lines.join('\n'), style: Theme.of(context).textTheme.bodyMedium);
+    return Text(
+      lines.join('\n'),
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
   }
 
   Widget _agreementLeadingCheckbox({
@@ -2512,10 +2845,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Widget _agreementLeadingSuggestionCheckbox() {
-    return _agreementLeadingCheckbox(
-      value: true,
-      onChanged: null,
-    );
+    return _agreementLeadingCheckbox(value: true, onChanged: null);
   }
 
   Widget _agreementRuleAccordionShell({
@@ -2533,7 +2863,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           InkWell(
             onTap: onHeaderTap,
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(_kAgreementRuleHPad, 4, _kAgreementRuleHPad, 4),
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                _kAgreementRuleHPad,
+                4,
+                _kAgreementRuleHPad,
+                4,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -2551,7 +2886,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           ),
           if (expanded)
             Padding(
-              padding: const EdgeInsets.fromLTRB(_kAgreementRuleHPad, 0, _kAgreementRuleHPad, 12),
+              padding: const EdgeInsets.fromLTRB(
+                _kAgreementRuleHPad,
+                0,
+                _kAgreementRuleHPad,
+                12,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: expandedChildren,
@@ -2600,7 +2940,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
   }
 
-  void _disposeTextControllersNextFrame(TextEditingController? a, TextEditingController? b) {
+  void _disposeTextControllersNextFrame(
+    TextEditingController? a,
+    TextEditingController? b,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       a?.dispose();
       b?.dispose();
@@ -2633,7 +2976,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   void _saveEditingCustomRule(AppLocalizations l10n, AgreementCustomRule rule) {
-    if (_customRuleEditingId != rule.id || _customRuleEditTitle == null || _customRuleEditBody == null) {
+    if (_customRuleEditingId != rule.id ||
+        _customRuleEditTitle == null ||
+        _customRuleEditBody == null) {
       return;
     }
     final t = _customRuleEditTitle!.text.trim();
@@ -2666,7 +3011,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final scheme = Theme.of(context).colorScheme;
     final bodyStyle = Theme.of(context).textTheme.bodyMedium;
     final raw = _buildingRulesBody.text;
-    final display = raw.trim().isEmpty ? l10n.housingAgreementRuleBuildingHint : raw;
+    final display = raw.trim().isEmpty
+        ? l10n.housingAgreementRuleBuildingHint
+        : raw;
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: scheme.outlineVariant),
@@ -2688,7 +3035,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return _agreementRuleAccordionShell(
       leading: _agreementLeadingCheckbox(
         value: _rulesDraft.curfewEnabled,
-        onChanged: _curfewEditing ? null : (v) => setState(() => _rulesDraft.curfewEnabled = v ?? false),
+        onChanged: _curfewEditing
+            ? null
+            : (v) => setState(() => _rulesDraft.curfewEnabled = v ?? false),
       ),
       title: Text(l10n.housingAgreementRuleCurfewTitle),
       expanded: _curfewExpanded,
@@ -2698,7 +3047,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           l10n: l10n,
           pencilEnabled: !_curfewEditing,
           onPencil: () => setState(() {
-            _quietGridSnapshotForEdit = quietHoursDeepCopy(_rulesDraft.quietHalfHours);
+            _quietGridSnapshotForEdit = quietHoursDeepCopy(
+              _rulesDraft.quietHalfHours,
+            );
             _curfewEditing = true;
             _curfewExpanded = true;
           }),
@@ -2734,7 +3085,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 TextButton(
                   onPressed: () => setState(() {
                     if (_quietGridSnapshotForEdit != null) {
-                      quietHoursReplaceFrom(_rulesDraft.quietHalfHours, _quietGridSnapshotForEdit!);
+                      quietHoursReplaceFrom(
+                        _rulesDraft.quietHalfHours,
+                        _quietGridSnapshotForEdit!,
+                      );
                     }
                     _quietGridSnapshotForEdit = null;
                     _curfewEditing = false;
@@ -2766,7 +3120,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         value: _rulesDraft.earlyWithdrawalEnabled,
         onChanged: _withdrawalEditing
             ? null
-            : (v) => setState(() => _rulesDraft.earlyWithdrawalEnabled = v ?? false),
+            : (v) => setState(
+                () => _rulesDraft.earlyWithdrawalEnabled = v ?? false,
+              ),
       ),
       title: Text(l10n.housingAgreementRuleEarlyWithdrawalTitle),
       expanded: _withdrawalExpanded,
@@ -2786,7 +3142,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(l10n.housingPlanWithdrawalIntro, style: Theme.of(context).textTheme.bodySmall),
+          child: Text(
+            l10n.housingPlanWithdrawalIntro,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         if (_withdrawalEditing)
           Column(
@@ -2831,7 +3190,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         value: _rulesDraft.buildingRulesEnabled,
         onChanged: _buildingRulesEditing
             ? null
-            : (v) => setState(() => _rulesDraft.buildingRulesEnabled = v ?? false),
+            : (v) =>
+                  setState(() => _rulesDraft.buildingRulesEnabled = v ?? false),
       ),
       title: Text(l10n.housingAgreementRuleBuildingTitle),
       expanded: _buildingExpanded,
@@ -2874,7 +3234,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                     child: Text(l10n.housingPlanCancel),
                   ),
                   FilledButton(
-                    onPressed: () => setState(() => _buildingRulesEditing = false),
+                    onPressed: () =>
+                        setState(() => _buildingRulesEditing = false),
                     child: Text(l10n.housingPlanSave),
                   ),
                 ],
@@ -2906,10 +3267,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return _agreementRuleAccordionShell(
       leading: _agreementLeadingCheckbox(
         value: rule.enabled,
-        onChanged: isEditing ? null : (v) => setState(() => rule.enabled = v ?? true),
+        onChanged: isEditing
+            ? null
+            : (v) => setState(() => rule.enabled = v ?? true),
       ),
       title: Text(
-        rule.title.isEmpty ? l10n.housingAgreementRuleCustomTitleLabel : rule.title,
+        rule.title.isEmpty
+            ? l10n.housingAgreementRuleCustomTitleLabel
+            : rule.title,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -2940,7 +3305,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             children: [
               TextField(
                 controller: _customRuleEditTitle,
-                decoration: InputDecoration(labelText: l10n.housingAgreementRuleCustomTitleLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.housingAgreementRuleCustomTitleLabel,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -2977,10 +3344,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 ? Text(
                     l10n.housingAgreementRuleCustomBodyLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   )
-                : Text(rule.body, style: Theme.of(context).textTheme.bodyMedium),
+                : Text(
+                    rule.body,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
           ),
       ],
     );
@@ -3017,10 +3387,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           trashEnabled: !_rulesRemovalLocked,
           onTrash: !_rulesRemovalLocked
               ? () => setState(() {
-                    if (!_rulesDraft.dismissedSuggestionIds.contains(suggestionId)) {
-                      _rulesDraft.dismissedSuggestionIds.add(suggestionId);
-                    }
-                  })
+                  if (!_rulesDraft.dismissedSuggestionIds.contains(
+                    suggestionId,
+                  )) {
+                    _rulesDraft.dismissedSuggestionIds.add(suggestionId);
+                  }
+                })
               : null,
           trashTooltip: l10n.housingAgreementRuleDismissSuggestion,
         ),
@@ -3053,7 +3425,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 children: [
                   TextField(
                     controller: titleCtrl,
-                    decoration: InputDecoration(labelText: d10n.housingAgreementRuleCustomTitleLabel),
+                    decoration: InputDecoration(
+                      labelText: d10n.housingAgreementRuleCustomTitleLabel,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -3069,8 +3443,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(d10n.housingPlanCancel)),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(d10n.housingPlanSave)),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(d10n.housingPlanCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(d10n.housingPlanSave),
+              ),
             ],
           );
         },
@@ -3103,7 +3483,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(l10n.housingAgreementRulesIntro, style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          l10n.housingAgreementRulesIntro,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
         if (_rulesRemovalLocked) ...[
           const SizedBox(height: 8),
           Text(
@@ -3117,14 +3500,18 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         _agreementBuildingRulesCard(l10n),
         for (var i = 0; i < _rulesDraft.customRules.length; i++)
           _customAgreementRuleTile(l10n, i),
-        if (!_rulesDraft.dismissedSuggestionIds.contains(kAgreementSuggestionCommonCleanliness))
+        if (!_rulesDraft.dismissedSuggestionIds.contains(
+          kAgreementSuggestionCommonCleanliness,
+        ))
           _suggestionAgreementRuleTile(
             l10n,
             suggestionId: kAgreementSuggestionCommonCleanliness,
             title: l10n.housingAgreementSuggestionCleanlinessTitle,
             body: l10n.housingAgreementSuggestionCleanlinessBody,
           ),
-        if (!_rulesDraft.dismissedSuggestionIds.contains(kAgreementSuggestionFridgeManagement))
+        if (!_rulesDraft.dismissedSuggestionIds.contains(
+          kAgreementSuggestionFridgeManagement,
+        ))
           _suggestionAgreementRuleTile(
             l10n,
             suggestionId: kAgreementSuggestionFridgeManagement,
@@ -3135,12 +3522,74 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: FilledButton.tonalIcon(
-            onPressed: _rulesRemovalLocked ? null : () => _showAddAgreementRuleDialog(),
+            onPressed: _rulesRemovalLocked
+                ? null
+                : () => _showAddAgreementRuleDialog(),
             icon: const Icon(Icons.add),
             label: Text(l10n.housingAgreementRuleAdd),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HousingContactParticipantCard extends StatelessWidget {
+  const _HousingContactParticipantCard({
+    required this.title,
+    required this.displayName,
+    required this.avatarId,
+    required this.hasContact,
+    required this.avatarIconFor,
+    required this.onChooseContact,
+  });
+
+  final String title;
+  final String displayName;
+  final String avatarId;
+  final bool hasContact;
+  final IconData Function(String avatarId) avatarIconFor;
+  final VoidCallback onChooseContact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: theme.textTheme.titleSmall),
+            const SizedBox(height: 12),
+            if (hasContact) ...[
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(child: Icon(avatarIconFor(avatarId))),
+                title: Text(displayName),
+                subtitle: Text(l10n.contactsTitle),
+              ),
+              const SizedBox(height: 8),
+            ] else
+              Text(
+                l10n.housingPlanContactRequired,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            FilledButton.icon(
+              icon: const Icon(Icons.contacts),
+              label: Text(
+                hasContact
+                    ? l10n.housingPlanChangeContactAction
+                    : l10n.housingPlanChooseContactAction,
+              ),
+              onPressed: onChooseContact,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -3161,6 +3610,7 @@ class _SummaryView extends StatelessWidget {
   final String planId;
   final AppPreferences prefs;
   final List<IconData> avatarIcons;
+
   /// Keys `lineId:participantId`; same map as split-step manual amount pins.
   final Map<String, int> shareMinorOverrides;
   final VoidCallback onEditPlan;
@@ -3170,7 +3620,9 @@ class _SummaryView extends StatelessWidget {
   IconData _iconForAvatar(String avatarId) {
     if (!avatarId.startsWith('mdi:')) return MdiIcons.account;
     final idx = int.tryParse(avatarId.split(':').last);
-    if (idx == null || idx < 0 || idx >= avatarIcons.length) return MdiIcons.account;
+    if (idx == null || idx < 0 || idx >= avatarIcons.length) {
+      return MdiIcons.account;
+    }
     return avatarIcons[idx];
   }
 
@@ -3195,15 +3647,20 @@ class _SummaryView extends StatelessWidget {
           return int.tryParse(tail) ?? 999;
         }
 
-        final roster = (snap.data![0] as List<Participant>)
-            .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
-            .toList()
-          ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
+        final roster =
+            (snap.data![0] as List<Participant>)
+                .where(
+                  (p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'),
+                )
+                .toList()
+              ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
         final lines = snap.data![1] as List<PlanLine>;
         final agr = snap.data![2] as Agreement?;
         final ratios = snap.data![3] as List<PlanRatio>;
         final planGroups = snap.data![4] as List<PlanGroup>;
-        if (agr == null) return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
+        if (agr == null) {
+          return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
+        }
 
         var planMonthlyTotalMinor = 0;
         for (final line in lines) {
@@ -3211,14 +3668,18 @@ class _SummaryView extends StatelessWidget {
         }
 
         final knownGroupIds = planGroups.map((g) => g.id).toSet();
-        final sortedLines = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final sortedLines = [...lines]
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
         int participantShareMinor(String participantId) {
           var participantMonthlyMinor = 0;
           for (final g in planGroups) {
             final mem = sortedLines.where((l) => l.groupId == g.id).toList();
             if (mem.isEmpty) continue;
-            final basis = mem.fold<int>(0, (a, l) => a + PlanProjection.unitMinor(l));
+            final basis = mem.fold<int>(
+              0,
+              (a, l) => a + PlanProjection.unitMinor(l),
+            );
             final gKey = 'g:${g.id}:$participantId';
             final o = shareMinorOverrides[gKey];
             if (o != null) {
@@ -3226,7 +3687,9 @@ class _SummaryView extends StatelessWidget {
               continue;
             }
             final w = ratios
-                .where((r) => r.groupId == g.id && r.participantId == participantId)
+                .where(
+                  (r) => r.groupId == g.id && r.participantId == participantId,
+                )
                 .fold<int>(0, (a, r) => a + r.weight);
             participantMonthlyMinor += (basis * w / 10000).round();
           }
@@ -3240,7 +3703,10 @@ class _SummaryView extends StatelessWidget {
               continue;
             }
             final w = ratios
-                .where((r) => r.lineId == line.id && r.participantId == participantId)
+                .where(
+                  (r) =>
+                      r.lineId == line.id && r.participantId == participantId,
+                )
                 .fold<int>(0, (a, r) => a + r.weight);
             final basis = PlanProjection.unitMinor(line);
             participantMonthlyMinor += (basis * w / 10000).round();
@@ -3260,7 +3726,10 @@ class _SummaryView extends StatelessWidget {
                   final sharePct = planMonthlyTotalMinor > 0
                       ? (participantMonthlyMinor / planMonthlyTotalMinor) * 100
                       : 0.0;
-                  final displayCurrency = displayCurrencyCodeForPlan(prefs, lines);
+                  final displayCurrency = displayCurrencyCodeForPlan(
+                    prefs,
+                    lines,
+                  );
                   return Card(
                     margin: const EdgeInsets.only(bottom: 10),
                     child: Padding(
@@ -3268,9 +3737,7 @@ class _SummaryView extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            child: Icon(_iconForAvatar(p.avatarId)),
-                          ),
+                          CircleAvatar(child: Icon(_iconForAvatar(p.avatarId))),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -3281,14 +3748,18 @@ class _SummaryView extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         p.displayName,
-                                        style: Theme.of(context).textTheme.titleMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     Text(
                                       '${sharePct.toStringAsFixed(2)}%',
-                                      style: Theme.of(context).textTheme.titleMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
                                     ),
                                   ],
                                 ),
@@ -3300,11 +3771,16 @@ class _SummaryView extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  formatMinorAsMoney(context, participantMonthlyMinor, displayCurrency),
+                                  formatMinorAsMoney(
+                                    context,
+                                    participantMonthlyMinor,
+                                    displayCurrency,
+                                  ),
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineLarge
+                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
@@ -3326,9 +3802,15 @@ class _SummaryView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton.tonal(onPressed: onEditPlan, child: Text(l10n.housingPlanSummaryEditPlan)),
+                  FilledButton.tonal(
+                    onPressed: onEditPlan,
+                    child: Text(l10n.housingPlanSummaryEditPlan),
+                  ),
                   const SizedBox(height: 8),
-                  FilledButton(onPressed: onInvite, child: Text(l10n.housingPlanSummaryInvite)),
+                  FilledButton(
+                    onPressed: onInvite,
+                    child: Text(l10n.housingPlanSummaryInvite),
+                  ),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: onDestroy,
@@ -3361,10 +3843,12 @@ class _CategoryEditorDialog extends StatefulWidget {
 }
 
 class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
-  late final TextEditingController _title =
-      TextEditingController(text: widget.initial?.title ?? '');
-  late final TextEditingController _description =
-      TextEditingController(text: widget.initial?.description ?? '');
+  late final TextEditingController _title = TextEditingController(
+    text: widget.initial?.title ?? '',
+  );
+  late final TextEditingController _description = TextEditingController(
+    text: widget.initial?.description ?? '',
+  );
 
   @override
   void dispose() {
@@ -3378,7 +3862,11 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
     final l10n = AppLocalizations.of(context);
     final canSave = _title.text.trim().isNotEmpty;
     return AlertDialog(
-      title: Text(widget.initial == null ? l10n.housingPlanAddCategoryTitle : l10n.housingPlanEditCategoryTitle),
+      title: Text(
+        widget.initial == null
+            ? l10n.housingPlanAddCategoryTitle
+            : l10n.housingPlanEditCategoryTitle,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -3386,7 +3874,9 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
           children: [
             TextField(
               controller: _title,
-              decoration: InputDecoration(labelText: l10n.housingPlanCategoryNameLabel),
+              decoration: InputDecoration(
+                labelText: l10n.housingPlanCategoryNameLabel,
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
@@ -3395,8 +3885,8 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
               child: Text(
                 l10n.housingPlanCategoryDescriptionLabel,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 maxLines: 2,
                 softWrap: true,
               ),
@@ -3404,9 +3894,7 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
             const SizedBox(height: 6),
             TextField(
               controller: _description,
-              decoration: const InputDecoration(
-                alignLabelWithHint: true,
-              ),
+              decoration: const InputDecoration(alignLabelWithHint: true),
               maxLines: 5,
               minLines: 2,
               onChanged: (_) => setState(() {}),
@@ -3415,7 +3903,10 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.housingPlanCancel)),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.housingPlanCancel),
+        ),
         FilledButton(
           onPressed: canSave
               ? () {
@@ -3480,16 +3971,21 @@ class _LineEditorDialog extends StatefulWidget {
 class _LineEditorDialogState extends State<_LineEditorDialog> {
   late bool _isRecurring = widget.initial?.isRecurring ?? true;
   late bool _amountUsesRange = widget.initial?.amountUsesRange ?? false;
-  late final TextEditingController _title =
-      TextEditingController(text: widget.initial?.title ?? '');
-  late final TextEditingController _amount =
-      TextEditingController(text: _minorToText(widget.initial?.amountMinor));
-  late final TextEditingController _min =
-      TextEditingController(text: _minorToText(widget.initial?.minAmountMinor));
-  late final TextEditingController _max =
-      TextEditingController(text: _minorToText(widget.initial?.maxAmountMinor));
-  late final TextEditingController _description =
-      TextEditingController(text: widget.initial?.description ?? '');
+  late final TextEditingController _title = TextEditingController(
+    text: widget.initial?.title ?? '',
+  );
+  late final TextEditingController _amount = TextEditingController(
+    text: _minorToText(widget.initial?.amountMinor),
+  );
+  late final TextEditingController _min = TextEditingController(
+    text: _minorToText(widget.initial?.minAmountMinor),
+  );
+  late final TextEditingController _max = TextEditingController(
+    text: _minorToText(widget.initial?.maxAmountMinor),
+  );
+  late final TextEditingController _description = TextEditingController(
+    text: widget.initial?.description ?? '',
+  );
   late int _dayOfMonth;
   late String _currency;
   String? _groupId;
@@ -3500,7 +3996,9 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
     _dayOfMonth = widget.initial?.recurrenceDayOfMonth ?? 1;
     _currency = widget.initial?.currency ?? widget.defaultCurrency;
     final gid = widget.initial?.groupId;
-    _groupId = gid != null && widget.groups.any((g) => g.id == gid) ? gid : null;
+    _groupId = gid != null && widget.groups.any((g) => g.id == gid)
+        ? gid
+        : null;
   }
 
   @override
@@ -3518,11 +4016,16 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final canSave = _title.text.trim().isNotEmpty &&
+    final canSave =
+        _title.text.trim().isNotEmpty &&
         (!_isRecurring || (_dayOfMonth >= 1 && _dayOfMonth <= 31)) &&
         (_amountUsesRange ? _rangeValid() : _fixedOk);
     return AlertDialog(
-      title: Text(widget.initial == null ? l10n.housingPlanAddExpenseTitle : l10n.housingPlanEditExpenseTitle),
+      title: Text(
+        widget.initial == null
+            ? l10n.housingPlanAddExpenseTitle
+            : l10n.housingPlanEditExpenseTitle,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -3540,7 +4043,9 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
             ),
             TextField(
               controller: _title,
-              decoration: InputDecoration(labelText: l10n.housingPlanExpenseTitleLabel),
+              decoration: InputDecoration(
+                labelText: l10n.housingPlanExpenseTitleLabel,
+              ),
               onChanged: (_) => setState(() {}),
             ),
             if (widget.groups.isNotEmpty) ...[
@@ -3548,9 +4053,14 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               DropdownButtonFormField<String?>(
                 key: ValueKey<String?>(_groupId),
                 initialValue: _groupId,
-                decoration: InputDecoration(labelText: l10n.housingPlanCategoryOptionalLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanCategoryOptionalLabel,
+                ),
                 items: [
-                  DropdownMenuItem(value: null, child: Text(l10n.housingPlanCategoryNone)),
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(l10n.housingPlanCategoryNone),
+                  ),
                   ...widget.groups.map(
                     (g) => DropdownMenuItem(value: g.id, child: Text(g.title)),
                   ),
@@ -3573,8 +4083,13 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 initialValue: _dayOfMonth,
-                decoration: InputDecoration(labelText: l10n.housingPlanDayOfMonthLabel),
-                items: [for (var d = 1; d <= 31; d++) DropdownMenuItem(value: d, child: Text('$d'))],
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanDayOfMonthLabel,
+                ),
+                items: [
+                  for (var d = 1; d <= 31; d++)
+                    DropdownMenuItem(value: d, child: Text('$d')),
+                ],
                 onChanged: (v) => setState(() => _dayOfMonth = v ?? 1),
               ),
             ],
@@ -3583,13 +4098,17 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _min,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l10n.housingPlanMinLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanMinLabel,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
               TextField(
                 controller: _max,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l10n.housingPlanMaxLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanMaxLabel,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
             ] else ...[
@@ -3597,7 +4116,9 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
               TextField(
                 controller: _amount,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l10n.housingPlanAmountLabel),
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanAmountLabel,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
             ],
@@ -3605,7 +4126,10 @@ class _LineEditorDialogState extends State<_LineEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.housingPlanCancel)),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.housingPlanCancel),
+        ),
         FilledButton(
           onPressed: canSave
               ? () {
