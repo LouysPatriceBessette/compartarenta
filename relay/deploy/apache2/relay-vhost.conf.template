@@ -61,12 +61,32 @@
     # marketing surface; it contains NO operational state of the relay
     # (no envelope IDs, no metrics, no schema version, no telemetry that
     # calls /v1/...). The audit checklist's A.4.b item verifies this.
+    #
+    # In addition to the marketing root, the DocumentRoot also serves the
+    # invitation-link landing page at /contact/invite/ . The reference
+    # version of this landing page lives in the source repository under
+    # `relay/deploy/landing/contact/invite/` (HTML + invite.js). To deploy:
+    #
+    #   sudo mkdir -p /var/www/compartarenta-relay-landing/contact/invite
+    #   sudo cp -r relay/deploy/landing/contact/invite/* \
+    #       /var/www/compartarenta-relay-landing/contact/invite/
+    #
+    # This page is purely static — it reads the `?v=…&c=…` payload of the
+    # invitation URL on the client and offers two paths:
+    #   (1) tap a `compartarenta://contact/invite?…` deep link, and
+    #   (2) copy the full deep link and paste it into the app's
+    #       "Scan / enter a code" screen.
+    # It never sends the payload to the relay.
     DocumentRoot /var/www/compartarenta-relay-landing
     <Directory /var/www/compartarenta-relay-landing>
         Require all granted
         Options -Indexes -ExecCGI -Includes
         AllowOverride None
     </Directory>
+
+    # Make sure /contact/invite (no trailing slash) resolves to the
+    # invitation landing page rather than returning 404.
+    DirectoryIndex index.html
 
     # --- Reverse proxy to the relay binary (loopback only) ---
     ProxyPreserveHost On

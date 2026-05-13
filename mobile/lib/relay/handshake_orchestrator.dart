@@ -241,6 +241,7 @@ class HandshakeOrchestrator {
       String localContactId,
       String shortCode,
       String deepLink,
+      String webLink,
     })
   >
   generateInvitation({
@@ -328,6 +329,7 @@ class HandshakeOrchestrator {
       localContactId: stubContactId,
       shortCode: code.renderShort(),
       deepLink: code.renderDeepLink(),
+      webLink: code.renderWebLink(),
     );
   }
 

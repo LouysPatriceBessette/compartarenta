@@ -34,6 +34,8 @@ class InvitationCode {
   static const int currentVersion = 1;
   static const int nonceBytes = 12;
   static const int invitationIdBytes = 8;
+  static const String defaultInvitationLinkOrigin =
+      'https://sync.incoherences.org';
 
   final int version;
   final Uint8List invitationId;
@@ -90,6 +92,20 @@ class InvitationCode {
   String renderDeepLink() {
     final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
     return 'compartarenta://contact/invite?v=$version&c=$encoded';
+  }
+
+  /// HTTPS representation suitable for email, SMS, and messaging apps.
+  ///
+  /// Most clients do not autolink custom schemes like `compartarenta://`.
+  /// This URL carries the same payload but starts with `https://`, so it is
+  /// clickable in common mail clients. Once app/universal links are configured
+  /// for [origin], the OS can route this URL directly into the installed app.
+  String renderWebLink({String origin = defaultInvitationLinkOrigin}) {
+    final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
+    final base = origin.endsWith('/')
+        ? origin.substring(0, origin.length - 1)
+        : origin;
+    return '$base/contact/invite?v=$version&c=$encoded';
   }
 
   /// Hex representation of the nonce, suitable for storing in the local
@@ -201,22 +217,24 @@ InvitationCodeParseResult parseInvitationCode(String input) {
   );
 }
 
-/// Parses either a human-readable invitation code or the app-local deep link
-/// produced by [InvitationCode.renderDeepLink].
+/// Parses either a human-readable invitation code or a deep/web link produced
+/// by [InvitationCode.renderDeepLink] or [InvitationCode.renderWebLink].
 InvitationCodeParseResult parseInvitationInput(String input) {
   final trimmed = input.trim();
-  if (trimmed.startsWith('compartarenta://')) {
-    return parseInvitationDeepLink(trimmed);
+  final uriText = _extractInvitationUri(trimmed);
+  if (uriText != null) {
+    return parseInvitationLink(uriText);
   }
   return parseInvitationCode(trimmed);
 }
 
-/// Parses a `compartarenta://contact/invite` deep link.
+/// Parses a `compartarenta://contact/invite` or
+/// `https://<host>/contact/invite` invitation link.
 ///
 /// The deep-link payload is intended for QR/share-sheet transport. It carries
 /// the same version + invitation id + nonce bytes as the short code; it does
 /// not carry the human checksum because a QR scan is machine-read.
-InvitationCodeParseResult parseInvitationDeepLink(String input) {
+InvitationCodeParseResult parseInvitationLink(String input) {
   final Uri uri;
   try {
     uri = Uri.parse(input.trim());
@@ -224,9 +242,14 @@ InvitationCodeParseResult parseInvitationDeepLink(String input) {
     return const InvitationCodeBad(InvitationCodeError.invalidCharacters);
   }
 
-  if (uri.scheme != 'compartarenta' ||
-      uri.host != 'contact' ||
-      uri.path != '/invite') {
+  final supportedCustomScheme =
+      uri.scheme == 'compartarenta' &&
+      uri.host == 'contact' &&
+      uri.path == '/invite';
+  final supportedWebLink =
+      (uri.scheme == 'https' || uri.scheme == 'http') &&
+      uri.path == '/contact/invite';
+  if (!supportedCustomScheme && !supportedWebLink) {
     return const InvitationCodeBad(InvitationCodeError.invalidCharacters);
   }
 
@@ -272,6 +295,33 @@ InvitationCodeParseResult parseInvitationDeepLink(String input) {
   return InvitationCodeOk(
     InvitationCode._(version: version!, invitationId: invId, nonce: nonce),
   );
+}
+
+/// Backwards-compatible alias for the original custom-scheme parser.
+InvitationCodeParseResult parseInvitationDeepLink(String input) =>
+    parseInvitationLink(input);
+
+String? _extractInvitationUri(String input) {
+  if (input.startsWith('compartarenta://') ||
+      input.startsWith('https://') ||
+      input.startsWith('http://')) {
+    return _stripTrailingPunctuation(input);
+  }
+
+  final match = RegExp(
+    r'(compartarenta://\S+|https?://\S+)',
+    caseSensitive: false,
+  ).firstMatch(input);
+  if (match == null) return null;
+  return _stripTrailingPunctuation(match.group(0)!);
+}
+
+String _stripTrailingPunctuation(String value) {
+  var result = value.trim();
+  while (result.isNotEmpty && '.,);]}>'.contains(result[result.length - 1])) {
+    result = result.substring(0, result.length - 1);
+  }
+  return result;
 }
 
 // ---------- Crockford base32 with mod-37 checksum ----------

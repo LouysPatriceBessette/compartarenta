@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Compartarenta — Connection invitation</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f7fb;
+      --fg: #1a1a23;
+      --muted: #5d5d68;
+      --accent: #5a4cd8;
+      --accent-fg: #ffffff;
+      --card: #ffffff;
+      --border: #e2e2ea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15151c;
+        --fg: #ececf1;
+        --muted: #9b9ba8;
+        --accent: #8b7dff;
+        --accent-fg: #15151c;
+        --card: #1f1f29;
+        --border: #2d2d3a;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 8px;
+    }
+    p { margin: 0 0 12px; }
+    .lede { color: var(--muted); margin-bottom: 24px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      margin: 0 0 8px;
+    }
+    .open-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--accent-fg);
+      padding: 12px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 8px 0 4px;
+    }
+    .open-btn:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    code, .link-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: block;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+    .section + .section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .lang { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    footer {
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Compartarenta</h1>
+    <p class="lede">You received an invitation to connect with someone on Compartarenta.</p>
+
+    <section class="card">
+      <h2>Open the app</h2>
+      <p>If Compartarenta is installed on this device, tap the button below.</p>
+      <p><a id="open-app" class="open-btn" href="compartarenta://contact/invite">Open in Compartarenta</a></p>
+      <p style="color: var(--muted); font-size: 0.85rem;">
+        Nothing about this invitation is sent to our server by opening this page —
+        the link is processed entirely on your device.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Or paste this link into the app</h2>
+      <p>Open Compartarenta, go to <strong>Contacts</strong>, tap the
+        <strong>scan / enter-code</strong> icon at the top of the screen, and paste
+        the full link below.</p>
+      <div id="link-box" class="link-box" aria-label="Invitation link">compartarenta://contact/invite</div>
+      <p style="color: var(--muted); font-size: 0.85rem;">
+        The same invitation is also valid as a short code (the one written under
+        the link in the message you received).
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="section">
+        <div class="lang">Français</div>
+        <p>Vous avez reçu une invitation à vous connecter sur Compartarenta.
+          Ouvrez l’application Compartarenta sur l’appareil où elle est installée,
+          allez dans <strong>Contacts</strong>, touchez l’icône
+          <strong>scanner / saisir un code</strong> en haut de l’écran et collez
+          le lien complet ci-dessus. Vous pouvez aussi utiliser le code court
+          inclus dans le message que vous avez reçu.</p>
+      </div>
+      <div class="section">
+        <div class="lang">Español</div>
+        <p>Has recibido una invitación para conectarte en Compartarenta. Abre la
+          app Compartarenta en el dispositivo donde esté instalada, ve a
+          <strong>Contactos</strong>, toca el icono
+          <strong>escanear / introducir código</strong> en la parte superior de
+          la pantalla y pega el enlace de arriba. También puedes usar el código
+          corto incluido en el mensaje que recibiste.</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>This page is part of the Compartarenta relay infrastructure. It
+        contains no operational data about the relay.</p>
+    </footer>
+  </main>
+  <script src="invite.js"></script>
+</body>
+</html>

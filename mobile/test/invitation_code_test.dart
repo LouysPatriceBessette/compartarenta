@@ -147,6 +147,16 @@ void main() {
       expect(link, contains('c='));
     });
 
+    test('web link includes the version and a payload param', () {
+      InvitationCode.setRandomForTesting(_SeededRandom(111));
+      addTearDown(InvitationCode.resetRandomForTesting);
+      final code = InvitationCode.generate();
+      final link = code.renderWebLink();
+      expect(link, startsWith('https://sync.incoherences.org/contact/invite?'));
+      expect(link, contains('v=${InvitationCode.currentVersion}'));
+      expect(link, contains('c='));
+    });
+
     test('parseInvitationDeepLink round-trips a generated deep link', () {
       InvitationCode.setRandomForTesting(_SeededRandom(12));
       addTearDown(InvitationCode.resetRandomForTesting);
@@ -161,16 +171,41 @@ void main() {
       expect(ok.code.renderShort(), code.renderShort());
     });
 
-    test('parseInvitationInput accepts short code and deep link', () {
-      InvitationCode.setRandomForTesting(_SeededRandom(13));
+    test(
+      'parseInvitationInput accepts short code, deep link, and web link',
+      () {
+        InvitationCode.setRandomForTesting(_SeededRandom(13));
+        addTearDown(InvitationCode.resetRandomForTesting);
+        final code = InvitationCode.generate();
+
+        expect(
+          parseInvitationInput(code.renderShort()),
+          isA<InvitationCodeOk>(),
+        );
+        expect(
+          parseInvitationInput(code.renderDeepLink()),
+          isA<InvitationCodeOk>(),
+        );
+        expect(
+          parseInvitationInput(code.renderWebLink()),
+          isA<InvitationCodeOk>(),
+        );
+      },
+    );
+
+    test('parseInvitationInput extracts a web link from a pasted message', () {
+      InvitationCode.setRandomForTesting(_SeededRandom(14));
       addTearDown(InvitationCode.resetRandomForTesting);
       final code = InvitationCode.generate();
+      final message =
+          'Invitation:\n${code.renderWebLink()}.\nFallback: ${code.renderShort()}';
 
-      expect(parseInvitationInput(code.renderShort()), isA<InvitationCodeOk>());
-      expect(
-        parseInvitationInput(code.renderDeepLink()),
-        isA<InvitationCodeOk>(),
-      );
+      final parsed = parseInvitationInput(message);
+
+      expect(parsed, isA<InvitationCodeOk>());
+      final ok = parsed as InvitationCodeOk;
+      expect(ok.code.invitationIdHex(), code.invitationIdHex());
+      expect(ok.code.nonceHex(), code.nonceHex());
     });
 
     test('nonce hex and invitation-id hex match expected byte lengths', () {

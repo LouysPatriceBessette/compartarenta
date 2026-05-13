@@ -333,6 +333,14 @@
   "contactsInviteQrSemantics": "Code QR d’invitation",
   "contactsInviteShortCodeLabel": "Code",
   "contactsInviteCopyDeepLink": "Copier le lien",
+  "contactsInviteCopyShareText": "Copier l’invitation",
+  "contactsInviteShareText": "Vous êtes invité à vous connecter sur Compartarenta.\n\nCode à usage unique :\n{code}\n\nPour l’utiliser : ouvrez l’app Compartarenta, allez dans Contacts, touchez l’icône scanner/saisir un code dans le haut de l’écran et collez ce code. Depuis l’appareil où l’app est installée vous pouvez aussi ouvrir : {link}",
+  "@contactsInviteShareText": {
+    "placeholders": {
+      "link": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
   "contactsInviteExpiresAt": "Expire {when}",
   "@contactsInviteExpiresAt": {
     "placeholders": { "when": { "type": "String" } }

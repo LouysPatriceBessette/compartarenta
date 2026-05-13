@@ -24,11 +24,16 @@ class ContactInvitationsRepository {
   /// Generates a new invitation, persists a `pending` row, and returns both
   /// the row metadata and the encoded code so the caller can present it for
   /// out-of-band sharing.
-  Future<({ContactInvitation row, InvitationCode code, String shortCode, String deepLink})>
-      generate({
-    required Duration validFor,
-    DateTime? now,
-  }) async {
+  Future<
+    ({
+      ContactInvitation row,
+      InvitationCode code,
+      String shortCode,
+      String deepLink,
+      String webLink,
+    })
+  >
+  generate({required Duration validFor, DateTime? now}) async {
     final created = now ?? DateTime.now().toUtc();
     final code = InvitationCode.generate();
     final companion = ContactInvitationsCompanion.insert(
@@ -39,14 +44,15 @@ class ContactInvitationsRepository {
       expiresAt: created.add(validFor),
     );
     await _db.upsertContactInvitation(companion);
-    final row = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(code.invitationIdHex())))
-        .getSingle();
+    final row = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(code.invitationIdHex()))).getSingle();
     return (
       row: row,
       code: code,
       shortCode: code.renderShort(),
       deepLink: code.renderDeepLink(),
+      webLink: code.renderWebLink(),
     );
   }
 
@@ -60,11 +66,17 @@ class ContactInvitationsRepository {
     for (final row in all) {
       if (row.status == InvitationStatus.pending &&
           row.expiresAt.isBefore(reference)) {
-        await _markStatus(row.id, InvitationStatus.expired, consumedAt: reference);
-        out.add(row.copyWith(
-          status: InvitationStatus.expired,
-          consumedAt: drift.Value(reference),
-        ));
+        await _markStatus(
+          row.id,
+          InvitationStatus.expired,
+          consumedAt: reference,
+        );
+        out.add(
+          row.copyWith(
+            status: InvitationStatus.expired,
+            consumedAt: drift.Value(reference),
+          ),
+        );
       } else {
         out.add(row);
       }
@@ -75,9 +87,9 @@ class ContactInvitationsRepository {
   /// Marks the given invitation revoked. Returns true if the row was found
   /// and was in a state where revocation is allowed (pending only).
   Future<bool> revoke(String invitationId, {DateTime? now}) async {
-    final row = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(invitationId)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(invitationId))).getSingleOrNull();
     if (row == null || row.status != InvitationStatus.pending) return false;
     await _markStatus(
       invitationId,
@@ -92,9 +104,9 @@ class ContactInvitationsRepository {
   /// whether the local user ultimately accepts or rejects: the nonce is
   /// considered consumed on first validation per the spec.
   Future<bool> markUsed(String invitationId, {DateTime? now}) async {
-    final row = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(invitationId)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(invitationId))).getSingleOrNull();
     if (row == null || row.status != InvitationStatus.pending) return false;
     if (row.expiresAt.isBefore(now ?? DateTime.now().toUtc())) {
       await _markStatus(
@@ -117,8 +129,9 @@ class ContactInvitationsRepository {
     String status, {
     DateTime? consumedAt,
   }) async {
-    await (_db.update(_db.contactInvitations)..where((t) => t.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(id))).write(
       ContactInvitationsCompanion(
         status: drift.Value(status),
         consumedAt: consumedAt == null

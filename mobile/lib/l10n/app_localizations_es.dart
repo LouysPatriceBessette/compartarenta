@@ -873,6 +873,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsInviteCopyDeepLink => 'Copiar enlace';
 
   @override
+  String get contactsInviteCopyShareText => 'Copiar invitación';
+
+  @override
+  String contactsInviteShareText(String link, String code) {
+    return 'Te invitan a conectarte en Compartarenta.\n\nCódigo de un solo uso:\n$code\n\nPara usarlo: abre la app Compartarenta, ve a Contactos, toca el icono de escanear/introducir código en la parte superior de la pantalla y pega este código. Desde el dispositivo donde la app esté instalada también puedes abrir: $link';
+  }
+
+  @override
   String contactsInviteExpiresAt(String when) {
     return 'Expira $when';
   }

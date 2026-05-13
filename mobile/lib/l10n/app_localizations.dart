@@ -1646,6 +1646,18 @@ abstract class AppLocalizations {
   /// **'Copy link'**
   String get contactsInviteCopyDeepLink;
 
+  /// No description provided for @contactsInviteCopyShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy invitation'**
+  String get contactsInviteCopyShareText;
+
+  /// No description provided for @contactsInviteShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re invited to connect on Compartarenta.\n\nOne-time code:\n{code}\n\nTo use it: open the Compartarenta app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: {link}'**
+  String contactsInviteShareText(String link, String code);
+
   /// No description provided for @contactsInviteExpiresAt.
   ///
   /// In en, this message translates to:

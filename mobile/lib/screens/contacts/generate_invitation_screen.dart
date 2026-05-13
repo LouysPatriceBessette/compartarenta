@@ -145,6 +145,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
           row: r.invitation,
           shortCode: r.shortCode,
           deepLink: r.deepLink,
+          webLink: r.webLink,
         );
       } else {
         final r = await _repo.generate(validFor: _validFor);
@@ -152,6 +153,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
           row: r.row,
           shortCode: r.shortCode,
           deepLink: r.deepLink,
+          webLink: r.webLink,
         );
       }
       if (!mounted) return;
@@ -209,6 +211,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
               : _GeneratedView(
                   shortCode: generated.shortCode,
                   deepLink: generated.deepLink,
+                  webLink: generated.webLink,
                   expiresAt: generated.row.expiresAt,
                   onRevoke: _revoke,
                   onDone: () => context.pop(),
@@ -224,11 +227,13 @@ class _GeneratedInvitation {
     required this.row,
     required this.shortCode,
     required this.deepLink,
+    required this.webLink,
   });
 
   final ContactInvitation row;
   final String shortCode;
   final String deepLink;
+  final String webLink;
 }
 
 class _IntroForm extends StatelessWidget {
@@ -296,6 +301,7 @@ class _GeneratedView extends StatelessWidget {
   const _GeneratedView({
     required this.shortCode,
     required this.deepLink,
+    required this.webLink,
     required this.expiresAt,
     required this.onRevoke,
     required this.onDone,
@@ -303,6 +309,7 @@ class _GeneratedView extends StatelessWidget {
 
   final String shortCode;
   final String deepLink;
+  final String webLink;
   final DateTime expiresAt;
   final VoidCallback onRevoke;
   final VoidCallback onDone;
@@ -310,6 +317,7 @@ class _GeneratedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final shareText = l10n.contactsInviteShareText(webLink, shortCode);
     // The QR card + buttons easily exceed a phone viewport. Make the
     // upper portion scrollable so it never overflows, then keep the
     // action buttons docked at the bottom of the available space.
@@ -382,10 +390,10 @@ class _GeneratedView extends StatelessWidget {
                             ),
                             OutlinedButton.icon(
                               icon: const Icon(Icons.link),
-                              label: Text(l10n.contactsInviteCopyDeepLink),
+                              label: Text(l10n.contactsInviteCopyShareText),
                               onPressed: () {
                                 Clipboard.setData(
-                                  ClipboardData(text: deepLink),
+                                  ClipboardData(text: shareText),
                                 );
                               },
                             ),
