@@ -52,20 +52,86 @@ curl -s -o /dev/null -w "%{http_code}\n" http://$RELAY_HOST/v1/envelopes
 `relay-deployment-topology` / "TLS is mandatory on the relay
 sub-domain".
 
-### A.4 No incidental public endpoints
+### A.4 Public surface enumeration
 
 ```bash
-for path in /metrics /admin /debug /debug/pprof /pprof /healthz /readyz; do
+for path in / /healthz /readyz /metrics /admin /debug /debug/pprof /pprof; do
   echo -n "$path: "
   curl -s -o /dev/null -w "%{http_code}\n" https://$RELAY_HOST$path
 done
 ```
 
-**Expected:** `/metrics`, `/admin`, `/debug`, `/debug/pprof`, `/pprof`
-return non-200 (the relay does not serve them on the public listener).
-`/healthz` and `/readyz` return 200. Required by
-`relay-deployment-topology` / "The relay is the only public surface
-exposed by the deployment".
+**Expected:**
+
+- `/` returns **200**. By design, the relay sub-domain serves a
+  hand-authored static landing page describing the application and
+  linking to the app stores. This is documented in
+  [`relay-deployment.md`](./relay-deployment.md) as part of the
+  relay's own public surface (not an unrelated co-tenant). The
+  landing-page content is itself audited by item **A.4.b** below.
+- `/healthz` and `/readyz` return **200** (proxied by Apache to the
+  relay binary).
+- `/metrics`, `/admin`, `/debug`, `/debug/pprof`, `/pprof` return
+  **non-200** (Apache `Require all denied` returns 403; if Apache is
+  bypassed the relay binary's public listener does not serve them
+  either, so the answer is 404).
+
+Required by `relay-deployment-topology` / "The relay is the only
+public surface exposed by the deployment". The landing page is part
+of the relay's own front door, not "an unrelated service hosted on
+the same VPS".
+
+### A.4.b Landing page is static and free of operational state
+
+```bash
+curl -s https://$RELAY_HOST/ \
+  | head -c 200000 \
+  | grep -iE 'envelope_id|sender_identity|recipient_identity|relay_envelopes_|queue_depth|ttl_expires_at|operator_action|"build"|"schema_version"|/v1/' \
+  || echo "ok"
+```
+
+**Expected:** prints `ok`. The landing page contains only static
+marketing content (description + store links) and does not embed:
+
+- references to the relay's `/v1/...` endpoints,
+- envelope, identity, or routing identifiers,
+- internal counter / metric names,
+- the build hash or schema version,
+- telemetry beacons or analytics that contact the relay.
+
+The corresponding constraints are documented in
+[`relay-deployment.md`](./relay-deployment.md) under "Static landing
+page". Any failure here is a finding per
+`relay-public-auditability` / "Public claims about the relay are
+verifiable from the repo".
+
+### A.4.c Apache vhost matches the repository template
+
+`$VHOST_FILE` is whatever filename the operator chose under
+`/etc/apache2/sites-available/`. The literal `relay-vhost` in the
+template is conventional, not required; see
+[`relay-deployment.md`](./relay-deployment.md) /
+"Sub-domain name is a placeholder".
+
+```bash
+diff -u \
+  /srv/compartarenta-relay/source/relay/deploy/apache2/relay-vhost.conf.template \
+  "$VHOST_FILE" \
+  | head -200
+```
+
+**Expected:** the only differences from the template are:
+
+- `ServerName` (your chosen sub-domain),
+- `DocumentRoot` (path to the landing page),
+- the `SSLCertificate*` paths rewritten by `certbot`,
+- the `Redirect permanent` target on the `*:80` vhost (matching your
+  chosen sub-domain).
+
+Any other deviation is a finding per
+`relay-public-auditability` /
+"Configuration drift between deployed and documented is itself a
+finding".
 
 ### A.5 Database port is not reachable from the public internet
 
@@ -289,17 +355,24 @@ SELECT actor, action, reason FROM operator_actions ORDER BY occurred_at DESC LIM
 
 ## F. Documentation alignment
 
-### F.1 README, deployment runbook, audit log are present
+### F.1 Documentation and reference manifests are present
 
 ```bash
 test -f relay/README.md \
+  && test -f relay/compose.yml \
+  && test -f relay/Dockerfile \
+  && test -f relay/.env.example \
+  && test -f relay/deploy/apache2/relay-vhost.conf.template \
   && test -f docs/relay-deployment.md \
   && test -f docs/relay-audit-checklist.md \
   && test -f docs/relay-audit-log.md \
   && echo "ok"
 ```
 
-**Expected:** `ok`.
+**Expected:** `ok`. Every artefact an external reviewer needs to
+reproduce the deployment locally is present in the repo
+(`relay-public-auditability` / "The relay's source, configuration, and
+schema are public").
 
 ### F.2 The audit log has an entry within the last quarter
 

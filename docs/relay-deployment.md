@@ -1,9 +1,10 @@
 # Compartarenta Relay — Deployment Runbook
 
 This runbook describes how to deploy the Compartarenta relay on an
-existing VPS, under a dedicated sub-domain, with TLS terminated at the
-public edge and the relay state held in a containerized PostgreSQL
-instance. It is the operational counterpart to the spec at
+existing Ubuntu VPS that **already hosts other services**, under a
+dedicated sub-domain, with Apache as the reverse proxy in front of the
+containerized Go binary and a containerized PostgreSQL behind it. It is
+the operational counterpart to the spec at
 `openspec/changes/relay-server-infrastructure-and-audit/`. Auditors
 should cross-reference this document with
 [`relay-audit-checklist.md`](./relay-audit-checklist.md).
@@ -12,46 +13,329 @@ should cross-reference this document with
 
 | Item                           | Where                                                      |
 |--------------------------------|------------------------------------------------------------|
-| Source code                    | [`relay/`](../relay)                                       |
+| Relay source                   | [`relay/`](../relay)                                       |
 | Migrations (canonical)         | [`relay/internal/store/schema/`](../relay/internal/store/schema) |
-| Reference compose manifest     | [`relay/compose.yml`](../relay/compose.yml)                |
+| Container manifest             | [`relay/compose.yml`](../relay/compose.yml)                |
 | Environment template           | [`relay/.env.example`](../relay/.env.example)              |
+| Apache vhost template          | [`relay/deploy/apache2/relay-vhost.conf.template`](../relay/deploy/apache2/relay-vhost.conf.template) |
 | Audit checklist                | [`relay-audit-checklist.md`](./relay-audit-checklist.md)   |
 | Audit log                      | [`relay-audit-log.md`](./relay-audit-log.md)               |
-| Deployment topology spec       | `openspec/changes/relay-server-infrastructure-and-audit/specs/relay-deployment-topology/spec.md` |
+| Topology spec                  | `openspec/changes/relay-server-infrastructure-and-audit/specs/relay-deployment-topology/spec.md` |
 
 ## Topology
 
 ```
                  public internet
                        │
-                       │ HTTPS / 443
+                       │ HTTPS / 443  (also 80 -> redirect)
                        ▼
+              ┌──────────────────────────┐
+              │  Apache 2 (host)         │  ← TLS for the dedicated
+              │  vhost: relay sub-domain │    relay sub-domain only
+              │  + static landing page   │  ← page d'accueil at /
+              │  on /                    │  ← proxies /v1/, /healthz,
+              │                          │    /readyz to the relay
+              └────────────┬─────────────┘
+                           │ HTTP / 8080  (loopback only, no TLS)
+                           ▼
               ┌──────────────────────┐
-              │   reverse proxy      │  ← terminates TLS for
-              │   (Caddy / nginx /   │    relay.<example.tld>
-              │   traefik)           │    auto-renewed via ACME
-              └──────────┬───────────┘
-                         │ HTTP / 8080  (private)
-                         ▼
-              ┌──────────────────────┐
-              │   relay container    │   non-root, read-only rootfs
-              │   /v1/envelopes      │   cap_drop: ALL
+              │   relay container    │   non-root (UID 65532),
+              │   FROM scratch       │   read-only rootfs,
+              │   /v1/envelopes      │   cap_drop: ALL,
               │   /v1/inbox/:id      │   no-new-privileges:true
               │   /v1/handshake/...  │
               │   /v1/disconnect     │
               │   /healthz /readyz   │
-              │   /metrics  ← 9090   │  ← private port only
-              └──────────┬───────────┘
-                         │ tcp / 5432  (private)
-                         ▼
+              │   /metrics  ← 9090   │  ← private listener,
+              │                      │    loopback only
+              └────────────┬─────────┘
+                           │ tcp / 5432  (Docker private net)
+                           ▼
               ┌──────────────────────┐
               │  postgres container  │   no published port
               │  pgdata named volume │   isolated network
               └──────────────────────┘
 ```
 
+## Ports summary
+
+The relay does NOT require any new public port on a VPS that already
+runs other websites. Apache's 80/443 listeners are shared; everything
+else is bound to loopback or stays inside the Docker network.
+
+| Port  | Side                  | Visibility                              | Used by                                  |
+|-------|-----------------------|------------------------------------------|------------------------------------------|
+| 80    | host                  | public (existing Apache)                 | redirect to HTTPS on the relay sub-domain|
+| 443   | host                  | public (existing Apache)                 | TLS + landing page + reverse proxy       |
+| 22    | host                  | restricted (operator allow-list)         | SSH for administration                   |
+| 8080  | host                  | `127.0.0.1` only (bound by compose)      | Apache → relay binary                    |
+| 9090  | host                  | `127.0.0.1` only (bound by compose)      | metrics (SSH-tunnel reachable only)      |
+| 5432  | inside Docker network | not bound to host at all                 | relay ↔ postgres                         |
+
+Conclusion for UFW / host firewall: **no new rule needed for the
+relay**. The existing rules that already allow 80/443/22 for the other
+services on the VPS cover everything. A defensive `deny 5432/tcp` is
+optional — Docker is not publishing that port in the first place, so
+the audit checklist's A.5 probe is satisfied by construction.
+
+## Host preparation
+
+### Required system packages
+
+Most are already on a standard Ubuntu 24.04 host that runs Apache. The
+new ones in this list are `postgresql-client`, `jq`, and `fail2ban`.
+
+```bash
+sudo apt update
+sudo apt install -y \
+    apache2 \
+    certbot python3-certbot-apache \
+    postgresql-client \
+    jq \
+    fail2ban
+sudo a2enmod proxy proxy_http ssl headers rewrite http2
+```
+
+The host does **not** need Go installed. The relay's `Dockerfile` uses
+a `golang:1.26-alpine` builder stage to compile the binary inside the
+container; the runtime image is `FROM scratch`. The host also does not
+need anything Node-related — the relay is a single Go process.
+
+### Dedicated Linux user
+
+The deployment lives under a dedicated system user with exclusive
+filesystem access. The username is **`compartarenta-relay`** and is
+recorded here on purpose — its presence in the public repository is a
+deliberate operational choice, mitigated by `fail2ban` for SSH and by
+the user account being password-locked (login is only via
+`sudo -u compartarenta-relay -s` from an authorized admin user).
+
+```bash
+sudo useradd --system --create-home \
+             --home-dir /srv/compartarenta-relay \
+             --shell /bin/bash \
+             --comment "Compartarenta relay deploy account" \
+             compartarenta-relay
+
+# Password-locked. No SSH password login is possible for this account.
+sudo passwd -l compartarenta-relay
+
+# Exclusive ownership.
+sudo chown -R compartarenta-relay:compartarenta-relay /srv/compartarenta-relay
+
+# 0700 = owner rwx, group ---, others ---. Only compartarenta-relay
+# (and root, which has no fs permissions limits) can read or traverse.
+sudo chmod 0700 /srv/compartarenta-relay
+```
+
+Verify:
+
+```bash
+sudo namei -l /srv/compartarenta-relay
+sudo ls -lan /srv/compartarenta-relay
+```
+
+### Docker group membership
+
+To let `compartarenta-relay` run `docker compose` without `sudo`,
+add it to the `docker` group:
+
+```bash
+sudo usermod -aG docker compartarenta-relay
+```
+
+**Security trade-off, recorded here for the audit posture:** members
+of the `docker` group have effective root on the host (they can mount
+any host path into a container as root). This is acceptable here
+because the same account already owns the relay's secrets and the
+deployment directory — the trust boundary is identical. Therefore:
+
+- `compartarenta-relay` MUST NOT be used for unrelated host tasks.
+- No SSH keys are authorized on this account directly; access is via
+  `sudo -u compartarenta-relay -s` from a separately-authenticated
+  admin user.
+
+An alternative that avoids the `docker` group is to drive
+`docker compose` from a `systemd` unit that runs as root, with a narrow
+`sudoers` rule that lets `compartarenta-relay` issue only
+`systemctl start/stop/restart compartarenta-relay`. Slightly more
+ceremony for a marginal isolation gain in this context.
+
+### Deployment directory layout
+
+```
+/srv/compartarenta-relay/                     compartarenta-relay:compartarenta-relay, 0700
+├── source/                                   git clone of this repository
+│   └── …/relay/
+│       ├── compose.yml
+│       ├── Dockerfile
+│       └── internal/store/schema/0001_init.sql
+├── env/                                      compartarenta-relay:compartarenta-relay, 0700
+│   └── .env                                  compartarenta-relay:compartarenta-relay, 0600
+└── audit/                                    compartarenta-relay:compartarenta-relay, 0700
+    └── (local audit artefacts: schema dumps, log samples, etc.)
+```
+
+Set it up:
+
+```bash
+sudo -u compartarenta-relay -s
+cd /srv/compartarenta-relay
+
+git clone https://github.com/<owner>/Compartarenta.git source
+mkdir -p env audit
+chmod 0700 env audit
+
+cp source/relay/.env.example env/.env
+chmod 0600 env/.env
+# Edit env/.env: fill in real values from the secret store.
+# Never commit env/.env.
+```
+
+### fail2ban for SSH
+
+`compartarenta-relay` is password-locked and SSH-key-less, so the
+username is not a direct attack target. But the VPS hosts other
+services and the relay's existence is publicly documented (CT logs +
+this repo), so the standard `fail2ban` SSH jail is recommended for
+defense in depth.
+
+```bash
+sudo systemctl enable --now fail2ban
+sudo systemctl status fail2ban
+```
+
+The default `sshd` jail on Ubuntu 24.04 is sufficient. Tune
+`bantime` / `findtime` / `maxretry` per the operator's preference;
+record any deviation from defaults in `docs/relay-audit-log.md`.
+
+## Reverse proxy: Apache vhost + static landing page
+
+### Sub-domain name is a placeholder
+
+The literal string `relay` used throughout this document, in the
+Apache vhost template
+([`relay/deploy/apache2/relay-vhost.conf.template`](../relay/deploy/apache2/relay-vhost.conf.template)),
+and in the audit checklist examples is a **placeholder, not a
+requirement**. The spec
+(`relay-deployment-topology` / "The relay is exposed on a dedicated
+sub-domain") writes the example as `relay.<example.tld>` with an
+explicit `e.g.,`; no particular word is mandated.
+
+Pick any sub-domain name that fits your product branding —
+`sync.<your-domain>`, `api.<your-domain>`, `m.<your-domain>`,
+`<brand>-sync.<your-domain>`, `connect.<your-domain>`, etc. Nothing in
+the Go binary, the Docker manifests, the compose project name, or the
+on-disk schema depends on the literal word `relay`.
+
+What the spec **does** require, regardless of the name you pick:
+
+1. It SHALL be a **dedicated sub-domain** (not a path under an
+   existing domain such as `<your-domain>/api/`). The constraint is
+   per `relay-deployment-topology` / "The relay is exposed on a
+   dedicated sub-domain".
+2. It SHALL have **its own TLS certificate**. No wildcard cert reuse
+   with unrelated services on the same VPS, per
+   `relay-deployment-topology` / "TLS material is not shared with
+   unrelated services".
+3. It SHALL serve **only** the relay's documented public surface: the
+   protocol endpoints under `/v1/*`, the health endpoints, and the
+   documented static landing page at `/`. No other application is
+   reachable via the same sub-domain.
+
+Whatever name you pick, replace every occurrence of
+`relay.example.tld` in your local copy of the Apache vhost template
+and in the deployments / audits sections of
+[`relay-audit-log.md`](./relay-audit-log.md) with the real value at
+deployment time. Once chosen, the name is recorded in the first
+"Deployments" row of `relay-audit-log.md`.
+
+> If you have not yet locked your product brand, picking a
+> brand-neutral name (`sync`, `api`, `m`) lets you defer the decision
+> without ever having to rename the sub-domain afterwards. Renaming a
+> sub-domain later is technically cheap (DNS + a fresh ACME cert) but
+> it does churn the audit log.
+
+### Reverse proxy role
+
+Apache:
+
+- terminates TLS for the sub-domain with its own ACME-issued
+  certificate (no wildcard reuse with unrelated sites on this VPS, per
+  `relay-deployment-topology` / "TLS material is not shared with
+  unrelated services"),
+- serves a **static landing page** at `/` (hand-authored HTML
+  describing the application and linking to the app stores — see
+  notes below),
+- reverse-proxies `/v1/*`, `/healthz`, `/readyz` to the relay binary
+  on `127.0.0.1:8080`,
+- blocks `/metrics`, `/admin`, `/debug`, `/pprof` at the proxy as
+  defense in depth (the relay's public listener doesn't serve them in
+  the first place; metrics are on the private listener only).
+
+### Reference vhost
+
+The canonical vhost template lives in this repository at
+[`relay/deploy/apache2/relay-vhost.conf.template`](../relay/deploy/apache2/relay-vhost.conf.template).
+The audit checklist's F.1 item verifies its presence; F.2 expects no
+drift between the deployed vhost and this template.
+
+Adapt the template (replace `relay.example.tld` and the
+`DocumentRoot` path), drop it into `/etc/apache2/sites-available/`:
+
+```bash
+sudo cp /srv/compartarenta-relay/source/relay/deploy/apache2/relay-vhost.conf.template \
+        /etc/apache2/sites-available/relay.example.tld.conf
+sudo sed -i 's/relay\.example\.tld/relay.YOUR-DOMAIN.TLD/g' \
+        /etc/apache2/sites-available/relay.example.tld.conf
+sudo a2ensite relay.example.tld.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
+
+### TLS issuance with certbot
+
+```bash
+sudo certbot --apache -d relay.YOUR-DOMAIN.TLD
+```
+
+`certbot --apache` rewrites the vhost to point at the issued
+certificate and installs a `systemd` timer for automatic renewal. The
+relay sub-domain MUST get its own certificate; do NOT use a wildcard
+that also covers unrelated services on the host.
+
+Monitoring of renewal failures (the spec requires alerting before
+expiry) is operator-side; recommended pattern: a Prometheus alert on
+`probe_ssl_earliest_cert_expiry` from blackbox_exporter, or a cron
+that emails the operator when `certbot certificates` reports a date
+less than 14 days away.
+
+### Static landing page
+
+The page at `/` is documented as **part of the relay's public surface**
+of the same project (description of the app + links to the stores),
+not as an unrelated co-tenant service. The spec line "The sub-domain
+SHALL serve only the relay" is preserved in spirit: the landing page
+describes the same application that owns the protocol endpoints; it
+does not host an unrelated service.
+
+Constraints on the landing page content (verified by audit item
+A.4.b):
+
+- Hand-authored static HTML + assets. No server-side language.
+- No embedded telemetry, analytics, or scripts that call the relay's
+  `/v1/...` endpoints.
+- No operational state on the page (no envelope IDs, no metrics
+  values, no schema version, no build hash, no internal links).
+
+Place it at `/var/www/compartarenta-relay-landing/` (or wherever the
+vhost's `DocumentRoot` points). Versioning the landing page in this
+repo is recommended but optional; if it lives elsewhere, record where
+it lives in `docs/relay-audit-log.md`.
+
 ## Required environment
+
+Loaded from `/srv/compartarenta-relay/env/.env` at deploy time.
 
 | Variable                 | Purpose                                                  | Source                         |
 |--------------------------|----------------------------------------------------------|--------------------------------|
@@ -77,68 +361,116 @@ The relay's `config.Load` refuses to start without `DATABASE_URL`. It
 also enforces ceiling bounds on `ENVELOPE_TTL_MAX` (~30 days) and
 `IDEMPOTENCY_TTL` (~7 days). Wider values trip an explicit error.
 
-## TLS
-
-The relay binary itself does NOT terminate TLS. Termination happens at
-the reverse proxy in front of it. Recommended pattern:
-
-- Caddy / nginx / traefik on the same host, with `relay.<example.tld>`
-  pointing to its IP.
-- ACME issuance (Caddy and traefik do this automatically). Set up
-  monitoring on the certificate expiry; renewal-failure alerts are
-  required by `relay-deployment-topology` / "Certificate renewal is
-  monitored".
-- The certificate's SAN list contains **only** the relay sub-domain (and
-  any other names that are exclusively part of the relay deployment).
-  This is enforced by `relay-deployment-topology` /
-  "TLS material is not shared with unrelated services".
-
 ## Deploying the first time
 
-1. Provision DNS: create an `A` (and `AAAA`) record for the relay
-   sub-domain pointing to the VPS.
-2. Provision the host firewall to expose only TCP/443 publicly. The
-   metrics port (9090) and the database port (5432) MUST NOT be reachable
-   from the public internet.
-3. Install the reverse proxy with an ACME-issued certificate for the
-   relay sub-domain. Configure it to forward to `127.0.0.1:8080`.
-4. Inject `.env` values from your secret store. Never commit them.
-5. Pull or build the relay image. Pin to an immutable digest.
-6. `docker compose up -d`. The relay applies migrations and refuses to
-   start when the schema version doesn't match.
-7. Probe `https://relay.<example.tld>/healthz` from the public side and
-   `http://127.0.0.1:9090/metrics` over SSH-tunnel. The former must
-   succeed; the latter must return Prometheus text. Both are part of
-   the audit checklist baseline.
-8. Run the audit checklist end-to-end and append an entry to
-   [`relay-audit-log.md`](./relay-audit-log.md).
+1. **DNS.** Create `A` (and `AAAA` if applicable) records for
+   `relay.<your-domain>` pointing to the VPS public IP.
+2. **Host preparation.** Run the package install, create the
+   `compartarenta-relay` user, lay out `/srv/compartarenta-relay/` per
+   the "Host preparation" section above.
+3. **Apache vhost.** Copy and adapt the template, `a2ensite`,
+   `apache2ctl configtest`, then `certbot --apache`. Reload Apache.
+4. **Secrets.** Populate `env/.env` from the secret store
+   (`compartarenta-relay` user, mode 0600).
+5. **Build the image with a real digest.** From
+   `/srv/compartarenta-relay`:
+
+   ```bash
+   docker compose --env-file env/.env \
+                  -f source/relay/compose.yml \
+                  build
+   ```
+
+   The build stage runs `govulncheck ./...` and aborts on critical CVEs.
+6. **Start the stack:**
+
+   ```bash
+   docker compose --env-file env/.env \
+                  -f source/relay/compose.yml \
+                  up -d
+   ```
+
+   The relay applies migrations on startup and refuses to start when the
+   schema version doesn't match the binary's expected version.
+7. **Probe.** From the public side:
+
+   ```bash
+   curl https://relay.YOUR-DOMAIN.TLD/healthz
+   curl -I https://relay.YOUR-DOMAIN.TLD/                # 200, landing page
+   curl -I https://relay.YOUR-DOMAIN.TLD/metrics         # 403 or 404
+   ```
+
+   Through an SSH tunnel from a privileged workstation:
+
+   ```bash
+   ssh -L 9090:127.0.0.1:9090 <admin>@<vps>
+   curl http://127.0.0.1:9090/metrics | head
+   ```
+
+8. **Tag + audit.** Tag the release in the repository, append the
+   `(tag, digest, deployment date)` row to `docs/relay-audit-log.md`,
+   run the full `docs/relay-audit-checklist.md` against the live
+   instance, and record the baseline self-audit entry **before**
+   advertising the sub-domain to clients.
 
 ## Upgrading
 
 1. Build the new image with `BUILD_DIGEST` set to the immutable digest
    you intend to deploy.
 2. Tag the corresponding release in this repository. Update
-   `relay-audit-log.md` with the `(tag, digest, deployment date)` triple
-   before the new image becomes live.
-3. `docker compose pull && docker compose up -d`.
-4. Re-run `relay-audit-checklist.md`. If anything diverges from this
-   document, file an audit finding per
-   `relay-public-auditability` /
-   "Configuration drift between deployed and documented is itself a
-   finding".
+   `docs/relay-audit-log.md` with the new `(tag, digest, deployment
+   date)` row **before** the new image becomes live.
+3. As `compartarenta-relay`:
 
-Rollback is a `docker compose up -d --image-digest <previous>` away. The
-routing-relationship rows survive rollbacks because they live in the
-named volume.
+   ```bash
+   cd /srv/compartarenta-relay
+   git -C source pull --ff-only
+   docker compose --env-file env/.env -f source/relay/compose.yml pull
+   docker compose --env-file env/.env -f source/relay/compose.yml up -d
+   ```
+
+4. Re-run the audit checklist. Any divergence from this document is a
+   finding per `relay-public-auditability` / "Configuration drift
+   between deployed and documented is itself a finding".
+
+Rollback: pin the previous digest in `env/.env` and re-run step 3. The
+routing relationships and in-flight envelopes survive rollbacks because
+they live in the `pgdata` named volume.
+
+## Day-to-day operations
+
+Always as the deploy user:
+
+```bash
+sudo -u compartarenta-relay -s
+cd /srv/compartarenta-relay
+
+# Logs (last 100 lines, follow).
+docker compose --env-file env/.env -f source/relay/compose.yml \
+  logs --tail 100 -f relay
+
+# Status.
+docker compose --env-file env/.env -f source/relay/compose.yml ps
+
+# Schema dump for audit item C.1.
+docker compose --env-file env/.env -f source/relay/compose.yml \
+  exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt+"
+
+# Restart the relay container only (postgres keeps running).
+docker compose --env-file env/.env -f source/relay/compose.yml \
+  restart relay
+```
 
 ## Patch cadence
 
 | Surface                 | Cadence                              | Critical CVE window         |
 |-------------------------|--------------------------------------|-----------------------------|
-| Host OS                 | monthly review                       | 72 hours after disclosure   |
-| Container runtime       | monthly review                       | 72 hours after disclosure   |
+| Host OS (Ubuntu 24.04)  | monthly review                       | 72 hours after disclosure   |
+| Apache 2 + Certbot      | monthly review                       | 72 hours after disclosure   |
+| fail2ban                | monthly review                       | as part of host OS          |
+| Docker engine           | monthly review                       | 72 hours after disclosure   |
 | Postgres image          | monthly review                       | 72 hours after disclosure   |
-| Relay image deps        | weekly `govulncheck`                 | next image build            |
+| Relay image deps        | weekly `govulncheck` in CI           | next image build            |
 
 `govulncheck ./...` runs inside the Docker build stage and fails the
 build on known-critical CVEs. Re-running `go mod tidy` plus rebuilding
@@ -146,8 +478,7 @@ brings in the fix.
 
 ## Alerts
 
-Configure alerts on the deployed Prometheus collector (out of scope for
-this repository; happens at the operator's monitoring stack):
+Configure on the operator's monitoring stack:
 
 | Signal                                       | Threshold                                  |
 |----------------------------------------------|--------------------------------------------|
@@ -155,11 +486,13 @@ this repository; happens at the operator's monitoring stack):
 | `relay_envelopes_queue_depth`                | alert when > N for M minutes (operator-chosen) |
 | `relay_envelopes_oldest_undelivered_age_seconds` | alert when > envelope TTL minimum      |
 | `relay_http_requests_total{status_class="5xx"}` rate | alert when > 1% of total over 5 minutes |
+| `relay_ratelimit_rejections_total` rate      | alert on sustained spikes (abuse signal)   |
 | TLS certificate expiry                       | alert > 14 days before expiry              |
+| fail2ban jail size                           | alert on unusual spikes (brute-force burst)|
 
-The exact thresholds and recipients are role-keyed (e.g., "operator
-on-call") per `relay-observability-without-plaintext` /
-"Alerting thresholds are documented".
+Recipients are role-keyed ("operator on-call"), not personal-data
+level, per `relay-observability-without-plaintext` / "Alerting
+thresholds are documented".
 
 ## What this relay never does
 
@@ -176,14 +509,17 @@ Repeated for emphasis (the audit checklist tests each item):
   internet.
 - It does NOT share TLS material with services unrelated to the relay.
 - It does NOT host any unrelated workload in its containers.
+- It does NOT use the dedicated Linux account for unrelated host tasks.
 
 Each of these statements is verifiable from this repository alone.
 
-## Operator-side tasks that this repository cannot perform for you
+## Operator-side items the repository cannot perform
 
-Tasks 3.1 and 3.2 of `relay-server-infrastructure-and-audit/tasks.md`
-(reserving the sub-domain and provisioning ACME) need DNS access and
-domain control. They are operator runbook items by nature. The same
-applies to task 7.6 (audit-checklist dry-run on a live deployment) and
-to task 6.3 once a first real deployment occurs. Mark them done in
-`tasks.md` when the operator completes them.
+Tasks 3.1 and 3.2 of
+`openspec/changes/relay-server-infrastructure-and-audit/tasks.md`
+(reserving the sub-domain and provisioning ACME certs) need DNS access
+and domain control. They are operator runbook items by nature. The
+same applies to tasks 7.6 (audit-checklist dry-run on a live
+deployment) and 6.3/6.4 (first tagged release + baseline audit entry).
+Mark them done in `tasks.md` once they're completed against the live
+deployment.

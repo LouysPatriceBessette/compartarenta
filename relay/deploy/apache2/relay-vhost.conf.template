@@ -1,0 +1,115 @@
+# Apache reverse-proxy template for the Compartarenta relay.
+#
+# Copy to /etc/apache2/sites-available/<your-subdomain>.conf (any
+# filename — the literal `relay-vhost` is purely conventional).
+#
+# Adapt:
+#   * ServerName : the dedicated sub-domain on your controlled
+#       domain. The literal `relay` in `relay.example.tld` below is a
+#       PLACEHOLDER, not a requirement. Use any name that fits your
+#       product branding (e.g., `sync.<your-domain>`,
+#       `api.<your-domain>`, `m.<your-domain>`,
+#       `<brand>-sync.<your-domain>`). The spec
+#       `relay-deployment-topology` only mandates that the name be a
+#       dedicated sub-domain with its own TLS material — it does NOT
+#       mandate any specific word. See `docs/relay-deployment.md` /
+#       "Sub-domain name is a placeholder" for details.
+#   * DocumentRoot : the static landing page for the same sub-domain.
+#   * SSLCertificateFile / SSLCertificateKeyFile : rewritten by
+#       `certbot --apache` if you let it manage the vhost; otherwise
+#       set them by hand.
+#
+# This file is the public, version-controlled reference vhost referred
+# to by docs/relay-deployment.md. Any diff between the deployed vhost
+# and this template is an audit finding per `relay-public-auditability`
+# / "Configuration drift between deployed and documented is itself a
+# finding".
+#
+# The relay binary itself does NOT terminate TLS — termination happens
+# at this vhost. The binary listens in plaintext on 127.0.0.1:8080 and
+# is only reachable from the host via loopback (per
+# `relay/compose.yml`).
+
+# ---------------------------------------------------------------------------
+# HTTP : redirect to HTTPS
+# ---------------------------------------------------------------------------
+<VirtualHost *:80>
+    ServerName relay.example.tld
+    Redirect permanent / https://relay.example.tld/
+</VirtualHost>
+
+# ---------------------------------------------------------------------------
+# HTTPS : TLS termination + static landing page + reverse proxy to relay
+# ---------------------------------------------------------------------------
+<VirtualHost *:443>
+    ServerName relay.example.tld
+
+    # --- TLS ---
+    SSLEngine on
+    SSLCertificateFile      /etc/letsencrypt/live/relay.example.tld/fullchain.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/relay.example.tld/privkey.pem
+    Protocols h2 http/1.1
+
+    # The relay vhost has its OWN certificate. Per
+    # `relay-deployment-topology` / "TLS material is not shared with
+    # unrelated services", do NOT reference a wildcard cert that also
+    # covers unrelated sites on this VPS.
+
+    # --- Static landing page on / ---
+    # Hand-authored HTML + assets describing the application and linking
+    # to the app stores. The page is documented as a public-facing
+    # marketing surface; it contains NO operational state of the relay
+    # (no envelope IDs, no metrics, no schema version, no telemetry that
+    # calls /v1/...). The audit checklist's A.4.b item verifies this.
+    DocumentRoot /var/www/compartarenta-relay-landing
+    <Directory /var/www/compartarenta-relay-landing>
+        Require all granted
+        Options -Indexes -ExecCGI -Includes
+        AllowOverride None
+    </Directory>
+
+    # --- Reverse proxy to the relay binary (loopback only) ---
+    ProxyPreserveHost On
+    ProxyRequests Off
+
+    # The relay protocol surface — every documented endpoint is under
+    # /v1/, plus /healthz and /readyz.
+    ProxyPass        /v1/      http://127.0.0.1:8080/v1/
+    ProxyPassReverse /v1/      http://127.0.0.1:8080/v1/
+
+    ProxyPass        /healthz  http://127.0.0.1:8080/healthz
+    ProxyPassReverse /healthz  http://127.0.0.1:8080/healthz
+
+    ProxyPass        /readyz   http://127.0.0.1:8080/readyz
+    ProxyPassReverse /readyz   http://127.0.0.1:8080/readyz
+
+    # --- Defense-in-depth: block introspection paths at the proxy ---
+    # The relay's public listener does not serve /metrics, /admin,
+    # /debug, or /pprof in the first place — the metrics endpoint is on
+    # the PRIVATE listener (127.0.0.1:9090) only. This block is here so
+    # that a future misconfiguration of the relay binary cannot
+    # accidentally surface them on the public sub-domain.
+    <LocationMatch "^/(metrics|admin|debug|pprof)(/|$)">
+        Require all denied
+    </LocationMatch>
+
+    # --- Security headers ---
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # The landing page is static; permit only its own origin for
+    # scripts/images/etc. The relay protocol responses are JSON so CSP
+    # does not affect them.
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+
+    # --- Logging ---
+    # Apache access logs may incidentally capture client IPs. Per
+    # `relay-observability-without-plaintext` / "Logs do not persist
+    # client IP addresses as relay state", these logs are rotated by
+    # the standard Apache logrotate policy and do NOT migrate into the
+    # relay database.
+    LogLevel warn
+    ErrorLog  ${APACHE_LOG_DIR}/relay-error.log
+    CustomLog ${APACHE_LOG_DIR}/relay-access.log combined
+</VirtualHost>
