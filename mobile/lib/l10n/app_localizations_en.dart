@@ -916,7 +916,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeWaveBNote =>
-      'The encrypted handshake with the relay will be enabled once the relay infrastructure is deployed.';
+      'After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.';
 
   @override
   String get contactsEnterInviteCodeValid => 'Code format is valid';
@@ -931,7 +931,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.';
 
   @override
-  String get contactsHandshakeDispatching => 'Sending the request to the relay…';
+  String get contactsHandshakeDispatching =>
+      'Sending the request to the relay…';
 
   @override
   String get contactsHandshakeDispatched =>
@@ -963,7 +964,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactsIncomingEmpty => 'No pending connection requests.';
 
   @override
-  String contactsIncomingBody(String name) => '$name wants to connect.';
+  String contactsIncomingBody(String name) {
+    return '$name wants to connect.';
+  }
 
   @override
   String get contactsIncomingAccept => 'Accept';
@@ -975,22 +978,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactsIncomingBannerOne => '1 new connection request';
 
   @override
-  String contactsIncomingBannerMany(int count) =>
-      '$count new connection requests';
-
-  @override
-  String get contactsDisconnectAction => 'Disconnect';
-
-  @override
-  String get contactsDisconnectTitle => 'Disconnect from this contact?';
-
-  @override
-  String get contactsDisconnectBody =>
-      'A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.';
-
-  @override
-  String get contactsDisconnectSent =>
-      'Disconnect notice sent. Contact is now local-only.';
+  String contactsIncomingBannerMany(int count) {
+    return '$count new connection requests';
+  }
 
   @override
   String get contactsCodeErrorEmpty => 'Enter a code to continue.';
@@ -1064,4 +1054,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactsUnblockBody =>
       'Incoming messages from this contact will be processed again.';
+
+  @override
+  String get contactsDisconnectAction => 'Disconnect';
+
+  @override
+  String get contactsDisconnectTitle => 'Disconnect from this contact?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Disconnect notice sent. Contact is now local-only.';
 }

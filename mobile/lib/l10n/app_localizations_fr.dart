@@ -944,8 +944,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'La poignée de main du relais n’est pas encore disponible. Le code est valide localement, mais il ne peut pas être utilisé tant que le relais n’est pas en ligne.';
 
   @override
-  String get contactsHandshakeDispatching =>
-      'Envoi de la requête au relais…';
+  String get contactsHandshakeDispatching => 'Envoi de la requête au relais…';
 
   @override
   String get contactsHandshakeDispatched =>
@@ -977,7 +976,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsIncomingEmpty => 'Aucune demande de connexion en attente.';
 
   @override
-  String contactsIncomingBody(String name) => '$name souhaite se connecter.';
+  String contactsIncomingBody(String name) {
+    return '$name souhaite se connecter.';
+  }
 
   @override
   String get contactsIncomingAccept => 'Accepter';
@@ -989,22 +990,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsIncomingBannerOne => '1 nouvelle demande de connexion';
 
   @override
-  String contactsIncomingBannerMany(int count) =>
-      '$count nouvelles demandes de connexion';
-
-  @override
-  String get contactsDisconnectAction => 'Se déconnecter';
-
-  @override
-  String get contactsDisconnectTitle => 'Se déconnecter de ce contact ?';
-
-  @override
-  String get contactsDisconnectBody =>
-      'Un avis de déconnexion sera envoyé au relais. Les deux côtés repasseront à des contacts locaux uniquement.';
-
-  @override
-  String get contactsDisconnectSent =>
-      'Avis de déconnexion envoyé. Le contact est maintenant local uniquement.';
+  String contactsIncomingBannerMany(int count) {
+    return '$count nouvelles demandes de connexion';
+  }
 
   @override
   String get contactsCodeErrorEmpty => 'Saisissez un code pour continuer.';
@@ -1079,4 +1067,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get contactsUnblockBody =>
       'Les messages entrants de ce contact seront à nouveau traités.';
+
+  @override
+  String get contactsDisconnectAction => 'Se déconnecter';
+
+  @override
+  String get contactsDisconnectTitle => 'Se déconnecter de ce contact ?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'Un avis de déconnexion sera envoyé au relais. Les deux côtés repasseront à des contacts locaux uniquement.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Avis de déconnexion envoyé. Le contact est maintenant local uniquement.';
 }

@@ -43,8 +43,21 @@ melos:
         dart run build_runner build --delete-conflicting-outputs
 
     run:dev:
-      description: Run the app (dev flavor) from mobile
-      run: cd mobile && flutter run --flavor dev
+      description: |
+        Run the app (dev flavor) from mobile. Defaults to the real relay
+        (https://sync.incoherences.org); override with the API_BASE_URL
+        env var. Extra args go through (e.g. -d chrome, -d linux).
+      run: cd mobile && ./tool/run_dev.sh
+
+    run:dev:web:
+      description: |
+        Run the dev configuration in the desktop browser (Chrome). Flutter
+        web does not support --flavor, so the script forwards the dev
+        --dart-define values without --flavor. Default API_BASE_URL is
+        the real relay; override via env or extra args:
+          API_BASE_URL=http://localhost:8080 dart run melos run run:dev:web
+          dart run melos run run:dev:web -- --web-port=5001
+      run: cd mobile && ./tool/run_dev_web.sh
 
     build:apk:prod:
       description: Release APK (prod); output under mobile/build/app/outputs/flutter-apk/

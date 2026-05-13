@@ -1733,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsEnterInviteCodeWaveBNote.
   ///
   /// In en, this message translates to:
-  /// **'The encrypted handshake with the relay will be enabled once the relay infrastructure is deployed.'**
+  /// **'After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.'**
   String get contactsEnterInviteCodeWaveBNote;
 
   /// No description provided for @contactsEnterInviteCodeValid.
@@ -1755,58 +1755,88 @@ abstract class AppLocalizations {
   String get contactsHandshakeNotAvailableYet;
 
   /// No description provided for @contactsHandshakeDispatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending the request to the relay…'**
   String get contactsHandshakeDispatching;
 
   /// No description provided for @contactsHandshakeDispatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. Waiting for the inviter to confirm.'**
   String get contactsHandshakeDispatched;
 
   /// No description provided for @contactsHandshakeErrorRelayUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to reach the relay. Check your network and try again.'**
   String get contactsHandshakeErrorRelayUnavailable;
 
   /// No description provided for @contactsHandshakeErrorAlreadyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has already been used.'**
   String get contactsHandshakeErrorAlreadyCompleted;
 
   /// No description provided for @contactsHandshakeErrorNonceConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation has already been redeemed.'**
   String get contactsHandshakeErrorNonceConsumed;
 
   /// No description provided for @contactsHandshakeErrorExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation has expired.'**
   String get contactsHandshakeErrorExpired;
 
   /// No description provided for @contactsHandshakeErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while contacting the relay.'**
   String get contactsHandshakeErrorUnknown;
 
   /// No description provided for @contactsIncomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection requests'**
   String get contactsIncomingTitle;
 
   /// No description provided for @contactsIncomingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending connection requests.'**
   String get contactsIncomingEmpty;
 
   /// No description provided for @contactsIncomingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to connect.'**
   String contactsIncomingBody(String name);
 
   /// No description provided for @contactsIncomingAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
   String get contactsIncomingAccept;
 
   /// No description provided for @contactsIncomingReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
   String get contactsIncomingReject;
 
   /// No description provided for @contactsIncomingBannerOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 new connection request'**
   String get contactsIncomingBannerOne;
 
   /// No description provided for @contactsIncomingBannerMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new connection requests'**
   String contactsIncomingBannerMany(int count);
-
-  /// No description provided for @contactsDisconnectAction.
-  String get contactsDisconnectAction;
-
-  /// No description provided for @contactsDisconnectTitle.
-  String get contactsDisconnectTitle;
-
-  /// No description provided for @contactsDisconnectBody.
-  String get contactsDisconnectBody;
-
-  /// No description provided for @contactsDisconnectSent.
-  String get contactsDisconnectSent;
 
   /// No description provided for @contactsCodeErrorEmpty.
   ///
@@ -1939,6 +1969,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Incoming messages from this contact will be processed again.'**
   String get contactsUnblockBody;
+
+  /// No description provided for @contactsDisconnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get contactsDisconnectAction;
+
+  /// No description provided for @contactsDisconnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect from this contact?'**
+  String get contactsDisconnectTitle;
+
+  /// No description provided for @contactsDisconnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.'**
+  String get contactsDisconnectBody;
+
+  /// No description provided for @contactsDisconnectSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect notice sent. Contact is now local-only.'**
+  String get contactsDisconnectSent;
 }
 
 class _AppLocalizationsDelegate

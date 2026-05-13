@@ -966,10 +966,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsIncomingTitle => 'Solicitudes de conexión';
 
   @override
-  String get contactsIncomingEmpty => 'No hay solicitudes de conexión pendientes.';
+  String get contactsIncomingEmpty =>
+      'No hay solicitudes de conexión pendientes.';
 
   @override
-  String contactsIncomingBody(String name) => '$name quiere conectarse.';
+  String contactsIncomingBody(String name) {
+    return '$name quiere conectarse.';
+  }
 
   @override
   String get contactsIncomingAccept => 'Aceptar';
@@ -981,22 +984,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsIncomingBannerOne => '1 nueva solicitud de conexión';
 
   @override
-  String contactsIncomingBannerMany(int count) =>
-      '$count nuevas solicitudes de conexión';
-
-  @override
-  String get contactsDisconnectAction => 'Desconectar';
-
-  @override
-  String get contactsDisconnectTitle => '¿Desconectar de este contacto?';
-
-  @override
-  String get contactsDisconnectBody =>
-      'Se enviará un aviso de desconexión al relevo. Ambos lados volverán a ser contactos solo locales.';
-
-  @override
-  String get contactsDisconnectSent =>
-      'Aviso de desconexión enviado. El contacto ahora es solo local.';
+  String contactsIncomingBannerMany(int count) {
+    return '$count nuevas solicitudes de conexión';
+  }
 
   @override
   String get contactsCodeErrorEmpty => 'Introduce un código para continuar.';
@@ -1070,4 +1060,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get contactsUnblockBody =>
       'Los mensajes entrantes de este contacto se procesarán de nuevo.';
+
+  @override
+  String get contactsDisconnectAction => 'Desconectar';
+
+  @override
+  String get contactsDisconnectTitle => '¿Desconectar de este contacto?';
+
+  @override
+  String get contactsDisconnectBody =>
+      'Se enviará un aviso de desconexión al relevo. Ambos lados volverán a ser contactos solo locales.';
+
+  @override
+  String get contactsDisconnectSent =>
+      'Aviso de desconexión enviado. El contacto ahora es solo local.';
 }

@@ -64,8 +64,26 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
       future: _prefs,
       builder: (context, snapshot) {
         final prefs = snapshot.data;
+        if (snapshot.hasError) {
+          return MaterialApp(
+            home: Scaffold(
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SelectableText(
+                    'Startup failed:\n${snapshot.error}\n\n${snapshot.stackTrace}',
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         if (snapshot.connectionState != ConnectionState.done || prefs == null) {
-          return const MaterialApp(home: Scaffold(body: SizedBox.shrink()));
+          return const MaterialApp(
+            home: Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
         }
 
         final router = _createRouter(widget.config, prefs);
