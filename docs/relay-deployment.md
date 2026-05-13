@@ -415,23 +415,40 @@ also enforces ceiling bounds on `ENVELOPE_TTL_MAX` (~30 days) and
 
 ## Upgrading
 
-1. Build the new image with `BUILD_DIGEST` set to the immutable digest
-   you intend to deploy.
-2. Tag the corresponding release in this repository. Update
-   `docs/relay-audit-log.md` with the new `(tag, digest, deployment
-   date)` row **before** the new image becomes live.
-3. As `compartarenta-relay`:
+1. Make sure to push all your code to git.
 
-   ```bash
-   cd /srv/compartarenta-relay
-   git -C source pull --ff-only
-   docker compose --env-file env/.env -f source/relay/compose.yml pull
-   docker compose --env-file env/.env -f source/relay/compose.yml up -d
-   ```
+2. Create a version tag and push it.
 
-4. Re-run the audit checklist. Any divergence from this document is a
-   finding per `relay-public-auditability` / "Configuration drift
-   between deployed and documented is itself a finding".
+3. Get the tag SHA using `git rev-parse HEAD`
+
+On the VPS:
+
+4. Impersonnate the app user
+	`sudo -u compartarenta-relay -s`
+5. Pull the repos.
+	```
+	cd /srv/compartarenta-relay
+	git -C source pull --ff-only
+	```
+6. Replace the commit SHA with the new one (obtained in step 3)
+	`nano env/.env`
+
+7. Build and run Docker
+	```
+	docker compose --env-file env/.env -f source/relay/compose.yml build
+	docker compose --env-file env/.env -f source/relay/compose.yml up -d
+	```
+8. Get the Docker SHA
+	`docker inspect compartarenta-relay:v0.1.0 --format '{{.Id}}'`
+
+9. Exit impersonation of the app's user
+	`exit`
+
+10. From local files, open `docs/relay-audit-log.md`
+
+11. Tag this new release in the `Deployments` section.
+
+12. Follow `relay-audit-checklist.md` steps, then file the `Baseline` section.
 
 Rollback: pin the previous digest in `env/.env` and re-run step 3. The
 routing relationships and in-flight envelopes survive rollbacks because
