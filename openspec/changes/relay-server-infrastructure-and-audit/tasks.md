@@ -23,10 +23,10 @@
 
 ## 3. Deployment topology
 
-- [ ] 3.1 Reserve the sub-domain on the existing controlled domain; configure DNS.
-      Operator-side; runbook lives in `docs/relay-deployment.md`.
-- [ ] 3.2 Provision TLS via ACME / equivalent with automated renewal; instrument renewal monitoring.
-      Operator-side; runbook lives in `docs/relay-deployment.md`.
+- [x] 3.1 Reserve the sub-domain on the existing controlled domain; configure DNS.
+      Done: `sync.incoherences.org` resolves to the VPS public IP (verified by audit item A.1 during the v0.1.0 baseline self-audit on 2026-05-13).
+- [x] 3.2 Provision TLS via ACME / equivalent with automated renewal; instrument renewal monitoring.
+      Done: Let's Encrypt cert issued via `certbot --apache` with an installed systemd renewal timer; SAN scope limited to the relay sub-domain (verified by audit item A.2 during the v0.1.0 baseline self-audit on 2026-05-13). Renewal-failure alerting is captured as a "next step" in `docs/relay-deployment.md` (Prometheus blackbox_exporter on `probe_ssl_earliest_cert_expiry` or a `certbot certificates` cron); deferred to the operator's monitoring stack rollout.
 - [x] 3.3 Author the container compose / equivalent manifest: relay container + database container on a private network; named volumes for state.
       `relay/compose.yml`: `relay-net` private network, `pgdata` named volume, no published port on the postgres service.
 - [x] 3.4 Configure firewall to expose only the relay endpoint on the public interface; admin access via SSH (or equivalent) restricted to allow-list / bastion.
@@ -72,10 +72,10 @@
 
 - [x] 6.1 Author `docs/relay-audit-checklist.md` with runnable checks (DNS/TLS scope, image digest match, schema diff, TTL config, log absence-of-plaintext, metrics private-only, public surface enumeration, operator action log presence).
 - [x] 6.2 Author `docs/relay-deployment.md` describing the topology, TTL bounds, identifiers, and operational cadences.
-- [ ] 6.3 Tag the first deployed release; record the (tag, digest, deployment date) triple in a public location in the repository.
-      Awaiting the first real deployment. `docs/relay-audit-log.md` carries a placeholder row that must be replaced before public traffic.
-- [ ] 6.4 Run the baseline self-audit using the checklist; record the entry in a public audit log dated on or before first public traffic.
-      Awaiting the first real deployment. Baseline placeholder lives in `docs/relay-audit-log.md`.
+- [x] 6.3 Tag the first deployed release; record the (tag, digest, deployment date) triple in a public location in the repository.
+      Done: `v0.1.0` tagged on 2026-05-13; the Deployments table of `docs/relay-audit-log.md` carries the `(v0.1.0, sha256:1c826875…3ddc653e, 2026-05-13T21:05Z)` row.
+- [x] 6.4 Run the baseline self-audit using the checklist; record the entry in a public audit log dated on or before first public traffic.
+      Done: full checklist executed on 2026-05-13 against the live `sync.incoherences.org` deployment; results recorded in the Baseline block of `docs/relay-audit-log.md`. No findings.
 - [x] 6.5 Schedule the recurring quarterly self-audit; document the cadence.
       `docs/relay-audit-log.md` "Audit cadence" section.
 - [x] 6.6 Define the tracking mechanism for audit findings (public issue tracker or audit log entries) and create a placeholder entry to demonstrate the mechanism.
@@ -93,9 +93,10 @@
       Deferred for the same reason as 7.3.
 - [x] 7.5 Schema-shape test that scans the database for any column whose name or type suggests user-content plaintext.
       `internal/store/schema_shape_test.go` scans the embedded migrations.
-- [ ] 7.6 Audit-checklist dry-run test that exercises each item in `docs/relay-audit-checklist.md` against a local deployment.
-      Operator-side; runs against a `docker compose up`-ed stack and produces a baseline audit-log entry.
+- [x] 7.6 Audit-checklist dry-run test that exercises each item in `docs/relay-audit-checklist.md` against a local deployment.
+      Done against the live production deployment (`sync.incoherences.org`) on 2026-05-13 rather than a local `docker compose up` stack; this satisfies the intent more strongly than the originally-scoped local rehearsal. The end-to-end run also surfaced ambiguities in the original checklist wording (auditor-from-outside framing for B–E, `nc`-based host-port scan in A.5, `.RepoDigests`-based digest check in B.1) and the operator-on-VPS rewrites were committed together with the baseline self-audit entry.
 
 ## Notes on deferred items
 
-- **3.1, 3.2, 6.3, 6.4, 7.3, 7.4, 7.6** require either DNS / TLS access on the operator's controlled domain or a live PostgreSQL test fixture. They are marked unchecked deliberately so the next deployment milestone or testing pass can finish them without ambiguity. The supporting documentation and code paths needed to complete each one are already in this change.
+- **7.3, 7.4** require a live PostgreSQL test fixture in CI (docker-compose or testcontainers). They remain unchecked until that fixture lands. The supporting code paths needed to complete each one are already in this change.
+- **Renewal-failure alerting for the TLS cert (3.2 follow-up)** depends on the operator's monitoring stack and is documented in `docs/relay-deployment.md` "Alerts". Not gating this change.

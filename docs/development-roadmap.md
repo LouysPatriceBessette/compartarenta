@@ -63,10 +63,7 @@ When this step is started, it will:
 
 These items are NOT required for the development deployment of the relay (which is already live and serving `/healthz` end-to-end behind the documented Apache vhost). They MUST be resolved before the first public release of the mobile app that talks to this relay.
 
-- **Inject a real build identifier into the relay binary at deploy time.** The relay's `/healthz` and `/readyz` responses expose a `build` field sourced from `internal/version.Build`, which is the placeholder string `"dev"` until overwritten via `-ldflags`. The wiring already exists end to end: the `Dockerfile` accepts `ARG BUILD_DIGEST` and passes it through `-ldflags="-X github.com/compartarenta/relay/internal/version.Build=${BUILD_DIGEST}"`; `compose.yml` plumbs `BUILD_DIGEST` and `RELAY_TAG` from the environment; `.env.example` documents them. What is missing is the **release procedure** that derives real values (typically the git short SHA, the release tag, or the immutable container image digest) and feeds them to `docker compose build` / `docker compose up` so that:
-  - the audit-checklist requirement "tagged release matching deployed digest" (this Step) is satisfiable end-to-end without ambiguity,
-  - operational triage can correlate a running binary with a specific source revision from `/healthz` alone, and
-  - the `RELAY_TAG` used as the local image tag is no longer the literal `dev`, which would conflate distinct builds in `docker image ls`.
+- **~~Inject a real build identifier into the relay binary at deploy time.~~** **Resolved on 2026-05-13** with the `v0.1.0` baseline deployment on `sync.incoherences.org`. `BUILD_DIGEST` is now populated from `git rev-parse HEAD` of the tagged commit at build time (per `docs/relay-deployment.md` "Deploying the first time" / "Upgrading"), compiled into the binary via `-ldflags -X internal/version.Build=…`, and surfaced by `/healthz`. `RELAY_TAG` is the matching git tag (e.g. `v0.1.0`) rather than the literal `dev`. The resulting container image's `sha256:` digest is the load-bearing identifier recorded in the Deployments table of `docs/relay-audit-log.md`, satisfying the audit-checklist requirement "tagged release matching deployed digest" end-to-end.
 
 ### Step 5 — Focus on completing the housing module
 
