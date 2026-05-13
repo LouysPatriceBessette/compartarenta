@@ -55,6 +55,15 @@ When this step is started, it will:
 
 > Implementation note: although this step is listed after Steps 1 and 2 in product terms, the relay deployment must be **live** before Step 1's handshake can complete its first end-to-end run with two real devices. In practice, Step 4's repository skeleton, schema, audit checklist, and a development-environment deployment land **in parallel with** Step 1, and the production deployment goes live before Step 1's handshake feature ships to users.
 
+#### Step 4 follow-ups (deferred until before the first public mobile release)
+
+These items are NOT required for the development deployment of the relay (which is already live and serving `/healthz` end-to-end behind the documented Apache vhost). They MUST be resolved before the first public release of the mobile app that talks to this relay.
+
+- **Inject a real build identifier into the relay binary at deploy time.** The relay's `/healthz` and `/readyz` responses expose a `build` field sourced from `internal/version.Build`, which is the placeholder string `"dev"` until overwritten via `-ldflags`. The wiring already exists end to end: the `Dockerfile` accepts `ARG BUILD_DIGEST` and passes it through `-ldflags="-X github.com/compartarenta/relay/internal/version.Build=${BUILD_DIGEST}"`; `compose.yml` plumbs `BUILD_DIGEST` and `RELAY_TAG` from the environment; `.env.example` documents them. What is missing is the **release procedure** that derives real values (typically the git short SHA, the release tag, or the immutable container image digest) and feeds them to `docker compose build` / `docker compose up` so that:
+  - the audit-checklist requirement "tagged release matching deployed digest" (this Step) is satisfiable end-to-end without ambiguity,
+  - operational triage can correlate a running binary with a specific source revision from `/healthz` alone, and
+  - the `RELAY_TAG` used as the local image tag is no longer the literal `dev`, which would conflate distinct builds in `docker image ls`.
+
 ### Step 5 — Focus on completing the housing module
 
 After Steps 1 and 2 land, attention focuses on completing housing:
