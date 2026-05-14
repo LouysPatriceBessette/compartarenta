@@ -1,0 +1,79 @@
+---
+description: Balance relay release cost vs client weight; prefer lean code
+alwaysApply: true
+---
+
+# Relay (`relay/`) Change Minimization
+
+The Compartarenta **relay** (Go service under `relay/`, plus deployment
+artifacts that ship with it) has a **high change cost**: each modification
+typically implies a **release** and an **audit**.
+
+The goal is **efficient, lightweight code overall**: avoiding the relay is not
+an absolute when the client-side alternative would be heavier to own (more
+logic, duplication, fragile workarounds, or long-term maintenance burden).
+
+## Trade-off you must assess
+
+When a problem could be fixed **either** in relay **or** in mobile/web (or
+dev tooling / ops config without relay *source* changes), **briefly compare**:
+
+| Relay-side change | Client / tooling / ops alternative |
+|-------------------|-------------------------------------|
+| Release + audit overhead | Extra Dart/Flutter surface, branches, adapters, or repeated patterns |
+| Size and risk of the Go / protocol delta | UX or DX cost (e.g. special cases only for web) |
+| Operator deploy step | Documentation-only or env-only burden |
+
+- If the **non-relay** path is clearly **smaller and cleaner** (e.g. fixed
+  port in a dev script, documented `CORS_ALLOWED_ORIGINS`, a few lines in
+  the app), **prefer it** and do not suggest relay source changes first.
+- If the **non-relay** path would add **substantial** weight, complexity, or
+  hacks across the app **while** a **small, well-scoped** relay change would
+  keep the product code lean, **state that comparison** and recommend the
+  lighter overall option—**including** a relay change when it genuinely wins
+  on total cost—then let the **user** decide given release/audit policy.
+
+Do not default to piling work onto mobile/web solely to avoid touching the
+relay when that would **worsen** long-term maintainability or binary size on
+the client.
+
+## Default stance (after the comparison)
+
+- **Prefer fixes outside the relay** when the assessed alternative is
+  **reasonably small** and keeps shared code simple: Flutter tooling, local
+  dev scripts, Apache or operator config *without relay source edits*,
+  env-only settings already supported by a shipped relay binary,
+  documentation, OpenSpec tasks, etc.
+- **Do not** propose relay code or relay image changes as the **first** option
+  when the problem is already solvable with minimal client or ops cost (e.g.
+  origin/port alignment, documented env vars).
+
+## When a relay change seems necessary
+
+1. **Prove or argue** why the chosen path is lighter overall—or why every
+   non-relay path is infeasible or unacceptably heavy.
+2. If the relay change is **mandatory in principle** but could be **deferred**
+   (tracked task, follow-up ticket, backlog item) so the user can ship a
+   client-only or ops-only fix now, **say so explicitly** and offer that
+   trade-off: *immediate workaround vs. scheduled relay release + audit*—and
+   let the **user decide**.
+
+## In scope for this rule
+
+- Go code, tests, or defaults under `relay/`
+- Anything that changes the **relay container image** or **relay binary
+  behavior** visible to operators
+- Schema or protocol changes consumed by production relays
+
+## Out of scope (not treated as “relay change” for this rule)
+
+- Editing **docs only** (e.g. `docs/relay-deployment.md`) with no binary
+  impact
+- **User-owned** production env vars / vhost snippets already documented
+  (no repo edit required)
+- **OpenSpec** or task files that record future relay work without
+  implementing it
+
+When evidence is missing, **assume** relay changes carry release + audit
+cost—but still **ask** whether a tiny relay delta beats a heavy client
+workaround before recommending either.

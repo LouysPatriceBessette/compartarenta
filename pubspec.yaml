@@ -54,9 +54,11 @@ melos:
         Run the dev configuration in the desktop browser (Chrome). Flutter
         web does not support --flavor, so the script forwards the dev
         --dart-define values without --flavor. Default API_BASE_URL is
-        the real relay; override via env or extra args:
+        the real relay; override via env or extra args. The web server
+        defaults to http://localhost:5001 (relay CORS / Apache allow-list);
+        override with WEB_PORT=5002 or dart run melos run run:dev:web -- --web-port=...
           API_BASE_URL=http://localhost:8080 dart run melos run run:dev:web
-          dart run melos run run:dev:web -- --web-port=5001
+          WEB_PORT=5002 dart run melos run run:dev:web
       run: cd mobile && ./tool/run_dev_web.sh
 
     web:assets:
