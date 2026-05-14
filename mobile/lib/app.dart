@@ -19,6 +19,7 @@ import 'screens/contacts/outstanding_invitations_screen.dart';
 import 'screens/contacts/redeem_invitation_screen.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'widgets/app_error_boundary.dart';
+import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
 
 class CompartarentaApp extends StatefulWidget {
@@ -32,6 +33,9 @@ class CompartarentaApp extends StatefulWidget {
 
 class _CompartarentaAppState extends State<CompartarentaApp> {
   late final Future<AppPreferences> _prefs = _loadPrefs();
+
+  /// Reused across [ListenableBuilder] rebuilds so navigation state is kept.
+  GoRouter? _router;
 
   Future<AppPreferences> _loadPrefs() async {
     final prefs = await AppPreferences.load();
@@ -86,7 +90,8 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
           );
         }
 
-        final router = _createRouter(widget.config, prefs);
+        _router ??= _createRouter(widget.config, prefs);
+        final router = _router!;
 
         // Rebuild MaterialApp when preferences (e.g., language override) change.
         return ListenableBuilder(
@@ -111,7 +116,13 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
               ],
               routerConfig: router,
               builder: (context, child) => AppErrorBoundary(
-                child: ConnectivityBanner(child: child ?? const SizedBox.shrink()),
+                child: ConnectivityBanner(
+                  child: ContactInviteDeepLinkListener(
+                    router: router,
+                    prefs: prefs,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             );
           },
@@ -173,7 +184,11 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
           ),
           GoRoute(
             path: 'redeem',
-            builder: (context, state) => const RedeemInvitationScreen(),
+            builder: (context, state) {
+              final extra = state.extra;
+              final initial = extra is String ? extra : null;
+              return RedeemInvitationScreen(initialInvitationUri: initial);
+            },
           ),
           GoRoute(
             path: 'incoming',

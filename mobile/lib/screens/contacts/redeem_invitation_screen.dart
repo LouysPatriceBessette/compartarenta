@@ -17,7 +17,11 @@ import '../../relay/handshake_orchestrator.dart';
 /// [HandshakeOrchestrator]. The accepted/rejected outcome is surfaced
 /// later by the orchestrator's poller (see `ContactsListScreen`).
 class RedeemInvitationScreen extends StatefulWidget {
-  const RedeemInvitationScreen({super.key});
+  const RedeemInvitationScreen({super.key, this.initialInvitationUri});
+
+  /// Full `compartarenta://contact/invite?...` URI from an app link
+  /// ([GoRouterState.extra]) or tests.
+  final String? initialInvitationUri;
 
   @override
   State<RedeemInvitationScreen> createState() => _RedeemInvitationScreenState();
@@ -43,6 +47,19 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   /// case), without churning the relay when the screen is hidden — the
   /// timer is cancelled in [dispose].
   static const Duration _outcomePollInterval = Duration(seconds: 2);
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialInvitationUri?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _controller.text = initial;
+        _validate();
+      });
+    }
+  }
 
   @override
   void dispose() {

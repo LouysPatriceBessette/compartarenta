@@ -64,3 +64,23 @@
 - [ ] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact). *(Wave B.)*
 - [ ] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect. *(Wave A delete-only path can be covered now; full disconnect path is Wave B.)*
 - [ ] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests). *(Wave B.)*
+
+## 8. Relay: static contact-invite landing (`relay/deploy/landing/contact/invite/`)
+
+Browser-served HTML/JS on the relay vhost (release + audit required for each
+deploy). Tracked separately from Flutter so client work can proceed first.
+
+The mobile app now registers `compartarenta://contact/invite` on **Android and
+iOS** and routes it with **`app_links`** to the redeem screen, which covers the
+main “Open in Compartarenta” failure that was previously attributed to the
+landing page alone. Remaining relay work is UX on the **HTTPS** page (copy,
+languages); in-app mail WebViews that block custom schemes are an environment
+limit, not something the relay HTML can fully fix without store / universal-link
+work.
+
+- [ ] 8.1 **Copy UX**: add an explicit control to copy the invitation link (and
+      optionally the short code) with clear feedback (`navigator.clipboard` +
+      visible “copied” state / toast).
+- [ ] 8.2 **Languages**: keep primary instructions + CTA + link box in **English**
+      by default; move FR/ES (and future locales) behind a small client-side
+      language toggle (plain JS), so unknown invitee language defaults to English.

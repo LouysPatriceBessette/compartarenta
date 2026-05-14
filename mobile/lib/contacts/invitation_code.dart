@@ -297,6 +297,13 @@ InvitationCodeParseResult parseInvitationLink(String input) {
   );
 }
 
+/// Whether [uri] is the in-app deep link for contact invitations
+/// (`compartarenta://contact/invite?...`), before query validation.
+bool isContactInvitationAppLink(Uri uri) =>
+    uri.scheme == 'compartarenta' &&
+    uri.host == 'contact' &&
+    uri.path == '/invite';
+
 /// Backwards-compatible alias for the original custom-scheme parser.
 InvitationCodeParseResult parseInvitationDeepLink(String input) =>
     parseInvitationLink(input);

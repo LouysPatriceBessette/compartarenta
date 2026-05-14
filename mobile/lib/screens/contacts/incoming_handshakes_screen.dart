@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
 import '../../l10n/app_localizations.dart';
@@ -35,6 +36,10 @@ class _IncomingHandshakesScreenState extends State<IncomingHandshakesScreen> {
         selfDisplayName: selfName,
         selfAvatarId: selfAvatar,
       );
+      if (!mounted) return;
+      if (orch.incomingHandshakes.value.isEmpty) {
+        context.pop();
+      }
     } on HandshakeOrchestratorError catch (e) {
       _showError(e.code);
     } finally {
@@ -48,6 +53,10 @@ class _IncomingHandshakesScreenState extends State<IncomingHandshakesScreen> {
     setState(() => _busy = true);
     try {
       await orch.rejectIncoming(view.handshakeId);
+      if (!mounted) return;
+      if (orch.incomingHandshakes.value.isEmpty) {
+        context.pop();
+      }
     } on HandshakeOrchestratorError catch (e) {
       _showError(e.code);
     } finally {

@@ -26,12 +26,19 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
 
   Future<List<Contact>>? _future;
 
+  /// Last seen length of [HandshakeOrchestrator.incomingHandshakes]. When it
+  /// changes (e.g. inviter accepts the last request), we reload contacts so
+  /// the list reflects [ContactsRepository.promoteToConnected] even though this
+  /// screen uses a different [AppDatabase] instance than the orchestrator.
+  int _lastIncomingHandshakesCount = -1;
+
   @override
   void initState() {
     super.initState();
     _reload();
     final orch = _orchestrator;
     if (orch != null) {
+      _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
       orch.incomingHandshakes.addListener(_onIncomingChanged);
       unawaited(orch.processAllPendingHandshakes());
     }
@@ -45,6 +52,22 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
 
   void _onIncomingChanged() {
     if (!mounted) return;
+    final orch = _orchestrator;
+    final n = orch?.incomingHandshakes.value.length ?? 0;
+    if (n != _lastIncomingHandshakesCount) {
+      _lastIncomingHandshakesCount = n;
+      _reload();
+      // Second read after the frame (and a short delay) mitigates occasional
+      // cross-connection WAL visibility lag between the bootstrap DB and this
+      // screen's [AppDatabase] right after handshake finalisation.
+      if (n == 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future<void>.delayed(const Duration(milliseconds: 48), () {
+            if (mounted) _reload();
+          });
+        });
+      }
+    }
     setState(() {});
   }
 
@@ -58,6 +81,12 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     await context.push('/contacts/incoming');
     if (!mounted) return;
     _reload();
+    // A second list read on the next frame mitigates occasional stale reads
+    // when the contacts list uses a different Drift isolate/connection than
+    // the bootstrap HandshakeOrchestrator DB right after a handshake commit.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _reload();
+    });
   }
 
   Future<void> _openAddSheet() async {
@@ -104,6 +133,17 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
         title: Text(l10n.contactsTitle),
         actions: [
           IconButton(
