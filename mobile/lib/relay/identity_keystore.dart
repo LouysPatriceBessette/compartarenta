@@ -98,11 +98,8 @@ class _SecureStorageIdentityKeystore implements IdentityKeystore {
 
   @override
   Future<void> deleteForTesting() async {
-    assert(() {
-      _cachedPrivate = null;
-      _cachedPublic = null;
-      return true;
-    }());
+    _cachedPrivate = null;
+    _cachedPublic = null;
     await _storage.delete(key: slot);
   }
 }

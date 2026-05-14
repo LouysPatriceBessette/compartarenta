@@ -7,6 +7,8 @@ import '../data/supported_currencies.dart';
 import '../db/db_reset.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
+import '../relay/handshake_orchestrator.dart';
+import '../relay/identity_keystore.dart';
 import '../widgets/async_state.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -168,14 +170,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               title: const Text('Reset local database'),
-              subtitle: const Text('Deletes the on-device SQLite database files.'),
+              subtitle: const Text(
+                'Deletes on-device SQLite (plans, agreements, contacts, '
+                'invitations, handshakes). Clears relay test identity when a '
+                'relay URL is configured.',
+              ),
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Reset local database?'),
                     content: const Text(
-                      'This will delete local database files on this device. '
+                      'This will delete the local database directory on this '
+                      'device, including all Contacts module data stored in '
+                      'SQLite. If this build targets a relay (non-placeholder '
+                      'API URL), the local X25519 test identity in secure '
+                      'storage is cleared as well.\n\n'
+                      'Fully restart the app afterward so the database and '
+                      'relay stack are recreated cleanly. '
                       'Use only during development.',
                     ),
                     actions: [
@@ -192,10 +204,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
 
                 if (confirmed != true) return;
+
+                final orch = HandshakeOrchestrator.maybeInstance;
+                if (orch != null) {
+                  await orch.releaseLocalDatabaseConnectionForDevReset();
+                  HandshakeOrchestrator
+                      .clearInstalledInstanceAfterDevDatabaseReset();
+                }
+                if (widget.config.apiBaseUrl.host != 'example.invalid') {
+                  await IdentityKeystore.secureStorage().deleteForTesting();
+                }
                 await DbReset.deleteLocalDbFiles();
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Local database deleted.')),
+                  const SnackBar(
+                    content: Text(
+                      'Local database and contact-related storage cleared. '
+                      'Restart the app.',
+                    ),
+                  ),
                 );
               },
             ),

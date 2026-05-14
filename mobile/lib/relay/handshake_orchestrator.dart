@@ -212,6 +212,19 @@ class HandshakeOrchestrator {
     _pollTimer = null;
   }
 
+  /// Stops relay polling and closes the bootstrap-owned [AppDatabase] so the
+  /// on-disk SQLite files can be removed (development-only local DB reset).
+  Future<void> releaseLocalDatabaseConnectionForDevReset() async {
+    stopPolling();
+    await _db.close();
+  }
+
+  /// Clears the process-wide orchestrator after its database was closed for a
+  /// dev reset. A full app restart is required to reinstall the relay stack.
+  static void clearInstalledInstanceAfterDevDatabaseReset() {
+    _instance = null;
+  }
+
   Future<void> _safePoll() async {
     if (_processing) return;
     _processing = true;
