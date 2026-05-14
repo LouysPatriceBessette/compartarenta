@@ -108,6 +108,8 @@ class HandshakeOrchestratorError implements Exception {
 ///   row, fetches the relevant relay inbox, decrypts incoming envelopes,
 ///   and either surfaces them via [incomingHandshakes] (inviter waiting
 ///   on accept/reject) or finishes the flow (invitee receiving the ack).
+///   The periodic poll also runs [pollSteadyStateInboxes] so inbound
+///   steady-state envelopes reach connected contacts.
 /// * **Accept / Reject** ([acceptIncoming] / [rejectIncoming]): sends
 ///   the ack envelope, promotes (or discards) the local stub, and
 ///   establishes the steady-state routing on the relay.
@@ -189,10 +191,16 @@ class HandshakeOrchestrator {
   final ValueNotifier<List<IncomingHandshakeView>> incomingHandshakes =
       ValueNotifier<List<IncomingHandshakeView>>(const []);
 
+  /// Incremented whenever a steady-state inbox envelope is applied
+  /// ([EnvelopeKind.profileUpdate] or [EnvelopeKind.disconnect]) so contact
+  /// UIs can refresh.
+  final ValueNotifier<int> steadyStateInboxTick = ValueNotifier<int>(0);
+
   /// Disposes timers + notifiers. Mostly useful in tests.
   void dispose() {
     _pollTimer?.cancel();
     incomingHandshakes.dispose();
+    steadyStateInboxTick.dispose();
   }
 
   /// Starts the periodic polling timer. Safe to call multiple times.
@@ -230,6 +238,7 @@ class HandshakeOrchestrator {
     _processing = true;
     try {
       await processAllPendingHandshakes();
+      await pollSteadyStateInboxes();
     } catch (e, st) {
       debugPrint('HandshakeOrchestrator poll failed: $e\n$st');
     } finally {
@@ -596,8 +605,13 @@ class HandshakeOrchestrator {
       ],
     );
     if (rows.isEmpty) {
-      stopPolling();
       await _refreshIncomingHandshakes();
+      final hasConnected = (await _contacts.list()).any(
+        (c) => c.kind == 'connected',
+      );
+      if (!hasConnected) {
+        stopPolling();
+      }
       return;
     }
     for (final row in rows) {
@@ -613,6 +627,193 @@ class HandshakeOrchestrator {
       }
     }
     await _refreshIncomingHandshakes();
+  }
+
+  /// Polls the relay steady-state inbox once per connected contact for
+  /// inbound [EnvelopeKind.profileUpdate] and [EnvelopeKind.disconnect].
+  ///
+  /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
+  Future<void> pollSteadyStateInboxes() async {
+    final connected =
+        (await _contacts.list()).where((c) => c.kind == 'connected').toList();
+    if (connected.isEmpty) return;
+
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+
+    for (final contact in connected) {
+      final peerB64 = contact.peerPublicMaterial;
+      if (peerB64 == null || peerB64.isEmpty) continue;
+
+      final Uint8List peerPub;
+      try {
+        peerPub = RelayRouting.unb64(peerB64);
+      } catch (_) {
+        continue;
+      }
+
+      final Uint8List myListen = await RelayRouting.steadyStateAddress(
+        firstPub: selfPub,
+        secondPub: peerPub,
+      );
+      final List<RelayEnvelopeView> envs;
+      try {
+        envs = await _relay.fetchInbox(recipient: myListen);
+      } on RelayClientError {
+        continue;
+      } on TimeoutException {
+        continue;
+      }
+      for (final env in envs) {
+        try {
+          if (env.kind == EnvelopeKind.disconnect) {
+            await _handleInboundDisconnect(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
+          } else if (env.kind == EnvelopeKind.profileUpdate) {
+            await _handleInboundProfileUpdate(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
+          } else {
+            await _relay.ackEnvelope(
+              envelopeId: env.envelopeId,
+              recipient: myListen,
+            );
+          }
+        } catch (e, st) {
+          debugPrint('steady inbox env ${env.envelopeId} failed: $e\n$st');
+          try {
+            await _relay.ackEnvelope(
+              envelopeId: env.envelopeId,
+              recipient: myListen,
+            );
+          } catch (_) {
+            // ignore
+          }
+        }
+      }
+    }
+  }
+
+  bool _bytesEqual(Uint8List a, Uint8List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  Future<void> _maybeRelayDisconnectSteady(
+    Uint8List selfSteady,
+    Uint8List peerSteady,
+  ) async {
+    try {
+      await _relay.disconnectRouting(
+        selfIdentity: selfSteady,
+        peerIdentity: peerSteady,
+      );
+    } on RelayClientError catch (e) {
+      debugPrint('steady disconnectRouting failed: $e');
+    } on TimeoutException catch (e) {
+      debugPrint('steady disconnectRouting timed out: $e');
+    }
+  }
+
+  Future<void> _handleInboundDisconnect({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    final DisconnectEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptDisconnect(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+
+    final routingB64 = contact.relayRoutingId;
+    await _contacts.demoteToLocalOnly(contact.id);
+    if (routingB64 != null && routingB64.isNotEmpty) {
+      await _maybeRelayDisconnectSteady(
+        myListenAddr,
+        RelayRouting.unb64(routingB64),
+      );
+    }
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  Future<void> _handleInboundProfileUpdate({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    final ProfileUpdateEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptProfileUpdate(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    final dn = decrypted.displayName.trim();
+    final av = decrypted.avatarId.trim();
+    if (dn.isNotEmpty || av.isNotEmpty) {
+      await _contacts.rename(
+        id: contact.id,
+        displayName: dn.isNotEmpty ? dn : contact.displayName,
+        avatarId: av.isNotEmpty ? av : contact.avatarId,
+      );
+    }
+
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
   }
 
   Future<void> _processOne(PendingHandshake row) async {

@@ -74,7 +74,7 @@ The mobile app now registers `compartarenta://contact/invite` on **Android and
 iOS** and routes it with **`app_links`** to the redeem screen, which covers the
 main “Open in Compartarenta” failure that was previously attributed to the
 landing page alone. Remaining relay work is UX on the **HTTPS** page (copy,
-languages); in-app mail WebViews that block custom schemes are an environment
+languages, store badge placeholders); in-app mail WebViews that block custom schemes are an environment
 limit, not something the relay HTML can fully fix without store / universal-link
 work.
 
@@ -84,3 +84,12 @@ work.
 - [ ] 8.2 **Languages**: keep primary instructions + CTA + link box in **English**
       by default; move FR/ES (and future locales) behind a small client-side
       language toggle (plain JS), so unknown invitee language defaults to English.
+- [ ] 8.3 **Store badges (no links yet)**: on the HTTPS invite page, show the
+      official **Google Play** and **Apple App Store** badge images for invitees
+      who have not installed the app. For now use **static logos only** (no
+      `href`) because the app is not published. Add a short line of copy in
+      **English** next to or under the badges, e.g. *“Don’t have Compartarenta
+      installed yet? You’ll find it on Google Play and the App Store.”* (adjust
+      for layout; follow each platform’s badge artwork guidelines). Wire real
+      store URLs in a follow-up tracked with store release (see
+      `mobile-app-store-release` tasks).

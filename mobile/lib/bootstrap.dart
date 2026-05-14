@@ -58,6 +58,13 @@ Future<void> bootstrap() async {
           },
         ),
       );
+      unawaited(
+        orchestrator.pollSteadyStateInboxes().catchError(
+          (Object error, StackTrace stack) {
+            debugPrint('Initial steady inbox poll failed: $error\n$stack');
+          },
+        ),
+      );
       orchestrator.startPolling();
     } catch (error, stack) {
       debugPrint('Relay handshake bootstrap failed: $error\n$stack');

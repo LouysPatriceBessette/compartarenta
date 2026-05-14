@@ -68,3 +68,16 @@
 - [ ] 10.3 Perform beta validation and resolve any high-severity issues before production submission
 - [ ] 10.4 Submit to both stores and track review outcomes; iterate on any rejection feedback
 
+## 11. Relay invite page and public store listings
+
+After the app has **public** Play Store and App Store listing URLs, update the
+relay-hosted contact invitation page (`relay/deploy/landing/contact/invite/`)
+so the store badge images link to those listings. That change ships with the
+**relay** static site / vhost and therefore requires a **relay release and
+security audit** in addition to the mobile store publication work.
+
+- [ ] 11.1 Add `href` targets on the Play and App Store badges on
+      `relay/deploy/landing/contact/invite/` using the canonical public listing
+      URLs; verify links open correctly on mobile browsers. Coordinate relay
+      deploy + audit with operators.
+

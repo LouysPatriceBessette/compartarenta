@@ -40,6 +40,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     if (orch != null) {
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
       orch.incomingHandshakes.addListener(_onIncomingChanged);
+      orch.steadyStateInboxTick.addListener(_onSteadyInboxTick);
       unawaited(orch.processAllPendingHandshakes());
     }
   }
@@ -47,7 +48,13 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   @override
   void dispose() {
     _orchestrator?.incomingHandshakes.removeListener(_onIncomingChanged);
+    _orchestrator?.steadyStateInboxTick.removeListener(_onSteadyInboxTick);
     super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    _reload();
   }
 
   void _onIncomingChanged() {
