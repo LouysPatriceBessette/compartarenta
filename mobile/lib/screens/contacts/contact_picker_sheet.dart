@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../contacts/avatar_palette.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
-import 'contact_editor_screen.dart';
 import 'generate_invitation_screen.dart';
 
 /// Bottom sheet used by modules to select an existing Contact as a participant.
@@ -27,19 +26,17 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
   Future<List<Contact>> _loadContacts() async {
     final contacts = await widget.db.listContacts();
     return contacts
-        .where((c) => !widget.excludeContactIds.contains(c.id))
+        .where(
+          (c) =>
+              c.kind == 'connected' &&
+              !c.isBlocked &&
+              !widget.excludeContactIds.contains(c.id),
+        )
         .toList();
   }
 
   void _reload() {
     setState(() => _future = _loadContacts());
-  }
-
-  Future<void> _addContact() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => const ContactEditorScreen()),
-    );
-    if (mounted) _reload();
   }
 
   Future<void> _inviteContact() async {
@@ -73,10 +70,7 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
                   }
                   final contacts = snapshot.data ?? const <Contact>[];
                   if (contacts.isEmpty) {
-                    return _ContactPickerEmptyState(
-                      onAddContact: _addContact,
-                      onInviteContact: _inviteContact,
-                    );
+                    return const _ContactPickerEmptyState();
                   }
                   return ListView.separated(
                     shrinkWrap: true,
@@ -99,22 +93,13 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.person_add),
-                  label: Text(l10n.contactsAddLocalOnlyAction),
-                  onPressed: _addContact,
-                ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.send),
-                  label: Text(l10n.contactsInviteAction),
-                  onPressed: _inviteContact,
-                ),
-              ],
+            Align(
+              alignment: Alignment.centerRight,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.send),
+                label: Text(l10n.contactsInviteAction),
+                onPressed: _inviteContact,
+              ),
             ),
           ],
         ),
@@ -124,22 +109,12 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
 
   String _kindLabel(AppLocalizations l10n, Contact contact) {
     if (contact.isBlocked) return l10n.contactsKindBlocked;
-    return switch (contact.kind) {
-      'connected' => l10n.contactsKindConnected,
-      'archived' => l10n.contactsKindDeleted,
-      _ => l10n.contactsKindLocalOnly,
-    };
+    return l10n.contactsKindConnected;
   }
 }
 
 class _ContactPickerEmptyState extends StatelessWidget {
-  const _ContactPickerEmptyState({
-    required this.onAddContact,
-    required this.onInviteContact,
-  });
-
-  final VoidCallback onAddContact;
-  final VoidCallback onInviteContact;
+  const _ContactPickerEmptyState();
 
   @override
   Widget build(BuildContext context) {
@@ -160,18 +135,6 @@ class _ContactPickerEmptyState extends StatelessWidget {
             l10n.contactsPickerEmptyBody,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            icon: const Icon(Icons.person_add),
-            label: Text(l10n.contactsAddLocalOnlyAction),
-            onPressed: onAddContact,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.send),
-            label: Text(l10n.contactsInviteAction),
-            onPressed: onInviteContact,
           ),
         ],
       ),

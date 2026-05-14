@@ -172,7 +172,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
         routes: [
           GoRoute(
             path: 'new',
-            builder: (context, state) => const ContactEditorScreen(),
+            redirect: (context, state) => '/contacts/invite/new',
           ),
           GoRoute(
             path: 'invite/new',

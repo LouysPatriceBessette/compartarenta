@@ -10,10 +10,10 @@ The app SHALL persist a **Contact** entity as a first-class record on-device. A 
 
 Connected contacts SHALL additionally persist the relay-routing identifier and the public key material needed to encrypt envelopes addressed to that contact, per `end-to-end-encryption`.
 
-#### Scenario: Adding a local-only contact
-- **WHEN** a user adds a new contact by entering a name and selecting an avatar without using an invitation code
-- **THEN** the app persists a Contact record with kind = local-only
-- **THEN** the Contact has no routing identifier and no peer public material
+#### Scenario: Local-only row exists only for connection lifecycle or legacy migration
+- **WHEN** the app needs a contact row before a handshake completes, after a disconnect demotion, or when mirroring legacy module participants during migration
+- **THEN** the row MAY exist with kind = local-only and SHALL NOT be treated as an eligible co-participant in relay-backed modules until kind becomes `connected`
+- **THEN** the Contact has no routing identifier and no peer public material while it remains local-only
 
 #### Scenario: Promotion from local-only to connected
 - **WHEN** a successful handshake completes for a contact stub (per `contact-handshake-over-relay`)
@@ -21,11 +21,11 @@ Connected contacts SHALL additionally persist the relay-routing identifier and t
 - **THEN** the stable identifier of the Contact is unchanged across this promotion
 
 ### Requirement: Modules reference Contacts instead of authoring inline participants
-After this capability is in place, modules that ask the user to "add a participant" (e.g., a housing participant, a vehicle participant) SHALL author the participant by **referencing an existing Contact** or by creating a new Contact first. Modules SHALL NOT introduce new ad-hoc participants that bypass the Contacts data model.
+After this capability is in place, modules that ask the user to "add a participant" (e.g., a housing participant, a vehicle participant) SHALL author the participant by **referencing an existing connected Contact** (selected through the module picker) or by driving the user to **invite and complete a handshake** first. Modules SHALL NOT introduce new ad-hoc participants that bypass the Contacts data model.
 
-#### Scenario: Adding a housing participant uses the contact picker
-- **WHEN** a user adds a new participant to a housing plan after this capability is enabled
-- **THEN** the user picks an existing Contact or creates a new Contact
+#### Scenario: Adding a housing co-participant uses the contact picker
+- **WHEN** a user adds a new co-participant to a housing plan after this capability is enabled
+- **THEN** the user picks from connected Contacts or uses the picker's invite entry point so the peer can become connected
 - **THEN** the housing participant row references the Contact identifier; it does NOT embed a fresh inline name/avatar pair as the authoritative record
 
 #### Scenario: Module participants survive contact updates
@@ -54,17 +54,17 @@ The app SHALL provide a Contacts area (list, detail, edit) reachable from the ma
 
 #### Scenario: New user can manage contacts before adding to a module
 - **WHEN** a freshly onboarded user opens the Contacts area before adding a housing or vehicle participant
-- **THEN** the area is reachable, the empty state is informative, and the user can add a local-only contact or start an invitation
+- **THEN** the area is reachable, the empty state is informative, and the user can start an invitation or redeem a code to build connected contacts
 
 ### Requirement: Existing module participants are migrated into Contacts on first upgrade
 On the first launch of an app version that introduces Contacts, the app SHALL run a one-time migration that creates a Contact for each unique participant referenced by an existing module, and rewrites each module's participant row to reference its corresponding Contact identifier. The de-duplication policy across modules SHALL be conservative: identical (display name, avatar) pairs MAY be unified into one Contact; otherwise distinct Contacts are created and the user MAY merge them manually later.
 
-Migration SHALL produce **local-only** Contacts. It SHALL NOT create connected Contacts and SHALL NOT initiate any handshake or relay traffic on the user's behalf.
+Migration SHALL produce **local-only** Contacts. It SHALL NOT create connected Contacts and SHALL NOT initiate any handshake or relay traffic on the user's behalf. **Commercial / product rule:** those migrated rows are placeholders; co-participants in relay-backed plans SHALL NOT remain on migration-only local rows once the product enforces connected-only participation—the user MUST invite each person and complete connection (and thus satisfy licensing / sign-in on their device) before they count as valid co-participants.
 
 #### Scenario: Migration unifies identical name+avatar across modules
 - **WHEN** the same (display name, avatar) pair existed as a participant in both housing and a hypothetical other module before the upgrade
 - **THEN** the migration creates one Contact and both modules reference it
-- **THEN** the resulting Contact's kind is local-only
+- **THEN** the resulting Contact's kind is local-only until a handshake promotes it
 
 #### Scenario: Migration does not auto-connect contacts
 - **WHEN** the migration runs

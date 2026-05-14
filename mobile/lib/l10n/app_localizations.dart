@@ -778,10 +778,16 @@ abstract class AppLocalizations {
   /// **'Choose a contact for each participant before continuing.'**
   String get housingPlanContactRequired;
 
+  /// No description provided for @housingPlanParticipantsMustBeConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Each co-participant must be a connected contact (they use the app on their own account). Invite them from Contacts first, then select them here.'**
+  String get housingPlanParticipantsMustBeConnected;
+
   /// No description provided for @housingPlanParticipantsPlaceholderNote.
   ///
   /// In en, this message translates to:
-  /// **'Participants now come from Contacts. The housing plan keeps a name and avatar snapshot for historical readability.'**
+  /// **'Co-participants must be connected contacts. The plan keeps a name and avatar snapshot for historical readability.'**
   String get housingPlanParticipantsPlaceholderNote;
 
   /// No description provided for @housingPlanYou.
@@ -1529,7 +1535,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsPickerEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Add a local contact or invite someone before adding them to this module.'**
+  /// **'Invite people and complete the connection in Contacts first. Only connected contacts can join this module.'**
   String get contactsPickerEmptyBody;
 
   /// No description provided for @contactsEmptyTitle.
@@ -1541,13 +1547,13 @@ abstract class AppLocalizations {
   /// No description provided for @contactsEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Add someone you know to reuse them across modules, or invite a contact to connect through the relay.'**
+  /// **'Invite someone and connect through the relay. Connected contacts can be reused across modules.'**
   String get contactsEmptyBody;
 
   /// No description provided for @contactsAddContactAction.
   ///
   /// In en, this message translates to:
-  /// **'Add a contact'**
+  /// **'Invite someone'**
   String get contactsAddContactAction;
 
   /// No description provided for @contactsAddLocalOnlyAction.

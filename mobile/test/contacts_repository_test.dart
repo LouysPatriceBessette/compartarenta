@@ -67,6 +67,22 @@ void main() {
       await repo.setBlocked(id: 'c3', blocked: false);
       expect((await repo.get('c3'))!.isBlocked, isFalse);
     });
+
+    test('list omits legacy manual local ids (contact:local:*)', () async {
+      final repo = ContactsRepository(db);
+      await repo.upsertLocalOnly(
+        id: 'contact:local:111',
+        displayName: 'Manual',
+        avatarId: 'mdi:0',
+      );
+      await repo.upsertLocalOnly(
+        id: 'contact:handshake:deadbeef',
+        displayName: 'Stub',
+        avatarId: 'mdi:1',
+      );
+      final visible = await repo.list();
+      expect(visible.map((c) => c.id).toList(), ['contact:handshake:deadbeef']);
+    });
   });
 
   group('ContactInvitationsRepository', () {

@@ -7,13 +7,15 @@ deltas, but it must not redefine what a Contact is.
 
 ## Picker UX
 
-Modules SHALL add participants through the shared Contacts picker. The picker
-lists visible Contacts, distinguishes local-only / connected / blocked state,
-and offers two entry points when the desired person is missing:
+Modules SHALL add co-participants through the shared Contacts picker. The picker
+lists **connected** contacts only (not locally blocked). When the desired person
+is missing, the picker SHALL offer an **Invite** entry point so they can
+complete the handshake and become connected.
 
-- **Add a contact** creates a local-only Contact without relay traffic.
-- **Invite a contact** creates an out-of-band invitation code that can later
-  promote the Contact to connected through the relay handshake.
+The legacy **manual local-only** path (`contact:local:`) is not a supported way
+to add people who will participate in relay-backed plans. **Local-only** rows
+still exist on-device for invitation stubs, post-disconnect demotion, and
+migration placeholders, per `contacts-domain-model`.
 
 Modules SHALL NOT expose a parallel authoritative flow that asks for a
 temporary participant name and avatar inline after adopting Contacts.

@@ -17,7 +17,7 @@
 ## 2. Contacts UI
 
 - [x] 2.1 Add a Contacts area in the main shell (list, empty state, detail view, edit).
-- [x] 2.2 Implement local-only contact creation (name + avatar) without any relay traffic.
+- [x] 2.2 ~~Implement local-only contact creation (name + avatar) without any relay traffic.~~ **Superseded:** manual local-only creation was removed from the Contacts UI; local-only rows remain only for invitation stubs, disconnect demotion, and migration. Co-participants in modules must be **connected** contacts (see `contacts-module-integration` and housing validation).
 - [x] 2.3 Implement contact detail view with kind indicator (local-only vs connected).
 - [x] 2.4 Implement edit / rename / change-avatar with updates surfaced through every module reference.
 - [x] 2.5 Implement delete (local, snapshot-preserving) and disconnect (sends disconnect envelope) as two distinct actions. *(Wave A: delete + local snapshot preservation. Wave B: disconnect envelope dispatch over the relay. Wave B follow-up: deletion is now refused while a Contact is still referenced by a module plan or is currently `connected`; the UI redirects to plan reassignment or the explicit Disconnect action — see `contact-privacy-and-deletion`.)*
@@ -47,8 +47,9 @@
 ## 5. Module integration contract
 
 - [x] 5.1 Document the `contacts-module-integration` contract for adopting modules (housing first), including picker UX, snapshot rules, and per-module alias storage. *(See `docs/contacts-module-integration.md`.)*
-- [x] 5.2 Provide a participant picker widget that lists Contacts, surfaces kind, and offers "Add new contact" + "Invite contact" entry points.
+- [x] 5.2 Provide a participant picker widget that lists **connected** contacts, surfaces blocked exclusion, and offers an **Invite** entry point (no manual local-only creation for module participants).
 - [x] 5.3 Ensure no parallel "inline temporary participant" path remains accessible from inside adopting modules. *(Housing now routes participant selection through the Contacts picker and stores the selected `contactId` plus a snapshot.)*
+- [x] 5.4 Enforce **connected-only** co-participants for housing (picker + advance-step validation); `/contacts/new` redirects to invite generation. *(Commercial rule: every co-participant uses the app on their own account.)*
 
 ## 6. Privacy compliance and audit alignment
 

@@ -1354,6 +1354,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                       ? () async {
                                           final messenger =
                                               ScaffoldMessenger.of(context);
+                                          if (_stepIndex == 0) {
+                                            for (var j = 0;
+                                                j < _otherParticipantCount;
+                                                j++) {
+                                              final id = _contactIds[j]!;
+                                              final c = await _db.getContact(
+                                                id,
+                                              );
+                                              if (c == null ||
+                                                  c.kind != 'connected' ||
+                                                  c.isBlocked) {
+                                                if (mounted) {
+                                                  messenger.showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        l10n.housingPlanParticipantsMustBeConnected,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                return;
+                                              }
+                                            }
+                                          }
                                           try {
                                             if (_stepIndex == 0) {
                                               await _persistParticipants();

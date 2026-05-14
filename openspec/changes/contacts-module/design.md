@@ -43,11 +43,17 @@ Alternatives considered:
 
 A **local-only contact** has just on-device data (name, avatar, optional notes). A **connected contact** additionally has a relay-routing identifier and the public material needed to send encrypted envelopes to that contact via the relay.
 
+**Product rule (commercial):** anyone who **participates in a shared plan** (housing, vehicle, and similar modules) must be a **connected** contact: they use the app on their own account (with an active entitlement / license as enforced elsewhere in the product). Module pickers therefore list **connected** contacts only. The `local-only` kind is retained where it supports the **connection lifecycle**—invitation stubs before handshake, a row **demoted** after disconnect so the user can re-invite without orphaning history, and **migration** placeholders that must be replaced by a real connection before those people count as valid co-participants.
+
 Rationale:
 
-- Many real-world participants will never install the app (e.g., one-time roommate); a local-only contact lets the user keep using the app sensibly.
-- Promotion from local-only → connected is the result of a completed handshake; downgrade is not automatic but can be triggered manually.
-- The same Contact ID survives the promotion, so module references do not break.
+- Relay-backed collaboration requires routing material; local-only rows intentionally lack it until handshake completes.
+- Promotion from local-only → connected is the result of a completed handshake; demotion after disconnect returns the row to local-only while preserving identity and history.
+- The same Contact ID survives promotion, so module references do not break once the peer connects.
+
+Alternatives considered:
+
+- **Local-only co-participants for offline-only accounting inside shared plans**: rejected — it bypasses the requirement that every party is a real app user who can receive encrypted module traffic.
 
 ### Decision: Unique invitation code format
 

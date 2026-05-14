@@ -12,8 +12,16 @@ class ContactsRepository {
 
   final AppDatabase _db;
 
-  Future<List<Contact>> list({bool includeDeleted = false}) =>
-      _db.listContacts(includeDeleted: includeDeleted);
+  /// Lists contacts for the Contacts UI and pickers.
+  ///
+  /// Rows with ids under `contact:local:` were the legacy manual local-only
+  /// path; they are hidden from the list so users add people through
+  /// invitation and handshake instead, while handshake stubs and demoted
+  /// contacts keep stable `contact:handshake:` ids.
+  Future<List<Contact>> list({bool includeDeleted = false}) async {
+    final rows = await _db.listContacts(includeDeleted: includeDeleted);
+    return rows.where((c) => !c.id.startsWith('contact:local:')).toList();
+  }
 
   Future<Contact?> get(String id) => _db.getContact(id);
 

@@ -379,8 +379,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez un contact pour chaque participant avant de continuer.';
 
   @override
+  String get housingPlanParticipantsMustBeConnected =>
+      'Chaque co-participant doit être un contact connecté (il utilise l’app avec son propre compte). Invitez-le depuis Contacts d’abord, puis sélectionnez-le ici.';
+
+  @override
   String get housingPlanParticipantsPlaceholderNote =>
-      'Les participants viennent maintenant des Contacts. Le plan logement conserve une copie du nom et de l’avatar pour garder l’historique lisible.';
+      'Les co-participants doivent être des contacts connectés. Le plan conserve une copie du nom et de l’avatar pour garder l’historique lisible.';
 
   @override
   String get housingPlanYou => 'Vous';
@@ -815,17 +819,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsPickerEmptyBody =>
-      'Ajoutez un contact local ou invitez quelqu’un avant de l’ajouter à ce module.';
+      'Invitez des personnes et terminez la connexion dans Contacts d’abord. Seuls les contacts connectés peuvent rejoindre ce module.';
 
   @override
   String get contactsEmptyTitle => 'Aucun contact pour l’instant';
 
   @override
   String get contactsEmptyBody =>
-      'Ajoutez une personne que vous connaissez pour la réutiliser entre modules, ou invitez un contact à se connecter via le relais.';
+      'Invitez quelqu’un et connectez-vous via le relais. Les contacts connectés sont réutilisables entre modules.';
 
   @override
-  String get contactsAddContactAction => 'Ajouter un contact';
+  String get contactsAddContactAction => 'Inviter quelqu’un';
 
   @override
   String get contactsAddLocalOnlyAction => 'Ajouter un contact local';
