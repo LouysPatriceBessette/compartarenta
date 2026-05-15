@@ -66,19 +66,12 @@
   "errorSomethingWentWrongBody": "Please try again. If this keeps happening, contact support.",
   "errorUnknownOnboardingStep": "Unknown onboarding step.",
 
-  "homeEnvironment": "Environment: {env}",
-  "@homeEnvironment": {
-    "placeholders": {
-      "env": { "type": "String" }
-    }
-  },
-  "homeApiBaseUrl": "API base URL: {url}",
-  "@homeApiBaseUrl": {
-    "placeholders": {
-      "url": { "type": "String" }
-    }
-  },
   "homeHousingPlan": "Housing plan",
+  "homeModuleContacts": "Contacts",
+  "homeModuleHousing": "Housing",
+  "homeModulePersonalBudget": "Personal budget",
+  "homeModuleVehicle": "Vehicle",
+  "homeModuleVehicleSharing": "Vehicle sharing",
   "housingPlanSummaryMonthlyTotal": "Monthly total",
 
   "housingPlanLoadError": "Could not load plan data.\n{error}",
@@ -256,8 +249,6 @@
     }
   },
 
-  "homeCarSharingPlan": "Car sharing plan",
-
   "carSharingPlanTitle": "Car sharing plan",
   "carSharingPlanFinish": "Done",
   "carSharingOwnerPrompt": "{name}: specify whether this is your owned vehicle or a rental.",
@@ -309,9 +300,6 @@
   "carSharingFuelCustomHint": "Describe a different arrangement (not tracked by the app)",
   "carSharingClausesIntro": "Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.",
 
-  "homePlaceholderBody": "This is a placeholder home screen for the store-publishable MVP shell.",
-
-  "homeContacts": "Contacts",
 
   "contactsTitle": "Contacts",
   "contactsPickerTitle": "Choose a contact",

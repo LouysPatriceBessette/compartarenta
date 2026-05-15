@@ -454,23 +454,41 @@ abstract class AppLocalizations {
   /// **'Unknown onboarding step.'**
   String get errorUnknownOnboardingStep;
 
-  /// No description provided for @homeEnvironment.
-  ///
-  /// In en, this message translates to:
-  /// **'Environment: {env}'**
-  String homeEnvironment(String env);
-
-  /// No description provided for @homeApiBaseUrl.
-  ///
-  /// In en, this message translates to:
-  /// **'API base URL: {url}'**
-  String homeApiBaseUrl(String url);
-
   /// No description provided for @homeHousingPlan.
   ///
   /// In en, this message translates to:
   /// **'Housing plan'**
   String get homeHousingPlan;
+
+  /// No description provided for @homeModuleContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get homeModuleContacts;
+
+  /// No description provided for @homeModuleHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing'**
+  String get homeModuleHousing;
+
+  /// No description provided for @homeModulePersonalBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal budget'**
+  String get homeModulePersonalBudget;
+
+  /// No description provided for @homeModuleVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get homeModuleVehicle;
+
+  /// No description provided for @homeModuleVehicleSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle sharing'**
+  String get homeModuleVehicleSharing;
 
   /// No description provided for @housingPlanSummaryMonthlyTotal.
   ///
@@ -1226,12 +1244,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{1 day} other{{count} days}}'**
   String housingPlanDurationDaysCount(int count);
 
-  /// No description provided for @homeCarSharingPlan.
-  ///
-  /// In en, this message translates to:
-  /// **'Car sharing plan'**
-  String get homeCarSharingPlan;
-
   /// No description provided for @carSharingPlanTitle.
   ///
   /// In en, this message translates to:
@@ -1501,18 +1513,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.'**
   String get carSharingClausesIntro;
-
-  /// No description provided for @homePlaceholderBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This is a placeholder home screen for the store-publishable MVP shell.'**
-  String get homePlaceholderBody;
-
-  /// No description provided for @homeContacts.
-  ///
-  /// In en, this message translates to:
-  /// **'Contacts'**
-  String get homeContacts;
 
   /// No description provided for @contactsTitle.
   ///

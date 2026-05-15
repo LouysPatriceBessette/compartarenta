@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class OnboardingSplashStep extends StatefulWidget {
   const OnboardingSplashStep({super.key, required this.onDone});
@@ -30,12 +29,14 @@ class _OnboardingSplashStepState extends State<OnboardingSplashStep> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Icon(
-        MdiIcons.dog,
-        size: 96,
-        color: Theme.of(context).colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Image.asset(
+          'assets/brand/app_logo.png',
+          height: 180,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
 }
-

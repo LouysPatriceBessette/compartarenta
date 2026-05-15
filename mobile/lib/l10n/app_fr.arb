@@ -66,19 +66,12 @@
   "errorSomethingWentWrongBody": "Veuillez réessayer. Si le problème persiste, contactez le support.",
   "errorUnknownOnboardingStep": "Étape de configuration inconnue.",
 
-  "homeEnvironment": "Environnement : {env}",
-  "@homeEnvironment": {
-    "placeholders": {
-      "env": { "type": "String" }
-    }
-  },
-  "homeApiBaseUrl": "URL de base API : {url}",
-  "@homeApiBaseUrl": {
-    "placeholders": {
-      "url": { "type": "String" }
-    }
-  },
   "homeHousingPlan": "Plan logement",
+  "homeModuleContacts": "Contacts",
+  "homeModuleHousing": "Logement",
+  "homeModulePersonalBudget": "Budget personnel",
+  "homeModuleVehicle": "Véhicule",
+  "homeModuleVehicleSharing": "Partage de véhicule",
   "housingPlanSummaryMonthlyTotal": "Total mensuel",
 
   "housingPlanLoadError": "Impossible de charger les données du plan.\n{error}",
@@ -254,8 +247,6 @@
     }
   },
 
-  "homeCarSharingPlan": "Plan voiture",
-
   "carSharingPlanTitle": "Plan partage de voiture",
   "carSharingPlanFinish": "Terminer",
   "carSharingOwnerPrompt": "{name} : indiquez s’il s’agit de votre véhicule ou d’une location.",
@@ -307,9 +298,6 @@
   "carSharingFuelCustomHint": "Décrivez un autre mode (non géré par l’app)",
   "carSharingClausesIntro": "Clauses facultatives et suggestions. Les règles propres au logement (couvre-feu, retrait anticipé, immeuble) ne figurent pas ici.",
 
-  "homePlaceholderBody": "Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique.",
-
-  "homeContacts": "Contacts",
 
   "contactsTitle": "Contacts",
   "contactsPickerTitle": "Choisir un contact",

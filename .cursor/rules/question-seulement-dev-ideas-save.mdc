@@ -1,0 +1,48 @@
+---
+description: >-
+  When the user prefixes a message with "Question seulement:", save Q&A under
+  dev-ideas with a fixed layout; reply in chat with only the file path.
+alwaysApply: true
+---
+
+# "Question seulement" → save answer under `dev-ideas/`
+
+## Scope
+
+This rule is **`alwaysApply: true`**: it applies for **every** chat in this repository, **regardless** of which files or folders you have open or which part of the project you are working in. No `globs` restriction.
+
+## When this applies
+
+If the **user message starts with** `Question seulement:` (colon optional spacing flexible), treat it as a **research / explanation-only** turn with **persisted delivery**:
+
+1. **Write the complete answer only in a new file** under `dev-ideas/` at the repository root (`dev-ideas/` is gitignored; personal notes).
+2. **In the chat reply**, give **only** the path to that file (e.g. `` `dev-ideas/YYYY-MM-DD-short-topic.md` ``). Do **not** paste or summarize the answer in chat unless the user explicitly asks.
+
+If you cannot write the file (blocked, ambiguous topic for the filename), say so briefly and still answer in chat normally.
+
+## Filename
+
+Pattern: **`YYYY-MM-DD-[courte-description].md`**
+
+- **`YYYY-MM-DD`**: calendar date **of this conversation turn** (use the date the user/agent session provides as authoritative).
+- **`[courte-description]`**: ASCII slug derived from the topic (lowercase, hyphens, no spaces; omit `Question-seulement` from the slug). Keep it short (roughly 3–6 words).
+
+## File body layout (exact structure)
+
+Use this **top-to-bottom template**:
+
+1. **Quoted user text** — The user’s prompt **verbatim** (including `Question seulement:`), as a Markdown **block quote** (`>` lines). Preserve line breaks; empty lines inside the quote use `>` on a blank line where needed.
+
+2. **Separator** — Insert **exactly** this line (single line):
+
+   ```html
+   <hr style="height:5px; border:none; color:#FFF; background-color:#FFF; margin:40px 0 10px;">
+   ```
+
+3. **Heading** — Then a level-1 Markdown heading **`# Réponse IA`** on its own line.
+
+4. **Answer** — Then the assistant’s **full response** (headings, tables, lists, prose) with **no** reformulation mandate beyond answering the question; language follows the user’s question (consistent with existing `dev-ideas/` notes).
+
+## Language
+
+Personal notes in `dev-ideas/` **may mirror the user’s language** for Q&A. This does **not** override English-only requirements for shared project documentation under `docs/**` and similar.

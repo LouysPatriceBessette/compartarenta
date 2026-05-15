@@ -191,17 +191,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorUnknownOnboardingStep => 'Étape de configuration inconnue.';
 
   @override
-  String homeEnvironment(String env) {
-    return 'Environnement : $env';
-  }
-
-  @override
-  String homeApiBaseUrl(String url) {
-    return 'URL de base API : $url';
-  }
-
-  @override
   String get homeHousingPlan => 'Plan logement';
+
+  @override
+  String get homeModuleContacts => 'Contacts';
+
+  @override
+  String get homeModuleHousing => 'Logement';
+
+  @override
+  String get homeModulePersonalBudget => 'Budget personnel';
+
+  @override
+  String get homeModuleVehicle => 'Véhicule';
+
+  @override
+  String get homeModuleVehicleSharing => 'Partage de véhicule';
 
   @override
   String get housingPlanSummaryMonthlyTotal => 'Total mensuel';
@@ -645,9 +650,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get homeCarSharingPlan => 'Plan voiture';
-
-  @override
   String get carSharingPlanTitle => 'Plan partage de voiture';
 
   @override
@@ -799,13 +801,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carSharingClausesIntro =>
       'Clauses facultatives et suggestions. Les règles propres au logement (couvre-feu, retrait anticipé, immeuble) ne figurent pas ici.';
-
-  @override
-  String get homePlaceholderBody =>
-      'Ceci est un écran d’accueil provisoire pour la coque MVP publiable en boutique.';
-
-  @override
-  String get homeContacts => 'Contacts';
 
   @override
   String get contactsTitle => 'Contacts';

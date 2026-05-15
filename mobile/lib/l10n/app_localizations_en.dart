@@ -190,17 +190,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorUnknownOnboardingStep => 'Unknown onboarding step.';
 
   @override
-  String homeEnvironment(String env) {
-    return 'Environment: $env';
-  }
-
-  @override
-  String homeApiBaseUrl(String url) {
-    return 'API base URL: $url';
-  }
-
-  @override
   String get homeHousingPlan => 'Housing plan';
+
+  @override
+  String get homeModuleContacts => 'Contacts';
+
+  @override
+  String get homeModuleHousing => 'Housing';
+
+  @override
+  String get homeModulePersonalBudget => 'Personal budget';
+
+  @override
+  String get homeModuleVehicle => 'Vehicle';
+
+  @override
+  String get homeModuleVehicleSharing => 'Vehicle sharing';
 
   @override
   String get housingPlanSummaryMonthlyTotal => 'Monthly total';
@@ -639,9 +644,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeCarSharingPlan => 'Car sharing plan';
-
-  @override
   String get carSharingPlanTitle => 'Car sharing plan';
 
   @override
@@ -788,13 +790,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carSharingClausesIntro =>
       'Add optional clauses and suggested topics. Housing-specific rules (curfew, early withdrawal, building rules) are omitted here.';
-
-  @override
-  String get homePlaceholderBody =>
-      'This is a placeholder home screen for the store-publishable MVP shell.';
-
-  @override
-  String get homeContacts => 'Contacts';
 
   @override
   String get contactsTitle => 'Contacts';

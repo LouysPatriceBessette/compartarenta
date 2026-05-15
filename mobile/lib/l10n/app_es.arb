@@ -66,19 +66,12 @@
   "errorSomethingWentWrongBody": "Por favor, inténtalo de nuevo. Si continúa, contacta con soporte.",
   "errorUnknownOnboardingStep": "Paso de configuración desconocido.",
 
-  "homeEnvironment": "Entorno: {env}",
-  "@homeEnvironment": {
-    "placeholders": {
-      "env": { "type": "String" }
-    }
-  },
-  "homeApiBaseUrl": "URL base de la API: {url}",
-  "@homeApiBaseUrl": {
-    "placeholders": {
-      "url": { "type": "String" }
-    }
-  },
   "homeHousingPlan": "Plan de vivienda",
+  "homeModuleContacts": "Contactos",
+  "homeModuleHousing": "Vivienda",
+  "homeModulePersonalBudget": "Presupuesto personal",
+  "homeModuleVehicle": "Vehículo",
+  "homeModuleVehicleSharing": "Uso compartido del vehículo",
   "housingPlanSummaryMonthlyTotal": "Total mensual",
 
   "housingPlanLoadError": "No se pudieron cargar los datos del plan.\n{error}",
@@ -254,8 +247,6 @@
     }
   },
 
-  "homeCarSharingPlan": "Plan de coche",
-
   "carSharingPlanTitle": "Plan de coche compartido",
   "carSharingPlanFinish": "Listo",
   "carSharingOwnerPrompt": "{name}: indica si es tu vehículo o un alquiler.",
@@ -307,9 +298,6 @@
   "carSharingFuelCustomHint": "Describe otro modo (no gestionado por la app)",
   "carSharingClausesIntro": "Cláusulas opcionales y sugerencias. No se incluyen reglas específicas de vivienda (toque de queda, retirada anticipada, edificio).",
 
-  "homePlaceholderBody": "Esta es una pantalla de inicio provisional para el contenedor MVP publicable.",
-
-  "homeContacts": "Contactos",
 
   "contactsTitle": "Contactos",
   "contactsPickerTitle": "Elegir un contacto",

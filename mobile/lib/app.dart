@@ -27,6 +27,7 @@ import 'widgets/app_error_boundary.dart';
 import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
 import 'widgets/profile_label_conflict_host.dart';
+import 'theme/app_theme.dart';
 
 class CompartarentaApp extends StatefulWidget {
   const CompartarentaApp({super.key, required this.config});
@@ -98,6 +99,7 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
         final prefs = snapshot.data;
         if (snapshot.hasError) {
           return MaterialApp(
+            theme: buildAppTheme(),
             home: Scaffold(
               body: SafeArea(
                 child: Padding(
@@ -111,8 +113,9 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
           );
         }
         if (snapshot.connectionState != ConnectionState.done || prefs == null) {
-          return const MaterialApp(
-            home: Scaffold(
+          return MaterialApp(
+            theme: buildAppTheme(),
+            home: const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
           );
@@ -130,10 +133,7 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
 
             return MaterialApp.router(
               onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-              theme: ThemeData(
-                useMaterial3: true,
-                colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-              ),
+              theme: buildAppTheme(),
               locale: locale,
               supportedLocales: AppLocalizations.supportedLocales,
               localizationsDelegates: const [
@@ -182,7 +182,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => HomeScreen(config: config),
+        builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
         path: '/settings',

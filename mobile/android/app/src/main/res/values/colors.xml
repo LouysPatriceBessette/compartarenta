@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches AppBrandColors.primaryBlueLight — splash + adaptive icon background -->
+    <color name="brand_splash">#AED6F1</color>
+    <color name="ic_launcher_background">#AED6F1</color>
+</resources>

@@ -190,17 +190,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorUnknownOnboardingStep => 'Paso de configuración desconocido.';
 
   @override
-  String homeEnvironment(String env) {
-    return 'Entorno: $env';
-  }
-
-  @override
-  String homeApiBaseUrl(String url) {
-    return 'URL base de la API: $url';
-  }
-
-  @override
   String get homeHousingPlan => 'Plan de vivienda';
+
+  @override
+  String get homeModuleContacts => 'Contactos';
+
+  @override
+  String get homeModuleHousing => 'Vivienda';
+
+  @override
+  String get homeModulePersonalBudget => 'Presupuesto personal';
+
+  @override
+  String get homeModuleVehicle => 'Vehículo';
+
+  @override
+  String get homeModuleVehicleSharing => 'Uso compartido del vehículo';
 
   @override
   String get housingPlanSummaryMonthlyTotal => 'Total mensual';
@@ -642,9 +647,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get homeCarSharingPlan => 'Plan de coche';
-
-  @override
   String get carSharingPlanTitle => 'Plan de coche compartido';
 
   @override
@@ -794,13 +796,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get carSharingClausesIntro =>
       'Cláusulas opcionales y sugerencias. No se incluyen reglas específicas de vivienda (toque de queda, retirada anticipada, edificio).';
-
-  @override
-  String get homePlaceholderBody =>
-      'Esta es una pantalla de inicio provisional para el contenedor MVP publicable.';
-
-  @override
-  String get homeContacts => 'Contactos';
 
   @override
   String get contactsTitle => 'Contactos';
