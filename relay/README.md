@@ -70,6 +70,7 @@ proposal/accept/reject) are pinned by capability
 | [`internal/config/`](./internal/config) | Environment-variable parsing. Secrets never default to a non-empty value. |
 | [`internal/logging/`](./internal/logging) | Structured logger with an explicit field allow-list. |
 | [`internal/store/schema/`](./internal/store/schema) | Versioned SQL migrations applied at startup. Embedded into the binary via `//go:embed`. |
+| [`internal/integration/`](./internal/integration) | PostgreSQL integration tests (build tag `integration`; see "Running locally"). |
 | [`Dockerfile`](./Dockerfile) | Reproducible image build. |
 | [`compose.yml`](./compose.yml) | Dev/reference deployment manifest. |
 | [`.env.example`](./.env.example) | Documented configuration template. **Real secrets never live in this repo.** |
@@ -96,6 +97,22 @@ docker compose --env-file .env.example up --build
 The relay refuses to start if the on-disk schema version does not match
 the binary's expected version (`relay-state-schema-and-retention` /
 "Schema migrations are versioned and reviewable").
+
+### PostgreSQL integration tests (OpenSpec 7.3 / 7.4)
+
+End-to-end tests against a real database live under
+[`internal/integration/`](./internal/integration). They use the Go build
+tag `integration` and are skipped unless `RELAY_INTEGRATION_TEST_DSN` is set
+to a PostgreSQL connection string (same shape as `DATABASE_URL`, typically
+`sslmode=disable` for local Docker).
+
+```bash
+export RELAY_INTEGRATION_TEST_DSN='postgresql://relay:relay@127.0.0.1:5432/relay?sslmode=disable'
+go test -tags=integration -count=1 ./internal/integration/...
+```
+
+They delete relay data tables at the start of each test; use a dedicated
+database, not production.
 
 ## Why Go, why PostgreSQL?
 

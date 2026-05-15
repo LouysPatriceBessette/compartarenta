@@ -87,10 +87,10 @@
       `internal/api/api_test.go`: `TestDecodeIdentity*`, `TestDecodeCiphertextRejectsOversize`, `TestClampTTL`.
 - [x] 7.2 Unit tests for rate limiting behavior.
       `internal/ratelimit/ratelimit_test.go`.
-- [ ] 7.3 Integration test for envelope lifecycle: submit → deliver → delete (and verify metrics counter increments).
-      Deferred: requires a live PostgreSQL fixture (docker-compose or testcontainers). The store API is exercised by `internal/store/canonical_test.go` and the schema-shape test; full lifecycle test slated for the next follow-up.
-- [ ] 7.4 Integration test for sweeper expiry: submit → no delivery → TTL expiry → row deletion (verify metrics counter increments).
-      Deferred for the same reason as 7.3.
+- [x] 7.3 Integration test for envelope lifecycle: submit → deliver → delete (and verify metrics counter increments).
+      `internal/integration/lifecycle_integration_test.go` (build tag `integration`): POST `/v1/envelopes` → ack → empty inbox; asserts `relay_envelopes_accepted_total` and `relay_envelopes_delivered_total` each increase by 1. Requires `RELAY_INTEGRATION_TEST_DSN` (PostgreSQL); see `relay/README.md`.
+- [x] 7.4 Integration test for sweeper expiry: submit → no delivery → TTL expiry → row deletion (verify metrics counter increments).
+      Same package: inserts an undelivered envelope with `ttl_expires_at` before the sweeper clock, runs `sweeper.Run`, asserts row removal, `relay_envelopes_expired_total` +1, and `relay_sweeper_runs_total` +1. Same DSN gate as 7.3.
 - [x] 7.5 Schema-shape test that scans the database for any column whose name or type suggests user-content plaintext.
       `internal/store/schema_shape_test.go` scans the embedded migrations.
 - [x] 7.6 Audit-checklist dry-run test that exercises each item in `docs/relay-audit-checklist.md` against a local deployment.
@@ -98,5 +98,4 @@
 
 ## Notes on deferred items
 
-- **7.3, 7.4** require a live PostgreSQL test fixture in CI (docker-compose or testcontainers). They remain unchecked until that fixture lands. The supporting code paths needed to complete each one are already in this change.
 - **Renewal-failure alerting for the TLS cert (3.2 follow-up)** depends on the operator's monitoring stack and is documented in `docs/relay-deployment.md` "Alerts". Not gating this change.
