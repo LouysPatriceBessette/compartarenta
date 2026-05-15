@@ -403,11 +403,13 @@
   "contactsCodeErrorUnsupportedVersion": "This code was created by a newer version of the app.",
 
   "contactsKindLocalOnly": "Local only",
+  "contactsKindDisconnected": "Disconnected",
   "contactsKindConnected": "Connected",
   "contactsKindBlocked": "Blocked",
   "contactsKindDeleted": "Deleted",
   "contactsFieldNameLabel": "Name",
   "contactsFieldNameHint": "How this person appears in the app",
+  "contactsFieldAvatarReadOnlyFootnote": "Only they can change their avatar on their device.",
   "contactsFieldAvatarLabel": "Avatar",
   "contactsFieldNotesLabel": "Notes",
   "contactsFieldNotesHint": "Personal reminder, not shared",
@@ -432,6 +434,29 @@
   "contactsDisconnectAction": "Disconnect",
   "contactsDisconnectTitle": "Disconnect from this contact?",
   "contactsDisconnectBody": "A disconnect notice will be sent to the relay. Both sides will fall back to local-only contacts.",
-  "contactsDisconnectSent": "Disconnect notice sent. Contact is now local-only."
+  "contactsDisconnectSent": "Disconnect notice sent. Contact is now local-only.",
+
+  "contactsReconnectAction": "Request reconnection",
+  "contactsLabelEditorTitle": "How you see this contact",
+  "contactsLabelEditorHint": "Leave blank to use the name they choose on their device",
+  "contactsFieldTheirNameLabel": "Their name",
+  "settingsProfileIdentityTitle": "Your profile",
+  "settingsProfileIdentitySubtitle": "Name and avatar shown to your contacts",
+  "settingsProfileAppearancesTitle": "How others label you",
+  "settingsProfileAppearancesBody": "Each connected contact can share the name they use for you in their list. It is delivered only inside encrypted profile updates.",
+  "settingsProfileAppearancesColumnPeer": "Contact",
+  "settingsProfileAppearancesColumnTheirLabel": "Their label for you",
+  "settingsProfileAppearancesEmpty": "No connected contacts yet. Pair with someone to see how they label you here.",
+  "settingsProfileAppearancesNoSharedLabels": "No contact has shared a custom name for you in their list yet.",
+  "peerNameConflictTitle": "Contact updated their name",
+  "peerNameConflictBody": "You label this contact \"{label}\". They now use \"{canonical}\" on their device.",
+  "@peerNameConflictBody": {
+    "placeholders": {
+      "label": { "type": "String" },
+      "canonical": { "type": "String" }
+    }
+  },
+  "peerNameConflictUseTheirs": "Use their name",
+  "peerNameConflictKeepMine": "Keep my label"
 }
 

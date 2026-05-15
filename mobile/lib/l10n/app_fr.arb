@@ -401,11 +401,13 @@
   "contactsCodeErrorUnsupportedVersion": "Ce code a été créé par une version plus récente de l’app.",
 
   "contactsKindLocalOnly": "Local uniquement",
+  "contactsKindDisconnected": "Déconnecté",
   "contactsKindConnected": "Connecté",
   "contactsKindBlocked": "Bloqué",
   "contactsKindDeleted": "Supprimé",
   "contactsFieldNameLabel": "Nom",
   "contactsFieldNameHint": "Tel que cette personne apparaît dans l’app",
+  "contactsFieldAvatarReadOnlyFootnote": "Seul ce contact peut changer son avatar sur son appareil.",
   "contactsFieldAvatarLabel": "Avatar",
   "contactsFieldNotesLabel": "Notes",
   "contactsFieldNotesHint": "Rappel personnel, non partagé",
@@ -430,6 +432,29 @@
   "contactsDisconnectAction": "Se déconnecter",
   "contactsDisconnectTitle": "Se déconnecter de ce contact ?",
   "contactsDisconnectBody": "Un avis de déconnexion sera envoyé au relais. Les deux côtés repasseront à des contacts locaux uniquement.",
-  "contactsDisconnectSent": "Avis de déconnexion envoyé. Le contact est maintenant local uniquement."
+  "contactsDisconnectSent": "Avis de déconnexion envoyé. Le contact est maintenant local uniquement.",
+
+  "contactsReconnectAction": "Demander une reconnexion",
+  "contactsLabelEditorTitle": "Comment vous voyez ce contact",
+  "contactsLabelEditorHint": "Laisser vide pour utiliser le nom qu’il choisit sur son appareil",
+  "contactsFieldTheirNameLabel": "Son nom",
+  "settingsProfileIdentityTitle": "Votre profil",
+  "settingsProfileIdentitySubtitle": "Nom et avatar visibles par vos contacts",
+  "settingsProfileAppearancesTitle": "Comment les autres vous nomment",
+  "settingsProfileAppearancesBody": "Chaque contact connecté peut partager le nom qu'il vous donne dans sa liste. Cela transite uniquement dans les mises à jour de profil chiffrées.",
+  "settingsProfileAppearancesColumnPeer": "Contact",
+  "settingsProfileAppearancesColumnTheirLabel": "Son libellé pour vous",
+  "settingsProfileAppearancesEmpty": "Aucun contact connecté pour l'instant. Associez-vous à quelqu'un pour voir ici comment il vous nomme.",
+  "settingsProfileAppearancesNoSharedLabels": "Aucun contact ne vous a encore communiqué un nom personnalisé dans sa liste.",
+  "peerNameConflictTitle": "Le contact a changé de nom",
+  "peerNameConflictBody": "Vous affichez ce contact sous « {label} ». Il utilise maintenant « {canonical} » sur son appareil.",
+  "@peerNameConflictBody": {
+    "placeholders": {
+      "label": { "type": "String" },
+      "canonical": { "type": "String" }
+    }
+  },
+  "peerNameConflictUseTheirs": "Utiliser son nom",
+  "peerNameConflictKeepMine": "Garder mon libellé"
 }
 

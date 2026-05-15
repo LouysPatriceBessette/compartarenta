@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
+import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
@@ -43,7 +44,7 @@ class HousingPlanScreen extends StatefulWidget {
 }
 
 class _HousingPlanScreenState extends State<HousingPlanScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
 
   static const _planId = 'housing:default';
   static const _agreementId = 'agreement:housing:default';
@@ -582,7 +583,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (selected == null || !mounted) return;
     setState(() {
       _contactIds[index] = selected.id;
-      _nameControllers[index].text = selected.displayName;
+      _nameControllers[index].text = selected.effectiveDisplayName;
       _avatarIds[index] = selected.avatarId;
     });
   }

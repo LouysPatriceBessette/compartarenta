@@ -59,9 +59,9 @@ If a handshake fails (rejected, expired, wrong nonce, malformed envelope), the r
 - **THEN** any envelope state created for the in-flight handshake is deleted under TTL rules
 
 ### Requirement: Connected contacts can update identity information through small encrypted envelopes
-Once two contacts are connected, either side MAY send small encrypted **profile-update** envelopes to communicate a changed display name or avatar identifier. The receiving side SHALL surface these updates non-intrusively (e.g., a "Contact updated their profile" affordance). Profile-update envelopes are subject to the same relay semantics as any other message (encrypted, TTL, delivered, deleted).
+Once two contacts are connected, either side MAY send small encrypted **profile-update** envelopes to communicate a change to that sender’s **canonical** display name or avatar identifier (self-asserted identity). Profile-update SHALL NOT be used to push another party’s self-identity or to set another user’s **local display label** on their device. The receiving side SHALL merge canonical updates per `contact-peer-display-ownership` (including optional prompts when a local label diverges). Profile-update envelopes are subject to the same relay semantics as any other message (encrypted, TTL, delivered, deleted).
 
 #### Scenario: Peer renames themselves
 - **WHEN** a connected contact changes their own display name on their device and the update is delivered
-- **THEN** the local Contact reflects the new display name
+- **THEN** the local device updates stored **canonical** fields for that contact and recomputes the **effective** list name (respecting any local display label rules)
 - **THEN** module historical snapshots (per `contacts-domain-model`) remain unchanged

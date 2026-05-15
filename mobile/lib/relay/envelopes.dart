@@ -88,17 +88,26 @@ class AckEnvelope {
 /// `[ framing_version | kind=3 | sender_long_term_pub(32) |
 ///    aead_nonce(12) | aead_ciphertext_with_tag ]`
 ///
-/// AEAD plaintext: `{ "display_name": "...", "avatar_id": "..." }`.
+/// AEAD plaintext: `{ "display_name": "...", "avatar_id": "..." }` and
+/// optionally `how_i_label_you` when the sender includes how they list
+/// the recipient on their device (encrypted appearance notice).
 class ProfileUpdateEnvelope {
   ProfileUpdateEnvelope({
     required this.senderLongTermPublicKey,
     required this.displayName,
     required this.avatarId,
+    this.hasHowILabelYou = false,
+    this.howILabelYou = '',
   });
 
   final Uint8List senderLongTermPublicKey;
   final String displayName;
   final String avatarId;
+
+  /// When true, [howILabelYou] was present on the wire (possibly empty,
+  /// meaning the sender cleared their local label for the recipient).
+  final bool hasHowILabelYou;
+  final String howILabelYou;
 }
 
 /// Steady-state disconnect notice. No payload beyond identifying the
@@ -379,10 +388,14 @@ class EnvelopeCodec {
       senderPub: envelope.senderLongTermPublicKey,
       aeadNonce: _defaultNonceSource(),
     );
-    final body = utf8.encode(jsonEncode({
+    final payload = <String, dynamic>{
       'display_name': envelope.displayName,
       'avatar_id': envelope.avatarId,
-    }));
+    };
+    if (envelope.hasHowILabelYou) {
+      payload['how_i_label_you'] = envelope.howILabelYou;
+    }
+    final body = utf8.encode(jsonEncode(payload));
     final aeadNonce = header.sublist(header.length - 12);
     final encrypted = await _aeadEncrypt(
       key: key,
@@ -419,10 +432,14 @@ class EnvelopeCodec {
       aad: Uint8List.fromList(frame.sublist(0, 46)),
     );
     final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    final hasHow = json.containsKey('how_i_label_you');
+    final howRaw = hasHow ? (json['how_i_label_you'] as String? ?? '') : '';
     return ProfileUpdateEnvelope(
       senderLongTermPublicKey: senderPub,
       displayName: (json['display_name'] as String?) ?? '',
       avatarId: (json['avatar_id'] as String?) ?? '',
+      hasHowILabelYou: hasHow,
+      howILabelYou: howRaw,
     );
   }
 

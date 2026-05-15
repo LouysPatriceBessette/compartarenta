@@ -28,10 +28,22 @@ After this capability is in place, modules that ask the user to "add a participa
 - **THEN** the user picks from connected Contacts or uses the picker's invite entry point so the peer can become connected
 - **THEN** the housing participant row references the Contact identifier; it does NOT embed a fresh inline name/avatar pair as the authoritative record
 
-#### Scenario: Module participants survive contact updates
-- **WHEN** the local user updates a Contact's display name
-- **THEN** every module participant referencing that Contact reflects the updated name in subsequent displays
-- **THEN** historical ledger entries previously displayed under the old name continue to be readable; presentation MAY show the current name
+#### Scenario: Module participants reflect the effective contact name
+- **WHEN** the local user changes how a contact is shown (canonical peer update and/or **local display label** per `contact-peer-display-ownership`)
+- **THEN** every module participant referencing that Contact reflects the updated **effective** name in subsequent displays
+- **THEN** historical ledger entries previously displayed under an older effective name continue to be readable; presentation MAY show the current effective name
+
+### Requirement: User-facing status distinguishes disconnected ex-peers
+Contacts whose **technical** kind is `local-only` **only because** they were demoted after a prior `connected` relationship (disconnect per `contact-privacy-and-deletion`) SHALL be shown to the user as **Disconnected** (localized), not with the same copy as never-connected invitation stubs.
+
+#### Scenario: Disconnected is not “never connected”
+- **WHEN** a contact row has no routing material after a completed disconnect
+- **THEN** the Contacts UI presents **Disconnected** (or equivalent localized label) for that row
+- **WHEN** a contact row is a pre-handshake invitation stub that was never `connected`
+- **THEN** the UI SHALL NOT present the same status string as for a post-disconnect demotion (exact strings are a UX decision documented under `contact-peer-display-ownership`)
+
+### Requirement: Canonical vs local display fields
+The on-device shape that stores **peer canonical** identity separately from **local display label** is specified in `contact-peer-display-ownership`. The Contacts domain model SHALL remain the anchor for stable `Contact.id` and `kind`; label fields MAY be added without changing module foreign keys.
 
 ### Requirement: Modules retain a snapshot view of a contact's name and avatar at moments of historical record
 For historical readability (per `data-locality-and-client-storage`), modules MAY persist a per-row **display snapshot** (name, avatar) captured at the time a record was accepted into the local ledger. The snapshot SHALL be informational; the Contact reference SHALL remain the authoritative identity link.

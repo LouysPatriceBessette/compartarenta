@@ -5,6 +5,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
+import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -19,7 +20,7 @@ class ContactsListScreen extends StatefulWidget {
 }
 
 class _ContactsListScreenState extends State<ContactsListScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
   late final ContactsRepository _repo = ContactsRepository(_db);
   HandshakeOrchestrator? get _orchestrator =>
       HandshakeOrchestrator.maybeInstance;
@@ -28,8 +29,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
 
   /// Last seen length of [HandshakeOrchestrator.incomingHandshakes]. When it
   /// changes (e.g. inviter accepts the last request), we reload contacts so
-  /// the list reflects [ContactsRepository.promoteToConnected] even though this
-  /// screen uses a different [AppDatabase] instance than the orchestrator.
+  /// the list reflects [ContactsRepository.promoteToConnected] without leaving
+  /// the screen.
   int _lastIncomingHandshakesCount = -1;
 
   @override
@@ -64,9 +65,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     if (n != _lastIncomingHandshakesCount) {
       _lastIncomingHandshakesCount = n;
       _reload();
-      // Second read after the frame (and a short delay) mitigates occasional
-      // cross-connection WAL visibility lag between the bootstrap DB and this
-      // screen's [AppDatabase] right after handshake finalisation.
+      // Brief follow-up read after the frame in case the last handshake row
+      // is cleared asynchronously right as the count hits zero.
       if (n == 0) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future<void>.delayed(const Duration(milliseconds: 48), () {
@@ -88,9 +88,6 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     await context.push('/contacts/incoming');
     if (!mounted) return;
     _reload();
-    // A second list read on the next frame mitigates occasional stale reads
-    // when the contacts list uses a different Drift isolate/connection than
-    // the bootstrap HandshakeOrchestrator DB right after a handshake commit.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _reload();
     });
@@ -262,6 +259,14 @@ class _ContactTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final blocked = contact.isBlocked;
     final connected = contact.kind == 'connected';
+    final disconnected = contact.showsDisconnectedStatus;
+    final statusLine = blocked
+        ? l10n.contactsKindBlocked
+        : connected
+        ? l10n.contactsKindConnected
+        : disconnected
+        ? l10n.contactsKindDisconnected
+        : l10n.contactsKindLocalOnly;
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
@@ -270,14 +275,8 @@ class _ContactTile extends StatelessWidget {
             : Theme.of(context).colorScheme.primaryContainer,
         child: Icon(AvatarPalette.iconFor(contact.avatarId)),
       ),
-      title: Text(contact.displayName),
-      subtitle: Text(
-        blocked
-            ? l10n.contactsKindBlocked
-            : connected
-            ? l10n.contactsKindConnected
-            : l10n.contactsKindLocalOnly,
-      ),
+      title: Text(contact.effectiveDisplayName),
+      subtitle: Text(statusLine),
       trailing: connected
           ? Icon(
               Icons.link,

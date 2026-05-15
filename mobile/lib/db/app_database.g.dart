@@ -4536,6 +4536,41 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _localDisplayLabelMeta = const VerificationMeta(
+    'localDisplayLabel',
+  );
+  @override
+  late final GeneratedColumn<String> localDisplayLabel =
+      GeneratedColumn<String>(
+        'local_display_label',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _theirLabelForMeMeta = const VerificationMeta(
+    'theirLabelForMe',
+  );
+  @override
+  late final GeneratedColumn<String> theirLabelForMe = GeneratedColumn<String>(
+    'their_label_for_me',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _disconnectedAtMeta = const VerificationMeta(
+    'disconnectedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> disconnectedAt =
+      GeneratedColumn<DateTime>(
+        'disconnected_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4579,6 +4614,9 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     isBlocked,
     relayRoutingId,
     peerPublicMaterial,
+    localDisplayLabel,
+    theirLabelForMe,
+    disconnectedAt,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4657,6 +4695,33 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('local_display_label')) {
+      context.handle(
+        _localDisplayLabelMeta,
+        localDisplayLabel.isAcceptableOrUnknown(
+          data['local_display_label']!,
+          _localDisplayLabelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('their_label_for_me')) {
+      context.handle(
+        _theirLabelForMeMeta,
+        theirLabelForMe.isAcceptableOrUnknown(
+          data['their_label_for_me']!,
+          _theirLabelForMeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('disconnected_at')) {
+      context.handle(
+        _disconnectedAtMeta,
+        disconnectedAt.isAcceptableOrUnknown(
+          data['disconnected_at']!,
+          _disconnectedAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4720,6 +4785,18 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.string,
         data['${effectivePrefix}peer_public_material'],
       ),
+      localDisplayLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_display_label'],
+      ),
+      theirLabelForMe: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}their_label_for_me'],
+      ),
+      disconnectedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}disconnected_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4763,6 +4840,20 @@ class Contact extends DataClass implements Insertable<Contact> {
   /// Peer public key material (base64 or similar) exchanged during the
   /// handshake. Populated only when kind = connected.
   final String? peerPublicMaterial;
+
+  /// Optional label **only on this device** for how the user wants this
+  /// contact to appear in lists. When null or empty, [displayName] is the
+  /// effective name (peer canonical / stub name).
+  final String? localDisplayLabel;
+
+  /// How **this contact** currently labels the **local user** on their
+  /// device, learned from encrypted steady-state profile updates. Null when
+  /// unknown or never shared.
+  final String? theirLabelForMe;
+
+  /// Set when a previously `connected` contact was demoted after disconnect.
+  /// Null for stubs that were never connected.
+  final DateTime? disconnectedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -4779,6 +4870,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.isBlocked,
     this.relayRoutingId,
     this.peerPublicMaterial,
+    this.localDisplayLabel,
+    this.theirLabelForMe,
+    this.disconnectedAt,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -4797,6 +4891,15 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     if (!nullToAbsent || peerPublicMaterial != null) {
       map['peer_public_material'] = Variable<String>(peerPublicMaterial);
+    }
+    if (!nullToAbsent || localDisplayLabel != null) {
+      map['local_display_label'] = Variable<String>(localDisplayLabel);
+    }
+    if (!nullToAbsent || theirLabelForMe != null) {
+      map['their_label_for_me'] = Variable<String>(theirLabelForMe);
+    }
+    if (!nullToAbsent || disconnectedAt != null) {
+      map['disconnected_at'] = Variable<DateTime>(disconnectedAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -4820,6 +4923,15 @@ class Contact extends DataClass implements Insertable<Contact> {
       peerPublicMaterial: peerPublicMaterial == null && nullToAbsent
           ? const Value.absent()
           : Value(peerPublicMaterial),
+      localDisplayLabel: localDisplayLabel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localDisplayLabel),
+      theirLabelForMe: theirLabelForMe == null && nullToAbsent
+          ? const Value.absent()
+          : Value(theirLabelForMe),
+      disconnectedAt: disconnectedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(disconnectedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -4844,6 +4956,11 @@ class Contact extends DataClass implements Insertable<Contact> {
       peerPublicMaterial: serializer.fromJson<String?>(
         json['peerPublicMaterial'],
       ),
+      localDisplayLabel: serializer.fromJson<String?>(
+        json['localDisplayLabel'],
+      ),
+      theirLabelForMe: serializer.fromJson<String?>(json['theirLabelForMe']),
+      disconnectedAt: serializer.fromJson<DateTime?>(json['disconnectedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -4861,6 +4978,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'isBlocked': serializer.toJson<bool>(isBlocked),
       'relayRoutingId': serializer.toJson<String?>(relayRoutingId),
       'peerPublicMaterial': serializer.toJson<String?>(peerPublicMaterial),
+      'localDisplayLabel': serializer.toJson<String?>(localDisplayLabel),
+      'theirLabelForMe': serializer.toJson<String?>(theirLabelForMe),
+      'disconnectedAt': serializer.toJson<DateTime?>(disconnectedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -4876,6 +4996,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? isBlocked,
     Value<String?> relayRoutingId = const Value.absent(),
     Value<String?> peerPublicMaterial = const Value.absent(),
+    Value<String?> localDisplayLabel = const Value.absent(),
+    Value<String?> theirLabelForMe = const Value.absent(),
+    Value<DateTime?> disconnectedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -4892,6 +5015,15 @@ class Contact extends DataClass implements Insertable<Contact> {
     peerPublicMaterial: peerPublicMaterial.present
         ? peerPublicMaterial.value
         : this.peerPublicMaterial,
+    localDisplayLabel: localDisplayLabel.present
+        ? localDisplayLabel.value
+        : this.localDisplayLabel,
+    theirLabelForMe: theirLabelForMe.present
+        ? theirLabelForMe.value
+        : this.theirLabelForMe,
+    disconnectedAt: disconnectedAt.present
+        ? disconnectedAt.value
+        : this.disconnectedAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -4912,6 +5044,15 @@ class Contact extends DataClass implements Insertable<Contact> {
       peerPublicMaterial: data.peerPublicMaterial.present
           ? data.peerPublicMaterial.value
           : this.peerPublicMaterial,
+      localDisplayLabel: data.localDisplayLabel.present
+          ? data.localDisplayLabel.value
+          : this.localDisplayLabel,
+      theirLabelForMe: data.theirLabelForMe.present
+          ? data.theirLabelForMe.value
+          : this.theirLabelForMe,
+      disconnectedAt: data.disconnectedAt.present
+          ? data.disconnectedAt.value
+          : this.disconnectedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4929,6 +5070,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('isBlocked: $isBlocked, ')
           ..write('relayRoutingId: $relayRoutingId, ')
           ..write('peerPublicMaterial: $peerPublicMaterial, ')
+          ..write('localDisplayLabel: $localDisplayLabel, ')
+          ..write('theirLabelForMe: $theirLabelForMe, ')
+          ..write('disconnectedAt: $disconnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -4946,6 +5090,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     isBlocked,
     relayRoutingId,
     peerPublicMaterial,
+    localDisplayLabel,
+    theirLabelForMe,
+    disconnectedAt,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4962,6 +5109,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.isBlocked == this.isBlocked &&
           other.relayRoutingId == this.relayRoutingId &&
           other.peerPublicMaterial == this.peerPublicMaterial &&
+          other.localDisplayLabel == this.localDisplayLabel &&
+          other.theirLabelForMe == this.theirLabelForMe &&
+          other.disconnectedAt == this.disconnectedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -4976,6 +5126,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> isBlocked;
   final Value<String?> relayRoutingId;
   final Value<String?> peerPublicMaterial;
+  final Value<String?> localDisplayLabel;
+  final Value<String?> theirLabelForMe;
+  final Value<DateTime?> disconnectedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -4989,6 +5142,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.isBlocked = const Value.absent(),
     this.relayRoutingId = const Value.absent(),
     this.peerPublicMaterial = const Value.absent(),
+    this.localDisplayLabel = const Value.absent(),
+    this.theirLabelForMe = const Value.absent(),
+    this.disconnectedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -5003,6 +5159,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.isBlocked = const Value.absent(),
     this.relayRoutingId = const Value.absent(),
     this.peerPublicMaterial = const Value.absent(),
+    this.localDisplayLabel = const Value.absent(),
+    this.theirLabelForMe = const Value.absent(),
+    this.disconnectedAt = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -5022,6 +5181,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? isBlocked,
     Expression<String>? relayRoutingId,
     Expression<String>? peerPublicMaterial,
+    Expression<String>? localDisplayLabel,
+    Expression<String>? theirLabelForMe,
+    Expression<DateTime>? disconnectedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -5037,6 +5199,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (relayRoutingId != null) 'relay_routing_id': relayRoutingId,
       if (peerPublicMaterial != null)
         'peer_public_material': peerPublicMaterial,
+      if (localDisplayLabel != null) 'local_display_label': localDisplayLabel,
+      if (theirLabelForMe != null) 'their_label_for_me': theirLabelForMe,
+      if (disconnectedAt != null) 'disconnected_at': disconnectedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -5053,6 +5218,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? isBlocked,
     Value<String?>? relayRoutingId,
     Value<String?>? peerPublicMaterial,
+    Value<String?>? localDisplayLabel,
+    Value<String?>? theirLabelForMe,
+    Value<DateTime?>? disconnectedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -5067,6 +5235,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       isBlocked: isBlocked ?? this.isBlocked,
       relayRoutingId: relayRoutingId ?? this.relayRoutingId,
       peerPublicMaterial: peerPublicMaterial ?? this.peerPublicMaterial,
+      localDisplayLabel: localDisplayLabel ?? this.localDisplayLabel,
+      theirLabelForMe: theirLabelForMe ?? this.theirLabelForMe,
+      disconnectedAt: disconnectedAt ?? this.disconnectedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -5101,6 +5272,15 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (peerPublicMaterial.present) {
       map['peer_public_material'] = Variable<String>(peerPublicMaterial.value);
     }
+    if (localDisplayLabel.present) {
+      map['local_display_label'] = Variable<String>(localDisplayLabel.value);
+    }
+    if (theirLabelForMe.present) {
+      map['their_label_for_me'] = Variable<String>(theirLabelForMe.value);
+    }
+    if (disconnectedAt.present) {
+      map['disconnected_at'] = Variable<DateTime>(disconnectedAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5127,6 +5307,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('isBlocked: $isBlocked, ')
           ..write('relayRoutingId: $relayRoutingId, ')
           ..write('peerPublicMaterial: $peerPublicMaterial, ')
+          ..write('localDisplayLabel: $localDisplayLabel, ')
+          ..write('theirLabelForMe: $theirLabelForMe, ')
+          ..write('disconnectedAt: $disconnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8756,6 +8939,9 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> isBlocked,
       Value<String?> relayRoutingId,
       Value<String?> peerPublicMaterial,
+      Value<String?> localDisplayLabel,
+      Value<String?> theirLabelForMe,
+      Value<DateTime?> disconnectedAt,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -8771,6 +8957,9 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> isBlocked,
       Value<String?> relayRoutingId,
       Value<String?> peerPublicMaterial,
+      Value<String?> localDisplayLabel,
+      Value<String?> theirLabelForMe,
+      Value<DateTime?> disconnectedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8823,6 +9012,21 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get peerPublicMaterial => $composableBuilder(
     column: $table.peerPublicMaterial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localDisplayLabel => $composableBuilder(
+    column: $table.localDisplayLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get theirLabelForMe => $composableBuilder(
+    column: $table.theirLabelForMe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get disconnectedAt => $composableBuilder(
+    column: $table.disconnectedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8891,6 +9095,21 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get localDisplayLabel => $composableBuilder(
+    column: $table.localDisplayLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get theirLabelForMe => $composableBuilder(
+    column: $table.theirLabelForMe,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get disconnectedAt => $composableBuilder(
+    column: $table.disconnectedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8946,6 +9165,21 @@ class $$ContactsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get localDisplayLabel => $composableBuilder(
+    column: $table.localDisplayLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get theirLabelForMe => $composableBuilder(
+    column: $table.theirLabelForMe,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get disconnectedAt => $composableBuilder(
+    column: $table.disconnectedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8992,6 +9226,9 @@ class $$ContactsTableTableManager
                 Value<bool> isBlocked = const Value.absent(),
                 Value<String?> relayRoutingId = const Value.absent(),
                 Value<String?> peerPublicMaterial = const Value.absent(),
+                Value<String?> localDisplayLabel = const Value.absent(),
+                Value<String?> theirLabelForMe = const Value.absent(),
+                Value<DateTime?> disconnectedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -9005,6 +9242,9 @@ class $$ContactsTableTableManager
                 isBlocked: isBlocked,
                 relayRoutingId: relayRoutingId,
                 peerPublicMaterial: peerPublicMaterial,
+                localDisplayLabel: localDisplayLabel,
+                theirLabelForMe: theirLabelForMe,
+                disconnectedAt: disconnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9020,6 +9260,9 @@ class $$ContactsTableTableManager
                 Value<bool> isBlocked = const Value.absent(),
                 Value<String?> relayRoutingId = const Value.absent(),
                 Value<String?> peerPublicMaterial = const Value.absent(),
+                Value<String?> localDisplayLabel = const Value.absent(),
+                Value<String?> theirLabelForMe = const Value.absent(),
+                Value<DateTime?> disconnectedAt = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -9033,6 +9276,9 @@ class $$ContactsTableTableManager
                 isBlocked: isBlocked,
                 relayRoutingId: relayRoutingId,
                 peerPublicMaterial: peerPublicMaterial,
+                localDisplayLabel: localDisplayLabel,
+                theirLabelForMe: theirLabelForMe,
+                disconnectedAt: disconnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

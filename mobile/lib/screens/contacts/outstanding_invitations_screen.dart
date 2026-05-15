@@ -16,7 +16,7 @@ class OutstandingInvitationsScreen extends StatefulWidget {
 
 class _OutstandingInvitationsScreenState
     extends State<OutstandingInvitationsScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
   late final ContactInvitationsRepository _repo =
       ContactInvitationsRepository(_db);
 

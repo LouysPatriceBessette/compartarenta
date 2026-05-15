@@ -5,6 +5,7 @@ import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../contacts/avatar_palette.dart';
+import '../../contacts/contact_display.dart';
 import '../../relay/handshake_orchestrator.dart';
 
 /// Detail view for a Contact. Exposes edit, delete, block, and (when
@@ -19,7 +20,7 @@ class ContactDetailScreen extends StatefulWidget {
 }
 
 class _ContactDetailScreenState extends State<ContactDetailScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
   late final ContactsRepository _repo = ContactsRepository(_db);
 
   Future<Contact?>? _future;
@@ -56,6 +57,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
             onEdit: () => context
                 .push('/contacts/${contact.id}/edit')
                 .then((_) => _reload()),
+            onReconnect: contact.showsDisconnectedStatus
+                ? () async {
+                    await context.push('/contacts/invite/new');
+                    if (mounted) _reload();
+                  }
+                : null,
             onDelete: () => _confirmAndDelete(contact),
             onToggleBlock: () => _confirmAndToggleBlock(contact),
             onDisconnect: contact.kind == 'connected'
@@ -231,6 +238,7 @@ class _ContactDetail extends StatelessWidget {
   const _ContactDetail({
     required this.contact,
     required this.onEdit,
+    this.onReconnect,
     required this.onDelete,
     required this.onToggleBlock,
     this.onDisconnect,
@@ -238,6 +246,7 @@ class _ContactDetail extends StatelessWidget {
 
   final Contact contact;
   final VoidCallback onEdit;
+  final VoidCallback? onReconnect;
   final VoidCallback onDelete;
   final VoidCallback onToggleBlock;
   final VoidCallback? onDisconnect;
@@ -248,6 +257,15 @@ class _ContactDetail extends StatelessWidget {
     final connected = contact.kind == 'connected';
     final blocked = contact.isBlocked;
     final deleted = contact.deletedAt != null;
+    final disconnected = contact.showsDisconnectedStatus;
+    final statusLabel = connected
+        ? l10n.contactsKindConnected
+        : disconnected
+        ? l10n.contactsKindDisconnected
+        : l10n.contactsKindLocalOnly;
+    final editLabel = (connected || disconnected)
+        ? l10n.contactsLabelEditorTitle
+        : l10n.commonEdit;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -268,19 +286,22 @@ class _ContactDetail extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    contact.displayName,
+                    contact.effectiveDisplayName,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  if (contact.showsDistinctPeerCanonicalForDisplay) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '${l10n.contactsFieldTheirNameLabel}: ${contact.displayName}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 6,
                     children: [
                       Chip(
-                        label: Text(
-                          connected
-                              ? l10n.contactsKindConnected
-                              : l10n.contactsKindLocalOnly,
-                        ),
+                        label: Text(statusLabel),
                       ),
                       if (blocked)
                         Chip(
@@ -311,9 +332,17 @@ class _ContactDetail extends StatelessWidget {
           Text(contact.notes),
         ],
         const SizedBox(height: 24),
+        if (onReconnect != null && !deleted) ...[
+          FilledButton.icon(
+            icon: const Icon(Icons.send),
+            label: Text(l10n.contactsReconnectAction),
+            onPressed: onReconnect,
+          ),
+          const SizedBox(height: 8),
+        ],
         FilledButton.icon(
           icon: const Icon(Icons.edit),
-          label: Text(l10n.commonEdit),
+          label: Text(editLabel),
           onPressed: deleted ? null : onEdit,
         ),
         const SizedBox(height: 8),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../contacts/avatar_palette.dart';
+import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import 'generate_invitation_screen.dart';
@@ -82,7 +83,7 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
                         leading: CircleAvatar(
                           child: Icon(AvatarPalette.iconFor(contact.avatarId)),
                         ),
-                        title: Text(contact.displayName),
+                        title: Text(contact.effectiveDisplayName),
                         subtitle: Text(_kindLabel(l10n, contact)),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.of(context).pop(contact),

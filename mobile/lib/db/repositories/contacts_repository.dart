@@ -16,8 +16,9 @@ class ContactsRepository {
   ///
   /// Rows with ids under `contact:local:` were the legacy manual local-only
   /// path; they are hidden from the list so users add people through
-  /// invitation and handshake instead, while handshake stubs and demoted
-  /// contacts keep stable `contact:handshake:` ids.
+  /// invitation and handshake instead, while handshake / redeemed stubs and
+  /// demoted contacts keep stable ids (`contact:handshake:` /
+  /// `contact:redeemed:`).
   Future<List<Contact>> list({bool includeDeleted = false}) async {
     final rows = await _db.listContacts(includeDeleted: includeDeleted);
     return rows.where((c) => !c.id.startsWith('contact:local:')).toList();
@@ -59,6 +60,71 @@ class ContactsRepository {
         displayName: drift.Value(displayName),
         avatarId: drift.Value(avatarId),
         notes: notes == null ? const drift.Value.absent() : drift.Value(notes),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
+
+  Future<void> setNotes(String id, String notes) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        notes: drift.Value(notes),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
+
+  Future<void> setTheirLabelForMe(String id, String? label) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        theirLabelForMe: label == null || label.trim().isEmpty
+            ? const drift.Value(null)
+            : drift.Value(label.trim()),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
+
+  /// Clears [Contacts.theirLabelForMe] on every row where it matches the
+  /// local user's canonical [canonicalDisplayName] (trimmed), so the
+  /// profile matrix no longer shows a redundant "their label for you".
+  Future<void> clearTheirLabelForMeWhenMatchesCanonical(
+    String canonicalDisplayName,
+  ) async {
+    final trimmed = canonicalDisplayName.trim();
+    if (trimmed.isEmpty) return;
+    final rows = await _db.listContacts(includeDeleted: false);
+    for (final c in rows) {
+      final theirs = c.theirLabelForMe?.trim();
+      if (theirs != null && theirs.isNotEmpty && theirs == trimmed) {
+        await setTheirLabelForMe(c.id, null);
+      }
+    }
+  }
+
+  /// Clears [Contacts.localDisplayLabel] so [Contact.displayName] is shown.
+  Future<void> clearLocalDisplayLabel(String id) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        localDisplayLabel: const drift.Value(null),
+        updatedAt: drift.Value(now),
+      ),
+    );
+  }
+
+  /// Persists how this device labels a contact in lists (not their canonical
+  /// relay identity).
+  Future<void> setLocalDisplayLabel(String id, String? label) async {
+    final now = DateTime.now().toUtc();
+    final trimmed = label?.trim();
+    await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
+      ContactsCompanion(
+        localDisplayLabel: trimmed == null || trimmed.isEmpty
+            ? const drift.Value(null)
+            : drift.Value(trimmed),
         updatedAt: drift.Value(now),
       ),
     );
@@ -118,6 +184,8 @@ class ContactsRepository {
         avatarId: avatarId == null
             ? const drift.Value.absent()
             : drift.Value(avatarId),
+        disconnectedAt: const drift.Value(null),
+        theirLabelForMe: const drift.Value(null),
         updatedAt: drift.Value(now),
       ),
     );
@@ -134,6 +202,8 @@ class ContactsRepository {
         kind: const drift.Value('local-only'),
         relayRoutingId: const drift.Value(null),
         peerPublicMaterial: const drift.Value(null),
+        disconnectedAt: drift.Value(now),
+        theirLabelForMe: const drift.Value(null),
         updatedAt: drift.Value(now),
       ),
     );

@@ -19,6 +19,9 @@ Future<void> bootstrap() async {
   final config = AppConfig.fromDartDefines();
   final sentryDsn = const String.fromEnvironment('SENTRY_DSN', defaultValue: '');
 
+  final appDb = AppDatabase();
+  AppDatabase.bindProcessScope(appDb);
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     if (sentryDsn.isNotEmpty) {
@@ -40,15 +43,14 @@ Future<void> bootstrap() async {
   // do not target a live relay don't accidentally spam HTTP requests.
   if (config.apiBaseUrl.host != 'example.invalid') {
     try {
-      final db = AppDatabase();
       final identity = IdentityKeystore.secureStorage();
       final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
       final orchestrator = HandshakeOrchestrator(
-        db: db,
+        db: appDb,
         identity: identity,
         relay: relay,
-        contacts: ContactsRepository(db),
-        invitations: ContactInvitationsRepository(db),
+        contacts: ContactsRepository(appDb),
+        invitations: ContactInvitationsRepository(appDb),
       );
       HandshakeOrchestrator.install(orchestrator);
       unawaited(

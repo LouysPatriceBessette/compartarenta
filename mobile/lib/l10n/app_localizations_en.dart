@@ -1034,6 +1034,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactsKindLocalOnly => 'Local only';
 
   @override
+  String get contactsKindDisconnected => 'Disconnected';
+
+  @override
   String get contactsKindConnected => 'Connected';
 
   @override
@@ -1047,6 +1050,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsFieldNameHint => 'How this person appears in the app';
+
+  @override
+  String get contactsFieldAvatarReadOnlyFootnote =>
+      'Only they can change their avatar on their device.';
 
   @override
   String get contactsFieldAvatarLabel => 'Avatar';
@@ -1120,4 +1127,60 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactsDisconnectSent =>
       'Disconnect notice sent. Contact is now local-only.';
+
+  @override
+  String get contactsReconnectAction => 'Request reconnection';
+
+  @override
+  String get contactsLabelEditorTitle => 'How you see this contact';
+
+  @override
+  String get contactsLabelEditorHint =>
+      'Leave blank to use the name they choose on their device';
+
+  @override
+  String get contactsFieldTheirNameLabel => 'Their name';
+
+  @override
+  String get settingsProfileIdentityTitle => 'Your profile';
+
+  @override
+  String get settingsProfileIdentitySubtitle =>
+      'Name and avatar shown to your contacts';
+
+  @override
+  String get settingsProfileAppearancesTitle => 'How others label you';
+
+  @override
+  String get settingsProfileAppearancesBody =>
+      'Each connected contact can share the name they use for you in their list. It is delivered only inside encrypted profile updates.';
+
+  @override
+  String get settingsProfileAppearancesColumnPeer => 'Contact';
+
+  @override
+  String get settingsProfileAppearancesColumnTheirLabel =>
+      'Their label for you';
+
+  @override
+  String get settingsProfileAppearancesEmpty =>
+      'No connected contacts yet. Pair with someone to see how they label you here.';
+
+  @override
+  String get settingsProfileAppearancesNoSharedLabels =>
+      'No contact has shared a custom name for you in their list yet.';
+
+  @override
+  String get peerNameConflictTitle => 'Contact updated their name';
+
+  @override
+  String peerNameConflictBody(String label, String canonical) {
+    return 'You label this contact \"$label\". They now use \"$canonical\" on their device.';
+  }
+
+  @override
+  String get peerNameConflictUseTheirs => 'Use their name';
+
+  @override
+  String get peerNameConflictKeepMine => 'Keep my label';
 }

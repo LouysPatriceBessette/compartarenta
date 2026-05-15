@@ -22,7 +22,7 @@ class GenerateInvitationScreen extends StatefulWidget {
 }
 
 class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
   late final ContactInvitationsRepository _repo = ContactInvitationsRepository(
     _db,
   );

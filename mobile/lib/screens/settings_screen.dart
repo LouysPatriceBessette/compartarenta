@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../config/app_config.dart';
 import '../data/supported_currencies.dart';
 import '../db/db_reset.dart';
@@ -58,6 +60,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ? l10n.commonNotSet
                   : widget.prefs.displayName,
             ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/profile'),
           ),
           ListTile(
             title: Text(l10n.settingsCurrencyTitle),

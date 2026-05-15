@@ -241,6 +241,38 @@ void main() {
       expect(decoded.displayName, 'Alice (renamed)');
       expect(decoded.avatarId, 'bird');
       expect(decoded.senderLongTermPublicKey, equals(alicePub));
+      expect(decoded.hasHowILabelYou, isFalse);
+    });
+
+    test('profile_update round-trips how_i_label_you when present', () async {
+      final aliceKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      );
+      final bobKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i)),
+      );
+      final alicePriv = await aliceKeystore.loadOrCreatePrivateKey();
+      final alicePub = await aliceKeystore.publicKey();
+      final bobPriv = await bobKeystore.loadOrCreatePrivateKey();
+      final bobPub = await bobKeystore.publicKey();
+
+      final frame = await EnvelopeCodec.encryptProfileUpdate(
+        envelope: ProfileUpdateEnvelope(
+          senderLongTermPublicKey: alicePub,
+          displayName: 'Alice',
+          avatarId: 'cat',
+          hasHowILabelYou: true,
+          howILabelYou: 'Boss',
+        ),
+        senderLongTermPrivateKey: alicePriv,
+        peerLongTermPublicKey: bobPub,
+      );
+      final decoded = await EnvelopeCodec.decryptProfileUpdate(
+        frame: frame,
+        receiverLongTermPrivateKey: bobPriv,
+      );
+      expect(decoded.hasHowILabelYou, isTrue);
+      expect(decoded.howILabelYou, 'Boss');
     });
 
     test('disconnect round-trips an empty payload', () async {

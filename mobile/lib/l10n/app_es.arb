@@ -401,11 +401,13 @@
   "contactsCodeErrorUnsupportedVersion": "Este código se creó con una versión más reciente de la app.",
 
   "contactsKindLocalOnly": "Solo local",
+  "contactsKindDisconnected": "Desconectado",
   "contactsKindConnected": "Conectado",
   "contactsKindBlocked": "Bloqueado",
   "contactsKindDeleted": "Eliminado",
   "contactsFieldNameLabel": "Nombre",
   "contactsFieldNameHint": "Cómo aparece esta persona en la app",
+  "contactsFieldAvatarReadOnlyFootnote": "Solo esa persona puede cambiar su avatar en su dispositivo.",
   "contactsFieldAvatarLabel": "Avatar",
   "contactsFieldNotesLabel": "Notas",
   "contactsFieldNotesHint": "Recordatorio personal, no compartido",
@@ -430,6 +432,29 @@
   "contactsDisconnectAction": "Desconectar",
   "contactsDisconnectTitle": "¿Desconectar de este contacto?",
   "contactsDisconnectBody": "Se enviará un aviso de desconexión al relevo. Ambos lados volverán a ser contactos solo locales.",
-  "contactsDisconnectSent": "Aviso de desconexión enviado. El contacto ahora es solo local."
+  "contactsDisconnectSent": "Aviso de desconexión enviado. El contacto ahora es solo local.",
+
+  "contactsReconnectAction": "Solicitar reconexión",
+  "contactsLabelEditorTitle": "Cómo ves a este contacto",
+  "contactsLabelEditorHint": "Déjalo en blanco para usar el nombre que elija en su dispositivo",
+  "contactsFieldTheirNameLabel": "Su nombre",
+  "settingsProfileIdentityTitle": "Tu perfil",
+  "settingsProfileIdentitySubtitle": "Nombre y avatar que ven tus contactos",
+  "settingsProfileAppearancesTitle": "Cómo te nombran los demás",
+  "settingsProfileAppearancesBody": "Cada contacto conectado puede compartir el nombre que usa para ti en su lista. Solo viaja dentro de actualizaciones de perfil cifradas.",
+  "settingsProfileAppearancesColumnPeer": "Contacto",
+  "settingsProfileAppearancesColumnTheirLabel": "Su etiqueta para ti",
+  "settingsProfileAppearancesEmpty": "Aún no hay contactos conectados. Empareja con alguien para ver aquí cómo te nombran.",
+  "settingsProfileAppearancesNoSharedLabels": "Ningún contacto ha compartido aún un nombre personalizado para ti en su lista.",
+  "peerNameConflictTitle": "El contacto cambió de nombre",
+  "peerNameConflictBody": "Muestras a este contacto como «{label}». Ahora usa «{canonical}» en su dispositivo.",
+  "@peerNameConflictBody": {
+    "placeholders": {
+      "label": { "type": "String" },
+      "canonical": { "type": "String" }
+    }
+  },
+  "peerNameConflictUseTheirs": "Usar su nombre",
+  "peerNameConflictKeepMine": "Conservar mi etiqueta"
 }
 

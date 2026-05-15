@@ -8,6 +8,7 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../prefs/app_preferences.dart';
 import 'envelopes.dart';
 import 'identity_keystore.dart';
 import 'relay_client.dart';
@@ -59,6 +60,20 @@ class IncomingHandshakeView {
   final String peerPublicMaterialB64;
   final String contactStubId;
   final DateTime receivedAt;
+}
+
+/// Fired when a peer's canonical name no longer matches the local user's
+/// display label override for that contact (see `contact-peer-display-ownership`).
+class ProfileLabelConflict {
+  ProfileLabelConflict({
+    required this.contactId,
+    required this.newCanonicalDisplayName,
+    required this.localDisplayLabel,
+  });
+
+  final String contactId;
+  final String newCanonicalDisplayName;
+  final String localDisplayLabel;
 }
 
 /// Result of a redeem attempt on the invitee side.
@@ -196,11 +211,17 @@ class HandshakeOrchestrator {
   /// UIs can refresh.
   final ValueNotifier<int> steadyStateInboxTick = ValueNotifier<int>(0);
 
+  /// When a profile-update changes a peer's canonical name but the local user
+  /// had a different [Contacts.localDisplayLabel], UIs MAY listen and prompt.
+  final ValueNotifier<ProfileLabelConflict?> profileLabelConflict =
+      ValueNotifier<ProfileLabelConflict?>(null);
+
   /// Disposes timers + notifiers. Mostly useful in tests.
   void dispose() {
     _pollTimer?.cancel();
     incomingHandshakes.dispose();
     steadyStateInboxTick.dispose();
+    profileLabelConflict.dispose();
   }
 
   /// Starts the periodic polling timer. Safe to call multiple times.
@@ -225,6 +246,7 @@ class HandshakeOrchestrator {
   Future<void> releaseLocalDatabaseConnectionForDevReset() async {
     stopPolling();
     await _db.close();
+    AppDatabase.clearProcessScopeIfReferencing(_db);
   }
 
   /// Clears the process-wide orchestrator after its database was closed for a
@@ -799,14 +821,39 @@ class HandshakeOrchestrator {
       return;
     }
 
+    if (decrypted.hasHowILabelYou) {
+      final raw = decrypted.howILabelYou.trim();
+      await _contacts.setTheirLabelForMe(
+        contact.id,
+        raw.isEmpty ? null : raw,
+      );
+    }
+
     final dn = decrypted.displayName.trim();
     final av = decrypted.avatarId.trim();
     if (dn.isNotEmpty || av.isNotEmpty) {
+      final newDn = dn.isNotEmpty ? dn : contact.displayName;
+      final newAv = av.isNotEmpty ? av : contact.avatarId;
+      final label = contact.localDisplayLabel?.trim();
+      if (label != null && label.isNotEmpty) {
+        if (label == newDn.trim()) {
+          await _contacts.clearLocalDisplayLabel(contact.id);
+        }
+      }
       await _contacts.rename(
         id: contact.id,
-        displayName: dn.isNotEmpty ? dn : contact.displayName,
-        avatarId: av.isNotEmpty ? av : contact.avatarId,
+        displayName: newDn,
+        avatarId: newAv,
       );
+      if (label != null &&
+          label.isNotEmpty &&
+          label != newDn.trim()) {
+        profileLabelConflict.value = ProfileLabelConflict(
+          contactId: contact.id,
+          newCanonicalDisplayName: newDn,
+          localDisplayLabel: label,
+        );
+      }
     }
 
     await _relay.ackEnvelope(
@@ -1159,11 +1206,14 @@ class HandshakeOrchestrator {
       final peerPubB64 = contact.peerPublicMaterial;
       if (peerPubB64 == null || peerPubB64.isEmpty) continue;
       final peerPub = RelayRouting.unb64(peerPubB64);
+      final howLabel = (contact.localDisplayLabel ?? '').trim();
       final frame = await EnvelopeCodec.encryptProfileUpdate(
         envelope: ProfileUpdateEnvelope(
           senderLongTermPublicKey: selfPub,
           displayName: displayName,
           avatarId: avatarId,
+          hasHowILabelYou: true,
+          howILabelYou: howLabel,
         ),
         senderLongTermPrivateKey: selfPriv,
         peerLongTermPublicKey: peerPub,
@@ -1193,6 +1243,55 @@ class HandshakeOrchestrator {
       }
     }
     return dispatched;
+  }
+
+  /// Pushes the local user's canonical profile plus how they list [contactId]
+  /// on this device, so the peer can surface it under profile appearances.
+  Future<void> notifyPeerOfLocalDisplayLabelChange(String contactId) async {
+    final contact = await _contacts.get(contactId);
+    if (contact == null || contact.kind != 'connected') return;
+    final peerPubB64 = contact.peerPublicMaterial;
+    if (peerPubB64 == null || peerPubB64.isEmpty) return;
+
+    final prefs = await AppPreferences.load();
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final peerPub = RelayRouting.unb64(peerPubB64);
+    final howLabel = (contact.localDisplayLabel ?? '').trim();
+    final frame = await EnvelopeCodec.encryptProfileUpdate(
+      envelope: ProfileUpdateEnvelope(
+        senderLongTermPublicKey: selfPub,
+        displayName: prefs.displayName,
+        avatarId: prefs.avatarId,
+        hasHowILabelYou: true,
+        howILabelYou: howLabel,
+      ),
+      senderLongTermPrivateKey: selfPriv,
+      peerLongTermPublicKey: peerPub,
+    );
+    final selfAddr = await RelayRouting.steadyStateAddress(
+      firstPub: selfPub,
+      secondPub: peerPub,
+    );
+    final peerAddr = await RelayRouting.steadyStateAddress(
+      firstPub: peerPub,
+      secondPub: selfPub,
+    );
+    try {
+      await _relay.postEnvelope(
+        senderIdentity: selfAddr,
+        recipientIdentity: peerAddr,
+        idempotencyKey: _randomBytes(16),
+        ciphertext: frame,
+        kind: EnvelopeKind.profileUpdate,
+        ttl: _steadyTtl,
+      );
+      steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    } on RelayClientError catch (e) {
+      debugPrint('profile_update (label) to $contactId failed: $e');
+    } on TimeoutException {
+      // best-effort
+    }
   }
 
   /// Sends a `disconnect` envelope to a single connected contact and

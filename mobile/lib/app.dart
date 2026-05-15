@@ -1,17 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'config/app_config.dart';
+import 'db/app_database.dart';
+import 'db/repositories/contacts_repository.dart';
 import 'prefs/app_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
+import 'screens/settings/profile_identity_settings_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_plan_screen.dart';
 import 'screens/car_sharing/car_sharing_plan_screen.dart';
 import 'screens/contacts/contact_detail_screen.dart';
-import 'screens/contacts/contact_editor_screen.dart';
+import 'screens/contacts/contact_edit_route_screen.dart';
 import 'screens/contacts/contacts_list_screen.dart';
 import 'screens/contacts/generate_invitation_screen.dart';
 import 'screens/contacts/incoming_handshakes_screen.dart';
@@ -21,6 +26,7 @@ import 'relay/handshake_orchestrator.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
+import 'widgets/profile_label_conflict_host.dart';
 
 class CompartarentaApp extends StatefulWidget {
   const CompartarentaApp({super.key, required this.config});
@@ -47,9 +53,18 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
   void _wireProfileBroadcaster(AppPreferences prefs) {
     _lastProfileSignature = '${prefs.displayName}|${prefs.avatarId}';
     prefs.addListener(() {
-      final sig = '${prefs.displayName}|${prefs.avatarId}';
+      final dn = prefs.displayName;
+      final av = prefs.avatarId;
+      final sig = '$dn|$av';
       if (sig == _lastProfileSignature) return;
+      final prevParts = _lastProfileSignature.split('|');
+      final prevDn = prevParts.isNotEmpty ? prevParts.first : '';
       _lastProfileSignature = sig;
+
+      if (dn.trim().isNotEmpty && dn != prevDn) {
+        unawaited(_clearTheirLabelsIfCanonicalMatches(dn));
+      }
+
       final orch = HandshakeOrchestrator.maybeInstance;
       if (orch == null) return;
       if (prefs.displayName.isEmpty || prefs.avatarId.isEmpty) return;
@@ -60,6 +75,19 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
         avatarId: prefs.avatarId,
       );
     });
+  }
+
+  Future<void> _clearTheirLabelsIfCanonicalMatches(String canonical) async {
+    try {
+      final repo = ContactsRepository(AppDatabase.processScope);
+      await repo.clearTheirLabelForMeWhenMatchesCanonical(canonical);
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        orch.steadyStateInboxTick.value = orch.steadyStateInboxTick.value + 1;
+      }
+    } catch (_) {
+      // Best-effort; profile UI still loads from DB on next open.
+    }
   }
 
   @override
@@ -116,11 +144,13 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
               ],
               routerConfig: router,
               builder: (context, child) => AppErrorBoundary(
-                child: ConnectivityBanner(
-                  child: ContactInviteDeepLinkListener(
-                    router: router,
-                    prefs: prefs,
-                    child: child ?? const SizedBox.shrink(),
+                child: ProfileLabelConflictHost(
+                  child: ConnectivityBanner(
+                    child: ContactInviteDeepLinkListener(
+                      router: router,
+                      prefs: prefs,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
@@ -157,6 +187,11 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => SettingsScreen(config: config, prefs: prefs),
+      ),
+      GoRoute(
+        path: '/settings/profile',
+        builder: (context, state) =>
+            ProfileIdentitySettingsScreen(prefs: prefs),
       ),
       GoRoute(
         path: '/housing',
@@ -202,8 +237,8 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (context, state) => ContactEditorScreen(
-                  contactId: state.pathParameters['contactId'],
+                builder: (context, state) => ContactEditRouteScreen(
+                  contactId: state.pathParameters['contactId']!,
                 ),
               ),
             ],

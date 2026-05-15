@@ -75,6 +75,8 @@ The app SHALL provide an **explicit "Disconnect contact"** action separate from 
 - send a small encrypted "disconnect" envelope to the peer through the relay so the peer can drop the connection on their side,
 - have no effect on either side's accepted ledger data (historical snapshots remain).
 
+The Contacts UI SHALL present a **Disconnected** user-facing status (localized) for such demoted rows, distinct from never-connected invitation stubs, and SHOULD offer **Request reconnection** that reuses the invitation + handshake flow per `contact-peer-display-ownership` under the change `user-profile-and-contact-display-labels`.
+
 #### Scenario: Disconnect notifies the peer
 - **WHEN** the user disconnects a connected Contact
 - **THEN** the local Contact's kind transitions to local-only on this device

@@ -63,8 +63,12 @@ After onboarding and initial configuration, when the user has no accepted expens
 - **THEN** they see guidance and at least one primary action to create value without hunting through menus
 
 ### Requirement: Settings remain editable after onboarding
-All values collected during initial configuration (display name, currency, locale-related formats, time zone policy if applicable) SHALL remain editable in a settings area without repeating the full onboarding flow.
+All values collected during initial configuration (display name, currency, locale-related formats, time zone policy if applicable) SHALL remain editable in a settings area without repeating the full onboarding flow. **Detailed** requirements for editing the user’s **display name and avatar** after setup (including propagation to connected peers) are defined in `self-identity-settings-and-sync` under the change `user-profile-and-contact-display-labels`.
 
 #### Scenario: User changes currency after setup
 - **WHEN** the user opens settings after completing onboarding
 - **THEN** they can change currency or formatting preferences and the app applies them to subsequent displays according to documented rounding rules
+
+#### Scenario: User changes display name after setup
+- **WHEN** the user opens settings after completing onboarding
+- **THEN** they can change their display name and avatar per `self-identity-settings-and-sync` and connected peers receive canonical updates per `contact-handshake-over-relay`

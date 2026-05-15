@@ -1922,6 +1922,12 @@ abstract class AppLocalizations {
   /// **'Local only'**
   String get contactsKindLocalOnly;
 
+  /// No description provided for @contactsKindDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get contactsKindDisconnected;
+
   /// No description provided for @contactsKindConnected.
   ///
   /// In en, this message translates to:
@@ -1951,6 +1957,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'How this person appears in the app'**
   String get contactsFieldNameHint;
+
+  /// No description provided for @contactsFieldAvatarReadOnlyFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only they can change their avatar on their device.'**
+  String get contactsFieldAvatarReadOnlyFootnote;
 
   /// No description provided for @contactsFieldAvatarLabel.
   ///
@@ -2065,6 +2077,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect notice sent. Contact is now local-only.'**
   String get contactsDisconnectSent;
+
+  /// No description provided for @contactsReconnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Request reconnection'**
+  String get contactsReconnectAction;
+
+  /// No description provided for @contactsLabelEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How you see this contact'**
+  String get contactsLabelEditorTitle;
+
+  /// No description provided for @contactsLabelEditorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to use the name they choose on their device'**
+  String get contactsLabelEditorHint;
+
+  /// No description provided for @contactsFieldTheirNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Their name'**
+  String get contactsFieldTheirNameLabel;
+
+  /// No description provided for @settingsProfileIdentityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile'**
+  String get settingsProfileIdentityTitle;
+
+  /// No description provided for @settingsProfileIdentitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name and avatar shown to your contacts'**
+  String get settingsProfileIdentitySubtitle;
+
+  /// No description provided for @settingsProfileAppearancesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How others label you'**
+  String get settingsProfileAppearancesTitle;
+
+  /// No description provided for @settingsProfileAppearancesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each connected contact can share the name they use for you in their list. It is delivered only inside encrypted profile updates.'**
+  String get settingsProfileAppearancesBody;
+
+  /// No description provided for @settingsProfileAppearancesColumnPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get settingsProfileAppearancesColumnPeer;
+
+  /// No description provided for @settingsProfileAppearancesColumnTheirLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Their label for you'**
+  String get settingsProfileAppearancesColumnTheirLabel;
+
+  /// No description provided for @settingsProfileAppearancesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No connected contacts yet. Pair with someone to see how they label you here.'**
+  String get settingsProfileAppearancesEmpty;
+
+  /// No description provided for @settingsProfileAppearancesNoSharedLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'No contact has shared a custom name for you in their list yet.'**
+  String get settingsProfileAppearancesNoSharedLabels;
+
+  /// No description provided for @peerNameConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact updated their name'**
+  String get peerNameConflictTitle;
+
+  /// No description provided for @peerNameConflictBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You label this contact \"{label}\". They now use \"{canonical}\" on their device.'**
+  String peerNameConflictBody(String label, String canonical);
+
+  /// No description provided for @peerNameConflictUseTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'Use their name'**
+  String get peerNameConflictUseTheirs;
+
+  /// No description provided for @peerNameConflictKeepMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my label'**
+  String get peerNameConflictKeepMine;
 }
 
 class _AppLocalizationsDelegate

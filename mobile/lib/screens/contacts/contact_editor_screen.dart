@@ -20,7 +20,7 @@ class ContactEditorScreen extends StatefulWidget {
 }
 
 class _ContactEditorScreenState extends State<ContactEditorScreen> {
-  late final AppDatabase _db = AppDatabase();
+  AppDatabase get _db => AppDatabase.processScope;
   late final ContactsRepository _repo = ContactsRepository(_db);
 
   final _nameController = TextEditingController();

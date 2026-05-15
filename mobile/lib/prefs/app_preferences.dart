@@ -73,6 +73,17 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sets display name and avatar in one step with a single [notifyListeners]
+  /// so router listeners do not rebuild twice (avoids visible flicker).
+  Future<void> setProfileIdentity({
+    required String displayName,
+    required String avatarId,
+  }) async {
+    await _prefs.setString(_kDisplayName, displayName.trim());
+    await _prefs.setString(_kAvatarId, avatarId);
+    notifyListeners();
+  }
+
   Set<PlanType> get planTypes {
     final raw = _prefs.getStringList(_kPlanTypes) ?? const <String>[];
     return raw

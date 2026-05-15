@@ -1040,6 +1040,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsKindLocalOnly => 'Solo local';
 
   @override
+  String get contactsKindDisconnected => 'Desconectado';
+
+  @override
   String get contactsKindConnected => 'Conectado';
 
   @override
@@ -1053,6 +1056,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactsFieldNameHint => 'Cómo aparece esta persona en la app';
+
+  @override
+  String get contactsFieldAvatarReadOnlyFootnote =>
+      'Solo esa persona puede cambiar su avatar en su dispositivo.';
 
   @override
   String get contactsFieldAvatarLabel => 'Avatar';
@@ -1126,4 +1133,60 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get contactsDisconnectSent =>
       'Aviso de desconexión enviado. El contacto ahora es solo local.';
+
+  @override
+  String get contactsReconnectAction => 'Solicitar reconexión';
+
+  @override
+  String get contactsLabelEditorTitle => 'Cómo ves a este contacto';
+
+  @override
+  String get contactsLabelEditorHint =>
+      'Déjalo en blanco para usar el nombre que elija en su dispositivo';
+
+  @override
+  String get contactsFieldTheirNameLabel => 'Su nombre';
+
+  @override
+  String get settingsProfileIdentityTitle => 'Tu perfil';
+
+  @override
+  String get settingsProfileIdentitySubtitle =>
+      'Nombre y avatar que ven tus contactos';
+
+  @override
+  String get settingsProfileAppearancesTitle => 'Cómo te nombran los demás';
+
+  @override
+  String get settingsProfileAppearancesBody =>
+      'Cada contacto conectado puede compartir el nombre que usa para ti en su lista. Solo viaja dentro de actualizaciones de perfil cifradas.';
+
+  @override
+  String get settingsProfileAppearancesColumnPeer => 'Contacto';
+
+  @override
+  String get settingsProfileAppearancesColumnTheirLabel =>
+      'Su etiqueta para ti';
+
+  @override
+  String get settingsProfileAppearancesEmpty =>
+      'Aún no hay contactos conectados. Empareja con alguien para ver aquí cómo te nombran.';
+
+  @override
+  String get settingsProfileAppearancesNoSharedLabels =>
+      'Ningún contacto ha compartido aún un nombre personalizado para ti en su lista.';
+
+  @override
+  String get peerNameConflictTitle => 'El contacto cambió de nombre';
+
+  @override
+  String peerNameConflictBody(String label, String canonical) {
+    return 'Muestras a este contacto como «$label». Ahora usa «$canonical» en su dispositivo.';
+  }
+
+  @override
+  String get peerNameConflictUseTheirs => 'Usar su nombre';
+
+  @override
+  String get peerNameConflictKeepMine => 'Conservar mi etiqueta';
 }

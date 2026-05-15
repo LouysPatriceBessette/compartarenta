@@ -184,6 +184,20 @@ class Contacts extends Table {
   /// handshake. Populated only when kind = connected.
   TextColumn get peerPublicMaterial => text().nullable()();
 
+  /// Optional label **only on this device** for how the user wants this
+  /// contact to appear in lists. When null or empty, [displayName] is the
+  /// effective name (peer canonical / stub name).
+  TextColumn get localDisplayLabel => text().nullable()();
+
+  /// How **this contact** currently labels the **local user** on their
+  /// device, learned from encrypted steady-state profile updates. Null when
+  /// unknown or never shared.
+  TextColumn get theirLabelForMe => text().nullable()();
+
+  /// Set when a previously `connected` contact was demoted after disconnect.
+  /// Null for stubs that were never connected.
+  DateTimeColumn get disconnectedAt => dateTime().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -351,8 +365,35 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
+  /// Single process-wide database used by UI and relay code. Bound in
+  /// [bootstrap] before [runApp]. Do not call [AppDatabase]'s public
+  /// constructor from widgets — use [processScope] instead.
+  static AppDatabase? _processScope;
+
+  static void bindProcessScope(AppDatabase db) {
+    _processScope = db;
+  }
+
+  static AppDatabase get processScope {
+    final s = _processScope;
+    if (s == null) {
+      throw StateError(
+        'AppDatabase.processScope is not bound. '
+        'bootstrap.dart must call AppDatabase.bindProcessScope before runApp.',
+      );
+    }
+    return s;
+  }
+
+  /// Clears the global reference after [close] (e.g. dev database reset).
+  static void clearProcessScopeIfReferencing(AppDatabase db) {
+    if (identical(_processScope, db)) {
+      _processScope = null;
+    }
+  }
+
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -421,6 +462,69 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 10) {
             await m.createTable(pendingHandshakes);
+          }
+          if (from < 11) {
+            await m.addColumn(contacts, contacts.localDisplayLabel);
+            await m.addColumn(contacts, contacts.disconnectedAt);
+          }
+          if (from < 12) {
+            // Contacts disconnected before `disconnected_at` existed never got
+            // the column set; backfill for rows that are clearly not active
+            // invitation stubs (see `contact_display.showsDisconnectedStatus`).
+            await customStatement('''
+              UPDATE contacts
+              SET disconnected_at = COALESCE(updated_at, created_at)
+              WHERE kind = 'local-only'
+                AND disconnected_at IS NULL
+                AND (relay_routing_id IS NULL OR relay_routing_id = '')
+                AND (peer_public_material IS NULL OR peer_public_material = '')
+                AND id LIKE 'contact:handshake:%'
+                AND NOT EXISTS (
+                  SELECT 1 FROM pending_handshakes ph
+                  WHERE ph.contact_stub_id = contacts.id
+                    AND ph.state IN (
+                      'awaiting_hello',
+                      'awaiting_ack',
+                      'hello_received'
+                    )
+                )
+                AND NOT EXISTS (
+                  SELECT 1 FROM contact_invitations ci
+                  WHERE ci.contact_stub_id = contacts.id
+                    AND ci.status = 'pending'
+                )
+            ''');
+          }
+          if (from < 13) {
+            // v12 only matched `contact:handshake:` (inviter stubs). Invitees
+            // keep `contact:redeemed:` ids — same demotion shape but backfill
+            // missed them, so UI stayed on `contactsKindLocalOnly`.
+            await customStatement('''
+              UPDATE contacts
+              SET disconnected_at = COALESCE(updated_at, created_at)
+              WHERE kind = 'local-only'
+                AND disconnected_at IS NULL
+                AND (relay_routing_id IS NULL OR relay_routing_id = '')
+                AND (peer_public_material IS NULL OR peer_public_material = '')
+                AND id LIKE 'contact:redeemed:%'
+                AND NOT EXISTS (
+                  SELECT 1 FROM pending_handshakes ph
+                  WHERE ph.contact_stub_id = contacts.id
+                    AND ph.state IN (
+                      'awaiting_hello',
+                      'awaiting_ack',
+                      'hello_received'
+                    )
+                )
+                AND NOT EXISTS (
+                  SELECT 1 FROM contact_invitations ci
+                  WHERE ci.contact_stub_id = contacts.id
+                    AND ci.status = 'pending'
+                )
+            ''');
+          }
+          if (from < 14) {
+            await m.addColumn(contacts, contacts.theirLabelForMe);
           }
         },
         beforeOpen: (details) async {
