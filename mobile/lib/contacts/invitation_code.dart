@@ -100,12 +100,19 @@ class InvitationCode {
   /// This URL carries the same payload but starts with `https://`, so it is
   /// clickable in common mail clients. Once app/universal links are configured
   /// for [origin], the OS can route this URL directly into the installed app.
+  ///
+  /// The query also includes `s`, the same string as [renderShort], so the
+  /// relay’s static invite page can show a “copy short code” affordance.
+  /// [parseInvitationLink] ignores `s` and continues to rely only on `v` and
+  /// `c`.
   String renderWebLink({String origin = defaultInvitationLinkOrigin}) {
     final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
     final base = origin.endsWith('/')
         ? origin.substring(0, origin.length - 1)
         : origin;
-    return '$base/contact/invite?v=$version&c=$encoded';
+    final short = renderShort();
+    final s = Uri.encodeQueryComponent(short);
+    return '$base/contact/invite?v=$version&c=$encoded&s=$s';
   }
 
   /// Hex representation of the nonce, suitable for storing in the local

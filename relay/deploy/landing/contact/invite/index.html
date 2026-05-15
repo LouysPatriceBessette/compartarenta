@@ -15,6 +15,10 @@
       --accent-fg: #ffffff;
       --card: #ffffff;
       --border: #e2e2ea;
+      --btn-ghost-bg: transparent;
+      --btn-ghost-fg: var(--accent);
+      --btn-ghost-border: var(--border);
+      --badge-soon: #e65100;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -25,6 +29,7 @@
         --accent-fg: #15151c;
         --card: #1f1f29;
         --border: #2d2d3a;
+        --badge-soon: #ffb74d;
       }
     }
     * { box-sizing: border-box; }
@@ -47,7 +52,40 @@
       margin: 0 0 8px;
     }
     p { margin: 0 0 12px; }
-    .lede { color: var(--muted); margin-bottom: 24px; }
+    .lede { color: var(--muted); margin-bottom: 20px; }
+    .top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .lang-switch {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .lang-switch button {
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+      cursor: pointer;
+    }
+    .lang-switch button[aria-pressed="true"] {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+    .lang-switch button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -84,8 +122,98 @@
       overflow-wrap: anywhere;
       user-select: all;
     }
-    .section + .section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-    .lang { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    .copy-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .btn-copy {
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--btn-ghost-border);
+      background: var(--btn-ghost-bg);
+      color: var(--btn-ghost-fg);
+      cursor: pointer;
+    }
+    .btn-copy:disabled,
+    .btn-copy[aria-disabled="true"] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-copy:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .btn-copy[data-copied="true"] {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    }
+    .short-code-line {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .short-code-line code {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.95em;
+      border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: flex-start;
+      gap: 24px;
+      margin-top: 12px;
+    }
+    .badge-unit {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .badge-unit img {
+      height: 40px;
+      width: auto;
+      display: block;
+    }
+    .badge-unit img.play-badge {
+      height: 56px;
+    }
+    .badge-row .badge-unit:nth-child(2) img {
+      margin: 8px 0;
+    }
+    .badge-unit img:hover {
+      cursor: wait;
+    }
+    .badge-soon {
+      margin-top: 6px;
+      font-size: 0.8em;
+      color: var(--badge-soon);
+      line-height: 1.2;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     footer {
       margin-top: 32px;
       color: var(--muted);
@@ -95,56 +223,165 @@
   </style>
 </head>
 <body>
+  <div id="copy-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <main>
-    <h1>Compartarenta</h1>
-    <p class="lede">You received an invitation to connect with someone on Compartarenta.</p>
+    <div class="top-row">
+      <h1 style="margin:0;">Compartarenta</h1>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang-switch="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang-switch="fr" aria-pressed="false">FR</button>
+        <button type="button" data-lang-switch="es" aria-pressed="false">ES</button>
+      </div>
+    </div>
+
+    <p class="lede" data-i18n="en">You received an invitation to connect with someone on Compartarenta.</p>
+    <p class="lede" data-i18n="fr" hidden>Vous avez reçu une invitation à vous connecter avec quelqu’un sur Compartarenta.</p>
+    <p class="lede" data-i18n="es" hidden>Has recibido una invitación para conectarte con alguien en Compartarenta.</p>
 
     <section class="card">
-      <h2>Open the app</h2>
-      <p>If Compartarenta is installed on this device, tap the button below.</p>
-      <p><a id="open-app" class="open-btn" href="compartarenta://contact/invite">Open in Compartarenta</a></p>
-      <p style="color: var(--muted); font-size: 0.85rem;">
+      <h2 data-i18n="en">Open the app</h2>
+      <h2 data-i18n="fr" hidden>Ouvrir l’application</h2>
+      <h2 data-i18n="es" hidden>Abrir la app</h2>
+
+      <p data-i18n="en">If Compartarenta is installed on this device, tap the button below.</p>
+      <p data-i18n="fr" hidden>Si Compartarenta est installée sur cet appareil, touchez le bouton ci-dessous.</p>
+      <p data-i18n="es" hidden>Si Compartarenta está instalada en este dispositivo, toca el botón de abajo.</p>
+
+      <p>
+        <a id="open-app" class="open-btn" data-open-app href="compartarenta://contact/invite">
+          <span data-i18n="en">Open in Compartarenta</span>
+          <span data-i18n="fr" hidden>Ouvrir dans Compartarenta</span>
+          <span data-i18n="es" hidden>Abrir en Compartarenta</span>
+        </a>
+      </p>
+
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="en">
         Nothing about this invitation is sent to our server by opening this page —
         the link is processed entirely on your device.
       </p>
-    </section>
-
-    <section class="card">
-      <h2>Or paste this link into the app</h2>
-      <p>Open Compartarenta, go to <strong>Contacts</strong>, tap the
-        <strong>scan / enter-code</strong> icon at the top of the screen, and paste
-        the full link below.</p>
-      <div id="link-box" class="link-box" aria-label="Invitation link">compartarenta://contact/invite</div>
-      <p style="color: var(--muted); font-size: 0.85rem;">
-        The same invitation is also valid as a short code (the one written under
-        the link in the message you received).
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="fr" hidden>
+        Aucune donnée d’invitation n’est envoyée à notre serveur lorsque vous ouvrez cette page —
+        le lien est traité entièrement sur votre appareil.
+      </p>
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="es" hidden>
+        Al abrir esta página no se envía información de la invitación a nuestro servidor:
+        el enlace se procesa por completo en tu dispositivo.
       </p>
     </section>
 
     <section class="card">
-      <div class="section">
-        <div class="lang">Français</div>
-        <p>Vous avez reçu une invitation à vous connecter sur Compartarenta.
-          Ouvrez l’application Compartarenta sur l’appareil où elle est installée,
-          allez dans <strong>Contacts</strong>, touchez l’icône
-          <strong>scanner / saisir un code</strong> en haut de l’écran et collez
-          le lien complet ci-dessus. Vous pouvez aussi utiliser le code court
-          inclus dans le message que vous avez reçu.</p>
+      <h2 data-i18n="en">Or paste this link into the app</h2>
+      <h2 data-i18n="fr" hidden>Ou collez ce lien dans l’application</h2>
+      <h2 data-i18n="es" hidden>O pega este enlace en la app</h2>
+
+      <p data-i18n="en">Open Compartarenta, go to <strong>Contacts</strong>, tap the
+        <strong>scan / enter-code</strong> icon at the top of the screen, and paste
+        the full link below.</p>
+      <p data-i18n="fr" hidden>Ouvrez Compartarenta, allez dans <strong>Contacts</strong>, touchez l’icône
+        <strong>scanner / saisir un code</strong> en haut de l’écran et collez
+        le lien complet ci-dessous.</p>
+      <p data-i18n="es" hidden>Abre Compartarenta, ve a <strong>Contactos</strong>, toca el icono
+        <strong>escanear / introducir código</strong> en la parte superior de
+        la pantalla y pega el enlace completo de abajo.</p>
+
+      <div id="link-box" class="link-box" data-invite-link-box aria-label="Invitation link">compartarenta://contact/invite</div>
+
+      <div class="copy-row">
+        <button type="button" class="btn-copy" data-copy-kind="deep" data-requires-invite
+          aria-label="Copy invitation deep link">
+          <span data-i18n="en">Copy invitation link</span>
+          <span data-i18n="fr" hidden>Copier le lien d’invitation</span>
+          <span data-i18n="es" hidden>Copiar enlace de invitación</span>
+        </button>
+        <button type="button" class="btn-copy" data-copy-kind="https"
+          aria-label="Copy this page URL">
+          <span data-i18n="en">Copy page URL</span>
+          <span data-i18n="fr" hidden>Copier l’URL de la page</span>
+          <span data-i18n="es" hidden>Copiar URL de la página</span>
+        </button>
       </div>
-      <div class="section">
-        <div class="lang">Español</div>
-        <p>Has recibido una invitación para conectarte en Compartarenta. Abre la
-          app Compartarenta en el dispositivo donde esté instalada, ve a
-          <strong>Contactos</strong>, toca el icono
-          <strong>escanear / introducir código</strong> en la parte superior de
-          la pantalla y pega el enlace de arriba. También puedes usar el código
-          corto incluido en el mensaje que recibiste.</p>
+
+      <div id="short-code-row" class="short-code-line" hidden>
+        <span data-i18n="en">Short code:</span>
+        <span data-i18n="fr" hidden>Code court :</span>
+        <span data-i18n="es" hidden>Código corto:</span>
+        <code id="short-code-value"></code>
+      </div>
+      <p id="short-code-copy-wrap" class="copy-row" style="margin-top:8px;" hidden>
+        <button type="button" class="btn-copy" data-copy-kind="short"
+          aria-label="Copy short code">
+          <span data-i18n="en">Copy short code</span>
+          <span data-i18n="fr" hidden>Copier le code court</span>
+          <span data-i18n="es" hidden>Copiar código corto</span>
+        </button>
+      </p>
+
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="en">
+        The same invitation is also valid as a short code (the one written under
+        the link in the message you received), if your sender included one.
+      </p>
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="fr" hidden>
+        La même invitation est aussi valable sous forme de code court (celui indiqué sous
+        le lien dans le message reçu), si l’expéditeur en a fourni un.
+      </p>
+      <p style="color: var(--muted); font-size: 0.85rem;" data-i18n="es" hidden>
+        La misma invitación también vale como código corto (el que aparece bajo
+        el enlace en el mensaje recibido), si quien te invitó lo incluyó.
+      </p>
+    </section>
+
+    <section class="card">
+      <div data-i18n="en">
+        <h2>Get the app</h2>
+        <p>Don’t have Compartarenta installed yet? You’ll find it on Google Play and the App Store once it is published. Store links will be added when the app goes live.</p>
+        <div class="badge-row">
+          <figure class="badge-unit">
+            <img class="play-badge" src="badges/google-play-badge.png" width="155" height="60" alt="Get it on Google Play" />
+            <figcaption class="badge-soon">(Soon)</figcaption>
+          </figure>
+          <figure class="badge-unit">
+            <img src="badges/app-store-badge.svg" width="120" height="40" alt="Download on the App Store" />
+            <figcaption class="badge-soon">(Soon)</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div data-i18n="fr" hidden>
+        <h2>Télécharger l’app</h2>
+        <p>Vous n’avez pas encore installé Compartarenta&nbsp;? Vous la trouverez sur Google Play et sur l’App Store dès sa publication. Les liens vers les boutiques seront ajoutés au lancement.</p>
+        <div class="badge-row">
+          <figure class="badge-unit">
+            <img class="play-badge" src="badges/google-play-badge.png" width="155" height="60" alt="Disponible sur Google Play" />
+            <figcaption class="badge-soon">(Bientôt)</figcaption>
+          </figure>
+          <figure class="badge-unit">
+            <img src="badges/app-store-badge.svg" width="120" height="40" alt="Télécharger sur l’App Store" />
+            <figcaption class="badge-soon">(Bientôt)</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div data-i18n="es" hidden>
+        <h2>Descargar la app</h2>
+        <p>¿Aún no tienes Compartarenta instalada? La encontrarás en Google Play y en el App Store cuando esté publicada. Los enlaces a las tiendas se añadirán en el lanzamiento.</p>
+        <div class="badge-row">
+          <figure class="badge-unit">
+            <img class="play-badge" src="badges/google-play-badge.png" width="155" height="60" alt="Disponible en Google Play" />
+            <figcaption class="badge-soon">(Pronto)</figcaption>
+          </figure>
+          <figure class="badge-unit">
+            <img src="badges/app-store-badge.svg" width="120" height="40" alt="Descarga en el App Store" />
+            <figcaption class="badge-soon">(Pronto)</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
     <footer>
-      <p>This page is part of the Compartarenta relay infrastructure. It
+      <p data-i18n="en">This page is part of the Compartarenta relay infrastructure. It
         contains no operational data about the relay.</p>
+      <p data-i18n="fr" hidden>Cette page fait partie de l’infrastructure relay de Compartarenta. Elle
+        ne contient aucune donnée opérationnelle sur le relay.</p>
+      <p data-i18n="es" hidden>Esta página forma parte de la infraestructura relay de Compartarenta. No
+        contiene datos operativos sobre el relay.</p>
     </footer>
   </main>
   <script src="invite.js"></script>

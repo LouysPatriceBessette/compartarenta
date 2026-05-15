@@ -79,13 +79,13 @@ languages, store badge placeholders); in-app mail WebViews that block custom sch
 limit, not something the relay HTML can fully fix without store / universal-link
 work.
 
-- [ ] 8.1 **Copy UX**: add an explicit control to copy the invitation link (and
+- [x] 8.1 **Copy UX**: add an explicit control to copy the invitation link (and
       optionally the short code) with clear feedback (`navigator.clipboard` +
       visible “copied” state / toast).
-- [ ] 8.2 **Languages**: keep primary instructions + CTA + link box in **English**
+- [x] 8.2 **Languages**: keep primary instructions + CTA + link box in **English**
       by default; move FR/ES (and future locales) behind a small client-side
       language toggle (plain JS), so unknown invitee language defaults to English.
-- [ ] 8.3 **Store badges (no links yet)**: on the HTTPS invite page, show the
+- [x] 8.3 **Store badges (no links yet)**: on the HTTPS invite page, show the
       official **Google Play** and **Apple App Store** badge images for invitees
       who have not installed the app. For now use **static logos only** (no
       `href`) because the app is not published. Add a short line of copy in

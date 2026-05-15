@@ -147,7 +147,7 @@ void main() {
       expect(link, contains('c='));
     });
 
-    test('web link includes the version and a payload param', () {
+    test('web link includes version, payload, and optional short code param', () {
       InvitationCode.setRandomForTesting(_SeededRandom(111));
       addTearDown(InvitationCode.resetRandomForTesting);
       final code = InvitationCode.generate();
@@ -155,6 +155,8 @@ void main() {
       expect(link, startsWith('https://sync.incoherences.org/contact/invite?'));
       expect(link, contains('v=${InvitationCode.currentVersion}'));
       expect(link, contains('c='));
+      final uri = Uri.parse(link);
+      expect(uri.queryParameters['s'], code.renderShort());
     });
 
     test('parseInvitationDeepLink round-trips a generated deep link', () {
