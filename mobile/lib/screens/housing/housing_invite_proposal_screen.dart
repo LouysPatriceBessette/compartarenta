@@ -437,6 +437,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             lines: lines,
             groups: groups,
             ratios: ratios,
+            participantIdsOrdered: pids,
             participantId: pids[idx],
             l10n: l10n,
             displayCurrency: displayCurrencyCodeForPlan(widget.prefs, lines),

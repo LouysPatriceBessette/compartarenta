@@ -12,10 +12,12 @@ import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import 'housing_invite_proposal_screen.dart';
 import '../../housing/projection/plan_projection.dart';
+import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/rational_percent_text.dart';
 import '../contacts/contact_picker_sheet.dart';
 
 sealed class _SplitListEntry {}
@@ -257,25 +259,180 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return (logicalX * dpr).round() / dpr;
   }
 
-  /// Picks a weight in `[0, assignable]` that minimizes
-  /// `|(basisMinor * w / 10000).round() - targetMinor|`.
-  int _bestWeightBpsForShareMinor(
-    int targetMinor,
-    int basisMinor,
-    int assignable,
+  List<int> _effectiveLineWeightsBps(
+    PlanLine line,
+    List<String> pids,
+    List<int> weightsDb,
   ) {
-    if (basisMinor <= 0 || assignable <= 0) return 0;
-    var bestW = 0;
+    final n = pids.length;
+    if (n == 0) return [];
+    var sumFirst = 0;
+    final out = List<int>.filled(n, 0);
+    for (var i = 0; i < n - 1; i++) {
+      final k = '${line.id}:${pids[i]}';
+      final w = _draftRatioWeightsBps[k] ?? weightsDb[i];
+      out[i] = w;
+      sumFirst += w;
+    }
+    out[n - 1] = (10000 - sumFirst).clamp(0, 10000);
+    return out;
+  }
+
+  List<int> _effectiveGroupWeightsBps(
+    PlanGroup group,
+    List<String> pids,
+    List<int> weightsDb,
+  ) {
+    final n = pids.length;
+    if (n == 0) return [];
+    var sumFirst = 0;
+    final out = List<int>.filled(n, 0);
+    for (var i = 0; i < n - 1; i++) {
+      final k = _shareSplitControllerKeyForGroup(group.id, pids[i]);
+      final w = _draftRatioWeightsBps[k] ?? weightsDb[i];
+      out[i] = w;
+      sumFirst += w;
+    }
+    out[n - 1] = (10000 - sumFirst).clamp(0, 10000);
+    return out;
+  }
+
+  Future<int> _bestWeightBpsForLineShareMinor({
+    required PlanLine line,
+    required List<String> pids,
+    required int participantIndex,
+    required int targetMinor,
+    required int basisMinor,
+    required int assignable,
+  }) async {
+    if (basisMinor <= 0 || pids.isEmpty) return 0;
+    if (participantIndex >= pids.length - 1) {
+      return await _ratioWeight(line.id, pids[participantIndex]);
+    }
+    final weightsDb = await Future.wait([
+      for (final pid in pids) _ratioWeight(line.id, pid),
+    ]);
+    var bestW = weightsDb[participantIndex].clamp(0, assignable);
     var bestErr = 1 << 30;
-    for (var w = 0; w <= assignable; w++) {
-      final got = (basisMinor * w / 10000).round();
+    for (var cand = 0; cand <= assignable; cand++) {
+      final trial = List<int>.from(weightsDb);
+      trial[participantIndex] = cand;
+      var s = 0;
+      for (var i = 0; i < pids.length - 1; i++) {
+        s += trial[i];
+      }
+      trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
+      final got = splitMinorByWeights(basisMinor, trial)[participantIndex];
       final err = (got - targetMinor).abs();
       if (err < bestErr) {
         bestErr = err;
-        bestW = w;
+        bestW = cand;
       }
     }
     return bestW;
+  }
+
+  Future<int> _bestWeightBpsForGroupShareMinor({
+    required PlanGroup group,
+    required List<String> pids,
+    required int participantIndex,
+    required int targetMinor,
+    required int basisMinor,
+    required int assignable,
+  }) async {
+    if (basisMinor <= 0 || pids.isEmpty) return 0;
+    if (participantIndex >= pids.length - 1) {
+      return await _ratioWeightGroup(group.id, pids[participantIndex]);
+    }
+    final weightsDb = await Future.wait([
+      for (final pid in pids) _ratioWeightGroup(group.id, pid),
+    ]);
+    var bestW = weightsDb[participantIndex].clamp(0, assignable);
+    var bestErr = 1 << 30;
+    for (var cand = 0; cand <= assignable; cand++) {
+      final trial = List<int>.from(weightsDb);
+      trial[participantIndex] = cand;
+      var s = 0;
+      for (var i = 0; i < pids.length - 1; i++) {
+        s += trial[i];
+      }
+      trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
+      final got = splitMinorByWeights(basisMinor, trial)[participantIndex];
+      final err = (got - targetMinor).abs();
+      if (err < bestErr) {
+        bestErr = err;
+        bestW = cand;
+      }
+    }
+    return bestW;
+  }
+
+  Future<int> _maxHamiltonShareLine({
+    required PlanLine line,
+    required List<String> pids,
+    required int participantIndex,
+    required int basisMinor,
+    required int assignable,
+  }) async {
+    if (basisMinor <= 0) return 0;
+    final wDb = await Future.wait([
+      for (final pid in pids) _ratioWeight(line.id, pid),
+    ]);
+    if (participantIndex >= pids.length - 1) {
+      return splitMinorByWeights(basisMinor, wDb)[participantIndex];
+    }
+    final trial = List<int>.from(wDb);
+    trial[participantIndex] = assignable;
+    var s = 0;
+    for (var i = 0; i < pids.length - 1; i++) {
+      s += trial[i];
+    }
+    trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
+    return splitMinorByWeights(basisMinor, trial)[participantIndex];
+  }
+
+  Future<int> _maxHamiltonShareGroup({
+    required PlanGroup group,
+    required List<String> pids,
+    required int participantIndex,
+    required int basisMinor,
+    required int assignable,
+  }) async {
+    if (basisMinor <= 0) return 0;
+    final wDb = await Future.wait([
+      for (final pid in pids) _ratioWeightGroup(group.id, pid),
+    ]);
+    if (participantIndex >= pids.length - 1) {
+      return splitMinorByWeights(basisMinor, wDb)[participantIndex];
+    }
+    final trial = List<int>.from(wDb);
+    trial[participantIndex] = assignable;
+    var s = 0;
+    for (var i = 0; i < pids.length - 1; i++) {
+      s += trial[i];
+    }
+    trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
+    return splitMinorByWeights(basisMinor, trial)[participantIndex];
+  }
+
+  bool _lineHasAnyShareAmountOverride(PlanLine line, List<String> pids) {
+    for (final pid in pids) {
+      if (_shareAmountMinorOverride.containsKey('${line.id}:$pid')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _groupHasAnyShareAmountOverride(PlanGroup group, List<String> pids) {
+    for (final pid in pids) {
+      if (_shareAmountMinorOverride.containsKey(
+            _shareSplitControllerKeyForGroup(group.id, pid),
+          )) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _commitShareAmountTextField(
@@ -297,7 +454,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     var minor = (major * 100).round();
     final maxShareMinor = basisMinor <= 0
         ? 0
-        : (basisMinor * assignable / 10000).round();
+        : await _maxHamiltonShareLine(
+            line: line,
+            pids: pids,
+            participantIndex: participantIndex,
+            basisMinor: basisMinor,
+            assignable: assignable,
+          );
     minor = minor.clamp(0, maxShareMinor);
     final display = (minor / 100).toStringAsFixed(2);
     if (display != formatted) {
@@ -306,7 +469,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         selection: TextSelection.collapsed(offset: display.length),
       );
     }
-    final wClamped = _bestWeightBpsForShareMinor(minor, basisMinor, assignable);
+    final wClamped = await _bestWeightBpsForLineShareMinor(
+      line: line,
+      pids: pids,
+      participantIndex: participantIndex,
+      targetMinor: minor,
+      basisMinor: basisMinor,
+      assignable: assignable,
+    );
     await _setRatioWeightBps(line, pids, participantIndex, wClamped);
     if (mounted) {
       setState(() {
@@ -350,7 +520,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     var minor = (major * 100).round();
     final maxShareMinor = basisMinor <= 0
         ? 0
-        : (basisMinor * assignable / 10000).round();
+        : await _maxHamiltonShareGroup(
+            group: group,
+            pids: pids,
+            participantIndex: participantIndex,
+            basisMinor: basisMinor,
+            assignable: assignable,
+          );
     minor = minor.clamp(0, maxShareMinor);
     final display = (minor / 100).toStringAsFixed(2);
     if (display != formatted) {
@@ -359,7 +535,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         selection: TextSelection.collapsed(offset: display.length),
       );
     }
-    final wClamped = _bestWeightBpsForShareMinor(minor, basisMinor, assignable);
+    final wClamped = await _bestWeightBpsForGroupShareMinor(
+      group: group,
+      pids: pids,
+      participantIndex: participantIndex,
+      targetMinor: minor,
+      basisMinor: basisMinor,
+      assignable: assignable,
+    );
     await _setGroupRatioWeightBps(group, pids, participantIndex, wClamped);
     if (mounted) {
       setState(() {
@@ -1954,12 +2137,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final key = '${line.id}:$pidCur';
         final wDb = weights[_ratioParticipantIndex];
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
-        final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
+        final wEffVec = _effectiveLineWeightsBps(line, pids, weights);
+        final hamilton = splitMinorByWeights(basisMinor, wEffVec);
+        final amountShareMinorComputed =
+            hamilton[_ratioParticipantIndex];
         final amountShareMinor =
             _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-        final percentEff = basisMinor > 0
-            ? (amountShareMinor / basisMinor) * 100
-            : 0.0;
 
         final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
         final shareText = _money2FromMinor(amountShareMinor);
@@ -2102,8 +2285,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         horizontal: 10,
                         vertical: 6,
                       ),
-                      child: Text(
-                        '${percentEff.toStringAsFixed(1)}%',
+                      child: RationalPercentText(
+                        shareMinor: amountShareMinor,
+                        totalMinor: basisMinor,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -2255,12 +2439,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final key = _shareSplitControllerKeyForGroup(group.id, pidCur);
         final wDb = weights[_ratioParticipantIndex];
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
-        final amountShareMinorComputed = (basisMinor * wEff / 10000).round();
+        final wEffVec = _effectiveGroupWeightsBps(group, pids, weights);
+        final hamilton = splitMinorByWeights(basisMinor, wEffVec);
+        final amountShareMinorComputed =
+            hamilton[_ratioParticipantIndex];
         final amountShareMinor =
             _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-        final percentEff = basisMinor > 0
-            ? (amountShareMinor / basisMinor) * 100
-            : 0.0;
 
         final shareCtrl = _shareAmountControllerForGroup(group.id, pidCur);
         final shareText = _money2FromMinor(amountShareMinor);
@@ -2421,8 +2605,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         horizontal: 10,
                         vertical: 6,
                       ),
-                      child: Text(
-                        '${percentEff.toStringAsFixed(1)}%',
+                      child: RationalPercentText(
+                        shareMinor: amountShareMinor,
+                        totalMinor: basisMinor,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -2577,6 +2762,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                   child: FutureBuilder<double>(
                     future: _participantTotalMinor(
                       pids[_ratioParticipantIndex],
+                      pids,
                       lines,
                       groups,
                     ),
@@ -2669,9 +2855,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   Future<double> _participantTotalMinor(
     String participantId,
+    List<String> pids,
     List<PlanLine> lines,
     List<PlanGroup> groups,
   ) async {
+    final idx = pids.indexOf(participantId);
+    if (idx < 0) return 0;
     var sumMinor = 0;
     final knownGroupIds = groups.map((g) => g.id).toSet();
     final sorted = [...lines]
@@ -2687,8 +2876,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         sumMinor += o;
         continue;
       }
-      final w = await _ratioWeightGroup(g.id, participantId);
-      sumMinor += (basis * w / 10000).round();
+      if (_groupHasAnyShareAmountOverride(g, pids)) {
+        final w = await _ratioWeightGroup(g.id, participantId);
+        sumMinor += (basis * w / 10000).round();
+      } else {
+        final weights = <int>[
+          for (final pid in pids) await _ratioWeightGroup(g.id, pid),
+        ];
+        sumMinor += splitMinorByWeights(basis, weights)[idx];
+      }
     }
 
     for (final line in sorted) {
@@ -2700,9 +2896,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         sumMinor += o;
         continue;
       }
-      final w = await _ratioWeight(line.id, participantId);
-      final basis = _splitBasisMinor(line);
-      sumMinor += (basis * w / 10000).round();
+      if (_lineHasAnyShareAmountOverride(line, pids)) {
+        final w = await _ratioWeight(line.id, participantId);
+        final basis = _splitBasisMinor(line);
+        sumMinor += (basis * w / 10000).round();
+      } else {
+        final basis = _splitBasisMinor(line);
+        final weights = <int>[
+          for (final pid in pids) await _ratioWeight(line.id, pid),
+        ];
+        sumMinor += splitMinorByWeights(basis, weights)[idx];
+      }
     }
     return sumMinor / 100.0;
   }
@@ -3696,7 +3900,29 @@ class _SummaryView extends StatelessWidget {
         final sortedLines = [...lines]
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
+        final rosterIds = roster.map((e) => e.id).toList();
+
+        bool lineRowHasPinnedShare(PlanLine line) {
+          for (final id in rosterIds) {
+            if (shareMinorOverrides.containsKey('${line.id}:$id')) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        bool groupRowHasPinnedShare(PlanGroup g) {
+          for (final id in rosterIds) {
+            if (shareMinorOverrides.containsKey('g:${g.id}:$id')) {
+              return true;
+            }
+          }
+          return false;
+        }
+
         int participantShareMinor(String participantId) {
+          final idx = rosterIds.indexOf(participantId);
+          if (idx < 0) return 0;
           var participantMonthlyMinor = 0;
           for (final g in planGroups) {
             final mem = sortedLines.where((l) => l.groupId == g.id).toList();
@@ -3716,7 +3942,19 @@ class _SummaryView extends StatelessWidget {
                   (r) => r.groupId == g.id && r.participantId == participantId,
                 )
                 .fold<int>(0, (a, r) => a + r.weight);
-            participantMonthlyMinor += (basis * w / 10000).round();
+            if (groupRowHasPinnedShare(g)) {
+              participantMonthlyMinor += (basis * w / 10000).round();
+            } else {
+              final ws = <int>[
+                for (final rid in rosterIds)
+                  ratios
+                      .where(
+                        (r) => r.groupId == g.id && r.participantId == rid,
+                      )
+                      .fold<int>(0, (a, r) => a + r.weight),
+              ];
+              participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
+            }
           }
           for (final line in sortedLines) {
             final gid = line.groupId;
@@ -3734,7 +3972,20 @@ class _SummaryView extends StatelessWidget {
                 )
                 .fold<int>(0, (a, r) => a + r.weight);
             final basis = PlanProjection.unitMinor(line);
-            participantMonthlyMinor += (basis * w / 10000).round();
+            if (lineRowHasPinnedShare(line)) {
+              participantMonthlyMinor += (basis * w / 10000).round();
+            } else {
+              final ws = <int>[
+                for (final rid in rosterIds)
+                  ratios
+                      .where(
+                        (r) =>
+                            r.lineId == line.id && r.participantId == rid,
+                      )
+                      .fold<int>(0, (a, r) => a + r.weight),
+              ];
+              participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
+            }
           }
           return participantMonthlyMinor;
         }
@@ -3748,9 +3999,6 @@ class _SummaryView extends StatelessWidget {
                 itemBuilder: (context, i) {
                   final p = roster[i];
                   final participantMonthlyMinor = participantShareMinor(p.id);
-                  final sharePct = planMonthlyTotalMinor > 0
-                      ? (participantMonthlyMinor / planMonthlyTotalMinor) * 100
-                      : 0.0;
                   final displayCurrency = displayCurrencyCodeForPlan(
                     prefs,
                     lines,
@@ -3780,8 +4028,9 @@ class _SummaryView extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    Text(
-                                      '${sharePct.toStringAsFixed(2)}%',
+                                    RationalPercentText(
+                                      shareMinor: participantMonthlyMinor,
+                                      totalMinor: planMonthlyTotalMinor,
                                       style: Theme.of(
                                         context,
                                       ).textTheme.titleMedium,

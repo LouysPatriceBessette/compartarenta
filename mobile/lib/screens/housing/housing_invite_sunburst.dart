@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/projection/plan_projection.dart';
+import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/format_money.dart';
 
@@ -41,10 +42,14 @@ int _weightGroup(List<PlanRatio> ratios, String groupId, String participantId) {
 }
 
 /// Inner-ring slices: each plan group with lines, then uncategorized lines.
+///
+/// [participantIdsOrdered] must list every plan participant in the same order
+/// used for ratio weights (so Hamilton splits match the rest of the app).
 List<InviteSunburstSlice> buildInviteSunburstSlices({
   required List<PlanLine> lines,
   required List<PlanGroup> groups,
   required List<PlanRatio> ratios,
+  required List<String> participantIdsOrdered,
   required String participantId,
   required AppLocalizations l10n,
   required String displayCurrency,
@@ -72,8 +77,13 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
     if (members.isEmpty) continue;
     final basis = members.fold<int>(0, (a, l) => a + PlanProjection.unitMinor(l));
     if (basis <= 0) continue;
-    final wg = _weightGroup(ratios, g.id, participantId);
-    final userPart = (basis * wg / 10000).round();
+    final wg = <int>[
+      for (final pid in participantIdsOrdered)
+        _weightGroup(ratios, g.id, pid),
+    ];
+    final shares = splitMinorByWeights(basis, wg);
+    final userIdx = participantIdsOrdered.indexOf(participantId);
+    final userPart = userIdx < 0 ? 0 : shares[userIdx];
     out.add(
       InviteSunburstSlice(
         label: g.title.trim().isEmpty ? l10n.housingPlanCategoryNone : g.title,
@@ -92,8 +102,13 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   for (final line in unc) {
     final b = PlanProjection.unitMinor(line);
     if (b <= 0) continue;
-    final w = _weightLine(ratios, line.id, participantId);
-    final userPart = (b * w / 10000).round();
+    final wRow = <int>[
+      for (final pid in participantIdsOrdered)
+        _weightLine(ratios, line.id, pid),
+    ];
+    final shares = splitMinorByWeights(b, wRow);
+    final userIdx = participantIdsOrdered.indexOf(participantId);
+    final userPart = userIdx < 0 ? 0 : shares[userIdx];
     out.add(
       InviteSunburstSlice(
         label: line.title.trim().isEmpty ? l10n.housingPlanSplitNoCategory : line.title,

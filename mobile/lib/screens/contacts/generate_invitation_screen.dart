@@ -10,6 +10,7 @@ import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../widgets/standard_validity_duration_bar.dart';
 
 /// Screen that generates a new invitation code and presents it for out-of-band
 /// sharing.
@@ -35,12 +36,6 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   bool _processingGeneratedPoll = false;
   bool _routingToIncoming = false;
   String? _error;
-
-  static const _options = <(Duration, String)>[
-    (Duration(hours: 1), '1h'),
-    (Duration(hours: 24), '24h'),
-    (Duration(days: 7), '7d'),
-  ];
 
   @override
   void initState() {
@@ -202,7 +197,6 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
           child: generated == null
               ? _IntroForm(
                   selected: _validFor,
-                  options: _options,
                   onSelect: (d) => setState(() => _validFor = d),
                   onGenerate: _generate,
                   busy: _generating,
@@ -239,7 +233,6 @@ class _GeneratedInvitation {
 class _IntroForm extends StatelessWidget {
   const _IntroForm({
     required this.selected,
-    required this.options,
     required this.onSelect,
     required this.onGenerate,
     required this.busy,
@@ -247,7 +240,6 @@ class _IntroForm extends StatelessWidget {
   });
 
   final Duration selected;
-  final List<(Duration, String)> options;
   final ValueChanged<Duration> onSelect;
   final VoidCallback onGenerate;
   final bool busy;
@@ -271,13 +263,9 @@ class _IntroForm extends StatelessWidget {
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 4),
-        SegmentedButton<Duration>(
-          segments: [
-            for (final (duration, label) in options)
-              ButtonSegment(value: duration, label: Text(label)),
-          ],
-          selected: {selected},
-          onSelectionChanged: (s) => onSelect(s.first),
+        StandardValidityDurationSegmented(
+          selected: selected,
+          onChanged: onSelect,
         ),
         if (error != null) ...[
           const SizedBox(height: 12),
