@@ -24,6 +24,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
     _sub = _connectivity.onConnectivityChanged.listen((results) {
       final offline = results.isEmpty || results.every((r) => r == ConnectivityResult.none);
       if (offline == _isOffline) return;
+      if (!mounted) return;
       setState(() => _isOffline = offline);
     });
   }

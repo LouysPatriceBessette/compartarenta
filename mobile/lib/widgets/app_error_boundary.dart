@@ -16,36 +16,40 @@ class _AppErrorBoundaryState extends State<AppErrorBoundary> {
   Object? _error;
   StackTrace? _stackTrace;
 
-  ErrorWidgetBuilder? _previousBuilder;
+  FlutterExceptionHandler? _previousFlutterOnError;
+  late final FlutterExceptionHandler _chainedHandler;
 
   @override
   void initState() {
     super.initState();
-    _previousBuilder = ErrorWidget.builder;
-    ErrorWidget.builder = (details) {
-      _capture(details.exception, details.stack);
-      return _FallbackErrorScreen(
-        error: details.exception,
-        stackTrace: details.stack,
-        onRestart: _restart,
-      );
+    _previousFlutterOnError = FlutterError.onError;
+    _chainedHandler = (FlutterErrorDetails details) {
+      _previousFlutterOnError?.call(details);
+      _scheduleCapture(details.exception, details.stack);
     };
+    FlutterError.onError = _chainedHandler;
   }
 
   @override
   void dispose() {
-    final previous = _previousBuilder;
-    if (previous != null) {
-      ErrorWidget.builder = previous;
+    if (FlutterError.onError == _chainedHandler) {
+      FlutterError.onError = _previousFlutterOnError;
     }
     super.dispose();
   }
 
-  void _capture(Object error, StackTrace? stackTrace) {
+  void _scheduleCapture(Object error, StackTrace? stackTrace) {
     if (_error != null) return;
-    setState(() {
-      _error = error;
-      _stackTrace = stackTrace;
+    // Never call setState synchronously from the error path: it races with
+    // element teardown (e.g. process death, activity stop, "close all") and can
+    // trigger framework assertions such as _InactiveElements.remove.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_error != null) return;
+      setState(() {
+        _error = error;
+        _stackTrace = stackTrace;
+      });
     });
   }
 
@@ -119,4 +123,3 @@ class _FallbackErrorScreen extends StatelessWidget {
     );
   }
 }
-

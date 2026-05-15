@@ -36,15 +36,17 @@ class HomeScreen extends StatelessWidget {
           const contentInset = 16.0;
           const gap = 12.0;
 
-          // Usable width inside body minus content margin and system insets
-          // (gesture nav bar, notches, etc.); must match horizontal padding below
-          // or Wrap children overflow and skip the 2-column layout in landscape.
-          final contentW = constraints.maxWidth -
+          // Usable width for Wrap children: [LayoutBuilder] can report maxWidth==0
+          // briefly (e.g. cold start / activity teardown), which must not become a
+          // negative SizedBox width (BoxConstraints w=-32 when only insets apply).
+          final rawContentW = constraints.maxWidth -
               2 * contentInset -
               viewPadding.left -
               viewPadding.right;
-          final moduleTileW =
-              landscape ? (contentW - gap) / 2 : contentW;
+          final contentW = rawContentW.clamp(0.0, double.infinity);
+          final moduleTileW = landscape
+              ? ((contentW - gap) / 2).clamp(0.0, double.infinity)
+              : contentW;
 
           /// Material Icons does not expose `Icons.finance` in this SDK; `savings`
           /// is the closest bundled match to the Material Symbol “Finance”.
