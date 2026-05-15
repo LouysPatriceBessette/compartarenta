@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
+import '../../util/display_numbers.dart';
 import '../../util/format_money.dart';
 
 /// One inner-ring category (or uncategorized bucket) with total and focused participant share.
@@ -309,7 +310,11 @@ class HousingInviteSunburstChart extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             child: Text(
                               l10n.housingInviteSunburstCenterParticipation(
-                                ((globalUserMinor / grand) * 100).toStringAsFixed(0),
+                                formatShareOfTotalPercentNoSuffixSmart(
+                                  context,
+                                  shareNumeratorMinor: globalUserMinor,
+                                  totalDenominatorMinor: grand,
+                                ),
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 2,
@@ -330,8 +335,28 @@ class HousingInviteSunburstChart extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         ...slices.map((s) {
-          final pctInner = (s.totalMinor / grand) * 100;
-          final userPctOfCategory = s.userFraction * 100;
+          final pctInnerNoSuffix = grand > 0
+              ? formatShareOfTotalPercentNoSuffixSmart(
+                  context,
+                  shareNumeratorMinor: s.totalMinor,
+                  totalDenominatorMinor: grand,
+                )
+              : formatShareOfTotalPercentNoSuffixSmart(
+                  context,
+                  shareNumeratorMinor: 0,
+                  totalDenominatorMinor: 1,
+                );
+          final userPctNoSuffix = s.totalMinor > 0
+              ? formatShareOfTotalPercentNoSuffixSmart(
+                  context,
+                  shareNumeratorMinor: s.userMinor,
+                  totalDenominatorMinor: s.totalMinor,
+                )
+              : formatShareOfTotalPercentNoSuffixSmart(
+                  context,
+                  shareNumeratorMinor: 0,
+                  totalDenominatorMinor: 1,
+                );
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
@@ -353,7 +378,7 @@ class HousingInviteSunburstChart extends StatelessWidget {
                       Text(
                         l10n.housingInviteSunburstLegendAgreementShare(
                           s.label,
-                          pctInner.toStringAsFixed(0),
+                          pctInnerNoSuffix,
                         ),
                         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                       ),
@@ -362,7 +387,7 @@ class HousingInviteSunburstChart extends StatelessWidget {
                         l10n.housingInviteSunburstLegendYouParticipation(
                           formatMinorAsMoney(context, s.userMinor, s.currency),
                           formatMinorAsMoney(context, s.totalMinor, s.currency),
-                          userPctOfCategory.toStringAsFixed(0),
+                          userPctNoSuffix,
                         ),
                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),

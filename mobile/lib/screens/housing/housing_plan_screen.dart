@@ -30,9 +30,8 @@ final class _SplitListGroup extends _SplitListEntry {
 
 /// Uncategorized lines (no group, or unknown group id).
 final class _SplitUncategorized extends _SplitListEntry {
-  _SplitUncategorized(this.lines, {this.showHeading = true});
+  _SplitUncategorized(this.lines);
   final List<PlanLine> lines;
-  final bool showHeading;
 }
 
 /// Housing plan setup: vertical stepper (1–6) then summary.
@@ -195,7 +194,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _buildingRulesBody.dispose();
     _customRuleEditTitle?.dispose();
     _customRuleEditBody?.dispose();
-    _db.close();
+    // Do not close [AppDatabase.processScope] here — it is bound once in
+    // bootstrap for the whole process. Closing it breaks any screen that
+    // opens after navigating away (e.g. system back from Plan logement).
     super.dispose();
   }
 
@@ -803,6 +804,35 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
   }
 
+  /// True when the local DB contains everything required to show the housing
+  /// summary (same gates as finishing step 6). SharedPreferences alone is not
+  /// enough: clearing the DB leaves a stale `housingDefaultPlanSummaryReached`.
+  Future<bool> _isHousingPlanWizardFullyDoneInDb() async {
+    if (!_validateStep(0)) return false;
+    if (!_datesStepValid()) return false;
+    if (!await _validateStep2Expenses()) return false;
+    final lines = await _db.listPlanLines(_planId);
+    final groups = await _db.listPlanGroups(_planId);
+    final pids = _allParticipantIds();
+    if (!await _validateStep3Ratios(lines, groups, pids)) return false;
+    if (!_validateStep(5)) return false;
+    return true;
+  }
+
+  /// First wizard step that is not satisfied yet (0–5). Categories (2) are
+  /// optional; we resume at expenses (3) once participants and dates are valid.
+  Future<int> _inferResumeStepIndex() async {
+    if (!_validateStep(0)) return 0;
+    if (!_datesStepValid()) return 1;
+    if (!await _validateStep2Expenses()) return 3;
+    final lines = await _db.listPlanLines(_planId);
+    final groups = await _db.listPlanGroups(_planId);
+    final pids = _allParticipantIds();
+    if (!await _validateStep3Ratios(lines, groups, pids)) return 4;
+    if (!_validateStep(5)) return 5;
+    return 5;
+  }
+
   Future<void> _loadFromDb() async {
     await _ensurePlanShell();
     _shareAmountMinorOverride.clear();
@@ -858,8 +888,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
     _rulesRemovalLocked = await _db.planHasActiveAcceptedProposal(_planId);
 
-    if (widget.prefs.housingDefaultPlanSummaryReached) {
+    final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
+    if (dbComplete) {
       _showSummary = true;
+      await widget.prefs.setHousingDefaultPlanSummaryReached(true);
+    } else {
+      _showSummary = false;
+      await widget.prefs.setHousingDefaultPlanSummaryReached(false);
+      _stepIndex = await _inferResumeStepIndex();
     }
   }
 
@@ -2109,9 +2145,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return gid == null || !knownGroupIds.contains(gid);
     }).toList();
     if (uncategorized.isNotEmpty) {
-      out.add(
-        _SplitUncategorized(uncategorized, showHeading: groups.isNotEmpty),
-      );
+      out.add(_SplitUncategorized(uncategorized));
     }
     return out;
   }
@@ -2817,26 +2851,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             memberLines,
                             pids,
                           ),
-                        _SplitUncategorized(:final lines, :final showHeading) =>
-                          Column(
+                        _SplitUncategorized(:final lines) => Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              if (showHeading)
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    4,
-                                    i == 0 ? 8 : 18,
-                                    4,
-                                    6,
-                                  ),
-                                  child: Text(
-                                    l10n.housingPlanSplitNoCategory,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                ),
                               for (final line in lines)
                                 _buildSplitRatioLineCard(context, line, pids),
                             ],

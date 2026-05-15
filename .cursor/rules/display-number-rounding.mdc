@@ -1,0 +1,23 @@
+---
+description: User-visible money and percentage rounding (display only)
+alwaysApply: true
+---
+
+# Display number rounding (user-facing)
+
+Apply these rules when showing **amounts** or **percentages** to the user in UI (Flutter widgets, HTML mocks, etc.). **Never** round values that feed split logic, totals, persistence, or relay payloads—round or format only at presentation boundaries.
+
+## Amounts (money)
+
+- Show **exactly two** fraction digits (e.g. cents), locale-aware.
+- Prefer existing helpers: `formatMinorAsMoney`, `formatMajorDoubleAsMoney` in `mobile/lib/util/format_money.dart` (or equivalent for the surface).
+
+## Percentages
+
+- **Terminating** rational (e.g. `(share×100)/total` simplifies to a denominator whose prime factors are only 2 and 5): show **exactly one** fraction digit, half-up, locale-aware (`formatShareOfTotalPercentNoSuffix`, `formatPercentFromTenthsRounded`, or `formatRatioAsPercentNoSuffix` for simple integer ratios).
+- **Non-terminating** share-of-total: use **`RationalPercentText`** or **`formatShareOfTotalPercentNoSuffixSmart`** / **`formatShareOfTotalPercentWithSuffixSmart`**: show the first **four** fractional digits of the exact rational (truncate), then a **horizontal ellipsis** (`…`, U+2026), then `%` where the label needs it (see `kNonTerminatingPercentDisplayFractionDigits` in `percent_rational_expansion.dart`).
+- Implementation reference: `mobile/lib/util/percent_rational_expansion.dart` + `mobile/lib/util/display_numbers.dart`.
+
+## Calculations
+
+- Keep integer minor units, basis points, and rational splits as today; do not “clean up” mid-pipeline with `toStringAsFixed` on doubles used for money or weights.
