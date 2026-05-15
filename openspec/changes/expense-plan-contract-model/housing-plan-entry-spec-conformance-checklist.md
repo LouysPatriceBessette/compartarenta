@@ -1,14 +1,19 @@
 # Housing plan entry UI — spec conformance checklist
 
-This checklist maps **OpenSpec requirements** to the current **housing plan draft flow** (`mobile/lib/screens/housing/housing_plan_screen.dart` and related local persistence). It is about **first-time / local authoring** (“saisie”), not the full sync product.
+This checklist maps **OpenSpec requirements** to the current **housing plan draft flow** (`mobile/lib/screens/housing/housing_plan_screen.dart` and related local persistence). It is about **first-time / local authoring** (“saisie”), and it **references** the sibling change for **sending the proposal to connected participants** and the **response lifecycle** (see below).
 
-**Sources**
+**Sources (this change — `expense-plan-contract-model`)**
 
 - `specs/expense-plan-structure-and-editor/spec.md`
 - `specs/shared-agreement-contract-terms/spec.md`
 - `specs/plan-projection-preview/spec.md`
 - `specs/contract-unanimous-renegotiation/spec.md` (only where it touches editing vs. group law)
 - `specs/plan-contract-proposal-payload/spec.md` (proposal packaging vs. draft editor)
+
+**Sources (sibling change — `housing-plan-proposal-offer-and-responses`)**
+
+- [`specs/housing-plan-proposal-offer-flow/spec.md`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md) — deadline, relay send status, recipient Accept / Negotiate / Refuse, serial gate, broadcast to all, history, fork from invalidated offer; **proposer implicit accept** on send.
+- [`proposal.md`](../housing-plan-proposal-offer-and-responses/proposal.md), [`design.md`](../housing-plan-proposal-offer-and-responses/design.md), [`tasks.md`](../housing-plan-proposal-offer-and-responses/tasks.md) — scope, transport notes, implementation tracking.
 
 **Legend**
 
@@ -17,6 +22,10 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 | **Yes** | Implemented in the housing plan flow in a way that satisfies the requirement for local drafting. |
 | **Partial** | Some behavior exists; gaps vs. the spec text or only documented in code, not in UI. |
 | **No** | Not implemented in this flow (or only scaffolding exists elsewhere). |
+
+### Linked change: proposal send and responses
+
+Items **E6**, **E9**, **W1**, **W2** (and peer-visible **P4** / **P5** once a draft is “in flight”) are **blocked or incomplete** until the sibling OpenSpec change **`housing-plan-proposal-offer-and-responses`** is implemented. Track delivery there; when those flows ship, **re-run this checklist** and update the Status / Notes columns for the affected rows.
 
 ---
 
@@ -29,10 +38,10 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 | E3 | One-off estimate with min/max → **min ≤ max** validated, both stored for projection. | **Partial** | Range mode in line editor; confirm dedicated validation UX for all edge cases if required. |
 | E4 | **Non-blocking encouragement** (checklist, tips, readiness, summary gaps). | **Partial** | Stepper + inline hints/snackbars; no dedicated checklist / readiness score. |
 | E5 | **Readiness hints** when draft lacks key fields (ratios, period, …) without deleting work. | **Partial** | Validations on “Next”; not a standing checklist of gaps. |
-| E6 | **Optional gate** before “Propose to group” with explanation when incomplete. | **No** | No “Propose to group” action in this screen. |
+| E6 | **Optional gate** before “Propose to group” with explanation when incomplete. | **No** | No “Propose to group” action in this screen. **Implement with** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md) (deadline + send to connected roster). |
 | E7 | Ratios stored **per line or per group** consistently. | **Yes** | `PlanRatio` line vs group scope. |
 | E8 | Group-level ratios apply to bundled lines for projection/allocation. | **Yes** | Split UI and projection paths handle groups. |
-| E9 | Draft remains **local** until user explicitly proposes. | **Partial** | Data stays on device; **explicit propose** from this UI is absent (`PlanAgreementProposalService` not wired from app screens). |
+| E9 | Draft remains **local** until user explicitly proposes. | **Partial** | Data stays on device; **explicit propose** from this UI is absent (`PlanAgreementProposalService` not wired from app screens). **Wire send path per** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
 
 ---
 
@@ -46,7 +55,7 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 | A4 | Reject contract when **both** notice and penalty cleared (if neither satisfies floor). | **Yes** | Same step validation. |
 | A5 | Notice-only (or penalty-only per rules) can be valid. | **Yes** | `n > 0 \|\| p > 0` (and per-participant when not “same for all”). |
 | A6 | **Optional flexible clauses** (free text, bounded) part of package. | **No** | `clauses` carried on persist paths; **no dedicated editor** in the housing wizard. |
-| A7 | Contract/plan edits after accept → **pending renegotiation** until unanimous accept. | **Partial** | Local proposal/revision tables and service exist; **housing UI** does not surface renegotiation lifecycle. |
+| A7 | Contract/plan edits after accept → **pending renegotiation** until unanimous accept. | **Partial** | Local proposal/revision tables and service exist; **housing UI** does not surface renegotiation lifecycle. **Offer / response / invalidation UX:** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
 
 ---
 
@@ -68,8 +77,8 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 
 | # | Requirement / scenario (summary) | Status | Notes |
 |---|-----------------------------------|--------|-------|
-| R1 | Edits after active unanimous agreement → **renegotiation draft** until proposed + unanimous. | **Partial** | Domain/service direction; **not exposed** in housing wizard copy or state. |
-| R2 | “Propose changes to agreement” style entry. | **No** | Not in `HousingPlanScreen`. |
+| R1 | Edits after active unanimous agreement → **renegotiation draft** until proposed + unanimous. | **Partial** | Domain/service direction; **not exposed** in housing wizard copy or state. **Fork / resubmit after invalidation:** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
+| R2 | “Propose changes to agreement” style entry. | **No** | Not in `HousingPlanScreen`. **Overlaps offer flow** in [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md) (any participant may submit a new revision). |
 
 ---
 
@@ -77,8 +86,8 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 
 | # | Requirement / scenario (summary) | Status | Notes |
 |---|-----------------------------------|--------|-------|
-| W1 | “**Propose to group**” builds a **self-contained** proposal package. | **No** | No button/workflow from housing UI; `PlanAgreementProposalService` unused from `lib/` screens. |
-| W2 | Peer can **render** summary / projection from payload alone. | **No** | Transport and peer UI out of scope for this checklist item — not done in-app. |
+| W1 | “**Propose to group**” builds a **self-contained** proposal package. | **No** | No button/workflow from housing UI; `PlanAgreementProposalService` unused from `lib/` screens. **Package + send:** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
+| W2 | Peer can **render** summary / projection from payload alone. | **No** | **Recipient preview + inbox:** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
 | W3 | Payload includes **flexible clauses** when present. | **No** | Clauses not authorable in wizard; packaging not invoked from UI. |
 
 ---
@@ -89,9 +98,9 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 2. Align **summary numbers** with spec: either show **period-scoped** projection using `PlanProjection.projectTotalMinor` + documented one-off rule, or label monthly view explicitly as “per month” vs “over agreement period”.  
 3. Surface **one-off projection rule** in UI (one line or link to help).  
 4. Add **optional flexible clauses** field (bounded length) before “finish” or on a contract sub-step.  
-5. Wire **“Propose to group”** (or equivalent) to `PlanAgreementProposalService` + completeness gate per `expense-plan-structure-and-editor`.  
+5. Implement **`housing-plan-proposal-offer-and-responses`** ([`housing-plan-proposal-offer-flow/spec.md`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md)): wire **“Propose to group”** (or equivalent) to `PlanAgreementProposalService`, relay fan-out, recipient UI, then **re-triage** rows **E6**, **E9**, **W1**, **W2** (and **P4** / **P5** if the shipped preview matches the sent package).  
 6. Optional: **readiness checklist** or inline gap list instead of only step-gated snackbars.
 
 ---
 
-_Last reviewed against the spec files in this change and `housing_plan_screen.dart` layout (wizard + summary)._
+_Last reviewed against the spec files in **this** change, `housing_plan_screen.dart` (wizard + summary), and the linked sibling **`housing-plan-proposal-offer-and-responses`**._
