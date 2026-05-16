@@ -392,6 +392,46 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  /// True when `pragma_table_info` lists [columnSqlName] on [tableSqlName].
+  ///
+  /// [Migrator.createTable] uses the **current** table definition. Older
+  /// `user_version` upgrades may still have `addColumn` steps for columns that
+  /// are now part of that definition — skip those to avoid duplicate column
+  /// errors (e.g. `contacts` created at v9 already includes v11+ columns).
+  Future<bool> _sqliteTableHasColumn(
+    String tableSqlName,
+    String columnSqlName,
+  ) async {
+    final rows = await customSelect(
+      "SELECT 1 AS x FROM pragma_table_info('$tableSqlName') "
+      "WHERE name = '$columnSqlName' LIMIT 1",
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  Future<bool> _sqliteTableExists(String tableSqlName) async {
+    final rows = await customSelect(
+      "SELECT 1 AS x FROM sqlite_master "
+      "WHERE type = 'table' AND name = '$tableSqlName' LIMIT 1",
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  Future<void> _migrateAddColumn(
+    Migrator m,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    final tableName = table.actualTableName;
+    if (!await _sqliteTableExists(tableName)) {
+      return;
+    }
+    if (await _sqliteTableHasColumn(tableName, column.name)) {
+      return;
+    }
+    await m.addColumn(table, column);
+  }
+
   @override
   int get schemaVersion => 14;
 
@@ -403,10 +443,10 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           // Forward-only migrations. Always handle ranges.
           if (from < 2) {
-            await m.addColumn(plans, plans.notes);
+            await _migrateAddColumn(m, plans, plans.notes);
           }
           if (from < 3) {
-            await m.addColumn(plans, plans.currency);
+            await _migrateAddColumn(m, plans, plans.currency);
             await m.createTable(planGroups);
             await m.createTable(planLines);
             await m.createTable(planRatios);
@@ -418,14 +458,18 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(proposalResponses);
           }
           if (from < 5) {
-            await m.addColumn(planLines, planLines.recurrenceDayOfMonth);
-            await m.addColumn(planLines, planLines.sortOrder);
-            await m.addColumn(agreements, agreements.withdrawalSameForAll);
-            await m.addColumn(agreements, agreements.withdrawalPerParticipantJson);
+            await _migrateAddColumn(m, planLines, planLines.recurrenceDayOfMonth);
+            await _migrateAddColumn(m, planLines, planLines.sortOrder);
+            await _migrateAddColumn(m, agreements, agreements.withdrawalSameForAll);
+            await _migrateAddColumn(
+              m,
+              agreements,
+              agreements.withdrawalPerParticipantJson,
+            );
           }
           if (from < 6) {
-            await m.addColumn(planLines, planLines.amountUsesRange);
-            await m.addColumn(planLines, planLines.description);
+            await _migrateAddColumn(m, planLines, planLines.amountUsesRange);
+            await _migrateAddColumn(m, planLines, planLines.description);
             await customStatement(
               '''
               UPDATE plan_lines
@@ -449,23 +493,23 @@ class AppDatabase extends _$AppDatabase {
             );
           }
           if (from < 7) {
-            await m.addColumn(planGroups, planGroups.description);
+            await _migrateAddColumn(m, planGroups, planGroups.description);
           }
           if (from < 8) {
-            await m.addColumn(agreements, agreements.agreementRulesJson);
+            await _migrateAddColumn(m, agreements, agreements.agreementRulesJson);
           }
           if (from < 9) {
             await m.createTable(contacts);
             await m.createTable(contactInvitations);
-            await m.addColumn(participants, participants.contactId);
+            await _migrateAddColumn(m, participants, participants.contactId);
             await _mirrorParticipantsIntoContacts();
           }
           if (from < 10) {
             await m.createTable(pendingHandshakes);
           }
           if (from < 11) {
-            await m.addColumn(contacts, contacts.localDisplayLabel);
-            await m.addColumn(contacts, contacts.disconnectedAt);
+            await _migrateAddColumn(m, contacts, contacts.localDisplayLabel);
+            await _migrateAddColumn(m, contacts, contacts.disconnectedAt);
           }
           if (from < 12) {
             // Contacts disconnected before `disconnected_at` existed never got
@@ -524,7 +568,7 @@ class AppDatabase extends _$AppDatabase {
             ''');
           }
           if (from < 14) {
-            await m.addColumn(contacts, contacts.theirLabelForMe);
+            await _migrateAddColumn(m, contacts, contacts.theirLabelForMe);
           }
         },
         beforeOpen: (details) async {

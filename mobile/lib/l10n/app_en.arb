@@ -189,6 +189,27 @@
   "housingInviteRejectBlock": "I reject outright",
   "housingInviteNegotiateMessageLabel": "Message to send with your negotiation request",
   "housingInviteProposalLockedHint": "Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.",
+  "housingInviteInvitationStatusAction": "Invitation status",
+  "housingInviteStatusDialogTitle": "Invitation status",
+  "housingInviteStatusSentAtLabel": "Sent: {when}",
+  "@housingInviteStatusSentAtLabel": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingInviteStatusDeadlineLabel": "Response deadline: {when}",
+  "@housingInviteStatusDeadlineLabel": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingInviteStatusDeadlineNotSet": "Not set",
+  "housingInviteStatusTableSectionTitle": "Invitees",
+  "housingInviteStatusTableInvitee": "Invitee",
+  "housingInviteStatusTableStatus": "Status",
+  "housingInviteStatusNoPending": "No pending invitation for this plan.",
+  "pushNotificationHousingProposalTitle": "Housing proposal",
+  "pushNotificationHousingProposalBody": "Open the app to review the proposal.",
   "housingInviteGenerateCodes": "Generate invitation codes",
   "housingInviteCodesDialogTitle": "Invitation codes",
   "housingInviteCodesDialogBody": "Each code is for one co-participant. Share them however you prefer; registering codes with the relay server will be added later.",

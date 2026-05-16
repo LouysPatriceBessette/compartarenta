@@ -21,16 +21,26 @@ Future<int> housingPlansWithSelfParticipantCount(AppDatabase db) async {
 
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
 /// with a local self row; otherwise opens [HousingPlanScreen] directly.
-class HousingModuleEntryScreen extends StatelessWidget {
+class HousingModuleEntryScreen extends StatefulWidget {
   const HousingModuleEntryScreen({super.key, required this.prefs});
 
   final AppPreferences prefs;
 
   @override
+  State<HousingModuleEntryScreen> createState() =>
+      _HousingModuleEntryScreenState();
+}
+
+class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
+  /// Must be stable across rebuilds — a new [Future] each [build] restarts
+  /// [FutureBuilder] forever (visible as a flickering screen).
+  late final Future<int> _housingWithSelfCountFuture =
+      housingPlansWithSelfParticipantCount(AppDatabase.processScope);
+
+  @override
   Widget build(BuildContext context) {
-    final db = AppDatabase.processScope;
     return FutureBuilder<int>(
-      future: housingPlansWithSelfParticipantCount(db),
+      future: _housingWithSelfCountFuture,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(
@@ -39,9 +49,9 @@ class HousingModuleEntryScreen extends StatelessWidget {
         }
         final n = snap.data ?? 0;
         if (n > 1) {
-          return HousingWorkbenchScreen(prefs: prefs);
+          return HousingWorkbenchScreen(prefs: widget.prefs);
         }
-        return HousingPlanScreen(prefs: prefs);
+        return HousingPlanScreen(prefs: widget.prefs);
       },
     );
   }

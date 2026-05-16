@@ -36,6 +36,7 @@ void main() {
         clauses: '',
         withdrawalSameForAll: 'true',
         withdrawalPerParticipantJson: '{}',
+        agreementRulesJson: '{}',
         version: 1,
         createdAt: DateTime.utc(2026, 1, 1),
       );

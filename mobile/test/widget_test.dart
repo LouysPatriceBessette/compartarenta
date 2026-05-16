@@ -1,25 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter_test/flutter_test.dart';
+// Basic Flutter widget test: app shell reaches [HomeScreen] after prefs load.
 
 import 'package:compartarenta/app.dart';
 import 'package:compartarenta/config/app_config.dart';
+import 'package:compartarenta/screens/home_screen.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('App starts and shows Home', (WidgetTester tester) async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues(const {
+      'onboarding.complete': true,
+    });
+  });
+
+  testWidgets('App starts and shows HomeScreen', (WidgetTester tester) async {
     final config = AppConfig(
       environment: AppEnvironment.dev,
       apiBaseUrl: Uri.parse('https://example.invalid'),
     );
 
     await tester.pumpWidget(CompartarentaApp(config: config));
-    await tester.pumpAndSettle();
+    // Loading uses [CircularProgressIndicator] (non-terminating ticker);
+    // avoid [pumpAndSettle] until prefs have loaded and the router is built.
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (find.byType(HomeScreen).evaluate().isNotEmpty) {
+        break;
+      }
+    }
 
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 }

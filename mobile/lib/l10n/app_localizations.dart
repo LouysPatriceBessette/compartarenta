@@ -1066,6 +1066,72 @@ abstract class AppLocalizations {
   /// **'Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.'**
   String get housingInviteProposalLockedHint;
 
+  /// No description provided for @housingInviteInvitationStatusAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation status'**
+  String get housingInviteInvitationStatusAction;
+
+  /// No description provided for @housingInviteStatusDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation status'**
+  String get housingInviteStatusDialogTitle;
+
+  /// No description provided for @housingInviteStatusSentAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent: {when}'**
+  String housingInviteStatusSentAtLabel(String when);
+
+  /// No description provided for @housingInviteStatusDeadlineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Response deadline: {when}'**
+  String housingInviteStatusDeadlineLabel(String when);
+
+  /// No description provided for @housingInviteStatusDeadlineNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get housingInviteStatusDeadlineNotSet;
+
+  /// No description provided for @housingInviteStatusTableSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitees'**
+  String get housingInviteStatusTableSectionTitle;
+
+  /// No description provided for @housingInviteStatusTableInvitee.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitee'**
+  String get housingInviteStatusTableInvitee;
+
+  /// No description provided for @housingInviteStatusTableStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get housingInviteStatusTableStatus;
+
+  /// No description provided for @housingInviteStatusNoPending.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending invitation for this plan.'**
+  String get housingInviteStatusNoPending;
+
+  /// No description provided for @pushNotificationHousingProposalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal'**
+  String get pushNotificationHousingProposalTitle;
+
+  /// No description provided for @pushNotificationHousingProposalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the app to review the proposal.'**
+  String get pushNotificationHousingProposalBody;
+
   /// No description provided for @housingInviteGenerateCodes.
   ///
   /// In en, this message translates to:

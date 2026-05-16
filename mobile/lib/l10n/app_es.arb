@@ -189,6 +189,27 @@
   "housingInviteRejectBlock": "Rechazo por completo",
   "housingInviteNegotiateMessageLabel": "Mensaje a enviar con la solicitud de negociación",
   "housingInviteProposalLockedHint": "Otro participante está negociando o ha rechazado esta propuesta. Las respuestas quedan en pausa hasta revisar el plan.",
+  "housingInviteInvitationStatusAction": "Estado de las invitaciones",
+  "housingInviteStatusDialogTitle": "Estado de las invitaciones",
+  "housingInviteStatusSentAtLabel": "Enviado: {when}",
+  "@housingInviteStatusSentAtLabel": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingInviteStatusDeadlineLabel": "Plazo de respuesta: {when}",
+  "@housingInviteStatusDeadlineLabel": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingInviteStatusDeadlineNotSet": "Sin definir",
+  "housingInviteStatusTableSectionTitle": "Invitados",
+  "housingInviteStatusTableInvitee": "Invitado",
+  "housingInviteStatusTableStatus": "Estado",
+  "housingInviteStatusNoPending": "No hay invitación pendiente para este plan.",
+  "pushNotificationHousingProposalTitle": "Propuesta de vivienda",
+  "pushNotificationHousingProposalBody": "Abra la aplicación para revisar la propuesta.",
   "housingInviteGenerateCodes": "Generar códigos de invitación",
   "housingInviteCodesDialogTitle": "Códigos de invitación",
   "housingInviteCodesDialogBody": "Cada código es para un co-participante. Compártelos como prefieras; el registro en el servidor relé se añadirá más adelante.",

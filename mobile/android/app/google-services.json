@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "compartarenta-placeholder",
+    "storage_bucket": "compartarenta-placeholder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:aaaaaaaaaaaaaaaa",
+        "android_client_info": {
+          "package_name": "com.compartarenta.compartarenta.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:bbbbbbbbbbbbbbbb",
+        "android_client_info": {
+          "package_name": "com.compartarenta.compartarenta.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:cccccccccccccccc",
+        "android_client_info": {
+          "package_name": "com.compartarenta.compartarenta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

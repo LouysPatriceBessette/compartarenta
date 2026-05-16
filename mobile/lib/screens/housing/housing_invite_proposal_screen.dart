@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
@@ -12,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import 'housing_invitation_status_dialog.dart';
 
 /// Per-participant response to a housing proposal (local UI state until relay exists).
 enum HousingInviteParticipantUiStatus {
@@ -331,64 +330,6 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     );
   }
 
-  Future<void> _showCodesDialog(AppLocalizations l10n, List<Participant> roster) async {
-    final rng = math.Random.secure();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    String code() => List.generate(10, (_) => chars[rng.nextInt(chars.length)]).join();
-
-    final coOnly = roster.where((p) => !p.id.endsWith(':self')).toList();
-    final entries = <(String, String)>[];
-    for (final p in coOnly) {
-      entries.add((p.displayName, code()));
-    }
-
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.housingInviteCodesDialogTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.housingInviteCodesDialogBody),
-              const SizedBox(height: 12),
-              for (final e in entries) ...[
-                Text(e.$1, style: Theme.of(ctx).textTheme.titleSmall),
-                const SizedBox(height: 4),
-                SelectableText(e.$2, style: Theme.of(ctx).textTheme.titleMedium),
-                const SizedBox(height: 12),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.housingPlanCancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final buf = StringBuffer()..writeln(l10n.housingInviteCodesDialogTitle);
-              for (final e in entries) {
-                buf.writeln('${e.$1}: ${e.$2}');
-              }
-              await Clipboard.setData(ClipboardData(text: buf.toString()));
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.housingInviteCodesCopied)),
-                );
-              }
-            },
-            child: Text(l10n.housingInviteCodesCopyAll),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -611,8 +552,13 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                         ),
                         const SizedBox(height: 8),
                         FilledButton(
-                          onPressed: () => _showCodesDialog(l10n, roster),
-                          child: Text(l10n.housingInviteGenerateCodes),
+                          onPressed: () => showHousingInvitationStatusDialog(
+                            context,
+                            db: widget.db,
+                            planId: widget.planId,
+                            prefs: widget.prefs,
+                          ),
+                          child: Text(l10n.housingInviteInvitationStatusAction),
                         ),
                       ] else
                         OutlinedButton(

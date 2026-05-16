@@ -528,6 +528,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.';
 
   @override
+  String get housingInviteInvitationStatusAction => 'Invitation status';
+
+  @override
+  String get housingInviteStatusDialogTitle => 'Invitation status';
+
+  @override
+  String housingInviteStatusSentAtLabel(String when) {
+    return 'Sent: $when';
+  }
+
+  @override
+  String housingInviteStatusDeadlineLabel(String when) {
+    return 'Response deadline: $when';
+  }
+
+  @override
+  String get housingInviteStatusDeadlineNotSet => 'Not set';
+
+  @override
+  String get housingInviteStatusTableSectionTitle => 'Invitees';
+
+  @override
+  String get housingInviteStatusTableInvitee => 'Invitee';
+
+  @override
+  String get housingInviteStatusTableStatus => 'Status';
+
+  @override
+  String get housingInviteStatusNoPending =>
+      'No pending invitation for this plan.';
+
+  @override
+  String get pushNotificationHousingProposalTitle => 'Housing proposal';
+
+  @override
+  String get pushNotificationHousingProposalBody =>
+      'Open the app to review the proposal.';
+
+  @override
   String get housingInviteGenerateCodes => 'Generate invitation codes';
 
   @override

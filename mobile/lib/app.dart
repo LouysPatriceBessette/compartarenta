@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+import 'app_root_navigator.dart';
 import 'config/app_config.dart';
 import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
@@ -177,6 +178,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
   }
 
   return GoRouter(
+    navigatorKey: appRootNavigatorKey,
     refreshListenable: prefs,
     redirect: onboardingRedirect,
     routes: [

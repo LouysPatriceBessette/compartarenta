@@ -532,6 +532,46 @@ class AppLocalizationsEs extends AppLocalizations {
       'Otro participante está negociando o ha rechazado esta propuesta. Las respuestas quedan en pausa hasta revisar el plan.';
 
   @override
+  String get housingInviteInvitationStatusAction =>
+      'Estado de las invitaciones';
+
+  @override
+  String get housingInviteStatusDialogTitle => 'Estado de las invitaciones';
+
+  @override
+  String housingInviteStatusSentAtLabel(String when) {
+    return 'Enviado: $when';
+  }
+
+  @override
+  String housingInviteStatusDeadlineLabel(String when) {
+    return 'Plazo de respuesta: $when';
+  }
+
+  @override
+  String get housingInviteStatusDeadlineNotSet => 'Sin definir';
+
+  @override
+  String get housingInviteStatusTableSectionTitle => 'Invitados';
+
+  @override
+  String get housingInviteStatusTableInvitee => 'Invitado';
+
+  @override
+  String get housingInviteStatusTableStatus => 'Estado';
+
+  @override
+  String get housingInviteStatusNoPending =>
+      'No hay invitación pendiente para este plan.';
+
+  @override
+  String get pushNotificationHousingProposalTitle => 'Propuesta de vivienda';
+
+  @override
+  String get pushNotificationHousingProposalBody =>
+      'Abra la aplicación para revisar la propuesta.';
+
+  @override
   String get housingInviteGenerateCodes => 'Generar códigos de invitación';
 
   @override

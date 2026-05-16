@@ -10,7 +10,7 @@ import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
-import 'housing_invite_proposal_screen.dart';
+import 'housing_invitation_status_dialog.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../housing/proposals/agreement_period_day_overlap.dart';
 import '../../housing/proposals/housing_plan_period_gate.dart';
@@ -102,6 +102,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (code == 'es') return lookupAppLocalizations(const Locale('es'));
     return lookupAppLocalizations(const Locale('en'));
   }
+
+  /// Bumps when the summary should re-query DB (e.g. after creating a proposal revision).
+  int _summaryReloadToken = 0;
 
   /// 0–5 = wizard steps; summary when true.
   bool _showSummary = false;
@@ -1424,15 +1427,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
 
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (ctx) => HousingInviteProposalScreen(
-          db: _db,
-          planId: _planId,
-          prefs: widget.prefs,
-        ),
-      ),
-    );
+    setState(() => _summaryReloadToken++);
   }
 
   Future<void> _onDestroyPlan() async {
@@ -1558,6 +1553,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               db: _db,
               planId: _planId,
               prefs: widget.prefs,
+              reloadToken: _summaryReloadToken,
               avatarIcons: _avatarIcons,
               shareMinorOverrides: _shareAmountMinorOverride,
               onEditPlan: () => setState(() {
@@ -3942,11 +3938,30 @@ class _HousingContactParticipantCard extends StatelessWidget {
   }
 }
 
-class _SummaryView extends StatelessWidget {
+class _SummarySnapshot {
+  const _SummarySnapshot({
+    required this.participants,
+    required this.lines,
+    required this.agr,
+    required this.ratios,
+    required this.planGroups,
+    required this.proposalPkg,
+  });
+
+  final List<Participant> participants;
+  final List<PlanLine> lines;
+  final Agreement? agr;
+  final List<PlanRatio> ratios;
+  final List<PlanGroup> planGroups;
+  final ProposalPackage? proposalPkg;
+}
+
+class _SummaryView extends StatefulWidget {
   const _SummaryView({
     required this.db,
     required this.planId,
     required this.prefs,
+    required this.reloadToken,
     required this.avatarIcons,
     required this.shareMinorOverrides,
     required this.onEditPlan,
@@ -3957,6 +3972,7 @@ class _SummaryView extends StatelessWidget {
   final AppDatabase db;
   final String planId;
   final AppPreferences prefs;
+  final int reloadToken;
   final List<IconData> avatarIcons;
 
   /// Keys `lineId:participantId`; same map as split-step manual amount pins.
@@ -3965,29 +3981,66 @@ class _SummaryView extends StatelessWidget {
   final VoidCallback onInvite;
   final VoidCallback onDestroy;
 
+  @override
+  State<_SummaryView> createState() => _SummaryViewState();
+}
+
+class _SummaryViewState extends State<_SummaryView> {
+  Future<_SummarySnapshot>? _snapshotFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _snapshotFuture = _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SummaryView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reloadToken != widget.reloadToken) {
+      _snapshotFuture = _load();
+    }
+  }
+
+  Future<_SummarySnapshot> _load() async {
+    final r = await Future.wait([
+      widget.db.listParticipants(),
+      widget.db.listPlanLines(widget.planId),
+      widget.db.getAgreementForPlan(widget.planId),
+      widget.db.listPlanRatios(widget.planId),
+      widget.db.listPlanGroups(widget.planId),
+      (widget.db.select(widget.db.proposalPackages)
+            ..where((t) => t.planId.equals(widget.planId)))
+          .getSingleOrNull(),
+    ]);
+    return _SummarySnapshot(
+      participants: r[0] as List<Participant>,
+      lines: r[1] as List<PlanLine>,
+      agr: r[2] as Agreement?,
+      ratios: r[3] as List<PlanRatio>,
+      planGroups: r[4] as List<PlanGroup>,
+      proposalPkg: r[5] as ProposalPackage?,
+    );
+  }
+
   IconData _iconForAvatar(String avatarId) {
     if (!avatarId.startsWith('mdi:')) return MdiIcons.account;
     final idx = int.tryParse(avatarId.split(':').last);
-    if (idx == null || idx < 0 || idx >= avatarIcons.length) {
+    if (idx == null || idx < 0 || idx >= widget.avatarIcons.length) {
       return MdiIcons.account;
     }
-    return avatarIcons[idx];
+    return widget.avatarIcons[idx];
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Future.wait([
-        db.listParticipants(),
-        db.listPlanLines(planId),
-        db.getAgreementForPlan(planId),
-        db.listPlanRatios(planId),
-        db.listPlanGroups(planId),
-      ]),
-      builder: (context, AsyncSnapshot<List<dynamic>> snap) {
+    return FutureBuilder<_SummarySnapshot>(
+      future: _snapshotFuture,
+      builder: (context, AsyncSnapshot<_SummarySnapshot> snap) {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
+        final data = snap.data!;
         final l10n = AppLocalizations.of(context);
         int rosterOrder(String id) {
           if (id.endsWith(':self')) return -1;
@@ -3995,17 +4048,19 @@ class _SummaryView extends StatelessWidget {
           return int.tryParse(tail) ?? 999;
         }
 
-        final roster =
-            (snap.data![0] as List<Participant>)
-                .where(
-                  (p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'),
-                )
-                .toList()
-              ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
-        final lines = snap.data![1] as List<PlanLine>;
-        final agr = snap.data![2] as Agreement?;
-        final ratios = snap.data![3] as List<PlanRatio>;
-        final planGroups = snap.data![4] as List<PlanGroup>;
+        final roster = data.participants
+            .where(
+              (p) =>
+                  p.id == '${widget.planId}:self' ||
+                  p.id.startsWith('${widget.planId}:p'),
+            )
+            .toList()
+          ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
+        final lines = data.lines;
+        final agr = data.agr;
+        final ratios = data.ratios;
+        final planGroups = data.planGroups;
+        final hasPending = data.proposalPkg?.pendingRevisionId != null;
         if (agr == null) {
           return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
         }
@@ -4023,7 +4078,7 @@ class _SummaryView extends StatelessWidget {
 
         bool lineRowHasPinnedShare(PlanLine line) {
           for (final id in rosterIds) {
-            if (shareMinorOverrides.containsKey('${line.id}:$id')) {
+            if (widget.shareMinorOverrides.containsKey('${line.id}:$id')) {
               return true;
             }
           }
@@ -4032,7 +4087,7 @@ class _SummaryView extends StatelessWidget {
 
         bool groupRowHasPinnedShare(PlanGroup g) {
           for (final id in rosterIds) {
-            if (shareMinorOverrides.containsKey('g:${g.id}:$id')) {
+            if (widget.shareMinorOverrides.containsKey('g:${g.id}:$id')) {
               return true;
             }
           }
@@ -4051,7 +4106,7 @@ class _SummaryView extends StatelessWidget {
               (a, l) => a + PlanProjection.unitMinor(l),
             );
             final gKey = 'g:${g.id}:$participantId';
-            final o = shareMinorOverrides[gKey];
+            final o = widget.shareMinorOverrides[gKey];
             if (o != null) {
               participantMonthlyMinor += o;
               continue;
@@ -4079,7 +4134,7 @@ class _SummaryView extends StatelessWidget {
             final gid = line.groupId;
             if (gid != null && knownGroupIds.contains(gid)) continue;
             final key = '${line.id}:$participantId';
-            final o = shareMinorOverrides[key];
+            final o = widget.shareMinorOverrides[key];
             if (o != null) {
               participantMonthlyMinor += o;
               continue;
@@ -4119,7 +4174,7 @@ class _SummaryView extends StatelessWidget {
                   final p = roster[i];
                   final participantMonthlyMinor = participantShareMinor(p.id);
                   final displayCurrency = displayCurrencyCodeForPlan(
-                    prefs,
+                    widget.prefs,
                     lines,
                   );
                   return Card(
@@ -4196,17 +4251,29 @@ class _SummaryView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   FilledButton.tonal(
-                    onPressed: onEditPlan,
+                    onPressed: widget.onEditPlan,
                     child: Text(l10n.housingPlanSummaryEditPlan),
                   ),
                   const SizedBox(height: 8),
                   FilledButton(
-                    onPressed: onInvite,
+                    onPressed: widget.onInvite,
                     child: Text(l10n.housingPlanSummaryInvite),
                   ),
+                  if (hasPending) ...[
+                    const SizedBox(height: 8),
+                    FilledButton.tonal(
+                      onPressed: () => showHousingInvitationStatusDialog(
+                        context,
+                        db: widget.db,
+                        planId: widget.planId,
+                        prefs: widget.prefs,
+                      ),
+                      child: Text(l10n.housingInviteInvitationStatusAction),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   OutlinedButton(
-                    onPressed: onDestroy,
+                    onPressed: widget.onDestroy,
                     child: Text(l10n.housingPlanSummaryDestroy),
                   ),
                 ],

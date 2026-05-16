@@ -9,18 +9,25 @@ import 'config/app_config.dart';
 import 'contacts/contact_invitations_repository.dart';
 import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
+import 'notifications/push_notification_service.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'relay/identity_keystore.dart';
 import 'relay/relay_client.dart';
 
 Future<void> bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   final config = AppConfig.fromDartDefines();
   final sentryDsn = const String.fromEnvironment('SENTRY_DSN', defaultValue: '');
 
   final appDb = AppDatabase();
   AppDatabase.bindProcessScope(appDb);
+
+  unawaited(
+    PushNotificationService.initialize().catchError(
+      (Object e, StackTrace st) {
+        debugPrint('PushNotificationService.initialize failed: $e\n$st');
+      },
+    ),
+  );
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);

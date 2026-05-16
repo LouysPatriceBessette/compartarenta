@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:compartarenta/contacts/contact_invitations_repository.dart';
@@ -10,7 +11,7 @@ import 'package:compartarenta/relay/identity_keystore.dart';
 import 'package:compartarenta/relay/relay_client.dart';
 import 'package:compartarenta/relay/routing.dart';
 import 'package:compartarenta/relay/testing/fake_relay_client.dart';
-import 'package:drift/drift.dart' show QueryExecutor;
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -21,23 +22,34 @@ class _DbForTesting extends AppDatabase {
 class _Side {
   _Side({
     required this.db,
+    required this.dbFile,
     required this.identity,
     required this.orchestrator,
     required this.contacts,
   });
 
   final AppDatabase db;
+  final File dbFile;
   final IdentityKeystore identity;
   final HandshakeOrchestrator orchestrator;
   final ContactsRepository contacts;
 }
+
+int _relayDbFileSeq = 0;
 
 Future<_Side> _spawnSide({
   required RelayClient relay,
   required Uint8List identitySeed,
   Duration pollInterval = const Duration(seconds: 60),
 }) async {
-  final db = _DbForTesting(NativeDatabase.memory());
+  final id = _relayDbFileSeq++;
+  final dbFile = File(
+    '${Directory.systemTemp.path}/relay_handshake_test_$id.sqlite',
+  );
+  if (dbFile.existsSync()) {
+    dbFile.deleteSync();
+  }
+  final db = _DbForTesting(NativeDatabase(dbFile));
   final identity = InMemoryIdentityKeystore(seed: identitySeed);
   final contacts = ContactsRepository(db);
   final invitations = ContactInvitationsRepository(db);
@@ -51,6 +63,7 @@ Future<_Side> _spawnSide({
   );
   return _Side(
     db: db,
+    dbFile: dbFile,
     identity: identity,
     orchestrator: orchestrator,
     contacts: contacts,
@@ -58,6 +71,14 @@ Future<_Side> _spawnSide({
 }
 
 void main() {
+  setUpAll(() {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  });
+
+  tearDownAll(() {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = false;
+  });
+
   late FakeRelayClient relay;
   late _Side inviter;
   late _Side invitee;
@@ -79,6 +100,12 @@ void main() {
     invitee.orchestrator.stopPolling();
     await inviter.db.close();
     await invitee.db.close();
+    try {
+      if (inviter.dbFile.existsSync()) inviter.dbFile.deleteSync();
+    } catch (_) {}
+    try {
+      if (invitee.dbFile.existsSync()) invitee.dbFile.deleteSync();
+    } catch (_) {}
   });
 
   test('full happy-path handshake promotes both stubs to connected', () async {
