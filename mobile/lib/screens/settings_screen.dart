@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:go_router/go_router.dart';
 
 import '../config/app_config.dart';
-import '../data/supported_currencies.dart';
 import '../db/db_reset.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import '../relay/identity_keystore.dart';
-import '../widgets/async_state.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.config, required this.prefs});
@@ -24,10 +21,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
-
-  static final Uri _privacyPolicyUrl =
-      Uri.parse('https://example.invalid/privacy');
+  static final Uri _privacyPolicyUrl = Uri.parse(
+    'https://example.invalid/privacy',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +40,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: widget.prefs.languageCode,
               items: [
                 DropdownMenuItem(value: null, child: Text(l10n.languageSystem)),
-                DropdownMenuItem(value: 'en', child: Text(l10n.languageEnglish)),
+                DropdownMenuItem(
+                  value: 'en',
+                  child: Text(l10n.languageEnglish),
+                ),
                 DropdownMenuItem(value: 'fr', child: Text(l10n.languageFrench)),
-                DropdownMenuItem(value: 'es', child: Text(l10n.languageSpanish)),
+                DropdownMenuItem(
+                  value: 'es',
+                  child: Text(l10n.languageSpanish),
+                ),
               ],
               onChanged: (value) async {
                 await widget.prefs.setLanguageCode(value);
@@ -64,73 +66,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => context.push('/settings/profile'),
           ),
           ListTile(
-            title: Text(l10n.settingsCurrencyTitle),
-            subtitle: Text(
-              widget.prefs.currency.isEmpty
-                  ? l10n.commonNotSet
-                  : (supportedCurrencyByCode(widget.prefs.currency)?.displayLine ??
-                      widget.prefs.currency),
-            ),
+            title: Text(l10n.settingsNotificationsTitle),
+            subtitle: Text(l10n.settingsNotificationsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/notifications'),
           ),
           ListTile(
-            title: Text(l10n.settingsDateFormatTitle),
-            subtitle: Text(
-              widget.prefs.dateFormat.isEmpty
-                  ? l10n.commonNotSet
-                  : widget.prefs.dateFormat,
-            ),
-          ),
-          ListTile(
-            title: Text(l10n.settingsDistanceUnitTitle),
-            subtitle: Text(widget.prefs.distanceUnit?.name ?? l10n.commonNotSet),
+            title: Text(l10n.settingsUnitsTitle),
+            subtitle: Text(l10n.settingsUnitsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/units'),
           ),
           const Divider(),
           ListTile(
-            title: Text(l10n.settingsEnvironmentTitle),
-            subtitle: Text(widget.config.environment.name),
-          ),
-          ListTile(
-            title: Text(l10n.settingsApiBaseUrlTitle),
-            subtitle: Text(widget.config.apiBaseUrl.toString()),
-          ),
-          FutureBuilder(
-            future: _packageInfo,
-            builder: (context, snapshot) {
-              final info = snapshot.data;
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: LoadingView(),
-                );
-              }
-
-              if (snapshot.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ErrorView(
-                    title: l10n.errorSomethingWentWrongTitle,
-                    body: l10n.errorSomethingWentWrongBody,
-                    onRetry: () => setState(() {}),
-                  ),
-                );
-              }
-
-              final subtitle = info == null
-                  ? 'Unknown'
-                  : '${info.version} (${info.buildNumber})';
-
-              return ListTile(
-                title: Text(l10n.settingsAppVersionTitle),
-                subtitle: Text(subtitle),
-              );
-            },
+            title: Text(l10n.settingsAboutTitle),
+            subtitle: Text(l10n.settingsAboutSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/about'),
           ),
           const Divider(),
           ListTile(
             title: Text(l10n.settingsPrivacyPolicyTitle),
             subtitle: Text(_privacyPolicyUrl.toString()),
             onTap: () async {
-              await launchUrl(_privacyPolicyUrl, mode: LaunchMode.externalApplication);
+              await launchUrl(
+                _privacyPolicyUrl,
+                mode: LaunchMode.externalApplication,
+              );
             },
           ),
           if (showDevTools) ...[
@@ -141,7 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               title: const Text('Reset onboarding & preferences'),
-              subtitle: const Text('Clears onboarding progress and saved preferences.'),
+              subtitle: const Text(
+                'Clears onboarding progress and saved preferences.',
+              ),
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
@@ -168,7 +132,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 await widget.prefs.resetOnboardingAndPreferences();
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Onboarding and preferences reset.')),
+                  const SnackBar(
+                    content: Text('Onboarding and preferences reset.'),
+                  ),
                 );
               },
             ),
@@ -212,8 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final orch = HandshakeOrchestrator.maybeInstance;
                 if (orch != null) {
                   await orch.releaseLocalDatabaseConnectionForDevReset();
-                  HandshakeOrchestrator
-                      .clearInstalledInstanceAfterDevDatabaseReset();
+                  HandshakeOrchestrator.clearInstalledInstanceAfterDevDatabaseReset();
                 }
                 if (widget.config.apiBaseUrl.host != 'example.invalid') {
                   await IdentityKeystore.secureStorage().deleteForTesting();
@@ -236,4 +201,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

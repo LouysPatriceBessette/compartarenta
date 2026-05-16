@@ -11,7 +11,10 @@ import 'db/repositories/contacts_repository.dart';
 import 'prefs/app_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
+import 'screens/settings/about_settings_screen.dart';
+import 'screens/settings/notification_settings_screen.dart';
 import 'screens/settings/profile_identity_settings_screen.dart';
+import 'screens/settings/units_settings_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_module_entry_screen.dart';
@@ -133,7 +136,8 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
             final locale = override == null ? null : Locale(override);
 
             return MaterialApp.router(
-              onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+              onGenerateTitle: (context) =>
+                  AppLocalizations.of(context).appTitle,
               theme: buildAppTheme(),
               locale: locale,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -182,18 +186,28 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
     refreshListenable: prefs,
     redirect: onboardingRedirect,
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => SettingsScreen(config: config, prefs: prefs),
+        builder: (context, state) =>
+            SettingsScreen(config: config, prefs: prefs),
       ),
       GoRoute(
         path: '/settings/profile',
         builder: (context, state) =>
             ProfileIdentitySettingsScreen(prefs: prefs),
+      ),
+      GoRoute(
+        path: '/settings/notifications',
+        builder: (context, state) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/units',
+        builder: (context, state) => UnitsSettingsScreen(prefs: prefs),
+      ),
+      GoRoute(
+        path: '/settings/about',
+        builder: (context, state) => AboutSettingsScreen(config: config),
       ),
       GoRoute(
         path: '/housing',
@@ -257,4 +271,3 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
     ],
   );
 }
-

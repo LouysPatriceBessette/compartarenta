@@ -108,6 +108,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsApiBaseUrlTitle => 'API base URL';
 
   @override
+  String get settingsNotificationsTitle => 'Notifications';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Permissions, categories, and sound';
+
+  @override
+  String get settingsUnitsTitle => 'Units';
+
+  @override
+  String get settingsUnitsSubtitle => 'Currency, date format, and distance';
+
+  @override
+  String get settingsAboutTitle => 'About';
+
+  @override
+  String get settingsAboutSubtitle => 'Environment, API URL, and app version';
+
+  @override
+  String get settingsNotificationsGeneralSection => 'General permission';
+
+  @override
+  String get settingsNotificationsSystemPermissionTitle => 'System permission';
+
+  @override
+  String get settingsNotificationsSystemPermissionBody =>
+      'The app will ask after a relevant action, such as inviting someone.';
+
+  @override
+  String get settingsNotificationsGeneralSwitchTitle =>
+      'Allow app notifications';
+
+  @override
+  String get settingsNotificationsGeneralSwitchBody =>
+      'Master switch for notification categories in this app.';
+
+  @override
+  String get settingsNotificationsContactsSection => 'Contacts';
+
+  @override
+  String get settingsNotificationsContactAddRequest => 'Add requests';
+
+  @override
+  String get settingsNotificationsContactDisconnection =>
+      'Disconnection notices';
+
+  @override
+  String get settingsNotificationsContactInvitationExpiration =>
+      'Unconsumed invitation expiration';
+
+  @override
+  String get settingsNotificationsHousingSection => 'Housing';
+
+  @override
+  String get settingsNotificationsHousingPlanSubmission =>
+      'Plan submission received';
+
+  @override
+  String get settingsNotificationsHousingDecisionChange =>
+      'Participant decision status changes';
+
+  @override
+  String get settingsNotificationsHousingOfferExpiration =>
+      'Plan offer expiration without unanimous acceptance';
+
+  @override
+  String get settingsNotificationsSoundSection => 'Sound';
+
+  @override
+  String get settingsNotificationsSoundSwitchTitle => 'Play a sound';
+
+  @override
+  String get settingsNotificationsSoundSwitchBody =>
+      'Show notifications silently when this is off.';
+
+  @override
+  String get settingsNotificationsSoundPickerTitle => 'Notification sound';
+
+  @override
+  String get settingsNotificationsSoundPickerBody =>
+      'Device sound selection will be added later where platforms allow it safely.';
+
+  @override
   String get onboardingTitle => 'Setup';
 
   @override

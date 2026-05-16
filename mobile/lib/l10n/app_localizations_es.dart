@@ -108,6 +108,90 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsApiBaseUrlTitle => 'URL base de la API';
 
   @override
+  String get settingsNotificationsTitle => 'Notificaciones';
+
+  @override
+  String get settingsNotificationsSubtitle => 'Permisos, categorías y sonido';
+
+  @override
+  String get settingsUnitsTitle => 'Unidades';
+
+  @override
+  String get settingsUnitsSubtitle => 'Moneda, formato de fecha y distancia';
+
+  @override
+  String get settingsAboutTitle => 'Acerca de';
+
+  @override
+  String get settingsAboutSubtitle => 'Entorno, URL de API y versión';
+
+  @override
+  String get settingsNotificationsGeneralSection => 'Permiso general';
+
+  @override
+  String get settingsNotificationsSystemPermissionTitle =>
+      'Permiso del sistema';
+
+  @override
+  String get settingsNotificationsSystemPermissionBody =>
+      'La app lo pedirá después de una acción relevante, como invitar a alguien.';
+
+  @override
+  String get settingsNotificationsGeneralSwitchTitle =>
+      'Permitir notificaciones de la app';
+
+  @override
+  String get settingsNotificationsGeneralSwitchBody =>
+      'Interruptor principal para las categorías de notificación de esta app.';
+
+  @override
+  String get settingsNotificationsContactsSection => 'Contactos';
+
+  @override
+  String get settingsNotificationsContactAddRequest =>
+      'Solicitudes de incorporación';
+
+  @override
+  String get settingsNotificationsContactDisconnection =>
+      'Avisos de desconexión';
+
+  @override
+  String get settingsNotificationsContactInvitationExpiration =>
+      'Caducidad de una invitación sin usar';
+
+  @override
+  String get settingsNotificationsHousingSection => 'Vivienda';
+
+  @override
+  String get settingsNotificationsHousingPlanSubmission =>
+      'Propuesta de plan recibida';
+
+  @override
+  String get settingsNotificationsHousingDecisionChange =>
+      'Cambios de estado de decisión de un participante';
+
+  @override
+  String get settingsNotificationsHousingOfferExpiration =>
+      'Caducidad de una oferta de plan sin aceptación unánime';
+
+  @override
+  String get settingsNotificationsSoundSection => 'Sonido';
+
+  @override
+  String get settingsNotificationsSoundSwitchTitle => 'Reproducir un sonido';
+
+  @override
+  String get settingsNotificationsSoundSwitchBody =>
+      'Las notificaciones se mostrarán en silencio cuando esté desactivado.';
+
+  @override
+  String get settingsNotificationsSoundPickerTitle => 'Sonido de notificación';
+
+  @override
+  String get settingsNotificationsSoundPickerBody =>
+      'La selección de sonidos del dispositivo se añadirá más adelante donde las plataformas lo permitan de forma segura.';
+
+  @override
   String get onboardingTitle => 'Configuración';
 
   @override

@@ -298,6 +298,150 @@ abstract class AppLocalizations {
   /// **'API base URL'**
   String get settingsApiBaseUrlTitle;
 
+  /// No description provided for @settingsNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationsTitle;
+
+  /// No description provided for @settingsNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions, categories, and sound'**
+  String get settingsNotificationsSubtitle;
+
+  /// No description provided for @settingsUnitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get settingsUnitsTitle;
+
+  /// No description provided for @settingsUnitsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency, date format, and distance'**
+  String get settingsUnitsSubtitle;
+
+  /// No description provided for @settingsAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAboutTitle;
+
+  /// No description provided for @settingsAboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Environment, API URL, and app version'**
+  String get settingsAboutSubtitle;
+
+  /// No description provided for @settingsNotificationsGeneralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'General permission'**
+  String get settingsNotificationsGeneralSection;
+
+  /// No description provided for @settingsNotificationsSystemPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System permission'**
+  String get settingsNotificationsSystemPermissionTitle;
+
+  /// No description provided for @settingsNotificationsSystemPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app will ask after a relevant action, such as inviting someone.'**
+  String get settingsNotificationsSystemPermissionBody;
+
+  /// No description provided for @settingsNotificationsGeneralSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow app notifications'**
+  String get settingsNotificationsGeneralSwitchTitle;
+
+  /// No description provided for @settingsNotificationsGeneralSwitchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Master switch for notification categories in this app.'**
+  String get settingsNotificationsGeneralSwitchBody;
+
+  /// No description provided for @settingsNotificationsContactsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get settingsNotificationsContactsSection;
+
+  /// No description provided for @settingsNotificationsContactAddRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Add requests'**
+  String get settingsNotificationsContactAddRequest;
+
+  /// No description provided for @settingsNotificationsContactDisconnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnection notices'**
+  String get settingsNotificationsContactDisconnection;
+
+  /// No description provided for @settingsNotificationsContactInvitationExpiration.
+  ///
+  /// In en, this message translates to:
+  /// **'Unconsumed invitation expiration'**
+  String get settingsNotificationsContactInvitationExpiration;
+
+  /// No description provided for @settingsNotificationsHousingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing'**
+  String get settingsNotificationsHousingSection;
+
+  /// No description provided for @settingsNotificationsHousingPlanSubmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan submission received'**
+  String get settingsNotificationsHousingPlanSubmission;
+
+  /// No description provided for @settingsNotificationsHousingDecisionChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant decision status changes'**
+  String get settingsNotificationsHousingDecisionChange;
+
+  /// No description provided for @settingsNotificationsHousingOfferExpiration.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan offer expiration without unanimous acceptance'**
+  String get settingsNotificationsHousingOfferExpiration;
+
+  /// No description provided for @settingsNotificationsSoundSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsNotificationsSoundSection;
+
+  /// No description provided for @settingsNotificationsSoundSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound'**
+  String get settingsNotificationsSoundSwitchTitle;
+
+  /// No description provided for @settingsNotificationsSoundSwitchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Show notifications silently when this is off.'**
+  String get settingsNotificationsSoundSwitchBody;
+
+  /// No description provided for @settingsNotificationsSoundPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification sound'**
+  String get settingsNotificationsSoundPickerTitle;
+
+  /// No description provided for @settingsNotificationsSoundPickerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Device sound selection will be added later where platforms allow it safely.'**
+  String get settingsNotificationsSoundPickerBody;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In en, this message translates to:
