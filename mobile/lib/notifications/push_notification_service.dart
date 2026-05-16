@@ -65,9 +65,11 @@ class PushNotificationService {
     _started = true;
 
     try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
     } catch (e, st) {
       debugPrint(
         'PushNotificationService: Firebase.initializeApp failed: '

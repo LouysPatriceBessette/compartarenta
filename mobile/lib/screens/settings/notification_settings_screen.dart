@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
+import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
@@ -26,7 +27,9 @@ class _NotificationSettingsScreenState
   @override
   void initState() {
     super.initState();
-    _status = widget.permissionGate.status();
+    _status = widget.prefs.notificationsEnabled
+        ? _verifyEnabledNotificationsOnLoad()
+        : Future.value(NotificationSystemPermissionStatus.unknown);
   }
 
   Future<void> _refreshStatus() async {
@@ -35,10 +38,55 @@ class _NotificationSettingsScreenState
     });
   }
 
+  Future<NotificationSystemPermissionStatus>
+  _verifyEnabledNotificationsOnLoad() async {
+    final status = await widget.permissionGate.status();
+    if (!_systemAllowsNotifications(status) &&
+        widget.prefs.notificationsEnabled) {
+      await widget.prefs.setNotificationsEnabled(false);
+      if (mounted) setState(() {});
+    }
+    return status;
+  }
+
+  bool _systemAllowsNotifications(NotificationSystemPermissionStatus status) {
+    return status == NotificationSystemPermissionStatus.granted ||
+        status == NotificationSystemPermissionStatus.provisional;
+  }
+
   Future<void> _requestPermission() async {
-    await widget.permissionGate.ensureForUserAction(prefs: widget.prefs);
+    final status = await widget.permissionGate.requestSystemPermission();
+    if (_systemAllowsNotifications(status)) {
+      await PushNotificationService.initialize();
+    }
     if (!mounted) return;
     await _refreshStatus();
+  }
+
+  Future<void> _setNotificationsEnabled(bool value) async {
+    final l10n = AppLocalizations.of(context);
+    if (!value) {
+      await widget.prefs.setNotificationsEnabled(false);
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final status = await widget.permissionGate.requestSystemPermission();
+    if (_systemAllowsNotifications(status)) {
+      await widget.prefs.setNotificationsEnabled(true);
+      await PushNotificationService.initialize();
+    } else {
+      await widget.prefs.setNotificationsEnabled(false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.settingsNotificationsEnableBlocked)),
+        );
+      }
+    }
+
+    if (!mounted) return;
+    await _refreshStatus();
+    setState(() {});
   }
 
   @override
@@ -83,10 +131,7 @@ class _NotificationSettingsScreenState
             title: Text(l10n.settingsNotificationsGeneralSwitchTitle),
             subtitle: Text(l10n.settingsNotificationsGeneralSwitchBody),
             value: notificationsEnabled,
-            onChanged: (value) async {
-              await widget.prefs.setNotificationsEnabled(value);
-              if (mounted) setState(() {});
-            },
+            onChanged: _setNotificationsEnabled,
           ),
           const Divider(),
           _SectionHeader(title: l10n.settingsNotificationsContactsSection),

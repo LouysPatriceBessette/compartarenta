@@ -37,6 +37,33 @@ The system SHALL provide a Settings page where the user can inspect and manage n
 - **WHEN** the user toggles a notification category in Settings
 - **THEN** the system stores the app-level preference for that category
 
+#### Scenario: Fresh install starts with app notifications off
+- **WHEN** the app is installed or preferences are reset
+- **THEN** the app-level master notification switch defaults to off
+- **AND** category preferences may remain preselected but disabled until the master switch is enabled
+
+#### Scenario: User turns app notifications on
+- **WHEN** the user turns the app-level master notification switch on
+- **AND** system notification permission is not granted
+- **THEN** the system requests notification permission
+- **AND** the app-level switch remains on only if system permission becomes granted or provisionally granted
+
+#### Scenario: User turns app notifications off
+- **WHEN** the user turns the app-level master notification switch off
+- **THEN** the system disables the app-level notification preference
+- **AND** the system does not attempt to revoke browser, Android, or iOS notification permission
+
+#### Scenario: User revoked system permission outside the app
+- **WHEN** the user opens notification settings
+- **AND** the app-level master notification switch is on
+- **AND** system notification permission is no longer granted or provisionally granted
+- **THEN** the system updates the app-level master notification switch to off
+
+#### Scenario: Notification settings opens while app notifications are off
+- **WHEN** the user opens notification settings
+- **AND** the app-level master notification switch is off
+- **THEN** the system does not query system notification permission solely for stale-state reconciliation
+
 ### Requirement: Notification Categories
 The system SHALL model notification categories for peer-triggered Contacts and Housing events.
 
@@ -77,3 +104,25 @@ The system SHALL generally associate notifications with peer-triggered events an
 #### Scenario: Peer event is received
 - **WHEN** the app receives a notification-relevant event triggered by a peer
 - **THEN** the system can surface a notification according to system permission and app-level preferences
+
+### Requirement: Developer Notification Diagnostics
+The system SHALL provide a developer-only action to send a test notification so developers can verify the effective notification permission path.
+
+#### Scenario: Developer sends a test notification
+- **WHEN** a developer uses the Settings developer tool to send a test notification
+- **AND** app notifications are enabled
+- **AND** system notification permission is granted
+- **THEN** the system sends a notification with title `TEST` and body `TEST`
+
+#### Scenario: App notifications block the test notification
+- **WHEN** a developer sends a test notification
+- **AND** app notifications are disabled
+- **THEN** the system does not send a notification
+- **AND** the system reports that app notifications are disabled
+
+#### Scenario: System permission blocks the test notification
+- **WHEN** a developer sends a test notification
+- **AND** app notifications are enabled
+- **AND** system notification permission is not granted
+- **THEN** the system does not send a notification
+- **AND** the system reports that system notification permission is not granted

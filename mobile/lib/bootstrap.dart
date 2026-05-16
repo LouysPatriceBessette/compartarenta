@@ -9,6 +9,7 @@ import 'config/app_config.dart';
 import 'contacts/contact_invitations_repository.dart';
 import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
+import 'notifications/notification_permission_gate.dart';
 import 'notifications/push_notification_service.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'relay/identity_keystore.dart';
@@ -16,18 +17,15 @@ import 'relay/relay_client.dart';
 
 Future<void> bootstrap() async {
   final config = AppConfig.fromDartDefines();
-  final sentryDsn = const String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+  final sentryDsn = const String.fromEnvironment(
+    'SENTRY_DSN',
+    defaultValue: '',
+  );
 
   final appDb = AppDatabase();
   AppDatabase.bindProcessScope(appDb);
 
-  unawaited(
-    PushNotificationService.initialize().catchError(
-      (Object e, StackTrace st) {
-        debugPrint('PushNotificationService.initialize failed: $e\n$st');
-      },
-    ),
-  );
+  unawaited(_initializePushIfAlreadyAuthorized());
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -61,18 +59,20 @@ Future<void> bootstrap() async {
       );
       HandshakeOrchestrator.install(orchestrator);
       unawaited(
-        orchestrator.processAllPendingHandshakes().catchError(
-          (Object error, StackTrace stack) {
-            debugPrint('Initial handshake polling failed: $error\n$stack');
-          },
-        ),
+        orchestrator.processAllPendingHandshakes().catchError((
+          Object error,
+          StackTrace stack,
+        ) {
+          debugPrint('Initial handshake polling failed: $error\n$stack');
+        }),
       );
       unawaited(
-        orchestrator.pollSteadyStateInboxes().catchError(
-          (Object error, StackTrace stack) {
-            debugPrint('Initial steady inbox poll failed: $error\n$stack');
-          },
-        ),
+        orchestrator.pollSteadyStateInboxes().catchError((
+          Object error,
+          StackTrace stack,
+        ) {
+          debugPrint('Initial steady inbox poll failed: $error\n$stack');
+        }),
       );
       orchestrator.startPolling();
     } catch (error, stack) {
@@ -80,24 +80,35 @@ Future<void> bootstrap() async {
     }
   }
 
-  await runZonedGuarded(() async {
-    if (sentryDsn.isEmpty) {
-      runApp(CompartarentaApp(config: config));
-      return;
-    }
+  await runZonedGuarded(
+    () async {
+      if (sentryDsn.isEmpty) {
+        runApp(CompartarentaApp(config: config));
+        return;
+      }
 
-    await SentryFlutter.init(
-      (options) {
+      await SentryFlutter.init((options) {
         options.dsn = sentryDsn;
         options.environment = config.environment.name;
         options.tracesSampleRate = kDebugMode ? 1.0 : 0.1;
-      },
-      appRunner: () => runApp(CompartarentaApp(config: config)),
-    );
-  }, (error, stack) async {
-    if (sentryDsn.isNotEmpty) {
-      await Sentry.captureException(error, stackTrace: stack);
-    }
-  });
+      }, appRunner: () => runApp(CompartarentaApp(config: config)));
+    },
+    (error, stack) async {
+      if (sentryDsn.isNotEmpty) {
+        await Sentry.captureException(error, stackTrace: stack);
+      }
+    },
+  );
 }
 
+Future<void> _initializePushIfAlreadyAuthorized() async {
+  try {
+    final status = await NotificationPermissionGate.instance.status();
+    if (status == NotificationSystemPermissionStatus.granted ||
+        status == NotificationSystemPermissionStatus.provisional) {
+      await PushNotificationService.initialize();
+    }
+  } catch (e, st) {
+    debugPrint('Push notification authorization check failed: $e\n$st');
+  }
+}

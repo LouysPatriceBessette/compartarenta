@@ -68,6 +68,7 @@
   "settingsNotificationsSoundSwitchBody": "Les notifications seront silencieuses quand ce réglage est désactivé.",
   "settingsNotificationsSoundPickerTitle": "Son de notification",
   "settingsNotificationsSoundPickerBody": "La sélection d’un son de l’appareil sera ajoutée plus tard quand les plateformes le permettent sans risque.",
+  "settingsNotificationsEnableBlocked": "La permission système des notifications n’est pas accordée.",
 
   "onboardingTitle": "Configuration",
   "onboardingLanguageTitle": "Langue",

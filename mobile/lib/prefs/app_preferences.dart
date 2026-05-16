@@ -151,14 +151,16 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _notificationBool(String key) => _prefs.getBool(key) ?? true;
+  bool _notificationBool(String key, {bool defaultValue = true}) =>
+      _prefs.getBool(key) ?? defaultValue;
 
   Future<void> _setNotificationBool(String key, bool value) async {
     await _prefs.setBool(key, value);
     notifyListeners();
   }
 
-  bool get notificationsEnabled => _notificationBool(_kNotificationsEnabled);
+  bool get notificationsEnabled =>
+      _notificationBool(_kNotificationsEnabled, defaultValue: false);
   Future<void> setNotificationsEnabled(bool value) =>
       _setNotificationBool(_kNotificationsEnabled, value);
 

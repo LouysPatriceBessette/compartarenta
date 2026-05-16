@@ -9,6 +9,7 @@ import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
+import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
@@ -120,7 +121,12 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   Future<void> _generate() async {
     if (_generating) return;
     final prefs = await AppPreferences.load();
-    await NotificationPermissionGate.instance.ensureForUserAction(prefs: prefs);
+    final notificationStatus = await NotificationPermissionGate.instance
+        .ensureForUserAction(prefs: prefs);
+    if (notificationStatus == NotificationSystemPermissionStatus.granted ||
+        notificationStatus == NotificationSystemPermissionStatus.provisional) {
+      await PushNotificationService.initialize();
+    }
     if (!mounted) return;
     setState(() {
       _generating = true;

@@ -18,6 +18,7 @@ import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
+import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
@@ -1349,9 +1350,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return;
     }
 
-    await NotificationPermissionGate.instance.ensureForUserAction(
-      prefs: widget.prefs,
-    );
+    final notificationStatus = await NotificationPermissionGate.instance
+        .ensureForUserAction(prefs: widget.prefs);
+    if (notificationStatus == NotificationSystemPermissionStatus.granted ||
+        notificationStatus == NotificationSystemPermissionStatus.provisional) {
+      await PushNotificationService.initialize();
+    }
     if (!mounted) return;
 
     var selected = StandardValidityDurations.values[2];

@@ -1,8 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../firebase_options.dart';
 import '../prefs/app_preferences.dart';
+import 'browser_notification_permission_stub.dart'
+    if (dart.library.html) 'browser_notification_permission_web.dart';
 
 enum NotificationSystemPermissionStatus {
   unsupported,
@@ -25,9 +29,7 @@ class DefaultNotificationPermissionClient
   @override
   Future<NotificationSystemPermissionStatus> getStatus() async {
     if (kIsWeb) {
-      final settings = await FirebaseMessaging.instance
-          .getNotificationSettings();
-      return _fromFirebaseAuthorization(settings.authorizationStatus);
+      return browserNotificationStatus();
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -37,6 +39,7 @@ class DefaultNotificationPermissionClient
 
     if (defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS) {
+      await _ensureFirebaseInitialized();
       final settings = await FirebaseMessaging.instance
           .getNotificationSettings();
       return _fromFirebaseAuthorization(settings.authorizationStatus);
@@ -48,12 +51,7 @@ class DefaultNotificationPermissionClient
   @override
   Future<NotificationSystemPermissionStatus> request() async {
     if (kIsWeb) {
-      final settings = await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      return _fromFirebaseAuthorization(settings.authorizationStatus);
+      return requestBrowserNotification();
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -63,6 +61,7 @@ class DefaultNotificationPermissionClient
 
     if (defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS) {
+      await _ensureFirebaseInitialized();
       final settings = await FirebaseMessaging.instance.requestPermission(
         alert: true,
         badge: true,
@@ -72,6 +71,13 @@ class DefaultNotificationPermissionClient
     }
 
     return NotificationSystemPermissionStatus.unsupported;
+  }
+
+  Future<void> _ensureFirebaseInitialized() async {
+    if (Firebase.apps.isNotEmpty) return;
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 
   NotificationSystemPermissionStatus _fromPermissionStatus(
@@ -112,13 +118,7 @@ class NotificationPermissionGate {
 
   Future<NotificationSystemPermissionStatus> status() => client.getStatus();
 
-  Future<NotificationSystemPermissionStatus> ensureForUserAction({
-    AppPreferences? prefs,
-  }) async {
-    if (prefs != null && !prefs.notificationsEnabled) {
-      return client.getStatus();
-    }
-
+  Future<NotificationSystemPermissionStatus> requestSystemPermission() async {
     final current = await client.getStatus();
     if (current == NotificationSystemPermissionStatus.granted ||
         current == NotificationSystemPermissionStatus.provisional ||
@@ -126,5 +126,15 @@ class NotificationPermissionGate {
       return current;
     }
     return client.request();
+  }
+
+  Future<NotificationSystemPermissionStatus> ensureForUserAction({
+    AppPreferences? prefs,
+  }) async {
+    if (prefs != null && !prefs.notificationsEnabled) {
+      return client.getStatus();
+    }
+
+    return requestSystemPermission();
   }
 }

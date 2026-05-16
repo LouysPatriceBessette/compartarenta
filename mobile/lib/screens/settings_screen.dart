@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../config/app_config.dart';
 import '../db/db_reset.dart';
 import '../l10n/app_localizations.dart';
+import '../notifications/developer_test_notification.dart';
+import '../notifications/developer_test_notification_result.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import '../relay/identity_keystore.dart';
@@ -100,6 +102,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ListTile(
               title: const Text('Developer tools'),
               subtitle: const Text('Development-only actions'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications_active_outlined),
+              title: const Text('Send test notification'),
+              subtitle: const Text(
+                'Sends a local notification with TEST text.',
+              ),
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final result = await sendDeveloperTestNotification(
+                  widget.prefs,
+                );
+                if (!context.mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(content: Text(_testNotificationMessage(result))),
+                );
+              },
             ),
             ListTile(
               title: const Text('Reset onboarding & preferences'),
@@ -199,5 +218,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  String _testNotificationMessage(DeveloperTestNotificationResult result) {
+    return switch (result) {
+      DeveloperTestNotificationResult.shown => 'Test notification sent.',
+      DeveloperTestNotificationResult.appNotificationsDisabled =>
+        'App notifications are disabled in Settings.',
+      DeveloperTestNotificationResult.permissionDenied =>
+        'System notification permission is not granted.',
+      DeveloperTestNotificationResult.unsupported =>
+        'Test notifications are not supported on this platform.',
+      DeveloperTestNotificationResult.failed =>
+        'Could not send test notification.',
+    };
   }
 }

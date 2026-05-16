@@ -19,9 +19,10 @@ void main() {
       'prefs.languageCode': 'en',
     });
     final prefs = await AppPreferences.load();
-    final gate = NotificationPermissionGate(
-      client: _FakePermissionClient(NotificationSystemPermissionStatus.granted),
+    final permissionClient = _FakePermissionClient(
+      NotificationSystemPermissionStatus.granted,
     );
+    final gate = NotificationPermissionGate(client: permissionClient);
     final router = _settingsRouter(prefs: prefs, gate: gate);
 
     await tester.pumpWidget(_TestApp(router: router));
@@ -37,22 +38,57 @@ void main() {
     await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Allowed by the system'), findsOneWidget);
+    expect(find.text('Not requested yet'), findsOneWidget);
+    expect(permissionClient.getStatusCount, 0);
     expect(find.text('Contacts'), findsOneWidget);
     expect(find.text('Add requests'), findsOneWidget);
     expect(find.text('Housing'), findsOneWidget);
     expect(find.text('Plan submission received'), findsOneWidget);
+    expect(prefs.notificationsEnabled, isFalse);
 
-    await tester.tap(find.text('Add requests'));
+    final masterTile = tester.widget<SwitchListTile>(
+      find.ancestor(
+        of: find.text('Allow app notifications'),
+        matching: find.byType(SwitchListTile),
+      ),
+    );
+    masterTile.onChanged!(true);
     await tester.pumpAndSettle();
 
-    expect(prefs.notificationContactAddRequests, isFalse);
+    expect(prefs.notificationsEnabled, isTrue);
+    expect(permissionClient.getStatusCount, 1);
 
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
 
     expect(find.text('Sound'), findsOneWidget);
   });
+
+  testWidgets(
+    'notifications page disables stale app switch when system denied',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'onboarding.complete': true,
+        'prefs.languageCode': 'en',
+        'notifications.enabled': true,
+      });
+      final prefs = await AppPreferences.load();
+      final permissionClient = _FakePermissionClient(
+        NotificationSystemPermissionStatus.denied,
+      );
+      final gate = NotificationPermissionGate(client: permissionClient);
+      final router = _settingsRouter(prefs: prefs, gate: gate);
+
+      await tester.pumpWidget(_TestApp(router: router));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Notifications'));
+      await tester.pumpAndSettle();
+
+      expect(permissionClient.getStatusCount, 1);
+      expect(prefs.notificationsEnabled, isFalse);
+      expect(find.text('Blocked by the system'), findsOneWidget);
+    },
+  );
 }
 
 GoRouter _settingsRouter({
@@ -114,13 +150,21 @@ class _TestApp extends StatelessWidget {
 }
 
 final class _FakePermissionClient implements NotificationPermissionClient {
-  const _FakePermissionClient(this.status);
+  _FakePermissionClient(this.status);
 
   final NotificationSystemPermissionStatus status;
+  int getStatusCount = 0;
+  int requestCount = 0;
 
   @override
-  Future<NotificationSystemPermissionStatus> getStatus() async => status;
+  Future<NotificationSystemPermissionStatus> getStatus() async {
+    getStatusCount++;
+    return status;
+  }
 
   @override
-  Future<NotificationSystemPermissionStatus> request() async => status;
+  Future<NotificationSystemPermissionStatus> request() async {
+    requestCount++;
+    return status;
+  }
 }

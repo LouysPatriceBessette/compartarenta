@@ -347,20 +347,22 @@ class ProposalResponses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [
-  Plans,
-  Participants,
-  PlanLines,
-  PlanGroups,
-  PlanRatios,
-  Agreements,
-  ProposalPackages,
-  ProposalRevisions,
-  ProposalResponses,
-  Contacts,
-  ContactInvitations,
-  PendingHandshakes,
-])
+@DriftDatabase(
+  tables: [
+    Plans,
+    Participants,
+    PlanLines,
+    PlanGroups,
+    PlanRatios,
+    Agreements,
+    ProposalPackages,
+    ProposalRevisions,
+    ProposalResponses,
+    Contacts,
+    ContactInvitations,
+    PendingHandshakes,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
@@ -437,41 +439,40 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-        },
-        onUpgrade: (m, from, to) async {
-          // Forward-only migrations. Always handle ranges.
-          if (from < 2) {
-            await _migrateAddColumn(m, plans, plans.notes);
-          }
-          if (from < 3) {
-            await _migrateAddColumn(m, plans, plans.currency);
-            await m.createTable(planGroups);
-            await m.createTable(planLines);
-            await m.createTable(planRatios);
-            await m.createTable(agreements);
-          }
-          if (from < 4) {
-            await m.createTable(proposalPackages);
-            await m.createTable(proposalRevisions);
-            await m.createTable(proposalResponses);
-          }
-          if (from < 5) {
-            await _migrateAddColumn(m, planLines, planLines.recurrenceDayOfMonth);
-            await _migrateAddColumn(m, planLines, planLines.sortOrder);
-            await _migrateAddColumn(m, agreements, agreements.withdrawalSameForAll);
-            await _migrateAddColumn(
-              m,
-              agreements,
-              agreements.withdrawalPerParticipantJson,
-            );
-          }
-          if (from < 6) {
-            await _migrateAddColumn(m, planLines, planLines.amountUsesRange);
-            await _migrateAddColumn(m, planLines, planLines.description);
-            await customStatement(
-              '''
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      // Forward-only migrations. Always handle ranges.
+      if (from < 2) {
+        await _migrateAddColumn(m, plans, plans.notes);
+      }
+      if (from < 3) {
+        await _migrateAddColumn(m, plans, plans.currency);
+        await m.createTable(planGroups);
+        await m.createTable(planLines);
+        await m.createTable(planRatios);
+        await m.createTable(agreements);
+      }
+      if (from < 4) {
+        await m.createTable(proposalPackages);
+        await m.createTable(proposalRevisions);
+        await m.createTable(proposalResponses);
+      }
+      if (from < 5) {
+        await _migrateAddColumn(m, planLines, planLines.recurrenceDayOfMonth);
+        await _migrateAddColumn(m, planLines, planLines.sortOrder);
+        await _migrateAddColumn(m, agreements, agreements.withdrawalSameForAll);
+        await _migrateAddColumn(
+          m,
+          agreements,
+          agreements.withdrawalPerParticipantJson,
+        );
+      }
+      if (from < 6) {
+        await _migrateAddColumn(m, planLines, planLines.amountUsesRange);
+        await _migrateAddColumn(m, planLines, planLines.description);
+        await customStatement('''
               UPDATE plan_lines
               SET amount_uses_range = CASE
                 WHEN is_recurring = 0
@@ -479,43 +480,40 @@ class AppDatabase extends _$AppDatabase {
                 THEN 1
                 ELSE 0
               END
-              ''',
-            );
-            await customStatement(
-              '''
+              ''');
+        await customStatement('''
               UPDATE plan_lines
               SET amount_minor = min_amount_minor
               WHERE is_recurring = 0
                 AND amount_uses_range = 0
                 AND amount_minor IS NULL
                 AND min_amount_minor IS NOT NULL
-              ''',
-            );
-          }
-          if (from < 7) {
-            await _migrateAddColumn(m, planGroups, planGroups.description);
-          }
-          if (from < 8) {
-            await _migrateAddColumn(m, agreements, agreements.agreementRulesJson);
-          }
-          if (from < 9) {
-            await m.createTable(contacts);
-            await m.createTable(contactInvitations);
-            await _migrateAddColumn(m, participants, participants.contactId);
-            await _mirrorParticipantsIntoContacts();
-          }
-          if (from < 10) {
-            await m.createTable(pendingHandshakes);
-          }
-          if (from < 11) {
-            await _migrateAddColumn(m, contacts, contacts.localDisplayLabel);
-            await _migrateAddColumn(m, contacts, contacts.disconnectedAt);
-          }
-          if (from < 12) {
-            // Contacts disconnected before `disconnected_at` existed never got
-            // the column set; backfill for rows that are clearly not active
-            // invitation stubs (see `contact_display.showsDisconnectedStatus`).
-            await customStatement('''
+              ''');
+      }
+      if (from < 7) {
+        await _migrateAddColumn(m, planGroups, planGroups.description);
+      }
+      if (from < 8) {
+        await _migrateAddColumn(m, agreements, agreements.agreementRulesJson);
+      }
+      if (from < 9) {
+        await m.createTable(contacts);
+        await m.createTable(contactInvitations);
+        await _migrateAddColumn(m, participants, participants.contactId);
+        await _mirrorParticipantsIntoContacts();
+      }
+      if (from < 10) {
+        await m.createTable(pendingHandshakes);
+      }
+      if (from < 11) {
+        await _migrateAddColumn(m, contacts, contacts.localDisplayLabel);
+        await _migrateAddColumn(m, contacts, contacts.disconnectedAt);
+      }
+      if (from < 12) {
+        // Contacts disconnected before `disconnected_at` existed never got
+        // the column set; backfill for rows that are clearly not active
+        // invitation stubs (see `contact_display.showsDisconnectedStatus`).
+        await customStatement('''
               UPDATE contacts
               SET disconnected_at = COALESCE(updated_at, created_at)
               WHERE kind = 'local-only'
@@ -538,12 +536,12 @@ class AppDatabase extends _$AppDatabase {
                     AND ci.status = 'pending'
                 )
             ''');
-          }
-          if (from < 13) {
-            // v12 only matched `contact:handshake:` (inviter stubs). Invitees
-            // keep `contact:redeemed:` ids — same demotion shape but backfill
-            // missed them, so UI stayed on `contactsKindLocalOnly`.
-            await customStatement('''
+      }
+      if (from < 13) {
+        // v12 only matched `contact:handshake:` (inviter stubs). Invitees
+        // keep `contact:redeemed:` ids — same demotion shape but backfill
+        // missed them, so UI stayed on `contactsKindLocalOnly`.
+        await customStatement('''
               UPDATE contacts
               SET disconnected_at = COALESCE(updated_at, created_at)
               WHERE kind = 'local-only'
@@ -566,16 +564,16 @@ class AppDatabase extends _$AppDatabase {
                     AND ci.status = 'pending'
                 )
             ''');
-          }
-          if (from < 14) {
-            await _migrateAddColumn(m, contacts, contacts.theirLabelForMe);
-          }
-        },
-        beforeOpen: (details) async {
-          // Drift will run onCreate/onUpgrade automatically.
-          // This is a hook for sanity checks if needed later.
-        },
-      );
+      }
+      if (from < 14) {
+        await _migrateAddColumn(m, contacts, contacts.theirLabelForMe);
+      }
+    },
+    beforeOpen: (details) async {
+      // Drift will run onCreate/onUpgrade automatically.
+      // This is a hook for sanity checks if needed later.
+    },
+  );
 
   Future<void> upsertPlan(PlansCompanion plan) =>
       into(plans).insertOnConflictUpdate(plan);
@@ -589,20 +587,21 @@ class AppDatabase extends _$AppDatabase {
   /// True when a proposal package for [planId] has an active (accepted) revision.
   /// Used to lock removal of agreement rules that were part of a binding package.
   Future<bool> planHasActiveAcceptedProposal(String planId) async {
-    final row = await (select(proposalPackages)
-          ..where((t) => t.planId.equals(planId)))
-        .getSingleOrNull();
+    final row = await (select(
+      proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
     return row?.activeRevisionId != null;
   }
 
   Future<Agreement?> getAgreementForPlan(String planId) async {
-    final rows = await (select(agreements)
-          ..where((t) => t.planId.equals(planId))
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.version),
-            (t) => OrderingTerm.asc(t.id),
-          ]))
-        .get();
+    final rows =
+        await (select(agreements)
+              ..where((t) => t.planId.equals(planId))
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.version),
+                (t) => OrderingTerm.asc(t.id),
+              ]))
+            .get();
     if (rows.isEmpty) return null;
     if (rows.length == 1) return rows.first;
 
@@ -631,18 +630,20 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertPlanLine(PlanLinesCompanion line) =>
       into(planLines).insertOnConflictUpdate(line);
 
-  Future<List<PlanLine>> listPlanLines(String planId) => (select(planLines)
-        ..where((t) => t.planId.equals(planId))
-        ..orderBy([
-          (t) => OrderingTerm.asc(t.sortOrder),
-          (t) => OrderingTerm.asc(t.createdAt),
-        ]))
-      .get();
+  Future<List<PlanLine>> listPlanLines(String planId) =>
+      (select(planLines)
+            ..where((t) => t.planId.equals(planId))
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.sortOrder),
+              (t) => OrderingTerm.asc(t.createdAt),
+            ]))
+          .get();
 
-  Future<List<PlanGroup>> listPlanGroups(String planId) => (select(planGroups)
-        ..where((t) => t.planId.equals(planId))
-        ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-      .get();
+  Future<List<PlanGroup>> listPlanGroups(String planId) =>
+      (select(planGroups)
+            ..where((t) => t.planId.equals(planId))
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+          .get();
 
   Future<void> upsertPlanGroup(PlanGroupsCompanion row) =>
       into(planGroups).insertOnConflictUpdate(row);
@@ -657,22 +658,24 @@ class AppDatabase extends _$AppDatabase {
   /// participants whose ids start with `planId:p` (housing draft roster).
   Future<void> deletePlanRelatedData(String planId) async {
     await transaction(() async {
-      final pkgs = await (select(proposalPackages)
-            ..where((t) => t.planId.equals(planId)))
-          .get();
+      final pkgs = await (select(
+        proposalPackages,
+      )..where((t) => t.planId.equals(planId))).get();
       for (final pkg in pkgs) {
-        final revs = await (select(proposalRevisions)
-              ..where((t) => t.packageId.equals(pkg.id)))
-            .get();
+        final revs = await (select(
+          proposalRevisions,
+        )..where((t) => t.packageId.equals(pkg.id))).get();
         for (final r in revs) {
-          await (delete(proposalResponses)
-                ..where((t) => t.revisionId.equals(r.id)))
-              .go();
+          await (delete(
+            proposalResponses,
+          )..where((t) => t.revisionId.equals(r.id))).go();
         }
-        await (delete(proposalRevisions)
-              ..where((t) => t.packageId.equals(pkg.id)))
-            .go();
-        await (delete(proposalPackages)..where((t) => t.id.equals(pkg.id))).go();
+        await (delete(
+          proposalRevisions,
+        )..where((t) => t.packageId.equals(pkg.id))).go();
+        await (delete(
+          proposalPackages,
+        )..where((t) => t.id.equals(pkg.id))).go();
       }
       await (delete(planRatios)..where((t) => t.planId.equals(planId))).go();
       await (delete(planLines)..where((t) => t.planId.equals(planId))).go();
@@ -691,9 +694,8 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertParticipant(ParticipantsCompanion participant) =>
       into(participants).insertOnConflictUpdate(participant);
 
-  Future<List<Participant>> listParticipants() => (select(participants)
-        ..orderBy([(t) => OrderingTerm.asc(t.id)]))
-      .get();
+  Future<List<Participant>> listParticipants() =>
+      (select(participants)..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
 
   /// Returns the distinct list of [Plan]s in which [contactId] is currently
   /// referenced as a participant (other than as the local user's own "self"
@@ -705,9 +707,9 @@ class AppDatabase extends _$AppDatabase {
   /// `<planId>:self` and `<planId>:p<n>`. The plan id is recovered by
   /// stripping everything from the last `:` onward.
   Future<List<Plan>> listPlansContainingContact(String contactId) async {
-    final rows =
-        await (select(participants)..where((t) => t.contactId.equals(contactId)))
-            .get();
+    final rows = await (select(
+      participants,
+    )..where((t) => t.contactId.equals(contactId))).get();
     final planIds = <String>{};
     for (final p in rows) {
       final i = p.id.lastIndexOf(':');
@@ -715,8 +717,9 @@ class AppDatabase extends _$AppDatabase {
       planIds.add(p.id.substring(0, i));
     }
     if (planIds.isEmpty) return const <Plan>[];
-    final result =
-        await (select(plans)..where((t) => t.id.isIn(planIds))).get();
+    final result = await (select(
+      plans,
+    )..where((t) => t.id.isIn(planIds))).get();
     result.sort((a, b) {
       final ta = a.title.isEmpty ? a.id : a.title;
       final tb = b.title.isEmpty ? b.id : b.title;
@@ -748,17 +751,16 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertContactInvitation(ContactInvitationsCompanion row) =>
       into(contactInvitations).insertOnConflictUpdate(row);
 
-  Future<List<ContactInvitation>> listContactInvitations() =>
-      (select(contactInvitations)
-            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-          .get();
+  Future<List<ContactInvitation>> listContactInvitations() => (select(
+    contactInvitations,
+  )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).get();
 
   Future<void> upsertPendingHandshake(PendingHandshakesCompanion row) =>
       into(pendingHandshakes).insertOnConflictUpdate(row);
 
-  Future<PendingHandshake?> getPendingHandshake(String id) =>
-      (select(pendingHandshakes)..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+  Future<PendingHandshake?> getPendingHandshake(String id) => (select(
+    pendingHandshakes,
+  )..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<List<PendingHandshake>> listPendingHandshakes({
     Iterable<String>? statesIn,
@@ -815,6 +817,10 @@ QueryExecutor _openConnection() {
   return driftDatabase(
     name: 'compartarenta.sqlite',
     native: DriftNativeOptions(
+      // Avoid drift_flutter's default getTemporaryDirectory() call during lazy
+      // open. On Android this can race plugin registration during early relay
+      // polling; SQLite can keep temporary data in memory for our workload.
+      tempDirectoryPath: () async => null,
       databaseDirectory: () async {
         final dir = await DbPaths.dbDirectory();
         return Directory(p.join(dir.path));
@@ -831,4 +837,3 @@ QueryExecutor _openConnection() {
     ),
   );
 }
-

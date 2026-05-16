@@ -68,6 +68,7 @@
   "settingsNotificationsSoundSwitchBody": "Show notifications silently when this is off.",
   "settingsNotificationsSoundPickerTitle": "Notification sound",
   "settingsNotificationsSoundPickerBody": "Device sound selection will be added later where platforms allow it safely.",
+  "settingsNotificationsEnableBlocked": "System notification permission is not granted.",
 
   "onboardingTitle": "Setup",
   "onboardingLanguageTitle": "Language",

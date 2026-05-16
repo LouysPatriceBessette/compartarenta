@@ -44,6 +44,28 @@ void main() {
     expect(result, NotificationSystemPermissionStatus.unknown);
     expect(client.requestCount, 0);
   });
+
+  test('new installations default app notifications to disabled', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await AppPreferences.load();
+
+    expect(prefs.notificationsEnabled, isFalse);
+    expect(prefs.notificationContactAddRequests, isTrue);
+  });
+
+  test('settings system request ignores disabled app notifications', () async {
+    SharedPreferences.setMockInitialValues({'notifications.enabled': false});
+    final client = _FakePermissionClient(
+      status: NotificationSystemPermissionStatus.unknown,
+      requestResult: NotificationSystemPermissionStatus.granted,
+    );
+    final gate = NotificationPermissionGate(client: client);
+
+    final result = await gate.requestSystemPermission();
+
+    expect(result, NotificationSystemPermissionStatus.granted);
+    expect(client.requestCount, 1);
+  });
 }
 
 final class _FakePermissionClient implements NotificationPermissionClient {

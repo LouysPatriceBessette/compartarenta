@@ -484,6 +484,12 @@ abstract class AppLocalizations {
   /// **'Device sound selection will be added later where platforms allow it safely.'**
   String get settingsNotificationsSoundPickerBody;
 
+  /// No description provided for @settingsNotificationsEnableBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'System notification permission is not granted.'**
+  String get settingsNotificationsEnableBlocked;
+
   /// No description provided for @onboardingTitle.
   ///
   /// In en, this message translates to:

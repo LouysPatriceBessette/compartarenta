@@ -5,7 +5,7 @@ The app now initializes push notification support during bootstrap, which can re
 The permission model has multiple layers:
 
 - Platform/system notification permission: browser, Android, iOS.
-- App-level notification categories: Contacts and Housing event types.
+- App-level master switch and notification categories: Contacts and Housing event types.
 - Notification sound preference: global enablement first; built-in app sound selection can be considered later, but arbitrary device sound selection is not portable across Android and iOS.
 
 This change must keep the app lightweight and extensible. More notification entry points and categories are expected.
@@ -17,7 +17,10 @@ This change must keep the app lightweight and extensible. More notification entr
 - Delay notification permission prompts until after initial setup and after a user action that benefits from notifications.
 - Provide a reusable permission prompt boundary that can be invoked from multiple flows.
 - Add Settings navigation for Notifications, Units, and About so users can manage notification preferences outside a specific flow.
+- Keep the app-level master notification switch off by default and make turning it on request system permission.
+- Detect stale app-level notification enablement when the Notifications settings page loads and the system permission has been revoked outside the app.
 - Define initial notification categories for Contacts and Housing.
+- Provide a developer-only test notification path that validates effective notification delivery without depending on FCM or peer events.
 - Preserve the product rule that peer-triggered events generally get notifications while local-only actions do not.
 
 **Non-Goals:**
@@ -47,7 +50,30 @@ The initial category switches can be local app preferences. Backend delivery can
 
 Alternative considered: server-authoritative category preferences from day one. That would add backend scope before the UX and permission semantics are validated.
 
-4. Treat sound as default/silent first, not as an arbitrary device sound picker.
+4. Make the app-level master switch explicit and conservative.
+
+The master notification switch is an app preference, not the platform permission itself. On fresh installs it defaults to off, so the app does not behave as opted in before the user has made an explicit choice.
+
+When the user turns the switch on, the app requests system notification permission if needed. If the platform grants or provisionally grants permission, the app-level switch remains on and notification infrastructure can initialize. If the platform denies or cannot grant permission, the app-level switch remains off and the UI explains that system permission is missing.
+
+When the user turns the switch off, the app only disables its own notification preference. It does not attempt to revoke browser, Android, or iOS permission because those permissions belong to the system/browser settings surface.
+
+When the Notifications settings page opens and the app-level switch is already on, the app verifies that system permission is still valid. If the user revoked system permission outside the app, the app-level switch is reconciled back to off. The page does not perform this system permission check when the app-level switch is already off, avoiding unnecessary platform queries and keeping the initial off state quiet.
+
+Alternative considered: treat the app-level switch as purely local and never request system permission from it. That made the UI confusing because users could turn notifications on while the platform still blocked delivery.
+
+5. Provide a developer-only test notification action.
+
+Developer builds expose a `Send test notification` action under Developer tools. The action sends title/body `TEST` through the platform's effective local-notification path:
+
+- Web uses the browser `Notification` API directly.
+- Android/iOS use local notifications.
+
+The action reports whether delivery was blocked by the app-level switch, by system permission, by platform support, or by an unexpected failure. This helps verify permission semantics without waiting for peer-triggered traffic or FCM delivery.
+
+Alternative considered: rely only on real peer events. That slows debugging and conflates permission state with transport or event-delivery issues.
+
+6. Treat sound as default/silent first, not as an arbitrary device sound picker.
 
 A sound enabled/disabled switch is straightforward. Full device sound selection is not a safe cross-platform baseline:
 

@@ -22,10 +22,7 @@ Future<String?> showSupportedCurrencyPicker(
 }
 
 class _CurrencyPickerBody extends StatefulWidget {
-  const _CurrencyPickerBody({
-    required this.searchHint,
-    this.initialCode,
-  });
+  const _CurrencyPickerBody({required this.searchHint, this.initialCode});
 
   final String searchHint;
   final String? initialCode;
@@ -60,12 +57,19 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final maxH = MediaQuery.sizeOf(context).height * 0.75;
+    final media = MediaQuery.of(context);
+    final bottomInset = media.viewInsets.bottom;
+    final maxH = media.size.height * 0.75;
+    final availableH =
+        (media.size.height - bottomInset - media.padding.top - 24).clamp(
+          120.0,
+          media.size.height,
+        );
+    final sheetH = availableH < maxH ? availableH : maxH;
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: SizedBox(
-        height: maxH,
+        height: sheetH,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -86,10 +90,15 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
                 itemCount: _filtered.length,
                 itemBuilder: (context, index) {
                   final c = _filtered[index];
-                  final selected = widget.initialCode != null &&
+                  final selected =
+                      widget.initialCode != null &&
                       widget.initialCode!.toUpperCase() == c.code;
                   return ListTile(
-                    title: Text(c.displayLine),
+                    title: Text(
+                      c.displayLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     selected: selected,
                     onTap: () => Navigator.of(context).pop(c.code),
                   );

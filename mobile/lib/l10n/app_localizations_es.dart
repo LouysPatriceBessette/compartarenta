@@ -219,6 +219,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'La selección de sonidos del dispositivo se añadirá más adelante donde las plataformas lo permitan de forma segura.';
 
   @override
+  String get settingsNotificationsEnableBlocked =>
+      'El permiso del sistema para notificaciones no está concedido.';
+
+  @override
   String get onboardingTitle => 'Configuración';
 
   @override

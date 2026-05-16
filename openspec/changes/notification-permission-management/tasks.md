@@ -19,6 +19,9 @@
 - [x] 3.2 Persist category switch changes from the Notifications settings page.
 - [x] 3.3 Normalize system permission state for display across web, Android, and iOS.
 - [x] 3.4 Model sound choices as default/silent first, with future app-provided sounds only behind platform-specific channel and file handling.
+- [x] 3.5 Default the app-level master notification switch to off on fresh installs and preference resets.
+- [x] 3.6 Request system notification permission when the user turns the app-level master switch on, and keep the switch off if permission is not granted.
+- [x] 3.7 Reconcile stale app-level enabled state when notification settings opens after system permission was revoked outside the app.
 
 ## 4. Verification
 
@@ -26,3 +29,5 @@
 - [x] 4.2 Add tests for the reusable permission gate behavior when permission is already granted, denied, or unknown.
 - [x] 4.3 Run `flutter test` for the mobile package.
 - [x] 4.4 Run `dart analyze` for changed Dart files.
+- [x] 4.5 Add developer-only Settings action to send a `TEST` notification through the effective local notification/browser notification path.
+- [x] 4.6 Verify Chrome and Android behavior with the developer test notification action.

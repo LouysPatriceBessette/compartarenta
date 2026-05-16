@@ -1,11 +1,11 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 
 import 'bootstrap.dart';
-import 'notifications/push_notification_background.dart';
+import 'notifications/push_background_registration_stub.dart'
+    if (dart.library.io) 'notifications/push_background_registration_io.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  registerPushBackgroundHandler();
   bootstrap();
 }
