@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
+import 'agreement_period_day_overlap.dart';
+import 'housing_plan_period_gate.dart';
 
 /// Local-only proposal / renegotiation support (sync layer TBD).
 ///
@@ -37,6 +39,9 @@ class PlanAgreementProposalService {
   Future<String> createRevisionFromCurrentDraft({
     required String planId,
     required String proposerParticipantId,
+    DateTime? responseExpiresAt,
+    String? forkedFromPackageId,
+    String? forkedFromRevisionId,
   }) async {
     final packageId = await ensurePackageForPlan(planId);
 
@@ -108,6 +113,10 @@ class PlanAgreementProposalService {
         'withdrawalSameForAll': agreement.withdrawalSameForAll,
         'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
       },
+      'responseExpiresAt': responseExpiresAt?.toIso8601String(),
+      'lifecycleState': 'open',
+      ?forkedFromPackageId: forkedFromPackageId,
+      ?forkedFromRevisionId: forkedFromRevisionId,
     };
 
     await _db.transaction(() async {
@@ -155,7 +164,7 @@ class PlanAgreementProposalService {
         );
   }
 
-  Future<bool> tryActivateIfUnanimous({
+  Future<ProposalActivationOutcome> tryActivateIfUnanimous({
     required String planId,
     required String revisionId,
     required List<String> participantIds,
@@ -173,7 +182,23 @@ class PlanAgreementProposalService {
     final unanimous = participantIds.isNotEmpty &&
         participantIds.every((p) => byParticipant[p] == ProposalResponseStatus.accepted.name);
 
-    if (!unanimous) return false;
+    if (!unanimous) return ProposalActivationOutcome.notUnanimous;
+
+    final payload = await loadRevisionPayload(revisionId);
+    final period = _agreementPeriodFromRevisionPayload(payload);
+    if (period == null) {
+      return ProposalActivationOutcome.missingAgreementPeriodInRevision;
+    }
+
+    final blocking =
+        await listBlockingAgreementDayRanges(_db, excludePlanId: planId);
+    if (candidateConflictsWithAnyBlockingRange(
+          period.start,
+          period.end,
+          blocking,
+        )) {
+      return ProposalActivationOutcome.blockedByOverlappingAgreementPeriod;
+    }
 
     await _db.transaction(() async {
       await (_db.update(_db.proposalPackages)
@@ -185,7 +210,19 @@ class PlanAgreementProposalService {
         ),
       );
     });
-    return true;
+    return ProposalActivationOutcome.activated;
+  }
+
+  /// Parsed [agreement.periodStart] / [periodEnd] from a revision payload, or null.
+  ({DateTime start, DateTime end})? _agreementPeriodFromRevisionPayload(
+    Map<String, Object?> payload,
+  ) {
+    final agr = payload['agreement'];
+    if (agr is! Map) return null;
+    final ps = agr['periodStart'];
+    final pe = agr['periodEnd'];
+    if (ps is! String || pe is! String) return null;
+    return (start: DateTime.parse(ps), end: DateTime.parse(pe));
   }
 
   Future<Map<String, Object?>> loadRevisionPayload(String revisionId) async {
@@ -200,4 +237,20 @@ enum ProposalResponseStatus {
   pending,
   accepted,
   rejected,
+  negotiate,
+}
+
+/// Result of [PlanAgreementProposalService.tryActivateIfUnanimous].
+enum ProposalActivationOutcome {
+  /// Package now references this revision as active; pending cleared.
+  activated,
+
+  /// At least one [participantIds] entry is missing or not `accepted`.
+  notUnanimous,
+
+  /// Revision payload had no parseable `agreement.periodStart` / `periodEnd`.
+  missingAgreementPeriodInRevision,
+
+  /// Would overlap another housing plan on this device by the day rule (≥2 shared days).
+  blockedByOverlappingAgreementPeriod,
 }

@@ -928,6 +928,60 @@ abstract class AppLocalizations {
   /// **'Invite my participants'**
   String get housingPlanSummaryInvite;
 
+  /// No description provided for @housingWorkbenchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing plans'**
+  String get housingWorkbenchTitle;
+
+  /// No description provided for @housingWorkbenchDraftsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft plans'**
+  String get housingWorkbenchDraftsSection;
+
+  /// No description provided for @housingWorkbenchPendingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending proposals'**
+  String get housingWorkbenchPendingSection;
+
+  /// No description provided for @housingWorkbenchOpenPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get housingWorkbenchOpenPlan;
+
+  /// No description provided for @housingWorkbenchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No housing plans with your profile on this device.'**
+  String get housingWorkbenchEmpty;
+
+  /// No description provided for @housingInviteResponseWindowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Response window'**
+  String get housingInviteResponseWindowTitle;
+
+  /// No description provided for @housingInviteResponseWindowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants have until this date and time to respond (UTC).'**
+  String get housingInviteResponseWindowBody;
+
+  /// No description provided for @housingInvitePeriodOverlapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement period conflict'**
+  String get housingInvitePeriodOverlapTitle;
+
+  /// No description provided for @housingInvitePeriodOverlapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.'**
+  String get housingInvitePeriodOverlapBody;
+
   /// No description provided for @housingInviteProposalAppBarTitle.
   ///
   /// In en, this message translates to:

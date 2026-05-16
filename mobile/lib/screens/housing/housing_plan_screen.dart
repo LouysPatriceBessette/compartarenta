@@ -12,12 +12,16 @@ import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import 'housing_invite_proposal_screen.dart';
 import '../../housing/projection/plan_projection.dart';
+import '../../housing/proposals/agreement_period_day_overlap.dart';
+import '../../housing/proposals/housing_plan_period_gate.dart';
+import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
+import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
 
 sealed class _SplitListEntry {}
@@ -36,9 +40,16 @@ final class _SplitUncategorized extends _SplitListEntry {
 
 /// Housing plan setup: vertical stepper (1–6) then summary.
 class HousingPlanScreen extends StatefulWidget {
-  const HousingPlanScreen({super.key, required this.prefs});
+  const HousingPlanScreen({
+    super.key,
+    required this.prefs,
+    this.planId = 'housing:default',
+  });
 
   final AppPreferences prefs;
+
+  /// Stable plan row id (participants use `{planId}:self`, `{planId}:p0`, …).
+  final String planId;
 
   @override
   State<HousingPlanScreen> createState() => _HousingPlanScreenState();
@@ -47,8 +58,8 @@ class HousingPlanScreen extends StatefulWidget {
 class _HousingPlanScreenState extends State<HousingPlanScreen> {
   AppDatabase get _db => AppDatabase.processScope;
 
-  static const _planId = 'housing:default';
-  static const _agreementId = 'agreement:housing:default';
+  String get _planId => widget.planId;
+  String get _agreementId => 'agreement:$_planId';
 
   static const List<IconData> _avatarIcons = [
     MdiIcons.account,
@@ -1323,6 +1334,107 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return (v * 100).round();
   }
 
+  Future<void> _openInviteProposalFlow() async {
+    final agr = await _db.getAgreementForPlan(_planId);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (agr == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanSummaryMissingAgreement)),
+      );
+      return;
+    }
+
+    var selected = StandardValidityDurations.values[2];
+
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(l10n.housingInviteResponseWindowTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.housingInviteResponseWindowBody),
+                const SizedBox(height: 16),
+                StandardValidityDurationSegmented(
+                  selected: selected,
+                  onChanged: (d) => setLocal(() => selected = d),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.housingPlanCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.commonContinue),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (proceed != true || !mounted) return;
+
+    final responseExpiresAt = DateTime.now().toUtc().add(selected);
+    final blocking =
+        await listBlockingAgreementDayRanges(_db, excludePlanId: _planId);
+    if (candidateConflictsWithAnyBlockingRange(
+          agr.periodStart,
+          agr.periodEnd,
+          blocking,
+        )) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.housingInvitePeriodOverlapTitle),
+          content: Text(l10n.housingInvitePeriodOverlapBody),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.onboardingOk),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final proposerId = '$_planId:self';
+    try {
+      await PlanAgreementProposalService(_db).createRevisionFromCurrentDraft(
+        planId: _planId,
+        proposerParticipantId: proposerId,
+        responseExpiresAt: responseExpiresAt,
+      );
+    } catch (e, st) {
+      if (!mounted) return;
+      debugPrintStack(stackTrace: st);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (ctx) => HousingInviteProposalScreen(
+          db: _db,
+          planId: _planId,
+          prefs: widget.prefs,
+        ),
+      ),
+    );
+  }
+
   Future<void> _onDestroyPlan() async {
     final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
@@ -1452,17 +1564,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                 _showSummary = false;
                 _stepIndex = 0;
               }),
-              onInvite: () {
-                Navigator.of(context).push<void>(
-                  MaterialPageRoute<void>(
-                    builder: (ctx) => HousingInviteProposalScreen(
-                      db: _db,
-                      planId: _planId,
-                      prefs: widget.prefs,
-                    ),
-                  ),
-                );
-              },
+              onInvite: _openInviteProposalFlow,
               onDestroy: _onDestroyPlan,
             );
           }

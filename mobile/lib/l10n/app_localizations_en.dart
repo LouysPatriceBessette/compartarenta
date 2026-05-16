@@ -453,6 +453,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanSummaryInvite => 'Invite my participants';
 
   @override
+  String get housingWorkbenchTitle => 'Housing plans';
+
+  @override
+  String get housingWorkbenchDraftsSection => 'Draft plans';
+
+  @override
+  String get housingWorkbenchPendingSection => 'Pending proposals';
+
+  @override
+  String get housingWorkbenchOpenPlan => 'Open';
+
+  @override
+  String get housingWorkbenchEmpty =>
+      'No housing plans with your profile on this device.';
+
+  @override
+  String get housingInviteResponseWindowTitle => 'Response window';
+
+  @override
+  String get housingInviteResponseWindowBody =>
+      'Participants have until this date and time to respond (UTC).';
+
+  @override
+  String get housingInvitePeriodOverlapTitle => 'Agreement period conflict';
+
+  @override
+  String get housingInvitePeriodOverlapBody =>
+      'This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.';
+
+  @override
   String get housingInviteProposalAppBarTitle => 'Invitation proposal';
 
   @override
