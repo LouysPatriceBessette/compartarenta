@@ -25,7 +25,7 @@ This checklist maps **OpenSpec requirements** to the current **housing plan draf
 
 ### Linked change: proposal send and responses
 
-Items **E6**, **E9**, **W1**, **W2** (and peer-visible **P4** / **P5** once a draft is “in flight”) are **blocked or incomplete** until the sibling OpenSpec change **`housing-plan-proposal-offer-and-responses`** is implemented. Track delivery there; when those flows ship, **re-run this checklist** and update the Status / Notes columns for the affected rows.
+Items **E6**, **E9**, **W1**, **W2** (and peer-visible **P4** / **P5** once a draft is “in flight”), plus **home / workbench navigation** (selector when multiple plan entries: local draft, received offers, sent threads) and **fork gating + lineage**, are **blocked or incomplete** until the sibling OpenSpec change **`housing-plan-proposal-offer-and-responses`** is implemented. Track delivery there; when those flows ship, **re-run this checklist** and update the Status / Notes columns for the affected rows.
 
 ---
 

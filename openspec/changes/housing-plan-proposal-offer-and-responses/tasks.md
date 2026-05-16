@@ -10,3 +10,14 @@
 - [ ] 1.8 History: local event store for all participants; render thread / status from events.
 - [ ] 1.9 Invalidated offer: “**Fork / edit and submit**” entry for **any** participant from retained snapshot (new `revisionId`, same `packageId` lineage per `plan-contract-proposal-payload`).
 - [ ] 1.10 Wire protocol: define encrypted JSON message kinds (offer, response, invalidation notice) and document alongside `docs/contacts-module-relay-payload.md` (follow relay change-minimization: prefer client-only protocol docs unless relay must change).
+- [ ] 1.11 **Workbench model**: persist and list local draft(s), sent threads, received threads; compute `entries.length` for navigation rules.
+- [ ] 1.12 **Home Housing**: open workbench **selector** when `entries.length > 1`; preserve direct-to-summary for single lone draft (spec).
+- [ ] 1.13 **Fork lineage** fields on revision rows + `fork created` history events; UI shows provenance (“forked from …”).
+- [ ] 1.14 **Fork gating** in editor/workbench: disable fork while source `revisionId` is **open**; enable when invalidated/expired/closed per spec.
+- [ ] 1.15 **Concurrent offers**: independent per-`revisionId` state machines; inbox UI lists multiple threads (Case #1 / #2).
+- [ ] 1.16 **Agreement period overlap gate**: compute **blocking intervals** per participating plan (active contract dates, else open revision proposed dates); compare **calendar days only** (strip time; no UTC for this test); block **send** / **final accept** when **S ≥ 2** shared days with any blocking interval; **S ≤ 1** never blocks (handoff on same calendar day allowed).
+- [ ] 1.17 **UX copy** for calendar conflicts (**≥ 2** shared days; show conflicting plan label + date range); optional suggest “adjust dates”.
+
+
+- [ ] 1.18 Wire checklist [`housing-plan-entry-spec-conformance-checklist.md`](../expense-plan-contract-model/housing-plan-entry-spec-conformance-checklist.md) rows for home selector / workbench when implemented.
+

@@ -128,6 +128,7 @@ Each client SHALL retain a durable **event history** for proposal activity, at m
 
 - timeline of send, relay-accept per recipient (if captured), deliveries (if captured), responses, invalidations, expiry
 - message text for Negotiate/Refuse when present
+- **fork** provenance: `fork created` events and metadata linking child `revisionId` to `forkedFromRevisionId` / `forkedFromPackageId` (and optional proposer id), for every forked revision
 
 History MUST survive normal app restarts and MUST NOT depend on the relay retaining ciphertext after ack/TTL (the relay is not the system of record).
 
@@ -142,8 +143,10 @@ History MUST survive normal app restarts and MUST NOT depend on the relay retain
 
 **WHEN** a `revisionId` is **invalidated** or **expired**:
 
-- **THEN** any roster participant (including non-authors) MAY open the retained snapshot and **edit** it to produce a **new** revision with a new `revisionId` (same `packageId` lineage per `plan-contract-proposal-payload`) and submit it through the same send flow
+- **THEN** any roster participant (including non-authors) MAY open the retained snapshot and **edit** it to produce a **new** revision with a new `revisionId` (same `packageId` lineage per `plan-contract-proposal-payload` when the group context is unchanged; a **new** `packageId` MAY be minted when the fork intentionally starts a new group context—implementation SHALL still record **fork lineage** fields)
 - **AND** the author of that new revision becomes the **proposer** for that revision’s history records
+- **AND** the new revision SHALL carry **fork lineage** metadata (`forkedFromPackageId`, `forkedFromRevisionId`, …) as required in **Fork lineage is mandatory** above
+- **AND** **Fork from workbench only when source revision is not forkable-blocked** applies to UI affordances
 
 #### Scenario: Non-original author resubmits
 
@@ -163,7 +166,154 @@ The housing invitation / preview surface SHALL NOT present **contact invitation 
 
 ---
 
+### Requirement: Multiple concurrent open offers are supported per participant
+
+A participant MAY have **more than one** proposal revision **open** at the same time when those revisions belong to **different** `packageId` values (e.g. two unrelated housing plans both addressing the same recipient) **or** when parallel **fork** revisions were created after an earlier revision was **invalidated** or **expired** (e.g. B and C each fork the same invalidated parent into two new revisions that are both in flight). The **serial response gate** applies **independently per `revisionId`**; the client SHALL not merge timelines across unrelated revisions.
+
+#### Scenario: Two proposers, one recipient (different plans)
+
+- **WHEN** A’s offer targets only B on plan `pkg:A` and C’s offer targets only B on plan `pkg:C`
+- **THEN** B’s inbox shows **two** distinct actionable threads, each keyed by its own `packageId` / `revisionId`, with independent deadlines and serial queues
+
+#### Scenario: Parallel forks after invalidation
+
+- **WHEN** A’s revision `R1` is invalidated by B’s refusal and both B and C fork `R1` into `R2` and `R3` respectively
+- **THEN** each new revision has its own `revisionId`, its own roster and response order, and participants who receive both SHALL see **two** open offers until each is resolved or invalidated
+
+---
+
+### Requirement: Agreement period overlap gate (cross-plan propose and final accept)
+
+The app SHALL prevent a user from **(a)** **sending** (as proposer) a new housing proposal whose embedded agreement contract period **conflicts** with any **blocking calendar interval** derived from another housing plan they **currently participate in**, and from **(b)** recording **final accept** on a received offer whose period **conflicts** with any such interval. **Conflict** means **two or more shared calendar days** between the candidate period and that interval under **Day-only overlap** below (sharing **at most one** calendar day is **never** a conflict for this gate).
+
+**Negotiate** and **Refuse** on a received offer SHALL remain available even when **final accept** is blocked by a calendar conflict (so the user can decline or steer toward dates with **S ≤ 1** against all blocking intervals).
+
+**Blocking calendar interval** (for overlap tests only):
+
+- For each housing plan **P** where the user is a **current roster participant**:
+  - **WHEN** **P** has an **active** unanimous agreement per `contract-unanimous-renegotiation`, the blocking interval SHALL be that agreement’s **periodStart**–**periodEnd** interpreted as **inclusive calendar dates** (see **Day-only overlap** below).
+  - **ELSE WHEN** **P** has no active agreement but the user is party to an **open** (not invalidated, not expired) proposal revision on **P**, the blocking interval SHALL be that revision’s proposed `contract.periodStart`–`contract.periodEnd`, same **day-only** interpretation.
+  - **ELSE** there is **no** blocking interval on **P** for this user for overlap purposes (e.g. roster exists only as draft with no bound period yet—implementation SHALL define whether a draft-only plan contributes an interval; default **no** until a period is fixed on a sent revision or active contract).
+
+**Day-only overlap (no UTC / no time-of-day for this gate)**
+
+- Each agreement period SHALL be reduced to an **inclusive range of calendar dates** using only the **date** parts of `periodStart` and `periodEnd` from the payload or active contract (strip time-of-day; do **not** apply UTC offset logic for this comparison—same displayed calendar day is the same day everywhere).
+- Let **S** be the number of **calendar days** in the intersection of the candidate period and a blocking interval (inclusive counting on both ends). **WHEN** **S ≤ 1** **THEN** that pair does **not** block (this **permits** a **single** shared day, e.g. one plan’s last day is another’s first day, or any other exactly-one-day touch). **WHEN** **S ≥ 2** **THEN** the candidate **conflicts** with that blocking interval and **send** / **final accept** SHALL be blocked until the user adjusts dates or the blocking interval changes.
+
+**WHEN** the candidate period **does not conflict** with any blocking interval under this rule (all pairs have **S ≤ 1**), the user **MAY** **negotiate**, **propose**, and **final accept** per the rest of this spec without leaving the prior plan’s roster solely for calendar reasons.
+
+#### Scenario: Two non-overlapping futures are allowed
+
+- **WHEN** the user participates in plan P1 with active period ending 2026-12-31 and receives an offer on P2 covering 2027-01-01 onward with **S = 0** shared days with P1’s blocking interval
+- **THEN** they MAY negotiate and accept P2’s offer without leaving P1’s roster
+
+#### Scenario: End of one plan and start of another on the same calendar day is allowed
+
+- **WHEN** plan P1’s last day and plan P2’s first day are the **same calendar date** (inclusive ranges share exactly that one day, **S = 1**)
+- **THEN** **send** and **final accept** are **not** blocked by this gate for that pair
+
+#### Scenario: Two or more shared calendar days block final accept
+
+- **WHEN** a received offer shares **two or more** calendar days with the user’s blocking interval on another plan
+- **THEN** **final accept** is blocked with a localized explanation referencing the conflicting plan (label) and dates
+- **AND** **Refuse** and **Negotiate** (with required text for Negotiate) remain enabled
+
+#### Scenario: Two or more shared calendar days block send
+
+- **WHEN** the user participates in plan P with a blocking interval and edits a proposal for plan Q whose period shares **two or more** calendar days with P’s interval
+- **THEN** **send proposal** is blocked until they shorten/adjust Q’s dates or P’s blocking interval changes
+
+#### Scenario: Multiple pending offers with at most one-day touch still OK
+
+- **WHEN** the user has several pending offers whose periods never share **two or more** days with any blocking interval
+- **THEN** they MAY view and respond per the serial gate without calendar-based blocking beyond this rule
+
+---
+
+### Requirement: Fork lineage is mandatory in history and in new revision metadata
+
+Every proposal revision that is created by **fork** (copying a prior snapshot) SHALL persist:
+
+- `forkedFromPackageId` (nullable when not a fork)
+- `forkedFromRevisionId` (nullable when not a fork)
+- optional `forkedFromProposerParticipantId` for audit display
+
+The **event history** for each revision SHALL include events that record **fork created** with links to the parent so any participant can answer “did this come from a fork, and from which revision?”.
+
+#### Scenario: History shows fork provenance
+
+- **WHEN** C forks invalidated `R1` into `R3`
+- **THEN** `R3` metadata and timeline show parent `R1` (and its `packageId`) read-only, even if `R3` later uses a new `packageId` per `plan-contract-proposal-payload` rules for a new group context
+
+---
+
+### Requirement: Plan workbench selector (draft + all offers)
+
+The housing **authoring / entry** flow SHALL expose a **workbench selector** listing **every** plan-related entry the user may work on, including at minimum:
+
+1. **Local draft** — the user’s unsubmitted work-in-progress (wizard incomplete or complete); always listed even when empty of sent history.
+2. **Received offers** — revisions where this user is a recipient and may view (and respond when allowed).
+3. **Sent offers** — revisions this user proposed to others (author view, statuses).
+
+**WHEN** the user has **more than one** such entry **or** any entry besides a single local draft with no other threads, the app SHALL show this selector **before** jumping straight to a single plan summary.
+
+#### Scenario: Single draft only — current behaviour preserved
+
+- **WHEN** the only entry is one local draft and there are no received/sent offer threads
+- **THEN** the home **Housing** entry MAY navigate directly to that draft’s summary (current behaviour)
+
+#### Scenario: Draft plus one received offer — selector first
+
+- **WHEN** there is a local draft and at least one received offer
+- **THEN** tapping Housing opens the **selector**; choosing an entry opens the corresponding summary / wizard step
+
+---
+
+### Requirement: Home Housing entry uses the selector when multiple entries exist
+
+The home-screen **Housing** affordance SHALL open the **workbench selector** **WHEN** the user has **more than one** workbench entry (draft + offers, multiple drafts, multiple offers, or any combination totaling **two or more** rows).
+
+**WHEN** there is **exactly one** workbench entry and it is **only** the user’s local draft with **no** sent/received offer threads, the app MAY keep the current behaviour and open that draft’s **summary** directly.
+
+#### Scenario: Completed draft with no offers still single entry
+
+- **WHEN** exactly one completed local draft and zero offers
+- **THEN** direct summary remains allowed
+
+#### Scenario: Draft plus one received offer — two entries
+
+- **WHEN** one local draft and one received offer (two entries)
+- **THEN** Housing opens the **selector** first
+
+#### Scenario: Only one received offer, no local draft
+
+- **WHEN** exactly one workbench entry (e.g. a single received offer)
+- **THEN** the app MAY open that offer’s summary directly or still use the selector—either is acceptable if `entries.length == 1`
+
+---
+
+### Requirement: Fork from workbench only when source revision is not forkable-blocked
+
+The workbench (and plan authoring steps) SHALL offer **Fork from this offer** only when the selected source revision is **fork-eligible**: its state is **invalidated**, **expired**, or otherwise **closed** for further responses per this spec **and** creating a draft from that fork would not immediately violate the **Agreement period overlap gate** (e.g. user may still need to adjust dates before send).
+
+**WHEN** a revision is still **open** (awaiting responses, including **waiting** in the serial queue after another participant’s pending turn) **THEN** the user SHALL **not** be offered fork from that revision as an editing source until they (or the group) resolve it; they MUST take or await a **decision** on that offer first.
+
+#### Scenario: Cannot fork an open offer
+
+- **WHEN** revision `R` is still open for decisions
+- **THEN** “Fork for edit” is disabled with explanation (“Respond to this offer first” / localized)
+
+#### Scenario: Can fork after invalidation
+
+- **WHEN** `R` is invalidated after B’s refusal
+- **THEN** B and C (and others on the roster) MAY fork from the retained snapshot of `R` into a new revision
+
+---
+
 ## Notes (non-normative)
 
 - Wire message kinds and JSON fields for offer/response/broadcast SHOULD be documented next to `docs/contacts-module-relay-payload.md`; relay Go changes are **not** assumed unless a future audit requires a new opaque `kind` byte — prefer evolving client plaintext schema under existing steady-state encryption where policy allows.
 - If `contract-unanimous-renegotiation` audit matrix requirements conflict with storage here, treat this spec as the **housing offer UX** source of truth and align the shared “status screen” wording in a later editorial pass.
+- **Concurrent offers** use distinct `packageId` / `revisionId` keys; `plan-contract-proposal-payload` already distinguishes revisions within a package—multiple packages represent multiple dwellings or independent group contexts (Case #2). **Cross-plan** actions are limited by the **Agreement period overlap gate** (day-only shared-day count; no UTC for that gate), not by a blanket withdraw-from-plan rule.
+- Response **deadline** / **expires at** for offers may still use precise instants (e.g. UTC storage) for relay TTL and UI `YYYY-MM-DD HH:MM`; that is **independent** of the **day-only** agreement-period gate above.
+
