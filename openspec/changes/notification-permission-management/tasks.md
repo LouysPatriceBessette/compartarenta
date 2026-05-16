@@ -8,21 +8,21 @@
 
 ## 2. Permission Timing
 
-- [ ] 2.1 Stop requesting notification permission during initial app load or onboarding.
-- [ ] 2.2 Add a reusable notification permission gate that checks system permission and requests it only after a user action.
-- [ ] 2.3 Invoke the reusable gate from Contacts > Invite someone.
-- [ ] 2.4 Invoke the reusable gate from the Housing plan summary Invite my participants action.
+- [x] 2.1 Stop requesting notification permission during initial app load or onboarding.
+- [x] 2.2 Add a reusable notification permission gate that checks system permission and requests it only after a user action.
+- [x] 2.3 Invoke the reusable gate from Contacts > Invite someone.
+- [x] 2.4 Invoke the reusable gate from the Housing plan summary Invite my participants action.
 
 ## 3. Preference Model
 
-- [ ] 3.1 Define local app preferences for general notifications, Contacts notification categories, Housing notification categories, and sound enabled/disabled.
-- [ ] 3.2 Persist category switch changes from the Notifications settings page.
-- [ ] 3.3 Normalize system permission state for display across web, Android, and iOS.
+- [x] 3.1 Define local app preferences for general notifications, Contacts notification categories, Housing notification categories, and sound enabled/disabled.
+- [x] 3.2 Persist category switch changes from the Notifications settings page.
+- [x] 3.3 Normalize system permission state for display across web, Android, and iOS.
 - [x] 3.4 Model sound choices as default/silent first, with future app-provided sounds only behind platform-specific channel and file handling.
 
 ## 4. Verification
 
-- [ ] 4.1 Add widget coverage for the Settings navigation structure and Notifications page UI.
-- [ ] 4.2 Add tests for the reusable permission gate behavior when permission is already granted, denied, or unknown.
+- [x] 4.1 Add widget coverage for the Settings navigation structure and Notifications page UI.
+- [x] 4.2 Add tests for the reusable permission gate behavior when permission is already granted, denied, or unknown.
 - [x] 4.3 Run `flutter test` for the mobile package.
 - [x] 4.4 Run `dart analyze` for changed Dart files.

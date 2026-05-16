@@ -199,7 +199,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       ),
       GoRoute(
         path: '/settings/notifications',
-        builder: (context, state) => const NotificationSettingsScreen(),
+        builder: (context, state) => NotificationSettingsScreen(prefs: prefs),
       ),
       GoRoute(
         path: '/settings/units',

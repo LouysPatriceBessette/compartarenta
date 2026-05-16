@@ -352,6 +352,48 @@ abstract class AppLocalizations {
   /// **'The app will ask after a relevant action, such as inviting someone.'**
   String get settingsNotificationsSystemPermissionBody;
 
+  /// No description provided for @settingsNotificationsSystemPermissionChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking permission…'**
+  String get settingsNotificationsSystemPermissionChecking;
+
+  /// No description provided for @settingsNotificationsSystemPermissionUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Not supported on this platform'**
+  String get settingsNotificationsSystemPermissionUnsupported;
+
+  /// No description provided for @settingsNotificationsSystemPermissionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Not requested yet'**
+  String get settingsNotificationsSystemPermissionUnknown;
+
+  /// No description provided for @settingsNotificationsSystemPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed by the system'**
+  String get settingsNotificationsSystemPermissionGranted;
+
+  /// No description provided for @settingsNotificationsSystemPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked by the system'**
+  String get settingsNotificationsSystemPermissionDenied;
+
+  /// No description provided for @settingsNotificationsSystemPermissionProvisional.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed quietly'**
+  String get settingsNotificationsSystemPermissionProvisional;
+
+  /// No description provided for @settingsNotificationsRequestAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get settingsNotificationsRequestAction;
+
   /// No description provided for @settingsNotificationsGeneralSwitchTitle.
   ///
   /// In en, this message translates to:

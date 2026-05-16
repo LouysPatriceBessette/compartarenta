@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../notifications/notification_permission_gate.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
@@ -118,6 +119,9 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
 
   Future<void> _generate() async {
     if (_generating) return;
+    final prefs = await AppPreferences.load();
+    await NotificationPermissionGate.instance.ensureForUserAction(prefs: prefs);
+    if (!mounted) return;
     setState(() {
       _generating = true;
       _error = null;
@@ -126,7 +130,6 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     try {
       _GeneratedInvitation result;
       if (orchestrator != null) {
-        final prefs = await AppPreferences.load();
         final stubName = prefs.displayName.isEmpty
             ? 'Pending invitation'
             : '${prefs.displayName}\u2019s contact';

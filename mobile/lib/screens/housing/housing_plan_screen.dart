@@ -17,6 +17,7 @@ import '../../housing/proposals/housing_plan_period_gate.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
+import '../../notifications/notification_permission_gate.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
@@ -442,8 +443,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   bool _groupHasAnyShareAmountOverride(PlanGroup group, List<String> pids) {
     for (final pid in pids) {
       if (_shareAmountMinorOverride.containsKey(
-            _shareSplitControllerKeyForGroup(group.id, pid),
-          )) {
+        _shareSplitControllerKeyForGroup(group.id, pid),
+      )) {
         return true;
       }
     }
@@ -1348,6 +1349,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return;
     }
 
+    await NotificationPermissionGate.instance.ensureForUserAction(
+      prefs: widget.prefs,
+    );
+    if (!mounted) return;
+
     var selected = StandardValidityDurations.values[2];
 
     final proceed = await showDialog<bool>(
@@ -1386,13 +1392,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     if (proceed != true || !mounted) return;
 
     final responseExpiresAt = DateTime.now().toUtc().add(selected);
-    final blocking =
-        await listBlockingAgreementDayRanges(_db, excludePlanId: _planId);
+    final blocking = await listBlockingAgreementDayRanges(
+      _db,
+      excludePlanId: _planId,
+    );
     if (candidateConflictsWithAnyBlockingRange(
-          agr.periodStart,
-          agr.periodEnd,
-          blocking,
-        )) {
+      agr.periodStart,
+      agr.periodEnd,
+      blocking,
+    )) {
       if (!mounted) return;
       await showDialog<void>(
         context: context,
@@ -1673,9 +1681,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                           final messenger =
                                               ScaffoldMessenger.of(context);
                                           if (_stepIndex == 0) {
-                                            for (var j = 0;
-                                                j < _otherParticipantCount;
-                                                j++) {
+                                            for (
+                                              var j = 0;
+                                              j < _otherParticipantCount;
+                                              j++
+                                            ) {
                                               final id = _contactIds[j]!;
                                               final c = await _db.getContact(
                                                 id,
@@ -2271,8 +2281,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
         final wEffVec = _effectiveLineWeightsBps(line, pids, weights);
         final hamilton = splitMinorByWeights(basisMinor, wEffVec);
-        final amountShareMinorComputed =
-            hamilton[_ratioParticipantIndex];
+        final amountShareMinorComputed = hamilton[_ratioParticipantIndex];
         final amountShareMinor =
             _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
 
@@ -2573,8 +2582,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         final wEff = _draftRatioWeightsBps[key] ?? wDb;
         final wEffVec = _effectiveGroupWeightsBps(group, pids, weights);
         final hamilton = splitMinorByWeights(basisMinor, wEffVec);
-        final amountShareMinorComputed =
-            hamilton[_ratioParticipantIndex];
+        final amountShareMinorComputed = hamilton[_ratioParticipantIndex];
         final amountShareMinor =
             _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
 
@@ -2950,12 +2958,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             pids,
                           ),
                         _SplitUncategorized(:final lines) => Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (final line in lines)
-                                _buildSplitRatioLineCard(context, line, pids),
-                            ],
-                          ),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final line in lines)
+                              _buildSplitRatioLineCard(context, line, pids),
+                          ],
+                        ),
                       };
                     },
                   ),
@@ -4009,9 +4017,9 @@ class _SummaryViewState extends State<_SummaryView> {
       widget.db.getAgreementForPlan(widget.planId),
       widget.db.listPlanRatios(widget.planId),
       widget.db.listPlanGroups(widget.planId),
-      (widget.db.select(widget.db.proposalPackages)
-            ..where((t) => t.planId.equals(widget.planId)))
-          .getSingleOrNull(),
+      (widget.db.select(
+        widget.db.proposalPackages,
+      )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull(),
     ]);
     return _SummarySnapshot(
       participants: r[0] as List<Participant>,
@@ -4048,14 +4056,15 @@ class _SummaryViewState extends State<_SummaryView> {
           return int.tryParse(tail) ?? 999;
         }
 
-        final roster = data.participants
-            .where(
-              (p) =>
-                  p.id == '${widget.planId}:self' ||
-                  p.id.startsWith('${widget.planId}:p'),
-            )
-            .toList()
-          ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
+        final roster =
+            data.participants
+                .where(
+                  (p) =>
+                      p.id == '${widget.planId}:self' ||
+                      p.id.startsWith('${widget.planId}:p'),
+                )
+                .toList()
+              ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
         final lines = data.lines;
         final agr = data.agr;
         final ratios = data.ratios;
@@ -4122,9 +4131,7 @@ class _SummaryViewState extends State<_SummaryView> {
               final ws = <int>[
                 for (final rid in rosterIds)
                   ratios
-                      .where(
-                        (r) => r.groupId == g.id && r.participantId == rid,
-                      )
+                      .where((r) => r.groupId == g.id && r.participantId == rid)
                       .fold<int>(0, (a, r) => a + r.weight),
               ];
               participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
@@ -4153,8 +4160,7 @@ class _SummaryViewState extends State<_SummaryView> {
                 for (final rid in rosterIds)
                   ratios
                       .where(
-                        (r) =>
-                            r.lineId == line.id && r.participantId == rid,
+                        (r) => r.lineId == line.id && r.participantId == rid,
                       )
                       .fold<int>(0, (a, r) => a + r.weight),
               ];

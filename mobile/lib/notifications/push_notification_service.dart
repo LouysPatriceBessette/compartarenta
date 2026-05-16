@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../app_root_navigator.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
+import '../prefs/app_preferences.dart';
 
 /// FCM + local notifications for housing proposals (and future message types).
 ///
@@ -24,10 +24,20 @@ class PushNotificationService {
 
   static const AndroidNotificationChannel _androidChannel =
       AndroidNotificationChannel(
-    'housing_proposals_v1',
-    'Housing proposals',
-    description: 'Alerts when a co-participant sends a housing plan proposal.',
+        'housing_proposals_v1',
+        'Housing proposals',
+        description:
+            'Alerts when a co-participant sends a housing plan proposal.',
+        importance: Importance.high,
+      );
+  static const AndroidNotificationChannel
+  _androidSilentChannel = AndroidNotificationChannel(
+    'housing_proposals_silent_v1',
+    'Housing proposals (silent)',
+    description:
+        'Silent alerts when a co-participant sends a housing plan proposal.',
     importance: Importance.high,
+    playSound: false,
   );
 
   static const String _housingTapPayload = 'housing_proposal';
@@ -40,8 +50,7 @@ class PushNotificationService {
   static bool _started = false;
 
   static AppLocalizations _l10nForUiLocale() {
-    final lang =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final lang = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     if (lang == 'fr') {
       return lookupAppLocalizations(const Locale('fr'));
     }
@@ -60,8 +69,10 @@ class PushNotificationService {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e, st) {
-      debugPrint('PushNotificationService: Firebase.initializeApp failed: '
-          '$e\n$st');
+      debugPrint(
+        'PushNotificationService: Firebase.initializeApp failed: '
+        '$e\n$st',
+      );
       _started = false;
       return;
     }
@@ -69,24 +80,19 @@ class PushNotificationService {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings();
     await _plugin.initialize(
-      const InitializationSettings(
-        android: androidInit,
-        iOS: iosInit,
-      ),
+      const InitializationSettings(android: androidInit, iOS: iosInit),
       onDidReceiveNotificationResponse: _onLocalNotificationTapped,
     );
 
     await _ensureAndroidChannel();
 
-    await _requestPermissions();
-
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await FirebaseMessaging.instance
           .setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+            alert: true,
+            badge: true,
+            sound: true,
+          );
     }
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
@@ -99,41 +105,26 @@ class PushNotificationService {
     }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((token) {
-      debugPrint('PushNotificationService: FCM token refreshed (length '
-          '${token.length})');
+      debugPrint(
+        'PushNotificationService: FCM token refreshed (length '
+        '${token.length})',
+      );
     });
   }
 
   static Future<void> _ensureAndroidChannel() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.createNotificationChannel(_androidChannel);
-  }
-
-  static Future<void> _requestPermissions() async {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final status = await Permission.notification.request();
-      debugPrint('PushNotificationService: Android notification permission '
-          '$status');
-    }
-    final settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    debugPrint(
-      'PushNotificationService: FCM permission '
-      '${settings.authorizationStatus}',
-    );
+    await android?.createNotificationChannel(_androidSilentChannel);
   }
 
   static void _onForegroundMessage(RemoteMessage message) {
     if (!isHousingProposalRemoteMessage(message)) return;
     unawaited(
-      showRemoteMessageAsLocalNotification(
-        message,
-        isBackgroundIsolate: false,
-      ),
+      showRemoteMessageAsLocalNotification(message, isBackgroundIsolate: false),
     );
   }
 
@@ -163,10 +154,12 @@ class PushNotificationService {
         ? lookupAppLocalizations(const Locale('en'))
         : _l10nForUiLocale();
 
-    final title = message.notification?.title ??
+    final title =
+        message.notification?.title ??
         message.data['title'] as String? ??
         l10n.pushNotificationHousingProposalTitle;
-    final body = message.notification?.body ??
+    final body =
+        message.notification?.body ??
         message.data['body'] as String? ??
         l10n.pushNotificationHousingProposalBody;
 
@@ -181,35 +174,39 @@ class PushNotificationService {
           iOS: DarwinInitializationSettings(),
         ),
       );
-      final android = plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await android?.createNotificationChannel(_androidChannel);
+      await android?.createNotificationChannel(_androidSilentChannel);
     }
 
+    final prefs = await AppPreferences.load();
+    final playSound =
+        prefs.notificationsEnabled && prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+
     final androidDetails = AndroidNotificationDetails(
-      _androidChannel.id,
-      _androidChannel.name,
-      channelDescription: _androidChannel.description,
+      androidChannel.id,
+      androidChannel.name,
+      channelDescription: androidChannel.description,
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
+      playSound: playSound,
     );
-    const iosDetails = DarwinNotificationDetails();
+    final iosDetails = DarwinNotificationDetails(presentSound: playSound);
     final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
 
-    final id = message.messageId?.hashCode.abs() ??
+    final id =
+        message.messageId?.hashCode.abs() ??
         DateTime.now().millisecondsSinceEpoch.remainder(1 << 30);
 
-    await plugin.show(
-      id,
-      title,
-      body,
-      details,
-      payload: _housingTapPayload,
-    );
+    await plugin.show(id, title, body, details, payload: _housingTapPayload);
   }
 
   static void _onLocalNotificationTapped(NotificationResponse response) {

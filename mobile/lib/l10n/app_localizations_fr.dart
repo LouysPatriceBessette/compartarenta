@@ -136,6 +136,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'L’app fera la demande après une action pertinente, comme inviter quelqu’un.';
 
   @override
+  String get settingsNotificationsSystemPermissionChecking =>
+      'Vérification de la permission…';
+
+  @override
+  String get settingsNotificationsSystemPermissionUnsupported =>
+      'Non pris en charge sur cette plateforme';
+
+  @override
+  String get settingsNotificationsSystemPermissionUnknown =>
+      'Pas encore demandé';
+
+  @override
+  String get settingsNotificationsSystemPermissionGranted =>
+      'Autorisé par le système';
+
+  @override
+  String get settingsNotificationsSystemPermissionDenied =>
+      'Bloqué par le système';
+
+  @override
+  String get settingsNotificationsSystemPermissionProvisional =>
+      'Autorisé silencieusement';
+
+  @override
+  String get settingsNotificationsRequestAction => 'Autoriser';
+
+  @override
   String get settingsNotificationsGeneralSwitchTitle =>
       'Autoriser les notifications de l’app';
 

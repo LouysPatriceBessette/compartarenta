@@ -137,6 +137,33 @@ class AppLocalizationsEs extends AppLocalizations {
       'La app lo pedirá después de una acción relevante, como invitar a alguien.';
 
   @override
+  String get settingsNotificationsSystemPermissionChecking =>
+      'Comprobando permiso…';
+
+  @override
+  String get settingsNotificationsSystemPermissionUnsupported =>
+      'No compatible con esta plataforma';
+
+  @override
+  String get settingsNotificationsSystemPermissionUnknown =>
+      'Aún no solicitado';
+
+  @override
+  String get settingsNotificationsSystemPermissionGranted =>
+      'Permitido por el sistema';
+
+  @override
+  String get settingsNotificationsSystemPermissionDenied =>
+      'Bloqueado por el sistema';
+
+  @override
+  String get settingsNotificationsSystemPermissionProvisional =>
+      'Permitido en silencio';
+
+  @override
+  String get settingsNotificationsRequestAction => 'Permitir';
+
+  @override
   String get settingsNotificationsGeneralSwitchTitle =>
       'Permitir notificaciones de la app';
 

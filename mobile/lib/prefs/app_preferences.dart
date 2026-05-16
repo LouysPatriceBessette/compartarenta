@@ -26,8 +26,24 @@ class AppPreferences extends ChangeNotifier {
   static const _kTimeZonePolicy = 'prefs.timeZonePolicy';
   static const _kLanguageCode = 'prefs.languageCode';
 
+  static const _kNotificationsEnabled = 'notifications.enabled';
+  static const _kNotificationsContactAddRequests =
+      'notifications.contacts.addRequests';
+  static const _kNotificationsContactDisconnection =
+      'notifications.contacts.disconnection';
+  static const _kNotificationsContactInvitationExpiration =
+      'notifications.contacts.invitationExpiration';
+  static const _kNotificationsHousingPlanSubmission =
+      'notifications.housing.planSubmission';
+  static const _kNotificationsHousingDecisionChange =
+      'notifications.housing.decisionChange';
+  static const _kNotificationsHousingOfferExpiration =
+      'notifications.housing.offerExpiration';
+  static const _kNotificationsSoundEnabled = 'notifications.sound.enabled';
+
   /// Default housing draft plan reached the post-wizard summary at least once.
-  static const _kHousingDefaultSummaryReached = 'housing.default.summaryReached';
+  static const _kHousingDefaultSummaryReached =
+      'housing.default.summaryReached';
   static const _kCarSharingPlanDraft = 'carSharing.planDraftJson';
 
   static Future<AppPreferences> load() async {
@@ -135,6 +151,52 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _notificationBool(String key) => _prefs.getBool(key) ?? true;
+
+  Future<void> _setNotificationBool(String key, bool value) async {
+    await _prefs.setBool(key, value);
+    notifyListeners();
+  }
+
+  bool get notificationsEnabled => _notificationBool(_kNotificationsEnabled);
+  Future<void> setNotificationsEnabled(bool value) =>
+      _setNotificationBool(_kNotificationsEnabled, value);
+
+  bool get notificationContactAddRequests =>
+      _notificationBool(_kNotificationsContactAddRequests);
+  Future<void> setNotificationContactAddRequests(bool value) =>
+      _setNotificationBool(_kNotificationsContactAddRequests, value);
+
+  bool get notificationContactDisconnection =>
+      _notificationBool(_kNotificationsContactDisconnection);
+  Future<void> setNotificationContactDisconnection(bool value) =>
+      _setNotificationBool(_kNotificationsContactDisconnection, value);
+
+  bool get notificationContactInvitationExpiration =>
+      _notificationBool(_kNotificationsContactInvitationExpiration);
+  Future<void> setNotificationContactInvitationExpiration(bool value) =>
+      _setNotificationBool(_kNotificationsContactInvitationExpiration, value);
+
+  bool get notificationHousingPlanSubmission =>
+      _notificationBool(_kNotificationsHousingPlanSubmission);
+  Future<void> setNotificationHousingPlanSubmission(bool value) =>
+      _setNotificationBool(_kNotificationsHousingPlanSubmission, value);
+
+  bool get notificationHousingDecisionChange =>
+      _notificationBool(_kNotificationsHousingDecisionChange);
+  Future<void> setNotificationHousingDecisionChange(bool value) =>
+      _setNotificationBool(_kNotificationsHousingDecisionChange, value);
+
+  bool get notificationHousingOfferExpiration =>
+      _notificationBool(_kNotificationsHousingOfferExpiration);
+  Future<void> setNotificationHousingOfferExpiration(bool value) =>
+      _setNotificationBool(_kNotificationsHousingOfferExpiration, value);
+
+  bool get notificationSoundEnabled =>
+      _notificationBool(_kNotificationsSoundEnabled);
+  Future<void> setNotificationSoundEnabled(bool value) =>
+      _setNotificationBool(_kNotificationsSoundEnabled, value);
+
   bool get hasProfile => displayName.isNotEmpty && avatarId.isNotEmpty;
   bool get hasRegionalPrefs =>
       currency.isNotEmpty && dateFormat.isNotEmpty && distanceUnit != null;
@@ -148,9 +210,13 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
-  String get carSharingPlanDraftJson => _prefs.getString(_kCarSharingPlanDraft) ?? '';
+  String get carSharingPlanDraftJson =>
+      _prefs.getString(_kCarSharingPlanDraft) ?? '';
 
-  Future<void> setCarSharingPlanDraftJson(String value, {bool notify = true}) async {
+  Future<void> setCarSharingPlanDraftJson(
+    String value, {
+    bool notify = true,
+  }) async {
     await _prefs.setString(_kCarSharingPlanDraft, value);
     if (notify) notifyListeners();
   }
@@ -182,6 +248,15 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kDistanceUnit);
     await _prefs.remove(_kTimeZonePolicy);
     await _prefs.remove(_kLanguageCode);
+
+    await _prefs.remove(_kNotificationsEnabled);
+    await _prefs.remove(_kNotificationsContactAddRequests);
+    await _prefs.remove(_kNotificationsContactDisconnection);
+    await _prefs.remove(_kNotificationsContactInvitationExpiration);
+    await _prefs.remove(_kNotificationsHousingPlanSubmission);
+    await _prefs.remove(_kNotificationsHousingDecisionChange);
+    await _prefs.remove(_kNotificationsHousingOfferExpiration);
+    await _prefs.remove(_kNotificationsSoundEnabled);
 
     await _prefs.remove(_kHousingDefaultSummaryReached);
     await _prefs.remove(_kCarSharingPlanDraft);
