@@ -297,20 +297,25 @@ class HandshakeOrchestrator {
     required Duration validFor,
     required String stubDisplayName,
     required String stubAvatarId,
+    String? reconnectContactId,
   }) async {
     final created = _now().toUtc();
     final code = InvitationCode.generate();
     final invitationIdHex = code.invitationIdHex();
-    final stubContactId = 'contact:handshake:$invitationIdHex';
+    final stubContactId =
+        reconnectContactId ?? 'contact:handshake:$invitationIdHex';
 
-    // 1) Stub Contact (local-only, will be promoted on accept).
-    await _contacts.upsertLocalOnly(
-      id: stubContactId,
-      displayName: stubDisplayName,
-      avatarId: stubAvatarId,
-      createdAt: created,
-      updatedAt: created,
-    );
+    // 1) Stub Contact (local-only, will be promoted on accept). Reconnection
+    // invitations point at the existing disconnected Contact instead.
+    if (reconnectContactId == null) {
+      await _contacts.upsertLocalOnly(
+        id: stubContactId,
+        displayName: stubDisplayName,
+        avatarId: stubAvatarId,
+        createdAt: created,
+        updatedAt: created,
+      );
+    }
 
     // 2) Local invitation row owns the lifecycle (pending / used / ...).
     await _db.upsertContactInvitation(
@@ -703,10 +708,17 @@ class HandshakeOrchestrator {
       final List<RelayEnvelopeView> envs;
       try {
         envs = await _relay.fetchInbox(recipient: myListen);
-      } on RelayClientError {
+      } on RelayClientError catch (e) {
+        debugPrint('steady inbox fetch failed for ${contact.id}: $e');
         continue;
-      } on TimeoutException {
+      } on TimeoutException catch (e) {
+        debugPrint('steady inbox fetch timed out for ${contact.id}: $e');
         continue;
+      }
+      if (envs.isNotEmpty) {
+        debugPrint(
+          'steady inbox fetched ${envs.length} envelope(s) for ${contact.id}',
+        );
       }
       for (final env in envs) {
         try {
@@ -1172,6 +1184,7 @@ class HandshakeOrchestrator {
       addrInvitee: addrInvitee,
     );
     await refreshIncomingHandshakes();
+    startPolling();
   }
 
   Future<void> _finalizeInviteeAccept({
@@ -1197,13 +1210,25 @@ class HandshakeOrchestrator {
       throw HandshakeOrchestratorError('relay_error', e);
     }
 
-    await _contacts.promoteToConnected(
-      id: row.contactStubId,
-      relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
-      peerPublicMaterialB64: RelayRouting.b64(ack.inviterLongTermPublicKey),
+    final peerPublicMaterialB64 = RelayRouting.b64(
+      ack.inviterLongTermPublicKey,
+    );
+    final reconnectCandidate = await _contacts.disconnectedReconnectCandidate(
+      peerPublicMaterialB64: peerPublicMaterialB64,
       displayName: ack.displayName.isEmpty ? null : ack.displayName,
       avatarId: ack.avatarId.isEmpty ? null : ack.avatarId,
     );
+    final promoteContactId = reconnectCandidate?.id ?? row.contactStubId;
+    await _contacts.promoteToConnected(
+      id: promoteContactId,
+      relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
+      peerPublicMaterialB64: peerPublicMaterialB64,
+      displayName: ack.displayName.isEmpty ? null : ack.displayName,
+      avatarId: ack.avatarId.isEmpty ? null : ack.avatarId,
+    );
+    if (promoteContactId != row.contactStubId) {
+      await _contacts.deleteLocally(row.contactStubId);
+    }
 
     await _markHandshake(
       row.id,
@@ -1212,6 +1237,7 @@ class HandshakeOrchestrator {
         ack.inviterLongTermPublicKey,
       ),
     );
+    startPolling();
   }
 
   // ---------------------------------------------------------------------
@@ -1375,6 +1401,7 @@ class HandshakeOrchestrator {
     }
 
     await _contacts.demoteToLocalOnly(contactId);
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
   }
 
   // ---------------------------------------------------------------------

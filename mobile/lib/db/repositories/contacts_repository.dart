@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 
+import '../../contacts/contact_display.dart';
 import '../app_database.dart';
 
 /// Public, on-device-only repository for Contacts.
@@ -25,6 +26,28 @@ class ContactsRepository {
   }
 
   Future<Contact?> get(String id) => _db.getContact(id);
+
+  Future<Contact?> disconnectedReconnectCandidate({
+    required String peerPublicMaterialB64,
+    String? displayName,
+    String? avatarId,
+  }) async {
+    final rows = await list(includeDeleted: false);
+    for (final c in rows) {
+      if (!c.showsDisconnectedStatus) continue;
+      if (c.peerPublicMaterial == peerPublicMaterialB64) return c;
+    }
+    for (final c in rows) {
+      if (!c.showsDisconnectedStatus) continue;
+      if (displayName != null &&
+          displayName.isNotEmpty &&
+          c.displayName == displayName &&
+          (avatarId == null || avatarId.isEmpty || c.avatarId == avatarId)) {
+        return c;
+      }
+    }
+    return null;
+  }
 
   Future<void> upsertLocalOnly({
     required String id,
@@ -68,10 +91,7 @@ class ContactsRepository {
   Future<void> setNotes(String id, String notes) async {
     final now = DateTime.now().toUtc();
     await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
-      ContactsCompanion(
-        notes: drift.Value(notes),
-        updatedAt: drift.Value(now),
-      ),
+      ContactsCompanion(notes: drift.Value(notes), updatedAt: drift.Value(now)),
     );
   }
 
@@ -201,7 +221,6 @@ class ContactsRepository {
       ContactsCompanion(
         kind: const drift.Value('local-only'),
         relayRoutingId: const drift.Value(null),
-        peerPublicMaterial: const drift.Value(null),
         disconnectedAt: drift.Value(now),
         theirLabelForMe: const drift.Value(null),
         updatedAt: drift.Value(now),

@@ -112,6 +112,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       final activeBefore = await orch.activePendingHandshakeRows();
       final allBefore = await orch.allPendingHandshakeRowsForDiagnostics();
       await orch.processAllPendingHandshakes();
+      await orch.pollSteadyStateInboxes();
       await orch.refreshIncomingHandshakes();
       if (!mounted) return;
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;

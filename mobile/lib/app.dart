@@ -227,7 +227,12 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
           ),
           GoRoute(
             path: 'invite/new',
-            builder: (context, state) => const GenerateInvitationScreen(),
+            builder: (context, state) {
+              final extra = state.extra;
+              return GenerateInvitationScreen(
+                reconnectContactId: extra is String ? extra : null,
+              );
+            },
           ),
           GoRoute(
             path: 'invitations',

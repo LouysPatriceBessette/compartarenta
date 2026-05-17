@@ -272,6 +272,77 @@ void main() {
       await inviter.orchestrator.pollSteadyStateInboxes();
 
       expect(inviter.notifications.disconnections, ['Invitee Self-Name']);
+      final inviterContact = await inviter.contacts.get(invite.localContactId);
+      expect(inviterContact?.kind, 'local-only');
+      expect(inviterContact?.disconnectedAt, isNotNull);
+    },
+  );
+
+  test(
+    'reconnection reuses disconnected contacts instead of duplicating stubs',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      await inviter.orchestrator.processAllPendingHandshakes();
+      await inviter.orchestrator.acceptIncoming(
+        inviter.orchestrator.incomingHandshakes.value.single.handshakeId,
+        selfDisplayName: 'Inviter Self-Name',
+        selfAvatarId: 'mdi:inviter-avatar',
+      );
+      await invitee.orchestrator.processAllPendingHandshakes();
+
+      await invitee.orchestrator.sendDisconnect(redeem.localContactId);
+      await inviter.orchestrator.pollSteadyStateInboxes();
+      expect(
+        (await invitee.contacts.get(redeem.localContactId))?.disconnectedAt,
+        isNotNull,
+      );
+      expect(
+        (await inviter.contacts.get(invite.localContactId))?.disconnectedAt,
+        isNotNull,
+      );
+
+      final reconnect = await invitee.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'unused reconnect stub',
+        stubAvatarId: 'mdi:unused',
+        reconnectContactId: redeem.localContactId,
+      );
+      expect(reconnect.localContactId, redeem.localContactId);
+
+      final reconnectCode =
+          (parseInvitationCode(reconnect.shortCode) as InvitationCodeOk).code;
+      await inviter.orchestrator.redeemInvitation(
+        code: reconnectCode,
+        selfDisplayName: 'Inviter Self-Name',
+        selfAvatarId: 'mdi:inviter-avatar',
+      );
+      await invitee.orchestrator.processAllPendingHandshakes();
+      await invitee.orchestrator.acceptIncoming(
+        invitee.orchestrator.incomingHandshakes.value.single.handshakeId,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      await inviter.orchestrator.processAllPendingHandshakes();
+
+      final inviteeVisible = await invitee.contacts.list();
+      final inviterVisible = await inviter.contacts.list();
+      expect(inviteeVisible, hasLength(1));
+      expect(inviterVisible, hasLength(1));
+      expect(inviteeVisible.single.id, redeem.localContactId);
+      expect(inviterVisible.single.id, invite.localContactId);
+      expect(inviteeVisible.single.kind, 'connected');
+      expect(inviterVisible.single.kind, 'connected');
     },
   );
 

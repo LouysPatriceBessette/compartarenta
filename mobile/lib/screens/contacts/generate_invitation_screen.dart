@@ -17,7 +17,9 @@ import '../../widgets/standard_validity_duration_bar.dart';
 /// Screen that generates a new invitation code and presents it for out-of-band
 /// sharing.
 class GenerateInvitationScreen extends StatefulWidget {
-  const GenerateInvitationScreen({super.key});
+  const GenerateInvitationScreen({super.key, this.reconnectContactId});
+
+  final String? reconnectContactId;
 
   @override
   State<GenerateInvitationScreen> createState() =>
@@ -149,6 +151,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
         validFor: _validFor,
         stubDisplayName: stubName,
         stubAvatarId: stubAvatar,
+        reconnectContactId: widget.reconnectContactId,
       );
       final result = _GeneratedInvitation(
         row: r.invitation,

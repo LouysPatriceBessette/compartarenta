@@ -73,7 +73,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     .then((_) => _reload()),
                 onReconnect: contact.showsDisconnectedStatus
                     ? () async {
-                        await context.push('/contacts/invite/new');
+                        await context.push(
+                          '/contacts/invite/new',
+                          extra: contact.id,
+                        );
                         if (mounted) _reload();
                       }
                     : null,
