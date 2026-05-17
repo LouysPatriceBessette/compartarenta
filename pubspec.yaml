@@ -73,8 +73,11 @@ melos:
       run: cd mobile && flutter build apk --release --flavor prod
 
     build:apk:dev:
-      description: Release APK (dev) for internal demos
-      run: cd mobile && flutter build apk --release --flavor dev
+      description: Release APK (dev) for internal demos; defaults to the real relay
+      run: |
+        cd mobile
+        API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
+        flutter build apk --release --flavor dev --dart-define=ENV=dev --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"
 
     apk:list:
       description: List APK outputs (from repo root; run a build:apk:* script first)
