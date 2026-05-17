@@ -120,6 +120,14 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
 
   Future<void> _generate() async {
     if (_generating) return;
+    final l10n = AppLocalizations.of(context);
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) {
+      setState(() {
+        _error = l10n.contactsHandshakeNotAvailableYet;
+      });
+      return;
+    }
     final prefs = await AppPreferences.load();
     final notificationStatus = await NotificationPermissionGate.instance
         .ensureForUserAction(prefs: prefs);
@@ -132,49 +140,35 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
       _generating = true;
       _error = null;
     });
-    final orchestrator = HandshakeOrchestrator.maybeInstance;
     try {
-      _GeneratedInvitation result;
-      if (orchestrator != null) {
-        final stubName = prefs.displayName.isEmpty
-            ? 'Pending invitation'
-            : '${prefs.displayName}\u2019s contact';
-        final stubAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
-        final r = await orchestrator.generateInvitation(
-          validFor: _validFor,
-          stubDisplayName: stubName,
-          stubAvatarId: stubAvatar,
-        );
-        result = _GeneratedInvitation(
-          row: r.invitation,
-          shortCode: r.shortCode,
-          deepLink: r.deepLink,
-          webLink: r.webLink,
-        );
-      } else {
-        final r = await _repo.generate(validFor: _validFor);
-        result = _GeneratedInvitation(
-          row: r.row,
-          shortCode: r.shortCode,
-          deepLink: r.deepLink,
-          webLink: r.webLink,
-        );
-      }
+      final stubName = prefs.displayName.isEmpty
+          ? 'Pending invitation'
+          : '${prefs.displayName}\u2019s contact';
+      final stubAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+      final r = await orchestrator.generateInvitation(
+        validFor: _validFor,
+        stubDisplayName: stubName,
+        stubAvatarId: stubAvatar,
+      );
+      final result = _GeneratedInvitation(
+        row: r.invitation,
+        shortCode: r.shortCode,
+        deepLink: r.deepLink,
+        webLink: r.webLink,
+      );
       if (!mounted) return;
       setState(() {
         _generated = result;
         _generating = false;
       });
-      if (orchestrator != null) {
-        _attachIncomingListener();
-        _startGeneratedPolling(orchestrator);
-        _routeToIncomingIfCurrentInvitationHasRequest();
-      }
+      _attachIncomingListener();
+      _startGeneratedPolling(orchestrator);
+      _routeToIncomingIfCurrentInvitationHasRequest();
     } on HandshakeOrchestratorError catch (e) {
       if (!mounted) return;
       setState(() {
         _generating = false;
-        _error = e.code;
+        _error = _handshakeErrorLabel(l10n, e.code);
       });
     } catch (e) {
       if (!mounted) return;
@@ -183,6 +177,17 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
         _error = e.toString();
       });
     }
+  }
+
+  String _handshakeErrorLabel(AppLocalizations l10n, String code) {
+    return switch (code) {
+      'relay_unavailable' ||
+      'relay_error' => l10n.contactsHandshakeErrorRelayUnavailable,
+      'already_completed' => l10n.contactsHandshakeErrorAlreadyCompleted,
+      'nonce_already_consumed' => l10n.contactsHandshakeErrorNonceConsumed,
+      'expired_code' || 'expired' => l10n.contactsHandshakeErrorExpired,
+      _ => l10n.contactsHandshakeErrorUnknown,
+    };
   }
 
   Future<void> _revoke() async {

@@ -1324,6 +1324,30 @@ abstract class AppLocalizations {
   /// **'Open the app to review the proposal.'**
   String get pushNotificationHousingProposalBody;
 
+  /// No description provided for @pushNotificationContactAddRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request'**
+  String get pushNotificationContactAddRequestTitle;
+
+  /// No description provided for @pushNotificationContactAddRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to connect with you.'**
+  String pushNotificationContactAddRequestBody(String name);
+
+  /// No description provided for @pushNotificationContactDisconnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact disconnected'**
+  String get pushNotificationContactDisconnectionTitle;
+
+  /// No description provided for @pushNotificationContactDisconnectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} disconnected from you.'**
+  String pushNotificationContactDisconnectionBody(String name);
+
   /// No description provided for @housingInviteGenerateCodes.
   ///
   /// In en, this message translates to:
@@ -2191,6 +2215,40 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} new connection requests'**
   String contactsIncomingBannerMany(int count);
+
+  /// No description provided for @contactsRefreshIncomingTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for connection requests'**
+  String get contactsRefreshIncomingTooltip;
+
+  /// No description provided for @contactsRefreshIncomingFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending connection request(s).'**
+  String contactsRefreshIncomingFound(int count);
+
+  /// No description provided for @contactsRefreshIncomingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending connection requests found.'**
+  String get contactsRefreshIncomingNone;
+
+  /// No description provided for @contactsRefreshIncomingNoneWithActivePolls.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending connection requests found. Active relay poll(s): {count}.'**
+  String contactsRefreshIncomingNoneWithActivePolls(int count);
+
+  /// No description provided for @contactsRefreshIncomingDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending connection requests found. Active relay poll(s): {activeCount}. Local handshake row(s): {totalCount}. Latest state: {latestState}.'**
+  String contactsRefreshIncomingDiagnostics(
+    int activeCount,
+    int totalCount,
+    String latestState,
+  );
 
   /// No description provided for @contactsCodeErrorEmpty.
   ///

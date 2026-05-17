@@ -6,6 +6,7 @@ import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
+import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 
 /// Detail view for a Contact. Exposes edit, delete, block, and (when
@@ -24,6 +25,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   late final ContactsRepository _repo = ContactsRepository(_db);
 
   Future<Contact?>? _future;
+  Future<IncomingHandshakeView?>? _incomingFuture;
 
   @override
   void initState() {
@@ -34,6 +36,8 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   void _reload() {
     setState(() {
       _future = _repo.get(widget.contactId);
+      _incomingFuture = HandshakeOrchestrator.maybeInstance
+          ?.incomingHandshakeForContact(widget.contactId);
     });
   }
 
@@ -52,26 +56,101 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           if (contact == null) {
             return Center(child: Text(l10n.contactsDetailMissing));
           }
-          return _ContactDetail(
-            contact: contact,
-            onEdit: () => context
-                .push('/contacts/${contact.id}/edit')
-                .then((_) => _reload()),
-            onReconnect: contact.showsDisconnectedStatus
-                ? () async {
-                    await context.push('/contacts/invite/new');
-                    if (mounted) _reload();
-                  }
-                : null,
-            onDelete: () => _confirmAndDelete(contact),
-            onToggleBlock: () => _confirmAndToggleBlock(contact),
-            onDisconnect: contact.kind == 'connected'
-                ? () => _confirmAndDisconnect(contact)
-                : null,
+          return FutureBuilder<IncomingHandshakeView?>(
+            future: _incomingFuture,
+            builder: (context, incomingSnapshot) {
+              return _ContactDetail(
+                contact: contact,
+                incomingRequest: incomingSnapshot.data,
+                onAcceptIncoming: incomingSnapshot.data == null
+                    ? null
+                    : () => _acceptIncoming(incomingSnapshot.data!),
+                onRejectIncoming: incomingSnapshot.data == null
+                    ? null
+                    : () => _rejectIncoming(incomingSnapshot.data!),
+                onEdit: () => context
+                    .push('/contacts/${contact.id}/edit')
+                    .then((_) => _reload()),
+                onReconnect: contact.showsDisconnectedStatus
+                    ? () async {
+                        await context.push('/contacts/invite/new');
+                        if (mounted) _reload();
+                      }
+                    : null,
+                onDelete: () => _confirmAndDelete(contact),
+                onToggleBlock: () => _confirmAndToggleBlock(contact),
+                onDisconnect: contact.kind == 'connected'
+                    ? () => _confirmAndDisconnect(contact)
+                    : null,
+              );
+            },
           );
         },
       ),
     );
+  }
+
+  Future<void> _acceptIncoming(IncomingHandshakeView view) async {
+    final l10n = AppLocalizations.of(context);
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.contactsHandshakeNotAvailableYet)),
+      );
+      return;
+    }
+    try {
+      final prefs = await AppPreferences.load();
+      final selfName = prefs.displayName.isEmpty
+          ? 'Unknown'
+          : prefs.displayName;
+      final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+      await orch.acceptIncoming(
+        view.handshakeId,
+        selfDisplayName: selfName,
+        selfAvatarId: selfAvatar,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.contactsHandshakeCompleted)));
+      _reload();
+    } on HandshakeOrchestratorError catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_handshakeErrorMessage(l10n, e.code))),
+      );
+    }
+  }
+
+  Future<void> _rejectIncoming(IncomingHandshakeView view) async {
+    final l10n = AppLocalizations.of(context);
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.contactsHandshakeNotAvailableYet)),
+      );
+      return;
+    }
+    try {
+      await orch.rejectIncoming(view.handshakeId);
+      if (!mounted) return;
+      context.pop();
+    } on HandshakeOrchestratorError catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_handshakeErrorMessage(l10n, e.code))),
+      );
+    }
+  }
+
+  String _handshakeErrorMessage(AppLocalizations l10n, String code) {
+    return switch (code) {
+      'relay_unavailable' ||
+      'relay_error' => l10n.contactsHandshakeErrorRelayUnavailable,
+      'already_completed' => l10n.contactsHandshakeErrorAlreadyCompleted,
+      _ => l10n.contactsHandshakeErrorUnknown,
+    };
   }
 
   Future<void> _confirmAndDelete(Contact contact) async {
@@ -221,9 +300,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     try {
       await orchestrator.sendDisconnect(contact.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.contactsDisconnectSent)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.contactsDisconnectSent)));
     } on HandshakeOrchestratorError {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -237,6 +316,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 class _ContactDetail extends StatelessWidget {
   const _ContactDetail({
     required this.contact,
+    this.incomingRequest,
+    this.onAcceptIncoming,
+    this.onRejectIncoming,
     required this.onEdit,
     this.onReconnect,
     required this.onDelete,
@@ -245,6 +327,9 @@ class _ContactDetail extends StatelessWidget {
   });
 
   final Contact contact;
+  final IncomingHandshakeView? incomingRequest;
+  final VoidCallback? onAcceptIncoming;
+  final VoidCallback? onRejectIncoming;
   final VoidCallback onEdit;
   final VoidCallback? onReconnect;
   final VoidCallback onDelete;
@@ -273,12 +358,8 @@ class _ContactDetail extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 32,
-              backgroundColor:
-                  Theme.of(context).colorScheme.primaryContainer,
-              child: Icon(
-                AvatarPalette.iconFor(contact.avatarId),
-                size: 36,
-              ),
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(AvatarPalette.iconFor(contact.avatarId), size: 36),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -300,20 +381,20 @@ class _ContactDetail extends StatelessWidget {
                   Wrap(
                     spacing: 6,
                     children: [
-                      Chip(
-                        label: Text(statusLabel),
-                      ),
+                      Chip(label: Text(statusLabel)),
                       if (blocked)
                         Chip(
                           label: Text(l10n.contactsKindBlocked),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.errorContainer,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.errorContainer,
                         ),
                       if (deleted)
                         Chip(
                           label: Text(l10n.contactsKindDeleted),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surfaceContainerHighest,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                         ),
                     ],
                   ),
@@ -332,6 +413,50 @@ class _ContactDetail extends StatelessWidget {
           Text(contact.notes),
         ],
         const SizedBox(height: 24),
+        if (incomingRequest != null) ...[
+          Card(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.contactsIncomingTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.contactsIncomingBody(
+                      incomingRequest!.peerDisplayName.isEmpty
+                          ? 'Unknown'
+                          : incomingRequest!.peerDisplayName,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.close),
+                        label: Text(l10n.contactsIncomingReject),
+                        onPressed: onRejectIncoming,
+                      ),
+                      FilledButton.icon(
+                        icon: const Icon(Icons.check),
+                        label: Text(l10n.contactsIncomingAccept),
+                        onPressed: onAcceptIncoming,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (onReconnect != null && !deleted) ...[
           FilledButton.icon(
             icon: const Icon(Icons.send),
@@ -348,9 +473,7 @@ class _ContactDetail extends StatelessWidget {
         const SizedBox(height: 8),
         OutlinedButton.icon(
           icon: Icon(blocked ? Icons.lock_open : Icons.block),
-          label: Text(
-            blocked ? l10n.commonUnblock : l10n.commonBlock,
-          ),
+          label: Text(blocked ? l10n.commonUnblock : l10n.commonBlock),
           onPressed: deleted ? null : onToggleBlock,
         ),
         if (onDisconnect != null && !deleted) ...[

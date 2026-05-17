@@ -1,7 +1,7 @@
 ---
 description: >-
-  When the user prefixes a message with "Question seulement:", save Q&A under
-  dev-ideas with a fixed layout; reply in chat with only the file path.
+  When the user prefixes a message with "Question seulement:" or asks
+  "Garde-moi cette réponse", save Q&A under dev-ideas with a fixed layout.
 alwaysApply: true
 ---
 
@@ -18,6 +18,13 @@ If the **user message starts with** `Question seulement:` (colon optional spacin
 1. **Write the complete answer only in a new file** under `dev-ideas/` at the repository root (`dev-ideas/` is gitignored; personal notes).
 2. **In the chat reply**, give **only** the path to that file (e.g. `` `dev-ideas/YYYY-MM-DD-short-topic.md` ``). Do **not** paste or summarize the answer in chat unless the user explicitly asks.
 
+If the **user message contains** `Garde-moi cette réponse` (case-insensitive, accents optional), save the **previous assistant response** instead:
+
+1. **Write the previous assistant response only in a new file** under `dev-ideas/` at the repository root.
+2. Use the same filename pattern and body layout below.
+3. For the quoted user text, quote the user prompt that the previous assistant response answered when available. If that prompt is unavailable, quote the `Garde-moi cette réponse` message instead.
+4. In the chat reply, give only the path to the file unless the user explicitly asks for additional work in the same message; then keep the chat reply concise and include the path.
+
 If you cannot write the file (blocked, ambiguous topic for the filename), say so briefly and still answer in chat normally.
 
 ## Filename
@@ -25,13 +32,13 @@ If you cannot write the file (blocked, ambiguous topic for the filename), say so
 Pattern: **`YYYY-MM-DD-[courte-description].md`**
 
 - **`YYYY-MM-DD`**: calendar date **of this conversation turn** (use the date the user/agent session provides as authoritative).
-- **`[courte-description]`**: ASCII slug derived from the topic (lowercase, hyphens, no spaces; omit `Question-seulement` from the slug). Keep it short (roughly 3–6 words).
+- **`[courte-description]`**: ASCII slug derived from the topic (lowercase, hyphens, no spaces; omit `Question-seulement` and `Garde-moi-cette-reponse` from the slug). Keep it short (roughly 3–6 words).
 
 ## File body layout (exact structure)
 
 Use this **top-to-bottom template**:
 
-1. **Quoted user text** — The user’s prompt **verbatim** (including `Question seulement:`), as a Markdown **block quote** (`>` lines). Preserve line breaks; empty lines inside the quote use `>` on a blank line where needed.
+1. **Quoted user text** — The user’s prompt **verbatim** (including `Question seulement:` when applicable), as a Markdown **block quote** (`>` lines). Preserve line breaks; empty lines inside the quote use `>` on a blank line where needed.
 
 2. **Separator** — Insert **exactly** this line (single line):
 

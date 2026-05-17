@@ -26,6 +26,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       HandshakeOrchestrator.maybeInstance;
 
   Future<List<Contact>>? _future;
+  bool _refreshingIncoming = false;
 
   /// Last seen length of [HandshakeOrchestrator.incomingHandshakes]. When it
   /// changes (e.g. inviter accepts the last request), we reload contacts so
@@ -42,7 +43,10 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
       orch.incomingHandshakes.addListener(_onIncomingChanged);
       orch.steadyStateInboxTick.addListener(_onSteadyInboxTick);
-      unawaited(orch.processAllPendingHandshakes());
+      unawaited(() async {
+        await orch.processAllPendingHandshakes();
+        await orch.refreshIncomingHandshakes();
+      }());
     }
   }
 
@@ -99,6 +103,45 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     _reload();
   }
 
+  Future<void> _refreshIncomingNow() async {
+    final orch = _orchestrator;
+    if (orch == null || _refreshingIncoming) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _refreshingIncoming = true);
+    try {
+      final activeBefore = await orch.activePendingHandshakeRows();
+      final allBefore = await orch.allPendingHandshakeRowsForDiagnostics();
+      await orch.processAllPendingHandshakes();
+      await orch.refreshIncomingHandshakes();
+      if (!mounted) return;
+      _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
+      _reload();
+      final count = orch.incomingHandshakes.value.length;
+      final activeCount = activeBefore.length;
+      final latestError = allBefore.isEmpty ? '' : allBefore.last.lastErrorCode;
+      final latest = allBefore.isEmpty
+          ? 'none'
+          : latestError.isEmpty
+          ? allBefore.last.state
+          : '${allBefore.last.state}/$latestError';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 0
+                ? l10n.contactsRefreshIncomingDiagnostics(
+                    activeCount,
+                    allBefore.length,
+                    latest,
+                  )
+                : l10n.contactsRefreshIncomingFound(count),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _refreshingIncoming = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -128,6 +171,17 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () =>
                 context.push('/contacts/redeem').then((_) => _reload()),
+          ),
+          IconButton(
+            tooltip: l10n.contactsRefreshIncomingTooltip,
+            icon: _refreshingIncoming
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: _refreshingIncoming ? null : _refreshIncomingNow,
           ),
         ],
       ),

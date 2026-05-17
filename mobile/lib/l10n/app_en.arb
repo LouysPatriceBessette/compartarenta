@@ -242,6 +242,16 @@
   "housingInviteStatusNoPending": "No pending invitation for this plan.",
   "pushNotificationHousingProposalTitle": "Housing proposal",
   "pushNotificationHousingProposalBody": "Open the app to review the proposal.",
+  "pushNotificationContactAddRequestTitle": "Contact request",
+  "pushNotificationContactAddRequestBody": "{name} wants to connect with you.",
+  "@pushNotificationContactAddRequestBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactDisconnectionTitle": "Contact disconnected",
+  "pushNotificationContactDisconnectionBody": "{name} disconnected from you.",
+  "@pushNotificationContactDisconnectionBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "housingInviteGenerateCodes": "Generate invitation codes",
   "housingInviteCodesDialogTitle": "Invitation codes",
   "housingInviteCodesDialogBody": "Each code is for one co-participant. Share them however you prefer; registering codes with the relay server will be added later.",
@@ -444,6 +454,24 @@
   "contactsIncomingBannerMany": "{count} new connection requests",
   "@contactsIncomingBannerMany": {
     "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingTooltip": "Check for connection requests",
+  "contactsRefreshIncomingFound": "{count} pending connection request(s).",
+  "@contactsRefreshIncomingFound": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingNone": "No pending connection requests found.",
+  "contactsRefreshIncomingNoneWithActivePolls": "No pending connection requests found. Active relay poll(s): {count}.",
+  "@contactsRefreshIncomingNoneWithActivePolls": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingDiagnostics": "No pending connection requests found. Active relay poll(s): {activeCount}. Local handshake row(s): {totalCount}. Latest state: {latestState}.",
+  "@contactsRefreshIncomingDiagnostics": {
+    "placeholders": {
+      "activeCount": { "type": "int" },
+      "totalCount": { "type": "int" },
+      "latestState": { "type": "String" }
+    }
   },
   "contactsCodeErrorEmpty": "Enter a code to continue.",
   "contactsCodeErrorTooShort": "This code is too short.",

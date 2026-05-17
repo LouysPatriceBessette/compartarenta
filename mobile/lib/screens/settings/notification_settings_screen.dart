@@ -159,14 +159,9 @@ class _NotificationSettingsScreenState
           ),
           SwitchListTile(
             title: Text(l10n.settingsNotificationsContactInvitationExpiration),
-            value: widget.prefs.notificationContactInvitationExpiration,
-            onChanged: notificationsEnabled
-                ? (value) async {
-                    await widget.prefs
-                        .setNotificationContactInvitationExpiration(value);
-                    if (mounted) setState(() {});
-                  }
-                : null,
+            subtitle: Text(l10n.commonComingSoon),
+            value: false,
+            onChanged: null,
           ),
           const Divider(),
           _SectionHeader(title: l10n.settingsNotificationsHousingSection),

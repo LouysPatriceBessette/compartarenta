@@ -685,6 +685,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ouvrez l\'application pour consulter la proposition.';
 
   @override
+  String get pushNotificationContactAddRequestTitle => 'Demande de contact';
+
+  @override
+  String pushNotificationContactAddRequestBody(String name) {
+    return '$name veut se connecter avec vous.';
+  }
+
+  @override
+  String get pushNotificationContactDisconnectionTitle => 'Contact déconnecté';
+
+  @override
+  String pushNotificationContactDisconnectionBody(String name) {
+    return '$name s’est déconnecté de vous.';
+  }
+
+  @override
   String get housingInviteGenerateCodes => 'Générer les codes d\'invitation';
 
   @override
@@ -1195,6 +1211,33 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String contactsIncomingBannerMany(int count) {
     return '$count nouvelles demandes de connexion';
+  }
+
+  @override
+  String get contactsRefreshIncomingTooltip =>
+      'Vérifier les demandes de connexion';
+
+  @override
+  String contactsRefreshIncomingFound(int count) {
+    return '$count demande(s) de connexion en attente.';
+  }
+
+  @override
+  String get contactsRefreshIncomingNone =>
+      'Aucune demande de connexion en attente trouvée.';
+
+  @override
+  String contactsRefreshIncomingNoneWithActivePolls(int count) {
+    return 'Aucune demande de connexion en attente trouvée. Poll(s) relais actif(s) : $count.';
+  }
+
+  @override
+  String contactsRefreshIncomingDiagnostics(
+    int activeCount,
+    int totalCount,
+    String latestState,
+  ) {
+    return 'Aucune demande de connexion en attente trouvée. Poll(s) relais actif(s) : $activeCount. Ligne(s) handshake locale(s) : $totalCount. Dernier état : $latestState.';
   }
 
   @override

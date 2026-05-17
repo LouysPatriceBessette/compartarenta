@@ -242,6 +242,16 @@
   "housingInviteStatusNoPending": "Aucune invitation en attente pour ce plan.",
   "pushNotificationHousingProposalTitle": "Proposition de logement",
   "pushNotificationHousingProposalBody": "Ouvrez l'application pour consulter la proposition.",
+  "pushNotificationContactAddRequestTitle": "Demande de contact",
+  "pushNotificationContactAddRequestBody": "{name} veut se connecter avec vous.",
+  "@pushNotificationContactAddRequestBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactDisconnectionTitle": "Contact déconnecté",
+  "pushNotificationContactDisconnectionBody": "{name} s’est déconnecté de vous.",
+  "@pushNotificationContactDisconnectionBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "housingInviteGenerateCodes": "Générer les codes d'invitation",
   "housingInviteCodesDialogTitle": "Codes d'invitation",
   "housingInviteCodesDialogBody": "Chaque code est destiné à un co-participant. Partagez-les comme vous voulez ; l'enregistrement sur le serveur relais sera ajouté ultérieurement.",
@@ -442,6 +452,24 @@
   "contactsIncomingBannerMany": "{count} nouvelles demandes de connexion",
   "@contactsIncomingBannerMany": {
     "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingTooltip": "Vérifier les demandes de connexion",
+  "contactsRefreshIncomingFound": "{count} demande(s) de connexion en attente.",
+  "@contactsRefreshIncomingFound": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingNone": "Aucune demande de connexion en attente trouvée.",
+  "contactsRefreshIncomingNoneWithActivePolls": "Aucune demande de connexion en attente trouvée. Poll(s) relais actif(s) : {count}.",
+  "@contactsRefreshIncomingNoneWithActivePolls": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingDiagnostics": "Aucune demande de connexion en attente trouvée. Poll(s) relais actif(s) : {activeCount}. Ligne(s) handshake locale(s) : {totalCount}. Dernier état : {latestState}.",
+  "@contactsRefreshIncomingDiagnostics": {
+    "placeholders": {
+      "activeCount": { "type": "int" },
+      "totalCount": { "type": "int" },
+      "latestState": { "type": "String" }
+    }
   },
   "contactsCodeErrorEmpty": "Saisissez un code pour continuer.",
   "contactsCodeErrorTooShort": "Ce code est trop court.",

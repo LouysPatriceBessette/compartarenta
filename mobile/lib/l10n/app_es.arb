@@ -242,6 +242,16 @@
   "housingInviteStatusNoPending": "No hay invitación pendiente para este plan.",
   "pushNotificationHousingProposalTitle": "Propuesta de vivienda",
   "pushNotificationHousingProposalBody": "Abra la aplicación para revisar la propuesta.",
+  "pushNotificationContactAddRequestTitle": "Solicitud de contacto",
+  "pushNotificationContactAddRequestBody": "{name} quiere conectarse contigo.",
+  "@pushNotificationContactAddRequestBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactDisconnectionTitle": "Contacto desconectado",
+  "pushNotificationContactDisconnectionBody": "{name} se desconectó de ti.",
+  "@pushNotificationContactDisconnectionBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "housingInviteGenerateCodes": "Generar códigos de invitación",
   "housingInviteCodesDialogTitle": "Códigos de invitación",
   "housingInviteCodesDialogBody": "Cada código es para un co-participante. Compártelos como prefieras; el registro en el servidor relé se añadirá más adelante.",
@@ -442,6 +452,24 @@
   "contactsIncomingBannerMany": "{count} nuevas solicitudes de conexión",
   "@contactsIncomingBannerMany": {
     "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingTooltip": "Buscar solicitudes de conexión",
+  "contactsRefreshIncomingFound": "{count} solicitud(es) de conexión pendiente(s).",
+  "@contactsRefreshIncomingFound": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingNone": "No se encontraron solicitudes de conexión pendientes.",
+  "contactsRefreshIncomingNoneWithActivePolls": "No se encontraron solicitudes de conexión pendientes. Sondeo(s) de relevo activo(s): {count}.",
+  "@contactsRefreshIncomingNoneWithActivePolls": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "contactsRefreshIncomingDiagnostics": "No se encontraron solicitudes de conexión pendientes. Sondeo(s) de relevo activo(s): {activeCount}. Fila(s) handshake local(es): {totalCount}. Último estado: {latestState}.",
+  "@contactsRefreshIncomingDiagnostics": {
+    "placeholders": {
+      "activeCount": { "type": "int" },
+      "totalCount": { "type": "int" },
+      "latestState": { "type": "String" }
+    }
   },
   "contactsCodeErrorEmpty": "Introduce un código para continuar.",
   "contactsCodeErrorTooShort": "Este código es demasiado corto.",

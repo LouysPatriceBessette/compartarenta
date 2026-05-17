@@ -8,6 +8,7 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../notifications/contact_notification_service.dart';
 import '../prefs/app_preferences.dart';
 import 'envelopes.dart';
 import 'identity_keystore.dart';
@@ -139,6 +140,8 @@ class HandshakeOrchestrator {
     required RelayClient relay,
     required ContactsRepository contacts,
     required ContactInvitationsRepository invitations,
+    ContactNotificationSink contactNotifications =
+        const DefaultContactNotificationSink(),
     Duration pollInterval = const Duration(seconds: 10),
     Duration helloTtl = const Duration(hours: 24),
     Duration ackTtl = const Duration(hours: 24),
@@ -149,6 +152,7 @@ class HandshakeOrchestrator {
        _relay = relay,
        _contacts = contacts,
        _invitations = invitations,
+       _contactNotifications = contactNotifications,
        _pollInterval = pollInterval,
        _helloTtl = helloTtl,
        _ackTtl = ackTtl,
@@ -160,6 +164,7 @@ class HandshakeOrchestrator {
   final RelayClient _relay;
   final ContactsRepository _contacts;
   final ContactInvitationsRepository _invitations;
+  final ContactNotificationSink _contactNotifications;
   final Duration _pollInterval;
   final Duration _helloTtl;
   final Duration _ackTtl;
@@ -475,7 +480,7 @@ class HandshakeOrchestrator {
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
     );
-    await _refreshIncomingHandshakes();
+    await refreshIncomingHandshakes();
   }
 
   // ---------------------------------------------------------------------
@@ -620,14 +625,9 @@ class HandshakeOrchestrator {
   /// envelope it finds. Safe to call from a Timer or manually from a
   /// pull-to-refresh action.
   Future<void> processAllPendingHandshakes() async {
-    final rows = await _db.listPendingHandshakes(
-      statesIn: const [
-        HandshakeState.awaitingHello,
-        HandshakeState.awaitingAck,
-      ],
-    );
+    final rows = await activePendingHandshakeRows();
     if (rows.isEmpty) {
-      await _refreshIncomingHandshakes();
+      await refreshIncomingHandshakes();
       final hasConnected = (await _contacts.list()).any(
         (c) => c.kind == 'connected',
       );
@@ -640,15 +640,36 @@ class HandshakeOrchestrator {
       try {
         await _processOne(row);
       } catch (e, st) {
-        debugPrint('handshake row ${row.id} failed: $e\n$st');
+        debugPrint('handshake row ${row.id} poll error: $e\n$st');
         await _markHandshake(
           row.id,
-          state: HandshakeState.failed,
           lastErrorCode: e is HandshakeOrchestratorError ? e.code : 'unknown',
         );
       }
     }
-    await _refreshIncomingHandshakes();
+    await refreshIncomingHandshakes();
+  }
+
+  Future<List<PendingHandshake>> activePendingHandshakeRows() async {
+    final rows = await _db.listPendingHandshakes();
+    return rows.where(_shouldPollHandshakeRow).toList(growable: false);
+  }
+
+  Future<List<PendingHandshake>> allPendingHandshakeRowsForDiagnostics() {
+    return _db.listPendingHandshakes();
+  }
+
+  bool _shouldPollHandshakeRow(PendingHandshake row) {
+    if (row.state == HandshakeState.awaitingHello ||
+        row.state == HandshakeState.awaitingAck) {
+      return true;
+    }
+    if (row.state != HandshakeState.failed) return false;
+    final code = row.lastErrorCode;
+    return code.isEmpty ||
+        code == 'unknown' ||
+        code == 'relay_error' ||
+        code == 'relay_unavailable';
   }
 
   /// Polls the relay steady-state inbox once per connected contact for
@@ -656,8 +677,9 @@ class HandshakeOrchestrator {
   ///
   /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
   Future<void> pollSteadyStateInboxes() async {
-    final connected =
-        (await _contacts.list()).where((c) => c.kind == 'connected').toList();
+    final connected = (await _contacts.list())
+        .where((c) => c.kind == 'connected')
+        .toList();
     if (connected.isEmpty) return;
 
     final selfPriv = await _identity.loadOrCreatePrivateKey();
@@ -791,6 +813,9 @@ class HandshakeOrchestrator {
       );
     }
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    await _contactNotifications.contactDisconnected(
+      displayName: contact.displayName,
+    );
   }
 
   Future<void> _handleInboundProfileUpdate({
@@ -823,10 +848,7 @@ class HandshakeOrchestrator {
 
     if (decrypted.hasHowILabelYou) {
       final raw = decrypted.howILabelYou.trim();
-      await _contacts.setTheirLabelForMe(
-        contact.id,
-        raw.isEmpty ? null : raw,
-      );
+      await _contacts.setTheirLabelForMe(contact.id, raw.isEmpty ? null : raw);
     }
 
     final dn = decrypted.displayName.trim();
@@ -845,9 +867,7 @@ class HandshakeOrchestrator {
         displayName: newDn,
         avatarId: newAv,
       );
-      if (label != null &&
-          label.isNotEmpty &&
-          label != newDn.trim()) {
+      if (label != null && label.isNotEmpty && label != newDn.trim()) {
         profileLabelConflict.value = ProfileLabelConflict(
           contactId: contact.id,
           newCanonicalDisplayName: newDn,
@@ -889,12 +909,19 @@ class HandshakeOrchestrator {
     final List<RelayEnvelopeView> envs;
     try {
       envs = await _relay.fetchInbox(recipient: listenAddr);
-    } on RelayClientError {
+    } on RelayClientError catch (e) {
       // Network issue / 5xx: leave the row alone and try again on the
       // next tick.
+      debugPrint('Handshake poll fetch failed for ${row.id}: $e');
       return;
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      debugPrint('Handshake poll fetch timed out for ${row.id}: $e');
       return;
+    }
+    if (envs.isNotEmpty) {
+      debugPrint(
+        'Handshake poll fetched ${envs.length} envelope(s) for ${row.id}',
+      );
     }
     if (envs.isEmpty) return;
 
@@ -999,6 +1026,9 @@ class HandshakeOrchestrator {
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: listenAddr,
+    );
+    await _contactNotifications.contactAddRequestReceived(
+      displayName: hello.displayName,
     );
   }
 
@@ -1141,7 +1171,7 @@ class HandshakeOrchestrator {
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
     );
-    await _refreshIncomingHandshakes();
+    await refreshIncomingHandshakes();
   }
 
   Future<void> _finalizeInviteeAccept({
@@ -1408,7 +1438,17 @@ class HandshakeOrchestrator {
     );
   }
 
-  Future<void> _refreshIncomingHandshakes() async {
+  Future<IncomingHandshakeView?> incomingHandshakeForContact(
+    String contactId,
+  ) async {
+    await refreshIncomingHandshakes();
+    for (final view in incomingHandshakes.value) {
+      if (view.contactStubId == contactId) return view;
+    }
+    return null;
+  }
+
+  Future<void> refreshIncomingHandshakes() async {
     final rows = await _db.listPendingHandshakes(
       statesIn: const [HandshakeState.helloReceived],
     );

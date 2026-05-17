@@ -687,6 +687,23 @@ class AppLocalizationsEs extends AppLocalizations {
       'Abra la aplicación para revisar la propuesta.';
 
   @override
+  String get pushNotificationContactAddRequestTitle => 'Solicitud de contacto';
+
+  @override
+  String pushNotificationContactAddRequestBody(String name) {
+    return '$name quiere conectarse contigo.';
+  }
+
+  @override
+  String get pushNotificationContactDisconnectionTitle =>
+      'Contacto desconectado';
+
+  @override
+  String pushNotificationContactDisconnectionBody(String name) {
+    return '$name se desconectó de ti.';
+  }
+
+  @override
   String get housingInviteGenerateCodes => 'Generar códigos de invitación';
 
   @override
@@ -1194,6 +1211,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String contactsIncomingBannerMany(int count) {
     return '$count nuevas solicitudes de conexión';
+  }
+
+  @override
+  String get contactsRefreshIncomingTooltip => 'Buscar solicitudes de conexión';
+
+  @override
+  String contactsRefreshIncomingFound(int count) {
+    return '$count solicitud(es) de conexión pendiente(s).';
+  }
+
+  @override
+  String get contactsRefreshIncomingNone =>
+      'No se encontraron solicitudes de conexión pendientes.';
+
+  @override
+  String contactsRefreshIncomingNoneWithActivePolls(int count) {
+    return 'No se encontraron solicitudes de conexión pendientes. Sondeo(s) de relevo activo(s): $count.';
+  }
+
+  @override
+  String contactsRefreshIncomingDiagnostics(
+    int activeCount,
+    int totalCount,
+    String latestState,
+  ) {
+    return 'No se encontraron solicitudes de conexión pendientes. Sondeo(s) de relevo activo(s): $activeCount. Fila(s) handshake local(es): $totalCount. Último estado: $latestState.';
   }
 
   @override

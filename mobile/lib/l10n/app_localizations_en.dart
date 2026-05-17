@@ -681,6 +681,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open the app to review the proposal.';
 
   @override
+  String get pushNotificationContactAddRequestTitle => 'Contact request';
+
+  @override
+  String pushNotificationContactAddRequestBody(String name) {
+    return '$name wants to connect with you.';
+  }
+
+  @override
+  String get pushNotificationContactDisconnectionTitle =>
+      'Contact disconnected';
+
+  @override
+  String pushNotificationContactDisconnectionBody(String name) {
+    return '$name disconnected from you.';
+  }
+
+  @override
   String get housingInviteGenerateCodes => 'Generate invitation codes';
 
   @override
@@ -1185,6 +1202,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String contactsIncomingBannerMany(int count) {
     return '$count new connection requests';
+  }
+
+  @override
+  String get contactsRefreshIncomingTooltip => 'Check for connection requests';
+
+  @override
+  String contactsRefreshIncomingFound(int count) {
+    return '$count pending connection request(s).';
+  }
+
+  @override
+  String get contactsRefreshIncomingNone =>
+      'No pending connection requests found.';
+
+  @override
+  String contactsRefreshIncomingNoneWithActivePolls(int count) {
+    return 'No pending connection requests found. Active relay poll(s): $count.';
+  }
+
+  @override
+  String contactsRefreshIncomingDiagnostics(
+    int activeCount,
+    int totalCount,
+    String latestState,
+  ) {
+    return 'No pending connection requests found. Active relay poll(s): $activeCount. Local handshake row(s): $totalCount. Latest state: $latestState.';
   }
 
   @override

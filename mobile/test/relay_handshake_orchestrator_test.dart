@@ -5,13 +5,14 @@ import 'package:compartarenta/contacts/contact_invitations_repository.dart';
 import 'package:compartarenta/contacts/invitation_code.dart';
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/db/repositories/contacts_repository.dart';
+import 'package:compartarenta/notifications/contact_notification_service.dart';
 import 'package:compartarenta/relay/envelopes.dart';
 import 'package:compartarenta/relay/handshake_orchestrator.dart';
 import 'package:compartarenta/relay/identity_keystore.dart';
 import 'package:compartarenta/relay/relay_client.dart';
 import 'package:compartarenta/relay/routing.dart';
 import 'package:compartarenta/relay/testing/fake_relay_client.dart';
-import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,6 +27,7 @@ class _Side {
     required this.identity,
     required this.orchestrator,
     required this.contacts,
+    required this.notifications,
   });
 
   final AppDatabase db;
@@ -33,6 +35,7 @@ class _Side {
   final IdentityKeystore identity;
   final HandshakeOrchestrator orchestrator;
   final ContactsRepository contacts;
+  final _FakeContactNotificationSink notifications;
 }
 
 int _relayDbFileSeq = 0;
@@ -53,12 +56,14 @@ Future<_Side> _spawnSide({
   final identity = InMemoryIdentityKeystore(seed: identitySeed);
   final contacts = ContactsRepository(db);
   final invitations = ContactInvitationsRepository(db);
+  final notifications = _FakeContactNotificationSink();
   final orchestrator = HandshakeOrchestrator(
     db: db,
     identity: identity,
     relay: relay,
     contacts: contacts,
     invitations: invitations,
+    contactNotifications: notifications,
     pollInterval: pollInterval,
   );
   return _Side(
@@ -67,7 +72,23 @@ Future<_Side> _spawnSide({
     identity: identity,
     orchestrator: orchestrator,
     contacts: contacts,
+    notifications: notifications,
   );
+}
+
+final class _FakeContactNotificationSink implements ContactNotificationSink {
+  final addRequests = <String>[];
+  final disconnections = <String>[];
+
+  @override
+  Future<void> contactAddRequestReceived({required String displayName}) async {
+    addRequests.add(displayName);
+  }
+
+  @override
+  Future<void> contactDisconnected({required String displayName}) async {
+    disconnections.add(displayName);
+  }
 }
 
 void main() {
@@ -134,17 +155,24 @@ void main() {
 
     // Step 3 — inviter polls, picks up hello, transitions to helloReceived.
     await inviter.orchestrator.processAllPendingHandshakes();
-    expect(relay.envelopeCount, 0,
-        reason: 'hello envelope should be acknowledged after decryption');
+    expect(
+      relay.envelopeCount,
+      0,
+      reason: 'hello envelope should be acknowledged after decryption',
+    );
     expect(inviter.orchestrator.incomingHandshakes.value.length, 1);
     final incoming = inviter.orchestrator.incomingHandshakes.value.single;
     expect(incoming.peerDisplayName, 'Invitee Self-Name');
     expect(incoming.peerAvatarId, 'mdi:invitee-avatar');
+    expect(inviter.notifications.addRequests, ['Invitee Self-Name']);
+    final fallbackIncoming = await inviter.orchestrator
+        .incomingHandshakeForContact(invite.localContactId);
+    expect(fallbackIncoming?.handshakeId, incoming.handshakeId);
 
     // Invitation nonce is consumed regardless of accept/reject outcome.
-    final invitationRow = await (inviter.db.select(inviter.db.contactInvitations)
-          ..where((t) => t.id.equals(invite.invitation.id)))
-        .getSingle();
+    final invitationRow = await (inviter.db.select(
+      inviter.db.contactInvitations,
+    )..where((t) => t.id.equals(invite.invitation.id))).getSingle();
     expect(invitationRow.status, InvitationStatus.used);
 
     // Step 4 — inviter accepts. Relay should now hold an ack envelope
@@ -181,13 +209,80 @@ void main() {
     expect(relay.routings.length, 2);
   });
 
+  test('failed unknown inviter handshake remains pollable', () async {
+    final invite = await inviter.orchestrator.generateInvitation(
+      validFor: const Duration(hours: 1),
+      stubDisplayName: 'pending peer',
+      stubAvatarId: 'mdi:account',
+    );
+    final code =
+        (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+
+    await invitee.orchestrator.redeemInvitation(
+      code: code,
+      selfDisplayName: 'Invitee Self-Name',
+      selfAvatarId: 'mdi:invitee-avatar',
+    );
+
+    final handshakeId = '${invite.invitation.id}:inviter';
+    await (inviter.db.update(
+      inviter.db.pendingHandshakes,
+    )..where((t) => t.id.equals(handshakeId))).write(
+      const PendingHandshakesCompanion(
+        state: Value(HandshakeState.failed),
+        lastErrorCode: Value('unknown'),
+      ),
+    );
+
+    final active = await inviter.orchestrator.activePendingHandshakeRows();
+    expect(active.map((row) => row.id), contains(handshakeId));
+
+    await inviter.orchestrator.processAllPendingHandshakes();
+
+    final incoming = inviter.orchestrator.incomingHandshakes.value.single;
+    expect(incoming.handshakeId, handshakeId);
+    expect(incoming.peerDisplayName, 'Invitee Self-Name');
+  });
+
+  test(
+    'inbound disconnect emits a contact disconnection notification',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      await inviter.orchestrator.processAllPendingHandshakes();
+      final incoming = inviter.orchestrator.incomingHandshakes.value.single;
+      await inviter.orchestrator.acceptIncoming(
+        incoming.handshakeId,
+        selfDisplayName: 'Inviter Self-Name',
+        selfAvatarId: 'mdi:inviter-avatar',
+      );
+      await invitee.orchestrator.processAllPendingHandshakes();
+
+      await invitee.orchestrator.sendDisconnect(redeem.localContactId);
+      await inviter.orchestrator.pollSteadyStateInboxes();
+
+      expect(inviter.notifications.disconnections, ['Invitee Self-Name']);
+    },
+  );
+
   test('rejection path drops both stubs and signals the invitee', () async {
     final invite = await inviter.orchestrator.generateInvitation(
       validFor: const Duration(hours: 1),
       stubDisplayName: 'pending peer',
       stubAvatarId: 'mdi:account',
     );
-    final code = (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+    final code =
+        (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
 
     final redeem = await invitee.orchestrator.redeemInvitation(
       code: code,
@@ -201,8 +296,11 @@ void main() {
 
     // Inviter's stub is gone.
     final inviterContact = await inviter.contacts.get(invite.localContactId);
-    expect(inviterContact?.deletedAt, isNotNull,
-        reason: 'rejected stub is deleted locally');
+    expect(
+      inviterContact?.deletedAt,
+      isNotNull,
+      reason: 'rejected stub is deleted locally',
+    );
 
     // Invitee polls, sees rejection, drops its stub.
     await invitee.orchestrator.processAllPendingHandshakes();
@@ -216,7 +314,8 @@ void main() {
       stubDisplayName: 'pending peer',
       stubAvatarId: 'mdi:account',
     );
-    final code = (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+    final code =
+        (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
 
     await invitee.orchestrator.redeemInvitation(
       code: code,
@@ -229,10 +328,8 @@ void main() {
     // reusing the relay routing the inviter had pre-registered for the
     // hello direction. The second envelope must be ignored by the
     // inviter (nonce consumed); the stub state must not regress.
-    final hexInv =
-        Uint8List.fromList(_hexDecode(invite.invitation.id));
-    final hexNonce =
-        Uint8List.fromList(_hexDecode(invite.invitation.nonce));
+    final hexInv = Uint8List.fromList(_hexDecode(invite.invitation.id));
+    final hexNonce = Uint8List.fromList(_hexDecode(invite.invitation.nonce));
     final addrInviter = await RelayRouting.inviterHandshakeAddress(
       invitationId: hexInv,
       nonce: hexNonce,
@@ -256,8 +353,8 @@ void main() {
         echoedNonce: hexNonce,
       ),
       invitationNonce: hexNonce,
-      inviteeLongTermPrivateKey:
-          await invitee.identity.loadOrCreatePrivateKey(),
+      inviteeLongTermPrivateKey: await invitee.identity
+          .loadOrCreatePrivateKey(),
       inviterHandshakePublicKey: inviterHandshakePub,
     );
     await relay.postEnvelope(
