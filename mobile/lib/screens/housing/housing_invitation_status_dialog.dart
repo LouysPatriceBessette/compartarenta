@@ -5,12 +5,10 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 
-String _formatUtcDateTime(
-  DateTime utc,
-  AppPreferences prefs,
-) {
+String _formatUtcDateTime(DateTime utc, AppPreferences prefs) {
   final local = utc.toLocal();
   final fmt = prefs.dateFormat.trim().isEmpty ? 'YYYY-MM-DD' : prefs.dateFormat;
   final date = formatPreferenceDate(utc, fmt);
@@ -41,26 +39,28 @@ Future<void> showHousingInvitationStatusDialog(
   required AppPreferences prefs,
 }) async {
   final l10n = AppLocalizations.of(context);
-  final pkg = await (db.select(db.proposalPackages)
-        ..where((t) => t.planId.equals(planId)))
-      .getSingleOrNull();
+  await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
+  if (!context.mounted) return;
+  final pkg = await (db.select(
+    db.proposalPackages,
+  )..where((t) => t.planId.equals(planId))).getSingleOrNull();
   final pendingId = pkg?.pendingRevisionId;
   if (!context.mounted) return;
   if (pendingId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.housingInviteStatusNoPending)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.housingInviteStatusNoPending)));
     return;
   }
 
-  final rev = await (db.select(db.proposalRevisions)
-        ..where((t) => t.id.equals(pendingId)))
-      .getSingleOrNull();
+  final rev = await (db.select(
+    db.proposalRevisions,
+  )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
   if (!context.mounted) return;
   if (rev == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.housingInviteStatusNoPending)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.housingInviteStatusNoPending)));
     return;
   }
 
@@ -75,9 +75,9 @@ Future<void> showHousingInvitationStatusDialog(
     }
   }
 
-  final responses = await (db.select(db.proposalResponses)
-        ..where((t) => t.revisionId.equals(pendingId)))
-      .get();
+  final responses = await (db.select(
+    db.proposalResponses,
+  )..where((t) => t.revisionId.equals(pendingId))).get();
   final byParticipant = {for (final r in responses) r.participantId: r.status};
 
   final all = await db.listParticipants();
@@ -87,12 +87,11 @@ Future<void> showHousingInvitationStatusDialog(
     return int.tryParse(tail) ?? 999;
   }
 
-  final roster = all
-      .where(
-        (p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'),
-      )
-      .toList()
-    ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
+  final roster =
+      all
+          .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
+          .toList()
+        ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
 
   if (!context.mounted) return;
   await showDialog<void>(
@@ -129,8 +128,12 @@ Future<void> showHousingInvitationStatusDialog(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: [
-                    DataColumn(label: Text(l10n.housingInviteStatusTableInvitee)),
-                    DataColumn(label: Text(l10n.housingInviteStatusTableStatus)),
+                    DataColumn(
+                      label: Text(l10n.housingInviteStatusTableInvitee),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.housingInviteStatusTableStatus),
+                    ),
                   ],
                   rows: [
                     for (final p in roster)
@@ -139,10 +142,7 @@ Future<void> showHousingInvitationStatusDialog(
                           DataCell(Text(p.displayName)),
                           DataCell(
                             Text(
-                              _responseStatusLabel(
-                                l10n,
-                                byParticipant[p.id],
-                              ),
+                              _responseStatusLabel(l10n, byParticipant[p.id]),
                             ),
                           ),
                         ],

@@ -154,6 +154,11 @@ class PushNotificationService {
         prefs.notificationHousingPlanSubmission;
   }
 
+  static bool shouldDisplayHousingDecisionNotification(AppPreferences prefs) {
+    return prefs.notificationsEnabled &&
+        prefs.notificationHousingDecisionChange;
+  }
+
   /// Shows a heads-up notification. Used from the foreground isolate and from
   /// the FCM background isolate (separate [FlutterLocalNotificationsPlugin] there).
   static Future<void> showRemoteMessageAsLocalNotification(
@@ -236,6 +241,42 @@ class PushNotificationService {
     final l10n = _l10nForUiLocale();
     final title = l10n.pushNotificationHousingProposalTitle;
     final body = l10n.pushNotificationHousingProposalBody;
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: _housingTapPayload,
+    );
+  }
+
+  static Future<void> showLocalHousingDecisionNotification({
+    required String senderDisplayName,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingDecisionTitle;
+    final body = senderDisplayName.trim().isEmpty
+        ? l10n.pushNotificationHousingDecisionBody
+        : l10n.pushNotificationHousingDecisionBodyFrom(
+            senderDisplayName.trim(),
+          );
     await _ensureLocalNotificationsInitialized(_plugin);
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;

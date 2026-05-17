@@ -201,6 +201,7 @@
   "housingWorkbenchTitle": "Plans logement",
   "housingWorkbenchDraftsSection": "Plans brouillon",
   "housingWorkbenchPendingSection": "Propositions en attente",
+  "housingWorkbenchActiveSection": "Plans actifs",
   "housingWorkbenchOpenPlan": "Ouvrir",
   "housingWorkbenchEmpty": "Aucun plan logement avec votre profil sur cet appareil.",
   "housingInviteResponseWindowTitle": "Délai de réponse",
@@ -220,6 +221,7 @@
   "housingInviteNegotiate": "J'aimerais négocier",
   "housingInviteRejectBlock": "Je refuse en bloc",
   "housingInviteNegotiateMessageLabel": "Message à envoyer avec la demande de négociation",
+  "housingInviteResponseSent": "Réponse envoyée.",
   "housingInviteProposalLockedHint": "Un autre participant est en négociation ou a rejeté cette proposition. Les réponses sont suspendues jusqu'à révision du plan.",
   "housingInviteInvitationStatusAction": "Statut des invitations",
   "housingInviteStatusDialogTitle": "Statut des invitations",
@@ -255,6 +257,12 @@
   },
   "pushNotificationHousingProposalTitle": "Proposition de logement",
   "pushNotificationHousingProposalBody": "Ouvrez l'application pour consulter la proposition.",
+  "pushNotificationHousingDecisionTitle": "Réponse à une proposition de logement",
+  "pushNotificationHousingDecisionBody": "Un participant a répondu à une proposition de logement.",
+  "pushNotificationHousingDecisionBodyFrom": "{name} a répondu à une proposition de logement.",
+  "@pushNotificationHousingDecisionBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationContactAddRequestTitle": "Demande de contact",
   "pushNotificationContactAddRequestBody": "{name} veut se connecter avec vous.",
   "@pushNotificationContactAddRequestBody": {

@@ -4290,17 +4290,7 @@ class _SummaryViewState extends State<_SummaryView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton.tonal(
-                    onPressed: widget.onEditPlan,
-                    child: Text(l10n.housingPlanSummaryEditPlan),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: widget.onInvite,
-                    child: Text(l10n.housingPlanSummaryInvite),
-                  ),
                   if (hasPending) ...[
-                    const SizedBox(height: 8),
                     FilledButton.tonal(
                       onPressed: () => showHousingInvitationStatusDialog(
                         context,
@@ -4310,12 +4300,22 @@ class _SummaryViewState extends State<_SummaryView> {
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),
                     ),
+                  ] else ...[
+                    FilledButton.tonal(
+                      onPressed: widget.onEditPlan,
+                      child: Text(l10n.housingPlanSummaryEditPlan),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton(
+                      onPressed: widget.onInvite,
+                      child: Text(l10n.housingPlanSummaryInvite),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: widget.onDestroy,
+                      child: Text(l10n.housingPlanSummaryDestroy),
+                    ),
                   ],
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    onPressed: widget.onDestroy,
-                    child: Text(l10n.housingPlanSummaryDestroy),
-                  ),
                 ],
               ),
             ),

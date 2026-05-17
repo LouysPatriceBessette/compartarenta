@@ -17,13 +17,15 @@ class PlanAgreementProposalService {
   static const String kind = 'expensePlanAgreementProposal';
 
   Future<String> ensurePackageForPlan(String planId) async {
-    final existing = await (_db.select(_db.proposalPackages)
-          ..where((t) => t.planId.equals(planId)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
     if (existing != null) return existing.id;
 
     final id = 'pkg:$planId';
-    await _db.into(_db.proposalPackages).insert(
+    await _db
+        .into(_db.proposalPackages)
+        .insert(
           ProposalPackagesCompanion.insert(
             id: id,
             planId: planId,
@@ -45,19 +47,23 @@ class PlanAgreementProposalService {
   }) async {
     final packageId = await ensurePackageForPlan(planId);
 
-    final plan = await (_db.select(_db.plans)..where((t) => t.id.equals(planId)))
-        .getSingle();
+    final plan = await (_db.select(
+      _db.plans,
+    )..where((t) => t.id.equals(planId))).getSingle();
     final agreement = await _db.getAgreementForPlan(planId);
     if (agreement == null) {
       throw StateError('No agreement found for plan $planId');
     }
     final lines = await _db.listPlanLines(planId);
-    final ratios = await (_db.select(_db.planRatios)
-          ..where((t) => t.planId.equals(planId)))
-        .get();
-    final groups = await (_db.select(_db.planGroups)
-          ..where((t) => t.planId.equals(planId)))
-        .get();
+    final ratios = await (_db.select(
+      _db.planRatios,
+    )..where((t) => t.planId.equals(planId))).get();
+    final groups = await (_db.select(
+      _db.planGroups,
+    )..where((t) => t.planId.equals(planId))).get();
+    final participants = (await _db.listParticipants())
+        .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
+        .toList(growable: false);
 
     final revisionId = 'rev:${DateTime.now().toUtc().microsecondsSinceEpoch}';
     final createdAt = DateTime.now().toUtc();
@@ -66,15 +72,18 @@ class PlanAgreementProposalService {
       'kind': kind,
       'packageId': packageId,
       'revisionId': revisionId,
+      'sourcePackageId': packageId,
+      'sourceRevisionId': revisionId,
       'contentHash': 'local:$revisionId',
       'createdAt': createdAt.toIso8601String(),
       'proposerParticipantId': proposerParticipantId,
+      'participantSourceIds': {for (final p in participants) p.id: p.id},
       'plan': {
         'type': plan.type,
         'title': plan.title,
         'defaultCurrency': plan.currency,
         'groups': [
-          for (final g in groups) {'id': g.id, 'title': g.title}
+          for (final g in groups) {'id': g.id, 'title': g.title},
         ],
         'lines': [
           for (final l in lines)
@@ -91,7 +100,7 @@ class PlanAgreementProposalService {
               'cadence': l.cadence,
               'recurrenceDayOfMonth': l.recurrenceDayOfMonth,
               if (l.groupId != null) 'groupId': l.groupId,
-            }
+            },
         ],
         'ratios': [
           for (final r in ratios)
@@ -100,7 +109,7 @@ class PlanAgreementProposalService {
               if (r.lineId != null) 'lineId': r.lineId,
               if (r.groupId != null) 'groupId': r.groupId,
               'weight': r.weight,
-            }
+            },
         ],
       },
       'agreement': {
@@ -108,19 +117,25 @@ class PlanAgreementProposalService {
         'periodStart': agreement.periodStart.toIso8601String(),
         'periodEnd': agreement.periodEnd.toIso8601String(),
         'minNoticeDays': agreement.minNoticeDays,
-        'penalty': {'currency': plan.currency, 'amountMinor': agreement.penaltyMinor},
+        'penalty': {
+          'currency': plan.currency,
+          'amountMinor': agreement.penaltyMinor,
+        },
         'clauses': agreement.clauses,
         'withdrawalSameForAll': agreement.withdrawalSameForAll,
         'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
       },
       'responseExpiresAt': responseExpiresAt?.toIso8601String(),
       'lifecycleState': 'open',
+      'responseMessages': <String, String>{},
       ?forkedFromPackageId: forkedFromPackageId,
       ?forkedFromRevisionId: forkedFromRevisionId,
     };
 
     await _db.transaction(() async {
-      await _db.into(_db.proposalRevisions).insert(
+      await _db
+          .into(_db.proposalRevisions)
+          .insert(
             ProposalRevisionsCompanion.insert(
               id: revisionId,
               packageId: packageId,
@@ -131,17 +146,31 @@ class PlanAgreementProposalService {
             ),
           );
 
-      await (_db.update(_db.proposalPackages)
-            ..where((t) => t.id.equals(packageId)))
-          .write(ProposalPackagesCompanion(
-            pendingRevisionId: drift.Value(revisionId),
-          ));
+      await (_db.update(
+        _db.proposalPackages,
+      )..where((t) => t.id.equals(packageId))).write(
+        ProposalPackagesCompanion(pendingRevisionId: drift.Value(revisionId)),
+      );
 
       await recordResponse(
         revisionId: revisionId,
         participantId: proposerParticipantId,
         status: ProposalResponseStatus.accepted,
       );
+      for (final participant in participants) {
+        if (participant.id == proposerParticipantId) continue;
+        await _db
+            .into(_db.proposalResponses)
+            .insertOnConflictUpdate(
+              ProposalResponsesCompanion.insert(
+                id: 'resp:$revisionId:${participant.id}',
+                revisionId: revisionId,
+                participantId: participant.id,
+                status: ProposalResponseStatus.pending.name,
+                respondedAt: const drift.Value.absent(),
+              ),
+            );
+      }
     });
 
     return revisionId;
@@ -151,9 +180,12 @@ class PlanAgreementProposalService {
     required String revisionId,
     required String participantId,
     required ProposalResponseStatus status,
+    String? message,
   }) async {
     final id = 'resp:$revisionId:$participantId';
-    await _db.into(_db.proposalResponses).insertOnConflictUpdate(
+    await _db
+        .into(_db.proposalResponses)
+        .insertOnConflictUpdate(
           ProposalResponsesCompanion.insert(
             id: id,
             revisionId: revisionId,
@@ -162,6 +194,38 @@ class PlanAgreementProposalService {
             respondedAt: drift.Value(DateTime.now().toUtc()),
           ),
         );
+    await _recordResponseMessage(
+      revisionId: revisionId,
+      participantId: participantId,
+      message: message,
+    );
+  }
+
+  Future<void> _recordResponseMessage({
+    required String revisionId,
+    required String participantId,
+    String? message,
+  }) async {
+    final trimmed = message?.trim() ?? '';
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final messages = Map<String, dynamic>.from(
+      (payload['responseMessages'] as Map?) ?? const <String, dynamic>{},
+    );
+    if (trimmed.isEmpty) {
+      messages.remove(participantId);
+    } else {
+      messages[participantId] = trimmed;
+    }
+    payload['responseMessages'] = messages;
+    await (_db.update(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).write(
+      ProposalRevisionsCompanion(payloadJson: drift.Value(jsonEncode(payload))),
+    );
   }
 
   Future<ProposalActivationOutcome> tryActivateIfUnanimous({
@@ -171,16 +235,19 @@ class PlanAgreementProposalService {
   }) async {
     final packageId = await ensurePackageForPlan(planId);
 
-    final responses = await (_db.select(_db.proposalResponses)
-          ..where((t) => t.revisionId.equals(revisionId)))
-        .get();
+    final responses = await (_db.select(
+      _db.proposalResponses,
+    )..where((t) => t.revisionId.equals(revisionId))).get();
 
     final byParticipant = {
       for (final r in responses) r.participantId: r.status,
     };
 
-    final unanimous = participantIds.isNotEmpty &&
-        participantIds.every((p) => byParticipant[p] == ProposalResponseStatus.accepted.name);
+    final unanimous =
+        participantIds.isNotEmpty &&
+        participantIds.every(
+          (p) => byParticipant[p] == ProposalResponseStatus.accepted.name,
+        );
 
     if (!unanimous) return ProposalActivationOutcome.notUnanimous;
 
@@ -190,20 +257,22 @@ class PlanAgreementProposalService {
       return ProposalActivationOutcome.missingAgreementPeriodInRevision;
     }
 
-    final blocking =
-        await listBlockingAgreementDayRanges(_db, excludePlanId: planId);
+    final blocking = await listBlockingAgreementDayRanges(
+      _db,
+      excludePlanId: planId,
+    );
     if (candidateConflictsWithAnyBlockingRange(
-          period.start,
-          period.end,
-          blocking,
-        )) {
+      period.start,
+      period.end,
+      blocking,
+    )) {
       return ProposalActivationOutcome.blockedByOverlappingAgreementPeriod;
     }
 
     await _db.transaction(() async {
-      await (_db.update(_db.proposalPackages)
-            ..where((t) => t.id.equals(packageId)))
-          .write(
+      await (_db.update(
+        _db.proposalPackages,
+      )..where((t) => t.id.equals(packageId))).write(
         ProposalPackagesCompanion(
           activeRevisionId: drift.Value(revisionId),
           pendingRevisionId: const drift.Value.absent(),
@@ -226,19 +295,14 @@ class PlanAgreementProposalService {
   }
 
   Future<Map<String, Object?>> loadRevisionPayload(String revisionId) async {
-    final rev = await (_db.select(_db.proposalRevisions)
-          ..where((t) => t.id.equals(revisionId)))
-        .getSingle();
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingle();
     return jsonDecode(rev.payloadJson) as Map<String, Object?>;
   }
 }
 
-enum ProposalResponseStatus {
-  pending,
-  accepted,
-  rejected,
-  negotiate,
-}
+enum ProposalResponseStatus { pending, accepted, rejected, negotiate }
 
 /// Result of [PlanAgreementProposalService.tryActivateIfUnanimous].
 enum ProposalActivationOutcome {

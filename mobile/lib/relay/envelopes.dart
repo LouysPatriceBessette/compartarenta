@@ -16,6 +16,7 @@ class EnvelopeKind {
   static const int profileUpdate = 3;
   static const int disconnect = 4;
   static const int housingProposal = 5;
+  static const int housingProposalResponse = 6;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -136,6 +137,25 @@ class HousingProposalEnvelope {
   final String targetParticipantId;
 }
 
+/// Steady-state response to a Housing proposal revision.
+class HousingProposalResponseEnvelope {
+  HousingProposalResponseEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.sourcePackageId,
+    required this.sourceRevisionId,
+    required this.sourceParticipantId,
+    required this.status,
+    this.message = '',
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String sourcePackageId;
+  final String sourceRevisionId;
+  final String sourceParticipantId;
+  final String status;
+  final String message;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -145,6 +165,8 @@ const String _profileUpdateAeadInfo =
 const String _disconnectAeadInfo = 'compartarenta/steady-v1/disconnect-aead';
 const String _housingProposalAeadInfo =
     'compartarenta/steady-v1/housing-proposal-aead';
+const String _housingProposalResponseAeadInfo =
+    'compartarenta/steady-v1/housing-proposal-response-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -591,6 +613,83 @@ class EnvelopeCodec {
       senderLongTermPublicKey: senderPub,
       proposalJson: (json['proposal_json'] as String?) ?? '{}',
       targetParticipantId: (json['target_participant_id'] as String?) ?? '',
+    );
+  }
+
+  /// Encrypts a steady-state Housing proposal response envelope.
+  static Future<Uint8List> encryptHousingProposalResponse({
+    required HousingProposalResponseEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingProposalResponseAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.housingProposalResponse,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(
+      jsonEncode({
+        'source_package_id': envelope.sourcePackageId,
+        'source_revision_id': envelope.sourceRevisionId,
+        'source_participant_id': envelope.sourceParticipantId,
+        'status': envelope.status,
+        'message': envelope.message,
+      }),
+    );
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  /// Decrypts a steady-state Housing proposal response envelope.
+  static Future<HousingProposalResponseEnvelope>
+  decryptHousingProposalResponse({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.housingProposalResponse);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingProposalResponseAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingProposalResponseEnvelope(
+      senderLongTermPublicKey: senderPub,
+      sourcePackageId: (json['source_package_id'] as String?) ?? '',
+      sourceRevisionId: (json['source_revision_id'] as String?) ?? '',
+      sourceParticipantId: (json['source_participant_id'] as String?) ?? '',
+      status: (json['status'] as String?) ?? '',
+      message: (json['message'] as String?) ?? '',
     );
   }
 }

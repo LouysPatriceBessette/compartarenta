@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../prefs/app_preferences.dart';
+import 'housing_active_plan_screen.dart';
+import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
 import 'housing_workbench_screen.dart';
 
@@ -40,23 +43,57 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Plan>>(
-      future: _housingWithSelfFuture,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final plans = snap.data ?? const <Plan>[];
-        if (plans.length > 1) {
-          return HousingWorkbenchScreen(prefs: widget.prefs);
-        }
-        return HousingPlanScreen(
-          prefs: widget.prefs,
-          planId: plans.isEmpty ? 'housing:default' : plans.single.id,
-        );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go('/');
       },
+      child: FutureBuilder<List<Plan>>(
+        future: _housingWithSelfFuture,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final plans = snap.data ?? const <Plan>[];
+          if (plans.length > 1) {
+            return HousingWorkbenchScreen(prefs: widget.prefs);
+          }
+          if (plans.isEmpty) {
+            return HousingPlanScreen(prefs: widget.prefs);
+          }
+          return FutureBuilder<ProposalPackage?>(
+            future:
+                (AppDatabase.processScope.select(
+                      AppDatabase.processScope.proposalPackages,
+                    )..where((t) => t.planId.equals(plans.single.id)))
+                    .getSingleOrNull(),
+            builder: (context, pkgSnap) {
+              if (pkgSnap.connectionState != ConnectionState.done) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final pkg = pkgSnap.data;
+              if (pkg?.activeRevisionId != null) {
+                return const HousingActivePlanScreen();
+              }
+              if (pkg?.pendingRevisionId != null) {
+                return HousingInviteProposalScreen(
+                  db: AppDatabase.processScope,
+                  planId: plans.single.id,
+                  prefs: widget.prefs,
+                );
+              }
+              return HousingPlanScreen(
+                prefs: widget.prefs,
+                planId: plans.single.id,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

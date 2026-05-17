@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart' as drift;
@@ -9,6 +10,7 @@ import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
+import '../housing/proposals/plan_agreement_proposal_service.dart';
 import '../notifications/contact_notification_service.dart';
 import '../notifications/push_notification_service.dart';
 import '../prefs/app_preferences.dart';
@@ -758,6 +760,14 @@ class HandshakeOrchestrator {
               selfPriv: selfPriv,
               peerPub: peerPub,
             );
+          } else if (env.kind == EnvelopeKind.housingProposalResponse) {
+            await _handleInboundHousingProposalResponse(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
           } else {
             await _relay.ackEnvelope(
               envelopeId: env.envelopeId,
@@ -958,6 +968,45 @@ class HandshakeOrchestrator {
     await PushNotificationService.showLocalHousingProposalNotification(
       senderDisplayName: contact.displayName,
     );
+  }
+
+  Future<void> _handleInboundHousingProposalResponse({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    final HousingProposalResponseEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptHousingProposalResponse(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    await _applyHousingProposalResponse(
+      decrypted,
+      senderDisplayName: contact.displayName,
+    );
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
   }
 
   Future<void> _processOne(PendingHandshake row) async {
@@ -1442,6 +1491,192 @@ class HandshakeOrchestrator {
       sentCount: sent,
       failedParticipantIds: List.unmodifiable(failed),
     );
+  }
+
+  Future<HousingProposalSendResult> sendHousingProposalResponse({
+    required String planId,
+    required ProposalResponseStatus status,
+    String message = '',
+  }) async {
+    final transport = HousingProposalTransportService(_db);
+    final revisionId = await transport.pendingRevisionIdForPlan(planId);
+    if (revisionId == null) {
+      throw HandshakeOrchestratorError('unknown');
+    }
+    final selfParticipantId = '$planId:self';
+    await PlanAgreementProposalService(_db).recordResponse(
+      revisionId: revisionId,
+      participantId: selfParticipantId,
+      status: status,
+      message: message,
+    );
+    await transport.tryActivatePlanIfUnanimous(
+      planId: planId,
+      revisionId: revisionId,
+    );
+
+    final payload = await PlanAgreementProposalService(
+      _db,
+    ).loadRevisionPayload(revisionId);
+    final sourcePackageId =
+        (payload['sourcePackageId'] as String?) ??
+        (payload['packageId'] as String?) ??
+        '';
+    final sourceRevisionId =
+        (payload['sourceRevisionId'] as String?) ??
+        (payload['revisionId'] as String?) ??
+        revisionId;
+    final sourceParticipantId = await transport.sourceParticipantIdForLocal(
+      revisionId: revisionId,
+      localParticipantId: selfParticipantId,
+    );
+
+    final response = HousingProposalResponseEnvelope(
+      senderLongTermPublicKey: await _identity.publicKey(),
+      sourcePackageId: sourcePackageId,
+      sourceRevisionId: sourceRevisionId,
+      sourceParticipantId: sourceParticipantId,
+      status: status.name,
+      message: message.trim(),
+    );
+    return _broadcastHousingProposalResponse(
+      planId: planId,
+      response: response,
+    );
+  }
+
+  Future<HousingProposalSendResult> _broadcastHousingProposalResponse({
+    required String planId,
+    required HousingProposalResponseEnvelope response,
+  }) async {
+    final participants = (await _db.listParticipants())
+        .where(
+          (p) =>
+              (p.id.startsWith('$planId:p') || p.id == '$planId:self') &&
+              p.contactId != null,
+        )
+        .toList(growable: false);
+    if (participants.isEmpty) {
+      return const HousingProposalSendResult(
+        sentCount: 0,
+        failedParticipantIds: <String>[],
+      );
+    }
+
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    var sent = 0;
+    final failed = <String>[];
+
+    for (final participant in participants) {
+      final contactId = participant.contactId;
+      if (contactId == null) continue;
+      final contact = await _contacts.get(contactId);
+      final peerPubB64 = contact?.peerPublicMaterial;
+      if (contact == null ||
+          contact.kind != 'connected' ||
+          peerPubB64 == null ||
+          peerPubB64.isEmpty) {
+        failed.add(participant.id);
+        continue;
+      }
+
+      try {
+        final peerPub = RelayRouting.unb64(peerPubB64);
+        final frame = await EnvelopeCodec.encryptHousingProposalResponse(
+          envelope: response,
+          senderLongTermPrivateKey: selfPriv,
+          peerLongTermPublicKey: peerPub,
+        );
+        final selfAddr = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        final peerAddr = await RelayRouting.steadyStateAddress(
+          firstPub: peerPub,
+          secondPub: selfPub,
+        );
+        await _relay.postEnvelope(
+          senderIdentity: selfAddr,
+          recipientIdentity: peerAddr,
+          idempotencyKey: _randomBytes(16),
+          ciphertext: frame,
+          kind: EnvelopeKind.housingProposalResponse,
+          ttl: _steadyTtl,
+        );
+        sent++;
+      } on Object catch (e) {
+        debugPrint('housing_proposal_response to ${participant.id} failed: $e');
+        failed.add(participant.id);
+      }
+    }
+
+    return HousingProposalSendResult(
+      sentCount: sent,
+      failedParticipantIds: List.unmodifiable(failed),
+    );
+  }
+
+  Future<void> _applyHousingProposalResponse(
+    HousingProposalResponseEnvelope response, {
+    required String senderDisplayName,
+  }) async {
+    final revision = await _matchingHousingRevision(response.sourceRevisionId);
+    if (revision == null) return;
+    ProposalResponseStatus? status;
+    for (final candidate in ProposalResponseStatus.values) {
+      if (candidate.name == response.status) {
+        status = candidate;
+        break;
+      }
+    }
+    if (status == null) return;
+    final transport = HousingProposalTransportService(_db);
+    final participantId = await transport.localParticipantIdForSource(
+      revisionId: revision.id,
+      sourceParticipantId: response.sourceParticipantId,
+    );
+    if (participantId == null) return;
+    await PlanAgreementProposalService(_db).recordResponse(
+      revisionId: revision.id,
+      participantId: participantId,
+      status: status,
+      message: response.message,
+    );
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(revision.packageId))).getSingleOrNull();
+    if (pkg != null) {
+      await transport.tryActivatePlanIfUnanimous(
+        planId: pkg.planId,
+        revisionId: revision.id,
+      );
+    }
+    await PushNotificationService.showLocalHousingDecisionNotification(
+      senderDisplayName: senderDisplayName,
+    );
+  }
+
+  Future<ProposalRevision?> _matchingHousingRevision(
+    String sourceRevisionId,
+  ) async {
+    final direct = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(sourceRevisionId))).getSingleOrNull();
+    if (direct != null) return direct;
+    final revisions = await _db.select(_db.proposalRevisions).get();
+    for (final revision in revisions) {
+      try {
+        final payload =
+            jsonDecode(revision.payloadJson) as Map<String, dynamic>;
+        if (payload['sourceRevisionId'] == sourceRevisionId) {
+          return revision;
+        }
+      } catch (_) {
+        // Ignore malformed historical payloads.
+      }
+    }
+    return null;
   }
 
   /// Pushes the local user's canonical profile plus how they list [contactId]

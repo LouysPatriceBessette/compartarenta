@@ -201,6 +201,7 @@
   "housingWorkbenchTitle": "Housing plans",
   "housingWorkbenchDraftsSection": "Draft plans",
   "housingWorkbenchPendingSection": "Pending proposals",
+  "housingWorkbenchActiveSection": "Active plans",
   "housingWorkbenchOpenPlan": "Open",
   "housingWorkbenchEmpty": "No housing plans with your profile on this device.",
   "housingInviteResponseWindowTitle": "Response window",
@@ -220,6 +221,7 @@
   "housingInviteNegotiate": "I would like to negotiate",
   "housingInviteRejectBlock": "I reject outright",
   "housingInviteNegotiateMessageLabel": "Message to send with your negotiation request",
+  "housingInviteResponseSent": "Response sent.",
   "housingInviteProposalLockedHint": "Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.",
   "housingInviteInvitationStatusAction": "Invitation status",
   "housingInviteStatusDialogTitle": "Invitation status",
@@ -255,6 +257,12 @@
   },
   "pushNotificationHousingProposalTitle": "Housing proposal",
   "pushNotificationHousingProposalBody": "Open the app to review the proposal.",
+  "pushNotificationHousingDecisionTitle": "Housing proposal response",
+  "pushNotificationHousingDecisionBody": "A participant responded to a housing proposal.",
+  "pushNotificationHousingDecisionBodyFrom": "{name} responded to a housing proposal.",
+  "@pushNotificationHousingDecisionBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationContactAddRequestTitle": "Contact request",
   "pushNotificationContactAddRequestBody": "{name} wants to connect with you.",
   "@pushNotificationContactAddRequestBody": {

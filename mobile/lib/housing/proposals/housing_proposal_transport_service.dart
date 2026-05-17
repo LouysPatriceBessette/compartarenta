@@ -137,6 +137,66 @@ class HousingProposalTransportService {
     );
   }
 
+  Future<String?> pendingRevisionIdForPlan(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    return pkg?.pendingRevisionId;
+  }
+
+  Future<bool> hasActiveRevision(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    return pkg?.activeRevisionId != null;
+  }
+
+  Future<String?> localParticipantIdForSource({
+    required String revisionId,
+    required String sourceParticipantId,
+  }) async {
+    final payload = await PlanAgreementProposalService(
+      _db,
+    ).loadRevisionPayload(revisionId);
+    final map = _map(payload['participantSourceIds']);
+    for (final entry in map.entries) {
+      if (entry.value == sourceParticipantId) return entry.key;
+    }
+    final rows = await _db.listParticipants();
+    if (rows.any((p) => p.id == sourceParticipantId)) {
+      return sourceParticipantId;
+    }
+    return null;
+  }
+
+  Future<String> sourceParticipantIdForLocal({
+    required String revisionId,
+    required String localParticipantId,
+  }) async {
+    final payload = await PlanAgreementProposalService(
+      _db,
+    ).loadRevisionPayload(revisionId);
+    final map = _map(payload['participantSourceIds']);
+    final targetParticipantId = _string(payload['targetParticipantId']);
+    if (localParticipantId.endsWith(':self') &&
+        targetParticipantId.isNotEmpty) {
+      return targetParticipantId;
+    }
+    return _string(map[localParticipantId], fallback: localParticipantId);
+  }
+
+  Future<ProposalActivationOutcome> tryActivatePlanIfUnanimous({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final participants = await _participantsForPlan(planId);
+    return PlanAgreementProposalService(_db).tryActivateIfUnanimous(
+      planId: planId,
+      revisionId: revisionId,
+      participantIds: [for (final p in participants) p.id],
+    );
+  }
+
   Future<List<Participant>> _participantsForPlan(String planId) async {
     final rows = await _db.listParticipants();
     return rows
@@ -230,8 +290,23 @@ class HousingProposalTransportService {
     required String receivedRevisionId,
   }) {
     final copy = jsonDecode(jsonEncode(payload)) as Map<String, dynamic>;
+    final sourcePackageId = _string(payload['sourcePackageId']).isEmpty
+        ? _string(payload['packageId'])
+        : _string(payload['sourcePackageId']);
+    final sourceRevisionId = _string(payload['sourceRevisionId']).isEmpty
+        ? _string(payload['revisionId'])
+        : _string(payload['sourceRevisionId']);
     copy['packageId'] = receivedPackageId;
     copy['revisionId'] = receivedRevisionId;
+    copy['sourcePackageId'] = sourcePackageId;
+    copy['sourceRevisionId'] = sourceRevisionId;
+    copy['participantSourceIds'] = {
+      for (final entry in sourceToLocalParticipant.entries)
+        '$receivedPlanId:${entry.value}': entry.key,
+    };
+    copy['responseMessages'] = Map<String, dynamic>.from(
+      (copy['responseMessages'] as Map?) ?? const <String, dynamic>{},
+    );
     final proposer = _string(copy['proposerParticipantId']);
     if (sourceToLocalParticipant.containsKey(proposer)) {
       copy['proposerParticipantId'] =

@@ -1138,6 +1138,12 @@ abstract class AppLocalizations {
   /// **'Pending proposals'**
   String get housingWorkbenchPendingSection;
 
+  /// No description provided for @housingWorkbenchActiveSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Active plans'**
+  String get housingWorkbenchActiveSection;
+
   /// No description provided for @housingWorkbenchOpenPlan.
   ///
   /// In en, this message translates to:
@@ -1252,6 +1258,12 @@ abstract class AppLocalizations {
   /// **'Message to send with your negotiation request'**
   String get housingInviteNegotiateMessageLabel;
 
+  /// No description provided for @housingInviteResponseSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Response sent.'**
+  String get housingInviteResponseSent;
+
   /// No description provided for @housingInviteProposalLockedHint.
   ///
   /// In en, this message translates to:
@@ -1335,6 +1347,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the app to review the proposal.'**
   String get pushNotificationHousingProposalBody;
+
+  /// No description provided for @pushNotificationHousingDecisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal response'**
+  String get pushNotificationHousingDecisionTitle;
+
+  /// No description provided for @pushNotificationHousingDecisionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant responded to a housing proposal.'**
+  String get pushNotificationHousingDecisionBody;
+
+  /// No description provided for @pushNotificationHousingDecisionBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} responded to a housing proposal.'**
+  String pushNotificationHousingDecisionBodyFrom(String name);
 
   /// No description provided for @pushNotificationContactAddRequestTitle.
   ///

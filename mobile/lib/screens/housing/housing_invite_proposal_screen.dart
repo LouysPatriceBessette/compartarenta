@@ -1,13 +1,16 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
+import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_invite_sunburst.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import 'housing_invitation_status_dialog.dart';
@@ -20,6 +23,18 @@ enum HousingInviteParticipantUiStatus {
   rejected,
 }
 
+class _ProposalUiState {
+  const _ProposalUiState({
+    required this.revisionId,
+    required this.proposerParticipantId,
+    required this.responsesByParticipantId,
+  });
+
+  final String? revisionId;
+  final String proposerParticipantId;
+  final Map<String, ProposalResponse> responsesByParticipantId;
+}
+
 /// Full-scroll proposal preview for the plan author, or read-only + response UI for an invitee.
 class HousingInviteProposalScreen extends StatefulWidget {
   const HousingInviteProposalScreen({
@@ -27,6 +42,7 @@ class HousingInviteProposalScreen extends StatefulWidget {
     required this.db,
     required this.planId,
     required this.prefs,
+
     /// When non-null, this screen simulates that participant’s view (chips locked, response buttons).
     this.viewerParticipantIndex,
   });
@@ -39,21 +55,29 @@ class HousingInviteProposalScreen extends StatefulWidget {
   final int? viewerParticipantIndex;
 
   @override
-  State<HousingInviteProposalScreen> createState() => _HousingInviteProposalScreenState();
+  State<HousingInviteProposalScreen> createState() =>
+      _HousingInviteProposalScreenState();
 }
 
-class _HousingInviteProposalScreenState extends State<HousingInviteProposalScreen> {
+class _HousingInviteProposalScreenState
+    extends State<HousingInviteProposalScreen> {
   int _focusedParticipantIndex = 0;
   int _previewQuietDayIndex = 0;
 
-  /// Mock statuses for demo (no relay yet). Index aligns with sorted roster.
   final Map<int, HousingInviteParticipantUiStatus> _statusByRosterIndex = {};
-  final Map<int, String> _negotiationMessageByIndex = {};
 
   bool _negotiateExpanded = false;
   final TextEditingController _negotiateController = TextEditingController();
 
   bool get _isAuthorPreview => widget.viewerParticipantIndex == null;
+
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/');
+    }
+  }
 
   @override
   void initState() {
@@ -76,42 +100,119 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
   }
 
   List<Participant> _sortedRoster(List<Participant> all) {
-    final roster = all
-        .where((p) => p.id == '${widget.planId}:self' || p.id.startsWith('${widget.planId}:p'))
-        .toList()
-      ..sort((a, b) => _rosterOrder(a.id).compareTo(_rosterOrder(b.id)));
+    final roster =
+        all
+            .where(
+              (p) =>
+                  p.id == '${widget.planId}:self' ||
+                  p.id.startsWith('${widget.planId}:p'),
+            )
+            .toList()
+          ..sort((a, b) => _rosterOrder(a.id).compareTo(_rosterOrder(b.id)));
     return roster;
   }
 
   HousingInviteParticipantUiStatus _statusFor(int rosterIndex) {
-    if (rosterIndex == 0) return HousingInviteParticipantUiStatus.pending;
-    return _statusByRosterIndex[rosterIndex] ?? HousingInviteParticipantUiStatus.pending;
+    return _statusByRosterIndex[rosterIndex] ??
+        HousingInviteParticipantUiStatus.pending;
   }
 
-  bool _locksInviteeResponses(int rosterLength) {
-    if (_isAuthorPreview) return false;
-    final vi = widget.viewerParticipantIndex!;
-    for (var i = 0; i < rosterLength; i++) {
-      if (i == vi) continue;
-      final s = _statusFor(i);
-      if (s == HousingInviteParticipantUiStatus.negotiating ||
-          s == HousingInviteParticipantUiStatus.rejected) {
-        return true;
-      }
+  HousingInviteParticipantUiStatus _statusForParticipant(
+    Participant participant,
+    _ProposalUiState proposal,
+  ) {
+    final status = proposal.responsesByParticipantId[participant.id]?.status;
+    return switch (status) {
+      'accepted' => HousingInviteParticipantUiStatus.accepted,
+      'negotiate' => HousingInviteParticipantUiStatus.negotiating,
+      'rejected' => HousingInviteParticipantUiStatus.rejected,
+      _ => HousingInviteParticipantUiStatus.pending,
+    };
+  }
+
+  Future<_ProposalUiState> _loadProposalUiState() async {
+    final pkg = await (widget.db.select(
+      widget.db.proposalPackages,
+    )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull();
+    final revisionId = pkg?.pendingRevisionId ?? pkg?.activeRevisionId;
+    if (revisionId == null) {
+      return const _ProposalUiState(
+        revisionId: null,
+        proposerParticipantId: '',
+        responsesByParticipantId: <String, ProposalResponse>{},
+      );
     }
-    return false;
+    final revision = await (widget.db.select(
+      widget.db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingle();
+    final responses = await (widget.db.select(
+      widget.db.proposalResponses,
+    )..where((t) => t.revisionId.equals(revisionId))).get();
+    return _ProposalUiState(
+      revisionId: revisionId,
+      proposerParticipantId: revision.proposerParticipantId,
+      responsesByParticipantId: {
+        for (final response in responses) response.participantId: response,
+      },
+    );
   }
 
-  (Color bg, Color fg) _statusColors(ThemeData theme, HousingInviteParticipantUiStatus s) {
+  Future<void> _submitResponse(
+    ProposalResponseStatus status, {
+    String message = '',
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('relay'))),
+      );
+      return;
+    }
+    try {
+      await orchestrator.sendHousingProposalResponse(
+        planId: widget.planId,
+        status: status,
+        message: message,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.housingInviteResponseSent)));
+      setState(() {
+        _negotiateExpanded = false;
+        _negotiateController.clear();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+      );
+    }
+  }
+
+  (Color bg, Color fg) _statusColors(
+    ThemeData theme,
+    HousingInviteParticipantUiStatus s,
+  ) {
     switch (s) {
       case HousingInviteParticipantUiStatus.accepted:
-        return (theme.colorScheme.primaryContainer, theme.colorScheme.onPrimaryContainer);
+        return (
+          theme.colorScheme.primaryContainer,
+          theme.colorScheme.onPrimaryContainer,
+        );
       case HousingInviteParticipantUiStatus.pending:
-        return (theme.colorScheme.secondaryContainer, theme.colorScheme.onSecondaryContainer);
+        return (
+          theme.colorScheme.secondaryContainer,
+          theme.colorScheme.onSecondaryContainer,
+        );
       case HousingInviteParticipantUiStatus.negotiating:
         return (const Color(0xFFFFF9C4), const Color(0xFFF57F17));
       case HousingInviteParticipantUiStatus.rejected:
-        return (theme.colorScheme.errorContainer, theme.colorScheme.onErrorContainer);
+        return (
+          theme.colorScheme.errorContainer,
+          theme.colorScheme.onErrorContainer,
+        );
     }
   }
 
@@ -129,13 +230,20 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     final (chipBg, chipFg) = isAuthorRoster
         ? (theme.colorScheme.surface, theme.colorScheme.onSurface)
         : (!showParticipantStatus
-            ? (theme.colorScheme.surfaceContainerHighest, theme.colorScheme.onSurface)
-            : _statusColors(theme, status));
+              ? (
+                  theme.colorScheme.surfaceContainerHighest,
+                  theme.colorScheme.onSurface,
+                )
+              : _statusColors(theme, status));
     final statusLabel = switch (status) {
-      HousingInviteParticipantUiStatus.accepted => l10n.housingInviteStatusAccepted,
-      HousingInviteParticipantUiStatus.pending => l10n.housingInviteStatusPending,
-      HousingInviteParticipantUiStatus.negotiating => l10n.housingInviteStatusNegotiating,
-      HousingInviteParticipantUiStatus.rejected => l10n.housingInviteStatusRejected,
+      HousingInviteParticipantUiStatus.accepted =>
+        l10n.housingInviteStatusAccepted,
+      HousingInviteParticipantUiStatus.pending =>
+        l10n.housingInviteStatusPending,
+      HousingInviteParticipantUiStatus.negotiating =>
+        l10n.housingInviteStatusNegotiating,
+      HousingInviteParticipantUiStatus.rejected =>
+        l10n.housingInviteStatusRejected,
     };
 
     return ChoiceChip(
@@ -146,7 +254,9 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
               setState(() => _focusedParticipantIndex = index);
             }
           : null,
-      selectedColor: isAuthorRoster ? Colors.white : theme.colorScheme.primaryContainer,
+      selectedColor: isAuthorRoster
+          ? Colors.white
+          : theme.colorScheme.primaryContainer,
       backgroundColor: chipBg,
       label: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 140),
@@ -169,7 +279,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: chipFg.withOpacity(0.85),
+                  color: chipFg.withValues(alpha: 0.85),
                 ),
               ),
           ],
@@ -196,7 +306,9 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     final theme = Theme.of(context);
     final perMap = () {
       try {
-        final m = jsonDecode(agr.withdrawalPerParticipantJson) as Map<String, dynamic>?;
+        final m =
+            jsonDecode(agr.withdrawalPerParticipantJson)
+                as Map<String, dynamic>?;
         return m ?? {};
       } catch (_) {
         return <String, dynamic>{};
@@ -213,7 +325,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             uiSelectedDayIndex: _previewQuietDayIndex,
             onSelectDay: (i) => setState(() => _previewQuietDayIndex = i),
             editing: false,
-            onToggleCell: (_, __) {},
+            onToggleCell: (_, _) {},
             labelAbsolute: l10n.housingQuietHoursAbsolute,
             labelModerate: l10n.housingQuietHoursModerate,
             emptyDayLabel: l10n.housingQuietHoursNoneThisDay,
@@ -233,15 +345,23 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
           if (!rules.earlyWithdrawalEnabled)
-            Text(l10n.housingInviteRuleOffHint, style: theme.textTheme.bodySmall)
+            Text(
+              l10n.housingInviteRuleOffHint,
+              style: theme.textTheme.bodySmall,
+            )
           else ...[
             if (agr.withdrawalSameForAll == 'true') ...[
-              Text('${l10n.housingPlanMinimumNoticeDays}: ${agr.minNoticeDays}'),
+              Text(
+                '${l10n.housingPlanMinimumNoticeDays}: ${agr.minNoticeDays}',
+              ),
               Text(
                 '${l10n.housingPlanPenaltyAmount}: ${formatMinorAsMoney(context, agr.penaltyMinor, displayCurrency)}',
               ),
             ] else ...[
-              Text(l10n.housingInviteWithdrawalPerParticipantIntro, style: theme.textTheme.bodySmall),
+              Text(
+                l10n.housingInviteWithdrawalPerParticipantIntro,
+                style: theme.textTheme.bodySmall,
+              ),
               if (perMap.isNotEmpty)
                 ...perMap.entries.map((e) {
                   final v = e.value;
@@ -266,10 +386,15 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
           if (!rules.buildingRulesEnabled)
-            Text(l10n.housingInviteRuleOffHint, style: theme.textTheme.bodySmall)
+            Text(
+              l10n.housingInviteRuleOffHint,
+              style: theme.textTheme.bodySmall,
+            )
           else
             Text(
-              rules.buildingRulesText.trim().isEmpty ? agr.clauses : rules.buildingRulesText,
+              rules.buildingRulesText.trim().isEmpty
+                  ? agr.clauses
+                  : rules.buildingRulesText,
               style: theme.textTheme.bodyMedium,
             ),
         ],
@@ -280,33 +405,49 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
       if (!r.enabled) continue;
       tiles.add(
         ExpansionTile(
-          title: Text(r.title.isEmpty ? l10n.housingAgreementRuleCustomTitleLabel : r.title),
+          title: Text(
+            r.title.isEmpty
+                ? l10n.housingAgreementRuleCustomTitleLabel
+                : r.title,
+          ),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          children: [
-            Text(r.body, style: theme.textTheme.bodyMedium),
-          ],
+          children: [Text(r.body, style: theme.textTheme.bodyMedium)],
         ),
       );
     }
 
-    if (!rules.dismissedSuggestionIds.contains(kAgreementSuggestionCommonCleanliness)) {
+    if (!rules.dismissedSuggestionIds.contains(
+      kAgreementSuggestionCommonCleanliness,
+    )) {
       tiles.add(
         ExpansionTile(
-          title: Text('${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionCleanlinessTitle}'),
+          title: Text(
+            '${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionCleanlinessTitle}',
+          ),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           children: [
-            Text(l10n.housingAgreementSuggestionCleanlinessBody, style: theme.textTheme.bodyMedium),
+            Text(
+              l10n.housingAgreementSuggestionCleanlinessBody,
+              style: theme.textTheme.bodyMedium,
+            ),
           ],
         ),
       );
     }
-    if (!rules.dismissedSuggestionIds.contains(kAgreementSuggestionFridgeManagement)) {
+    if (!rules.dismissedSuggestionIds.contains(
+      kAgreementSuggestionFridgeManagement,
+    )) {
       tiles.add(
         ExpansionTile(
-          title: Text('${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionFridgeTitle}'),
+          title: Text(
+            '${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionFridgeTitle}',
+          ),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           children: [
-            Text(l10n.housingAgreementSuggestionFridgeBody, style: theme.textTheme.bodyMedium),
+            Text(
+              l10n.housingAgreementSuggestionFridgeBody,
+              style: theme.textTheme.bodyMedium,
+            ),
           ],
         ),
       );
@@ -321,7 +462,9 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Text(
               l10n.housingInviteRulesSectionTitle,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ...tiles,
@@ -336,9 +479,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.housingInviteProposalAppBarTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
       body: FutureBuilder<List<dynamic>>(
         future: Future.wait([
           widget.db.listParticipants(),
@@ -346,6 +487,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
           widget.db.getAgreementForPlan(widget.planId),
           widget.db.listPlanRatios(widget.planId),
           widget.db.listPlanGroups(widget.planId),
+          _loadProposalUiState(),
         ]),
         builder: (context, snap) {
           if (!snap.hasData) {
@@ -356,6 +498,7 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
           final agr = snap.data![2] as Agreement?;
           final ratios = snap.data![3] as List<PlanRatio>;
           final groups = snap.data![4] as List<PlanGroup>;
+          final proposal = snap.data![5] as _ProposalUiState;
           if (agr == null || roster.isEmpty) {
             return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
           }
@@ -364,13 +507,45 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
             clausesFallback: agr.clauses,
           );
           final pids = roster.map((p) => p.id).toList();
-          _focusedParticipantIndex = _focusedParticipantIndex.clamp(0, pids.length - 1);
+          _focusedParticipantIndex = _focusedParticipantIndex.clamp(
+            0,
+            pids.length - 1,
+          );
           if (!_isAuthorPreview) {
-            _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(0, pids.length - 1);
+            _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(
+              0,
+              pids.length - 1,
+            );
           }
 
           final idx = _focusedParticipantIndex;
-          final showParticipantStatus = widget.viewerParticipantIndex != null;
+          final selfParticipantId = '${widget.planId}:self';
+          final isAuthor = proposal.proposerParticipantId == selfParticipantId;
+          final selfStatus =
+              proposal.responsesByParticipantId[selfParticipantId]?.status ??
+              ProposalResponseStatus.pending.name;
+          final canRespond =
+              !isAuthor && selfStatus == ProposalResponseStatus.pending.name;
+          final showParticipantStatus = proposal.revisionId != null;
+          final hasActivePlan =
+              proposal.revisionId != null &&
+              proposal.responsesByParticipantId.values.isNotEmpty &&
+              proposal.responsesByParticipantId.values.every(
+                (r) => r.status == ProposalResponseStatus.accepted.name,
+              );
+          if (hasActivePlan) {
+            return const Center(child: Text('Plan actif'));
+          }
+          _statusByRosterIndex
+            ..clear()
+            ..addEntries(
+              roster.indexed.map(
+                (entry) => MapEntry(
+                  entry.$1,
+                  _statusForParticipant(entry.$2, proposal),
+                ),
+              ),
+            );
           const dateIso = 'YYYY-MM-DD';
           final dateRangeLine =
               '${formatPreferenceDate(agr.periodStart, dateIso)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateIso)}';
@@ -392,14 +567,18 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                   children: [
                     Text(
                       l10n.housingInviteProposalIntroTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Divider(height: 32),
                     Center(
                       child: Text(
                         l10n.housingInviteHousingAgreementTitle,
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -413,7 +592,11 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                     const SizedBox(height: 8),
                     Center(
                       child: Text(
-                        formatContractCalendarDuration(agr.periodStart, agr.periodEnd, l10n),
+                        formatContractCalendarDuration(
+                          agr.periodStart,
+                          agr.periodEnd,
+                          l10n,
+                        ),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -423,7 +606,9 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                     const SizedBox(height: 20),
                     Text(
                       l10n.housingInviteParticipantsSectionTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -436,16 +621,13 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                             theme,
                             i,
                             roster[i].displayName,
-                            _isAuthorPreview,
+                            false,
                             showParticipantStatus,
                           ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    HousingInviteSunburstChart(
-                      l10n: l10n,
-                      slices: sunSlices,
-                    ),
+                    HousingInviteSunburstChart(l10n: l10n, slices: sunSlices),
                     const SizedBox(height: 20),
                     _readOnlyRules(
                       context,
@@ -455,47 +637,26 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                       roster,
                       displayCurrencyCodeForPlan(widget.prefs, lines),
                     ),
-                    if (!_isAuthorPreview) ...[
+                    if (!isAuthor && !hasActivePlan) ...[
                       const SizedBox(height: 24),
-                      if (_locksInviteeResponses(roster.length)) ...[
-                        Text(
-                          l10n.housingInviteProposalLockedHint,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.error,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...[
-                          for (var i = 0; i < roster.length; i++)
-                            if (i != widget.viewerParticipantIndex &&
-                                (_statusFor(i) == HousingInviteParticipantUiStatus.negotiating ||
-                                    _statusFor(i) == HousingInviteParticipantUiStatus.rejected))
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Text(
-                                  '${roster[i].displayName}: ${_negotiationMessageByIndex[i]?.trim().isNotEmpty == true ? _negotiationMessageByIndex[i]! : _statusFor(i) == HousingInviteParticipantUiStatus.rejected ? l10n.housingInviteStatusRejected : l10n.housingInviteStatusNegotiating}',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ),
-                        ],
-                      ],
                       FilledButton(
-                        onPressed: _locksInviteeResponses(roster.length)
-                            ? null
-                            : () => setState(() {
-                                  _statusByRosterIndex[widget.viewerParticipantIndex!] =
-                                      HousingInviteParticipantUiStatus.accepted;
-                                }),
+                        onPressed: canRespond
+                            ? () => _submitResponse(
+                                ProposalResponseStatus.accepted,
+                              )
+                            : null,
                         child: Text(l10n.housingInviteAcceptFull),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton(
-                        onPressed: _locksInviteeResponses(roster.length)
-                            ? null
-                            : () => setState(() => _negotiateExpanded = !_negotiateExpanded),
+                        onPressed: canRespond
+                            ? () => setState(
+                                () => _negotiateExpanded = !_negotiateExpanded,
+                              )
+                            : null,
                         child: Text(l10n.housingInviteNegotiate),
                       ),
-                      if (_negotiateExpanded && !_locksInviteeResponses(roster.length)) ...[
+                      if (_negotiateExpanded && canRespond) ...[
                         const SizedBox(height: 8),
                         TextField(
                           controller: _negotiateController,
@@ -511,12 +672,10 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                           onPressed: () {
                             final t = _negotiateController.text.trim();
                             if (t.isEmpty) return;
-                            setState(() {
-                              _statusByRosterIndex[widget.viewerParticipantIndex!] =
-                                  HousingInviteParticipantUiStatus.negotiating;
-                              _negotiationMessageByIndex[widget.viewerParticipantIndex!] = t;
-                              _negotiateExpanded = false;
-                            });
+                            _submitResponse(
+                              ProposalResponseStatus.negotiate,
+                              message: t,
+                            );
                           },
                           child: Text(l10n.housingPlanSave),
                         ),
@@ -526,12 +685,11 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                         style: OutlinedButton.styleFrom(
                           foregroundColor: theme.colorScheme.error,
                         ),
-                        onPressed: _locksInviteeResponses(roster.length)
-                            ? null
-                            : () => setState(() {
-                                  _statusByRosterIndex[widget.viewerParticipantIndex!] =
-                                      HousingInviteParticipantUiStatus.rejected;
-                                }),
+                        onPressed: canRespond
+                            ? () => _submitResponse(
+                                ProposalResponseStatus.rejected,
+                              )
+                            : null,
                         child: Text(l10n.housingInviteRejectBlock),
                       ),
                     ],
@@ -545,9 +703,9 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (_isAuthorPreview) ...[
+                      if (isAuthor) ...[
                         OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: _goBack,
                           child: Text(l10n.housingPlanBack),
                         ),
                         const SizedBox(height: 8),
@@ -560,11 +718,22 @@ class _HousingInviteProposalScreenState extends State<HousingInviteProposalScree
                           ),
                           child: Text(l10n.housingInviteInvitationStatusAction),
                         ),
-                      ] else
+                      ] else ...[
                         OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: _goBack,
                           child: Text(l10n.housingPlanBack),
                         ),
+                        const SizedBox(height: 8),
+                        FilledButton(
+                          onPressed: () => showHousingInvitationStatusDialog(
+                            context,
+                            db: widget.db,
+                            planId: widget.planId,
+                            prefs: widget.prefs,
+                          ),
+                          child: Text(l10n.housingInviteInvitationStatusAction),
+                        ),
+                      ],
                     ],
                   ),
                 ),

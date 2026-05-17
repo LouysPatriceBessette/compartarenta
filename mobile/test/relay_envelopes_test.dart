@@ -347,5 +347,42 @@ void main() {
         expect(decoded.targetParticipantId, 'plan:p0');
       },
     );
+
+    test('housing_proposal_response round-trips status and message', () async {
+      final aliceKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      );
+      final bobKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i)),
+      );
+      final alicePriv = await aliceKeystore.loadOrCreatePrivateKey();
+      final alicePub = await aliceKeystore.publicKey();
+      final bobPriv = await bobKeystore.loadOrCreatePrivateKey();
+      final bobPub = await bobKeystore.publicKey();
+
+      final frame = await EnvelopeCodec.encryptHousingProposalResponse(
+        envelope: HousingProposalResponseEnvelope(
+          senderLongTermPublicKey: alicePub,
+          sourcePackageId: 'pkg:plan',
+          sourceRevisionId: 'rev:1',
+          sourceParticipantId: 'plan:p0',
+          status: 'negotiate',
+          message: 'Please lower the rent.',
+        ),
+        senderLongTermPrivateKey: alicePriv,
+        peerLongTermPublicKey: bobPub,
+      );
+      final decoded = await EnvelopeCodec.decryptHousingProposalResponse(
+        frame: frame,
+        receiverLongTermPrivateKey: bobPriv,
+      );
+
+      expect(decoded.senderLongTermPublicKey, equals(alicePub));
+      expect(decoded.sourcePackageId, 'pkg:plan');
+      expect(decoded.sourceRevisionId, 'rev:1');
+      expect(decoded.sourceParticipantId, 'plan:p0');
+      expect(decoded.status, 'negotiate');
+      expect(decoded.message, 'Please lower the rent.');
+    });
   });
 }

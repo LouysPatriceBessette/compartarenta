@@ -576,6 +576,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingWorkbenchPendingSection => 'Pending proposals';
 
   @override
+  String get housingWorkbenchActiveSection => 'Active plans';
+
+  @override
   String get housingWorkbenchOpenPlan => 'Open';
 
   @override
@@ -638,6 +641,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Message to send with your negotiation request';
 
   @override
+  String get housingInviteResponseSent => 'Response sent.';
+
+  @override
   String get housingInviteProposalLockedHint =>
       'Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.';
 
@@ -689,6 +695,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pushNotificationHousingProposalBody =>
       'Open the app to review the proposal.';
+
+  @override
+  String get pushNotificationHousingDecisionTitle =>
+      'Housing proposal response';
+
+  @override
+  String get pushNotificationHousingDecisionBody =>
+      'A participant responded to a housing proposal.';
+
+  @override
+  String pushNotificationHousingDecisionBodyFrom(String name) {
+    return '$name responded to a housing proposal.';
+  }
 
   @override
   String get pushNotificationContactAddRequestTitle => 'Contact request';

@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import 'housing_active_plan_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
 
 class _WorkbenchRow {
-  const _WorkbenchRow({required this.plan, required this.hasPending});
+  const _WorkbenchRow({
+    required this.plan,
+    required this.hasPending,
+    required this.hasActive,
+  });
 
   final Plan plan;
   final bool hasPending;
+  final bool hasActive;
 }
 
 /// Lists housing plans on this device where the user has a `planId:self` row.
@@ -28,20 +34,21 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
   late final Future<List<_WorkbenchRow>> _load = _fetch();
 
   Future<List<_WorkbenchRow>> _fetch() async {
-    final housing = await (_db.select(_db.plans)
-          ..where((t) => t.type.equals('housing')))
-        .get();
+    final housing = await (_db.select(
+      _db.plans,
+    )..where((t) => t.type.equals('housing'))).get();
     final out = <_WorkbenchRow>[];
     for (final p in housing) {
-      final self = await (_db.select(_db.participants)
-            ..where((t) => t.id.equals('${p.id}:self')))
-          .getSingleOrNull();
+      final self = await (_db.select(
+        _db.participants,
+      )..where((t) => t.id.equals('${p.id}:self'))).getSingleOrNull();
       if (self == null) continue;
-      final pkg = await (_db.select(_db.proposalPackages)
-            ..where((t) => t.planId.equals(p.id)))
-          .getSingleOrNull();
+      final pkg = await (_db.select(
+        _db.proposalPackages,
+      )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
       final pending = pkg?.pendingRevisionId != null;
-      out.add(_WorkbenchRow(plan: p, hasPending: pending));
+      final active = pkg?.activeRevisionId != null;
+      out.add(_WorkbenchRow(plan: p, hasPending: pending, hasActive: active));
     }
     out.sort((a, b) {
       final ta = a.plan.title.trim();
@@ -61,8 +68,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
   void _openPlanEditor(String planId) {
     Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            HousingPlanScreen(prefs: widget.prefs, planId: planId),
+        builder: (_) => HousingPlanScreen(prefs: widget.prefs, planId: planId),
       ),
     );
   }
@@ -79,11 +85,20 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
     );
   }
 
+  void _openActivePlan() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const HousingActivePlanScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: Text(l10n.housingWorkbenchTitle)),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(l10n.housingWorkbenchTitle),
+      ),
       body: FutureBuilder<List<_WorkbenchRow>>(
         future: _load,
         builder: (context, snap) {
@@ -102,12 +117,34 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
               ),
             );
           }
-          final drafts = rows.where((r) => !r.hasPending).toList();
+          final drafts = rows
+              .where((r) => !r.hasPending && !r.hasActive)
+              .toList();
           final pending = rows.where((r) => r.hasPending).toList();
+          final active = rows.where((r) => r.hasActive).toList();
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (active.isNotEmpty) ...[
+                Text(
+                  l10n.housingWorkbenchActiveSection,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final r in active)
+                  Card(
+                    child: ListTile(
+                      title: Text(_rowTitle(r.plan)),
+                      subtitle: Text(r.plan.id),
+                      trailing: TextButton(
+                        onPressed: _openActivePlan,
+                        child: Text(l10n.housingWorkbenchOpenPlan),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 24),
+              ],
               if (drafts.isNotEmpty) ...[
                 Text(
                   l10n.housingWorkbenchDraftsSection,
