@@ -15,6 +15,7 @@ class EnvelopeKind {
   static const int ack = 2;
   static const int profileUpdate = 3;
   static const int disconnect = 4;
+  static const int housingProposal = 5;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -122,6 +123,19 @@ class DisconnectEnvelope {
   final Uint8List senderLongTermPublicKey;
 }
 
+/// Steady-state Housing proposal sent to a connected contact.
+class HousingProposalEnvelope {
+  HousingProposalEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.proposalJson,
+    required this.targetParticipantId,
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String proposalJson;
+  final String targetParticipantId;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -129,6 +143,8 @@ const String _ackAeadInfo = 'compartarenta/handshake-v1/ack-aead';
 const String _profileUpdateAeadInfo =
     'compartarenta/steady-v1/profile-update-aead';
 const String _disconnectAeadInfo = 'compartarenta/steady-v1/disconnect-aead';
+const String _housingProposalAeadInfo =
+    'compartarenta/steady-v1/housing-proposal-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -186,11 +202,13 @@ class EnvelopeCodec {
       inviteePub: envelope.inviteeLongTermPublicKey,
       aeadNonce: _defaultNonceSource(),
     );
-    final plaintext = utf8.encode(jsonEncode({
-      'display_name': envelope.displayName,
-      'avatar_id': envelope.avatarId,
-      'echo_nonce_b64': RelayRouting.b64(envelope.echoedNonce),
-    }));
+    final plaintext = utf8.encode(
+      jsonEncode({
+        'display_name': envelope.displayName,
+        'avatar_id': envelope.avatarId,
+        'echo_nonce_b64': RelayRouting.b64(envelope.echoedNonce),
+      }),
+    );
     final aeadNonce = header.sublist(header.length - 12);
     final body = await _aeadEncrypt(
       key: key,
@@ -286,13 +304,15 @@ class EnvelopeCodec {
       inviterPub: envelope.inviterLongTermPublicKey,
       aeadNonce: _defaultNonceSource(),
     );
-    final body = utf8.encode(jsonEncode({
-      'decision': envelope.accepted ? 'accepted' : 'rejected',
-      if (envelope.accepted) ...{
-        'display_name': envelope.displayName,
-        'avatar_id': envelope.avatarId,
-      },
-    }));
+    final body = utf8.encode(
+      jsonEncode({
+        'decision': envelope.accepted ? 'accepted' : 'rejected',
+        if (envelope.accepted) ...{
+          'display_name': envelope.displayName,
+          'avatar_id': envelope.avatarId,
+        },
+      }),
+    );
     final aeadNonce = header.sublist(header.length - 12);
     final encrypted = await _aeadEncrypt(
       key: key,
@@ -337,8 +357,9 @@ class EnvelopeCodec {
       invitationId: invitationId,
       nonce: invitationNonce,
     );
-    final inviterHandshakePub =
-        await RelayRouting.handshakePublicKey(inviterHandshakePriv);
+    final inviterHandshakePub = await RelayRouting.handshakePublicKey(
+      inviterHandshakePriv,
+    );
     final shared = await _x25519(
       privateKey: inviteeLongTermPrivateKey,
       peerPublicKey: inviterHandshakePub,
@@ -502,6 +523,76 @@ class EnvelopeCodec {
     );
     return DisconnectEnvelope(senderLongTermPublicKey: senderPub);
   }
+
+  /// Encrypts a steady-state Housing proposal envelope.
+  static Future<Uint8List> encryptHousingProposal({
+    required HousingProposalEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingProposalAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.housingProposal,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(
+      jsonEncode({
+        'proposal_json': envelope.proposalJson,
+        'target_participant_id': envelope.targetParticipantId,
+      }),
+    );
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  /// Decrypts a steady-state Housing proposal envelope.
+  static Future<HousingProposalEnvelope> decryptHousingProposal({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.housingProposal);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingProposalAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingProposalEnvelope(
+      senderLongTermPublicKey: senderPub,
+      proposalJson: (json['proposal_json'] as String?) ?? '{}',
+      targetParticipantId: (json['target_participant_id'] as String?) ?? '',
+    );
+  }
 }
 
 /// Header view of a hello envelope returned by [EnvelopeCodec.peekHelloHeader].
@@ -614,10 +705,7 @@ Future<Uint8List> _x25519({
 }) async {
   final algo = Cryptography.instance.x25519();
   final ourKeyPair = await algo.newKeyPairFromSeed(privateKey);
-  final peer = SimplePublicKey(
-    peerPublicKey,
-    type: KeyPairType.x25519,
-  );
+  final peer = SimplePublicKey(peerPublicKey, type: KeyPairType.x25519);
   final shared = await algo.sharedSecretKey(
     keyPair: ourKeyPair,
     remotePublicKey: peer,
@@ -658,13 +746,11 @@ Future<Uint8List> _aeadEncrypt({
     nonce: nonce,
     aad: aad,
   );
-  final out = Uint8List(secretBox.cipherText.length + secretBox.mac.bytes.length);
-  out.setRange(0, secretBox.cipherText.length, secretBox.cipherText);
-  out.setRange(
-    secretBox.cipherText.length,
-    out.length,
-    secretBox.mac.bytes,
+  final out = Uint8List(
+    secretBox.cipherText.length + secretBox.mac.bytes.length,
   );
+  out.setRange(0, secretBox.cipherText.length, secretBox.cipherText);
+  out.setRange(secretBox.cipherText.length, out.length, secretBox.mac.bytes);
   return out;
 }
 

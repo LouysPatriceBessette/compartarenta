@@ -48,6 +48,7 @@ class PushNotificationService {
   ];
 
   static bool _started = false;
+  static bool _localStarted = false;
 
   static AppLocalizations _l10nForUiLocale() {
     final lang = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
@@ -79,14 +80,7 @@ class PushNotificationService {
       return;
     }
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosInit = DarwinInitializationSettings();
-    await _plugin.initialize(
-      const InitializationSettings(android: androidInit, iOS: iosInit),
-      onDidReceiveNotificationResponse: _onLocalNotificationTapped,
-    );
-
-    await _ensureAndroidChannel();
+    await _ensureLocalNotificationsInitialized(_plugin);
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await FirebaseMessaging.instance
@@ -123,6 +117,21 @@ class PushNotificationService {
     await android?.createNotificationChannel(_androidSilentChannel);
   }
 
+  static Future<void> _ensureLocalNotificationsInitialized(
+    FlutterLocalNotificationsPlugin plugin,
+  ) async {
+    if (identical(plugin, _plugin) && _localStarted) return;
+    await plugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(),
+      ),
+      onDidReceiveNotificationResponse: _onLocalNotificationTapped,
+    );
+    await _ensureAndroidChannel();
+    if (identical(plugin, _plugin)) _localStarted = true;
+  }
+
   static void _onForegroundMessage(RemoteMessage message) {
     if (!isHousingProposalRemoteMessage(message)) return;
     unawaited(
@@ -138,6 +147,11 @@ class PushNotificationService {
       if (t.contains('proposal') || t.contains('proposition')) return true;
     }
     return false;
+  }
+
+  static bool shouldDisplayHousingProposalNotification(AppPreferences prefs) {
+    return prefs.notificationsEnabled &&
+        prefs.notificationHousingPlanSubmission;
   }
 
   /// Shows a heads-up notification. Used from the foreground isolate and from
@@ -185,8 +199,10 @@ class PushNotificationService {
     }
 
     final prefs = await AppPreferences.load();
-    final playSound =
-        prefs.notificationsEnabled && prefs.notificationSoundEnabled;
+    if (!shouldDisplayHousingProposalNotification(prefs)) {
+      return;
+    }
+    final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
 
     final androidDetails = AndroidNotificationDetails(
@@ -209,6 +225,38 @@ class PushNotificationService {
         DateTime.now().millisecondsSinceEpoch.remainder(1 << 30);
 
     await plugin.show(id, title, body, details, payload: _housingTapPayload);
+  }
+
+  static Future<void> showLocalHousingProposalNotification({
+    String? senderDisplayName,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingProposalNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingProposalTitle;
+    final body = l10n.pushNotificationHousingProposalBody;
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: _housingTapPayload,
+    );
   }
 
   static void _onLocalNotificationTapped(NotificationResponse response) {

@@ -240,6 +240,19 @@
   "housingInviteStatusTableInvitee": "Invité",
   "housingInviteStatusTableStatus": "Statut",
   "housingInviteStatusNoPending": "Aucune invitation en attente pour ce plan.",
+  "housingInviteTransportSent": "Proposition envoyée à {sentCount} participant(s).",
+  "@housingInviteTransportSent": {
+    "placeholders": {
+      "sentCount": { "type": "int" }
+    }
+  },
+  "housingInviteTransportPartial": "Proposition envoyée à {sentCount} participant(s); {failedCount} participant(s) n'ont pas pu être joints.",
+  "@housingInviteTransportPartial": {
+    "placeholders": {
+      "sentCount": { "type": "int" },
+      "failedCount": { "type": "int" }
+    }
+  },
   "pushNotificationHousingProposalTitle": "Proposition de logement",
   "pushNotificationHousingProposalBody": "Ouvrez l'application pour consulter la proposition.",
   "pushNotificationContactAddRequestTitle": "Demande de contact",

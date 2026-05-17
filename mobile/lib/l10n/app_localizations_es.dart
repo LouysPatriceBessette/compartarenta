@@ -680,6 +680,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'No hay invitación pendiente para este plan.';
 
   @override
+  String housingInviteTransportSent(int sentCount) {
+    return 'Propuesta enviada a $sentCount participante(s).';
+  }
+
+  @override
+  String housingInviteTransportPartial(int sentCount, int failedCount) {
+    return 'Propuesta enviada a $sentCount participante(s); no se pudo contactar a $failedCount participante(s).';
+  }
+
+  @override
   String get pushNotificationHousingProposalTitle => 'Propuesta de vivienda';
 
   @override

@@ -20,6 +20,7 @@ import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
 import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
@@ -1423,12 +1424,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
 
     final proposerId = '$_planId:self';
+    late final String revisionId;
     try {
-      await PlanAgreementProposalService(_db).createRevisionFromCurrentDraft(
-        planId: _planId,
-        proposerParticipantId: proposerId,
-        responseExpiresAt: responseExpiresAt,
-      );
+      revisionId = await PlanAgreementProposalService(_db)
+          .createRevisionFromCurrentDraft(
+            planId: _planId,
+            proposerParticipantId: proposerId,
+            responseExpiresAt: responseExpiresAt,
+          );
     } catch (e, st) {
       if (!mounted) return;
       debugPrintStack(stackTrace: st);
@@ -1436,6 +1439,33 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
       return;
+    }
+
+    try {
+      final orchestrator = HandshakeOrchestrator.maybeInstance;
+      if (orchestrator == null) {
+        throw HandshakeOrchestratorError('relay_unavailable');
+      }
+      final send = await orchestrator.sendHousingProposalToPlanParticipants(
+        planId: _planId,
+        revisionId: revisionId,
+      );
+      if (!mounted) return;
+      final message = send.failedParticipantIds.isEmpty
+          ? l10n.housingInviteTransportSent(send.sentCount)
+          : l10n.housingInviteTransportPartial(
+              send.sentCount,
+              send.failedParticipantIds.length,
+            );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e, st) {
+      if (!mounted) return;
+      debugPrintStack(stackTrace: st);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+      );
     }
 
     if (!mounted) return;

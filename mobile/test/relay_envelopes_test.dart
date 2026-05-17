@@ -8,8 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('EnvelopeCodec hello', () {
     final invitationId = Uint8List.fromList(List<int>.generate(8, (i) => i));
-    final invitationNonce =
-        Uint8List.fromList(List<int>.generate(12, (i) => 0x10 + i));
+    final invitationNonce = Uint8List.fromList(
+      List<int>.generate(12, (i) => 0x10 + i),
+    );
 
     setUp(() {
       // Use a fixed nonce in tests so failures point at logic, not RNG.
@@ -30,8 +31,9 @@ void main() {
         invitationId: invitationId,
         nonce: invitationNonce,
       );
-      final inviterHandshakePub =
-          await RelayRouting.handshakePublicKey(inviterHandshakePriv);
+      final inviterHandshakePub = await RelayRouting.handshakePublicKey(
+        inviterHandshakePriv,
+      );
 
       final frame = await EnvelopeCodec.encryptHello(
         envelope: HelloEnvelope(
@@ -63,50 +65,57 @@ void main() {
       expect(decoded.inviteeLongTermPublicKey, equals(inviteePub));
     });
 
-    test('decrypt rejects wrong nonce (per nonce-mixed-into-salt rule)',
-        () async {
-      final inviteeKeystore = InMemoryIdentityKeystore(
-        seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
-      );
-      final inviteePriv = await inviteeKeystore.loadOrCreatePrivateKey();
-      final inviteePub = await inviteeKeystore.publicKey();
+    test(
+      'decrypt rejects wrong nonce (per nonce-mixed-into-salt rule)',
+      () async {
+        final inviteeKeystore = InMemoryIdentityKeystore(
+          seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+        );
+        final inviteePriv = await inviteeKeystore.loadOrCreatePrivateKey();
+        final inviteePub = await inviteeKeystore.publicKey();
 
-      final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
-        invitationId: invitationId,
-        nonce: invitationNonce,
-      );
-      final inviterHandshakePub =
-          await RelayRouting.handshakePublicKey(inviterHandshakePriv);
-
-      final frame = await EnvelopeCodec.encryptHello(
-        envelope: HelloEnvelope(
+        final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
           invitationId: invitationId,
-          inviteeLongTermPublicKey: inviteePub,
-          displayName: 'Alice',
-          avatarId: 'cat',
-          echoedNonce: invitationNonce,
-        ),
-        invitationNonce: invitationNonce,
-        inviteeLongTermPrivateKey: inviteePriv,
-        inviterHandshakePublicKey: inviterHandshakePub,
-      );
+          nonce: invitationNonce,
+        );
+        final inviterHandshakePub = await RelayRouting.handshakePublicKey(
+          inviterHandshakePriv,
+        );
 
-      final wrongNonce = Uint8List.fromList(
-        List<int>.generate(12, (i) => i + 1),
-      );
+        final frame = await EnvelopeCodec.encryptHello(
+          envelope: HelloEnvelope(
+            invitationId: invitationId,
+            inviteeLongTermPublicKey: inviteePub,
+            displayName: 'Alice',
+            avatarId: 'cat',
+            echoedNonce: invitationNonce,
+          ),
+          invitationNonce: invitationNonce,
+          inviteeLongTermPrivateKey: inviteePriv,
+          inviterHandshakePublicKey: inviterHandshakePub,
+        );
 
-      expect(
-        () => EnvelopeCodec.decryptHello(
-          frame: frame,
-          invitationNonce: wrongNonce,
-          inviterHandshakePrivateKey: inviterHandshakePriv,
-        ),
-        throwsA(isA<EnvelopeDecryptionError>()),
-      );
-    });
+        final wrongNonce = Uint8List.fromList(
+          List<int>.generate(12, (i) => i + 1),
+        );
+
+        expect(
+          () => EnvelopeCodec.decryptHello(
+            frame: frame,
+            invitationNonce: wrongNonce,
+            inviterHandshakePrivateKey: inviterHandshakePriv,
+          ),
+          throwsA(isA<EnvelopeDecryptionError>()),
+        );
+      },
+    );
 
     test('rejects wrong framing version / kind', () async {
-      final frame = Uint8List.fromList([0x02, 0x01, ...List<int>.filled(80, 0)]);
+      final frame = Uint8List.fromList([
+        0x02,
+        0x01,
+        ...List<int>.filled(80, 0),
+      ]);
       expect(
         () => EnvelopeCodec.peekHelloHeader(frame),
         throwsA(isA<EnvelopeDecryptionError>()),
@@ -116,12 +125,15 @@ void main() {
 
   group('EnvelopeCodec ack', () {
     final invitationId = Uint8List.fromList(List<int>.generate(8, (i) => i));
-    final invitationNonce =
-        Uint8List.fromList(List<int>.generate(12, (i) => 0x10 + i));
+    final invitationNonce = Uint8List.fromList(
+      List<int>.generate(12, (i) => 0x10 + i),
+    );
 
-    setUp(() => setNonceSourceForTesting(
-          () => Uint8List.fromList(List<int>.generate(12, (i) => 0x33 + i)),
-        ));
+    setUp(
+      () => setNonceSourceForTesting(
+        () => Uint8List.fromList(List<int>.generate(12, (i) => 0x33 + i)),
+      ),
+    );
     tearDown(resetNonceSourceForTesting);
 
     test('round-trips accepted ack with inviter profile', () async {
@@ -207,13 +219,14 @@ void main() {
   });
 
   group('EnvelopeCodec steady-state', () {
-    setUp(() => setNonceSourceForTesting(
-          () => Uint8List.fromList(List<int>.generate(12, (i) => 0x55 + i)),
-        ));
+    setUp(
+      () => setNonceSourceForTesting(
+        () => Uint8List.fromList(List<int>.generate(12, (i) => 0x55 + i)),
+      ),
+    );
     tearDown(resetNonceSourceForTesting);
 
-    test('profile_update round-trips between two connected contacts',
-        () async {
+    test('profile_update round-trips between two connected contacts', () async {
       final aliceKeystore = InMemoryIdentityKeystore(
         seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
       );
@@ -298,5 +311,41 @@ void main() {
       );
       expect(decoded.senderLongTermPublicKey, equals(alicePub));
     });
+
+    test(
+      'housing_proposal round-trips proposal json and target participant',
+      () async {
+        final aliceKeystore = InMemoryIdentityKeystore(
+          seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+        );
+        final bobKeystore = InMemoryIdentityKeystore(
+          seed: Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i)),
+        );
+        final alicePriv = await aliceKeystore.loadOrCreatePrivateKey();
+        final alicePub = await aliceKeystore.publicKey();
+        final bobPriv = await bobKeystore.loadOrCreatePrivateKey();
+        final bobPub = await bobKeystore.publicKey();
+
+        const proposalJson =
+            '{"kind":"expensePlanAgreementProposal","revisionId":"rev:1"}';
+        final frame = await EnvelopeCodec.encryptHousingProposal(
+          envelope: HousingProposalEnvelope(
+            senderLongTermPublicKey: alicePub,
+            proposalJson: proposalJson,
+            targetParticipantId: 'plan:p0',
+          ),
+          senderLongTermPrivateKey: alicePriv,
+          peerLongTermPublicKey: bobPub,
+        );
+        final decoded = await EnvelopeCodec.decryptHousingProposal(
+          frame: frame,
+          receiverLongTermPrivateKey: bobPriv,
+        );
+
+        expect(decoded.senderLongTermPublicKey, equals(alicePub));
+        expect(decoded.proposalJson, proposalJson);
+        expect(decoded.targetParticipantId, 'plan:p0');
+      },
+    );
   });
 }

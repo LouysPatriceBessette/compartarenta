@@ -33,6 +33,7 @@
 - [x] 4.6 Verify Chrome and Android behavior with the developer test notification action.
 - [x] 4.7 Add Contacts fallback acceptance controls on a local-only contact when it has a pending incoming handshake.
 - [x] 4.8 Add an explicit Contacts refresh action and targeted handshake polling logs so manual testing can distinguish "no relay envelope received" from "pending request ready to accept".
+- [x] 4.9 Gate incoming Housing proposal FCM/local notifications behind the app-level notification switch and the Housing "Plan submission received" category switch.
 
 ## Wish List
 

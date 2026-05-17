@@ -1312,6 +1312,18 @@ abstract class AppLocalizations {
   /// **'No pending invitation for this plan.'**
   String get housingInviteStatusNoPending;
 
+  /// No description provided for @housingInviteTransportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal sent to {sentCount} participant(s).'**
+  String housingInviteTransportSent(int sentCount);
+
+  /// No description provided for @housingInviteTransportPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposal sent to {sentCount} participant(s); {failedCount} participant(s) could not be reached.'**
+  String housingInviteTransportPartial(int sentCount, int failedCount);
+
   /// No description provided for @pushNotificationHousingProposalTitle.
   ///
   /// In en, this message translates to:

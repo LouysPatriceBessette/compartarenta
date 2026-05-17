@@ -678,6 +678,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune invitation en attente pour ce plan.';
 
   @override
+  String housingInviteTransportSent(int sentCount) {
+    return 'Proposition envoyée à $sentCount participant(s).';
+  }
+
+  @override
+  String housingInviteTransportPartial(int sentCount, int failedCount) {
+    return 'Proposition envoyée à $sentCount participant(s); $failedCount participant(s) n\'ont pas pu être joints.';
+  }
+
+  @override
   String get pushNotificationHousingProposalTitle => 'Proposition de logement';
 
   @override

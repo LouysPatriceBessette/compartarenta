@@ -8,7 +8,9 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../notifications/contact_notification_service.dart';
+import '../notifications/push_notification_service.dart';
 import '../prefs/app_preferences.dart';
 import 'envelopes.dart';
 import 'identity_keystore.dart';
@@ -86,6 +88,16 @@ class RedeemHandshakeResult {
 
   final String handshakeId;
   final String localContactId;
+}
+
+class HousingProposalSendResult {
+  const HousingProposalSendResult({
+    required this.sentCount,
+    required this.failedParticipantIds,
+  });
+
+  final int sentCount;
+  final List<String> failedParticipantIds;
 }
 
 /// Errors surfaced by the orchestrator.
@@ -738,6 +750,14 @@ class HandshakeOrchestrator {
               selfPriv: selfPriv,
               peerPub: peerPub,
             );
+          } else if (env.kind == EnvelopeKind.housingProposal) {
+            await _handleInboundHousingProposal(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
           } else {
             await _relay.ackEnvelope(
               envelopeId: env.envelopeId,
@@ -893,6 +913,51 @@ class HandshakeOrchestrator {
       recipient: myListenAddr,
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  Future<void> _handleInboundHousingProposal({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    final HousingProposalEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptHousingProposal(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    await HousingProposalTransportService(_db).importReceivedProposal(
+      proposalJson: decrypted.proposalJson,
+      targetParticipantId: decrypted.targetParticipantId,
+      senderContactId: contact.id,
+      senderDisplayName: contact.displayName,
+      senderAvatarId: contact.avatarId,
+    );
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    await PushNotificationService.showLocalHousingProposalNotification(
+      senderDisplayName: contact.displayName,
+    );
   }
 
   Future<void> _processOne(PendingHandshake row) async {
@@ -1299,6 +1364,84 @@ class HandshakeOrchestrator {
       }
     }
     return dispatched;
+  }
+
+  Future<HousingProposalSendResult> sendHousingProposalToPlanParticipants({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final participants = (await _db.listParticipants())
+        .where((p) => p.id.startsWith('$planId:p') && p.contactId != null)
+        .toList(growable: false);
+    if (participants.isEmpty) {
+      return const HousingProposalSendResult(
+        sentCount: 0,
+        failedParticipantIds: <String>[],
+      );
+    }
+
+    final transport = HousingProposalTransportService(_db);
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    var sent = 0;
+    final failed = <String>[];
+
+    for (final participant in participants) {
+      final contactId = participant.contactId;
+      if (contactId == null) continue;
+      final contact = await _contacts.get(contactId);
+      final peerPubB64 = contact?.peerPublicMaterial;
+      if (contact == null ||
+          contact.kind != 'connected' ||
+          peerPubB64 == null ||
+          peerPubB64.isEmpty) {
+        failed.add(participant.id);
+        continue;
+      }
+
+      try {
+        final peerPub = RelayRouting.unb64(peerPubB64);
+        final proposalJson = await transport.exportProposalForParticipant(
+          planId: planId,
+          revisionId: revisionId,
+          targetParticipantId: participant.id,
+        );
+        final frame = await EnvelopeCodec.encryptHousingProposal(
+          envelope: HousingProposalEnvelope(
+            senderLongTermPublicKey: selfPub,
+            proposalJson: proposalJson,
+            targetParticipantId: participant.id,
+          ),
+          senderLongTermPrivateKey: selfPriv,
+          peerLongTermPublicKey: peerPub,
+        );
+        final selfAddr = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        final peerAddr = await RelayRouting.steadyStateAddress(
+          firstPub: peerPub,
+          secondPub: selfPub,
+        );
+        await _relay.postEnvelope(
+          senderIdentity: selfAddr,
+          recipientIdentity: peerAddr,
+          idempotencyKey: _randomBytes(16),
+          ciphertext: frame,
+          kind: EnvelopeKind.housingProposal,
+          ttl: _steadyTtl,
+        );
+        sent++;
+      } on Object catch (e) {
+        debugPrint('housing_proposal to ${participant.id} failed: $e');
+        failed.add(participant.id);
+      }
+    }
+
+    return HousingProposalSendResult(
+      sentCount: sent,
+      failedParticipantIds: List.unmodifiable(failed),
+    );
   }
 
   /// Pushes the local user's canonical profile plus how they list [contactId]

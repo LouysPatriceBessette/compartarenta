@@ -5,18 +5,19 @@ import '../../prefs/app_preferences.dart';
 import 'housing_plan_screen.dart';
 import 'housing_workbench_screen.dart';
 
-/// Count of housing [Plan] rows where this device has a `planId:self` participant.
-Future<int> housingPlansWithSelfParticipantCount(AppDatabase db) async {
-  final housing =
-      await (db.select(db.plans)..where((t) => t.type.equals('housing'))).get();
-  var n = 0;
+/// Housing [Plan] rows where this device has a `planId:self` participant.
+Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
+  final housing = await (db.select(
+    db.plans,
+  )..where((t) => t.type.equals('housing'))).get();
+  final out = <Plan>[];
   for (final p in housing) {
-    final self = await (db.select(db.participants)
-          ..where((t) => t.id.equals('${p.id}:self')))
-        .getSingleOrNull();
-    if (self != null) n++;
+    final self = await (db.select(
+      db.participants,
+    )..where((t) => t.id.equals('${p.id}:self'))).getSingleOrNull();
+    if (self != null) out.add(p);
   }
-  return n;
+  return out;
 }
 
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
@@ -34,24 +35,27 @@ class HousingModuleEntryScreen extends StatefulWidget {
 class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   /// Must be stable across rebuilds — a new [Future] each [build] restarts
   /// [FutureBuilder] forever (visible as a flickering screen).
-  late final Future<int> _housingWithSelfCountFuture =
-      housingPlansWithSelfParticipantCount(AppDatabase.processScope);
+  late final Future<List<Plan>> _housingWithSelfFuture =
+      housingPlansWithSelfParticipant(AppDatabase.processScope);
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<int>(
-      future: _housingWithSelfCountFuture,
+    return FutureBuilder<List<Plan>>(
+      future: _housingWithSelfFuture,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final n = snap.data ?? 0;
-        if (n > 1) {
+        final plans = snap.data ?? const <Plan>[];
+        if (plans.length > 1) {
           return HousingWorkbenchScreen(prefs: widget.prefs);
         }
-        return HousingPlanScreen(prefs: widget.prefs);
+        return HousingPlanScreen(
+          prefs: widget.prefs,
+          planId: plans.isEmpty ? 'housing:default' : plans.single.id,
+        );
       },
     );
   }
