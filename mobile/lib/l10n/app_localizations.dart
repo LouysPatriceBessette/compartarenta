@@ -1264,6 +1264,90 @@ abstract class AppLocalizations {
   /// **'Response sent.'**
   String get housingInviteResponseSent;
 
+  /// No description provided for @housingArchiveEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived proposals'**
+  String get housingArchiveEntryTitle;
+
+  /// No description provided for @housingArchiveEntryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an archived proposal to review or create a derived version, or create a new plan.'**
+  String get housingArchiveEntryBody;
+
+  /// No description provided for @housingArchiveNegotiatingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan in negotiation'**
+  String get housingArchiveNegotiatingTitle;
+
+  /// No description provided for @housingArchiveRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected plan'**
+  String get housingArchiveRejectedTitle;
+
+  /// No description provided for @housingArchiveDraftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan draft'**
+  String get housingArchiveDraftTitle;
+
+  /// No description provided for @housingArchiveCreateDerivedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a derived version'**
+  String get housingArchiveCreateDerivedAction;
+
+  /// No description provided for @housingArchiveEditDraftAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get housingArchiveEditDraftAction;
+
+  /// No description provided for @housingArchiveViewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get housingArchiveViewAction;
+
+  /// No description provided for @housingArchiveCreateNewPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new plan'**
+  String get housingArchiveCreateNewPlan;
+
+  /// No description provided for @housingArchiveForkPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your response was sent.'**
+  String get housingArchiveForkPromptTitle;
+
+  /// No description provided for @housingArchiveForkPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to create a derived version of this proposal now to make your changes?'**
+  String get housingArchiveForkPromptBody;
+
+  /// No description provided for @housingArchiveForkPromptLaterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can do this later from the main menu.'**
+  String get housingArchiveForkPromptLaterHint;
+
+  /// No description provided for @housingArchiveForkLaterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get housingArchiveForkLaterAction;
+
+  /// No description provided for @housingArchiveForkPromptCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get housingArchiveForkPromptCreateAction;
+
   /// No description provided for @housingInviteProposalLockedHint.
   ///
   /// In en, this message translates to:
@@ -1317,6 +1401,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Status'**
   String get housingInviteStatusTableStatus;
+
+  /// No description provided for @housingInviteStatusMessagesSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get housingInviteStatusMessagesSectionTitle;
 
   /// No description provided for @housingInviteStatusNoPending.
   ///

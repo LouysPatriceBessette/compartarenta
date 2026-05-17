@@ -14,6 +14,7 @@ import 'housing_invitation_status_dialog.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../housing/proposals/agreement_period_day_overlap.dart';
 import '../../housing/proposals/housing_plan_period_gate.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
@@ -47,12 +48,14 @@ class HousingPlanScreen extends StatefulWidget {
     super.key,
     required this.prefs,
     this.planId = 'housing:default',
+    this.openEditorInitially = false,
   });
 
   final AppPreferences prefs;
 
   /// Stable plan row id (participants use `{planId}:self`, `{planId}:p0`, …).
   final String planId;
+  final bool openEditorInitially;
 
   @override
   State<HousingPlanScreen> createState() => _HousingPlanScreenState();
@@ -907,13 +910,22 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
     final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
     if (dbComplete) {
-      _showSummary = true;
+      _showSummary = !widget.openEditorInitially;
       await widget.prefs.setHousingDefaultPlanSummaryReached(true);
     } else {
       _showSummary = false;
       await widget.prefs.setHousingDefaultPlanSummaryReached(false);
       _stepIndex = await _inferResumeStepIndex();
     }
+  }
+
+  Future<void> _onEditPlanFromSummary() async {
+    await HousingProposalTransportService(_db).startPreparedForkDraft(_planId);
+    if (!mounted) return;
+    setState(() {
+      _showSummary = false;
+      _stepIndex = 0;
+    });
   }
 
   Future<List<PlanLine>> _planLinesFuture() {
@@ -1426,11 +1438,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final proposerId = '$_planId:self';
     late final String revisionId;
     try {
+      final fork = await HousingProposalTransportService(
+        _db,
+      ).preparedForkLineage(_planId);
       revisionId = await PlanAgreementProposalService(_db)
           .createRevisionFromCurrentDraft(
             planId: _planId,
             proposerParticipantId: proposerId,
             responseExpiresAt: responseExpiresAt,
+            forkedFromPackageId: fork?.packageId,
+            forkedFromRevisionId: fork?.revisionId,
           );
     } catch (e, st) {
       if (!mounted) return;
@@ -1598,10 +1615,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               reloadToken: _summaryReloadToken,
               avatarIcons: _avatarIcons,
               shareMinorOverrides: _shareAmountMinorOverride,
-              onEditPlan: () => setState(() {
-                _showSummary = false;
-                _stepIndex = 0;
-              }),
+              onEditPlan: _onEditPlanFromSummary,
               onInvite: _openInviteProposalFlow,
               onDestroy: _onDestroyPlan,
             );

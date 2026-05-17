@@ -1,6 +1,9 @@
 # Personal dev notes (not tracked)
 dev-ideas/
 
+# dev
+relay/deploy/landing/dev/
+
 # OS / editor
 .DS_Store
 Thumbs.db

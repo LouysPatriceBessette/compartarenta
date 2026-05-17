@@ -37,6 +37,7 @@ Future<void> showHousingInvitationStatusDialog(
   required AppDatabase db,
   required String planId,
   required AppPreferences prefs,
+  String? revisionId,
 }) async {
   final l10n = AppLocalizations.of(context);
   await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
@@ -44,7 +45,7 @@ Future<void> showHousingInvitationStatusDialog(
   final pkg = await (db.select(
     db.proposalPackages,
   )..where((t) => t.planId.equals(planId))).getSingleOrNull();
-  final pendingId = pkg?.pendingRevisionId;
+  final pendingId = revisionId ?? pkg?.pendingRevisionId;
   if (!context.mounted) return;
   if (pendingId == null) {
     ScaffoldMessenger.of(
@@ -65,6 +66,9 @@ Future<void> showHousingInvitationStatusDialog(
   }
 
   final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+  final responseMessages = Map<String, dynamic>.from(
+    (payload['responseMessages'] as Map?) ?? const <String, dynamic>{},
+  );
   final expiresStr = payload['responseExpiresAt'] as String?;
   DateTime? expiresUtc;
   if (expiresStr != null) {
@@ -150,6 +154,21 @@ Future<void> showHousingInvitationStatusDialog(
                   ],
                 ),
               ),
+              if (responseMessages.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.housingInviteStatusMessagesSectionTitle,
+                  style: Theme.of(ctx).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                for (final entry in responseMessages.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '${_displayNameForParticipantId(entry.key, roster)}: ${entry.value}',
+                    ),
+                  ),
+              ],
             ],
           ),
         ),
@@ -162,4 +181,11 @@ Future<void> showHousingInvitationStatusDialog(
       );
     },
   );
+}
+
+String _displayNameForParticipantId(String id, List<Participant> roster) {
+  for (final participant in roster) {
+    if (participant.id == id) return participant.displayName;
+  }
+  return id;
 }

@@ -644,6 +644,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingInviteResponseSent => 'Response sent.';
 
   @override
+  String get housingArchiveEntryTitle => 'Archived proposals';
+
+  @override
+  String get housingArchiveEntryBody =>
+      'Choose an archived proposal to review or create a derived version, or create a new plan.';
+
+  @override
+  String get housingArchiveNegotiatingTitle => 'Plan in negotiation';
+
+  @override
+  String get housingArchiveRejectedTitle => 'Rejected plan';
+
+  @override
+  String get housingArchiveDraftTitle => 'Plan draft';
+
+  @override
+  String get housingArchiveCreateDerivedAction => 'Create a derived version';
+
+  @override
+  String get housingArchiveEditDraftAction => 'Edit';
+
+  @override
+  String get housingArchiveViewAction => 'View';
+
+  @override
+  String get housingArchiveCreateNewPlan => 'Create a new plan';
+
+  @override
+  String get housingArchiveForkPromptTitle => 'Your response was sent.';
+
+  @override
+  String get housingArchiveForkPromptBody =>
+      'Do you want to create a derived version of this proposal now to make your changes?';
+
+  @override
+  String get housingArchiveForkPromptLaterHint =>
+      'You can do this later from the main menu.';
+
+  @override
+  String get housingArchiveForkLaterAction => 'Later';
+
+  @override
+  String get housingArchiveForkPromptCreateAction => 'Create';
+
+  @override
   String get housingInviteProposalLockedHint =>
       'Another participant is negotiating or has rejected this proposal. Responses are paused until the plan is revised.';
 
@@ -674,6 +719,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingInviteStatusTableStatus => 'Status';
+
+  @override
+  String get housingInviteStatusMessagesSectionTitle => 'Messages';
 
   @override
   String get housingInviteStatusNoPending =>

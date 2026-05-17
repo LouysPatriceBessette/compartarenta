@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import 'housing_active_plan_screen.dart';
+import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
 
@@ -12,11 +14,13 @@ class _WorkbenchRow {
     required this.plan,
     required this.hasPending,
     required this.hasActive,
+    required this.hasArchive,
   });
 
   final Plan plan;
   final bool hasPending;
   final bool hasActive;
+  final bool hasArchive;
 }
 
 /// Lists housing plans on this device where the user has a `planId:self` row.
@@ -48,7 +52,17 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
       )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
       final pending = pkg?.pendingRevisionId != null;
       final active = pkg?.activeRevisionId != null;
-      out.add(_WorkbenchRow(plan: p, hasPending: pending, hasActive: active));
+      final archive = await HousingProposalTransportService(
+        _db,
+      ).planHasArchives(p.id);
+      out.add(
+        _WorkbenchRow(
+          plan: p,
+          hasPending: pending,
+          hasActive: active,
+          hasArchive: archive,
+        ),
+      );
     }
     out.sort((a, b) {
       final ta = a.plan.title.trim();
@@ -91,6 +105,15 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
     );
   }
 
+  void _openArchiveEntry(String planId) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            HousingArchiveEntryScreen(prefs: widget.prefs, planId: planId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -118,10 +141,13 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
             );
           }
           final drafts = rows
-              .where((r) => !r.hasPending && !r.hasActive)
+              .where((r) => !r.hasPending && !r.hasActive && !r.hasArchive)
               .toList();
           final pending = rows.where((r) => r.hasPending).toList();
           final active = rows.where((r) => r.hasActive).toList();
+          final archives = rows
+              .where((r) => r.hasArchive && !r.hasPending && !r.hasActive)
+              .toList();
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -158,6 +184,25 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
                       subtitle: Text(r.plan.id),
                       trailing: TextButton(
                         onPressed: () => _openPlanEditor(r.plan.id),
+                        child: Text(l10n.housingWorkbenchOpenPlan),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 24),
+              ],
+              if (archives.isNotEmpty) ...[
+                Text(
+                  l10n.housingArchiveEntryTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final r in archives)
+                  Card(
+                    child: ListTile(
+                      title: Text(_rowTitle(r.plan)),
+                      subtitle: Text(r.plan.id),
+                      trailing: TextButton(
+                        onPressed: () => _openArchiveEntry(r.plan.id),
                         child: Text(l10n.housingWorkbenchOpenPlan),
                       ),
                     ),

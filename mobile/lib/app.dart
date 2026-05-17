@@ -154,7 +154,11 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
                     child: ContactInviteDeepLinkListener(
                       router: router,
                       prefs: prefs,
-                      child: child ?? const SizedBox.shrink(),
+                      child: SafeArea(
+                        top: false,
+                        bottom: false,
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),

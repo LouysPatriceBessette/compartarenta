@@ -1,0 +1,27 @@
+---
+description: Keep technical terminology out of user-facing app copy
+alwaysApply: true
+---
+
+# User-Facing Terminology
+
+Use this terminology dictionary whenever writing or reviewing text that can be
+seen by app users: Flutter widgets, localization ARB files, HTML mocks, help
+text, settings labels, dialogs, snackbars, notifications, and documentation-like
+UI copy.
+
+Technical terms are allowed in developer-facing surfaces: function names,
+methods, classes, modules, internal comments when useful, tests, debug logs,
+developer tools, console output, OpenSpec implementation notes, and chat with
+the developer.
+
+## Dictionary
+
+| Technical term | Do not show to users | User-facing wording |
+| --- | --- | --- |
+| fork / forker / forkable | Do not use “fork” or “forker” in app UI copy. | Use “create a derived version”, “derived version”, “version dérivée”, or the locale-appropriate equivalent. |
+
+## Rule Of Thumb
+
+If the text is for a real-world user, prefer product language over developer
+language. If the text is for developers or the AI, the technical term may remain.

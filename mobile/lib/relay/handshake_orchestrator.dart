@@ -1510,10 +1510,19 @@ class HandshakeOrchestrator {
       status: status,
       message: message,
     );
-    await transport.tryActivatePlanIfUnanimous(
-      planId: planId,
-      revisionId: revisionId,
-    );
+    if (status == ProposalResponseStatus.accepted) {
+      await transport.tryActivatePlanIfUnanimous(
+        planId: planId,
+        revisionId: revisionId,
+      );
+    } else {
+      await transport.archiveInvalidatedProposal(
+        planId: planId,
+        revisionId: revisionId,
+        status: status,
+        responderParticipantId: selfParticipantId,
+      );
+    }
 
     final payload = await PlanAgreementProposalService(
       _db,
@@ -1647,10 +1656,19 @@ class HandshakeOrchestrator {
       _db.proposalPackages,
     )..where((t) => t.id.equals(revision.packageId))).getSingleOrNull();
     if (pkg != null) {
-      await transport.tryActivatePlanIfUnanimous(
-        planId: pkg.planId,
-        revisionId: revision.id,
-      );
+      if (status == ProposalResponseStatus.accepted) {
+        await transport.tryActivatePlanIfUnanimous(
+          planId: pkg.planId,
+          revisionId: revision.id,
+        );
+      } else {
+        await transport.archiveInvalidatedProposal(
+          planId: pkg.planId,
+          revisionId: revision.id,
+          status: status,
+          responderParticipantId: participantId,
+        );
+      }
     }
     await PushNotificationService.showLocalHousingDecisionNotification(
       senderDisplayName: senderDisplayName,

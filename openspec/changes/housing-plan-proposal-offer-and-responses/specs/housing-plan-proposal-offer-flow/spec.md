@@ -139,19 +139,54 @@ History MUST survive normal app restarts and MUST NOT depend on the relay retain
 
 ---
 
-### Requirement: Any participant may fork a new revision from an invalidated offer
+### Requirement: Fork eligibility depends on invalidation reason and responder
 
 **WHEN** a `revisionId` is **invalidated** or **expired**:
 
-- **THEN** any roster participant (including non-authors) MAY open the retained snapshot and **edit** it to produce a **new** revision with a new `revisionId` (same `packageId` lineage per `plan-contract-proposal-payload` when the group context is unchanged; a **new** `packageId` MAY be minted when the fork intentionally starts a new group context—implementation SHALL still record **fork lineage** fields)
+- **THEN** the client SHALL retain a read-only archive of the offer snapshot and response summary.
+- **AND** participants MAY fork from the retained snapshot only when they are eligible under the invalidation reason.
+- **AND** a participant who submitted a **Refuse** response SHALL NOT be eligible to fork that same refused revision.
+- **AND** other participants MAY open the retained snapshot and **edit** it to produce a **new** revision with a new `revisionId` (same `packageId` lineage per `plan-contract-proposal-payload` when the group context is unchanged; a **new** `packageId` MAY be minted when the fork intentionally starts a new group context—implementation SHALL still record **fork lineage** fields)
 - **AND** the author of that new revision becomes the **proposer** for that revision’s history records
 - **AND** the new revision SHALL carry **fork lineage** metadata (`forkedFromPackageId`, `forkedFromRevisionId`, …) as required in **Fork lineage is mandatory** above
 - **AND** **Fork from workbench only when source revision is not forkable-blocked** applies to UI affordances
+
+#### Scenario: Refuser keeps archive but cannot fork
+
+- **WHEN** participant B refuses revision `R1`
+- **THEN** B retains the archived proposal and response summary
+- **AND** B can view the offer but cannot fork it
+- **AND** all other participants may fork from `R1` if otherwise eligible
+
+#### Scenario: Negotiator is prompted to fork
+
+- **WHEN** participant B submits Negotiate on revision `R1`
+- **THEN** B retains the archived proposal and response summary
+- **AND** B is immediately asked whether they want to fork `R1` to make changes
+- **AND** choosing “not now” leaves the archive available for later fork from the housing workbench
 
 #### Scenario: Non-original author resubmits
 
 - **WHEN** participant C forks after B’s refusal
 - **THEN** history shows C as proposer of `R2` while retaining read-only `R1` events
+
+---
+
+### Requirement: Housing entry offers archive choices before editing
+
+When there is no active or open housing proposal but archived proposals exist, the housing module SHALL show a pre-editor choice page before step 1. The page SHALL list archived proposal snapshots and an option to create a new plan.
+
+#### Scenario: Eligible archived proposal forks into editor
+
+- **WHEN** the user selects an archived proposal they are eligible to fork
+- **THEN** the editor opens prefilled from that archived snapshot
+- **AND** the next submitted proposal records fork lineage to the archived revision
+
+#### Scenario: Ineligible archived proposal opens read-only
+
+- **WHEN** the user selects an archived proposal they are not eligible to fork
+- **THEN** the retained offer opens read-only with its response summary
+- **AND** the app does not open editable step 1 for that archived proposal
 
 ---
 

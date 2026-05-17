@@ -20,4 +20,6 @@
 
 
 - [ ] 1.18 Wire checklist [`housing-plan-entry-spec-conformance-checklist.md`](../expense-plan-contract-model/housing-plan-entry-spec-conformance-checklist.md) rows for home selector / workbench when implemented.
+- [x] 1.19 Archive invalidated proposals with response summary messages; prompt Negotiate responders to fork; prevent Refuse responders from forking the refused revision.
+- [x] 1.20 Housing entry archive/new-plan page before step 1; eligible archive opens editable fork, ineligible archive opens read-only review.
 

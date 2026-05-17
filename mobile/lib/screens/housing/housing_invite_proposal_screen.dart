@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_invite_sunburst.dart';
+import 'housing_plan_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -42,6 +44,7 @@ class HousingInviteProposalScreen extends StatefulWidget {
     required this.db,
     required this.planId,
     required this.prefs,
+    this.revisionId,
 
     /// When non-null, this screen simulates that participant’s view (chips locked, response buttons).
     this.viewerParticipantIndex,
@@ -50,6 +53,7 @@ class HousingInviteProposalScreen extends StatefulWidget {
   final AppDatabase db;
   final String planId;
   final AppPreferences prefs;
+  final String? revisionId;
 
   /// Roster index (0 = plan author on device). Null = author preview / invitation prep.
   final int? viewerParticipantIndex;
@@ -134,7 +138,8 @@ class _HousingInviteProposalScreenState
     final pkg = await (widget.db.select(
       widget.db.proposalPackages,
     )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull();
-    final revisionId = pkg?.pendingRevisionId ?? pkg?.activeRevisionId;
+    final revisionId =
+        widget.revisionId ?? pkg?.pendingRevisionId ?? pkg?.activeRevisionId;
     if (revisionId == null) {
       return const _ProposalUiState(
         revisionId: null,
@@ -160,6 +165,7 @@ class _HousingInviteProposalScreenState
   Future<void> _submitResponse(
     ProposalResponseStatus status, {
     String message = '',
+    String? revisionId,
   }) async {
     final l10n = AppLocalizations.of(context);
     final orchestrator = HandshakeOrchestrator.maybeInstance;
@@ -183,12 +189,58 @@ class _HousingInviteProposalScreenState
         _negotiateExpanded = false;
         _negotiateController.clear();
       });
+      if (status == ProposalResponseStatus.negotiate) {
+        await _promptForkAfterNegotiation(revisionId);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
     }
+  }
+
+  Future<void> _promptForkAfterNegotiation(String? revisionId) async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final shouldFork = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.housingArchiveForkPromptTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.housingArchiveForkPromptBody),
+            const SizedBox(height: 8),
+            Text(l10n.housingArchiveForkPromptLaterHint),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.housingArchiveForkLaterAction),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.housingArchiveForkPromptCreateAction),
+          ),
+        ],
+      ),
+    );
+    if (shouldFork != true || !mounted) return;
+    if (revisionId != null) {
+      await HousingProposalTransportService(
+        widget.db,
+      ).prepareForkFromArchive(planId: widget.planId, revisionId: revisionId);
+    }
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement<void, void>(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            HousingPlanScreen(prefs: widget.prefs, planId: widget.planId),
+      ),
+    );
   }
 
   (Color bg, Color fg) _statusColors(
@@ -643,6 +695,7 @@ class _HousingInviteProposalScreenState
                         onPressed: canRespond
                             ? () => _submitResponse(
                                 ProposalResponseStatus.accepted,
+                                revisionId: proposal.revisionId,
                               )
                             : null,
                         child: Text(l10n.housingInviteAcceptFull),
@@ -675,6 +728,7 @@ class _HousingInviteProposalScreenState
                             _submitResponse(
                               ProposalResponseStatus.negotiate,
                               message: t,
+                              revisionId: proposal.revisionId,
                             );
                           },
                           child: Text(l10n.housingPlanSave),
@@ -688,6 +742,7 @@ class _HousingInviteProposalScreenState
                         onPressed: canRespond
                             ? () => _submitResponse(
                                 ProposalResponseStatus.rejected,
+                                revisionId: proposal.revisionId,
                               )
                             : null,
                         child: Text(l10n.housingInviteRejectBlock),
@@ -715,6 +770,7 @@ class _HousingInviteProposalScreenState
                             db: widget.db,
                             planId: widget.planId,
                             prefs: widget.prefs,
+                            revisionId: proposal.revisionId,
                           ),
                           child: Text(l10n.housingInviteInvitationStatusAction),
                         ),
@@ -730,6 +786,7 @@ class _HousingInviteProposalScreenState
                             db: widget.db,
                             planId: widget.planId,
                             prefs: widget.prefs,
+                            revisionId: proposal.revisionId,
                           ),
                           child: Text(l10n.housingInviteInvitationStatusAction),
                         ),

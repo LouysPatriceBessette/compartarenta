@@ -648,6 +648,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingInviteResponseSent => 'Réponse envoyée.';
 
   @override
+  String get housingArchiveEntryTitle => 'Propositions archivées';
+
+  @override
+  String get housingArchiveEntryBody =>
+      'Choisissez une proposition archivée à consulter ou pour créer une version dérivée, ou créez un nouveau plan.';
+
+  @override
+  String get housingArchiveNegotiatingTitle => 'Plan en négociation';
+
+  @override
+  String get housingArchiveRejectedTitle => 'Plan rejeté';
+
+  @override
+  String get housingArchiveDraftTitle => 'Ébauche de plan';
+
+  @override
+  String get housingArchiveCreateDerivedAction => 'Créer une version dérivée';
+
+  @override
+  String get housingArchiveEditDraftAction => 'Modifier';
+
+  @override
+  String get housingArchiveViewAction => 'Consulter';
+
+  @override
+  String get housingArchiveCreateNewPlan => 'Créer un nouveau plan';
+
+  @override
+  String get housingArchiveForkPromptTitle => 'Votre réponse a été envoyée.';
+
+  @override
+  String get housingArchiveForkPromptBody =>
+      'Voulez-vous créer une version dérivée de cette proposition maintenant afin d\'y apporter vos changements?';
+
+  @override
+  String get housingArchiveForkPromptLaterHint =>
+      'Vous pouvez le faire plus tard à partir du menu principal.';
+
+  @override
+  String get housingArchiveForkLaterAction => 'Plus tard';
+
+  @override
+  String get housingArchiveForkPromptCreateAction => 'Créer';
+
+  @override
   String get housingInviteProposalLockedHint =>
       'Un autre participant est en négociation ou a rejeté cette proposition. Les réponses sont suspendues jusqu\'à révision du plan.';
 
@@ -678,6 +723,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingInviteStatusTableStatus => 'Statut';
+
+  @override
+  String get housingInviteStatusMessagesSectionTitle => 'Messages';
 
   @override
   String get housingInviteStatusNoPending =>

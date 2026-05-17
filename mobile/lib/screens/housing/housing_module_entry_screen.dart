@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../prefs/app_preferences.dart';
 import 'housing_active_plan_screen.dart';
+import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
 import 'housing_workbench_screen.dart';
@@ -86,9 +88,27 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
                   prefs: widget.prefs,
                 );
               }
-              return HousingPlanScreen(
-                prefs: widget.prefs,
-                planId: plans.single.id,
+              return FutureBuilder<bool>(
+                future: HousingProposalTransportService(
+                  AppDatabase.processScope,
+                ).planHasArchives(plans.single.id),
+                builder: (context, archiveSnap) {
+                  if (archiveSnap.connectionState != ConnectionState.done) {
+                    return const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (archiveSnap.data == true) {
+                    return HousingArchiveEntryScreen(
+                      prefs: widget.prefs,
+                      planId: plans.single.id,
+                    );
+                  }
+                  return HousingPlanScreen(
+                    prefs: widget.prefs,
+                    planId: plans.single.id,
+                  );
+                },
               );
             },
           );
