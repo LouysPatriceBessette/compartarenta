@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
@@ -25,6 +26,18 @@ Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
   return out;
 }
 
+class _HousingEntrySnapshot {
+  const _HousingEntrySnapshot({
+    required this.plans,
+    this.package,
+    this.hasArchives = false,
+  });
+
+  final List<Plan> plans;
+  final ProposalPackage? package;
+  final bool hasArchives;
+}
+
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
 /// with a local self row; otherwise opens [HousingPlanScreen] directly.
 class HousingModuleEntryScreen extends StatefulWidget {
@@ -40,8 +53,28 @@ class HousingModuleEntryScreen extends StatefulWidget {
 class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   /// Must be stable across rebuilds — a new [Future] each [build] restarts
   /// [FutureBuilder] forever (visible as a flickering screen).
-  late final Future<List<Plan>> _housingWithSelfFuture =
-      housingPlansWithSelfParticipant(AppDatabase.processScope);
+  late final Future<_HousingEntrySnapshot> _entryFuture = _loadEntry();
+
+  Future<_HousingEntrySnapshot> _loadEntry() async {
+    final db = AppDatabase.processScope;
+    await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
+    final plans = await housingPlansWithSelfParticipant(db);
+    if (plans.length != 1) {
+      return _HousingEntrySnapshot(plans: plans);
+    }
+    final planId = plans.single.id;
+    final pkg = await (db.select(
+      db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    final hasArchives = await HousingProposalTransportService(
+      db,
+    ).planHasArchives(planId);
+    return _HousingEntrySnapshot(
+      plans: plans,
+      package: pkg,
+      hasArchives: hasArchives,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,67 +83,43 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) context.go('/');
       },
-      child: FutureBuilder<List<Plan>>(
-        future: _housingWithSelfFuture,
+      child: FutureBuilder<_HousingEntrySnapshot>(
+        future: _entryFuture,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          final plans = snap.data ?? const <Plan>[];
+          final entry =
+              snap.data ?? const _HousingEntrySnapshot(plans: <Plan>[]);
+          final plans = entry.plans;
           if (plans.length > 1) {
             return HousingWorkbenchScreen(prefs: widget.prefs);
           }
           if (plans.isEmpty) {
             return HousingPlanScreen(prefs: widget.prefs);
           }
-          return FutureBuilder<ProposalPackage?>(
-            future:
-                (AppDatabase.processScope.select(
-                      AppDatabase.processScope.proposalPackages,
-                    )..where((t) => t.planId.equals(plans.single.id)))
-                    .getSingleOrNull(),
-            builder: (context, pkgSnap) {
-              if (pkgSnap.connectionState != ConnectionState.done) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final pkg = pkgSnap.data;
-              if (pkg?.activeRevisionId != null) {
-                return const HousingActivePlanScreen();
-              }
-              if (pkg?.pendingRevisionId != null) {
-                return HousingInviteProposalScreen(
-                  db: AppDatabase.processScope,
-                  planId: plans.single.id,
-                  prefs: widget.prefs,
-                );
-              }
-              return FutureBuilder<bool>(
-                future: HousingProposalTransportService(
-                  AppDatabase.processScope,
-                ).planHasArchives(plans.single.id),
-                builder: (context, archiveSnap) {
-                  if (archiveSnap.connectionState != ConnectionState.done) {
-                    return const Scaffold(
-                      body: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (archiveSnap.data == true) {
-                    return HousingArchiveEntryScreen(
-                      prefs: widget.prefs,
-                      planId: plans.single.id,
-                    );
-                  }
-                  return HousingPlanScreen(
-                    prefs: widget.prefs,
-                    planId: plans.single.id,
-                  );
-                },
-              );
-            },
+          final pkg = entry.package;
+          if (pkg?.activeRevisionId != null) {
+            return const HousingActivePlanScreen();
+          }
+          if (pkg?.pendingRevisionId != null) {
+            return HousingInviteProposalScreen(
+              db: AppDatabase.processScope,
+              planId: plans.single.id,
+              prefs: widget.prefs,
+            );
+          }
+          if (entry.hasArchives) {
+            return HousingArchiveEntryScreen(
+              prefs: widget.prefs,
+              planId: plans.single.id,
+            );
+          }
+          return HousingPlanScreen(
+            prefs: widget.prefs,
+            planId: plans.single.id,
           );
         },
       ),

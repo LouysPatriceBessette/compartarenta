@@ -568,7 +568,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanSummaryEditPlan => 'Modifier le plan';
 
   @override
-  String get housingPlanSummaryInvite => 'Inviter mes participants';
+  String get housingPlanSummaryInvite => 'Soumettre mon plan';
 
   @override
   String get housingWorkbenchTitle => 'Plans logement';
@@ -609,6 +609,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get housingInviteProposalIntroTitle =>
       'Voici la proposition qui sera envoyée à chacun de vos participants.';
+
+  @override
+  String get housingInviteProposalSentIntroTitle =>
+      'Voici la proposition envoyée à chacun de vos participants.';
 
   @override
   String get housingInviteParticipantsSectionTitle => 'Participants';
@@ -826,11 +830,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String housingInviteSunburstLegendYouParticipation(
+    String participantName,
     String userAmount,
     String totalAmount,
     String pct,
   ) {
-    return 'Votre participation : $userAmount/$totalAmount ($pct %)';
+    return 'Part de $participantName : $userAmount/$totalAmount ($pct %)';
   }
 
   @override

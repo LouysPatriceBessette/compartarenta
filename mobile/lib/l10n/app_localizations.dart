@@ -1117,7 +1117,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingPlanSummaryInvite.
   ///
   /// In en, this message translates to:
-  /// **'Invite my participants'**
+  /// **'Submit my plan'**
   String get housingPlanSummaryInvite;
 
   /// No description provided for @housingWorkbenchTitle.
@@ -1191,6 +1191,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Here is the proposal that will be sent to each of your participants.'**
   String get housingInviteProposalIntroTitle;
+
+  /// No description provided for @housingInviteProposalSentIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here is the proposal sent to each of your participants.'**
+  String get housingInviteProposalSentIntroTitle;
 
   /// No description provided for @housingInviteParticipantsSectionTitle.
   ///
@@ -1561,8 +1567,9 @@ abstract class AppLocalizations {
   /// No description provided for @housingInviteSunburstLegendYouParticipation.
   ///
   /// In en, this message translates to:
-  /// **'Your participation: {userAmount}/{totalAmount} ({pct}%)'**
+  /// **'{participantName}\'s share: {userAmount}/{totalAmount} ({pct}%)'**
   String housingInviteSunburstLegendYouParticipation(
+    String participantName,
     String userAmount,
     String totalAmount,
     String pct,

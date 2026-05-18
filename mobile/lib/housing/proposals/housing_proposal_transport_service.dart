@@ -765,6 +765,9 @@ class HousingProposalTransportService {
         withdrawalPerParticipantJson: drift.Value(
           _string(agreement['withdrawalPerParticipantJson'], fallback: '{}'),
         ),
+        agreementRulesJson: drift.Value(
+          _string(agreement['agreementRulesJson'], fallback: '{}'),
+        ),
         createdAt: createdAt,
         version: drift.Value(_int(agreement['version'], fallback: 1)),
       ),

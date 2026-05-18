@@ -30,11 +30,13 @@ class _ProposalUiState {
     required this.revisionId,
     required this.proposerParticipantId,
     required this.responsesByParticipantId,
+    required this.payload,
   });
 
   final String? revisionId;
   final String proposerParticipantId;
   final Map<String, ProposalResponse> responsesByParticipantId;
+  final Map<String, dynamic> payload;
 }
 
 /// Full-scroll proposal preview for the plan author, or read-only + response UI for an invitee.
@@ -45,6 +47,7 @@ class HousingInviteProposalScreen extends StatefulWidget {
     required this.planId,
     required this.prefs,
     this.revisionId,
+    this.onSendProposal,
 
     /// When non-null, this screen simulates that participant’s view (chips locked, response buttons).
     this.viewerParticipantIndex,
@@ -54,6 +57,7 @@ class HousingInviteProposalScreen extends StatefulWidget {
   final String planId;
   final AppPreferences prefs;
   final String? revisionId;
+  final Future<bool> Function(BuildContext context)? onSendProposal;
 
   /// Roster index (0 = plan author on device). Null = author preview / invitation prep.
   final int? viewerParticipantIndex;
@@ -65,15 +69,20 @@ class HousingInviteProposalScreen extends StatefulWidget {
 
 class _HousingInviteProposalScreenState
     extends State<HousingInviteProposalScreen> {
+  late Future<List<dynamic>> _proposalFuture;
+
   int _focusedParticipantIndex = 0;
   int _previewQuietDayIndex = 0;
 
   final Map<int, HousingInviteParticipantUiStatus> _statusByRosterIndex = {};
 
   bool _negotiateExpanded = false;
+  bool _sendingProposal = false;
   final TextEditingController _negotiateController = TextEditingController();
 
   bool get _isAuthorPreview => widget.viewerParticipantIndex == null;
+
+  bool get _isDraftSendPreview => widget.onSendProposal != null;
 
   void _goBack() {
     if (Navigator.of(context).canPop()) {
@@ -86,9 +95,21 @@ class _HousingInviteProposalScreenState
   @override
   void initState() {
     super.initState();
+    _proposalFuture = _loadProposalScreenData();
     if (!_isAuthorPreview) {
       _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(0, 100);
     }
+  }
+
+  Future<List<dynamic>> _loadProposalScreenData() {
+    return Future.wait([
+      widget.db.listParticipants(),
+      widget.db.listPlanLines(widget.planId),
+      widget.db.getAgreementForPlan(widget.planId),
+      widget.db.listPlanRatios(widget.planId),
+      widget.db.listPlanGroups(widget.planId),
+      _loadProposalUiState(),
+    ]);
   }
 
   @override
@@ -145,6 +166,7 @@ class _HousingInviteProposalScreenState
         revisionId: null,
         proposerParticipantId: '',
         responsesByParticipantId: <String, ProposalResponse>{},
+        payload: <String, dynamic>{},
       );
     }
     final revision = await (widget.db.select(
@@ -159,6 +181,7 @@ class _HousingInviteProposalScreenState
       responsesByParticipantId: {
         for (final response in responses) response.participantId: response,
       },
+      payload: jsonDecode(revision.payloadJson) as Map<String, dynamic>,
     );
   }
 
@@ -186,6 +209,7 @@ class _HousingInviteProposalScreenState
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.housingInviteResponseSent)));
       setState(() {
+        _proposalFuture = _loadProposalScreenData();
         _negotiateExpanded = false;
         _negotiateController.clear();
       });
@@ -241,6 +265,17 @@ class _HousingInviteProposalScreenState
             HousingPlanScreen(prefs: widget.prefs, planId: widget.planId),
       ),
     );
+  }
+
+  Future<void> _sendFromPreview() async {
+    final send = widget.onSendProposal;
+    if (send == null || _sendingProposal) return;
+    debugPrint('housing_proposal preview send tapped for ${widget.planId}');
+    setState(() => _sendingProposal = true);
+    final sent = await send(context);
+    if (!mounted) return;
+    setState(() => _sendingProposal = false);
+    if (sent) _goBack();
   }
 
   (Color bg, Color fg) _statusColors(
@@ -533,14 +568,7 @@ class _HousingInviteProposalScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
       body: FutureBuilder<List<dynamic>>(
-        future: Future.wait([
-          widget.db.listParticipants(),
-          widget.db.listPlanLines(widget.planId),
-          widget.db.getAgreementForPlan(widget.planId),
-          widget.db.listPlanRatios(widget.planId),
-          widget.db.listPlanGroups(widget.planId),
-          _loadProposalUiState(),
-        ]),
+        future: _proposalFuture,
         builder: (context, snap) {
           if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -554,25 +582,26 @@ class _HousingInviteProposalScreenState
           if (agr == null || roster.isEmpty) {
             return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
           }
+          final proposalAgreement = proposal.payload['agreement'] is Map
+              ? (proposal.payload['agreement'] as Map).cast<String, dynamic>()
+              : const <String, dynamic>{};
+          final proposalRulesJson = proposalAgreement['agreementRulesJson']
+              ?.toString();
+          final proposalClauses = proposalAgreement['clauses']?.toString();
           final rules = AgreementRulesDraft.parseStored(
-            agreementRulesJson: agr.agreementRulesJson,
-            clausesFallback: agr.clauses,
+            agreementRulesJson: proposalRulesJson ?? agr.agreementRulesJson,
+            clausesFallback: proposalClauses ?? agr.clauses,
           );
           final pids = roster.map((p) => p.id).toList();
           _focusedParticipantIndex = _focusedParticipantIndex.clamp(
             0,
             pids.length - 1,
           );
-          if (!_isAuthorPreview) {
-            _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(
-              0,
-              pids.length - 1,
-            );
-          }
-
           final idx = _focusedParticipantIndex;
           final selfParticipantId = '${widget.planId}:self';
-          final isAuthor = proposal.proposerParticipantId == selfParticipantId;
+          final isAuthor =
+              _isDraftSendPreview ||
+              proposal.proposerParticipantId == selfParticipantId;
           final selfStatus =
               proposal.responsesByParticipantId[selfParticipantId]?.status ??
               ProposalResponseStatus.pending.name;
@@ -617,13 +646,17 @@ class _HousingInviteProposalScreenState
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text(
-                      l10n.housingInviteProposalIntroTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    if (isAuthor) ...[
+                      Text(
+                        _isDraftSendPreview
+                            ? l10n.housingInviteProposalIntroTitle
+                            : l10n.housingInviteProposalSentIntroTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Divider(height: 32),
+                      const Divider(height: 32),
+                    ],
                     Center(
                       child: Text(
                         l10n.housingInviteHousingAgreementTitle,
@@ -673,13 +706,17 @@ class _HousingInviteProposalScreenState
                             theme,
                             i,
                             roster[i].displayName,
-                            false,
+                            true,
                             showParticipantStatus,
                           ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    HousingInviteSunburstChart(l10n: l10n, slices: sunSlices),
+                    HousingInviteSunburstChart(
+                      l10n: l10n,
+                      slices: sunSlices,
+                      participantName: roster[idx].displayName,
+                    ),
                     const SizedBox(height: 20),
                     _readOnlyRules(
                       context,
@@ -764,16 +801,26 @@ class _HousingInviteProposalScreenState
                           child: Text(l10n.housingPlanBack),
                         ),
                         const SizedBox(height: 8),
-                        FilledButton(
-                          onPressed: () => showHousingInvitationStatusDialog(
-                            context,
-                            db: widget.db,
-                            planId: widget.planId,
-                            prefs: widget.prefs,
-                            revisionId: proposal.revisionId,
+                        if (_isDraftSendPreview)
+                          FilledButton(
+                            onPressed: _sendingProposal
+                                ? null
+                                : _sendFromPreview,
+                            child: Text(l10n.housingPlanSummaryInvite),
+                          )
+                        else
+                          FilledButton(
+                            onPressed: () => showHousingInvitationStatusDialog(
+                              context,
+                              db: widget.db,
+                              planId: widget.planId,
+                              prefs: widget.prefs,
+                              revisionId: proposal.revisionId,
+                            ),
+                            child: Text(
+                              l10n.housingInviteInvitationStatusAction,
+                            ),
                           ),
-                          child: Text(l10n.housingInviteInvitationStatusAction),
-                        ),
                       ] else ...[
                         OutlinedButton(
                           onPressed: _goBack,

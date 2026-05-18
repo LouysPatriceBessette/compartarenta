@@ -23,6 +23,7 @@ class InviteSunburstSlice {
   final int totalMinor;
   final int userMinor;
   final Color baseColor;
+
   /// ISO currency code used for legend formatting (plan or user preference).
   final String currency;
 
@@ -76,11 +77,13 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   for (final g in groups) {
     final members = sorted.where((l) => l.groupId == g.id).toList();
     if (members.isEmpty) continue;
-    final basis = members.fold<int>(0, (a, l) => a + PlanProjection.unitMinor(l));
+    final basis = members.fold<int>(
+      0,
+      (a, l) => a + PlanProjection.unitMinor(l),
+    );
     if (basis <= 0) continue;
     final wg = <int>[
-      for (final pid in participantIdsOrdered)
-        _weightGroup(ratios, g.id, pid),
+      for (final pid in participantIdsOrdered) _weightGroup(ratios, g.id, pid),
     ];
     final shares = splitMinorByWeights(basis, wg);
     final userIdx = participantIdsOrdered.indexOf(participantId);
@@ -112,7 +115,9 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
     final userPart = userIdx < 0 ? 0 : shares[userIdx];
     out.add(
       InviteSunburstSlice(
-        label: line.title.trim().isEmpty ? l10n.housingPlanSplitNoCategory : line.title,
+        label: line.title.trim().isEmpty
+            ? l10n.housingPlanSplitNoCategory
+            : line.title,
         totalMinor: b,
         userMinor: userPart,
         baseColor: nextColor(),
@@ -124,7 +129,14 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   return out;
 }
 
-void _addAnnulusSector(Path path, Offset c, double rInner, double rOuter, double start, double sweep) {
+void _addAnnulusSector(
+  Path path,
+  Offset c,
+  double rInner,
+  double rOuter,
+  double start,
+  double sweep,
+) {
   const steps = 28;
   if (sweep <= 0 || rOuter <= rInner) return;
   for (var i = 0; i <= steps; i++) {
@@ -175,7 +187,7 @@ class _InviteSunburstPainter extends CustomPainter {
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.1
-      ..color = Colors.white.withOpacity(0.85);
+      ..color = Colors.white.withValues(alpha: 0.85);
 
     for (final s in slices) {
       final sweep = 2 * math.pi * (s.totalMinor / grandTotalMinor);
@@ -223,7 +235,14 @@ class _InviteSunburstPainter extends CustomPainter {
           ..style = PaintingStyle.fill
           ..color = Color.lerp(s.baseColor, Colors.white, 0.72)!;
         final pO = Path();
-        _addAnnulusSector(pO, c, rOuter0, rOuter1, angle + sweepUser, sweepOthers);
+        _addAnnulusSector(
+          pO,
+          c,
+          rOuter0,
+          rOuter1,
+          angle + sweepUser,
+          sweepOthers,
+        );
         canvas.drawPath(pO, othersPaint);
         canvas.drawPath(pO, stroke);
       }
@@ -261,10 +280,12 @@ class HousingInviteSunburstChart extends StatelessWidget {
     super.key,
     required this.l10n,
     required this.slices,
+    required this.participantName,
   });
 
   final AppLocalizations l10n;
   final List<InviteSunburstSlice> slices;
+  final String participantName;
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +296,9 @@ class HousingInviteSunburstChart extends StatelessWidget {
       return Text(
         l10n.housingInviteSunburstEmptyHint,
         textAlign: TextAlign.center,
-        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       );
     }
 
@@ -307,7 +330,10 @@ class HousingInviteSunburstChart extends StatelessWidget {
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(10),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
                             child: Text(
                               l10n.housingInviteSunburstCenterParticipation(
                                 formatShareOfTotalPercentNoSuffixSmart(
@@ -380,16 +406,21 @@ class HousingInviteSunburstChart extends StatelessWidget {
                           s.label,
                           pctInnerNoSuffix,
                         ),
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         l10n.housingInviteSunburstLegendYouParticipation(
+                          participantName,
                           formatMinorAsMoney(context, s.userMinor, s.currency),
                           formatMinorAsMoney(context, s.totalMinor, s.currency),
                           userPctNoSuffix,
                         ),
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),

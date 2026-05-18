@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 
+import '../contacts/contact_display.dart';
 import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
@@ -960,6 +961,7 @@ class HandshakeOrchestrator {
       senderDisplayName: contact.displayName,
       senderAvatarId: contact.avatarId,
     );
+    debugPrint('housing_proposal imported from ${contact.id}');
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
@@ -1420,9 +1422,10 @@ class HandshakeOrchestrator {
     required String revisionId,
   }) async {
     final participants = (await _db.listParticipants())
-        .where((p) => p.id.startsWith('$planId:p') && p.contactId != null)
+        .where((p) => p.id.startsWith('$planId:p'))
         .toList(growable: false);
     if (participants.isEmpty) {
+      debugPrint('housing_proposal no participant rows for $planId');
       return const HousingProposalSendResult(
         sentCount: 0,
         failedParticipantIds: <String>[],
@@ -1432,57 +1435,83 @@ class HandshakeOrchestrator {
     final transport = HousingProposalTransportService(_db);
     final selfPriv = await _identity.loadOrCreatePrivateKey();
     final selfPub = await _identity.publicKey();
+    final allConnectedContacts = (await _contacts.list())
+        .where((c) => c.kind == 'connected')
+        .toList(growable: false);
     var sent = 0;
     final failed = <String>[];
 
     for (final participant in participants) {
       final contactId = participant.contactId;
-      if (contactId == null) continue;
-      final contact = await _contacts.get(contactId);
-      final peerPubB64 = contact?.peerPublicMaterial;
-      if (contact == null ||
-          contact.kind != 'connected' ||
-          peerPubB64 == null ||
-          peerPubB64.isEmpty) {
+      final contact = contactId == null ? null : await _contacts.get(contactId);
+      final targets = _housingProposalTargetContacts(
+        participant: participant,
+        selectedContact: contact,
+        connectedContacts: allConnectedContacts,
+        planParticipantCount: participants.length,
+      );
+      if (targets.isEmpty) {
+        debugPrint(
+          'housing_proposal no connected target for ${participant.id}',
+        );
         failed.add(participant.id);
         continue;
       }
 
+      var deliveredToAnyTarget = false;
       try {
-        final peerPub = RelayRouting.unb64(peerPubB64);
         final proposalJson = await transport.exportProposalForParticipant(
           planId: planId,
           revisionId: revisionId,
           targetParticipantId: participant.id,
         );
-        final frame = await EnvelopeCodec.encryptHousingProposal(
-          envelope: HousingProposalEnvelope(
-            senderLongTermPublicKey: selfPub,
-            proposalJson: proposalJson,
-            targetParticipantId: participant.id,
-          ),
-          senderLongTermPrivateKey: selfPriv,
-          peerLongTermPublicKey: peerPub,
-        );
-        final selfAddr = await RelayRouting.steadyStateAddress(
-          firstPub: selfPub,
-          secondPub: peerPub,
-        );
-        final peerAddr = await RelayRouting.steadyStateAddress(
-          firstPub: peerPub,
-          secondPub: selfPub,
-        );
-        await _relay.postEnvelope(
-          senderIdentity: selfAddr,
-          recipientIdentity: peerAddr,
-          idempotencyKey: _randomBytes(16),
-          ciphertext: frame,
-          kind: EnvelopeKind.housingProposal,
-          ttl: _steadyTtl,
-        );
-        sent++;
+        for (final target in targets) {
+          final peerPubB64 = target.peerPublicMaterial;
+          if (peerPubB64 == null || peerPubB64.isEmpty) continue;
+          try {
+            final peerPub = RelayRouting.unb64(peerPubB64);
+            final frame = await EnvelopeCodec.encryptHousingProposal(
+              envelope: HousingProposalEnvelope(
+                senderLongTermPublicKey: selfPub,
+                proposalJson: proposalJson,
+                targetParticipantId: participant.id,
+              ),
+              senderLongTermPrivateKey: selfPriv,
+              peerLongTermPublicKey: peerPub,
+            );
+            final selfAddr = await RelayRouting.steadyStateAddress(
+              firstPub: selfPub,
+              secondPub: peerPub,
+            );
+            final peerAddr = await RelayRouting.steadyStateAddress(
+              firstPub: peerPub,
+              secondPub: selfPub,
+            );
+            await _relay.postEnvelope(
+              senderIdentity: selfAddr,
+              recipientIdentity: peerAddr,
+              idempotencyKey: _randomBytes(16),
+              ciphertext: frame,
+              kind: EnvelopeKind.housingProposal,
+              ttl: _steadyTtl,
+            );
+            debugPrint(
+              'housing_proposal posted for ${participant.id} to ${target.id}',
+            );
+            deliveredToAnyTarget = true;
+          } on Object catch (e) {
+            debugPrint(
+              'housing_proposal to ${participant.id}/${target.id} failed: $e',
+            );
+          }
+        }
       } on Object catch (e) {
         debugPrint('housing_proposal to ${participant.id} failed: $e');
+      }
+      if (deliveredToAnyTarget) {
+        debugPrint('housing_proposal delivered for ${participant.id}');
+        sent++;
+      } else {
         failed.add(participant.id);
       }
     }
@@ -1491,6 +1520,50 @@ class HandshakeOrchestrator {
       sentCount: sent,
       failedParticipantIds: List.unmodifiable(failed),
     );
+  }
+
+  List<Contact> _housingProposalTargetContacts({
+    required Participant participant,
+    required Contact? selectedContact,
+    required List<Contact> connectedContacts,
+    required int planParticipantCount,
+  }) {
+    final targets = <Contact>[];
+    final seenPeerMaterial = <String>{};
+
+    void add(Contact? contact) {
+      if (contact == null || contact.kind != 'connected') return;
+      final peer = contact.peerPublicMaterial;
+      if (peer == null || peer.isEmpty || !seenPeerMaterial.add(peer)) return;
+      targets.add(contact);
+    }
+
+    add(selectedContact);
+
+    final participantName = participant.displayName.trim().toLowerCase();
+    final participantAvatar = participant.avatarId.trim();
+    for (final contact in connectedContacts) {
+      final nameMatches =
+          participantName.isNotEmpty &&
+          contact.effectiveDisplayName.trim().toLowerCase() == participantName;
+      final avatarMatches =
+          participantAvatar.isNotEmpty && contact.avatarId == participantAvatar;
+      if (nameMatches || avatarMatches) {
+        add(contact);
+      }
+    }
+
+    if (planParticipantCount == 1 && connectedContacts.isNotEmpty) {
+      // A rare reinstall/reconnect can leave stale connected rows that still
+      // accept relay POSTs but are no longer polled by the peer. For a single
+      // invitee plan, fan out to the local connected candidates so the current
+      // reinstall identity can receive the proposal.
+      for (final contact in connectedContacts) {
+        add(contact);
+      }
+    }
+
+    return targets;
   }
 
   Future<HousingProposalSendResult> sendHousingProposalResponse({

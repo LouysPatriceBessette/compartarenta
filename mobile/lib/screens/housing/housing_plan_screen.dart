@@ -18,8 +18,6 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
-import '../../notifications/notification_permission_gate.dart';
-import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
@@ -27,6 +25,7 @@ import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
+import 'housing_invite_sunburst.dart';
 
 sealed class _SplitListEntry {}
 
@@ -1352,29 +1351,27 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return (v * 100).round();
   }
 
-  Future<void> _openInviteProposalFlow() async {
+  void _openInviteProposalFlow() {
+    debugPrint('housing_proposal summary send tapped for $_planId');
+    unawaited(_sendInviteProposalFlow(context));
+  }
+
+  Future<bool> _sendInviteProposalFlow(BuildContext flowContext) async {
+    debugPrint('housing_proposal send flow started for $_planId');
     final agr = await _db.getAgreementForPlan(_planId);
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
+    if (!mounted || !flowContext.mounted) return false;
+    final l10n = AppLocalizations.of(flowContext);
     if (agr == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(flowContext).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanSummaryMissingAgreement)),
       );
-      return;
+      return false;
     }
-
-    final notificationStatus = await NotificationPermissionGate.instance
-        .ensureForUserAction(prefs: widget.prefs);
-    if (notificationStatus == NotificationSystemPermissionStatus.granted ||
-        notificationStatus == NotificationSystemPermissionStatus.provisional) {
-      await PushNotificationService.initialize();
-    }
-    if (!mounted) return;
 
     var selected = StandardValidityDurations.values[2];
 
     final proceed = await showDialog<bool>(
-      context: context,
+      context: flowContext,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
           title: Text(l10n.housingInviteResponseWindowTitle),
@@ -1406,7 +1403,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       ),
     );
 
-    if (proceed != true || !mounted) return;
+    if (proceed != true || !mounted || !flowContext.mounted) return false;
 
     final responseExpiresAt = DateTime.now().toUtc().add(selected);
     final blocking = await listBlockingAgreementDayRanges(
@@ -1418,9 +1415,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       agr.periodEnd,
       blocking,
     )) {
-      if (!mounted) return;
+      if (!mounted || !flowContext.mounted) return false;
       await showDialog<void>(
-        context: context,
+        context: flowContext,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.housingInvitePeriodOverlapTitle),
           content: Text(l10n.housingInvitePeriodOverlapBody),
@@ -1432,7 +1429,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           ],
         ),
       );
-      return;
+      return false;
     }
 
     final proposerId = '$_planId:self';
@@ -1450,14 +1447,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
             forkedFromRevisionId: fork?.revisionId,
           );
     } catch (e, st) {
-      if (!mounted) return;
+      if (!mounted || !flowContext.mounted) return false;
       debugPrintStack(stackTrace: st);
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(flowContext).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
-      return;
+      return false;
     }
 
+    var sent = false;
     try {
       final orchestrator = HandshakeOrchestrator.maybeInstance;
       if (orchestrator == null) {
@@ -1467,26 +1465,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         planId: _planId,
         revisionId: revisionId,
       );
-      if (!mounted) return;
+      if (!mounted || !flowContext.mounted) return false;
       final message = send.failedParticipantIds.isEmpty
           ? l10n.housingInviteTransportSent(send.sentCount)
           : l10n.housingInviteTransportPartial(
               send.sentCount,
               send.failedParticipantIds.length,
             );
+      // Show the success message on the summary route, which remains after the
+      // preview route pops itself on a successful send.
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
+      sent = send.sentCount > 0;
     } catch (e, st) {
-      if (!mounted) return;
+      if (!mounted || !flowContext.mounted) return false;
       debugPrintStack(stackTrace: st);
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(flowContext).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) return sent;
     setState(() => _summaryReloadToken++);
+    return sent;
   }
 
   Future<void> _onDestroyPlan() async {
@@ -4043,6 +4045,7 @@ class _SummaryView extends StatefulWidget {
 
 class _SummaryViewState extends State<_SummaryView> {
   Future<_SummarySnapshot>? _snapshotFuture;
+  int _focusedParticipantIndex = 0;
 
   @override
   void initState() {
@@ -4132,6 +4135,12 @@ class _SummaryViewState extends State<_SummaryView> {
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
         final rosterIds = roster.map((e) => e.id).toList();
+        if (rosterIds.isNotEmpty) {
+          _focusedParticipantIndex = _focusedParticipantIndex.clamp(
+            0,
+            rosterIds.length - 1,
+          );
+        }
 
         bool lineRowHasPinnedShare(PlanLine line) {
           for (final id in rosterIds) {
@@ -4218,80 +4227,178 @@ class _SummaryViewState extends State<_SummaryView> {
           return participantMonthlyMinor;
         }
 
+        final focusedParticipant = roster.isEmpty
+            ? null
+            : roster[_focusedParticipantIndex];
+        final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, lines);
+        final sunSlices = focusedParticipant == null
+            ? <InviteSunburstSlice>[]
+            : buildInviteSunburstSlices(
+                lines: lines,
+                groups: planGroups,
+                ratios: ratios,
+                participantIdsOrdered: rosterIds,
+                participantId: focusedParticipant.id,
+                l10n: l10n,
+                displayCurrency: displayCurrency,
+              );
+
+        const dateIso = 'YYYY-MM-DD';
+        final dateRangeLine =
+            '${formatPreferenceDate(agr.periodStart, dateIso)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateIso)}';
+
         return Column(
           children: [
             Expanded(
-              child: ListView.builder(
+              child: ListView(
                 padding: const EdgeInsets.all(16),
-                itemCount: roster.length,
-                itemBuilder: (context, i) {
-                  final p = roster[i];
-                  final participantMonthlyMinor = participantShareMinor(p.id);
-                  final displayCurrency = displayCurrencyCodeForPlan(
-                    widget.prefs,
-                    lines,
-                  );
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(child: Icon(_iconForAvatar(p.avatarId))),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.housingInviteProposalIntroTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Divider(height: 32),
+                  Center(
+                    child: Text(
+                      l10n.housingInviteHousingAgreementTitle,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      dateRangeLine,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      formatContractCalendarDuration(
+                        agr.periodStart,
+                        agr.periodEnd,
+                        l10n,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.housingInviteParticipantsSectionTitle,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (var i = 0; i < roster.length; i++)
+                        ChoiceChip(
+                          selected: _focusedParticipantIndex == i,
+                          label: Text(roster[i].displayName),
+                          onSelected: (selected) {
+                            if (!selected) return;
+                            setState(() => _focusedParticipantIndex = i);
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (focusedParticipant != null)
+                    HousingInviteSunburstChart(
+                      l10n: l10n,
+                      slices: sunSlices,
+                      participantName: focusedParticipant.displayName,
+                    ),
+                  const SizedBox(height: 20),
+                  for (var i = 0; i < roster.length; i++) ...[
+                    Builder(
+                      builder: (context) {
+                        final p = roster[i];
+                        final participantMonthlyMinor = participantShareMinor(
+                          p.id,
+                        );
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        p.displayName,
+                                CircleAvatar(
+                                  child: Icon(_iconForAvatar(p.avatarId)),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              p.displayName,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.titleMedium,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          RationalPercentText(
+                                            shareMinor: participantMonthlyMinor,
+                                            totalMinor: planMonthlyTotalMinor,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        l10n.housingPlanSummaryMonthlyTotal,
+                                        textAlign: TextAlign.center,
                                         style: Theme.of(
                                           context,
-                                        ).textTheme.titleMedium,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                        ).textTheme.titleSmall,
                                       ),
-                                    ),
-                                    RationalPercentText(
-                                      shareMinor: participantMonthlyMinor,
-                                      totalMinor: planMonthlyTotalMinor,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  l10n.housingPlanSummaryMonthlyTotal,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  formatMinorAsMoney(
-                                    context,
-                                    participantMonthlyMinor,
-                                    displayCurrency,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        formatMinorAsMoney(
+                                          context,
+                                          participantMonthlyMinor,
+                                          displayCurrency,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineLarge
-                                      ?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ],
+                ],
               ),
             ),
             Padding(

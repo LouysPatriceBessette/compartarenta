@@ -197,7 +197,7 @@
   "housingPlanPenaltyAmount": "Penalty amount",
   "housingPlanSummaryMissingAgreement": "Missing agreement",
   "housingPlanSummaryEditPlan": "Edit plan",
-  "housingPlanSummaryInvite": "Invite my participants",
+  "housingPlanSummaryInvite": "Submit my plan",
   "housingWorkbenchTitle": "Housing plans",
   "housingWorkbenchDraftsSection": "Draft plans",
   "housingWorkbenchPendingSection": "Pending proposals",
@@ -210,6 +210,7 @@
   "housingInvitePeriodOverlapBody": "This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.",
   "housingInviteProposalAppBarTitle": "Invitation proposal",
   "housingInviteProposalIntroTitle": "Here is the proposal that will be sent to each of your participants.",
+  "housingInviteProposalSentIntroTitle": "Here is the proposal sent to each of your participants.",
   "housingInviteParticipantsSectionTitle": "Participants",
   "housingInviteExpensesSectionTitle": "Expenses and split",
   "housingInviteRulesSectionTitle": "Agreement rules",
@@ -312,9 +313,10 @@
       "pct": { "type": "String" }
     }
   },
-  "housingInviteSunburstLegendYouParticipation": "Your participation: {userAmount}/{totalAmount} ({pct}%)",
+  "housingInviteSunburstLegendYouParticipation": "{participantName}'s share: {userAmount}/{totalAmount} ({pct}%)",
   "@housingInviteSunburstLegendYouParticipation": {
     "placeholders": {
+      "participantName": { "type": "String" },
       "userAmount": { "type": "String" },
       "totalAmount": { "type": "String" },
       "pct": { "type": "String" }

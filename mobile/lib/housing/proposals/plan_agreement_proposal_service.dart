@@ -124,6 +124,7 @@ class PlanAgreementProposalService {
         'clauses': agreement.clauses,
         'withdrawalSameForAll': agreement.withdrawalSameForAll,
         'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
+        'agreementRulesJson': agreement.agreementRulesJson,
       },
       'responseExpiresAt': responseExpiresAt?.toIso8601String(),
       'lifecycleState': 'open',
