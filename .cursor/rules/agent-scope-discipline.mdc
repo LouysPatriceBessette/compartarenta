@@ -1,0 +1,18 @@
+---
+description: Require clarification and scoped implementation for multi-state product requests
+alwaysApply: true
+---
+
+# Multi-State Request Discipline
+
+When a request mixes UI, navigation, local state, transport/sync, screenshots, or multiple user roles:
+
+1. Restate the expected behavior as a short checklist before editing.
+2. Separate the work explicitly into display, navigation, persistence, and transport/sync changes.
+3. Do not modify transport, relay, or shared services unless the request directly requires it or there is concrete evidence that the bug is there.
+4. If a screenshot, role, state, or step is ambiguous or missing, ask for clarification instead of inferring.
+5. If the prompt contains more than two distinct behaviors, propose splitting it or ask which behavior to handle first.
+6. After each change, verify that user-confirmed behaviors have not been moved or regressed.
+7. For card/list UI changes, identify the exact data source and existing route before changing the rendering.
+
+Prefer a smaller, verified change over a broader speculative fix.

@@ -11,6 +11,7 @@
   "commonNotSet": "No configurado",
   "commonCancel": "Cancelar",
   "commonSave": "Guardar",
+  "commonSend": "Enviar",
   "commonDelete": "Eliminar",
   "commonEdit": "Editar",
   "commonDone": "Listo",
@@ -199,8 +200,9 @@
   "housingPlanSummaryEditPlan": "Editar plan",
   "housingPlanSummaryInvite": "Enviar mi plan",
   "housingWorkbenchTitle": "Planes de vivienda",
-  "housingWorkbenchDraftsSection": "Planes borrador",
-  "housingWorkbenchPendingSection": "Propuestas pendientes",
+  "housingWorkbenchDraftsSection": "Borrador(es)",
+  "housingWorkbenchPendingSection": "Pendiente",
+  "housingWorkbenchArchivedSection": "Archivada(s)",
   "housingWorkbenchActiveSection": "Planes activos",
   "housingWorkbenchOpenPlan": "Abrir",
   "housingWorkbenchEmpty": "No hay planes de vivienda con su perfil en este dispositivo.",
@@ -223,11 +225,23 @@
   "housingInviteRejectBlock": "Rechazo por completo",
   "housingInviteNegotiateMessageLabel": "Mensaje a enviar con la solicitud de negociación",
   "housingInviteResponseSent": "Respuesta enviada.",
-  "housingArchiveEntryTitle": "Propuestas archivadas",
-  "housingArchiveEntryBody": "Elija una propuesta archivada para revisar o crear una versión derivada, o cree un nuevo plan.",
+  "housingArchiveEntryTitle": "Planes de vivienda",
+  "housingArchiveEntryBody": "Elija una propuesta para revisar, edite un borrador o cree un plan nuevo.",
   "housingArchiveNegotiatingTitle": "Plan en negociación",
+  "housingArchivePendingTitle": "Plan en espera de {count} respuesta(s)",
+  "@housingArchivePendingTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveRejectedTitle": "Plan rechazado",
   "housingArchiveDraftTitle": "Borrador de plan",
+  "housingArchiveDraftParticipantsTitle": "Plan de {count} participantes",
+  "@housingArchiveDraftParticipantsTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveCreateDerivedAction": "Crear una versión derivada",
   "housingArchiveEditDraftAction": "Editar",
   "housingArchiveViewAction": "Ver",

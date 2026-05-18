@@ -24,6 +24,9 @@ class HousingProposalArchive {
     required this.invalidatedAt,
     required this.canFork,
     this.isDraft = false,
+    this.isPending = false,
+    this.pendingResponseCount = 0,
+    this.participantCount = 0,
     this.editorPlanId,
   });
 
@@ -34,6 +37,9 @@ class HousingProposalArchive {
   final DateTime invalidatedAt;
   final bool canFork;
   final bool isDraft;
+  final bool isPending;
+  final int pendingResponseCount;
+  final int participantCount;
   final String? editorPlanId;
 }
 
@@ -265,10 +271,51 @@ class HousingProposalTransportService {
       _db.proposalRevisions,
     )..where((t) => t.packageId.equals(pkg.id))).get();
     final out = <HousingProposalArchive>[];
+    final pendingRevisionIds = <String>{};
+    if (pkg.pendingRevisionId != null) {
+      final pending = await (_db.select(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(pkg.pendingRevisionId!))).getSingleOrNull();
+      if (pending != null) {
+        pendingRevisionIds.add(pending.id);
+        final payload = jsonDecode(pending.payloadJson) as Map<String, dynamic>;
+        final responses = await (_db.select(
+          _db.proposalResponses,
+        )..where((t) => t.revisionId.equals(pending.id))).get();
+        out.add(
+          HousingProposalArchive(
+            planId: planId,
+            revisionId: pending.id,
+            title: _string(_map(payload['plan'])['title'], fallback: planId),
+            status: ProposalResponseStatus.pending,
+            invalidatedAt: pending.createdAt,
+            canFork: false,
+            isPending: true,
+            pendingResponseCount: responses
+                .where((r) => r.status == ProposalResponseStatus.pending.name)
+                .length,
+            editorPlanId: planId,
+          ),
+        );
+      }
+    }
     for (final rev in revisions) {
+      if (rev.id == pkg.pendingRevisionId) continue;
       final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
       if (payload['lifecycleState'] == 'draft') {
         final draftPlanId = _string(payload['draftPlanId'], fallback: planId);
+        if (await _hasSubmittedProposalForPlan(draftPlanId)) continue;
+        final sentDraft = await _pendingArchiveForPlan(
+          listPlanId: planId,
+          planId: draftPlanId,
+        );
+        if (sentDraft != null) {
+          if (pendingRevisionIds.add(sentDraft.revisionId)) {
+            out.add(sentDraft);
+          }
+          continue;
+        }
+        if (payload['hideUntilAbandoned'] == true) continue;
         out.add(
           HousingProposalArchive(
             planId: planId,
@@ -278,27 +325,13 @@ class HousingProposalTransportService {
             invalidatedAt: _date(payload['draftStartedAt']) ?? rev.createdAt,
             canFork: false,
             isDraft: true,
+            participantCount: await _participantCountForPlan(draftPlanId),
             editorPlanId: draftPlanId,
           ),
         );
         continue;
       }
       if (payload['lifecycleState'] != 'archived') continue;
-      final forkDraftStartedAt = _date(payload['forkDraftStartedAt']);
-      if (forkDraftStartedAt != null) {
-        out.add(
-          HousingProposalArchive(
-            planId: planId,
-            revisionId: rev.id,
-            title: _string(_map(payload['plan'])['title'], fallback: planId),
-            status: ProposalResponseStatus.pending,
-            invalidatedAt: forkDraftStartedAt,
-            canFork: false,
-            isDraft: true,
-            editorPlanId: _string(payload['forkDraftPlanId'], fallback: planId),
-          ),
-        );
-      }
       final statusName = _string(payload['invalidatedByStatus']);
       final status = statusName == ProposalResponseStatus.negotiate.name
           ? ProposalResponseStatus.negotiate
@@ -332,8 +365,41 @@ class HousingProposalTransportService {
     return out;
   }
 
+  Future<HousingProposalArchive?> _pendingArchiveForPlan({
+    required String listPlanId,
+    required String planId,
+  }) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    if (pkg?.pendingRevisionId == null) return null;
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pkg!.pendingRevisionId!))).getSingleOrNull();
+    if (rev == null) return null;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final responses = await (_db.select(
+      _db.proposalResponses,
+    )..where((t) => t.revisionId.equals(rev.id))).get();
+    return HousingProposalArchive(
+      planId: listPlanId,
+      revisionId: rev.id,
+      title: _string(_map(payload['plan'])['title'], fallback: listPlanId),
+      status: ProposalResponseStatus.pending,
+      invalidatedAt: rev.createdAt,
+      canFork: false,
+      isPending: true,
+      pendingResponseCount: responses
+          .where((r) => r.status == ProposalResponseStatus.pending.name)
+          .length,
+      editorPlanId: planId,
+    );
+  }
+
   Future<bool> planHasArchives(String planId) async {
-    return (await listArchivesForPlan(planId)).isNotEmpty;
+    return (await listArchivesForPlan(
+      planId,
+    )).any((a) => !a.isDraft && !a.isPending);
   }
 
   Future<bool> canForkRevision({
@@ -377,6 +443,75 @@ class HousingProposalTransportService {
     );
   }
 
+  Future<void> createForkDraftFromArchive({
+    required String listPlanId,
+    required String revisionId,
+    required String draftPlanId,
+  }) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final now = DateTime.now().toUtc();
+    final sourceToDraftParticipant = _forkParticipantMap(payload, draftPlanId);
+
+    await _deleteReceivedPlanData(draftPlanId);
+    await _upsertPlan(draftPlanId, payload, now);
+    await _upsertForkParticipants(
+      draftPlanId: draftPlanId,
+      payload: payload,
+      sourceToDraftParticipant: sourceToDraftParticipant,
+      createdAt: now,
+    );
+    await _upsertGroups(draftPlanId, payload, now);
+    await _upsertLines(draftPlanId, payload, now);
+    await _upsertRatios(
+      receivedPlanId: draftPlanId,
+      payload: payload,
+      sourceToLocalParticipant: sourceToDraftParticipant,
+      createdAt: now,
+    );
+    await _upsertAgreement(draftPlanId, payload, now);
+
+    final draftRevisionId = 'draft:$draftPlanId';
+    final packageId = await PlanAgreementProposalService(
+      _db,
+    ).ensurePackageForPlan(listPlanId);
+    await _db
+        .into(_db.proposalRevisions)
+        .insertOnConflictUpdate(
+          ProposalRevisionsCompanion.insert(
+            id: draftRevisionId,
+            packageId: packageId,
+            contentHash: 'local-draft:$draftRevisionId',
+            proposerParticipantId: '$draftPlanId:self',
+            payloadJson: jsonEncode({
+              'kind': PlanAgreementProposalService.kind,
+              'lifecycleState': 'draft',
+              'hideUntilAbandoned': true,
+              'draftPlanId': draftPlanId,
+              'draftStartedAt': now.toIso8601String(),
+              'sourcePackageId': _string(
+                payload['sourcePackageId'],
+                fallback: _string(payload['packageId']),
+              ),
+              'sourceRevisionId': _string(
+                payload['sourceRevisionId'],
+                fallback: _string(payload['revisionId'], fallback: revisionId),
+              ),
+              'plan': {
+                'title': _string(
+                  _map(payload['plan'])['title'],
+                  fallback: draftPlanId,
+                ),
+              },
+            }),
+            createdAt: now,
+          ),
+        );
+  }
+
   Future<void> startPreparedForkDraft(String planId) async {
     final pkg = await (_db.select(
       _db.proposalPackages,
@@ -411,6 +546,64 @@ class HousingProposalTransportService {
     );
   }
 
+  Future<void> revealDraftEntry({
+    required String listPlanId,
+    required String draftPlanId,
+  }) async {
+    if (await _hasSubmittedProposalForPlan(draftPlanId)) return;
+    final packageId = await PlanAgreementProposalService(
+      _db,
+    ).ensurePackageForPlan(listPlanId);
+    final revisions = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.packageId.equals(packageId))).get();
+    for (final rev in revisions) {
+      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      if (payload['lifecycleState'] != 'draft') continue;
+      if (_string(payload['draftPlanId']) != draftPlanId) continue;
+      if (payload['hideUntilAbandoned'] != true) return;
+      payload.remove('hideUntilAbandoned');
+      await (_db.update(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(rev.id))).write(
+        ProposalRevisionsCompanion(
+          payloadJson: drift.Value(jsonEncode(payload)),
+        ),
+      );
+      return;
+    }
+  }
+
+  Future<bool> isHiddenDraftPlan(String draftPlanId) async {
+    if (await _hasSubmittedProposalForPlan(draftPlanId)) return false;
+    final revisions = await _db.select(_db.proposalRevisions).get();
+    for (final rev in revisions) {
+      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      if (payload['lifecycleState'] != 'draft') continue;
+      if (_string(payload['draftPlanId']) != draftPlanId) continue;
+      if (payload['hideUntilAbandoned'] == true) return true;
+    }
+    return false;
+  }
+
+  Future<bool> _hasSubmittedProposalForPlan(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    if (pkg == null) return false;
+    if (pkg.pendingRevisionId != null || pkg.activeRevisionId != null) {
+      return true;
+    }
+    final revisions = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.packageId.equals(pkg.id))).get();
+    for (final rev in revisions) {
+      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      if (payload['lifecycleState'] != 'draft') return true;
+    }
+    return false;
+  }
+
   Future<void> createStandaloneDraftEntry({
     required String listPlanId,
     required String draftPlanId,
@@ -440,28 +633,41 @@ class HousingProposalTransportService {
         );
   }
 
+  Future<int> _participantCountForPlan(String planId) async {
+    return (await _participantsForPlan(planId)).length;
+  }
+
   Future<({String packageId, String revisionId})?> preparedForkLineage(
     String planId,
   ) async {
     final pkg = await (_db.select(
       _db.proposalPackages,
     )..where((t) => t.planId.equals(planId))).getSingleOrNull();
-    if (pkg == null) return null;
-    final revisions = await (_db.select(
-      _db.proposalRevisions,
-    )..where((t) => t.packageId.equals(pkg.id))).get();
+    final revisions = pkg == null
+        ? await _db.select(_db.proposalRevisions).get()
+        : await (_db.select(
+            _db.proposalRevisions,
+          )..where((t) => t.packageId.equals(pkg.id))).get();
     DateTime? latest;
     ({String packageId, String revisionId})? out;
     for (final rev in revisions) {
       final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-      final raw = _string(payload['forkPreparedAt']);
+      final isPreparedOnSource = _string(payload['forkPreparedAt']).isNotEmpty;
+      final isDraftForPlan =
+          payload['lifecycleState'] == 'draft' &&
+          _string(payload['draftPlanId']) == planId;
+      if (!isPreparedOnSource && !isDraftForPlan) continue;
+      final raw = _string(
+        payload['forkPreparedAt'],
+        fallback: _string(payload['draftStartedAt']),
+      );
       if (raw.isEmpty) continue;
       final preparedAt =
           DateTime.tryParse(raw) ?? DateTime.fromMillisecondsSinceEpoch(0);
       if (latest != null && !preparedAt.isAfter(latest)) continue;
       latest = preparedAt;
       out = (
-        packageId: _string(payload['sourcePackageId'], fallback: pkg.id),
+        packageId: _string(payload['sourcePackageId'], fallback: rev.packageId),
         revisionId: _string(payload['sourceRevisionId'], fallback: rev.id),
       );
     }
@@ -551,6 +757,88 @@ class HousingProposalTransportService {
       out.putIfAbsent(id, () => 'p${n++}');
     }
     return out;
+  }
+
+  Map<String, String> _forkParticipantMap(
+    Map<String, dynamic> payload,
+    String draftPlanId,
+  ) {
+    final sourceIds = <String>[];
+    void add(String value) {
+      if (value.isNotEmpty && !sourceIds.contains(value)) sourceIds.add(value);
+    }
+
+    add(_string(payload['proposerParticipantId']));
+    final snapshots = payload['participantSnapshots'];
+    if (snapshots is List) {
+      for (final item in snapshots) {
+        if (item is Map) add(_string(item['id']));
+      }
+    }
+    final ratios = _list(_map(payload['plan'])['ratios']);
+    for (final ratio in ratios.whereType<Map>()) {
+      add(_string(ratio['participantId']));
+    }
+
+    final out = <String, String>{};
+    var next = 0;
+    for (final sourceId in sourceIds) {
+      if (sourceId.endsWith(':self')) {
+        out[sourceId] = 'self';
+        continue;
+      }
+      final match = RegExp(r':p(\d+)$').firstMatch(sourceId);
+      final tail = match == null ? 'p${next++}' : 'p${match.group(1)}';
+      if (tail != 'self') out[sourceId] = tail;
+    }
+    if (!out.containsValue('self')) {
+      out['$draftPlanId:self'] = 'self';
+    }
+    return out;
+  }
+
+  Future<void> _upsertForkParticipants({
+    required String draftPlanId,
+    required Map<String, dynamic> payload,
+    required Map<String, String> sourceToDraftParticipant,
+    required DateTime createdAt,
+  }) async {
+    final snapshots = <String, Map>{};
+    final raw = payload['participantSnapshots'];
+    if (raw is List) {
+      for (final item in raw) {
+        if (item is Map) snapshots[_string(item['id'])] = item;
+      }
+    }
+    for (final entry in sourceToDraftParticipant.entries) {
+      final sourceId = entry.key;
+      final localTail = entry.value;
+      final snap = snapshots[sourceId];
+      final sourceParticipant = await (_db.select(
+        _db.participants,
+      )..where((t) => t.id.equals(sourceId))).getSingleOrNull();
+      final contactId = _string(
+        snap?['contactId'],
+        fallback: sourceParticipant?.contactId ?? '',
+      );
+      await _db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$draftPlanId:$localTail',
+          displayName: _string(
+            snap?['displayName'],
+            fallback: sourceParticipant?.displayName ?? sourceId,
+          ),
+          avatarId: _string(
+            snap?['avatarId'],
+            fallback: sourceParticipant?.avatarId ?? 'a01',
+          ),
+          contactId: contactId.isEmpty
+              ? const drift.Value.absent()
+              : drift.Value(contactId),
+          createdAt: createdAt,
+        ),
+      );
+    }
   }
 
   Map<String, Object?> _remapPayload(

@@ -11,6 +11,7 @@
   "commonNotSet": "Not set",
   "commonCancel": "Cancel",
   "commonSave": "Save",
+  "commonSend": "Send",
   "commonDelete": "Delete",
   "commonEdit": "Edit",
   "commonDone": "Done",
@@ -199,8 +200,9 @@
   "housingPlanSummaryEditPlan": "Edit plan",
   "housingPlanSummaryInvite": "Submit my plan",
   "housingWorkbenchTitle": "Housing plans",
-  "housingWorkbenchDraftsSection": "Draft plans",
-  "housingWorkbenchPendingSection": "Pending proposals",
+  "housingWorkbenchDraftsSection": "Draft(s)",
+  "housingWorkbenchPendingSection": "Pending",
+  "housingWorkbenchArchivedSection": "Archived",
   "housingWorkbenchActiveSection": "Active plans",
   "housingWorkbenchOpenPlan": "Open",
   "housingWorkbenchEmpty": "No housing plans with your profile on this device.",
@@ -223,11 +225,23 @@
   "housingInviteRejectBlock": "I reject outright",
   "housingInviteNegotiateMessageLabel": "Message to send with your negotiation request",
   "housingInviteResponseSent": "Response sent.",
-  "housingArchiveEntryTitle": "Archived proposals",
-  "housingArchiveEntryBody": "Choose an archived proposal to review or create a derived version, or create a new plan.",
+  "housingArchiveEntryTitle": "Housing plans",
+  "housingArchiveEntryBody": "Choose a proposal to review, edit a draft, or create a new plan.",
   "housingArchiveNegotiatingTitle": "Plan in negotiation",
+  "housingArchivePendingTitle": "Plan waiting for {count} response(s)",
+  "@housingArchivePendingTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveRejectedTitle": "Rejected plan",
   "housingArchiveDraftTitle": "Plan draft",
+  "housingArchiveDraftParticipantsTitle": "Plan with {count} participants",
+  "@housingArchiveDraftParticipantsTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveCreateDerivedAction": "Create a derived version",
   "housingArchiveEditDraftAction": "Edit",
   "housingArchiveViewAction": "View",

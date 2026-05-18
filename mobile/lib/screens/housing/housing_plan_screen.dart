@@ -25,6 +25,7 @@ import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
+import 'housing_archive_entry_screen.dart';
 import 'housing_invite_sunburst.dart';
 
 sealed class _SplitListEntry {}
@@ -4046,11 +4047,26 @@ class _SummaryView extends StatefulWidget {
 class _SummaryViewState extends State<_SummaryView> {
   Future<_SummarySnapshot>? _snapshotFuture;
   int _focusedParticipantIndex = 0;
+  bool _hadPendingProposal = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _snapshotFuture = _load();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
+      if (!mounted) return;
+      setState(() {
+        _snapshotFuture = _load();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -4121,6 +4137,22 @@ class _SummaryViewState extends State<_SummaryView> {
         final ratios = data.ratios;
         final planGroups = data.planGroups;
         final hasPending = data.proposalPkg?.pendingRevisionId != null;
+        if (hasPending) {
+          _hadPendingProposal = true;
+        } else if (_hadPendingProposal) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement<void, void>(
+              MaterialPageRoute<void>(
+                builder: (_) => HousingArchiveEntryScreen(
+                  prefs: widget.prefs,
+                  planId: widget.planId,
+                ),
+              ),
+            );
+          });
+          return const Center(child: CircularProgressIndicator());
+        }
         if (agr == null) {
           return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
         }

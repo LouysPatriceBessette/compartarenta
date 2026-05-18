@@ -11,6 +11,7 @@
   "commonNotSet": "Non défini",
   "commonCancel": "Annuler",
   "commonSave": "Enregistrer",
+  "commonSend": "Envoyer",
   "commonDelete": "Supprimer",
   "commonEdit": "Modifier",
   "commonDone": "Terminé",
@@ -199,8 +200,9 @@
   "housingPlanSummaryEditPlan": "Modifier le plan",
   "housingPlanSummaryInvite": "Soumettre mon plan",
   "housingWorkbenchTitle": "Plans logement",
-  "housingWorkbenchDraftsSection": "Plans brouillon",
-  "housingWorkbenchPendingSection": "Propositions en attente",
+  "housingWorkbenchDraftsSection": "Ébauche(s)",
+  "housingWorkbenchPendingSection": "En attente",
+  "housingWorkbenchArchivedSection": "Archivée(s)",
   "housingWorkbenchActiveSection": "Plans actifs",
   "housingWorkbenchOpenPlan": "Ouvrir",
   "housingWorkbenchEmpty": "Aucun plan logement avec votre profil sur cet appareil.",
@@ -223,11 +225,23 @@
   "housingInviteRejectBlock": "Je refuse en bloc",
   "housingInviteNegotiateMessageLabel": "Message à envoyer avec la demande de négociation",
   "housingInviteResponseSent": "Réponse envoyée.",
-  "housingArchiveEntryTitle": "Propositions archivées",
-  "housingArchiveEntryBody": "Choisissez une proposition archivée à consulter ou pour créer une version dérivée, ou créez un nouveau plan.",
+  "housingArchiveEntryTitle": "Plans logement",
+  "housingArchiveEntryBody": "Choisissez une proposition à consulter, modifiez une ébauche ou créez un nouveau plan.",
   "housingArchiveNegotiatingTitle": "Plan en négociation",
+  "housingArchivePendingTitle": "Plan en attente de {count} réponse(s)",
+  "@housingArchivePendingTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveRejectedTitle": "Plan rejeté",
   "housingArchiveDraftTitle": "Ébauche de plan",
+  "housingArchiveDraftParticipantsTitle": "Plan de {count} participants",
+  "@housingArchiveDraftParticipantsTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "housingArchiveCreateDerivedAction": "Créer une version dérivée",
   "housingArchiveEditDraftAction": "Modifier",
   "housingArchiveViewAction": "Consulter",

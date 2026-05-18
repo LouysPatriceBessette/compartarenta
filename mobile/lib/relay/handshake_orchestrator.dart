@@ -1570,36 +1570,24 @@ class HandshakeOrchestrator {
     required String planId,
     required ProposalResponseStatus status,
     String message = '',
+    String? revisionId,
   }) async {
     final transport = HousingProposalTransportService(_db);
-    final revisionId = await transport.pendingRevisionIdForPlan(planId);
-    if (revisionId == null) {
+    final selectedRevisionId =
+        revisionId ?? await transport.pendingRevisionIdForPlan(planId);
+    if (selectedRevisionId == null) {
       throw HandshakeOrchestratorError('unknown');
     }
     final selfParticipantId = '$planId:self';
     await PlanAgreementProposalService(_db).recordResponse(
-      revisionId: revisionId,
+      revisionId: selectedRevisionId,
       participantId: selfParticipantId,
       status: status,
       message: message,
     );
-    if (status == ProposalResponseStatus.accepted) {
-      await transport.tryActivatePlanIfUnanimous(
-        planId: planId,
-        revisionId: revisionId,
-      );
-    } else {
-      await transport.archiveInvalidatedProposal(
-        planId: planId,
-        revisionId: revisionId,
-        status: status,
-        responderParticipantId: selfParticipantId,
-      );
-    }
-
     final payload = await PlanAgreementProposalService(
       _db,
-    ).loadRevisionPayload(revisionId);
+    ).loadRevisionPayload(selectedRevisionId);
     final sourcePackageId =
         (payload['sourcePackageId'] as String?) ??
         (payload['packageId'] as String?) ??
@@ -1607,9 +1595,9 @@ class HandshakeOrchestrator {
     final sourceRevisionId =
         (payload['sourceRevisionId'] as String?) ??
         (payload['revisionId'] as String?) ??
-        revisionId;
+        selectedRevisionId;
     final sourceParticipantId = await transport.sourceParticipantIdForLocal(
-      revisionId: revisionId,
+      revisionId: selectedRevisionId,
       localParticipantId: selfParticipantId,
     );
 
@@ -1621,10 +1609,24 @@ class HandshakeOrchestrator {
       status: status.name,
       message: message.trim(),
     );
-    return _broadcastHousingProposalResponse(
+    final sendResult = await _broadcastHousingProposalResponse(
       planId: planId,
       response: response,
     );
+    if (status == ProposalResponseStatus.accepted) {
+      await transport.tryActivatePlanIfUnanimous(
+        planId: planId,
+        revisionId: selectedRevisionId,
+      );
+    } else {
+      await transport.archiveInvalidatedProposal(
+        planId: planId,
+        revisionId: selectedRevisionId,
+        status: status,
+        responderParticipantId: selfParticipantId,
+      );
+    }
+    return sendResult;
   }
 
   Future<HousingProposalSendResult> _broadcastHousingProposalResponse({

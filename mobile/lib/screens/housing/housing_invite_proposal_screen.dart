@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,10 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
-import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_invite_sunburst.dart';
-import 'housing_plan_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -78,6 +77,8 @@ class _HousingInviteProposalScreenState
 
   bool _negotiateExpanded = false;
   bool _sendingProposal = false;
+  String? _displayRevisionId;
+  Timer? _refreshTimer;
   final TextEditingController _negotiateController = TextEditingController();
 
   bool get _isAuthorPreview => widget.viewerParticipantIndex == null;
@@ -99,6 +100,14 @@ class _HousingInviteProposalScreenState
     if (!_isAuthorPreview) {
       _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(0, 100);
     }
+    if (!_isDraftSendPreview) {
+      _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+        if (!mounted || _negotiateExpanded) return;
+        setState(() {
+          _proposalFuture = _loadProposalScreenData();
+        });
+      });
+    }
   }
 
   Future<List<dynamic>> _loadProposalScreenData() {
@@ -114,6 +123,7 @@ class _HousingInviteProposalScreenState
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _negotiateController.dispose();
     super.dispose();
   }
@@ -160,7 +170,10 @@ class _HousingInviteProposalScreenState
       widget.db.proposalPackages,
     )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull();
     final revisionId =
-        widget.revisionId ?? pkg?.pendingRevisionId ?? pkg?.activeRevisionId;
+        widget.revisionId ??
+        _displayRevisionId ??
+        pkg?.pendingRevisionId ??
+        pkg?.activeRevisionId;
     if (revisionId == null) {
       return const _ProposalUiState(
         revisionId: null,
@@ -172,6 +185,7 @@ class _HousingInviteProposalScreenState
     final revision = await (widget.db.select(
       widget.db.proposalRevisions,
     )..where((t) => t.id.equals(revisionId))).getSingle();
+    _displayRevisionId = revisionId;
     final responses = await (widget.db.select(
       widget.db.proposalResponses,
     )..where((t) => t.revisionId.equals(revisionId))).get();
@@ -203,6 +217,7 @@ class _HousingInviteProposalScreenState
         planId: widget.planId,
         status: status,
         message: message,
+        revisionId: revisionId,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -214,7 +229,7 @@ class _HousingInviteProposalScreenState
         _negotiateController.clear();
       });
       if (status == ProposalResponseStatus.negotiate) {
-        await _promptForkAfterNegotiation(revisionId);
+        if (mounted) context.go('/');
       }
     } catch (e) {
       if (!mounted) return;
@@ -222,49 +237,6 @@ class _HousingInviteProposalScreenState
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
     }
-  }
-
-  Future<void> _promptForkAfterNegotiation(String? revisionId) async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    final shouldFork = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.housingArchiveForkPromptTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.housingArchiveForkPromptBody),
-            const SizedBox(height: 8),
-            Text(l10n.housingArchiveForkPromptLaterHint),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.housingArchiveForkLaterAction),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.housingArchiveForkPromptCreateAction),
-          ),
-        ],
-      ),
-    );
-    if (shouldFork != true || !mounted) return;
-    if (revisionId != null) {
-      await HousingProposalTransportService(
-        widget.db,
-      ).prepareForkFromArchive(planId: widget.planId, revisionId: revisionId);
-    }
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement<void, void>(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            HousingPlanScreen(prefs: widget.prefs, planId: widget.planId),
-      ),
-    );
   }
 
   Future<void> _sendFromPreview() async {
@@ -276,6 +248,13 @@ class _HousingInviteProposalScreenState
     if (!mounted) return;
     setState(() => _sendingProposal = false);
     if (sent) _goBack();
+  }
+
+  void _cancelNegotiation() {
+    setState(() {
+      _negotiateExpanded = false;
+      _negotiateController.clear();
+    });
   }
 
   (Color bg, Color fg) _statusColors(
@@ -726,28 +705,39 @@ class _HousingInviteProposalScreenState
                       roster,
                       displayCurrencyCodeForPlan(widget.prefs, lines),
                     ),
-                    if (!isAuthor && !hasActivePlan) ...[
+                    if (!isAuthor && canRespond && !hasActivePlan) ...[
                       const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: canRespond
-                            ? () => _submitResponse(
-                                ProposalResponseStatus.accepted,
-                                revisionId: proposal.revisionId,
-                              )
-                            : null,
-                        child: Text(l10n.housingInviteAcceptFull),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        onPressed: canRespond
-                            ? () => setState(
-                                () => _negotiateExpanded = !_negotiateExpanded,
-                              )
-                            : null,
-                        child: Text(l10n.housingInviteNegotiate),
-                      ),
-                      if (_negotiateExpanded && canRespond) ...[
+                      if (!_negotiateExpanded) ...[
+                        FilledButton(
+                          onPressed: canRespond
+                              ? () => _submitResponse(
+                                  ProposalResponseStatus.accepted,
+                                  revisionId: proposal.revisionId,
+                                )
+                              : null,
+                          child: Text(l10n.housingInviteAcceptFull),
+                        ),
                         const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: canRespond
+                              ? () => setState(() => _negotiateExpanded = true)
+                              : null,
+                          child: Text(l10n.housingInviteNegotiate),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.error,
+                          ),
+                          onPressed: canRespond
+                              ? () => _submitResponse(
+                                  ProposalResponseStatus.rejected,
+                                  revisionId: proposal.revisionId,
+                                )
+                              : null,
+                          child: Text(l10n.housingInviteRejectBlock),
+                        ),
+                      ] else if (canRespond) ...[
                         TextField(
                           controller: _negotiateController,
                           minLines: 3,
@@ -768,22 +758,14 @@ class _HousingInviteProposalScreenState
                               revisionId: proposal.revisionId,
                             );
                           },
-                          child: Text(l10n.housingPlanSave),
+                          child: Text(l10n.commonSend),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: _cancelNegotiation,
+                          child: Text(l10n.commonCancel),
                         ),
                       ],
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
-                        ),
-                        onPressed: canRespond
-                            ? () => _submitResponse(
-                                ProposalResponseStatus.rejected,
-                                revisionId: proposal.revisionId,
-                              )
-                            : null,
-                        child: Text(l10n.housingInviteRejectBlock),
-                      ),
                     ],
                     SizedBox(height: 24 + MediaQuery.paddingOf(context).bottom),
                   ],
@@ -822,21 +804,25 @@ class _HousingInviteProposalScreenState
                             ),
                           ),
                       ] else ...[
-                        OutlinedButton(
-                          onPressed: _goBack,
-                          child: Text(l10n.housingPlanBack),
-                        ),
-                        const SizedBox(height: 8),
-                        FilledButton(
-                          onPressed: () => showHousingInvitationStatusDialog(
-                            context,
-                            db: widget.db,
-                            planId: widget.planId,
-                            prefs: widget.prefs,
-                            revisionId: proposal.revisionId,
+                        if (!_negotiateExpanded) ...[
+                          OutlinedButton(
+                            onPressed: _goBack,
+                            child: Text(l10n.housingPlanBack),
                           ),
-                          child: Text(l10n.housingInviteInvitationStatusAction),
-                        ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () => showHousingInvitationStatusDialog(
+                              context,
+                              db: widget.db,
+                              planId: widget.planId,
+                              prefs: widget.prefs,
+                              revisionId: proposal.revisionId,
+                            ),
+                            child: Text(
+                              l10n.housingInviteInvitationStatusAction,
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),

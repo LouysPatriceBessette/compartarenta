@@ -36,6 +36,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonSave => 'Guardar';
 
   @override
+  String get commonSend => 'Enviar';
+
+  @override
   String get commonDelete => 'Eliminar';
 
   @override
@@ -574,10 +577,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingWorkbenchTitle => 'Planes de vivienda';
 
   @override
-  String get housingWorkbenchDraftsSection => 'Planes borrador';
+  String get housingWorkbenchDraftsSection => 'Borrador(es)';
 
   @override
-  String get housingWorkbenchPendingSection => 'Propuestas pendientes';
+  String get housingWorkbenchPendingSection => 'Pendiente';
+
+  @override
+  String get housingWorkbenchArchivedSection => 'Archivada(s)';
 
   @override
   String get housingWorkbenchActiveSection => 'Planes activos';
@@ -653,20 +659,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingInviteResponseSent => 'Respuesta enviada.';
 
   @override
-  String get housingArchiveEntryTitle => 'Propuestas archivadas';
+  String get housingArchiveEntryTitle => 'Planes de vivienda';
 
   @override
   String get housingArchiveEntryBody =>
-      'Elija una propuesta archivada para revisar o crear una versión derivada, o cree un nuevo plan.';
+      'Elija una propuesta para revisar, edite un borrador o cree un plan nuevo.';
 
   @override
   String get housingArchiveNegotiatingTitle => 'Plan en negociación';
+
+  @override
+  String housingArchivePendingTitle(int count) {
+    return 'Plan en espera de $count respuesta(s)';
+  }
 
   @override
   String get housingArchiveRejectedTitle => 'Plan rechazado';
 
   @override
   String get housingArchiveDraftTitle => 'Borrador de plan';
+
+  @override
+  String housingArchiveDraftParticipantsTitle(int count) {
+    return 'Plan de $count participantes';
+  }
 
   @override
   String get housingArchiveCreateDerivedAction => 'Crear una versión derivada';

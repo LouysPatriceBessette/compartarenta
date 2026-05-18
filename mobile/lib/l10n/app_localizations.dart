@@ -154,6 +154,12 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get commonSave;
 
+  /// No description provided for @commonSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get commonSend;
+
   /// No description provided for @commonDelete.
   ///
   /// In en, this message translates to:
@@ -1129,14 +1135,20 @@ abstract class AppLocalizations {
   /// No description provided for @housingWorkbenchDraftsSection.
   ///
   /// In en, this message translates to:
-  /// **'Draft plans'**
+  /// **'Draft(s)'**
   String get housingWorkbenchDraftsSection;
 
   /// No description provided for @housingWorkbenchPendingSection.
   ///
   /// In en, this message translates to:
-  /// **'Pending proposals'**
+  /// **'Pending'**
   String get housingWorkbenchPendingSection;
+
+  /// No description provided for @housingWorkbenchArchivedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get housingWorkbenchArchivedSection;
 
   /// No description provided for @housingWorkbenchActiveSection.
   ///
@@ -1273,13 +1285,13 @@ abstract class AppLocalizations {
   /// No description provided for @housingArchiveEntryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Archived proposals'**
+  /// **'Housing plans'**
   String get housingArchiveEntryTitle;
 
   /// No description provided for @housingArchiveEntryBody.
   ///
   /// In en, this message translates to:
-  /// **'Choose an archived proposal to review or create a derived version, or create a new plan.'**
+  /// **'Choose a proposal to review, edit a draft, or create a new plan.'**
   String get housingArchiveEntryBody;
 
   /// No description provided for @housingArchiveNegotiatingTitle.
@@ -1287,6 +1299,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan in negotiation'**
   String get housingArchiveNegotiatingTitle;
+
+  /// No description provided for @housingArchivePendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan waiting for {count} response(s)'**
+  String housingArchivePendingTitle(int count);
 
   /// No description provided for @housingArchiveRejectedTitle.
   ///
@@ -1299,6 +1317,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan draft'**
   String get housingArchiveDraftTitle;
+
+  /// No description provided for @housingArchiveDraftParticipantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan with {count} participants'**
+  String housingArchiveDraftParticipantsTitle(int count);
 
   /// No description provided for @housingArchiveCreateDerivedAction.
   ///

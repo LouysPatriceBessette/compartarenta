@@ -45,7 +45,19 @@ Future<void> showHousingInvitationStatusDialog(
   final pkg = await (db.select(
     db.proposalPackages,
   )..where((t) => t.planId.equals(planId))).getSingleOrNull();
-  final pendingId = revisionId ?? pkg?.pendingRevisionId;
+  var pendingId = revisionId ?? pkg?.pendingRevisionId;
+  if (pendingId == null && pkg != null) {
+    final revisions = await (db.select(
+      db.proposalRevisions,
+    )..where((t) => t.packageId.equals(pkg.id))).get();
+    revisions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    for (final candidate in revisions) {
+      final payload = jsonDecode(candidate.payloadJson) as Map<String, dynamic>;
+      if (payload['lifecycleState'] == 'draft') continue;
+      pendingId = candidate.id;
+      break;
+    }
+  }
   if (!context.mounted) return;
   if (pendingId == null) {
     ScaffoldMessenger.of(
@@ -53,10 +65,11 @@ Future<void> showHousingInvitationStatusDialog(
     ).showSnackBar(SnackBar(content: Text(l10n.housingInviteStatusNoPending)));
     return;
   }
+  final selectedRevisionId = pendingId;
 
   final rev = await (db.select(
     db.proposalRevisions,
-  )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+  )..where((t) => t.id.equals(selectedRevisionId))).getSingleOrNull();
   if (!context.mounted) return;
   if (rev == null) {
     ScaffoldMessenger.of(
@@ -81,7 +94,7 @@ Future<void> showHousingInvitationStatusDialog(
 
   final responses = await (db.select(
     db.proposalResponses,
-  )..where((t) => t.revisionId.equals(pendingId))).get();
+  )..where((t) => t.revisionId.equals(selectedRevisionId))).get();
   final byParticipant = {for (final r in responses) r.participantId: r.status};
 
   final all = await db.listParticipants();
