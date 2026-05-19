@@ -28,8 +28,9 @@ class _IncomingHandshakesScreenState extends State<IncomingHandshakesScreen> {
     setState(() => _busy = true);
     try {
       final prefs = await AppPreferences.load();
-      final selfName =
-          prefs.displayName.isEmpty ? 'Unknown' : prefs.displayName;
+      final selfName = prefs.displayName.isEmpty
+          ? 'Unknown'
+          : prefs.displayName;
       final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
       await orch.acceptIncoming(
         view.handshakeId,
@@ -52,7 +53,16 @@ class _IncomingHandshakesScreenState extends State<IncomingHandshakesScreen> {
     if (orch == null || _busy) return;
     setState(() => _busy = true);
     try {
-      await orch.rejectIncoming(view.handshakeId);
+      final prefs = await AppPreferences.load();
+      final selfName = prefs.displayName.isEmpty
+          ? 'Unknown'
+          : prefs.displayName;
+      final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+      await orch.rejectIncoming(
+        view.handshakeId,
+        selfDisplayName: selfName,
+        selfAvatarId: selfAvatar,
+      );
       if (!mounted) return;
       if (orch.incomingHandshakes.value.isEmpty) {
         context.pop();
@@ -68,8 +78,8 @@ class _IncomingHandshakesScreenState extends State<IncomingHandshakesScreen> {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     final msg = switch (code) {
-      'relay_unavailable' || 'relay_error' =>
-        l10n.contactsHandshakeErrorRelayUnavailable,
+      'relay_unavailable' ||
+      'relay_error' => l10n.contactsHandshakeErrorRelayUnavailable,
       'already_completed' => l10n.contactsHandshakeErrorAlreadyCompleted,
       _ => l10n.contactsHandshakeErrorUnknown,
     };
@@ -131,9 +141,7 @@ class _IncomingTile extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         child: Icon(AvatarPalette.iconFor(view.peerAvatarId)),
       ),
-      title: Text(
-        view.peerDisplayName.isEmpty ? '—' : view.peerDisplayName,
-      ),
+      title: Text(view.peerDisplayName.isEmpty ? '—' : view.peerDisplayName),
       subtitle: Text(
         l10n.contactsIncomingBody(
           view.peerDisplayName.isEmpty ? 'Unknown' : view.peerDisplayName,

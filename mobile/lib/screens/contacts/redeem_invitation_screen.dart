@@ -7,6 +7,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
 import '../../l10n/app_localizations.dart';
+import '../../notifications/contact_notification_service.dart';
+import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 
@@ -89,6 +91,19 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _showHandshakeUnavailable(context);
       return;
     }
+    final prefs = await AppPreferences.load();
+    final notificationResult = await const NotificationFlowPermissionTrigger()
+        .ensure(
+          context: context,
+          prefs: prefs,
+          switches: const <NotificationFlowSwitch>{
+            NotificationFlowSwitch.contactAddRequests,
+          },
+        );
+    if (notificationResult == NotificationFlowPermissionResult.abortFlow ||
+        !mounted) {
+      return;
+    }
     setState(() {
       _dispatching = true;
       _dispatchError = null;
@@ -97,7 +112,6 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _rejected = false;
     });
     try {
-      final prefs = await AppPreferences.load();
       final selfName = prefs.displayName.isEmpty
           ? 'Unknown'
           : prefs.displayName;
@@ -120,6 +134,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       });
       _startOutcomePolling(orchestrator);
     } on HandshakeOrchestratorError catch (e) {
+      await const DefaultContactNotificationSink().contactAddRequestFailed(
+        errorCode: e.code,
+      );
       if (!mounted) return;
       setState(() {
         _dispatching = false;
@@ -211,12 +228,18 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   }
 
   void _onHandshakeFailed(String? code) {
+    final errorCode = (code == null || code.isEmpty) ? 'failed' : code;
+    unawaited(
+      const DefaultContactNotificationSink().contactAddRequestFailed(
+        errorCode: errorCode,
+      ),
+    );
     _outcomePollTimer?.cancel();
     setState(() {
       _completed = false;
       _rejected = false;
       _dispatched = false;
-      _dispatchError = (code == null || code.isEmpty) ? 'failed' : code;
+      _dispatchError = errorCode;
     });
   }
 

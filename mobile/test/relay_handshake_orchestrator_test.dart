@@ -78,11 +78,26 @@ Future<_Side> _spawnSide({
 
 final class _FakeContactNotificationSink implements ContactNotificationSink {
   final addRequests = <String>[];
+  final addRequestResolutions = <({String displayName, bool accepted})>[];
+  final addRequestFailures = <String>[];
   final disconnections = <String>[];
 
   @override
   Future<void> contactAddRequestReceived({required String displayName}) async {
     addRequests.add(displayName);
+  }
+
+  @override
+  Future<void> contactAddRequestResolved({
+    required String displayName,
+    required bool accepted,
+  }) async {
+    addRequestResolutions.add((displayName: displayName, accepted: accepted));
+  }
+
+  @override
+  Future<void> contactAddRequestFailed({required String errorCode}) async {
+    addRequestFailures.add(errorCode);
   }
 
   @override
@@ -199,6 +214,9 @@ void main() {
     expect(inviteeContact!.kind, 'connected');
     expect(inviteeContact.displayName, 'Inviter Self-Name');
     expect(inviteeContact.peerPublicMaterial, isNotNull);
+    expect(invitee.notifications.addRequestResolutions, [
+      (displayName: 'Inviter Self-Name', accepted: true),
+    ]);
 
     // After consumption, no envelopes remain in the relay.
     expect(relay.envelopeCount, 0);
@@ -363,7 +381,11 @@ void main() {
     await inviter.orchestrator.processAllPendingHandshakes();
     final incoming = inviter.orchestrator.incomingHandshakes.value.single;
 
-    await inviter.orchestrator.rejectIncoming(incoming.handshakeId);
+    await inviter.orchestrator.rejectIncoming(
+      incoming.handshakeId,
+      selfDisplayName: 'Inviter Self-Name',
+      selfAvatarId: 'mdi:inviter-avatar',
+    );
 
     // Inviter's stub is gone.
     final inviterContact = await inviter.contacts.get(invite.localContactId);
@@ -377,6 +399,9 @@ void main() {
     await invitee.orchestrator.processAllPendingHandshakes();
     final inviteeContact = await invitee.contacts.get(redeem.localContactId);
     expect(inviteeContact?.deletedAt, isNotNull);
+    expect(invitee.notifications.addRequestResolutions, [
+      (displayName: 'Inviter Self-Name', accepted: false),
+    ]);
   });
 
   test('replayed hello after nonce consumption is ignored', () async {

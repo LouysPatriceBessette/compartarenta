@@ -57,7 +57,7 @@
   "settingsNotificationsGeneralSwitchTitle": "Autoriser les notifications de l’app",
   "settingsNotificationsGeneralSwitchBody": "Interrupteur principal pour les catégories de notification de cette app.",
   "settingsNotificationsContactsSection": "Contacts",
-  "settingsNotificationsContactAddRequest": "Demandes d’ajout",
+  "settingsNotificationsContactAddRequest": "Demande/confirmation d’ajout",
   "settingsNotificationsContactDisconnection": "Avis de déconnexion",
   "settingsNotificationsContactInvitationExpiration": "Expiration d’une invitation non consommée",
   "settingsNotificationsHousingSection": "Logement",
@@ -70,6 +70,11 @@
   "settingsNotificationsSoundPickerTitle": "Son de notification",
   "settingsNotificationsSoundPickerBody": "La sélection d’un son de l’appareil sera ajoutée plus tard quand les plateformes le permettent sans risque.",
   "settingsNotificationsEnableBlocked": "La permission système des notifications n’est pas accordée.",
+  "notificationFlowPermissionPromptTitle": "Activer les notifications utiles?",
+  "notificationFlowPermissionPromptBody": "L’app peut activer les permissions de notification nécessaires pour ce que vous vous apprêtez à faire.",
+  "notificationFlowPermissionEnableAction": "Oui, les activer et continuer",
+  "notificationFlowPermissionReviewAction": "Je veux vérifier moi-même",
+  "notificationFlowPermissionNoAction": "Non, continuer",
 
   "onboardingTitle": "Configuration",
   "onboardingLanguageTitle": "Langue",
@@ -293,11 +298,28 @@
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationHousingResponseFailureRelayUnavailableBody": "Le serveur de relai est temporairement indisponible.",
+  "pushNotificationHousingResponseFailureUnknownBody": "La proposition à laquelle vous tentez de répondre n'a pas été trouvée. Il y a plusieurs raisons possibles. Recontactez la personne directement.",
+  "pushNotificationHousingResponseFailureSendBody": "Une erreur s'est produite lors de l'envoi de la réponse.",
+  "pushNotificationHousingResponseFailureLocalErrorBody": "Une erreur inconnue s'est produite.",
   "pushNotificationContactAddRequestTitle": "Demande de contact",
   "pushNotificationContactAddRequestBody": "{name} veut se connecter avec vous.",
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddRequestAcceptedBody": "Votre demande de connexion avec {name} a été acceptée.",
+  "@pushNotificationContactAddRequestAcceptedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestRejectedBody": "Votre demande de connexion avec {name} a été refusée.",
+  "@pushNotificationContactAddRequestRejectedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestExpiredCodeBody": "Le code de connexion que vous avez utilisé a expiré.",
+  "pushNotificationContactAddRequestInvalidCodeBody": "Le code de connexion que vous avez utilisé n'est pas valide.",
+  "pushNotificationContactAddRequestRelayErrorBody": "Une erreur s'est produite au niveau du serveur de relai. Ré-essayez.",
+  "pushNotificationContactAddRequestRelayUnavailableBody": "Le serveur de relai est temporairement indisponible.",
+  "pushNotificationContactAddRequestUnknownFailureBody": "Votre demande de connexion a échoué.",
   "pushNotificationContactDisconnectionTitle": "Contact déconnecté",
   "pushNotificationContactDisconnectionBody": "{name} s’est déconnecté de vous.",
   "@pushNotificationContactDisconnectionBody": {

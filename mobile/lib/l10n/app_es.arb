@@ -57,7 +57,7 @@
   "settingsNotificationsGeneralSwitchTitle": "Permitir notificaciones de la app",
   "settingsNotificationsGeneralSwitchBody": "Interruptor principal para las categorías de notificación de esta app.",
   "settingsNotificationsContactsSection": "Contactos",
-  "settingsNotificationsContactAddRequest": "Solicitudes de incorporación",
+  "settingsNotificationsContactAddRequest": "Solicitudes/confirmaciones de incorporación",
   "settingsNotificationsContactDisconnection": "Avisos de desconexión",
   "settingsNotificationsContactInvitationExpiration": "Caducidad de una invitación sin usar",
   "settingsNotificationsHousingSection": "Vivienda",
@@ -70,6 +70,11 @@
   "settingsNotificationsSoundPickerTitle": "Sonido de notificación",
   "settingsNotificationsSoundPickerBody": "La selección de sonidos del dispositivo se añadirá más adelante donde las plataformas lo permitan de forma segura.",
   "settingsNotificationsEnableBlocked": "El permiso del sistema para notificaciones no está concedido.",
+  "notificationFlowPermissionPromptTitle": "¿Activar notificaciones útiles?",
+  "notificationFlowPermissionPromptBody": "La app puede activar los permisos de notificación necesarios para lo que estás a punto de hacer.",
+  "notificationFlowPermissionEnableAction": "Sí, activarlas y continuar",
+  "notificationFlowPermissionReviewAction": "Quiero revisarlo yo mismo",
+  "notificationFlowPermissionNoAction": "No, continuar",
 
   "onboardingTitle": "Configuración",
   "onboardingLanguageTitle": "Idioma",
@@ -293,11 +298,28 @@
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationHousingResponseFailureRelayUnavailableBody": "El servidor de relevo no está disponible temporalmente.",
+  "pushNotificationHousingResponseFailureUnknownBody": "No se encontró la propuesta a la que intentas responder. Puede haber varios motivos. Contacta directamente con la persona.",
+  "pushNotificationHousingResponseFailureSendBody": "Se produjo un error al enviar la respuesta.",
+  "pushNotificationHousingResponseFailureLocalErrorBody": "Se produjo un error desconocido.",
   "pushNotificationContactAddRequestTitle": "Solicitud de contacto",
   "pushNotificationContactAddRequestBody": "{name} quiere conectarse contigo.",
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddRequestAcceptedBody": "Tu solicitud de conexión con {name} fue aceptada.",
+  "@pushNotificationContactAddRequestAcceptedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestRejectedBody": "Tu solicitud de conexión con {name} fue rechazada.",
+  "@pushNotificationContactAddRequestRejectedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestExpiredCodeBody": "El código de conexión que usaste ha caducado.",
+  "pushNotificationContactAddRequestInvalidCodeBody": "El código de conexión que usaste no es válido.",
+  "pushNotificationContactAddRequestRelayErrorBody": "Se produjo un error en el servidor de relevo. Inténtalo de nuevo.",
+  "pushNotificationContactAddRequestRelayUnavailableBody": "El servidor de relevo no está disponible temporalmente.",
+  "pushNotificationContactAddRequestUnknownFailureBody": "Tu solicitud de conexión falló.",
   "pushNotificationContactDisconnectionTitle": "Contacto desconectado",
   "pushNotificationContactDisconnectionBody": "{name} se desconectó de ti.",
   "@pushNotificationContactDisconnectionBody": {

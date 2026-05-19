@@ -440,7 +440,11 @@ class HandshakeOrchestrator {
   /// Inviter rejects an incoming handshake. Sends a `rejected` ack so
   /// the invitee gets a documented signal back, then drops the local
   /// stub Contact (no promotion happens).
-  Future<void> rejectIncoming(String handshakeId) async {
+  Future<void> rejectIncoming(
+    String handshakeId, {
+    String? selfDisplayName,
+    String? selfAvatarId,
+  }) async {
     final row = await _db.getPendingHandshake(handshakeId);
     if (row == null) {
       throw HandshakeOrchestratorError('unknown');
@@ -458,6 +462,9 @@ class HandshakeOrchestrator {
       invitationId: invitationIdBytes,
       nonce: nonceBytes,
     );
+    final prefs = await AppPreferences.load();
+    final displayName = selfDisplayName ?? prefs.displayName;
+    final avatarId = selfAvatarId ?? prefs.avatarId;
     final inviterLongTermPub = await _identity.publicKey();
     final inviteePub = RelayRouting.unb64(peerPubB64);
 
@@ -466,6 +473,8 @@ class HandshakeOrchestrator {
         invitationId: invitationIdBytes,
         inviterLongTermPublicKey: inviterLongTermPub,
         accepted: false,
+        displayName: displayName,
+        avatarId: avatarId,
       ),
       invitationNonce: nonceBytes,
       inviterHandshakePrivateKey: inviterHandshakePriv,
@@ -1199,6 +1208,13 @@ class HandshakeOrchestrator {
         ),
       );
     }
+    final notificationDisplayName = ack.displayName.isEmpty
+        ? 'Unknown'
+        : ack.displayName;
+    await _contactNotifications.contactAddRequestResolved(
+      displayName: notificationDisplayName,
+      accepted: ack.accepted,
+    );
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: listenAddr,

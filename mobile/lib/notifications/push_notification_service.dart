@@ -300,6 +300,46 @@ class PushNotificationService {
     );
   }
 
+  static Future<void> showLocalHousingResponseFailureNotification({
+    required String errorCode,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingDecisionTitle;
+    final body = switch (errorCode) {
+      'relay_unavailable' =>
+        l10n.pushNotificationHousingResponseFailureRelayUnavailableBody,
+      'unknown' => l10n.pushNotificationHousingResponseFailureUnknownBody,
+      'send_failed' => l10n.pushNotificationHousingResponseFailureSendBody,
+      'local_error' =>
+        l10n.pushNotificationHousingResponseFailureLocalErrorBody,
+      _ => l10n.pushNotificationHousingResponseFailureLocalErrorBody,
+    };
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title,
+      body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: _housingTapPayload,
+    );
+  }
+
   static void _onLocalNotificationTapped(NotificationResponse response) {
     if (response.payload != _housingTapPayload) return;
     _navigateToHousing();

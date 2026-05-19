@@ -421,7 +421,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotificationsContactAddRequest.
   ///
   /// In en, this message translates to:
-  /// **'Add requests'**
+  /// **'Add requests/confirmations'**
   String get settingsNotificationsContactAddRequest;
 
   /// No description provided for @settingsNotificationsContactDisconnection.
@@ -495,6 +495,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System notification permission is not granted.'**
   String get settingsNotificationsEnableBlocked;
+
+  /// No description provided for @notificationFlowPermissionPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable useful notifications?'**
+  String get notificationFlowPermissionPromptTitle;
+
+  /// No description provided for @notificationFlowPermissionPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app can enable the notification permissions needed for what you are about to do.'**
+  String get notificationFlowPermissionPromptBody;
+
+  /// No description provided for @notificationFlowPermissionEnableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, enable them and continue'**
+  String get notificationFlowPermissionEnableAction;
+
+  /// No description provided for @notificationFlowPermissionReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to check myself'**
+  String get notificationFlowPermissionReviewAction;
+
+  /// No description provided for @notificationFlowPermissionNoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'No, continue'**
+  String get notificationFlowPermissionNoAction;
 
   /// No description provided for @onboardingTitle.
   ///
@@ -1486,6 +1516,30 @@ abstract class AppLocalizations {
   /// **'{name} responded to a housing proposal.'**
   String pushNotificationHousingDecisionBodyFrom(String name);
 
+  /// No description provided for @pushNotificationHousingResponseFailureRelayUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay server is temporarily unavailable.'**
+  String get pushNotificationHousingResponseFailureRelayUnavailableBody;
+
+  /// No description provided for @pushNotificationHousingResponseFailureUnknownBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The proposal you are trying to respond to was not found. There are several possible reasons. Contact the person directly.'**
+  String get pushNotificationHousingResponseFailureUnknownBody;
+
+  /// No description provided for @pushNotificationHousingResponseFailureSendBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while sending the response.'**
+  String get pushNotificationHousingResponseFailureSendBody;
+
+  /// No description provided for @pushNotificationHousingResponseFailureLocalErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An unknown error occurred.'**
+  String get pushNotificationHousingResponseFailureLocalErrorBody;
+
   /// No description provided for @pushNotificationContactAddRequestTitle.
   ///
   /// In en, this message translates to:
@@ -1497,6 +1551,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} wants to connect with you.'**
   String pushNotificationContactAddRequestBody(String name);
+
+  /// No description provided for @pushNotificationContactAddRequestAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your connection request with {name} was accepted.'**
+  String pushNotificationContactAddRequestAcceptedBody(String name);
+
+  /// No description provided for @pushNotificationContactAddRequestRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your connection request with {name} was declined.'**
+  String pushNotificationContactAddRequestRejectedBody(String name);
+
+  /// No description provided for @pushNotificationContactAddRequestExpiredCodeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection code you used has expired.'**
+  String get pushNotificationContactAddRequestExpiredCodeBody;
+
+  /// No description provided for @pushNotificationContactAddRequestInvalidCodeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection code you used is not valid.'**
+  String get pushNotificationContactAddRequestInvalidCodeBody;
+
+  /// No description provided for @pushNotificationContactAddRequestRelayErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred on the relay server. Try again.'**
+  String get pushNotificationContactAddRequestRelayErrorBody;
+
+  /// No description provided for @pushNotificationContactAddRequestRelayUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay server is temporarily unavailable.'**
+  String get pushNotificationContactAddRequestRelayUnavailableBody;
+
+  /// No description provided for @pushNotificationContactAddRequestUnknownFailureBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your connection request failed.'**
+  String get pushNotificationContactAddRequestUnknownFailureBody;
 
   /// No description provided for @pushNotificationContactDisconnectionTitle.
   ///

@@ -10,6 +10,8 @@ import '../../housing/quiet_hours_week_grid.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_invite_sunburst.dart';
 import '../../l10n/app_localizations.dart';
+import '../../notifications/notification_flow_permission_trigger.dart';
+import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
@@ -207,18 +209,44 @@ class _HousingInviteProposalScreenState
     final l10n = AppLocalizations.of(context);
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator == null) {
+      if (status == ProposalResponseStatus.negotiate) {
+        await PushNotificationService.showLocalHousingResponseFailureNotification(
+          errorCode: 'relay_unavailable',
+        );
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('relay'))),
       );
       return;
     }
+    if (status == ProposalResponseStatus.negotiate) {
+      final notificationResult = await const NotificationFlowPermissionTrigger()
+          .ensure(
+            context: context,
+            prefs: widget.prefs,
+            switches: const {
+              NotificationFlowSwitch.housingDecisionChange,
+              NotificationFlowSwitch.housingOfferExpiration,
+            },
+          );
+      if (notificationResult == NotificationFlowPermissionResult.abortFlow ||
+          !mounted) {
+        return;
+      }
+    }
     try {
-      await orchestrator.sendHousingProposalResponse(
+      final result = await orchestrator.sendHousingProposalResponse(
         planId: widget.planId,
         status: status,
         message: message,
         revisionId: revisionId,
       );
+      if (status == ProposalResponseStatus.negotiate &&
+          result.failedParticipantIds.isNotEmpty) {
+        await PushNotificationService.showLocalHousingResponseFailureNotification(
+          errorCode: 'send_failed',
+        );
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -231,7 +259,22 @@ class _HousingInviteProposalScreenState
       if (status == ProposalResponseStatus.negotiate) {
         if (mounted) context.go('/');
       }
+    } on HandshakeOrchestratorError catch (e) {
+      if (status == ProposalResponseStatus.negotiate) {
+        await PushNotificationService.showLocalHousingResponseFailureNotification(
+          errorCode: e.code,
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingPlanCouldNotContinue(e.code))),
+      );
     } catch (e) {
+      if (status == ProposalResponseStatus.negotiate) {
+        await PushNotificationService.showLocalHousingResponseFailureNotification(
+          errorCode: 'local_error',
+        );
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),

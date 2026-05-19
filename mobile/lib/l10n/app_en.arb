@@ -57,7 +57,7 @@
   "settingsNotificationsGeneralSwitchTitle": "Allow app notifications",
   "settingsNotificationsGeneralSwitchBody": "Master switch for notification categories in this app.",
   "settingsNotificationsContactsSection": "Contacts",
-  "settingsNotificationsContactAddRequest": "Add requests",
+  "settingsNotificationsContactAddRequest": "Add requests/confirmations",
   "settingsNotificationsContactDisconnection": "Disconnection notices",
   "settingsNotificationsContactInvitationExpiration": "Unconsumed invitation expiration",
   "settingsNotificationsHousingSection": "Housing",
@@ -70,6 +70,11 @@
   "settingsNotificationsSoundPickerTitle": "Notification sound",
   "settingsNotificationsSoundPickerBody": "Device sound selection will be added later where platforms allow it safely.",
   "settingsNotificationsEnableBlocked": "System notification permission is not granted.",
+  "notificationFlowPermissionPromptTitle": "Enable useful notifications?",
+  "notificationFlowPermissionPromptBody": "The app can enable the notification permissions needed for what you are about to do.",
+  "notificationFlowPermissionEnableAction": "Yes, enable them and continue",
+  "notificationFlowPermissionReviewAction": "I want to check myself",
+  "notificationFlowPermissionNoAction": "No, continue",
 
   "onboardingTitle": "Setup",
   "onboardingLanguageTitle": "Language",
@@ -293,11 +298,28 @@
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationHousingResponseFailureRelayUnavailableBody": "The relay server is temporarily unavailable.",
+  "pushNotificationHousingResponseFailureUnknownBody": "The proposal you are trying to respond to was not found. There are several possible reasons. Contact the person directly.",
+  "pushNotificationHousingResponseFailureSendBody": "An error occurred while sending the response.",
+  "pushNotificationHousingResponseFailureLocalErrorBody": "An unknown error occurred.",
   "pushNotificationContactAddRequestTitle": "Contact request",
   "pushNotificationContactAddRequestBody": "{name} wants to connect with you.",
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddRequestAcceptedBody": "Your connection request with {name} was accepted.",
+  "@pushNotificationContactAddRequestAcceptedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestRejectedBody": "Your connection request with {name} was declined.",
+  "@pushNotificationContactAddRequestRejectedBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationContactAddRequestExpiredCodeBody": "The connection code you used has expired.",
+  "pushNotificationContactAddRequestInvalidCodeBody": "The connection code you used is not valid.",
+  "pushNotificationContactAddRequestRelayErrorBody": "An error occurred on the relay server. Try again.",
+  "pushNotificationContactAddRequestRelayUnavailableBody": "The relay server is temporarily unavailable.",
+  "pushNotificationContactAddRequestUnknownFailureBody": "Your connection request failed.",
   "pushNotificationContactDisconnectionTitle": "Contact disconnected",
   "pushNotificationContactDisconnectionBody": "{name} disconnected from you.",
   "@pushNotificationContactDisconnectionBody": {

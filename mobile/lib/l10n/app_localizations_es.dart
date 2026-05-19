@@ -179,7 +179,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsNotificationsContactAddRequest =>
-      'Solicitudes de incorporación';
+      'Solicitudes/confirmaciones de incorporación';
 
   @override
   String get settingsNotificationsContactDisconnection =>
@@ -224,6 +224,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settingsNotificationsEnableBlocked =>
       'El permiso del sistema para notificaciones no está concedido.';
+
+  @override
+  String get notificationFlowPermissionPromptTitle =>
+      '¿Activar notificaciones útiles?';
+
+  @override
+  String get notificationFlowPermissionPromptBody =>
+      'La app puede activar los permisos de notificación necesarios para lo que estás a punto de hacer.';
+
+  @override
+  String get notificationFlowPermissionEnableAction =>
+      'Sí, activarlas y continuar';
+
+  @override
+  String get notificationFlowPermissionReviewAction =>
+      'Quiero revisarlo yo mismo';
+
+  @override
+  String get notificationFlowPermissionNoAction => 'No, continuar';
 
   @override
   String get onboardingTitle => 'Configuración';
@@ -784,12 +803,58 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
+      'El servidor de relevo no está disponible temporalmente.';
+
+  @override
+  String get pushNotificationHousingResponseFailureUnknownBody =>
+      'No se encontró la propuesta a la que intentas responder. Puede haber varios motivos. Contacta directamente con la persona.';
+
+  @override
+  String get pushNotificationHousingResponseFailureSendBody =>
+      'Se produjo un error al enviar la respuesta.';
+
+  @override
+  String get pushNotificationHousingResponseFailureLocalErrorBody =>
+      'Se produjo un error desconocido.';
+
+  @override
   String get pushNotificationContactAddRequestTitle => 'Solicitud de contacto';
 
   @override
   String pushNotificationContactAddRequestBody(String name) {
     return '$name quiere conectarse contigo.';
   }
+
+  @override
+  String pushNotificationContactAddRequestAcceptedBody(String name) {
+    return 'Tu solicitud de conexión con $name fue aceptada.';
+  }
+
+  @override
+  String pushNotificationContactAddRequestRejectedBody(String name) {
+    return 'Tu solicitud de conexión con $name fue rechazada.';
+  }
+
+  @override
+  String get pushNotificationContactAddRequestExpiredCodeBody =>
+      'El código de conexión que usaste ha caducado.';
+
+  @override
+  String get pushNotificationContactAddRequestInvalidCodeBody =>
+      'El código de conexión que usaste no es válido.';
+
+  @override
+  String get pushNotificationContactAddRequestRelayErrorBody =>
+      'Se produjo un error en el servidor de relevo. Inténtalo de nuevo.';
+
+  @override
+  String get pushNotificationContactAddRequestRelayUnavailableBody =>
+      'El servidor de relevo no está disponible temporalmente.';
+
+  @override
+  String get pushNotificationContactAddRequestUnknownFailureBody =>
+      'Tu solicitud de conexión falló.';
 
   @override
   String get pushNotificationContactDisconnectionTitle =>

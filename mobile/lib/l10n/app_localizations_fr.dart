@@ -177,7 +177,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsNotificationsContactsSection => 'Contacts';
 
   @override
-  String get settingsNotificationsContactAddRequest => 'Demandes d’ajout';
+  String get settingsNotificationsContactAddRequest =>
+      'Demande/confirmation d’ajout';
 
   @override
   String get settingsNotificationsContactDisconnection => 'Avis de déconnexion';
@@ -221,6 +222,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsNotificationsEnableBlocked =>
       'La permission système des notifications n’est pas accordée.';
+
+  @override
+  String get notificationFlowPermissionPromptTitle =>
+      'Activer les notifications utiles?';
+
+  @override
+  String get notificationFlowPermissionPromptBody =>
+      'L’app peut activer les permissions de notification nécessaires pour ce que vous vous apprêtez à faire.';
+
+  @override
+  String get notificationFlowPermissionEnableAction =>
+      'Oui, les activer et continuer';
+
+  @override
+  String get notificationFlowPermissionReviewAction =>
+      'Je veux vérifier moi-même';
+
+  @override
+  String get notificationFlowPermissionNoAction => 'Non, continuer';
 
   @override
   String get onboardingTitle => 'Configuration';
@@ -782,12 +802,58 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
+      'Le serveur de relai est temporairement indisponible.';
+
+  @override
+  String get pushNotificationHousingResponseFailureUnknownBody =>
+      'La proposition à laquelle vous tentez de répondre n\'a pas été trouvée. Il y a plusieurs raisons possibles. Recontactez la personne directement.';
+
+  @override
+  String get pushNotificationHousingResponseFailureSendBody =>
+      'Une erreur s\'est produite lors de l\'envoi de la réponse.';
+
+  @override
+  String get pushNotificationHousingResponseFailureLocalErrorBody =>
+      'Une erreur inconnue s\'est produite.';
+
+  @override
   String get pushNotificationContactAddRequestTitle => 'Demande de contact';
 
   @override
   String pushNotificationContactAddRequestBody(String name) {
     return '$name veut se connecter avec vous.';
   }
+
+  @override
+  String pushNotificationContactAddRequestAcceptedBody(String name) {
+    return 'Votre demande de connexion avec $name a été acceptée.';
+  }
+
+  @override
+  String pushNotificationContactAddRequestRejectedBody(String name) {
+    return 'Votre demande de connexion avec $name a été refusée.';
+  }
+
+  @override
+  String get pushNotificationContactAddRequestExpiredCodeBody =>
+      'Le code de connexion que vous avez utilisé a expiré.';
+
+  @override
+  String get pushNotificationContactAddRequestInvalidCodeBody =>
+      'Le code de connexion que vous avez utilisé n\'est pas valide.';
+
+  @override
+  String get pushNotificationContactAddRequestRelayErrorBody =>
+      'Une erreur s\'est produite au niveau du serveur de relai. Ré-essayez.';
+
+  @override
+  String get pushNotificationContactAddRequestRelayUnavailableBody =>
+      'Le serveur de relai est temporairement indisponible.';
+
+  @override
+  String get pushNotificationContactAddRequestUnknownFailureBody =>
+      'Votre demande de connexion a échoué.';
 
   @override
   String get pushNotificationContactDisconnectionTitle => 'Contact déconnecté';

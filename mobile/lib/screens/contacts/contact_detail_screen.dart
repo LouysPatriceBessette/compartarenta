@@ -136,7 +136,16 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       return;
     }
     try {
-      await orch.rejectIncoming(view.handshakeId);
+      final prefs = await AppPreferences.load();
+      final selfName = prefs.displayName.isEmpty
+          ? 'Unknown'
+          : prefs.displayName;
+      final selfAvatar = prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId;
+      await orch.rejectIncoming(
+        view.handshakeId,
+        selfDisplayName: selfName,
+        selfAvatarId: selfAvatar,
+      );
       if (!mounted) return;
       context.pop();
     } on HandshakeOrchestratorError catch (e) {

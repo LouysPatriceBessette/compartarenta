@@ -18,6 +18,7 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
+import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
@@ -1405,6 +1406,23 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
 
     if (proceed != true || !mounted || !flowContext.mounted) return false;
+
+    // TODO(pre-prod): evaluate merging this notification trigger with the
+    // response-window selector into a single reusable prompt flow.
+    final notificationResult = await const NotificationFlowPermissionTrigger()
+        .ensure(
+          context: flowContext,
+          prefs: widget.prefs,
+          switches: const {
+            NotificationFlowSwitch.housingDecisionChange,
+            NotificationFlowSwitch.housingOfferExpiration,
+          },
+        );
+    if (notificationResult == NotificationFlowPermissionResult.abortFlow ||
+        !mounted ||
+        !flowContext.mounted) {
+      return false;
+    }
 
     final responseExpiresAt = DateTime.now().toUtc().add(selected);
     final blocking = await listBlockingAgreementDayRanges(

@@ -8,8 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
-import '../../notifications/notification_permission_gate.dart';
-import '../../notifications/push_notification_service.dart';
+import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
@@ -131,11 +130,17 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
       return;
     }
     final prefs = await AppPreferences.load();
-    final notificationStatus = await NotificationPermissionGate.instance
-        .ensureForUserAction(prefs: prefs);
-    if (notificationStatus == NotificationSystemPermissionStatus.granted ||
-        notificationStatus == NotificationSystemPermissionStatus.provisional) {
-      await PushNotificationService.initialize();
+    final notificationResult = await const NotificationFlowPermissionTrigger()
+        .ensure(
+          context: context,
+          prefs: prefs,
+          switches: const {
+            NotificationFlowSwitch.contactAddRequests,
+            NotificationFlowSwitch.contactInvitationExpiration,
+          },
+        );
+    if (notificationResult == NotificationFlowPermissionResult.abortFlow) {
+      return;
     }
     if (!mounted) return;
     setState(() {
