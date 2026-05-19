@@ -19,12 +19,16 @@ The system SHALL provide a closed-app push transport that lets the relay wake th
 - **AND** the app polls the relay, decrypts pending envelopes, and surfaces a local notification using the existing on-device notification builder
 
 ### Requirement: Wake push payload is data-only and content-free
-The system SHALL ensure that wake push payloads contain no plaintext business content. The relay SHALL emit only a `kind` discriminator and the target recipient routing id. The relay SHALL NOT include envelope identifiers, sender identity, business-domain metadata, or human-readable strings derived from envelope contents.
+The system SHALL ensure that wake push payloads contain no plaintext business content. The relay SHALL emit a payload composed of a schema version field `v`, a `kind` discriminator, and the target recipient routing id, and nothing else. The relay SHALL NOT include envelope identifiers, sender identity, business-domain metadata, or human-readable strings derived from envelope contents. The initial schema version SHALL be `1`.
 
 #### Scenario: Wake payload minimal shape
 - **WHEN** the relay dispatches a wake push
-- **THEN** the push body contains at most a payload kind, the recipient routing id, and an optional schema version field
+- **THEN** the push body contains exactly the schema version `v` (integer, initial value `1`), a payload kind (e.g. `"wake_for_inbox"`), and the recipient routing id
 - **AND** the push body does not contain envelope ciphertext, envelope identifiers, sender identifiers, business-domain message types, expense amounts, contact display names, or any plaintext title or body derived from envelope content
+
+#### Scenario: Client handles unknown payload version
+- **WHEN** the app receives a wake push whose `v` is higher than the value it knows about
+- **THEN** the app falls back to its default wake handler (poll the relay and decrypt) without crashing on the unrecognized fields
 
 #### Scenario: iOS degraded mode generic alert
 - **WHEN** the relay is configured to ship a generic alert because iOS data-only delivery is being throttled
@@ -73,23 +77,27 @@ The system SHALL support multiple non-expired routing push tokens per recipient 
 - **AND** the per-token error is logged with provider and error class but without envelope context
 
 ### Requirement: Routing push token registration
-The system SHALL expose explicit registration and unregistration endpoints on the relay. Registration SHALL be authenticated to bind the token to the holder of the recipient routing identity, using the same mechanism that authenticates envelope ingestion for that routing id. Each registration SHALL set or refresh an `expires_at` based on a configured time-to-live.
+The system SHALL expose explicit registration and unregistration endpoints on the relay. Registration SHALL be authenticated to bind the token to the holder of the recipient routing identity, using the same mechanism that authenticates envelope ingestion for that routing id. Each registration SHALL set or refresh an `expires_at` based on a configured time-to-live. Each registration request SHALL also carry the current country disclosure value (an ISO 3166-1 alpha-2 country code or the literal `UNDISCLOSED`); the relay SHALL persist that value in the corresponding row without history.
 
 #### Scenario: Authenticated registration is accepted
-- **WHEN** an authenticated client posts a registration request with provider, push token, and recipient routing id
-- **THEN** the relay creates or refreshes a row in the routing push token store
+- **WHEN** an authenticated client posts a registration request with provider, push token, recipient routing id, and country disclosure value
+- **THEN** the relay creates or refreshes a row in the routing push token store using all four fields
 - **AND** the relay returns the resulting `expires_at` so the client can schedule keep-alive refresh
 
 #### Scenario: Unauthenticated registration is rejected
 - **WHEN** a registration request arrives without valid authentication for the supplied recipient routing id
 - **THEN** the relay rejects the request and does not store any data
 
+#### Scenario: Missing or invalid country value defaults to UNDISCLOSED
+- **WHEN** a registration request omits the country value or supplies a value that is not a recognized ISO 3166-1 alpha-2 code and is not `UNDISCLOSED`
+- **THEN** the relay stores `UNDISCLOSED` for that row and proceeds normally
+
 #### Scenario: Client unregisters
 - **WHEN** the client posts an unregister request for an existing (recipient, provider, push token) tuple
 - **THEN** the relay deletes the corresponding row
 
 ### Requirement: Strict TTL on routing push tokens
-The system SHALL enforce a hard time-to-live on every routing push token row. The relay SHALL purge rows whose `expires_at` has passed. The relay SHALL NOT extend TTL automatically beyond the configured maximum even if the client refreshes aggressively.
+The system SHALL enforce a hard time-to-live on every routing push token row. The relay SHALL purge rows whose `expires_at` has passed. The relay SHALL NOT extend TTL automatically beyond the configured maximum even if the client refreshes aggressively. The default TTL SHALL be 14 days and SHALL be configurable through a relay environment variable; changing the configured value SHALL NOT alter `expires_at` of rows already in the table.
 
 #### Scenario: TTL expiry triggers purge
 - **WHEN** a routing push token row reaches its `expires_at` and the client has not refreshed
@@ -99,6 +107,11 @@ The system SHALL enforce a hard time-to-live on every routing push token row. Th
 - **WHEN** an authenticated client refreshes a registration before `expires_at`
 - **THEN** the relay updates `expires_at` to now plus the configured TTL
 - **AND** the relay updates `last_seen_at`
+
+#### Scenario: Operator reconfigures the TTL
+- **WHEN** the operator changes the configured TTL value and restarts the relay
+- **THEN** the new value applies to subsequent registrations and refreshes
+- **AND** existing rows keep their previously assigned `expires_at` and migrate to the new value only on their next refresh or replacement
 
 #### Scenario: Token reported invalid by provider is purged
 - **WHEN** the FCM or APNs provider returns a permanent error indicating the token is no longer valid
@@ -142,17 +155,94 @@ The system SHALL ensure that an uninstalled app, a powered-off device, or a devi
 - **WHEN** the device is offline for longer than one TTL cycle and no refresh occurs
 - **THEN** the relay purges the row at `expires_at`
 
-### Requirement: Aggregate-only operator metrics
-The system SHALL allow operators to derive aggregate active-device counts from `last_seen_at`. The relay SHALL NOT expose per-row `last_seen_at` data outside the dispatch path. The relay SHALL NOT join routing push token data with subscription or audit records beyond what is required for purge and dispatch.
+### Requirement: Daily aggregate statistics through a localhost-only endpoint and append-only file
+The system SHALL expose aggregate statistics through a single relay endpoint bound exclusively to the loopback interface, accessible only to the operating-system user that owns the relay process. The system SHALL NOT expose any per-row data outside the dispatch path. Operators SHALL NOT query the routing token database directly to obtain these statistics; the endpoint is the only sanctioned surface, and a cron job, whose source code lives in this repository, is the only sanctioned consumer.
 
-#### Scenario: Operator views active-device counts
-- **WHEN** an operator queries the configured metrics surface
-- **THEN** the relay reports counts of active devices over standard time windows (e.g., 1 day, 7 days, 30 days) and counts by provider
-- **AND** the relay does not report per-row identifiers in those metrics
+The endpoint SHALL compute, for a given target date (default: the previous calendar day in UTC), an aggregate summary of active devices, country distribution when applicable, and purely technical counters. The cron job SHALL run once per day at 00:07 UTC, call the endpoint for the previous calendar day, and append exactly one JSON line to a stats file on disk. The stats file SHALL be the only persistent surface of these statistics, SHALL be append-only, and SHALL never be modified retroactively for past days.
+
+#### Scenario: Endpoint is loopback-only
+- **WHEN** a request to the stats endpoint originates from any source other than the loopback interface
+- **THEN** the relay rejects the request without revealing whether the endpoint exists
+
+#### Scenario: Endpoint computes counts for the previous calendar day
+- **WHEN** the endpoint is called without a target date
+- **THEN** the endpoint computes the count of distinct routing push token rows whose `last_seen_at` falls within the previous calendar day in UTC (from 00:00:00 UTC inclusive to the next 00:00:00 UTC exclusive)
+- **AND** the endpoint returns the active total, the per-country breakdown subject to suppression rules, and the technical counters described below
+
+#### Scenario: Cron job appends a single line per day
+- **WHEN** the cron job runs at 00:07 UTC
+- **THEN** it appends exactly one JSON line to the stats file containing the previous day's date and the endpoint response
+- **AND** previous lines in the stats file remain untouched
+
+#### Scenario: Per-row data is never exported
+- **WHEN** the endpoint serves a request
+- **THEN** the response contains aggregate counts only
+- **AND** the response does not include routing identifiers, push tokens, raw `last_seen_at` values, country values per row, or any other per-row attribute
 
 #### Scenario: Routing push table is not joined with subscription data
-- **WHEN** the relay processes a subscription validation or any other server-side operation outside push dispatch
+- **WHEN** the relay processes a subscription validation or any other server-side operation outside push dispatch and stats aggregation
 - **THEN** the operation SHALL NOT read or join the routing push token table
+
+### Requirement: Technical counters share the same daily statistics line
+The system SHALL include, in the daily statistics line, a set of purely technical counters covering wake dispatch outcomes, TTL purge volume, and the current row count of the routing push token table. These counters SHALL contain no user-related dimensions.
+
+#### Scenario: Daily statistics line includes technical counters
+- **WHEN** the cron job writes its daily line
+- **THEN** the line includes `dispatch_success_count` and `dispatch_failure_count` covering the previous calendar day in UTC
+- **AND** the line includes `purge_count` for the previous calendar day in UTC
+- **AND** the line includes `routing_push_tokens_row_count` measured at the moment the endpoint is called
+
+#### Scenario: Technical counters carry no user-related labels
+- **WHEN** the relay produces the technical counters
+- **THEN** the counters do not include routing identifiers, push tokens, country labels, or per-provider breakdowns beyond a single aggregate provider distribution
+
+### Requirement: User-disclosed country aggregation, opt-in only
+The system SHALL allow each user to opt in to disclosing a country of use for the sole purpose of contributing to aggregate per-country counts in the daily statistics file. The setting SHALL be off on fresh installs and SHALL be revocable at any time from app settings. The relay SHALL store at most one country value per routing push token row, carried alongside the keep-alive payload. The relay SHALL NOT retain any history of past country values. The country value SHALL be the only user-declared dimension allowed in the routing push token table.
+
+The system SHALL suppress small country populations in the daily statistics file. Countries whose active-device count for the day is strictly less than 10 SHALL be merged into an `OTHER` bucket. The suppression threshold SHALL be hardcoded in source so it is visible to anyone auditing the repository, SHALL NOT be configurable through environment variables or runtime parameters, and SHALL be reviewed only through code review.
+
+#### Scenario: Fresh install defaults to opt-out
+- **WHEN** the user installs the app for the first time
+- **THEN** the country-disclosure preference is off
+- **AND** the client sends an `UNDISCLOSED` country value on every register and refresh until the user opts in
+
+#### Scenario: User opts in and selects a country
+- **WHEN** the user enables the country-disclosure preference and picks a country from the localized dropdown
+- **THEN** subsequent register and refresh calls send the corresponding ISO 3166-1 alpha-2 country code
+- **AND** the relay overwrites any previously stored country value for this row
+
+#### Scenario: User opts out
+- **WHEN** the user disables the country-disclosure preference
+- **THEN** the next register or refresh call sends `UNDISCLOSED`
+- **AND** the relay overwrites any previously stored country value for this row
+
+#### Scenario: User changes country
+- **WHEN** an opted-in user selects a different country
+- **THEN** the next register or refresh call sends the new code
+- **AND** the relay overwrites the previously stored code, with no history retained
+
+#### Scenario: Country picker is localized
+- **WHEN** the user opens the country picker
+- **THEN** country names are shown in the user's app language (FR, EN, ES)
+- **AND** the stored value remains the ISO 3166-1 alpha-2 code regardless of display language
+
+#### Scenario: Country with at least the threshold count is reported
+- **WHEN** the endpoint computes the daily statistics
+- **AND** a country has 10 or more active devices in the previous calendar day in UTC
+- **THEN** the country is reported under its ISO code in the per-country breakdown
+
+#### Scenario: Country below the threshold is bucketed into OTHER
+- **WHEN** a country has between 1 and 9 active devices in the previous calendar day in UTC
+- **THEN** the country code is not reported individually
+- **AND** the affected devices are summed into the `OTHER` bucket
+
+#### Scenario: UNDISCLOSED has its own bucket
+- **WHEN** the endpoint computes the daily statistics
+- **THEN** devices whose stored country is `UNDISCLOSED` are reported in an `UNDISCLOSED` bucket, separate from `OTHER`
+
+#### Scenario: No additional user-declared dimension is allowed
+- **WHEN** a future change considers adding another user-declared dimension to the routing push token table
+- **THEN** that change requires a separate spec amendment because this requirement bounds the user-declared columns to `country` only
 
 ### Requirement: User control governs wake registration
 The system SHALL make closed-app push registration conditional on the app-level master notification switch and on the relevant category preferences. When a user disables the master switch or disables every wake-eligible category, the client SHALL unregister and SHALL NOT re-register until the user re-enables a wake-eligible setting.
@@ -185,7 +275,7 @@ The system SHALL treat wake push dispatch as a best-effort side effect of envelo
 - **AND** the envelope still becomes available via polling
 
 ### Requirement: Documented operational configuration
-The system SHALL require the relay deployment documentation, the relay state schema documentation, and the relay audit checklist to be updated to describe routing push tokens, their TTL, their purge job, and the FCM and APNs credentials needed for dispatch.
+The system SHALL require the relay deployment documentation, the relay state schema documentation, and the relay audit checklist to be updated to describe routing push tokens, their TTL, their purge job, the FCM and APNs credentials needed for dispatch, the loopback-only daily statistics endpoint, the cron job that consumes it, and the stats file produced.
 
 #### Scenario: Deployment documentation describes credentials
 - **WHEN** the change ships
@@ -193,4 +283,8 @@ The system SHALL require the relay deployment documentation, the relay state sch
 
 #### Scenario: Audit checklist covers the routing push table
 - **WHEN** the change ships
-- **THEN** the relay audit checklist contains items asking the reviewer to confirm the routing push table schema, TTL enforcement, and the absence of extra columns beyond those specified in this capability
+- **THEN** the relay audit checklist contains items asking the reviewer to confirm the routing push table schema (including the single optional `country` column), TTL enforcement, the absence of extra columns beyond those specified in this capability, and the hardcoded country suppression threshold
+
+#### Scenario: Deployment documentation describes the statistics pipeline
+- **WHEN** the change ships
+- **THEN** the relay deployment documentation describes the loopback-only stats endpoint, the cron job that calls it at 00:07 UTC, the location and format of the append-only stats file, and the operating-system user that owns both the relay process and the cron job
