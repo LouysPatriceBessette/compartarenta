@@ -69,15 +69,29 @@ melos:
       run: cd mobile && ./tool/install_web_assets.sh
 
     build:apk:prod:
-      description: Release APK (prod); output under mobile/build/app/outputs/flutter-apk/
-      run: cd mobile && flutter build apk --release --flavor prod
+      description: |
+        Release APK (prod); output under mobile/build/app/outputs/flutter-apk/.
+        The build name is derived from the latest reachable git tag and the
+        build number is the count of commits between that tag and HEAD (so an
+        auditor reporting an issue can pinpoint the exact commit by stripping
+        the tag's commits, e.g. tag v0.1.0 + build 37 -> 37 commits past v0.1.0).
+      run: |
+        cd mobile
+        VERSION_FLAGS=$(./tool/compute_version.sh)
+        echo "Stamping APK with ${VERSION_FLAGS}"
+        flutter build apk --release --flavor prod ${VERSION_FLAGS}
 
     build:apk:dev:
-      description: Release APK (dev) for internal demos; defaults to the real relay
+      description: |
+        Release APK (dev) for internal demos; defaults to the real relay.
+        Build name/number are derived from git (see build:apk:prod for
+        details).
       run: |
         cd mobile
         API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
-        flutter build apk --release --flavor dev --dart-define=ENV=dev --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"
+        VERSION_FLAGS=$(./tool/compute_version.sh)
+        echo "Stamping APK with ${VERSION_FLAGS}"
+        flutter build apk --release --flavor dev --dart-define=ENV=dev --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" ${VERSION_FLAGS}
 
     apk:list:
       description: List APK outputs (from repo root; run a build:apk:* script first)

@@ -61,7 +61,11 @@ class _AboutSettingsScreenState extends State<AboutSettingsScreen> {
 
               final subtitle = info == null
                   ? l10n.commonNotSet
-                  : '${info.version} (${info.buildNumber})';
+                  : _formatVersionLine(
+                      version: info.version,
+                      buildNumber: info.buildNumber,
+                      gitSha: widget.config.gitSha,
+                    );
 
               return ListTile(
                 title: Text(l10n.settingsAppVersionTitle),
@@ -73,4 +77,14 @@ class _AboutSettingsScreenState extends State<AboutSettingsScreen> {
       ),
     );
   }
+}
+
+String _formatVersionLine({
+  required String version,
+  required String buildNumber,
+  required String gitSha,
+}) {
+  final base = '$version ($buildNumber)';
+  if (gitSha.isEmpty) return base;
+  return '$base · $gitSha';
 }
