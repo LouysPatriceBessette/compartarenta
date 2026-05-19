@@ -214,6 +214,7 @@ class _HousingInviteProposalScreenState
           errorCode: 'relay_unavailable',
         );
       }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('relay'))),
       );

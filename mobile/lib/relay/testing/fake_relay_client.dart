@@ -19,8 +19,8 @@ import '../relay_client.dart';
 class FakeRelayClient implements RelayClient {
   FakeRelayClient();
 
-  final List<_Pair> _routings = <_Pair>[];
-  final List<_StoredEnvelope> _envelopes = <_StoredEnvelope>[];
+  final List<FakeRelayRoutingPair> _routings = <FakeRelayRoutingPair>[];
+  final List<FakeRelayStoredEnvelope> _envelopes = <FakeRelayStoredEnvelope>[];
 
   int _envelopeCounter = 0;
 
@@ -32,8 +32,12 @@ class FakeRelayClient implements RelayClient {
 
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
-  List<_StoredEnvelope> get storedEnvelopes => List.unmodifiable(_envelopes);
-  List<_Pair> get routings => List.unmodifiable(_routings);
+  List<FakeRelayStoredEnvelope> get storedEnvelopes =>
+      List.unmodifiable(_envelopes);
+  List<FakeRelayRoutingPair> get routings => List.unmodifiable(_routings);
+
+  final List<FakeRoutingPushRegistration> routingPushRegistrations =
+      <FakeRoutingPushRegistration>[];
 
   void _maybeThrowOnce() {
     if (timeoutOnce) {
@@ -61,7 +65,7 @@ class FakeRelayClient implements RelayClient {
   }) async {
     _maybeThrowOnce();
     if (!_hasRouting(selfIdentity, peerIdentity)) {
-      _routings.add(_Pair(selfIdentity, peerIdentity));
+      _routings.add(FakeRelayRoutingPair(selfIdentity, peerIdentity));
     }
   }
 
@@ -85,7 +89,7 @@ class FakeRelayClient implements RelayClient {
     }
     final id = 'env-${_envelopeCounter++}';
     final now = DateTime.now().toUtc();
-    _envelopes.add(_StoredEnvelope(
+    _envelopes.add(FakeRelayStoredEnvelope(
       envelopeId: id,
       sender: senderIdentity,
       recipient: recipientIdentity,
@@ -110,15 +114,17 @@ class FakeRelayClient implements RelayClient {
     final out = <RelayEnvelopeView>[];
     for (final env in _envelopes) {
       if (_eq(env.recipient, recipient)) {
-        out.add(RelayEnvelopeView(
-          envelopeId: env.envelopeId,
-          senderIdentity: env.sender,
-          recipientIdentity: env.recipient,
-          ciphertext: env.ciphertext,
-          kind: env.kind,
-          createdAt: env.createdAt,
-          ttlExpiresAt: env.ttlExpiresAt,
-        ));
+        out.add(
+          RelayEnvelopeView(
+            envelopeId: env.envelopeId,
+            senderIdentity: env.sender,
+            recipientIdentity: env.recipient,
+            ciphertext: env.ciphertext,
+            kind: env.kind,
+            createdAt: env.createdAt,
+            ttlExpiresAt: env.ttlExpiresAt,
+          ),
+        );
         if (out.length >= limit) break;
       }
     }
@@ -150,17 +156,73 @@ class FakeRelayClient implements RelayClient {
   }
 
   @override
+  Future<DateTime> registerRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
+    required String country,
+  }) async {
+    _maybeThrowOnce();
+    routingPushRegistrations.removeWhere(
+      (r) =>
+          r.provider == provider &&
+          r.pushToken == pushToken &&
+          _eq(r.recipient, recipientIdentity),
+    );
+    routingPushRegistrations.add(
+      FakeRoutingPushRegistration(
+        provider: provider,
+        pushToken: pushToken,
+        recipient: Uint8List.fromList(recipientIdentity),
+        country: country,
+      ),
+    );
+    return DateTime.now().toUtc().add(const Duration(days: 14));
+  }
+
+  @override
+  Future<void> unregisterRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
+  }) async {
+    _maybeThrowOnce();
+    routingPushRegistrations.removeWhere(
+      (r) =>
+          r.provider == provider &&
+          r.pushToken == pushToken &&
+          _eq(r.recipient, recipientIdentity),
+    );
+  }
+
+  @override
   void close() {}
 }
 
-class _Pair {
-  _Pair(this.self, this.peer);
+class FakeRoutingPushRegistration {
+  FakeRoutingPushRegistration({
+    required this.provider,
+    required this.pushToken,
+    required this.recipient,
+    required this.country,
+  });
+
+  final String provider;
+  final String pushToken;
+  final Uint8List recipient;
+  final String country;
+}
+
+/// One directional routing tuple held by [FakeRelayClient].
+class FakeRelayRoutingPair {
+  FakeRelayRoutingPair(this.self, this.peer);
   final Uint8List self;
   final Uint8List peer;
 }
 
-class _StoredEnvelope {
-  _StoredEnvelope({
+/// One stored envelope row held by [FakeRelayClient].
+class FakeRelayStoredEnvelope {
+  FakeRelayStoredEnvelope({
     required this.envelopeId,
     required this.sender,
     required this.recipient,

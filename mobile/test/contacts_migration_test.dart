@@ -30,7 +30,7 @@ void main() {
         ('housing:p1', 'Bob',   'mdi:1', 0),
         ('vehicle:p0', 'Alice', 'mdi:0', 0);
     ''');
-    raw.dispose();
+    raw.close();
 
     // Now open through drift; the migration from v8 to v9 should run on
     // first access (e.g., the first query).

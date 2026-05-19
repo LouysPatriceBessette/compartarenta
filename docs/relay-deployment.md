@@ -540,3 +540,17 @@ same applies to tasks 7.6 (audit-checklist dry-run on a live
 deployment) and 6.3/6.4 (first tagged release + baseline audit entry).
 Mark them done in `tasks.md` once they're completed against the live
 deployment.
+
+## Daily closed-app push statistics (loopback)
+
+The relay binary can expose a **second HTTP listener** for operator-only
+daily aggregates: set `STATS_LISTEN_ADDR` (default `127.0.0.1:9091`, or `-`
+to disable). Only loopback clients receive `GET /internal/stats/daily?date=YYYY-MM-DD`;
+other remote addresses get HTTP 404.
+
+To append one JSON line per UTC day without querying PostgreSQL by hand, run
+[`relay/scripts/daily-stats-append.sh`](../relay/scripts/daily-stats-append.sh)
+from cron (example: `7 0 * * *` for 00:07 UTC). See
+[`relay/scripts/README-daily-stats.md`](../relay/scripts/README-daily-stats.md)
+for environment variables (`RELAY_STATS_URL`, `RELAY_STATS_FILE`) and
+idempotent re-run behaviour.

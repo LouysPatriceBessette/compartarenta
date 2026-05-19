@@ -89,24 +89,22 @@ func TestSchemaContainsNoUserPlaintextColumns(t *testing.T) {
 }
 
 func TestExactlyOnePayloadColumn(t *testing.T) {
-	raw, err := fs.ReadFile(schemaFS, "schema/0001_init.sql")
-	if err != nil {
-		t.Fatalf("read 0001_init.sql: %v", err)
-	}
-	bodyLower := strings.ToLower(string(raw))
-
-	// The only column carrying envelope payload bytes MUST be
-	// `envelopes.ciphertext`, declared as BYTEA. Confirm both the
-	// presence of that column and the absence of any other BYTEA
-	// column whose name suggests it carries payload.
-	if !strings.Contains(bodyLower, "ciphertext         bytea") {
-		t.Errorf("envelopes.ciphertext must be declared BYTEA")
-	}
-	// Inverse check: no BYTEA column named like a payload/blob/data
-	// field other than the documented ciphertext column.
-	for _, bad := range []string{"payload", "blob", "data ", "content", "message"} {
-		if strings.Contains(bodyLower, bad+" bytea") {
-			t.Errorf("schema declares an unexpected payload-shaped BYTEA column matching %q", bad)
+	files := []string{"0001_init.sql", "0002_routing_push_tokens.sql"}
+	for _, name := range files {
+		raw, err := fs.ReadFile(schemaFS, "schema/"+name)
+		if err != nil {
+			t.Fatalf("read %s: %v", name, err)
+		}
+		bodyLower := strings.ToLower(string(raw))
+		if name == "0001_init.sql" {
+			if !strings.Contains(bodyLower, "ciphertext         bytea") {
+				t.Errorf("envelopes.ciphertext must be declared BYTEA in %s", name)
+			}
+		}
+		for _, bad := range []string{"payload", "blob", "data ", "content", "message"} {
+			if strings.Contains(bodyLower, bad+" bytea") {
+				t.Errorf("schema %s declares an unexpected payload-shaped BYTEA column matching %q", name, bad)
+			}
 		}
 	}
 }
@@ -141,5 +139,12 @@ func TestLoadMigrationsSortsByVersionPrefix(t *testing.T) {
 	}
 	if migs[0].version != 1 {
 		t.Errorf("first migration must be version 1, got %d", migs[0].version)
+	}
+	raw2, err := fs.ReadFile(schemaFS, "schema/0002_routing_push_tokens.sql")
+	if err != nil {
+		t.Fatalf("read 0002: %v", err)
+	}
+	if !strings.Contains(string(raw2), "UPDATE schema_version SET version = 2") {
+		t.Errorf("0002 migration must bump schema_version to 2")
 	}
 }

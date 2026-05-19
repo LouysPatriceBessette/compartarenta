@@ -41,7 +41,7 @@ void main() {
     expect(find.text('Not requested yet'), findsOneWidget);
     expect(permissionClient.getStatusCount, 0);
     expect(find.text('Contacts'), findsOneWidget);
-    expect(find.text('Add requests'), findsOneWidget);
+    expect(find.text('Add requests/confirmations'), findsOneWidget);
     expect(find.text('Housing'), findsOneWidget);
     expect(find.text('Plan submission received'), findsOneWidget);
     expect(prefs.notificationsEnabled, isFalse);

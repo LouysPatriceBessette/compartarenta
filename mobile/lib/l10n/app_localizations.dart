@@ -436,6 +436,30 @@ abstract class AppLocalizations {
   /// **'Unconsumed invitation expiration'**
   String get settingsNotificationsContactInvitationExpiration;
 
+  /// No description provided for @settingsNotificationsCountryStatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay statistics (optional)'**
+  String get settingsNotificationsCountryStatsSection;
+
+  /// No description provided for @settingsNotificationsCountryStatsSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share country with relay statistics'**
+  String get settingsNotificationsCountryStatsSwitchTitle;
+
+  /// No description provided for @settingsNotificationsCountryStatsSwitchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, a two-letter country code is sent with routing push registration so operators can publish aggregated counts. No personal content is sent.'**
+  String get settingsNotificationsCountryStatsSwitchSubtitle;
+
+  /// No description provided for @settingsNotificationsCountryStatsPickerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get settingsNotificationsCountryStatsPickerLabel;
+
   /// No description provided for @settingsNotificationsHousingSection.
   ///
   /// In en, this message translates to:

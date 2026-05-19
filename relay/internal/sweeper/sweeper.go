@@ -47,6 +47,7 @@ func (s *Sweeper) Run(ctx context.Context) (Stats, error) {
 	idemExpired, errIdem := s.store.SweepIdempotency(ctx, start)
 	routingPruned, errRoute := s.store.PruneExpiredRouting(ctx,
 		start, s.cfg.DisconnectGrace, s.cfg.RoutingInactivityTTL)
+	pushPurged, errPush := s.store.PurgeExpiredRoutingPushTokens(ctx, start)
 
 	if errEnv == nil {
 		metrics.EnvelopesExpired.Add(float64(envExpired))
@@ -56,6 +57,12 @@ func (s *Sweeper) Run(ctx context.Context) (Stats, error) {
 	}
 	if errRoute == nil {
 		metrics.RoutingSevered.Add(float64(routingPruned))
+	}
+	if errPush == nil && pushPurged > 0 {
+		dayUTC := time.Date(start.UTC().Year(), start.UTC().Month(), start.UTC().Day(), 0, 0, 0, 0, time.UTC)
+		if err := s.store.MergeDayMetrics(ctx, dayUTC, 0, 0, pushPurged); err != nil {
+			errPush = err
+		}
 	}
 	metrics.SweeperRuns.Inc()
 	timer.Observe(time.Since(start).Seconds())
@@ -83,7 +90,7 @@ func (s *Sweeper) Run(ctx context.Context) (Stats, error) {
 		logging.F(logging.KeyDurationMS, time.Since(start).Milliseconds()),
 	)
 
-	return stats, firstNonNil(errEnv, errIdem, errRoute, cpErr)
+	return stats, firstNonNil(errEnv, errIdem, errRoute, errPush, cpErr)
 }
 
 // Loop runs `Run` on `cfg.SweeperInterval` until ctx is cancelled.

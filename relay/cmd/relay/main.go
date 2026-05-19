@@ -1,9 +1,11 @@
 // Command relay is the Compartarenta relay server entry point.
 //
-// The process binds two listeners:
+// The process binds listeners:
 //   - PublicListenAddr: the relay protocol + /healthz + /readyz.
 //   - PrivateListenAddr: /metrics. The deployment manifest does not
 //     publish this port to the public internet.
+//   - StatsListenAddr (default 127.0.0.1:9091): GET /internal/stats/daily
+//     loopback-only daily aggregates. Set STATS_LISTEN_ADDR=- to disable.
 //
 // On startup the relay:
 //   1. Loads configuration from env vars (no secrets in source).
@@ -33,6 +35,8 @@ import (
 	"github.com/compartarenta/relay/internal/config"
 	"github.com/compartarenta/relay/internal/logging"
 	"github.com/compartarenta/relay/internal/metrics"
+	"github.com/compartarenta/relay/internal/push"
+	"github.com/compartarenta/relay/internal/stats"
 	"github.com/compartarenta/relay/internal/store"
 	"github.com/compartarenta/relay/internal/sweeper"
 	"github.com/compartarenta/relay/internal/version"
@@ -69,7 +73,39 @@ func run() error {
 		logging.F(logging.KeySchemaVersion, version.Expected),
 	)
 
-	srv := api.NewServer(cfg, st, logger)
+	var wake *push.Dispatcher
+	if cfg.WakePushDispatchEnabled {
+		var fcm *push.FCMDataWake
+		if cfg.FCMServiceAccountJSONPath != "" {
+			fcm, err = push.NewFCMFromServiceAccountJSON(cfg.FCMServiceAccountJSONPath)
+			if err != nil {
+				logger.Warn(ctx, "push.fcm_init_failed",
+					logging.F(logging.KeyError, err.Error()),
+				)
+				fcm = nil
+			}
+		}
+		var apnsSender *push.APNsWake
+		if cfg.APNsAuthKeyPath != "" {
+			apnsSender, err = push.NewAPNsFromKeyFile(
+				cfg.APNsAuthKeyPath,
+				cfg.APNsKeyID,
+				cfg.APNsTeamID,
+				cfg.APNsBundleID,
+				cfg.APNsEnvironment,
+				cfg.APNsGenericAlertBody,
+			)
+			if err != nil {
+				logger.Warn(ctx, "push.apns_init_failed",
+					logging.F(logging.KeyError, err.Error()),
+				)
+				apnsSender = nil
+			}
+		}
+		wake = push.NewDispatcher(st, logger, fcm, apnsSender)
+	}
+
+	srv := api.NewServer(cfg, st, logger, wake)
 	sw := sweeper.New(cfg, st, logger)
 	go sw.Loop(ctx)
 
@@ -93,7 +129,20 @@ func run() error {
 		WriteTimeout:      30 * time.Second,
 	}
 
-	errCh := make(chan error, 2)
+	var statsServer *http.Server
+	if cfg.StatsListenAddr != "" && cfg.StatsListenAddr != "-" {
+		statsMux := http.NewServeMux()
+		statsMux.Handle("/internal/stats/daily", stats.Handler(st, time.Now))
+		statsServer = &http.Server{
+			Addr:              cfg.StatsListenAddr,
+			Handler:           statsMux,
+			ReadHeaderTimeout: 5 * time.Second,
+			ReadTimeout:       15 * time.Second,
+			WriteTimeout:      30 * time.Second,
+		}
+	}
+
+	errCh := make(chan error, 3)
 	go func() {
 		logger.Info(ctx, "listener.public",
 			logging.F(logging.KeyAddr, publicServer.Addr))
@@ -104,6 +153,13 @@ func run() error {
 			logging.F(logging.KeyAddr, privateServer.Addr))
 		errCh <- privateServer.ListenAndServe()
 	}()
+	if statsServer != nil {
+		go func() {
+			logger.Info(ctx, "listener.stats",
+				logging.F(logging.KeyAddr, statsServer.Addr))
+			errCh <- statsServer.ListenAndServe()
+		}()
+	}
 
 	select {
 	case <-ctx.Done():
@@ -120,5 +176,8 @@ func run() error {
 	defer shutdownCancel()
 	_ = publicServer.Shutdown(shutdownCtx)
 	_ = privateServer.Shutdown(shutdownCtx)
+	if statsServer != nil {
+		_ = statsServer.Shutdown(shutdownCtx)
+	}
 	return nil
 }

@@ -400,7 +400,10 @@ void main() {
     final inviteeContact = await invitee.contacts.get(redeem.localContactId);
     expect(inviteeContact?.deletedAt, isNotNull);
     expect(invitee.notifications.addRequestResolutions, [
-      (displayName: 'Inviter Self-Name', accepted: false),
+      // Rejected acks intentionally omit display_name, so the invitee falls
+      // back to the localized 'Unknown' placeholder. See `encryptAck` in
+      // `lib/relay/envelopes.dart`.
+      (displayName: 'Unknown', accepted: false),
     ]);
   });
 

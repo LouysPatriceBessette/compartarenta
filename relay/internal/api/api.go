@@ -26,6 +26,7 @@ import (
 	"github.com/compartarenta/relay/internal/config"
 	"github.com/compartarenta/relay/internal/logging"
 	"github.com/compartarenta/relay/internal/metrics"
+	"github.com/compartarenta/relay/internal/push"
 	"github.com/compartarenta/relay/internal/ratelimit"
 	"github.com/compartarenta/relay/internal/store"
 	"github.com/compartarenta/relay/internal/version"
@@ -42,11 +43,12 @@ type Server struct {
 	idMinLen     int
 	idMaxLen     int
 	envelopeIDFn func() ([]byte, error)
+	pushWake     *push.Dispatcher
 }
 
 // NewServer constructs a fully-wired Server. The identity / IP rate
 // limiters are owned by the server and live for the process lifetime.
-func NewServer(cfg config.Config, st *store.Store, l *logging.Logger) *Server {
+func NewServer(cfg config.Config, st *store.Store, l *logging.Logger, wake *push.Dispatcher) *Server {
 	return &Server{
 		cfg:          cfg,
 		store:        st,
@@ -57,6 +59,7 @@ func NewServer(cfg config.Config, st *store.Store, l *logging.Logger) *Server {
 		idMinLen:     8,
 		idMaxLen:     64,
 		envelopeIDFn: randomEnvelopeID,
+		pushWake:     wake,
 	}
 }
 
@@ -64,6 +67,8 @@ func NewServer(cfg config.Config, st *store.Store, l *logging.Logger) *Server {
 // It exposes the relay protocol endpoints plus /healthz and /readyz.
 func (s *Server) PublicHandler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/routing/push/register", s.handleRoutingPushRegister)
+	mux.HandleFunc("/v1/routing/push/unregister", s.handleRoutingPushUnregister)
 	mux.HandleFunc("/v1/envelopes", s.handleEnvelopes)
 	mux.HandleFunc("/v1/envelopes/", s.handleEnvelopeSubResource)
 	mux.HandleFunc("/v1/inbox/", s.handleInbox)
@@ -292,6 +297,15 @@ func (s *Server) handleEnvelopes(w http.ResponseWriter, r *http.Request) {
 		TTLExpiresAt: now.Add(ttl),
 		Replay:       false,
 	})
+
+	if s.cfg.WakePushDispatchEnabled && s.pushWake != nil {
+		recipientCopy := append([]byte(nil), recipient...)
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			s.pushWake.WakeRecipient(ctx, recipientCopy)
+		}()
+	}
 
 	s.logger.Info(r.Context(), "envelope.accepted",
 		logging.F(logging.KeyEndpoint, "envelopes"),
@@ -691,6 +705,10 @@ func statusClass(s int) string {
 func classifyEndpoint(r *http.Request) string {
 	p := r.URL.Path
 	switch {
+	case p == "/v1/routing/push/register":
+		return "routing_push_register"
+	case p == "/v1/routing/push/unregister":
+		return "routing_push_unregister"
 	case p == "/v1/envelopes":
 		return "envelopes"
 	case strings.HasPrefix(p, "/v1/envelopes/") && strings.HasSuffix(p, "/ack"):

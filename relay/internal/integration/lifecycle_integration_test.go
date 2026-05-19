@@ -48,6 +48,8 @@ func resetRelayData(ctx context.Context, t *testing.T, dsn string) {
 		DELETE FROM idempotency_entries;
 		DELETE FROM routing_relationships;
 		DELETE FROM operator_actions;
+		DELETE FROM routing_push_tokens;
+		DELETE FROM relay_day_metrics;
 	`)
 	if err != nil {
 		t.Fatalf("reset relay tables: %v", err)
@@ -69,6 +71,8 @@ func testConfig(dsn string) config.Config {
 		RateLimitPerIdentity: 1e6,
 		RateLimitPerIP:       1e6,
 		ShutdownTimeout:      10 * time.Second,
+		RoutingPushTokenTTL:  336 * time.Hour,
+		StatsListenAddr:      "-",
 	}
 }
 
@@ -108,7 +112,7 @@ func TestIntegrationEnvelopeSubmitDeliverDelete(t *testing.T) {
 	}
 
 	cfg := testConfig(dsn)
-	srv := api.NewServer(cfg, st, logging.NewForTest())
+	srv := api.NewServer(cfg, st, logging.NewForTest(), nil)
 	h := srv.PublicHandler()
 
 	accepted0 := counterValue(metrics.EnvelopesAccepted)

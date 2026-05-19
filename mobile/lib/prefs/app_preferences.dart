@@ -40,6 +40,10 @@ class AppPreferences extends ChangeNotifier {
   static const _kNotificationsHousingOfferExpiration =
       'notifications.housing.offerExpiration';
   static const _kNotificationsSoundEnabled = 'notifications.sound.enabled';
+  static const _kNotificationsCountryStatsEnabled =
+      'notifications.countryStats.enabled';
+  static const _kNotificationsCountryStatsCode =
+      'notifications.countryStats.isoCode';
 
   /// Default housing draft plan reached the post-wizard summary at least once.
   static const _kHousingDefaultSummaryReached =
@@ -199,6 +203,47 @@ class AppPreferences extends ChangeNotifier {
   Future<void> setNotificationSoundEnabled(bool value) =>
       _setNotificationBool(_kNotificationsSoundEnabled, value);
 
+  /// When true, the user allows sending a two-letter country code with
+  /// routing push registration for aggregated relay statistics.
+  bool get notificationCountryStatisticsEnabled =>
+      _prefs.getBool(_kNotificationsCountryStatsEnabled) ?? false;
+
+  Future<void> setNotificationCountryStatisticsEnabled(bool value) async {
+    await _prefs.setBool(_kNotificationsCountryStatsEnabled, value);
+    if (!value) {
+      await _prefs.remove(_kNotificationsCountryStatsCode);
+    }
+    notifyListeners();
+  }
+
+  /// Two-letter ISO 3166-1 alpha-2 code when [notificationCountryStatisticsEnabled].
+  String? get notificationCountryStatisticsCode =>
+      _prefs.getString(_kNotificationsCountryStatsCode);
+
+  Future<void> setNotificationCountryStatisticsCode(String? isoAlpha2) async {
+    if (isoAlpha2 == null || isoAlpha2.isEmpty) {
+      await _prefs.remove(_kNotificationsCountryStatsCode);
+    } else {
+      await _prefs.setString(
+        _kNotificationsCountryStatsCode,
+        isoAlpha2.trim().toUpperCase(),
+      );
+    }
+    notifyListeners();
+  }
+
+  /// Value sent on routing push registration (`UNDISCLOSED` when disabled).
+  String get countryCodeForRoutingPushRegistration {
+    if (!notificationCountryStatisticsEnabled) {
+      return 'UNDISCLOSED';
+    }
+    final raw = notificationCountryStatisticsCode;
+    if (raw == null || raw.length != 2) {
+      return 'UNDISCLOSED';
+    }
+    return raw.toUpperCase();
+  }
+
   bool get hasProfile => displayName.isNotEmpty && avatarId.isNotEmpty;
   bool get hasRegionalPrefs =>
       currency.isNotEmpty && dateFormat.isNotEmpty && distanceUnit != null;
@@ -259,6 +304,8 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kNotificationsHousingDecisionChange);
     await _prefs.remove(_kNotificationsHousingOfferExpiration);
     await _prefs.remove(_kNotificationsSoundEnabled);
+    await _prefs.remove(_kNotificationsCountryStatsEnabled);
+    await _prefs.remove(_kNotificationsCountryStatsCode);
 
     await _prefs.remove(_kHousingDefaultSummaryReached);
     await _prefs.remove(_kCarSharingPlanDraft);

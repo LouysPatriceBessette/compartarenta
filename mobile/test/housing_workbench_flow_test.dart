@@ -63,8 +63,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Housing plans'), findsOneWidget);
-    expect(find.text('Workbench Alpha'), findsOneWidget);
-    expect(find.text('Workbench Beta'), findsOneWidget);
-    expect(find.text('Draft plans'), findsOneWidget);
+    expect(find.text('Plan with 1 participants'), findsNWidgets(2));
+    expect(find.text('Draft(s)'), findsOneWidget);
   });
 }

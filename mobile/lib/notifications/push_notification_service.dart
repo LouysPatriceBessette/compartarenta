@@ -11,6 +11,8 @@ import '../app_root_navigator.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
+import 'closed_app_push_registration_service.dart';
+import 'wake_inbox_background_poll.dart';
 
 /// FCM + local notifications for housing proposals (and future message types).
 ///
@@ -105,7 +107,10 @@ class PushNotificationService {
         'PushNotificationService: FCM token refreshed (length '
         '${token.length})',
       );
+      unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
     });
+
+    unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
   }
 
   static Future<void> _ensureAndroidChannel() async {
@@ -133,10 +138,19 @@ class PushNotificationService {
   }
 
   static void _onForegroundMessage(RemoteMessage message) {
+    if (isWakeForInboxRemoteMessage(message)) {
+      unawaited(runWakeInboxPollOnce());
+      return;
+    }
     if (!isHousingProposalRemoteMessage(message)) return;
     unawaited(
       showRemoteMessageAsLocalNotification(message, isBackgroundIsolate: false),
     );
+  }
+
+  /// Data-only wake from the relay (`v` is ignored for forward compatibility).
+  static bool isWakeForInboxRemoteMessage(RemoteMessage message) {
+    return message.data['kind'] == 'wake_for_inbox';
   }
 
   static bool isHousingProposalRemoteMessage(RemoteMessage message) {

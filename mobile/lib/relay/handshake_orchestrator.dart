@@ -186,6 +186,9 @@ class HandshakeOrchestrator {
   final Duration _steadyTtl;
   final DateTime Function() _now;
 
+  /// Same [RelayClient] passed at construction (used for routing push).
+  RelayClient get relayClient => _relay;
+
   static HandshakeOrchestrator? _instance;
 
   /// Globally accessible orchestrator. Set during [bootstrap]. Tests can
@@ -205,6 +208,20 @@ class HandshakeOrchestrator {
   /// installed yet. Useful in environments (tests, dev builds with no
   /// relay configured) where the relay layer is intentionally absent.
   static HandshakeOrchestrator? get maybeInstance => _instance;
+
+  /// Optional hook invoked after routing topology changes so the app can
+  /// refresh closed-app push token registrations on the relay.
+  static Future<void> Function()? refreshClosedAppPushRegistration;
+
+  static void requestClosedAppPushRegistrationSync() {
+    final fn = refreshClosedAppPushRegistration;
+    if (fn == null) return;
+    unawaited(
+      fn().catchError((Object e, StackTrace st) {
+        debugPrint('Closed-app push registration sync failed: $e\n$st');
+      }),
+    );
+  }
 
   /// Installs the process-wide orchestrator. Must be called once during
   /// bootstrap. Subsequent calls replace the instance (useful for
@@ -389,6 +406,7 @@ class HandshakeOrchestrator {
     );
 
     startPolling();
+    requestClosedAppPushRegistrationSync();
 
     final row = await (_db.select(
       _db.contactInvitations,
@@ -462,9 +480,16 @@ class HandshakeOrchestrator {
       invitationId: invitationIdBytes,
       nonce: nonceBytes,
     );
-    final prefs = await AppPreferences.load();
-    final displayName = selfDisplayName ?? prefs.displayName;
-    final avatarId = selfAvatarId ?? prefs.avatarId;
+    final String displayName;
+    final String avatarId;
+    if (selfDisplayName != null && selfAvatarId != null) {
+      displayName = selfDisplayName;
+      avatarId = selfAvatarId;
+    } else {
+      final prefs = await AppPreferences.load();
+      displayName = selfDisplayName ?? prefs.displayName;
+      avatarId = selfAvatarId ?? prefs.avatarId;
+    }
     final inviterLongTermPub = await _identity.publicKey();
     final inviteePub = RelayRouting.unb64(peerPubB64);
 
@@ -510,6 +535,7 @@ class HandshakeOrchestrator {
       addrInvitee: addrInvitee,
     );
     await refreshIncomingHandshakes();
+    requestClosedAppPushRegistrationSync();
   }
 
   // ---------------------------------------------------------------------
@@ -620,6 +646,7 @@ class HandshakeOrchestrator {
     );
 
     startPolling();
+    requestClosedAppPushRegistrationSync();
 
     return RedeemHandshakeResult(
       handshakeId: pendingId,
@@ -799,6 +826,59 @@ class HandshakeOrchestrator {
     }
   }
 
+  /// Recipient routing ids whose inboxes this device polls: steady-state
+  /// addresses for each connected contact plus handshake listen addresses
+  /// for pending handshakes that still need relay polling.
+  Future<List<Uint8List>> routingWakeRecipientIdentities() async {
+    final out = <Uint8List>[];
+    void addUnique(Uint8List id) {
+      for (final e in out) {
+        if (_bytesEqual(e, id)) return;
+      }
+      out.add(id);
+    }
+
+    final rows = await _db.listPendingHandshakes();
+    for (final row in rows) {
+      if (!_shouldPollHandshakeRow(row)) continue;
+      final invitationIdBytes = _hexDecode(row.invitationIdHex);
+      final nonceBytes = _hexDecode(row.nonceHex);
+      final addrInviter = await RelayRouting.inviterHandshakeAddress(
+        invitationId: invitationIdBytes,
+        nonce: nonceBytes,
+      );
+      final addrInvitee = await RelayRouting.inviteeHandshakeAddress(
+        invitationId: invitationIdBytes,
+        nonce: nonceBytes,
+      );
+      final listenAddr = row.role == HandshakeRole.inviter
+          ? addrInviter
+          : addrInvitee;
+      addUnique(listenAddr);
+    }
+
+    final selfPub = await _identity.publicKey();
+    final contacts = await _contacts.list();
+    for (final contact in contacts) {
+      if (contact.kind != 'connected') continue;
+      final peerB64 = contact.peerPublicMaterial;
+      if (peerB64 == null || peerB64.isEmpty) continue;
+      final Uint8List peerPub;
+      try {
+        peerPub = RelayRouting.unb64(peerB64);
+      } catch (_) {
+        continue;
+      }
+      final myListen = await RelayRouting.steadyStateAddress(
+        firstPub: selfPub,
+        secondPub: peerPub,
+      );
+      addUnique(myListen);
+    }
+
+    return out;
+  }
+
   bool _bytesEqual(Uint8List a, Uint8List b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
@@ -868,6 +948,7 @@ class HandshakeOrchestrator {
     await _contactNotifications.contactDisconnected(
       displayName: contact.displayName,
     );
+    requestClosedAppPushRegistrationSync();
   }
 
   Future<void> _handleInboundProfileUpdate({
@@ -1317,6 +1398,7 @@ class HandshakeOrchestrator {
     );
     await refreshIncomingHandshakes();
     startPolling();
+    requestClosedAppPushRegistrationSync();
   }
 
   Future<void> _finalizeInviteeAccept({
@@ -1370,6 +1452,7 @@ class HandshakeOrchestrator {
       ),
     );
     startPolling();
+    requestClosedAppPushRegistrationSync();
   }
 
   // ---------------------------------------------------------------------
@@ -1889,6 +1972,7 @@ class HandshakeOrchestrator {
 
     await _contacts.demoteToLocalOnly(contactId);
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    requestClosedAppPushRegistrationSync();
   }
 
   // ---------------------------------------------------------------------

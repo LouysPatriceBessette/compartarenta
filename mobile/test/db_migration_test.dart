@@ -33,7 +33,7 @@ void main() {
       INSERT INTO plans (id, type, title, created_at)
       VALUES ('p1', 'housing', 'Test', 0);
     ''');
-    raw.dispose();
+    raw.close();
 
     final executor = NativeDatabase(file);
     final db = AppDatabaseForTesting(executor);

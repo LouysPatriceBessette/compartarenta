@@ -91,7 +91,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _showHandshakeUnavailable(context);
       return;
     }
+    if (!mounted) return;
     final prefs = await AppPreferences.load();
+    if (!mounted) return;
     final notificationResult = await const NotificationFlowPermissionTrigger()
         .ensure(
           context: context,

@@ -21,6 +21,10 @@ import 'routing.dart';
 ///   * `POST /v1/disconnect`          — mark a routing relationship as
 ///     disconnecting (no new envelopes accepted; existing in-flight ones
 ///     can still be ack'd).
+///   * `POST /v1/routing/push/register`   — register a device token for
+///     closed-app wake delivery to a recipient routing id (requires active
+///     routing for that id on the relay).
+///   * `POST /v1/routing/push/unregister` — remove one registration tuple.
 ///
 /// All identities and ciphertexts are base64url-encoded (no padding). The
 /// relay rejects identities outside `[8, 64]` bytes.
@@ -52,6 +56,23 @@ abstract class RelayClient {
   Future<bool> disconnectRouting({
     required Uint8List selfIdentity,
     required Uint8List peerIdentity,
+  });
+
+  /// Registers [pushToken] for wake delivery to [recipientIdentity].
+  ///
+  /// [provider] is `fcm` or `apns`. [country] is a two-letter ISO code or
+  /// `UNDISCLOSED` (relay normalizes invalid values).
+  Future<DateTime> registerRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
+    required String country,
+  });
+
+  Future<void> unregisterRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
   });
 
   void close();
@@ -201,6 +222,55 @@ class HttpRelayClient implements RelayClient {
     if (res.statusCode == 204) return true;
     if (res.statusCode == 404) return false;
     throw RelayClientError._fromResponse('disconnect', res);
+  }
+
+  @override
+  Future<DateTime> registerRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
+    required String country,
+  }) async {
+    final uri = baseUrl.resolve('/v1/routing/push/register');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'provider': provider,
+            'push_token': pushToken,
+            'recipient_identity': RelayRouting.b64(recipientIdentity),
+            'country': country,
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('routing_push_register', res);
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    return DateTime.parse(json['expires_at'] as String);
+  }
+
+  @override
+  Future<void> unregisterRoutingPush({
+    required String provider,
+    required String pushToken,
+    required Uint8List recipientIdentity,
+  }) async {
+    final uri = baseUrl.resolve('/v1/routing/push/unregister');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'provider': provider,
+            'push_token': pushToken,
+            'recipient_identity': RelayRouting.b64(recipientIdentity),
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode == 204) return;
+    throw RelayClientError._fromResponse('routing_push_unregister', res);
   }
 }
 

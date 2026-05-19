@@ -563,7 +563,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
         SwitchListTile(
           value: _draft.useAppFuelTracking,
           onChanged: (v) {
-            setState(() => _draft.useAppFuelTracking = v ?? true);
+            setState(() => _draft.useAppFuelTracking = v);
             unawaited(_persist());
           },
           title: Text(l10n.carSharingFuelUseAppTracking),
@@ -920,16 +920,26 @@ class _AddCarMaintenanceDialogState extends State<_AddCarMaintenanceDialog> {
             const SizedBox(height: 8),
             SwitchListTile(
               value: _recurring,
-              onChanged: (v) => setState(() => _recurring = v ?? false),
+              onChanged: (v) => setState(() => _recurring = v),
               title: Text(l10n.housingPlanRecurringSwitch),
             ),
             if (_recurring) ...[
               const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                value: _dayOfMonth,
-                decoration: InputDecoration(labelText: l10n.housingPlanDayOfMonthLabel),
-                items: [for (var d = 1; d <= 31; d++) DropdownMenuItem(value: d, child: Text('$d'))],
-                onChanged: (v) => setState(() => _dayOfMonth = v ?? 1),
+              InputDecorator(
+                decoration: InputDecoration(
+                  labelText: l10n.housingPlanDayOfMonthLabel,
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    isExpanded: true,
+                    value: _dayOfMonth,
+                    items: [
+                      for (var d = 1; d <= 31; d++)
+                        DropdownMenuItem(value: d, child: Text('$d')),
+                    ],
+                    onChanged: (v) => setState(() => _dayOfMonth = v ?? 1),
+                  ),
+                ),
               ),
             ],
           ],

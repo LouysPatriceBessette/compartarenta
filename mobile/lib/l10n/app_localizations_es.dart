@@ -190,6 +190,21 @@ class AppLocalizationsEs extends AppLocalizations {
       'Caducidad de una invitación sin usar';
 
   @override
+  String get settingsNotificationsCountryStatsSection =>
+      'Estadísticas del relé (opcional)';
+
+  @override
+  String get settingsNotificationsCountryStatsSwitchTitle =>
+      'Compartir el país para estadísticas agregadas';
+
+  @override
+  String get settingsNotificationsCountryStatsSwitchSubtitle =>
+      'Si está activado, se envía un código de país de dos letras con el registro de notificaciones de despertar para totales agregados del operador. No se envía contenido personal.';
+
+  @override
+  String get settingsNotificationsCountryStatsPickerLabel => 'País';
+
+  @override
   String get settingsNotificationsHousingSection => 'Vivienda';
 
   @override

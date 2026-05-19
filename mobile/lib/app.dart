@@ -27,6 +27,7 @@ import 'screens/contacts/incoming_handshakes_screen.dart';
 import 'screens/contacts/outstanding_invitations_screen.dart';
 import 'screens/contacts/redeem_invitation_screen.dart';
 import 'relay/handshake_orchestrator.dart';
+import 'notifications/closed_app_push_registration_service.dart';
 import 'widgets/app_error_boundary.dart';
 import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
@@ -48,10 +49,45 @@ class _CompartarentaAppState extends State<CompartarentaApp> {
   /// Reused across [ListenableBuilder] rebuilds so navigation state is kept.
   GoRouter? _router;
 
+  String _lastRoutingPushPrefsSig = '';
+
   Future<AppPreferences> _loadPrefs() async {
     final prefs = await AppPreferences.load();
     _wireProfileBroadcaster(prefs);
+    _wireClosedAppPush(prefs);
     return prefs;
+  }
+
+  void _wireClosedAppPush(AppPreferences prefs) {
+    if (widget.config.apiBaseUrl.host == 'example.invalid') {
+      return;
+    }
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) {
+      return;
+    }
+    ClosedAppPushRegistrationService.install(
+      relay: orch.relayClient,
+      prefs: prefs,
+    );
+    HandshakeOrchestrator.refreshClosedAppPushRegistration = () async {
+      await ClosedAppPushRegistrationService.maybeInstance?.sync();
+    };
+    unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
+
+    String routingPushSig() =>
+        '${prefs.notificationsEnabled}|'
+        '${prefs.notificationCountryStatisticsEnabled}|'
+        '${prefs.notificationCountryStatisticsCode ?? ''}';
+    _lastRoutingPushPrefsSig = routingPushSig();
+    prefs.addListener(() {
+      final next = routingPushSig();
+      if (next == _lastRoutingPushPrefsSig) {
+        return;
+      }
+      _lastRoutingPushPrefsSig = next;
+      HandshakeOrchestrator.requestClosedAppPushRegistrationSync();
+    });
   }
 
   String _lastProfileSignature = '';

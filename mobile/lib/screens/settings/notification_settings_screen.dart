@@ -4,6 +4,8 @@ import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
 import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
+import '../../util/routing_push_country_codes.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({
@@ -58,6 +60,7 @@ class _NotificationSettingsScreenState
     final status = await widget.permissionGate.requestSystemPermission();
     if (_systemAllowsNotifications(status)) {
       await PushNotificationService.initialize();
+      HandshakeOrchestrator.requestClosedAppPushRegistrationSync();
     }
     if (!mounted) return;
     await _refreshStatus();
@@ -75,6 +78,7 @@ class _NotificationSettingsScreenState
     if (_systemAllowsNotifications(status)) {
       await widget.prefs.setNotificationsEnabled(true);
       await PushNotificationService.initialize();
+      HandshakeOrchestrator.requestClosedAppPushRegistrationSync();
     } else {
       await widget.prefs.setNotificationsEnabled(false);
       if (mounted) {
@@ -225,9 +229,68 @@ class _NotificationSettingsScreenState
             title: Text(l10n.settingsNotificationsSoundPickerTitle),
             subtitle: Text(l10n.settingsNotificationsSoundPickerBody),
           ),
+          const Divider(),
+          _SectionHeader(title: l10n.settingsNotificationsCountryStatsSection),
+          SwitchListTile(
+            title: Text(l10n.settingsNotificationsCountryStatsSwitchTitle),
+            subtitle: Text(
+              l10n.settingsNotificationsCountryStatsSwitchSubtitle,
+            ),
+            value: widget.prefs.notificationCountryStatisticsEnabled,
+            onChanged: notificationsEnabled
+                ? (value) async {
+                    await widget.prefs
+                        .setNotificationCountryStatisticsEnabled(value);
+                    if (value &&
+                        (widget.prefs.notificationCountryStatisticsCode ==
+                                null ||
+                            widget.prefs.notificationCountryStatisticsCode!
+                                .isEmpty)) {
+                      await widget.prefs.setNotificationCountryStatisticsCode(
+                        kRoutingPushCountryAlpha2Choices.first,
+                      );
+                    }
+                    HandshakeOrchestrator
+                        .requestClosedAppPushRegistrationSync();
+                    if (mounted) setState(() {});
+                  }
+                : null,
+          ),
+          if (notificationsEnabled &&
+              widget.prefs.notificationCountryStatisticsEnabled)
+            ListTile(
+              title: Text(l10n.settingsNotificationsCountryStatsPickerLabel),
+              trailing: DropdownButton<String>(
+                value: _effectiveCountryCode(),
+                onChanged: (v) async {
+                  if (v == null) return;
+                  await widget.prefs.setNotificationCountryStatisticsCode(v);
+                  HandshakeOrchestrator
+                      .requestClosedAppPushRegistrationSync();
+                  if (mounted) setState(() {});
+                },
+                items: kRoutingPushCountryAlpha2Choices
+                    .map(
+                      (c) =>
+                          DropdownMenuItem<String>(value: c, child: Text(c)),
+                    )
+                    .toList(growable: false),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  String _effectiveCountryCode() {
+    final c = widget.prefs.notificationCountryStatisticsCode;
+    if (c != null && c.length == 2) {
+      final u = c.toUpperCase();
+      if (kRoutingPushCountryAlpha2Choices.contains(u)) {
+        return u;
+      }
+    }
+    return kRoutingPushCountryAlpha2Choices.first;
   }
 
   String _statusLabel(

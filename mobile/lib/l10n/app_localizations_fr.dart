@@ -188,6 +188,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Expiration d’une invitation non consommée';
 
   @override
+  String get settingsNotificationsCountryStatsSection =>
+      'Statistiques relais (facultatif)';
+
+  @override
+  String get settingsNotificationsCountryStatsSwitchTitle =>
+      'Partager le pays pour les statistiques agrégées';
+
+  @override
+  String get settingsNotificationsCountryStatsSwitchSubtitle =>
+      'Si activé, un code pays à deux lettres est envoyé avec l’enregistrement des notifications de réveil, pour des totaux agrégés côté opérateur. Aucun contenu personnel n’est envoyé.';
+
+  @override
+  String get settingsNotificationsCountryStatsPickerLabel => 'Pays';
+
+  @override
   String get settingsNotificationsHousingSection => 'Logement';
 
   @override

@@ -86,12 +86,39 @@ type Config struct {
 	// Default: empty (no CORS headers are emitted; browser callers are
 	// blocked).
 	CORSAllowedOrigins []string
+
+	// WakePushDispatchEnabled gates best-effort FCM/APNs wake dispatch after
+	// envelope persistence. Default: false (no third-party push calls).
+	WakePushDispatchEnabled bool
+
+	// FCMServiceAccountJSONPath is the filesystem path to the Firebase
+	// service account JSON used for FCM HTTP v1. Empty disables FCM sends.
+	FCMServiceAccountJSONPath string
+
+	// APNsAuthKeyPath is the filesystem path to the Apple .p8 key.
+	// Remaining APNs fields are required when this path is non-empty.
+	APNsAuthKeyPath      string
+	APNsKeyID            string
+	APNsTeamID           string
+	APNsBundleID         string
+	APNsEnvironment      string // "sandbox" or "production"
+	APNsGenericAlertBody string // optional non-personalized alert for iOS
+
+	// RoutingPushTokenTTL is the server-side lifetime applied on each
+	// successful registration refresh. Default: 336h (14 days).
+	RoutingPushTokenTTL time.Duration
+
+	// StatsListenAddr is the loopback-only HTTP bind address for the daily
+	// statistics endpoint. Default: 127.0.0.1:9091. Set to "-" to disable
+	// the stats listener entirely.
+	StatsListenAddr string
 }
 
 // Load reads configuration from environment variables. Errors are
 // aggregated so the operator sees every problem at once.
 func Load() (Config, error) {
 	var errs []error
+	routingTTLSeconds := intEnv(&errs, "ROUTING_PUSH_TOKEN_TTL_SECONDS", 1209600)
 	c := Config{
 		PublicListenAddr:     env("PUBLIC_LISTEN_ADDR", "0.0.0.0:8080"),
 		PrivateListenAddr:    env("PRIVATE_LISTEN_ADDR", "127.0.0.1:9090"),
@@ -107,6 +134,16 @@ func Load() (Config, error) {
 		RateLimitPerIP:       floatEnv(&errs, "RATE_LIMIT_PER_IP", 20),
 		ShutdownTimeout:      durEnv(&errs, "SHUTDOWN_TIMEOUT", 30*time.Second),
 		CORSAllowedOrigins:   listEnv("CORS_ALLOWED_ORIGINS"),
+		WakePushDispatchEnabled:   boolEnv(&errs, "WAKE_PUSH_DISPATCH_ENABLED", false),
+		FCMServiceAccountJSONPath: strings.TrimSpace(os.Getenv("FCM_SERVICE_ACCOUNT_JSON_PATH")),
+		APNsAuthKeyPath:           strings.TrimSpace(os.Getenv("APNS_AUTH_KEY_PATH")),
+		APNsKeyID:                 strings.TrimSpace(os.Getenv("APNS_KEY_ID")),
+		APNsTeamID:                strings.TrimSpace(os.Getenv("APNS_TEAM_ID")),
+		APNsBundleID:              strings.TrimSpace(os.Getenv("APNS_BUNDLE_ID")),
+		APNsEnvironment:           strings.TrimSpace(env("APNS_ENVIRONMENT", "production")),
+		APNsGenericAlertBody:      strings.TrimSpace(os.Getenv("APNS_GENERIC_ALERT_BODY")),
+		RoutingPushTokenTTL:       time.Duration(routingTTLSeconds) * time.Second,
+		StatsListenAddr:           env("STATS_LISTEN_ADDR", "127.0.0.1:9091"),
 	}
 	if c.DatabaseURL == "" {
 		errs = append(errs, errors.New("DATABASE_URL is required and must come from an explicit secret store (not committed)"))
@@ -125,6 +162,15 @@ func Load() (Config, error) {
 	}
 	if c.EnvelopeMaxBytes <= 0 || c.EnvelopeMaxBytes > 1<<20 {
 		errs = append(errs, fmt.Errorf("ENVELOPE_MAX_BYTES (%d) must be in (0, 1 MiB]", c.EnvelopeMaxBytes))
+	}
+	if c.RoutingPushTokenTTL < 24*time.Hour || c.RoutingPushTokenTTL > 90*24*time.Hour {
+		errs = append(errs, fmt.Errorf("ROUTING_PUSH_TOKEN_TTL_SECONDS must be between 86400 and 7776000 (1–90 days); got %s",
+			c.RoutingPushTokenTTL))
+	}
+	if c.APNsAuthKeyPath != "" {
+		if c.APNsKeyID == "" || c.APNsTeamID == "" || c.APNsBundleID == "" {
+			errs = append(errs, errors.New("when APNS_AUTH_KEY_PATH is set, APNS_KEY_ID, APNS_TEAM_ID, and APNS_BUNDLE_ID are required"))
+		}
 	}
 	if len(errs) > 0 {
 		return c, errors.Join(errs...)
@@ -150,6 +196,22 @@ func intEnv(errs *[]error, key string, def int) int {
 		return def
 	}
 	return n
+}
+
+func boolEnv(errs *[]error, key string, def bool) bool {
+	raw, ok := os.LookupEnv(key)
+	if !ok || strings.TrimSpace(raw) == "" {
+		return def
+	}
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "1", "true", "yes", "y", "on":
+		return true
+	case "0", "false", "no", "n", "off":
+		return false
+	default:
+		*errs = append(*errs, fmt.Errorf("%s: expected a boolean (true/false/1/0)", key))
+		return def
+	}
 }
 
 func floatEnv(errs *[]error, key string, def float64) float64 {

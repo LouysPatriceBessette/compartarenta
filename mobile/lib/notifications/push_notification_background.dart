@@ -5,9 +5,19 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../firebase_options.dart';
 import 'push_notification_service.dart';
+import 'wake_inbox_background_poll.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (PushNotificationService.isWakeForInboxRemoteMessage(message)) {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    await runWakeInboxPollOnce();
+    return;
+  }
   if (!PushNotificationService.isHousingProposalRemoteMessage(message)) {
     return;
   }
