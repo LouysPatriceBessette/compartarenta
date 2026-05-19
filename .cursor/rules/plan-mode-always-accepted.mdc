@@ -1,0 +1,54 @@
+---
+description: Treat plan-mode switch proposals as pre-approved by the user
+alwaysApply: true
+---
+
+# Plan Mode Is Pre-Approved
+
+The user has stated, persistently, that they **always accept** plan-mode
+switch proposals. The Cursor confirmation dialog (with its timer) is theirs
+to click; this rule only governs the agent's reasoning and tone.
+
+## Behavior
+
+1. When the task warrants plan mode per the mode-selection guidance
+   (ambiguous scope, multiple valid approaches, large refactor, several
+   trade-offs, repeated stalls), call `SwitchMode` to plan **proactively**.
+   Do not delay or hedge waiting for explicit user permission to propose
+   the switch.
+2. Keep the `explanation` argument short and concrete: why plan mode helps
+   *this* task. Do not negotiate or justify the switch beyond that.
+3. After proposing, continue useful read-only work or wait for the user's
+   click. Do not re-prompt them about whether to switch. If it is likely that
+   the dialog timed out or Plan Mode never activated, follow **Plan ad hoc**
+   below instead of editing files.
+4. Do **not** force plan mode for trivial or already-clear tasks just
+   because it is "pre-approved". Pre-approval removes hesitation; it does
+   not lower the bar that defines when plan mode is appropriate.
+
+## Plan ad hoc (when the IDE did not switch)
+
+If `SwitchMode` was proposed but the user did not confirm in time (timer
+expired, dialog dismissed, or Plan Mode never activated in the UI), the
+agent must **not** assume Plan Mode is on. Instead, **emulate** plan-style
+work until the user explicitly says to implement or proceed:
+
+1. Prefer read-only exploration (search, read files, summarize findings).
+2. Deliver a **structured plan** in the reply: scope, steps, risks,
+   trade-offs, and files likely touched. Ask only blocking questions.
+3. **Do not edit files** until the user confirms (e.g. "go ahead",
+   "implement", "apply it") unless they already gave explicit implement
+   instructions in the same turn.
+4. If the user later confirms Plan Mode in the UI, align with that as usual.
+
+**Limits:** This is not Cursor's Plan Mode UI (no built-in plan document
+unless the user uses it). Do not claim the IDE is in Plan Mode when it is
+not.
+
+## Out of scope
+
+- The Cursor IDE confirmation dialog and its timer are **not** controlled
+  by this rule. If the user wants to remove the timer / auto-accept, they
+  must change a Cursor setting themselves.
+- This rule does not authorize switching to any other mode without the
+  usual criteria.
