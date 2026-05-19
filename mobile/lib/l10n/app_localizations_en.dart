@@ -190,19 +190,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unconsumed invitation expiration';
 
   @override
-  String get settingsNotificationsCountryStatsSection =>
-      'Relay statistics (optional)';
+  String get settingsNotificationsCountryStatsSection => 'User statistics';
 
   @override
   String get settingsNotificationsCountryStatsSwitchTitle =>
-      'Share country with relay statistics';
+      'Which country are you located in?';
 
   @override
   String get settingsNotificationsCountryStatsSwitchSubtitle =>
-      'When enabled, a two-letter country code is sent with routing push registration so operators can publish aggregated counts. No personal content is sent.';
+      'Allow sharing your country name. No other personal content will be used. The data is compiled into a per-country user total.';
 
   @override
   String get settingsNotificationsCountryStatsPickerLabel => 'Country';
+
+  @override
+  String get settingsNotificationsCountryStatsSearchHint => 'Search by name';
+
+  @override
+  String get settingsNotificationsCountryStatsEmpty => 'No matching country';
 
   @override
   String get settingsNotificationsHousingSection => 'Housing';

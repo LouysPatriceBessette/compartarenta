@@ -439,19 +439,19 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotificationsCountryStatsSection.
   ///
   /// In en, this message translates to:
-  /// **'Relay statistics (optional)'**
+  /// **'User statistics'**
   String get settingsNotificationsCountryStatsSection;
 
   /// No description provided for @settingsNotificationsCountryStatsSwitchTitle.
   ///
   /// In en, this message translates to:
-  /// **'Share country with relay statistics'**
+  /// **'Which country are you located in?'**
   String get settingsNotificationsCountryStatsSwitchTitle;
 
   /// No description provided for @settingsNotificationsCountryStatsSwitchSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'When enabled, a two-letter country code is sent with routing push registration so operators can publish aggregated counts. No personal content is sent.'**
+  /// **'Allow sharing your country name. No other personal content will be used. The data is compiled into a per-country user total.'**
   String get settingsNotificationsCountryStatsSwitchSubtitle;
 
   /// No description provided for @settingsNotificationsCountryStatsPickerLabel.
@@ -459,6 +459,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Country'**
   String get settingsNotificationsCountryStatsPickerLabel;
+
+  /// No description provided for @settingsNotificationsCountryStatsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get settingsNotificationsCountryStatsSearchHint;
+
+  /// No description provided for @settingsNotificationsCountryStatsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching country'**
+  String get settingsNotificationsCountryStatsEmpty;
 
   /// No description provided for @settingsNotificationsHousingSection.
   ///

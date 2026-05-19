@@ -6,6 +6,7 @@ import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/routing_push_country_codes.dart';
+import '../../widgets/routing_push_country_picker_sheet.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({
@@ -25,13 +26,34 @@ class NotificationSettingsScreen extends StatefulWidget {
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
   late Future<NotificationSystemPermissionStatus> _status;
+  late final TextEditingController _countryField;
 
   @override
   void initState() {
     super.initState();
+    _countryField = TextEditingController();
     _status = widget.prefs.notificationsEnabled
         ? _verifyEnabledNotificationsOnLoad()
         : Future.value(NotificationSystemPermissionStatus.unknown);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncCountryFieldText();
+  }
+
+  @override
+  void dispose() {
+    _countryField.dispose();
+    super.dispose();
+  }
+
+  void _syncCountryFieldText() {
+    final label = _effectiveCountryDisplayName(context);
+    if (_countryField.text != label) {
+      _countryField.text = label;
+    }
   }
 
   Future<void> _refreshStatus() async {
@@ -247,50 +269,84 @@ class _NotificationSettingsScreenState
                             widget.prefs.notificationCountryStatisticsCode!
                                 .isEmpty)) {
                       await widget.prefs.setNotificationCountryStatisticsCode(
-                        kRoutingPushCountryAlpha2Choices.first,
+                        kRoutingPushSupportedCountries.first.code,
                       );
                     }
                     HandshakeOrchestrator
                         .requestClosedAppPushRegistrationSync();
-                    if (mounted) setState(() {});
+                    if (mounted) {
+                      _syncCountryFieldText();
+                      setState(() {});
+                    }
                   }
                 : null,
           ),
           if (notificationsEnabled &&
               widget.prefs.notificationCountryStatisticsEnabled)
-            ListTile(
-              title: Text(l10n.settingsNotificationsCountryStatsPickerLabel),
-              trailing: DropdownButton<String>(
-                value: _effectiveCountryCode(),
-                onChanged: (v) async {
-                  if (v == null) return;
-                  await widget.prefs.setNotificationCountryStatisticsCode(v);
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextFormField(
+                key: const ValueKey('countryStatsCountryField'),
+                readOnly: true,
+                canRequestFocus: false,
+                controller: _countryField,
+                decoration: InputDecoration(
+                  labelText: l10n.settingsNotificationsCountryStatsPickerLabel,
+                  hintText:
+                      l10n.settingsNotificationsCountryStatsSearchHint,
+                  suffixIcon: const Icon(Icons.arrow_drop_down),
+                ),
+                onTap: () async {
+                  FocusScope.of(context).unfocus();
+                  final code = await showRoutingPushCountryPicker(
+                    context,
+                    searchHint:
+                        l10n.settingsNotificationsCountryStatsSearchHint,
+                    emptyLabel:
+                        l10n.settingsNotificationsCountryStatsEmpty,
+                    languageCode: _languageCode(context),
+                    selectedCode: _effectiveCountryCode(),
+                  );
+                  if (code == null) return;
+                  await widget.prefs.setNotificationCountryStatisticsCode(
+                    code,
+                  );
                   HandshakeOrchestrator
                       .requestClosedAppPushRegistrationSync();
-                  if (mounted) setState(() {});
+                  if (mounted) {
+                    _syncCountryFieldText();
+                    setState(() {});
+                  }
                 },
-                items: kRoutingPushCountryAlpha2Choices
-                    .map(
-                      (c) =>
-                          DropdownMenuItem<String>(value: c, child: Text(c)),
-                    )
-                    .toList(growable: false),
               ),
             ),
+          // Extra breathing room below the picker so the trailing dropdown
+          // arrow stays well above the bottom screen edge (~3 lines of body
+          // text).
+          const SizedBox(height: 72),
         ],
       ),
     );
   }
 
+  String _languageCode(BuildContext context) {
+    return Localizations.localeOf(context).languageCode;
+  }
+
+  String _effectiveCountryDisplayName(BuildContext context) {
+    final code = _effectiveCountryCode();
+    final country = supportedRoutingPushCountryByCode(code);
+    if (country == null) return code;
+    return country.displayName(_languageCode(context));
+  }
+
   String _effectiveCountryCode() {
-    final c = widget.prefs.notificationCountryStatisticsCode;
-    if (c != null && c.length == 2) {
-      final u = c.toUpperCase();
-      if (kRoutingPushCountryAlpha2Choices.contains(u)) {
-        return u;
-      }
+    final raw = widget.prefs.notificationCountryStatisticsCode;
+    if (raw != null && raw.length == 2) {
+      final found = supportedRoutingPushCountryByCode(raw);
+      if (found != null) return found.code;
     }
-    return kRoutingPushCountryAlpha2Choices.first;
+    return kRoutingPushSupportedCountries.first.code;
   }
 
   String _statusLabel(

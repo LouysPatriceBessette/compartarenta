@@ -189,18 +189,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsNotificationsCountryStatsSection =>
-      'Statistiques relais (facultatif)';
+      'Statistiques utilisateurs';
 
   @override
   String get settingsNotificationsCountryStatsSwitchTitle =>
-      'Partager le pays pour les statistiques agrégées';
+      'Dans quel pays êtes-vous situé?';
 
   @override
   String get settingsNotificationsCountryStatsSwitchSubtitle =>
-      'Si activé, un code pays à deux lettres est envoyé avec l’enregistrement des notifications de réveil, pour des totaux agrégés côté opérateur. Aucun contenu personnel n’est envoyé.';
+      'Permettre le partage du nom de votre pays. Aucun autre contenu personnel ne sera utilisé. La donnée sera compilée dans un total d’utilisateurs par pays.';
 
   @override
   String get settingsNotificationsCountryStatsPickerLabel => 'Pays';
+
+  @override
+  String get settingsNotificationsCountryStatsSearchHint =>
+      'Rechercher par nom';
+
+  @override
+  String get settingsNotificationsCountryStatsEmpty =>
+      'Aucun pays correspondant';
 
   @override
   String get settingsNotificationsHousingSection => 'Logement';

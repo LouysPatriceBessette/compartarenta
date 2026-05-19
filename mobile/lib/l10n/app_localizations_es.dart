@@ -191,18 +191,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsNotificationsCountryStatsSection =>
-      'Estadísticas del relé (opcional)';
+      'Estadísticas de usuarios';
 
   @override
   String get settingsNotificationsCountryStatsSwitchTitle =>
-      'Compartir el país para estadísticas agregadas';
+      '¿En qué país te encuentras?';
 
   @override
   String get settingsNotificationsCountryStatsSwitchSubtitle =>
-      'Si está activado, se envía un código de país de dos letras con el registro de notificaciones de despertar para totales agregados del operador. No se envía contenido personal.';
+      'Permite compartir el nombre de tu país. No se utilizará ningún otro contenido personal. El dato se agrega a un total de usuarios por país.';
 
   @override
   String get settingsNotificationsCountryStatsPickerLabel => 'País';
+
+  @override
+  String get settingsNotificationsCountryStatsSearchHint => 'Buscar por nombre';
+
+  @override
+  String get settingsNotificationsCountryStatsEmpty => 'Ningún país coincide';
 
   @override
   String get settingsNotificationsHousingSection => 'Vivienda';
