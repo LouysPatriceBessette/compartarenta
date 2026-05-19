@@ -552,5 +552,5 @@ To append one JSON line per UTC day without querying PostgreSQL by hand, run
 [`relay/scripts/daily-stats-append.sh`](../relay/scripts/daily-stats-append.sh)
 from cron (example: `7 0 * * *` for 00:07 UTC). See
 [`relay/scripts/README-daily-stats.md`](../relay/scripts/README-daily-stats.md)
-for environment variables (`RELAY_STATS_URL`, `RELAY_STATS_FILE`) and
+for environment variables (`RELAY_STATS_URL`, `STATS_FILE_PATH`) and
 idempotent re-run behaviour.

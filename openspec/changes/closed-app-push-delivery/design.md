@@ -167,9 +167,9 @@ New environment variables for the relay:
 - `APNS_AUTH_KEY_PATH` — file path to APNs `.p8` key.
 - `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_ENVIRONMENT` (`sandbox` / `production`).
 - `ROUTING_PUSH_TOKEN_TTL_SECONDS` — default `1209600` (14 days).
-- `ROUTING_PUSH_TOKEN_PURGE_INTERVAL_SECONDS` — default `3600`.
-- `STATS_ENDPOINT_LISTEN_ADDR` — default `127.0.0.1:<port>` (loopback only). A Unix domain socket path is an acceptable alternative form.
-- `STATS_FILE_PATH` — default `/var/lib/compartarenta-relay/stats/daily.jsonl`.
+- `ROUTING_PUSH_TOKEN_PURGE_INTERVAL_SECONDS` — *originally proposed at default `3600`*. **Implementation note (2026-05-19):** purge of expired routing push tokens is performed by the existing general sweeper that runs on `SWEEPER_INTERVAL` (default `1m`, which is strictly faster than the proposed 1 h cadence), so no dedicated variable was added at the binary level. Operators should rely on `SWEEPER_INTERVAL` if a different cadence is required; the original variable name is reserved should a future change reintroduce a separate cadence for token purges.
+- `STATS_LISTEN_ADDR` — default `127.0.0.1:9091` (loopback only). Set to `-` to disable the listener entirely. (*Originally proposed as `STATS_ENDPOINT_LISTEN_ADDR`; renamed to `STATS_LISTEN_ADDR` at implementation.*) A Unix domain socket path is an acceptable alternative form.
+- `STATS_FILE_PATH` — default `/srv/compartarenta-stats/daily.jsonl`. **Read by the cron script (`relay/scripts/daily-stats-append.sh`), not by the relay binary.** The binary only exposes the HTTP endpoint at `STATS_LISTEN_ADDR`; persistence of the daily JSONL is an operator-side concern. (*Original default `/var/lib/compartarenta-relay/stats/daily.jsonl` updated to keep the file outside the deploy user's `0700`-restricted home and under a dedicated directory the operator owns.*)
 
 The audit checklist gains items asking the reviewer to confirm that these are present, that the table schema matches the spec, that no other column is silently added, that the suppression threshold is the hardcoded constant `10`, and that the stats endpoint is bound to loopback only.
 

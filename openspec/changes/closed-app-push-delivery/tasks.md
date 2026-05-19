@@ -8,7 +8,7 @@
 ## 2. Relay Schema and TTL
 
 - [ ] 2.1 Add a relay migration creating the `routing_push_tokens` table with columns `recipient_routing_id`, `provider`, `push_token`, `expires_at`, `last_seen_at`, `country`, primary key `(recipient_routing_id, provider, push_token)`, index on `recipient_routing_id`, index on `expires_at`. The `country` column defaults to `UNDISCLOSED`.
-- [ ] 2.2 Introduce relay configuration: `ROUTING_PUSH_TOKEN_TTL_SECONDS` (default 1209600 = 14 days), `ROUTING_PUSH_TOKEN_PURGE_INTERVAL_SECONDS` (default 3600).
+- [ ] 2.2 Introduce relay configuration: `ROUTING_PUSH_TOKEN_TTL_SECONDS` (default 1209600 = 14 days). *Implementation note (2026-05-19): purge cadence is governed by the existing `SWEEPER_INTERVAL` (default 1m) rather than the originally proposed `ROUTING_PUSH_TOKEN_PURGE_INTERVAL_SECONDS`; see `design.md` § 10.*
 - [ ] 2.3 Implement the purge job that deletes rows where `expires_at <= now()` on the configured interval. Increment a `purge_count` counter atomically for use by the statistics endpoint.
 - [ ] 2.4 Implement opportunistic purge on read paths that already touch the table (registration, dispatch).
 
@@ -30,10 +30,10 @@
 
 ## 5. Daily Statistics: Loopback Endpoint, Cron, and Append-Only File
 
-- [ ] 5.1 Implement `GET /internal/stats/daily?date=YYYY-MM-DD` in the relay. Listen exclusively on `STATS_ENDPOINT_LISTEN_ADDR` (default `127.0.0.1:<port>` or a Unix socket path). Reject any request that does not arrive over the loopback interface. Default `date` to the previous calendar day in UTC.
+- [ ] 5.1 Implement `GET /internal/stats/daily?date=YYYY-MM-DD` in the relay. Listen exclusively on `STATS_LISTEN_ADDR` (default `127.0.0.1:9091`; set to `-` to disable). *Originally proposed as `STATS_ENDPOINT_LISTEN_ADDR`; renamed at implementation — see `design.md` § 10.* Reject any request that does not arrive over the loopback interface. Default `date` to the previous calendar day in UTC.
 - [ ] 5.2 Compute the response in code (no ad-hoc queries) so the audit reviewer can inspect what fields are derivable: `active_total`, `by_country` (subject to the suppression rule below), `by_provider`, `dispatch_success_count`, `dispatch_failure_count`, `purge_count`, `routing_push_tokens_row_count`.
 - [ ] 5.3 Implement the country suppression rule in a named source constant `kCountrySuppressionThreshold = 10` (or language-appropriate equivalent). Sum all countries with strictly less than 10 active devices into an `OTHER` bucket. Treat `UNDISCLOSED` as its own bucket, never folded into `OTHER`.
-- [ ] 5.4 Implement and ship a cron job (in the same repository, packaged with the relay deployment artifacts) that runs at `7 0 * * *` UTC (i.e. 00:07 UTC daily), calls the endpoint for the previous calendar day, and appends one JSON line to `STATS_FILE_PATH` (default `/var/lib/compartarenta-relay/stats/daily.jsonl`).
+- [ ] 5.4 Implement and ship a cron job (in the same repository, packaged with the relay deployment artifacts) that runs at `7 0 * * *` UTC (i.e. 00:07 UTC daily), calls the endpoint for the previous calendar day, and appends one JSON line to `STATS_FILE_PATH` (default `/srv/compartarenta-stats/daily.jsonl`, read by `relay/scripts/daily-stats-append.sh` — the binary itself does not write the file).
 - [ ] 5.5 Make the cron idempotent: if the target date already has a line in the file, do nothing.
 - [ ] 5.6 Document, in a brief operator-facing README colocated with the cron script, the file format, how to publish or share the file, and the explicit guarantee that the relay DB itself is never queried by humans.
 - [ ] 5.7 Unit tests: suppression threshold is applied correctly across boundary cases (0, 9, 10, 11 devices); endpoint refuses non-loopback callers; cron append-only behavior; cron idempotency on re-run for the same day.
