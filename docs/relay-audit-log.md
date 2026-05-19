@@ -22,6 +22,7 @@ deployment happens.
 | Tag        | Image digest                             | Deployed at         | Operator    | Notes                                                        |
 |------------|------------------------------------------|---------------------|-------------|--------------------------------------------------------------|
 | v0.1.0 | sha256:1c826875efb8c73a96676d82c0fabcbb3e0f3849167d79bf3c831b773ddc653e | 2026-05-13T21:05Z | operator-on-call | First deployment. |
+| v0.2.0 | sha256:b5967deacc70d3b19cd2e31a12f294898a7549951779a8b92ba9a81d63cc010d | 2026-05-19T21:58Z | operator-on-call | Closed-app push delivery (schema v2). Wake dispatch disabled (WAKE_PUSH_DISPATCH_ENABLED=false). Stats cron via daily-stats-append-via-docker.sh. |
 
 When a new image goes live:
 
@@ -45,10 +46,7 @@ deployment and records the result here. The cadence is at minimum
 quarterly; the first audit (the "baseline") is dated on or before the
 first day of public traffic.
 
-### Baseline (placeholder)
-
-> Replace this block with the first real audit entry before exposing
-> the relay sub-domain to public traffic.
+### Baseline (v0.1.0)
 
 - **Date:** 2026-05-13T21:05Z
 - **Operator:** operator-on-call
@@ -57,6 +55,16 @@ first day of public traffic.
   as of 6a2fdc026d472179b50505736f2a5a7c8bfb595a
 - **Summary:** Initial deployment of sync.incoherences.org, all checks pass. 
 - **Findings:** None. (see Findings section)
+
+### Self-audit — v0.2.0 upgrade
+
+- **Date:** 2026-05-19T21:58Z
+- **Operator:** operator-on-call
+- **Image digest:** sha256:b5967deacc70d3b19cd2e31a12f294898a7549951779a8b92ba9a81d63cc010d
+- **Checklist version:** [`relay-audit-checklist.md`](./relay-audit-checklist.md)
+  as of 899e36cb441fef858c78b5b444e191ed5d407a65
+- **Summary:** Added a generic closed-app push delivery mechanism, all checks pass. 
+- **Findings:** None.
 
 ### Audit cadence
 

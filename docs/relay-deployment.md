@@ -433,22 +433,26 @@ On the VPS:
 6. Replace the commit SHA with the new one (obtained in step 3)
 	`nano env/.env`
 
-7. Build and run Docker
+7. Get the build date (keep it safe, needed for the audit log)
+  ```
+  date -u +"%Y-%m-%dT%H:%MZ"
+  ```
+8. Build and run Docker
 	```
 	docker compose --env-file env/.env -f source/relay/compose.yml build
 	docker compose --env-file env/.env -f source/relay/compose.yml up -d
 	```
-8. Get the Docker SHA
+9. Get the Docker SHA
 	`docker inspect compartarenta-relay:v0.1.0 --format '{{.Id}}'`
 
-9. Exit impersonation of the app's user
+10. Exit impersonation of the app's user
 	`exit`
 
-10. From local files, open `docs/relay-audit-log.md`
+11. From local files, open `docs/relay-audit-log.md`
 
-11. Tag this new release in the `Deployments` section.
+12. Tag this new release in the `Deployments` section.
 
-12. Follow `relay-audit-checklist.md` steps, then file the `Baseline` section.
+13. Follow `relay-audit-checklist.md` steps, then file the `Baseline` section.
 
 Rollback: pin the previous digest in `env/.env` and re-run step 3. The
 routing relationships and in-flight envelopes survive rollbacks because
