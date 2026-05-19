@@ -49,5 +49,7 @@ docker run --rm --network "container:${CONTAINER}" "${CURL_IMAGE}" \
   > "$tmp"
 
 mkdir -p "$(dirname "$STATS_FILE_PATH")"
+# The relay uses encoding/json.Encoder.Encode, which already appends a
+# trailing newline. Do not add a second one or `wc -l` will count an
+# extra blank line and JSONL parsers may see an empty record.
 cat "$tmp" >>"$STATS_FILE_PATH"
-printf '\n' >>"$STATS_FILE_PATH"

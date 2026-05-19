@@ -19,16 +19,18 @@ STATS_FILE_PATH="${STATS_FILE_PATH:-/srv/compartarenta-stats/daily.jsonl}"
 
 yesterday="$(date -u -d yesterday +%F 2>/dev/null || date -u -v-1d +%F)"
 
-tmp="$(mktemp)"
-trap 'rm -f "$tmp"' EXIT
-
-curl -fsS "$RELAY_STATS_URL?date=${yesterday}" -o "$tmp"
-
 # Idempotency: skip if this date already appears as the first JSON field.
 if [[ -f "$STATS_FILE_PATH" ]] && grep -q "\"date\":\"${yesterday}\"" "$STATS_FILE_PATH" 2>/dev/null; then
   exit 0
 fi
 
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+
+curl -fsS "$RELAY_STATS_URL?date=${yesterday}" -o "$tmp"
+
 mkdir -p "$(dirname "$STATS_FILE_PATH")"
+# The relay uses encoding/json.Encoder.Encode, which already appends a
+# trailing newline. Do not add a second one or `wc -l` will count an
+# extra blank line and JSONL parsers may see an empty record.
 cat "$tmp" >>"$STATS_FILE_PATH"
-printf '\n' >>"$STATS_FILE_PATH"
