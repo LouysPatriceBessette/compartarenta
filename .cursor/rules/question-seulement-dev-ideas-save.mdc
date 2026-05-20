@@ -22,7 +22,7 @@ If the **user message contains** `Garde-moi cette réponse` (case-insensitive, a
 
 1. **Write the previous assistant response only in a new file** under `dev-ideas/` at the repository root.
 2. Use the same filename pattern and body layout below.
-3. For the quoted user text, quote the user prompt that the previous assistant response answered when available. If that prompt is unavailable, quote the `Garde-moi cette réponse` message instead.
+3. **Quoted user text (critical):** use the **user message that the saved assistant reply was answering** — verbatim, as a block quote. **Never** quote `Garde-moi cette réponse` (or variants) as the block-quote content; that string is only the save command, not the topic. If that prior prompt is unavailable, quote the `Garde-moi cette réponse` message as a last resort and note unavailability in chat when you cannot write the file.
 4. In the chat reply, give only the path to the file unless the user explicitly asks for additional work in the same message; then keep the chat reply concise and include the path.
 
 If you cannot write the file (blocked, ambiguous topic for the filename), say so briefly and still answer in chat normally.
@@ -38,17 +38,46 @@ Pattern: **`YYYY-MM-DD-[courte-description].md`**
 
 Use this **top-to-bottom template**:
 
-1. **Quoted user text** — The user’s prompt **verbatim** (including `Question seulement:` when applicable), as a Markdown **block quote** (`>` lines). Preserve line breaks; empty lines inside the quote use `>` on a blank line where needed.
+1. **Quoted user text** — Verbatim user prompt as Markdown **block quote** (`>` lines). Preserve line breaks; empty lines inside the quote use `>` on a blank line where needed.
+   - `Question seulement:` → include the prefix in the quote.
+   - `Garde-moi cette réponse` → quote the **earlier** user turn (see above), **not** the save command.
 
-2. **Separator** — Insert **exactly** this line (single line):
+2. **Separator** — After the block quote, leave **one blank line**, then insert **exactly** this line as **raw HTML** (not inside a fenced code block, no ` ```html ` wrapper):
 
-   ```html
    <hr style="height:5px; border:none; color:#FFF; background-color:#FFF; margin:40px 0 10px;">
-   ```
 
-3. **Heading** — Then a level-1 Markdown heading **`# Réponse IA`** on its own line.
+   Then **one blank line** before the heading.
 
-4. **Answer** — Then the assistant’s **full response** (headings, tables, lists, prose) with **no** reformulation mandate beyond answering the question; language follows the user’s question (consistent with existing `dev-ideas/` notes).
+3. **Heading** — Level-1 Markdown heading **`# Réponse IA`** on its own line.
+
+4. **Answer** — The assistant’s **full response** (headings, tables, lists, prose). Language follows the quoted user prompt.
+
+### Layout example (`Garde-moi cette réponse`)
+
+User previously asked: *Investigate bug 1.22…*  
+Current message: *Garde-moi cette réponse.*
+
+```markdown
+> Très bien. Investigue ce bug 1.22 car il touche directement le déboggage que je fais avec Android et web.
+
+
+<hr style="height:5px; border:none; color:#FFF; background-color:#FFF; margin:40px 0 10px;">
+
+
+# Réponse IA
+
+…full prior assistant reply…
+```
+
+**Wrong** (do not do this):
+
+```markdown
+> Garde-moi cette réponse.
+
+```html
+<hr style="height:5px; border:none; color:#FFF; background-color:#FFF; margin:40px 0 10px;">
+```
+```
 
 ## Language
 

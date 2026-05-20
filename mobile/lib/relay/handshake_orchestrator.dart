@@ -1029,7 +1029,11 @@ class HandshakeOrchestrator {
         frame: envelope.ciphertext,
         receiverLongTermPrivateKey: selfPriv,
       );
-    } on EnvelopeDecryptionError {
+    } on EnvelopeDecryptionError catch (e, st) {
+      debugPrint(
+        'housing_proposal decrypt failed for ${contact.id} '
+        '(envelope ${envelope.envelopeId}): $e\n$st',
+      );
       await _relay.ackEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
@@ -1037,6 +1041,10 @@ class HandshakeOrchestrator {
       return;
     }
     if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      debugPrint(
+        'housing_proposal sender pubkey mismatch for ${contact.id} '
+        '(envelope ${envelope.envelopeId})',
+      );
       await _relay.ackEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
