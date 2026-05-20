@@ -380,14 +380,19 @@ psql_q \
   -c "\d+ idempotency_entries" \
   -c "\d+ envelopes" \
   -c "\d+ sweeper_checkpoint" \
-  -c "\d+ operator_actions"
+  -c "\d+ operator_actions" \
+  -c "\d+ routing_push_tokens" \
+  -c "\d+ relay_day_metrics"
 ```
 
 Then assert that the live table set is exactly the one declared in the
-canonical migration ([`relay/internal/store/schema/0001_init.sql`](../relay/internal/store/schema/0001_init.sql)):
+canonical migrations ([`0001_init.sql`](../relay/internal/store/schema/0001_init.sql)
+and [`0002_routing_push_tokens.sql`](../relay/internal/store/schema/0002_routing_push_tokens.sql)).
+From schema version 2 onward, `routing_push_tokens` and `relay_day_metrics`
+are expected in addition to the v0.1.0 tables:
 
 ```bash
-expected="envelopes idempotency_entries operator_actions routing_relationships schema_version sweeper_checkpoint"
+expected="envelopes idempotency_entries operator_actions relay_day_metrics routing_push_tokens routing_relationships schema_version sweeper_checkpoint"
 actual=$(psql_q -At -c \
   "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;" \
   | tr -d '\r' | tr '\n' ' ' | sed 's/ $//')
@@ -400,6 +405,9 @@ echo "Actual tables:   $actual"
 review (column types, CHECK constraints, indexes); the assertion only
 catches gross structural drift (added/removed tables). The only
 payload-carrying column is `envelopes.ciphertext` and it is BYTEA.
+`routing_push_tokens` stores opaque device tokens and an optional
+country code (`UNDISCLOSED` or ISO 3166-1 alpha-2), not message
+content. `relay_day_metrics` holds numeric counters only.
 Required by `relay-state-schema-and-retention` /
 "The relay database schema is explicitly enumerated and minimal".
 
@@ -417,7 +425,7 @@ psql_q -c "
   ORDER BY table_name, column_name;
 "
 
-expected_cols="operator_actions.action operator_actions.actor operator_actions.reason operator_actions.target_kind routing_relationships.status"
+expected_cols="operator_actions.action operator_actions.actor operator_actions.reason operator_actions.target_kind routing_push_tokens.country routing_push_tokens.provider routing_push_tokens.push_token routing_relationships.status"
 actual_cols=$(psql_q -At -c "
   SELECT table_name||'.'||column_name
   FROM information_schema.columns
@@ -430,10 +438,15 @@ echo "Actual:   $actual_cols"
 [ "$expected_cols" = "$actual_cols" ] && echo "C.2 PASS" || echo "C.2 FAIL"
 ```
 
-**Expected:** `C.2 PASS`. The five allow-listed columns are operator
-housekeeping (`operator_actions.*`) and a status enum
-(`routing_relationships.status` is constrained by CHECK to
-`'active' | 'disconnecting'`). None of them decode to user-facing
+**Expected:** `C.2 PASS`. The allow-listed TEXT/VARCHAR columns are:
+operator housekeeping (`operator_actions.*`); routing relationship
+status (`routing_relationships.status`, CHECK-constrained to
+`'active' | 'disconnecting'`); and closed-app push registration metadata
+on `routing_push_tokens` (`provider` is `'fcm' | 'apns'`;
+`push_token` is an opaque third-party device token, not envelope
+content; `country` is an optional ISO country code or `UNDISCLOSED`,
+not a display name or message body). `relay_day_metrics` has no TEXT
+columns. None of the allow-listed columns store user-facing message
 plaintext. Required by `relay-state-schema-and-retention` /
 "The relay database SHALL NOT store user payload plaintext".
 
@@ -619,22 +632,47 @@ applying migrations — and self-audits themselves). The checks below
 require `psql_q` from the section C setup; if your shell has been
 closed, redo the C setup block first.
 
-### E.0 Record the audit being performed right now
+### E.0 (optional) Record this audit run in `operator_actions`
 
-The baseline audit IS the first documented operator action on a fresh
-deployment. Insert one row capturing it before running E.1/E.2:
+The **authoritative** audit record is [`relay-audit-log.md`](./relay-audit-log.md)
+(committed to the repository: deployment row + self-audit section). The
+`operator_actions` table is a **secondary** in-database trail for
+operator-initiated events (manual sever, out-of-cycle sweep, migration,
+or choosing to mirror an audit run).
+
+**Skip E.0** when E.1 would already pass (≥1 row), for example after the
+v0.1.0 baseline audit or any prior insert. That is the normal case for a
+**version upgrade audit** (e.g. v0.2.0): document the run only in
+`relay-audit-log.md` and proceed to E.1/E.2.
+
+**Run E.0** only when:
+
+- this is the **first** audit on a deployment whose `operator_actions`
+  table is still empty (greenfield); or
+- you deliberately want a new DB row for this run (recommended for
+  unusual operator interventions, optional for routine quarterly audits).
+
+Example insert for a **first** baseline on an empty table:
 
 ```bash
 psql_q -c "INSERT INTO operator_actions (actor, action, reason)
            VALUES ('operator-on-call',
                    'baseline_self_audit',
-                   'Initial v0.1.0 baseline audit per docs/relay-audit-checklist.md');"
+                   'Initial baseline audit per docs/relay-audit-checklist.md');"
 ```
 
-Re-run this with a different `action` / `reason` for any later
-operator action (out-of-cycle sweeper, manual disconnect, etc.). For
-quarterly self-audits, change `baseline_self_audit` to e.g.
-`quarterly_self_audit_2026q3` and update the `reason` accordingly.
+Example for a **release upgrade** audit (optional; adjust tag and date):
+
+```bash
+psql_q -c "INSERT INTO operator_actions (actor, action, reason)
+           VALUES ('operator-on-call',
+                   'self_audit_v0.2.0',
+                   'Post-deploy checklist after v0.2.0; see docs/relay-audit-log.md');"
+```
+
+For other operator work (out-of-cycle sweeper, manual disconnect, etc.),
+use a distinct `action` and a concrete `reason`. Do **not** repeat the
+baseline insert on every checklist run.
 
 ### E.1 Operator actions are recorded
 
