@@ -27,7 +27,7 @@ melos:
 
     codegen:
       description: Run build_runner (Drift, etc.) in mobile
-      run: cd mobile && dart run build_runner build --delete-conflicting-outputs
+      run: cd mobile && dart run build_runner build
 
     clean:
       description: Flutter clean in mobile
@@ -40,7 +40,7 @@ melos:
         cd mobile
         flutter clean
         flutter pub get
-        dart run build_runner build --delete-conflicting-outputs
+        dart run build_runner build
 
     run:dev:
       description: |
