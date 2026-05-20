@@ -48,10 +48,10 @@ Future<void> showContactNotification({
   );
 
   await _plugin.show(
-    DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-    title,
-    body,
-    details,
+    id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+    title: title,
+    body: body,
+    notificationDetails: details,
     payload: _contactsPayload,
   );
 }
@@ -61,7 +61,7 @@ Future<void> _ensureInitialized() async {
   _initialized = true;
 
   await _plugin.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     ),

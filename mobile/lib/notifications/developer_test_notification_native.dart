@@ -32,10 +32,10 @@ Future<DeveloperTestNotificationResult> sendDeveloperTestNotification(
 
     await _ensureInitialized();
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      'TEST',
-      'TEST',
-      const NotificationDetails(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: 'TEST',
+      body: 'TEST',
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'developer_test_notifications_v1',
           'Developer test notifications',
@@ -59,7 +59,7 @@ Future<void> _ensureInitialized() async {
   _initialized = true;
 
   await _plugin.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     ),

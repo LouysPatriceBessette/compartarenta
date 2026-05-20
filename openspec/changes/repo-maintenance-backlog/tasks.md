@@ -5,14 +5,19 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
-- [ ] **Mobile dependencies — phased major upgrades (phases 2–3).**  
-  Phase 2 — `flutter_local_notifications`, `permission_handler`; phase 3 — rest
-  (`go_router`, `flutter_secure_storage`, …) as features need them.  
-  **Phases 2–3** are **mobile-only** and do **not** require a relay release for existing
-  notification behavior. **Relay wake** stays on `closed-app-push-delivery`.  
+- [ ] **Mobile dependencies — phase 3 (remaining majors).**  
+  `go_router`, `flutter_secure_storage`, `app_links`, … as features need them.  
+  **Mobile-only**; relay wake stays on `closed-app-push-delivery`.  
   **Scope:** `mobile/` + workspace `pubspec.lock` only.
 
 ## Done
+
+- [x] **Mobile dependencies — phase 2 (notifications + permissions).**  
+  Bumped `flutter_local_notifications` ^21.0.0 and `permission_handler` ^12.0.1.
+  Migrated `initialize()` / `show()` to named parameters (v20+ API) in
+  `push_notification_service.dart`, `contact_notification_service_native.dart`,
+  `developer_test_notification_native.dart`. Verified: `flutter analyze .`,
+  `flutter test`, `flutter build apk --debug --flavor dev` (2026-05-20).
 
 - [x] **Mobile dependencies — phase 1 (Firebase stack).**  
   Bumped `firebase_core` ^4.9.0 and `firebase_messaging` ^16.2.2 in `mobile/pubspec.yaml`

@@ -127,7 +127,7 @@ class PushNotificationService {
   ) async {
     if (identical(plugin, _plugin) && _localStarted) return;
     await plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
       ),
@@ -204,7 +204,7 @@ class PushNotificationService {
 
     if (isBackgroundIsolate) {
       await plugin.initialize(
-        const InitializationSettings(
+        settings: const InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
           iOS: DarwinInitializationSettings(),
         ),
@@ -243,7 +243,13 @@ class PushNotificationService {
         message.messageId?.hashCode.abs() ??
         DateTime.now().millisecondsSinceEpoch.remainder(1 << 30);
 
-    await plugin.show(id, title, body, details, payload: _housingTapPayload);
+    await plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
+      payload: _housingTapPayload,
+    );
   }
 
   static Future<void> showLocalHousingProposalNotification({
@@ -259,10 +265,10 @@ class PushNotificationService {
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title,
-      body,
-      NotificationDetails(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
           androidChannel.name,
@@ -295,10 +301,10 @@ class PushNotificationService {
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title,
-      body,
-      NotificationDetails(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
           androidChannel.name,
@@ -335,10 +341,10 @@ class PushNotificationService {
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title,
-      body,
-      NotificationDetails(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
           androidChannel.name,
