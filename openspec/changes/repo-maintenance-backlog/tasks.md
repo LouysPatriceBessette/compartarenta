@@ -5,19 +5,20 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
-- [ ] **Mobile dependencies — phased major upgrades (phases 1–3).**  
-  **Phases 1–2** (`firebase_core` / `firebase_messaging`, `flutter_local_notifications`,
-  `permission_handler`, etc.) are **mobile-only** and do **not** require a relay release
-  or VPS deploy for existing notification behavior (settings, permission gates, local
-  notifications on polling). **Relay wake** (closed-app push, `WAKE_PUSH_DISPATCH_ENABLED`,
-  FCM/APNs credentials on the relay) is a **separate** track (`closed-app-push-delivery`);
-  deferring relay update does not block phases 1–2.  
-  Phase 1 — Firebase stack; phase 2 — notifications + permissions; phase 3 — rest
+- [ ] **Mobile dependencies — phased major upgrades (phases 2–3).**  
+  Phase 2 — `flutter_local_notifications`, `permission_handler`; phase 3 — rest
   (`go_router`, `flutter_secure_storage`, …) as features need them.  
-  **Scope:** `mobile/` + workspace `pubspec.lock` only; relay Go image unaffected unless
-  ops Firebase project alignment is documented separately.
+  **Phases 2–3** are **mobile-only** and do **not** require a relay release for existing
+  notification behavior. **Relay wake** stays on `closed-app-push-delivery`.  
+  **Scope:** `mobile/` + workspace `pubspec.lock` only.
 
 ## Done
+
+- [x] **Mobile dependencies — phase 1 (Firebase stack).**  
+  Bumped `firebase_core` ^4.9.0 and `firebase_messaging` ^16.2.2 in `mobile/pubspec.yaml`
+  (lockfile: core 4.9.0, messaging 16.2.2). No Dart API changes required. Verified:
+  `flutter analyze .`, `flutter test`, `flutter build apk --debug --flavor dev`
+  (2026-05-20). **Scope:** mobile only; relay unchanged.
 
 - [x] **Mobile dependencies — phase 0 (constraint-safe `pub upgrade`).**  
   `flutter pub upgrade` in `mobile/` (no `--major-versions`): lockfile bumps for
