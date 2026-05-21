@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../util/display_numbers.dart';
 import '../../util/format_money.dart';
 import 'expense_amount_parse.dart';
+import 'expense_ratio_template_repository.dart';
 import 'expense_split_grid_logic.dart';
 
 /// Three-column split editor (amount / name / percent).
@@ -46,6 +47,7 @@ class ExpenseSplitGrid extends StatelessWidget {
               child: Text(
                 l10n.housingExpenseSplitParticipantColumn,
                 style: theme.textTheme.labelMedium,
+                textAlign: TextAlign.center,
               ),
             ),
             Expanded(
@@ -62,9 +64,9 @@ class ExpenseSplitGrid extends StatelessWidget {
         for (var i = 0; i < state.rows.length; i++)
           _SplitRow(
             key: ValueKey(state.rows[i].participantId),
-            row: state.rows[i],
+            displayName: state.rows[i].displayName,
+            amountMinor: state.rows[i].amountMinor,
             totalMinor: state.totalMinor,
-            currencyCode: currencyCode,
             onAmount: (minor) => onRowAmountChanged(i, minor),
             onPercentTenths: (t) => onRowPercentChanged(i, t),
             onChanged: onChanged,
@@ -73,7 +75,7 @@ class ExpenseSplitGrid extends StatelessWidget {
           const Divider(),
           _CorrectionRow(
             deltaMinor: state.amountDeltaMinor,
-            sumWeightBps: state.rows.fold<int>(0, (a, r) => a + r.weightBps),
+            sumAmountMinor: state.sumAmountMinor,
             totalMinor: state.totalMinor,
             currencyCode: currencyCode,
             label: l10n.housingExpenseSplitCorrectRow,
@@ -87,17 +89,17 @@ class ExpenseSplitGrid extends StatelessWidget {
 class _SplitRow extends StatefulWidget {
   const _SplitRow({
     super.key,
-    required this.row,
+    required this.displayName,
+    required this.amountMinor,
     required this.totalMinor,
-    required this.currencyCode,
     required this.onAmount,
     required this.onPercentTenths,
     required this.onChanged,
   });
 
-  final ExpenseSplitRow row;
+  final String displayName;
+  final int amountMinor;
   final int totalMinor;
-  final String currencyCode;
   final ValueChanged<int> onAmount;
   final ValueChanged<int> onPercentTenths;
   final VoidCallback onChanged;
@@ -114,34 +116,82 @@ class _SplitRowState extends State<_SplitRow> {
   void initState() {
     super.initState();
     _amountCtrl = TextEditingController(
-      text: (widget.row.amountMinor / 100).toStringAsFixed(2),
+      text: (widget.amountMinor / 100).toStringAsFixed(2),
     );
-    _pctCtrl = TextEditingController(text: _percentText());
+    // Percent text needs [Localizations]; do not read [context] in [initState].
+    _pctCtrl = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncPercentControllerText();
   }
 
   @override
   void didUpdateWidget(covariant _SplitRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_amountFocused) {
-      final t = (widget.row.amountMinor / 100).toStringAsFixed(2);
-      if (_amountCtrl.text != t) _amountCtrl.text = t;
+    _syncAmountControllerText();
+    if (oldWidget.amountMinor != widget.amountMinor && !_pctFocused) {
+      _applyPercentText(_percentTextFor(widget.amountMinor));
+    } else {
+      _syncPercentControllerText();
     }
-    if (!_pctFocused) {
-      final t = _percentText();
-      if (_pctCtrl.text != t) _pctCtrl.text = t;
-    }
+  }
+
+  void _syncAmountControllerText() {
+    if (_amountFocused) return;
+    final t = (widget.amountMinor / 100).toStringAsFixed(2);
+    if (_amountCtrl.text != t) _amountCtrl.text = t;
+  }
+
+  void _syncPercentControllerText() {
+    if (_pctFocused) return;
+    _applyPercentText(_percentTextFor(widget.amountMinor));
+  }
+
+  void _applyPercentText(String t) {
+    if (_pctCtrl.text != t) _pctCtrl.text = t;
+  }
+
+  void _applyAmountText(int amountMinor) {
+    final t = (amountMinor / 100).toStringAsFixed(2);
+    if (_amountCtrl.text != t) _amountCtrl.text = t;
+  }
+
+  void _releaseAmountFocus() {
+    setState(() {
+      _amountFocused = false;
+      _syncAmountControllerText();
+      _syncPercentControllerText();
+    });
+  }
+
+  void _releasePercentFocus() {
+    setState(() {
+      _pctFocused = false;
+      _syncAmountControllerText();
+      _syncPercentControllerText();
+    });
   }
 
   bool _amountFocused = false;
   bool _pctFocused = false;
 
-  String _percentText() {
+  String _percentTextFor(int shareMinor) {
     if (widget.totalMinor <= 0) return '';
     return formatShareOfTotalPercentNoSuffix(
       context,
-      shareNumeratorMinor: widget.row.amountMinor,
+      shareNumeratorMinor: shareMinor,
       totalDenominatorMinor: widget.totalMinor,
     ).replaceAll('%', '').trim();
+  }
+
+  int _amountMinorFromPercentTenths(int percentTenths) {
+    final scale = ExpenseRatioTemplateRepository.weightScale;
+    final w = (percentTenths * scale ~/ 1000)
+        .clamp(0, scale);
+    return widget.totalMinor * w ~/ scale;
   }
 
   @override
@@ -153,6 +203,10 @@ class _SplitRowState extends State<_SplitRow> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final nameStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -168,12 +222,16 @@ class _SplitRowState extends State<_SplitRow> {
               ],
               decoration: const InputDecoration(isDense: true),
               onTap: () => setState(() => _amountFocused = true),
-              onEditingComplete: () => setState(() => _amountFocused = false),
-              onTapOutside: (_) => setState(() => _amountFocused = false),
+              onEditingComplete: _releaseAmountFocus,
+              onTapOutside: (_) => _releaseAmountFocus(),
               onChanged: (v) {
                 final minor = parseAmountMinorFromText(v);
-                if (minor != null) widget.onAmount(minor);
+                if (minor == null) return;
+                widget.onAmount(minor);
                 widget.onChanged();
+                if (!_pctFocused) {
+                  _applyPercentText(_percentTextFor(minor));
+                }
               },
             ),
           ),
@@ -182,7 +240,11 @@ class _SplitRowState extends State<_SplitRow> {
             flex: 2,
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(widget.row.displayName),
+              child: Text(
+                widget.displayName,
+                textAlign: TextAlign.center,
+                style: nameStyle,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -197,14 +259,19 @@ class _SplitRowState extends State<_SplitRow> {
                 suffixText: '%',
               ),
               onTap: () => setState(() => _pctFocused = true),
-              onEditingComplete: () => setState(() => _pctFocused = false),
-              onTapOutside: (_) => setState(() => _pctFocused = false),
+              onEditingComplete: _releasePercentFocus,
+              onTapOutside: (_) => _releasePercentFocus(),
               onChanged: (v) {
                 final t = v.trim().replaceAll('%', '').replaceAll(',', '.');
+                if (t.isEmpty) return;
                 final d = double.tryParse(t);
                 if (d == null) return;
-                widget.onPercentTenths((d * 10).round());
+                final tenths = (d * 10).round();
+                widget.onPercentTenths(tenths);
                 widget.onChanged();
+                if (!_amountFocused) {
+                  _applyAmountText(_amountMinorFromPercentTenths(tenths));
+                }
               },
             ),
           ),
@@ -217,14 +284,14 @@ class _SplitRowState extends State<_SplitRow> {
 class _CorrectionRow extends StatelessWidget {
   const _CorrectionRow({
     required this.deltaMinor,
-    required this.sumWeightBps,
+    required this.sumAmountMinor,
     required this.totalMinor,
     required this.currencyCode,
     required this.label,
   });
 
   final int deltaMinor;
-  final int sumWeightBps;
+  final int sumAmountMinor;
   final int totalMinor;
   final String currencyCode;
   final String label;
@@ -232,15 +299,13 @@ class _CorrectionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final pct = totalMinor > 0
-        ? formatShareOfTotalPercentNoSuffix(
+    // Amount column: adjustment (sum − total). Percent column: share already assigned.
+    final pct = totalMinor > 0 && deltaMinor != 0
+        ? '${formatShareOfTotalPercentNoSuffix(
             context,
-            shareNumeratorMinor: (sumWeightBps * totalMinor ~/ 10000).clamp(
-              0,
-              totalMinor,
-            ),
+            shareNumeratorMinor: sumAmountMinor,
             totalDenominatorMinor: totalMinor,
-          )
+          )}%'
         : '—';
     return Row(
       children: [
@@ -258,6 +323,7 @@ class _CorrectionRow extends StatelessWidget {
           flex: 2,
           child: Text(
             label,
+            textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.error,
               fontWeight: FontWeight.w600,

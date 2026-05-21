@@ -1437,6 +1437,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           periodStart: agr.periodStart,
           periodEnd: agr.periodEnd,
           defaultCurrency: currency,
+          dateFormat: widget.prefs.dateFormat.trim().isEmpty
+              ? 'YYYY-MM-DD'
+              : widget.prefs.dateFormat.trim(),
           existingLineId: existing?.id,
           initialSortOrder: existing?.sortOrder ?? nextOrder,
         ),

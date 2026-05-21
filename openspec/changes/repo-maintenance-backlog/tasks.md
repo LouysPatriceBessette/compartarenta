@@ -5,6 +5,8 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
+- [ ] **User units + calendar week start** — see `openspec/changes/user-units-and-calendar-preferences/` (editable date/distance/TZ in settings, week starts Sunday/Monday, currency edit TBD).
+
 - [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  
   Wire `ExpensePlanLineForm` on accepted plans; budget-cap threshold confirmation when a live expense exceeds the monthly max; notifications (default **All**: every participant gets before-date + overdue reminders; single designated payer per product annex).  
   Deferred from `housing-unified-expense-entry` pass 5 / `tasks.md` § Deferred.  

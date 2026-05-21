@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import 'expense_amount_parse.dart';
 import 'expense_line_persistence.dart';
 import 'expense_recurrence_flow.dart';
+import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 import 'expense_ratio_template_repository.dart';
 import 'expense_split_grid.dart';
@@ -21,6 +22,7 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
     required this.periodStart,
     required this.periodEnd,
     required this.defaultCurrency,
+    required this.dateFormat,
     this.existingLineId,
     this.initialSortOrder = 0,
   });
@@ -31,6 +33,9 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
   final DateTime periodStart;
   final DateTime periodEnd;
   final String defaultCurrency;
+
+  /// User date pattern (`YYYY-MM-DD`, `DD/MM/YYYY`, …) for recurrence labels.
+  final String dateFormat;
   final String? existingLineId;
   final int initialSortOrder;
 
@@ -58,6 +63,9 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   late int _sortOrder = widget.initialSortOrder;
   DateTime? _createdAt;
   bool _loading = true;
+
+  /// Bumps when amount/split changes; avoids [setState] on the full form (RadioGroup crash on web).
+  final ValueNotifier<int> _splitRevision = ValueNotifier(0);
 
   @override
   void initState() {
@@ -124,10 +132,16 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
 
   @override
   void dispose() {
+    _splitRevision.dispose();
     _titleCtrl.dispose();
     _descCtrl.dispose();
     _amountCtrl.dispose();
     super.dispose();
+  }
+
+  void _refreshAmountDependentUi() {
+    _syncSplitFromAmount();
+    _splitRevision.value++;
   }
 
   void _syncSplitFromAmount() {
@@ -182,20 +196,83 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
     if (templateId == null || _split == null) return;
     final t = _templates.firstWhere((e) => e.id == templateId);
     final weights = ExpenseRatioTemplateRepository.decodeWeights(t.weightsJson);
-    setState(() {
-      _selectedTemplateId = templateId;
-      _likeClearedByEdit = false;
-      _split!.applyWeights(weights);
-    });
+    _selectedTemplateId = templateId;
+    _likeClearedByEdit = false;
+    _split!.applyWeights(weights);
+    _splitRevision.value++;
   }
 
   void _onGridEdited() {
-    setState(() {
-      if (_selectedTemplateId != null && !_likeClearedByEdit) {
-        _selectedTemplateId = null;
-        _likeClearedByEdit = true;
-      }
-    });
+    if (_selectedTemplateId != null && !_likeClearedByEdit) {
+      _selectedTemplateId = null;
+      _likeClearedByEdit = true;
+    }
+    _splitRevision.value++;
+  }
+
+  Widget _buildSplitSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 32),
+        Text(
+          l10n.housingExpenseSplitSectionTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: _split == null
+                ? null
+                : () {
+                    _split!.resetEqualParts();
+                    _splitRevision.value++;
+                  },
+            child: Text(l10n.housingExpenseEqualParts),
+          ),
+        ),
+        if (_templates.isNotEmpty) ...[
+          LikeRatioSelector(
+            templates: _templates,
+            participantIds: widget.participantIds,
+            selectedTemplateId: _selectedTemplateId,
+            onSelected: _onLikeSelected,
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (_split != null)
+          ExpenseSplitGrid(
+            state: _split!,
+            currencyCode: widget.defaultCurrency,
+            onChanged: _onGridEdited,
+            onRowAmountChanged: (i, minor) {
+              _split!.onAmountEdited(i, minor);
+              _onGridEdited();
+            },
+            onRowPercentChanged: (i, tenths) {
+              _split!.onPercentTenthsEdited(i, tenths);
+              _onGridEdited();
+            },
+          )
+        else
+          SizedBox(
+            height: 220,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  l10n.housingExpenseEnterAmountForSplit,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -245,13 +322,20 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
               title: Text(l10n.housingExpenseRecurrenceTapToSet),
               subtitle: _recurrence == null
                   ? null
-                  : Text(l10n.housingExpenseRecurrenceSet),
+                  : Text(
+                      formatRecurrenceSpecSummary(
+                        l10n,
+                        widget.dateFormat,
+                        _recurrence!,
+                      ),
+                    ),
               onTap: () async {
                 final spec = await showExpenseRecurrenceFlow(
                   context: context,
                   periodStart: widget.periodStart,
                   periodEnd: widget.periodEnd,
                   initial: _recurrence,
+                  dateFormat: widget.dateFormat,
                 );
                 if (spec != null) setState(() => _recurrence = spec);
               },
@@ -263,101 +347,129 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             decoration: InputDecoration(
               labelText: l10n.housingPlanAmountLabel,
             ),
-            onChanged: (_) => setState(_syncSplitFromAmount),
+            onChanged: (_) => _refreshAmountDependentUi(),
           ),
           const SizedBox(height: 8),
           Text(l10n.housingExpenseAmountTypeLabel, style: Theme.of(context).textTheme.titleSmall),
-          RadioGroup<bool>(
-            groupValue: _amountIsBudgetCap,
-            onChanged: (v) {
-              if (v == null) return;
-              setState(() => _amountIsBudgetCap = v);
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                RadioListTile<bool>(
-                  title: Text(l10n.housingExpenseAmountDetermined),
-                  value: false,
-                ),
-                RadioListTile<bool>(
-                  title: Text(l10n.housingExpenseAmountBudgetMax),
-                  value: true,
-                ),
-              ],
-            ),
+          _ExpenseAmountTypeSelector(
+            amountIsBudgetCap: _amountIsBudgetCap,
+            determinedLabel: l10n.housingExpenseAmountDetermined,
+            budgetLabel: l10n.housingExpenseAmountBudgetMax,
+            onChanged: (v) => setState(() => _amountIsBudgetCap = v),
           ),
-          DropdownButtonFormField<String?>(
-            initialValue: _paymentResponsibleId,
-            decoration: InputDecoration(
-              labelText: l10n.housingExpensePaymentResponsibleLabel,
-            ),
-            items: [
-              DropdownMenuItem(
-                value: null,
-                child: Text(l10n.housingExpensePaymentResponsibleAll),
-              ),
-              for (var i = 0; i < widget.participantIds.length; i++)
-                DropdownMenuItem(
-                  value: widget.participantIds[i],
-                  child: Text(widget.participantNames[i]),
-                ),
-            ],
+          _PaymentResponsibleField(
+            value: _paymentResponsibleId,
+            label: l10n.housingExpensePaymentResponsibleLabel,
+            allLabel: l10n.housingExpensePaymentResponsibleAll,
+            participantIds: widget.participantIds,
+            participantNames: widget.participantNames,
             onChanged: (v) => setState(() => _paymentResponsibleId = v),
           ),
-          const Divider(height: 32),
-          Text(
-            l10n.housingExpenseSplitSectionTitle,
-            style: Theme.of(context).textTheme.titleMedium,
+          ListenableBuilder(
+            listenable: _splitRevision,
+            builder: (context, _) => _buildSplitSection(l10n),
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: _split == null
-                  ? null
-                  : () => setState(_split!.resetEqualParts),
-              child: Text(l10n.housingExpenseEqualParts),
-            ),
-          ),
-          if (_templates.isNotEmpty) ...[
-            LikeRatioSelector(
-              templates: _templates,
-              participantIds: widget.participantIds,
-              selectedTemplateId: _selectedTemplateId,
-              onSelected: _onLikeSelected,
-            ),
-            const SizedBox(height: 8),
-          ],
-          if (_split != null)
-            ExpenseSplitGrid(
-              state: _split!,
-              currencyCode: widget.defaultCurrency,
-              onChanged: _onGridEdited,
-              onRowAmountChanged: (i, minor) {
-                setState(() {
-                  _split!.onAmountEdited(i, minor);
-                  _onGridEdited();
-                });
-              },
-              onRowPercentChanged: (i, tenths) {
-                setState(() {
-                  _split!.onPercentTenthsEdited(i, tenths);
-                  _onGridEdited();
-                });
-              },
-            ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            onPressed: _canSave ? _save : null,
-            child: Text(l10n.housingPlanSave),
-          ),
-        ),
+      bottomNavigationBar: ListenableBuilder(
+        listenable: _splitRevision,
+        builder: (context, _) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: FilledButton(
+                onPressed: _canSave ? _save : null,
+                child: Text(l10n.housingPlanSave),
+              ),
+            ),
+          );
+        },
       ),
+    );
+  }
+}
+
+/// Owns dropdown state so parent [setState] on amount does not reset the field.
+class _PaymentResponsibleField extends StatefulWidget {
+  const _PaymentResponsibleField({
+    required this.value,
+    required this.label,
+    required this.allLabel,
+    required this.participantIds,
+    required this.participantNames,
+    required this.onChanged,
+  });
+
+  final String? value;
+  final String label;
+  final String allLabel;
+  final List<String> participantIds;
+  final List<String> participantNames;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  State<_PaymentResponsibleField> createState() => _PaymentResponsibleFieldState();
+}
+
+class _PaymentResponsibleFieldState extends State<_PaymentResponsibleField> {
+  late String? _selected = widget.value;
+
+  @override
+  void didUpdateWidget(covariant _PaymentResponsibleField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _selected = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String?>(
+      initialValue: _selected,
+      decoration: InputDecoration(labelText: widget.label),
+      items: [
+        DropdownMenuItem(value: null, child: Text(widget.allLabel)),
+        for (var i = 0; i < widget.participantIds.length; i++)
+          DropdownMenuItem(
+            value: widget.participantIds[i],
+            child: Text(widget.participantNames[i]),
+          ),
+      ],
+      onChanged: (v) {
+        setState(() => _selected = v);
+        widget.onChanged(v);
+      },
+    );
+  }
+}
+
+/// Segmented control avoids [RadioGroup] dispose issues when the parent rebuilds.
+class _ExpenseAmountTypeSelector extends StatelessWidget {
+  const _ExpenseAmountTypeSelector({
+    required this.amountIsBudgetCap,
+    required this.determinedLabel,
+    required this.budgetLabel,
+    required this.onChanged,
+  });
+
+  final bool amountIsBudgetCap;
+  final String determinedLabel;
+  final String budgetLabel;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<bool>(
+      segments: [
+        ButtonSegment<bool>(value: false, label: Text(determinedLabel)),
+        ButtonSegment<bool>(value: true, label: Text(budgetLabel)),
+      ],
+      selected: {amountIsBudgetCap},
+      emptySelectionAllowed: false,
+      onSelectionChanged: (selected) {
+        if (selected.isEmpty) return;
+        onChanged(selected.first);
+      },
     );
   }
 }

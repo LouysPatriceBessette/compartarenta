@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 
 /// Picks agreement-bounded range and confirms recurrence kind.
+///
+/// Returns `null` when the user cancels either step or does not confirm a type.
 Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
   required BuildContext context,
   required DateTime periodStart,
   required DateTime periodEnd,
   required ExpenseRecurrenceSpec? initial,
+  required String dateFormat,
 }) async {
   final l10n = AppLocalizations.of(context);
   final startLocal = DateUtils.dateOnly(periodStart.toLocal());
@@ -17,41 +21,46 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
     context: context,
     firstDate: startLocal,
     lastDate: endLocal,
-    initialDateRange: DateTimeRange(
-      start: startLocal,
-      end: startLocal,
-    ),
+    saveText: l10n.housingExpenseRecurrenceUseRange,
   );
   if (range == null || !context.mounted) return null;
 
-  final anchor = range.start.toUtc().toIso8601String().split('T').first;
+  final anchor = calendarDateIso(range.start);
+  final anchorDisplay = formatRecurrenceAnchorIso(anchor, dateFormat);
   final day = range.start.day;
-  final spanDays = range.end.difference(range.start).inDays;
+  final spanDays = inclusiveCalendarDayCount(range.start, range.end);
+  final nthOrdinal = ordinalOfWeekdayInMonth(range.start);
 
   final options = <_RecurrenceChoice>[
     _RecurrenceChoice(
-      label: l10n.housingExpenseRecurrenceMonthlyDay(day, anchor),
+      label: l10n.housingExpenseRecurrenceMonthlyDay(day, anchorDisplay),
       spec: MonthlyDayRecurrence(day: day, anchorIso: anchor),
     ),
-    if (spanDays >= 1)
+    if (spanDays >= 2)
       _RecurrenceChoice(
-        label: l10n.housingExpenseRecurrenceEveryNDays(spanDays, anchor),
+        label: l10n.housingExpenseRecurrenceEveryNDays(spanDays, anchorDisplay),
         spec: EveryNDaysRecurrence(n: spanDays, anchorIso: anchor),
       ),
     _RecurrenceChoice(
-      label: l10n.housingExpenseRecurrenceNthWeekday(anchor),
+      label: recurrenceNthWeekdayOfMonthLabel(
+        l10n,
+        anchorDate: range.start,
+        anchorIso: anchor,
+        dateFormat: dateFormat,
+      ),
       spec: NthWeekdayRecurrence(
-        ordinal: 2,
+        ordinal: nthOrdinal,
         weekday: range.start.weekday,
         anchorIso: anchor,
       ),
     ),
   ];
 
-  ExpenseRecurrenceSpec? picked = initial ?? options.first.spec;
-  if (!context.mounted) return picked;
-  await showDialog<void>(
+  ExpenseRecurrenceSpec? picked = initial;
+  if (!context.mounted) return null;
+  final confirmed = await showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setDialogState) {
@@ -62,30 +71,26 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  RadioGroup<ExpenseRecurrenceSpec>(
-                    groupValue: picked,
-                    onChanged: (v) => setDialogState(() => picked = v),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final o in options)
-                          RadioListTile<ExpenseRecurrenceSpec>(
-                            title: Text(o.label),
-                            value: o.spec,
-                          ),
-                      ],
+                  for (final o in options)
+                    ListTile(
+                      title: Text(o.label),
+                      leading: Icon(
+                        picked == o.spec
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                      ),
+                      onTap: () => setDialogState(() => picked = o.spec),
                     ),
-                  ),
                 ],
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx),
+                onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l10n.housingPlanCancel),
               ),
               FilledButton(
-                onPressed: picked == null ? null : () => Navigator.pop(ctx),
+                onPressed: picked == null ? null : () => Navigator.pop(ctx, true),
                 child: Text(l10n.housingPlanSave),
               ),
             ],
@@ -94,6 +99,7 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
       );
     },
   );
+  if (confirmed != true || picked == null) return null;
   return picked;
 }
 

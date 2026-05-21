@@ -1971,17 +1971,105 @@ abstract class AppLocalizations {
   /// **'On day {day} of each month, from {anchor}'**
   String housingExpenseRecurrenceMonthlyDay(int day, String anchor);
 
+  /// No description provided for @housingExpenseRecurrenceUseRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get housingExpenseRecurrenceUseRange;
+
   /// No description provided for @housingExpenseRecurrenceEveryNDays.
   ///
   /// In en, this message translates to:
-  /// **'Every {days} days, from {anchor}'**
+  /// **'Every {days} days, starting {anchor}'**
   String housingExpenseRecurrenceEveryNDays(int days, String anchor);
 
-  /// No description provided for @housingExpenseRecurrenceNthWeekday.
+  /// No description provided for @housingExpenseRecurrenceNthWeekdayOfMonth.
   ///
   /// In en, this message translates to:
-  /// **'Nth weekday of month, from {anchor}'**
-  String housingExpenseRecurrenceNthWeekday(String anchor);
+  /// **'{ordinal} {weekday} of the month, from {anchor}'**
+  String housingExpenseRecurrenceNthWeekdayOfMonth(
+    String ordinal,
+    String weekday,
+    String anchor,
+  );
+
+  /// No description provided for @housingRecurrenceOrdinalFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First'**
+  String get housingRecurrenceOrdinalFirst;
+
+  /// No description provided for @housingRecurrenceOrdinalSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Second'**
+  String get housingRecurrenceOrdinalSecond;
+
+  /// No description provided for @housingRecurrenceOrdinalThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Third'**
+  String get housingRecurrenceOrdinalThird;
+
+  /// No description provided for @housingRecurrenceOrdinalFourth.
+  ///
+  /// In en, this message translates to:
+  /// **'Fourth'**
+  String get housingRecurrenceOrdinalFourth;
+
+  /// No description provided for @housingRecurrenceOrdinalFifth.
+  ///
+  /// In en, this message translates to:
+  /// **'Fifth'**
+  String get housingRecurrenceOrdinalFifth;
+
+  /// No description provided for @housingRecurrenceWeekdayMonday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get housingRecurrenceWeekdayMonday;
+
+  /// No description provided for @housingRecurrenceWeekdayTuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get housingRecurrenceWeekdayTuesday;
+
+  /// No description provided for @housingRecurrenceWeekdayWednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get housingRecurrenceWeekdayWednesday;
+
+  /// No description provided for @housingRecurrenceWeekdayThursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get housingRecurrenceWeekdayThursday;
+
+  /// No description provided for @housingRecurrenceWeekdayFriday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get housingRecurrenceWeekdayFriday;
+
+  /// No description provided for @housingRecurrenceWeekdaySaturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get housingRecurrenceWeekdaySaturday;
+
+  /// No description provided for @housingRecurrenceWeekdaySunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get housingRecurrenceWeekdaySunday;
+
+  /// No description provided for @housingExpenseEnterAmountForSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount for this expense'**
+  String get housingExpenseEnterAmountForSplit;
 
   /// Months segment of plan calendar duration (step 2).
   ///

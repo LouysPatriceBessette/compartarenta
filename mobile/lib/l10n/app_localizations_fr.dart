@@ -1068,14 +1068,61 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get housingExpenseRecurrenceUseRange => 'Utiliser';
+
+  @override
   String housingExpenseRecurrenceEveryNDays(int days, String anchor) {
     return 'À tous les $days jours, à partir du $anchor';
   }
 
   @override
-  String housingExpenseRecurrenceNthWeekday(String anchor) {
-    return 'Jour de semaine du mois, à partir du $anchor';
+  String housingExpenseRecurrenceNthWeekdayOfMonth(
+    String ordinal,
+    String weekday,
+    String anchor,
+  ) {
+    return '$ordinal $weekday du mois, à partir du $anchor';
   }
+
+  @override
+  String get housingRecurrenceOrdinalFirst => 'Premier';
+
+  @override
+  String get housingRecurrenceOrdinalSecond => 'Deuxième';
+
+  @override
+  String get housingRecurrenceOrdinalThird => 'Troisième';
+
+  @override
+  String get housingRecurrenceOrdinalFourth => 'Quatrième';
+
+  @override
+  String get housingRecurrenceOrdinalFifth => 'Cinquième';
+
+  @override
+  String get housingRecurrenceWeekdayMonday => 'lundi';
+
+  @override
+  String get housingRecurrenceWeekdayTuesday => 'mardi';
+
+  @override
+  String get housingRecurrenceWeekdayWednesday => 'mercredi';
+
+  @override
+  String get housingRecurrenceWeekdayThursday => 'jeudi';
+
+  @override
+  String get housingRecurrenceWeekdayFriday => 'vendredi';
+
+  @override
+  String get housingRecurrenceWeekdaySaturday => 'samedi';
+
+  @override
+  String get housingRecurrenceWeekdaySunday => 'dimanche';
+
+  @override
+  String get housingExpenseEnterAmountForSplit =>
+      'Entrez un montant pour cette dépense';
 
   @override
   String housingPlanDurationMonthsCount(int count) {

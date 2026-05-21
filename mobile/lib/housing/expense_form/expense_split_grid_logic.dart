@@ -107,23 +107,37 @@ class ExpenseSplitGridState {
     }
   }
 
+  /// Recomputes row amounts from locked [ExpenseSplitRow.weightBps].
+  ///
+  /// When weights still sum to [ExpenseRatioTemplateRepository.weightScale]
+  /// (e.g. equal parts, full template), uses [splitMinorByWeights] for fair
+  /// cent rounding. After partial row edits, weights may sum to less than 100%;
+  /// each row keeps its share of the new total and the correction row shows the
+  /// remainder.
   void setTotalMinor(int nextTotal) {
     totalMinor = nextTotal;
     if (totalMinor <= 0) return;
     final weights = [for (final r in rows) r.weightBps];
-    final amounts = splitMinorByWeights(totalMinor, weights);
-    for (var i = 0; i < rows.length; i++) {
-      rows[i].amountMinor = amounts[i];
+    final scale = ExpenseRatioTemplateRepository.weightScale;
+    final sumW = weights.fold<int>(0, (a, b) => a + b);
+    if (sumW == scale) {
+      final amounts = splitMinorByWeights(totalMinor, weights);
+      for (var i = 0; i < rows.length; i++) {
+        rows[i].amountMinor = amounts[i];
+      }
+      return;
+    }
+    for (final r in rows) {
+      r.amountMinor = totalMinor * r.weightBps ~/ scale;
     }
   }
 
   void onAmountEdited(int index, int amountMinor) {
     if (index < 0 || index >= rows.length || totalMinor <= 0) return;
+    final scale = ExpenseRatioTemplateRepository.weightScale;
     rows[index].amountMinor = amountMinor.clamp(0, 1 << 31);
     rows[index].weightBps =
-        ((rows[index].amountMinor * ExpenseRatioTemplateRepository.weightScale) /
-                totalMinor)
-            .round();
+        (rows[index].amountMinor * scale + totalMinor ~/ 2) ~/ totalMinor;
   }
 
   void onPercentTenthsEdited(int index, int percentTenths) {

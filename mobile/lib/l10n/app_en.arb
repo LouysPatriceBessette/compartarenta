@@ -410,19 +410,35 @@
       "anchor": { "type": "String" }
     }
   },
-  "housingExpenseRecurrenceEveryNDays": "Every {days} days, from {anchor}",
+  "housingExpenseRecurrenceUseRange": "Use",
+  "housingExpenseRecurrenceEveryNDays": "Every {days} days, starting {anchor}",
   "@housingExpenseRecurrenceEveryNDays": {
     "placeholders": {
       "days": { "type": "int" },
       "anchor": { "type": "String" }
     }
   },
-  "housingExpenseRecurrenceNthWeekday": "Nth weekday of month, from {anchor}",
-  "@housingExpenseRecurrenceNthWeekday": {
+  "housingExpenseRecurrenceNthWeekdayOfMonth": "{ordinal} {weekday} of the month, from {anchor}",
+  "@housingExpenseRecurrenceNthWeekdayOfMonth": {
     "placeholders": {
+      "ordinal": { "type": "String" },
+      "weekday": { "type": "String" },
       "anchor": { "type": "String" }
     }
   },
+  "housingRecurrenceOrdinalFirst": "First",
+  "housingRecurrenceOrdinalSecond": "Second",
+  "housingRecurrenceOrdinalThird": "Third",
+  "housingRecurrenceOrdinalFourth": "Fourth",
+  "housingRecurrenceOrdinalFifth": "Fifth",
+  "housingRecurrenceWeekdayMonday": "Monday",
+  "housingRecurrenceWeekdayTuesday": "Tuesday",
+  "housingRecurrenceWeekdayWednesday": "Wednesday",
+  "housingRecurrenceWeekdayThursday": "Thursday",
+  "housingRecurrenceWeekdayFriday": "Friday",
+  "housingRecurrenceWeekdaySaturday": "Saturday",
+  "housingRecurrenceWeekdaySunday": "Sunday",
+  "housingExpenseEnterAmountForSplit": "Enter an amount for this expense",
   "housingPlanDurationMonthsCount": "{count, plural, one{1 month} other{{count} months}}",
   "@housingPlanDurationMonthsCount": {
     "description": "Months segment of plan calendar duration (step 2).",
