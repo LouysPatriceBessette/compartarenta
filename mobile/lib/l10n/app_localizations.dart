@@ -1003,7 +1003,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingPlanExpenseValidationMessage.
   ///
   /// In en, this message translates to:
-  /// **'Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.'**
+  /// **'Add at least one expense. Each needs an amount, split totaling 100% across participants, and recurring items need a valid schedule.'**
   String get housingPlanExpenseValidationMessage;
 
   /// No description provided for @housingPlanSplitValidationMessage.

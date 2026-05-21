@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
@@ -16,6 +15,7 @@ import '../../housing/proposals/agreement_period_day_overlap.dart';
 import '../../housing/proposals/housing_plan_period_gate.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
+import '../../housing/expense_form/expense_recurrence_spec.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
@@ -30,21 +30,7 @@ import '../contacts/contact_picker_sheet.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_sunburst.dart';
 
-sealed class _SplitListEntry {}
-
-final class _SplitListGroup extends _SplitListEntry {
-  _SplitListGroup(this.group, this.memberLines);
-  final PlanGroup group;
-  final List<PlanLine> memberLines;
-}
-
-/// Uncategorized lines (no group, or unknown group id).
-final class _SplitUncategorized extends _SplitListEntry {
-  _SplitUncategorized(this.lines);
-  final List<PlanLine> lines;
-}
-
-/// Housing plan setup: vertical stepper (1–6) then summary.
+/// Housing plan setup: vertical stepper (4 steps) then summary.
 class HousingPlanScreen extends StatefulWidget {
   const HousingPlanScreen({
     super.key,
@@ -92,14 +78,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     MdiIcons.fish,
   ];
 
-  static const int _housingPlanStepCount = 6;
+  static const int _housingPlanStepCount = 4;
 
   List<String> _housingStepTitles(AppLocalizations l10n) => [
     l10n.housingPlanStepParticipants,
     l10n.housingPlanStepPlanDates,
-    l10n.housingPlanStepExpenseCategories,
     l10n.housingPlanStepExpenses,
-    l10n.housingPlanStepSplit,
     l10n.housingPlanStepAgreementRules,
   ];
 
@@ -121,10 +105,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   int _linesFutureSerial = -1;
   Future<List<PlanLine>>? _cachedPlanLinesFuture;
 
-  int _groupsEpoch = 0;
-  int _groupsFutureSerial = -1;
-  Future<List<PlanGroup>>? _cachedPlanGroupsFuture;
-
   /// Other people on the plan (not including the signed-in profile).
   int _otherParticipantCount = 1;
 
@@ -138,9 +118,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   DateTime? _periodStart;
   DateTime? _periodEnd;
 
-  int _ratioParticipantIndex = 0;
-
-  /// Selected participant when editing per-person withdrawal rules (same order as Split).
+  /// Selected participant when editing per-person withdrawal rules.
   int _withdrawalParticipantIndex = 0;
 
   bool _withdrawalSameForAll = true;
@@ -179,13 +157,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   final Set<String> _expandedCustomRuleIds = {};
   final Set<String> _expandedSuggestionIds = {};
 
-  final Map<String, TextEditingController> _shareAmountControllers = {};
-  final Map<String, int> _draftRatioWeightsBps = {};
-
-  /// Minor units to show after a manual amount commit when the persisted
-  /// weight grid cannot round-trip to the typed cents exactly.
-  final Map<String, int> _shareAmountMinorOverride = {};
-
   late final Future<void> _boot;
 
   @override
@@ -207,10 +178,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     for (final c in _perParticipantPenalty) {
       c.dispose();
     }
-    for (final c in _shareAmountControllers.values) {
-      c.dispose();
-    }
-    _shareAmountControllers.clear();
     _globalNotice.dispose();
     _globalPenalty.dispose();
     _buildingRulesBody.dispose();
@@ -220,505 +187,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     // bootstrap for the whole process. Closing it breaks any screen that
     // opens after navigating away (e.g. system back from Plan logement).
     super.dispose();
-  }
-
-  TextEditingController _shareAmountControllerFor(
-    String lineId,
-    String participantId,
-  ) {
-    final key = '$lineId:$participantId';
-    return _shareAmountControllers.putIfAbsent(
-      key,
-      () => TextEditingController(),
-    );
-  }
-
-  /// Major units string with exactly two decimals; invalid / NaN → `0.00`.
-  String _formatMoneyMajorTwoDecimals(String raw) {
-    final t = raw.trim().replaceAll(',', '.');
-    if (t.isEmpty) return '0.00';
-    final v = double.tryParse(t);
-    if (v == null || v.isNaN) return '0.00';
-    return v.toStringAsFixed(2);
-  }
-
-  /// Horizontal inset and track width matching [Slider] / [BaseSliderTrackShape.getPreferredRect].
-  (double leftInset, double trackWidth) _sliderTrackHorizontalMetrics(
-    BuildContext context,
-    double parentWidth, {
-    required bool sliderInteractive,
-  }) {
-    final st = SliderTheme.of(context);
-    final thumbShape = st.thumbShape;
-    final overlayShape = st.overlayShape;
-    if (thumbShape == null || overlayShape == null) {
-      const pad = 12.0;
-      return (pad, math.max(0.0, parentWidth - 2 * pad));
-    }
-    final discrete = false;
-    final thumbW = thumbShape
-        .getPreferredSize(sliderInteractive, discrete)
-        .width;
-    final overlayW = overlayShape
-        .getPreferredSize(sliderInteractive, discrete)
-        .width;
-    if (st.padding != null) {
-      return (0, math.max(0.0, parentWidth));
-    }
-    final leftInset = math.max(overlayW / 2, thumbW / 2);
-    final trackWidth = parentWidth - math.max(thumbW, overlayW);
-    return (leftInset, math.max(0.0, trackWidth));
-  }
-
-  EdgeInsets _sliderThemeOuterPadding(BuildContext context) {
-    return SliderTheme.of(
-          context,
-        ).padding?.resolve(Directionality.of(context)) ??
-        EdgeInsets.zero;
-  }
-
-  double _snapToDevicePixels(BuildContext context, double logicalX) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    return (logicalX * dpr).round() / dpr;
-  }
-
-  List<int> _effectiveLineWeightsBps(
-    PlanLine line,
-    List<String> pids,
-    List<int> weightsDb,
-  ) {
-    final n = pids.length;
-    if (n == 0) return [];
-    var sumFirst = 0;
-    final out = List<int>.filled(n, 0);
-    for (var i = 0; i < n - 1; i++) {
-      final k = '${line.id}:${pids[i]}';
-      final w = _draftRatioWeightsBps[k] ?? weightsDb[i];
-      out[i] = w;
-      sumFirst += w;
-    }
-    out[n - 1] = (10000 - sumFirst).clamp(0, 10000);
-    return out;
-  }
-
-  List<int> _effectiveGroupWeightsBps(
-    PlanGroup group,
-    List<String> pids,
-    List<int> weightsDb,
-  ) {
-    final n = pids.length;
-    if (n == 0) return [];
-    var sumFirst = 0;
-    final out = List<int>.filled(n, 0);
-    for (var i = 0; i < n - 1; i++) {
-      final k = _shareSplitControllerKeyForGroup(group.id, pids[i]);
-      final w = _draftRatioWeightsBps[k] ?? weightsDb[i];
-      out[i] = w;
-      sumFirst += w;
-    }
-    out[n - 1] = (10000 - sumFirst).clamp(0, 10000);
-    return out;
-  }
-
-  Future<int> _bestWeightBpsForLineShareMinor({
-    required PlanLine line,
-    required List<String> pids,
-    required int participantIndex,
-    required int targetMinor,
-    required int basisMinor,
-    required int assignable,
-  }) async {
-    if (basisMinor <= 0 || pids.isEmpty) return 0;
-    if (participantIndex >= pids.length - 1) {
-      return await _ratioWeight(line.id, pids[participantIndex]);
-    }
-    final weightsDb = await Future.wait([
-      for (final pid in pids) _ratioWeight(line.id, pid),
-    ]);
-    var bestW = weightsDb[participantIndex].clamp(0, assignable);
-    var bestErr = 1 << 30;
-    for (var cand = 0; cand <= assignable; cand++) {
-      final trial = List<int>.from(weightsDb);
-      trial[participantIndex] = cand;
-      var s = 0;
-      for (var i = 0; i < pids.length - 1; i++) {
-        s += trial[i];
-      }
-      trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
-      final got = splitMinorByWeights(basisMinor, trial)[participantIndex];
-      final err = (got - targetMinor).abs();
-      if (err < bestErr) {
-        bestErr = err;
-        bestW = cand;
-      }
-    }
-    return bestW;
-  }
-
-  Future<int> _bestWeightBpsForGroupShareMinor({
-    required PlanGroup group,
-    required List<String> pids,
-    required int participantIndex,
-    required int targetMinor,
-    required int basisMinor,
-    required int assignable,
-  }) async {
-    if (basisMinor <= 0 || pids.isEmpty) return 0;
-    if (participantIndex >= pids.length - 1) {
-      return await _ratioWeightGroup(group.id, pids[participantIndex]);
-    }
-    final weightsDb = await Future.wait([
-      for (final pid in pids) _ratioWeightGroup(group.id, pid),
-    ]);
-    var bestW = weightsDb[participantIndex].clamp(0, assignable);
-    var bestErr = 1 << 30;
-    for (var cand = 0; cand <= assignable; cand++) {
-      final trial = List<int>.from(weightsDb);
-      trial[participantIndex] = cand;
-      var s = 0;
-      for (var i = 0; i < pids.length - 1; i++) {
-        s += trial[i];
-      }
-      trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
-      final got = splitMinorByWeights(basisMinor, trial)[participantIndex];
-      final err = (got - targetMinor).abs();
-      if (err < bestErr) {
-        bestErr = err;
-        bestW = cand;
-      }
-    }
-    return bestW;
-  }
-
-  Future<int> _maxHamiltonShareLine({
-    required PlanLine line,
-    required List<String> pids,
-    required int participantIndex,
-    required int basisMinor,
-    required int assignable,
-  }) async {
-    if (basisMinor <= 0) return 0;
-    final wDb = await Future.wait([
-      for (final pid in pids) _ratioWeight(line.id, pid),
-    ]);
-    if (participantIndex >= pids.length - 1) {
-      return splitMinorByWeights(basisMinor, wDb)[participantIndex];
-    }
-    final trial = List<int>.from(wDb);
-    trial[participantIndex] = assignable;
-    var s = 0;
-    for (var i = 0; i < pids.length - 1; i++) {
-      s += trial[i];
-    }
-    trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
-    return splitMinorByWeights(basisMinor, trial)[participantIndex];
-  }
-
-  Future<int> _maxHamiltonShareGroup({
-    required PlanGroup group,
-    required List<String> pids,
-    required int participantIndex,
-    required int basisMinor,
-    required int assignable,
-  }) async {
-    if (basisMinor <= 0) return 0;
-    final wDb = await Future.wait([
-      for (final pid in pids) _ratioWeightGroup(group.id, pid),
-    ]);
-    if (participantIndex >= pids.length - 1) {
-      return splitMinorByWeights(basisMinor, wDb)[participantIndex];
-    }
-    final trial = List<int>.from(wDb);
-    trial[participantIndex] = assignable;
-    var s = 0;
-    for (var i = 0; i < pids.length - 1; i++) {
-      s += trial[i];
-    }
-    trial[pids.length - 1] = (10000 - s).clamp(0, 10000);
-    return splitMinorByWeights(basisMinor, trial)[participantIndex];
-  }
-
-  bool _lineHasAnyShareAmountOverride(PlanLine line, List<String> pids) {
-    for (final pid in pids) {
-      if (_shareAmountMinorOverride.containsKey('${line.id}:$pid')) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool _groupHasAnyShareAmountOverride(PlanGroup group, List<String> pids) {
-    for (final pid in pids) {
-      if (_shareAmountMinorOverride.containsKey(
-        _shareSplitControllerKeyForGroup(group.id, pid),
-      )) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  Future<void> _commitShareAmountTextField(
-    PlanLine line,
-    List<String> pids,
-    int participantIndex,
-    int basisMinor,
-    int assignable,
-    String controllerKey,
-  ) async {
-    final ctrl = _shareAmountControllers[controllerKey];
-    if (ctrl == null) return;
-    final formatted = _formatMoneyMajorTwoDecimals(ctrl.text);
-    ctrl.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-    final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
-    var minor = (major * 100).round();
-    final maxShareMinor = basisMinor <= 0
-        ? 0
-        : await _maxHamiltonShareLine(
-            line: line,
-            pids: pids,
-            participantIndex: participantIndex,
-            basisMinor: basisMinor,
-            assignable: assignable,
-          );
-    minor = minor.clamp(0, maxShareMinor);
-    final display = (minor / 100).toStringAsFixed(2);
-    if (display != formatted) {
-      ctrl.value = TextEditingValue(
-        text: display,
-        selection: TextSelection.collapsed(offset: display.length),
-      );
-    }
-    final wClamped = await _bestWeightBpsForLineShareMinor(
-      line: line,
-      pids: pids,
-      participantIndex: participantIndex,
-      targetMinor: minor,
-      basisMinor: basisMinor,
-      assignable: assignable,
-    );
-    await _setRatioWeightBps(line, pids, participantIndex, wClamped);
-    if (mounted) {
-      setState(() {
-        _shareAmountMinorOverride[controllerKey] = minor;
-      });
-    }
-  }
-
-  String _shareSplitControllerKeyForGroup(
-    String groupId,
-    String participantId,
-  ) => 'g:$groupId:$participantId';
-
-  TextEditingController _shareAmountControllerForGroup(
-    String groupId,
-    String participantId,
-  ) {
-    final key = _shareSplitControllerKeyForGroup(groupId, participantId);
-    return _shareAmountControllers.putIfAbsent(
-      key,
-      () => TextEditingController(),
-    );
-  }
-
-  Future<void> _commitShareGroupAmountTextField(
-    PlanGroup group,
-    List<String> pids,
-    int participantIndex,
-    int basisMinor,
-    int assignable,
-    String controllerKey,
-  ) async {
-    final ctrl = _shareAmountControllers[controllerKey];
-    if (ctrl == null) return;
-    final formatted = _formatMoneyMajorTwoDecimals(ctrl.text);
-    ctrl.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-    final major = double.tryParse(formatted.replaceAll(',', '.')) ?? 0.0;
-    var minor = (major * 100).round();
-    final maxShareMinor = basisMinor <= 0
-        ? 0
-        : await _maxHamiltonShareGroup(
-            group: group,
-            pids: pids,
-            participantIndex: participantIndex,
-            basisMinor: basisMinor,
-            assignable: assignable,
-          );
-    minor = minor.clamp(0, maxShareMinor);
-    final display = (minor / 100).toStringAsFixed(2);
-    if (display != formatted) {
-      ctrl.value = TextEditingValue(
-        text: display,
-        selection: TextSelection.collapsed(offset: display.length),
-      );
-    }
-    final wClamped = await _bestWeightBpsForGroupShareMinor(
-      group: group,
-      pids: pids,
-      participantIndex: participantIndex,
-      targetMinor: minor,
-      basisMinor: basisMinor,
-      assignable: assignable,
-    );
-    await _setGroupRatioWeightBps(group, pids, participantIndex, wClamped);
-    if (mounted) {
-      setState(() {
-        _shareAmountMinorOverride[controllerKey] = minor;
-      });
-    }
-  }
-
-  int _groupBasisMinor(List<PlanLine> memberLines) =>
-      memberLines.fold<int>(0, (a, l) => a + _splitBasisMinor(l));
-
-  List<double> _splitTickFractionsForParticipantCount(int n) {
-    final s = <double>{};
-    void add(int a, int b) => s.add(a / b);
-
-    add(1, 2);
-    add(1, 3);
-    add(2, 3);
-    add(1, 4);
-    add(3, 4);
-
-    if (n >= 5) {
-      add(1, 5);
-      add(2, 5);
-      add(3, 5);
-      add(4, 5);
-    }
-    if (n >= 6) {
-      add(1, 6);
-      add(5, 6);
-    }
-    if (n >= 7) {
-      add(1, 7);
-      add(2, 7);
-      add(3, 7);
-      add(4, 7);
-      add(5, 7);
-      add(6, 7);
-    }
-    if (n >= 8) {
-      add(1, 8);
-      add(3, 8);
-      add(5, 8);
-      add(7, 8);
-    }
-
-    final out = s.toList()..sort();
-    return out;
-  }
-
-  double _nearestTick(double v, List<double> ticks) {
-    var best = ticks.first;
-    var bestD = (v - best).abs();
-    for (final t in ticks.skip(1)) {
-      final d = (v - t).abs();
-      if (d < bestD) {
-        bestD = d;
-        best = t;
-      }
-    }
-    return best;
-  }
-
-  Future<void> _setRatioWeightBps(
-    PlanLine line,
-    List<String> pids,
-    int participantIndex,
-    int newW,
-  ) async {
-    final last = pids.last;
-    if (participantIndex >= pids.length - 1) return;
-
-    var assignedBefore = 0;
-    for (var i = 0; i < participantIndex; i++) {
-      assignedBefore += await _ratioWeight(line.id, pids[i]);
-    }
-    final assignable = (10000 - assignedBefore).clamp(0, 10000);
-    final clampedW = newW.clamp(0, assignable);
-    final pid = pids[participantIndex];
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:${line.id}:$pid',
-        planId: _planId,
-        participantId: pid,
-        lineId: drift.Value(line.id),
-        groupId: const drift.Value.absent(),
-        weight: clampedW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-
-    var sumExceptLast = 0;
-    for (var i = 0; i < pids.length - 1; i++) {
-      sumExceptLast += await _ratioWeight(line.id, pids[i]);
-    }
-    final lastW = (10000 - sumExceptLast).clamp(0, 10000);
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:${line.id}:$last',
-        planId: _planId,
-        participantId: last,
-        lineId: drift.Value(line.id),
-        groupId: const drift.Value.absent(),
-        weight: lastW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-  }
-
-  Future<void> _setGroupRatioWeightBps(
-    PlanGroup group,
-    List<String> pids,
-    int participantIndex,
-    int newW,
-  ) async {
-    final last = pids.last;
-    if (participantIndex >= pids.length - 1) return;
-
-    var assignedBefore = 0;
-    for (var i = 0; i < participantIndex; i++) {
-      assignedBefore += await _ratioWeightGroup(group.id, pids[i]);
-    }
-    final assignable = (10000 - assignedBefore).clamp(0, 10000);
-    final clampedW = newW.clamp(0, assignable);
-    final pid = pids[participantIndex];
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:grp:${group.id}:$pid',
-        planId: _planId,
-        participantId: pid,
-        lineId: const drift.Value.absent(),
-        groupId: drift.Value(group.id),
-        weight: clampedW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
-
-    var sumExceptLast = 0;
-    for (var i = 0; i < pids.length - 1; i++) {
-      sumExceptLast += await _ratioWeightGroup(group.id, pids[i]);
-    }
-    final lastW = (10000 - sumExceptLast).clamp(0, 10000);
-    await _db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$_planId:grp:${group.id}:$last',
-        planId: _planId,
-        participantId: last,
-        lineId: const drift.Value.absent(),
-        groupId: drift.Value(group.id),
-        weight: lastW,
-        createdAt: DateTime.now().toUtc(),
-      ),
-    );
   }
 
   String get _selfParticipantId => '$_planId:self';
@@ -827,37 +295,61 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   /// True when the local DB contains everything required to show the housing
-  /// summary (same gates as finishing step 6). SharedPreferences alone is not
-  /// enough: clearing the DB leaves a stale `housingDefaultPlanSummaryReached`.
+  /// summary (same gates as finishing the wizard). SharedPreferences alone is
+  /// not enough: clearing the DB leaves a stale `housingDefaultPlanSummaryReached`.
   Future<bool> _isHousingPlanWizardFullyDoneInDb() async {
     if (!_validateStep(0)) return false;
     if (!_datesStepValid()) return false;
-    if (!await _validateStep2Expenses()) return false;
-    final lines = await _db.listPlanLines(_planId);
-    final groups = await _db.listPlanGroups(_planId);
-    final pids = _allParticipantIds();
-    if (!await _validateStep3Ratios(lines, groups, pids)) return false;
-    if (!_validateStep(5)) return false;
+    if (!await _validateExpensesStep()) return false;
+    if (!_validateStep(3)) return false;
     return true;
   }
 
-  /// First wizard step that is not satisfied yet (0–5). Categories (2) are
-  /// optional; we resume at expenses (3) once participants and dates are valid.
+  /// First wizard step that is not satisfied yet (0–3).
   Future<int> _inferResumeStepIndex() async {
     if (!_validateStep(0)) return 0;
     if (!_datesStepValid()) return 1;
-    if (!await _validateStep2Expenses()) return 3;
+    if (!await _validateExpensesStep()) return 2;
+    if (!_validateStep(3)) return 3;
+    return 3;
+  }
+
+  Future<void> _stripOrphanGroupPlanRatios() async {
+    await (_db.delete(_db.planRatios)
+          ..where((t) => t.planId.equals(_planId))
+          ..where((t) => t.groupId.isNotNull())
+          ..where((t) => t.lineId.isNull()))
+        .go();
+  }
+
+  Future<bool> _validateExpensesStep() async {
     final lines = await _db.listPlanLines(_planId);
-    final groups = await _db.listPlanGroups(_planId);
+    if (lines.isEmpty) return false;
     final pids = _allParticipantIds();
-    if (!await _validateStep3Ratios(lines, groups, pids)) return 4;
-    if (!_validateStep(5)) return 5;
-    return 5;
+    final ratios = await _db.listPlanRatios(_planId);
+    for (final l in lines) {
+      if (l.amountMinor == null || l.amountMinor! <= 0) return false;
+      if (l.isRecurring) {
+        final spec = ExpenseRecurrenceSpec.parseStored(l.recurrenceSpecJson);
+        if (spec == null) {
+          final day = l.recurrenceDayOfMonth;
+          if (day == null || day < 1 || day > 31) return false;
+        }
+      }
+      var sum = 0;
+      for (final pid in pids) {
+        sum += ratios
+            .where((r) => r.lineId == l.id && r.participantId == pid)
+            .fold<int>(0, (a, r) => a + r.weight);
+      }
+      if (sum != 10000) return false;
+    }
+    return true;
   }
 
   Future<void> _loadFromDb() async {
     await _ensurePlanShell();
-    _shareAmountMinorOverride.clear();
+    await _stripOrphanGroupPlanRatios();
     final roster = await _db.listParticipants();
     final coRows = roster.where((p) => p.id.startsWith('$_planId:p')).toList()
       ..sort((a, b) => a.id.compareTo(b.id));
@@ -938,14 +430,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     return _cachedPlanLinesFuture!;
   }
 
-  Future<List<PlanGroup>> _planGroupsFuture() {
-    if (_groupsFutureSerial != _groupsEpoch) {
-      _groupsFutureSerial = _groupsEpoch;
-      _cachedPlanGroupsFuture = _db.listPlanGroups(_planId);
-    }
-    return _cachedPlanGroupsFuture!;
-  }
-
   bool _stepDone(int i) {
     if (_showSummary) return true;
     return i < _stepIndex;
@@ -957,9 +441,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _buildingRulesEditing ||
       _customRuleEditingId != null;
 
-  /// While editing agreement rule content, block wizard navigation on step 6.
+  /// While editing agreement rule content, block wizard navigation on agreement step.
   bool get _agreementRulesStepFooterLocked =>
-      _stepIndex == 5 && _anyAgreementRuleEditing;
+      _stepIndex == 3 && _anyAgreementRuleEditing;
 
   bool _datesStepValid() {
     if (_periodStart == null || _periodEnd == null) return false;
@@ -1011,12 +495,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 1:
         return _datesStepValid();
       case 2:
-        return true; // categories are optional (see expense plan specs)
+        return true; // validated async: expenses + per-line ratios
       case 3:
-        return true; // validated async: at least one expense line
-      case 4:
-        return true; // validated async: ratios sum to 100%
-      case 5:
         if (!_rulesDraft.earlyWithdrawalEnabled) return true;
         final n = int.tryParse(_globalNotice.text.trim()) ?? 0;
         final p = _parseMinor(_globalPenalty.text) ?? 0;
@@ -1033,88 +513,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       default:
         return true;
     }
-  }
-
-  Future<void> _unassignLinesAndDeletePlanGroup(String groupId) async {
-    await (_db.update(_db.planLines)..where((t) => t.groupId.equals(groupId)))
-        .write(PlanLinesCompanion(groupId: const drift.Value(null)));
-    await (_db.delete(_db.planGroups)..where((t) => t.id.equals(groupId))).go();
-  }
-
-  Future<void> _editPlanCategory(PlanGroup? existing) async {
-    final result = await showDialog<_CategoryDraft>(
-      context: context,
-      builder: (context) => _CategoryEditorDialog(initial: existing),
-    );
-    if (result == null) return;
-    final now = DateTime.now().toUtc();
-    final id = existing?.id ?? 'group:${now.microsecondsSinceEpoch}';
-    await _db.upsertPlanGroup(
-      PlanGroupsCompanion(
-        id: drift.Value(id),
-        planId: drift.Value(_planId),
-        title: drift.Value(result.title),
-        description: drift.Value(result.description),
-        createdAt: drift.Value(existing?.createdAt ?? now),
-      ),
-    );
-  }
-
-  Future<bool> _validateStep2Expenses() async {
-    final lines = await _db.listPlanLines(_planId);
-    if (lines.isEmpty) return false;
-    for (final l in lines) {
-      if (l.isRecurring &&
-          (l.recurrenceDayOfMonth == null ||
-              l.recurrenceDayOfMonth! < 1 ||
-              l.recurrenceDayOfMonth! > 31)) {
-        return false;
-      }
-      if (l.amountUsesRange) {
-        final mn = l.minAmountMinor;
-        final mx = l.maxAmountMinor;
-        if (mn == null || mx == null || mn > mx) return false;
-      } else {
-        if (l.amountMinor == null) return false;
-      }
-    }
-    return true;
-  }
-
-  Future<bool> _validateStep3Ratios(
-    List<PlanLine> lines,
-    List<PlanGroup> groups,
-    List<String> pids,
-  ) async {
-    final ratios = await _db.listPlanRatios(_planId);
-    final knownGroupIds = groups.map((g) => g.id).toSet();
-
-    for (final g in groups) {
-      final members = lines.where((l) => l.groupId == g.id).toList();
-      if (members.isEmpty) continue;
-      var sum = 0;
-      for (final pid in pids) {
-        final w = ratios
-            .where((r) => r.groupId == g.id && r.participantId == pid)
-            .fold<int>(0, (a, r) => a + r.weight);
-        sum += w;
-      }
-      if (sum != 10000) return false;
-    }
-
-    for (final line in lines) {
-      final gid = line.groupId;
-      if (gid != null && knownGroupIds.contains(gid)) continue;
-      var sum = 0;
-      for (final pid in pids) {
-        final w = ratios
-            .where((r) => r.lineId == line.id && r.participantId == pid)
-            .fold<int>(0, (a, r) => a + r.weight);
-        sum += w;
-      }
-      if (sum != 10000) return false;
-    }
-    return true;
   }
 
   Future<void> _persistParticipants() async {
@@ -1184,114 +582,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
   }
 
-  Future<void> _initRatiosIfNeeded() async {
-    final lines = await _db.listPlanLines(_planId);
-    final groups = await _db.listPlanGroups(_planId);
-    final pids = _allParticipantIds();
-    if (pids.length < 2) return;
-    final existing = await _db.listPlanRatios(_planId);
-    final knownGroupIds = groups.map((g) => g.id).toSet();
-    final last = pids.last;
-
-    for (final g in groups) {
-      final members = lines.where((l) => l.groupId == g.id).toList();
-      if (members.isEmpty) continue;
-      var sum = 0;
-      for (final pid in pids) {
-        sum += existing
-            .where((r) => r.groupId == g.id && r.participantId == pid)
-            .fold<int>(0, (a, r) => a + r.weight);
-      }
-      if (sum == 10000) continue;
-      await (_db.delete(
-        _db.planRatios,
-      )..where((t) => t.groupId.equals(g.id))).go();
-      for (var i = 0; i < pids.length - 1; i++) {
-        await _db.upsertPlanRatio(
-          PlanRatiosCompanion.insert(
-            id: 'ratio:$_planId:grp:${g.id}:${pids[i]}',
-            planId: _planId,
-            participantId: pids[i],
-            lineId: const drift.Value.absent(),
-            groupId: drift.Value(g.id),
-            weight: 0,
-            createdAt: DateTime.now().toUtc(),
-          ),
-        );
-      }
-      await _db.upsertPlanRatio(
-        PlanRatiosCompanion.insert(
-          id: 'ratio:$_planId:grp:${g.id}:$last',
-          planId: _planId,
-          participantId: last,
-          lineId: const drift.Value.absent(),
-          groupId: drift.Value(g.id),
-          weight: 10000,
-          createdAt: DateTime.now().toUtc(),
-        ),
-      );
-    }
-
-    for (final line in lines) {
-      final gid = line.groupId;
-      if (gid != null && knownGroupIds.contains(gid)) {
-        await (_db.delete(
-          _db.planRatios,
-        )..where((t) => t.lineId.equals(line.id))).go();
-        continue;
-      }
-      final lineSum = existing
-          .where((r) => r.lineId == line.id)
-          .fold<int>(0, (a, r) => a + r.weight);
-      if (lineSum == 10000) continue;
-      await (_db.delete(
-        _db.planRatios,
-      )..where((t) => t.lineId.equals(line.id))).go();
-      for (var i = 0; i < pids.length - 1; i++) {
-        await _db.upsertPlanRatio(
-          PlanRatiosCompanion.insert(
-            id: 'ratio:$_planId:${line.id}:${pids[i]}',
-            planId: _planId,
-            participantId: pids[i],
-            lineId: drift.Value(line.id),
-            groupId: const drift.Value.absent(),
-            weight: 0,
-            createdAt: DateTime.now().toUtc(),
-          ),
-        );
-      }
-      await _db.upsertPlanRatio(
-        PlanRatiosCompanion.insert(
-          id: 'ratio:$_planId:${line.id}:$last',
-          planId: _planId,
-          participantId: last,
-          lineId: drift.Value(line.id),
-          groupId: const drift.Value.absent(),
-          weight: 10000,
-          createdAt: DateTime.now().toUtc(),
-        ),
-      );
-    }
-  }
-
-  Future<int> _ratioWeightGroup(String groupId, String participantId) async {
-    final rows = await _db.listPlanRatios(_planId);
-    return rows
-        .where((r) => r.groupId == groupId && r.participantId == participantId)
-        .fold<int>(0, (a, r) => a + r.weight);
-  }
-
-  Future<int> _ratioWeight(String lineId, String participantId) async {
-    final rows = await _db.listPlanRatios(_planId);
-    return rows
-        .where((r) => r.lineId == lineId && r.participantId == participantId)
-        .fold<int>(0, (a, r) => a + r.weight);
-  }
-
-  /// Amount this line contributes to **monthly** split math (one month for recurring).
+  /// Monthly basis for presentation (budget cap uses high estimate).
   int _splitBasisMinor(PlanLine line) => PlanProjection.unitMinor(line);
-
-  String _money2FromMinor(int minor) => (minor / 100).toStringAsFixed(2);
 
   Future<void> _persistAgreementRules() async {
     final cur = await _db.getAgreementForPlan(_planId);
@@ -1537,9 +829,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     setState(() {
       _showSummary = false;
       _stepIndex = 0;
-      _ratioParticipantIndex = 0;
       _withdrawalParticipantIndex = 0;
-      _shareAmountMinorOverride.clear();
     });
     await _loadFromDb();
     if (mounted) {
@@ -1636,7 +926,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               prefs: widget.prefs,
               reloadToken: _summaryReloadToken,
               avatarIcons: _avatarIcons,
-              shareMinorOverrides: _shareAmountMinorOverride,
               onEditPlan: _onEditPlanFromSummary,
               onInvite: _openInviteProposalFlow,
               onDestroy: _onDestroyPlan,
@@ -1703,15 +992,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                               ),
                             ),
                           if (_stepIndex == 2)
-                            IconButton.filledTonal(
-                              tooltip: l10n.housingPlanAddCategoryTooltip,
-                              onPressed: () async {
-                                await _editPlanCategory(null);
-                                if (mounted) setState(() => _groupsEpoch++);
-                              },
-                              icon: const Icon(Icons.add),
-                            ),
-                          if (_stepIndex == 3)
                             IconButton.filledTonal(
                               tooltip: l10n.housingPlanAddExpenseTooltip,
                               onPressed: () async {
@@ -1783,8 +1063,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                             if (_stepIndex == 1) {
                                               await _persistPeriod();
                                             }
-                                            if (_stepIndex == 3) {
-                                              if (!await _validateStep2Expenses()) {
+                                            if (_stepIndex == 2) {
+                                              if (!await _validateExpensesStep()) {
                                                 if (mounted) {
                                                   messenger.showSnackBar(
                                                     SnackBar(
@@ -1797,30 +1077,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                                 return;
                                               }
                                             }
-                                            if (_stepIndex == 4) {
-                                              final lines = await _db
-                                                  .listPlanLines(_planId);
-                                              final groups = await _db
-                                                  .listPlanGroups(_planId);
-                                              final pids = _allParticipantIds();
-                                              if (!await _validateStep3Ratios(
-                                                lines,
-                                                groups,
-                                                pids,
-                                              )) {
-                                                if (mounted) {
-                                                  messenger.showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        l10n.housingPlanSplitValidationMessage,
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                                return;
-                                              }
-                                            }
-                                            if (_stepIndex == 5) {
+                                            if (_stepIndex == 3) {
                                               await _persistAgreementRules();
                                               await widget.prefs
                                                   .setHousingDefaultPlanSummaryReached(
@@ -1832,9 +1089,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                                 );
                                               }
                                               return;
-                                            }
-                                            if (_stepIndex == 3) {
-                                              await _initRatiosIfNeeded();
                                             }
                                             if (mounted) {
                                               setState(() => _stepIndex++);
@@ -1861,7 +1115,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                         }
                                       : null),
                             child: Text(
-                              _stepIndex == 5
+                              _stepIndex == 3
                                   ? l10n.housingPlanFinish
                                   : l10n.housingPlanNext,
                             ),
@@ -1886,12 +1140,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       case 1:
         return _stepDates();
       case 2:
-        return _stepExpenseCategories();
-      case 3:
         return _stepExpenses();
-      case 4:
-        return _stepRatios();
-      case 5:
+      case 3:
         return _stepAgreementRules();
       default:
         return const SizedBox.shrink();
@@ -1905,7 +1155,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _resizeParticipantEditors(v);
       _coEditorIndex = _coEditorIndex.clamp(0, v - 1);
       final maxPid = v;
-      _ratioParticipantIndex = _ratioParticipantIndex.clamp(0, maxPid);
       _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(
         0,
         maxPid,
@@ -2064,100 +1313,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
   }
 
-  Widget _stepExpenseCategories() {
-    return FutureBuilder<List<PlanGroup>>(
-      future: _planGroupsFuture(),
-      builder: (context, snap) {
-        final l10n = AppLocalizations.of(context);
-        final groups = snap.data ?? [];
-        return Column(
-          children: [
-            Expanded(
-              child: groups.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          l10n.housingPlanCategoriesEmptyHint,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: groups.length,
-                      itemBuilder: (context, i) {
-                        final g = groups[i];
-                        return Card(
-                          child: ListTile(
-                            title: Text(g.title),
-                            subtitle: g.description.isNotEmpty
-                                ? Text(
-                                    g.description,
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                : null,
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () async {
-                                final ok = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) {
-                                    final d10n = AppLocalizations.of(ctx);
-                                    return AlertDialog(
-                                      title: Text(
-                                        d10n.housingPlanDeleteCategoryTitle,
-                                      ),
-                                      content: Text(
-                                        d10n.housingPlanDeleteCategoryBody,
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(ctx, false),
-                                          child: Text(d10n.housingPlanCancel),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () =>
-                                              Navigator.pop(ctx, true),
-                                          child: Text(d10n.housingPlanDelete),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                                if (ok == true) {
-                                  await _unassignLinesAndDeletePlanGroup(g.id);
-                                  if (mounted) setState(() => _groupsEpoch++);
-                                }
-                              },
-                            ),
-                            onTap: () async {
-                              await _editPlanCategory(g);
-                              if (mounted) setState(() => _groupsEpoch++);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _stepExpenses() {
-    return FutureBuilder<List<dynamic>>(
-      future: Future.wait([_planLinesFuture(), _planGroupsFuture()]),
+    return FutureBuilder<List<PlanLine>>(
+      future: _planLinesFuture(),
       builder: (context, snap) {
         final l10n = AppLocalizations.of(context);
-        final lines = (snap.data?[0] as List<PlanLine>?) ?? [];
-        final groups = (snap.data?[1] as List<PlanGroup>?) ?? [];
-        final groupTitle = <String, String>{
-          for (final g in groups) g.id: g.title,
-        };
+        final lines = snap.data ?? [];
         return Column(
           children: [
             Expanded(
@@ -2205,11 +1366,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           child: Card(
                             child: ListTile(
                               title: Text(line.title),
-                              subtitle:
-                                  line.groupId != null &&
-                                      groupTitle[line.groupId!] != null
-                                  ? Text('(${groupTitle[line.groupId!]})')
-                                  : null,
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -2265,6 +1421,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       for (var i = 0; i < pids.length; i++) _ratioParticipantLabel(l10n, i),
     ];
     final lines = await _db.listPlanLines(_planId);
+    if (!mounted) return;
     final nextOrder = lines.isEmpty
         ? 0
         : lines.map((e) => e.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
@@ -2286,805 +1443,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       ),
     );
     if (saved == true && mounted) setState(() => _linesEpoch++);
-  }
-
-  List<_SplitListEntry> _splitDisplayEntries(
-    List<PlanLine> lines,
-    List<PlanGroup> groups,
-  ) {
-    final sorted = [...lines]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final knownGroupIds = groups.map((g) => g.id).toSet();
-    final out = <_SplitListEntry>[];
-    for (final g in groups) {
-      final inGroup = sorted.where((l) => l.groupId == g.id).toList();
-      if (inGroup.isEmpty) continue;
-      out.add(_SplitListGroup(g, inGroup));
-    }
-    final uncategorized = sorted.where((l) {
-      final gid = l.groupId;
-      return gid == null || !knownGroupIds.contains(gid);
-    }).toList();
-    if (uncategorized.isNotEmpty) {
-      out.add(_SplitUncategorized(uncategorized));
-    }
-    return out;
-  }
-
-  Widget _buildSplitRatioLineCard(
-    BuildContext context,
-    PlanLine line,
-    List<String> pids,
-  ) {
-    final lastIdx = pids.length - 1;
-    final isLast = _ratioParticipantIndex >= lastIdx;
-    final basisMinor = _splitBasisMinor(line);
-    return FutureBuilder<List<int>>(
-      future: Future.wait([for (final pid in pids) _ratioWeight(line.id, pid)]),
-      builder: (context, snapW) {
-        final weights = snapW.data ?? List.filled(pids.length, 0);
-        var before = 0;
-        for (var j = 0; j < _ratioParticipantIndex; j++) {
-          before += weights[j];
-        }
-        final assignable = (10000 - before).clamp(0, 10000);
-        final pidCur = pids[_ratioParticipantIndex];
-        final key = '${line.id}:$pidCur';
-        final wDb = weights[_ratioParticipantIndex];
-        final wEff = _draftRatioWeightsBps[key] ?? wDb;
-        final wEffVec = _effectiveLineWeightsBps(line, pids, weights);
-        final hamilton = splitMinorByWeights(basisMinor, wEffVec);
-        final amountShareMinorComputed = hamilton[_ratioParticipantIndex];
-        final amountShareMinor =
-            _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-
-        final shareCtrl = _shareAmountControllerFor(line.id, pidCur);
-        final shareText = _money2FromMinor(amountShareMinor);
-
-        final tickFractions = _splitTickFractionsForParticipantCount(
-          pids.length,
-        );
-        final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
-        final ticks = <double>[
-          0,
-          ...tickFractions.where((t) => t <= maxFrac),
-          maxFrac,
-        ]..sort();
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        line.title,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 86,
-                      child: Focus(
-                        onFocusChange: (hasFocus) {
-                          if (!hasFocus) {
-                            WidgetsBinding.instance.addPostFrameCallback((
-                              _,
-                            ) async {
-                              if (!mounted) return;
-                              await _commitShareAmountTextField(
-                                line,
-                                pids,
-                                _ratioParticipantIndex,
-                                basisMinor,
-                                assignable,
-                                key,
-                              );
-                            });
-                          }
-                        },
-                        child: Builder(
-                          builder: (focusCtx) {
-                            final typing =
-                                Focus.maybeOf(focusCtx)?.hasFocus ?? false;
-                            if (!typing && shareCtrl.text != shareText) {
-                              shareCtrl.value = TextEditingValue(
-                                text: shareText,
-                                selection: TextSelection.collapsed(
-                                  offset: shareText.length,
-                                ),
-                              );
-                            }
-                            return TextField(
-                              controller: shareCtrl,
-                              enabled: !isLast && assignable > 0,
-                              textAlign: TextAlign.right,
-                              textInputAction: TextInputAction.done,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onEditingComplete: () {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareAmountTextField(
-                                    line,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                });
-                              },
-                              onTapOutside: (_) {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareAmountTextField(
-                                    line,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                });
-                              },
-                              onSubmitted: (_) {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareAmountTextField(
-                                    line,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Text(
-                      ' / ${formatMinorAsMoney(context, basisMinor, displayCurrencyCodeForPlan(widget.prefs, [line]))}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: RationalPercentText(
-                        shareMinor: amountShareMinor,
-                        totalMinor: basisMinor,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ),
-                ),
-                if (!isLast)
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 10,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Slider(
-                          min: 0,
-                          max: maxFrac > 0 ? maxFrac : 1,
-                          value: (wEff / 10000.0).clamp(
-                            0.0,
-                            maxFrac > 0 ? maxFrac : 1,
-                          ),
-                          onChanged: assignable <= 0
-                              ? null
-                              : (v) {
-                                  final w = (v * 10000).round().clamp(
-                                    0,
-                                    assignable,
-                                  );
-                                  setState(() {
-                                    _shareAmountMinorOverride.remove(key);
-                                    _draftRatioWeightsBps[key] = w;
-                                  });
-                                },
-                          onChangeEnd: assignable <= 0
-                              ? null
-                              : (v) async {
-                                  final snapped = _nearestTick(v, ticks);
-                                  final w = (snapped * 10000).round().clamp(
-                                    0,
-                                    assignable,
-                                  );
-                                  setState(
-                                    () => _draftRatioWeightsBps[key] = w,
-                                  );
-                                  await _setRatioWeightBps(
-                                    line,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    w,
-                                  );
-                                  if (mounted) {
-                                    setState(() {
-                                      _draftRatioWeightsBps.remove(key);
-                                      _shareAmountMinorOverride.remove(key);
-                                    });
-                                  }
-                                },
-                        ),
-                        const SizedBox(height: 2),
-                        LayoutBuilder(
-                          builder: (context, c) {
-                            final outer = _sliderThemeOuterPadding(context);
-                            final innerW = math.max(
-                              0.0,
-                              c.maxWidth - outer.horizontal,
-                            );
-                            final sliderInteractive = assignable > 0 && !isLast;
-                            final (
-                              leftInset,
-                              trackWidth,
-                            ) = _sliderTrackHorizontalMetrics(
-                              context,
-                              innerW,
-                              sliderInteractive: sliderInteractive,
-                            );
-                            final color = Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant;
-                            return SizedBox(
-                              height: 10,
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  if (maxFrac > 0 && trackWidth > 0)
-                                    for (final t in ticks.where(
-                                      (e) => e > 0 && e < maxFrac,
-                                    ))
-                                      Positioned(
-                                        left: _snapToDevicePixels(
-                                          context,
-                                          outer.left +
-                                              leftInset +
-                                              (t / maxFrac) * trackWidth -
-                                              1,
-                                        ),
-                                        top: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          width: 2,
-                                          color: color,
-                                        ),
-                                      ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Slider(value: (wDb / 10000).clamp(0.0, 1.0), onChanged: null),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSplitRatioGroupCard(
-    BuildContext context,
-    PlanGroup group,
-    List<PlanLine> memberLines,
-    List<String> pids,
-  ) {
-    final lastIdx = pids.length - 1;
-    final isLast = _ratioParticipantIndex >= lastIdx;
-    final basisMinor = _groupBasisMinor(memberLines);
-    final displayCurrency = displayCurrencyCodeForPlan(
-      widget.prefs,
-      memberLines,
-    );
-    final memberLabel = memberLines.map((l) => l.title).join(' · ');
-
-    return FutureBuilder<List<int>>(
-      future: Future.wait([
-        for (final pid in pids) _ratioWeightGroup(group.id, pid),
-      ]),
-      builder: (context, snapW) {
-        final weights = snapW.data ?? List.filled(pids.length, 0);
-        var before = 0;
-        for (var j = 0; j < _ratioParticipantIndex; j++) {
-          before += weights[j];
-        }
-        final assignable = (10000 - before).clamp(0, 10000);
-        final pidCur = pids[_ratioParticipantIndex];
-        final key = _shareSplitControllerKeyForGroup(group.id, pidCur);
-        final wDb = weights[_ratioParticipantIndex];
-        final wEff = _draftRatioWeightsBps[key] ?? wDb;
-        final wEffVec = _effectiveGroupWeightsBps(group, pids, weights);
-        final hamilton = splitMinorByWeights(basisMinor, wEffVec);
-        final amountShareMinorComputed = hamilton[_ratioParticipantIndex];
-        final amountShareMinor =
-            _shareAmountMinorOverride[key] ?? amountShareMinorComputed;
-
-        final shareCtrl = _shareAmountControllerForGroup(group.id, pidCur);
-        final shareText = _money2FromMinor(amountShareMinor);
-
-        final tickFractions = _splitTickFractionsForParticipantCount(
-          pids.length,
-        );
-        final maxFrac = (assignable / 10000.0).clamp(0.0, 1.0);
-        final ticks = <double>[
-          0,
-          ...tickFractions.where((t) => t <= maxFrac),
-          maxFrac,
-        ]..sort();
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        group.title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 86,
-                      child: Focus(
-                        onFocusChange: (hasFocus) {
-                          if (!hasFocus) {
-                            WidgetsBinding.instance.addPostFrameCallback((
-                              _,
-                            ) async {
-                              if (!mounted) return;
-                              await _commitShareGroupAmountTextField(
-                                group,
-                                pids,
-                                _ratioParticipantIndex,
-                                basisMinor,
-                                assignable,
-                                key,
-                              );
-                            });
-                          }
-                        },
-                        child: Builder(
-                          builder: (focusCtx) {
-                            final typing =
-                                Focus.maybeOf(focusCtx)?.hasFocus ?? false;
-                            if (!typing && shareCtrl.text != shareText) {
-                              shareCtrl.value = TextEditingValue(
-                                text: shareText,
-                                selection: TextSelection.collapsed(
-                                  offset: shareText.length,
-                                ),
-                              );
-                            }
-                            return TextField(
-                              controller: shareCtrl,
-                              enabled: !isLast && assignable > 0,
-                              textAlign: TextAlign.right,
-                              textInputAction: TextInputAction.done,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onEditingComplete: () {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareGroupAmountTextField(
-                                    group,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                });
-                              },
-                              onTapOutside: (_) {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareGroupAmountTextField(
-                                    group,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                });
-                              },
-                              onSubmitted: (_) {
-                                Future.microtask(() async {
-                                  if (!mounted) return;
-                                  await _commitShareGroupAmountTextField(
-                                    group,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    basisMinor,
-                                    assignable,
-                                    key,
-                                  );
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Text(
-                      ' / ${formatMinorAsMoney(context, basisMinor, displayCurrency)}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ],
-                ),
-                if (memberLabel.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FractionallySizedBox(
-                      widthFactor: 0.75,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        memberLabel,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: RationalPercentText(
-                        shareMinor: amountShareMinor,
-                        totalMinor: basisMinor,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ),
-                ),
-                if (!isLast)
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 10,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Slider(
-                          min: 0,
-                          max: maxFrac > 0 ? maxFrac : 1,
-                          value: (wEff / 10000.0).clamp(
-                            0.0,
-                            maxFrac > 0 ? maxFrac : 1,
-                          ),
-                          onChanged: assignable <= 0
-                              ? null
-                              : (v) {
-                                  final w = (v * 10000).round().clamp(
-                                    0,
-                                    assignable,
-                                  );
-                                  setState(() {
-                                    _shareAmountMinorOverride.remove(key);
-                                    _draftRatioWeightsBps[key] = w;
-                                  });
-                                },
-                          onChangeEnd: assignable <= 0
-                              ? null
-                              : (v) async {
-                                  final snapped = _nearestTick(v, ticks);
-                                  final w = (snapped * 10000).round().clamp(
-                                    0,
-                                    assignable,
-                                  );
-                                  setState(
-                                    () => _draftRatioWeightsBps[key] = w,
-                                  );
-                                  await _setGroupRatioWeightBps(
-                                    group,
-                                    pids,
-                                    _ratioParticipantIndex,
-                                    w,
-                                  );
-                                  if (mounted) {
-                                    setState(() {
-                                      _draftRatioWeightsBps.remove(key);
-                                      _shareAmountMinorOverride.remove(key);
-                                    });
-                                  }
-                                },
-                        ),
-                        const SizedBox(height: 2),
-                        LayoutBuilder(
-                          builder: (context, c) {
-                            final outer = _sliderThemeOuterPadding(context);
-                            final innerW = math.max(
-                              0.0,
-                              c.maxWidth - outer.horizontal,
-                            );
-                            final sliderInteractive = assignable > 0 && !isLast;
-                            final (
-                              leftInset,
-                              trackWidth,
-                            ) = _sliderTrackHorizontalMetrics(
-                              context,
-                              innerW,
-                              sliderInteractive: sliderInteractive,
-                            );
-                            final color = Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant;
-                            return SizedBox(
-                              height: 10,
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  if (maxFrac > 0 && trackWidth > 0)
-                                    for (final t in ticks.where(
-                                      (e) => e > 0 && e < maxFrac,
-                                    ))
-                                      Positioned(
-                                        left: _snapToDevicePixels(
-                                          context,
-                                          outer.left +
-                                              leftInset +
-                                              (t / maxFrac) * trackWidth -
-                                              1,
-                                        ),
-                                        top: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          width: 2,
-                                          color: color,
-                                        ),
-                                      ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Slider(value: (wDb / 10000).clamp(0.0, 1.0), onChanged: null),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _stepRatios() {
-    return FutureBuilder<List<dynamic>>(
-      future: Future.wait([
-        _db.listPlanLines(_planId),
-        _db.listPlanGroups(_planId),
-      ]),
-      builder: (context, snapLinesAndGroups) {
-        return FutureBuilder<Agreement?>(
-          future: _db.getAgreementForPlan(_planId),
-          builder: (context, snapAgr) {
-            final l10n = AppLocalizations.of(context);
-            final combined = snapLinesAndGroups.data;
-            final lines = combined == null
-                ? <PlanLine>[]
-                : combined[0] as List<PlanLine>;
-            final groups = combined == null
-                ? <PlanGroup>[]
-                : combined[1] as List<PlanGroup>;
-            final agr = snapAgr.data;
-            if (lines.isEmpty || agr == null) {
-              return Center(child: Text(l10n.housingPlanAddExpensesFirst));
-            }
-            final pids = _allParticipantIds();
-            final entries = _splitDisplayEntries(lines, groups);
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: FutureBuilder<double>(
-                    future: _participantTotalMinor(
-                      pids[_ratioParticipantIndex],
-                      pids,
-                      lines,
-                      groups,
-                    ),
-                    builder: (context, snapT) {
-                      final t = snapT.data ?? 0;
-                      final displayCurrency = displayCurrencyCodeForPlan(
-                        widget.prefs,
-                        lines,
-                      );
-                      return Text(
-                        formatMajorDoubleAsMoney(context, t, displayCurrency),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.displaySmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (var i = 0; i < pids.length; i++)
-                        ChoiceChip(
-                          label: Text(_ratioParticipantLabel(l10n, i)),
-                          selected: _ratioParticipantIndex == i,
-                          onSelected: (sel) {
-                            if (!sel) return;
-                            if (i > 0) {
-                              // Encourage order: warn if skipping ahead without prior filled — soft check omitted for UX tap
-                            }
-                            setState(() => _ratioParticipantIndex = i);
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: entries.length,
-                    itemBuilder: (context, i) {
-                      final e = entries[i];
-                      return switch (e) {
-                        _SplitListGroup(:final group, :final memberLines) =>
-                          _buildSplitRatioGroupCard(
-                            context,
-                            group,
-                            memberLines,
-                            pids,
-                          ),
-                        _SplitUncategorized(:final lines) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final line in lines)
-                              _buildSplitRatioLineCard(context, line, pids),
-                          ],
-                        ),
-                      };
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<double> _participantTotalMinor(
-    String participantId,
-    List<String> pids,
-    List<PlanLine> lines,
-    List<PlanGroup> groups,
-  ) async {
-    final idx = pids.indexOf(participantId);
-    if (idx < 0) return 0;
-    var sumMinor = 0;
-    final knownGroupIds = groups.map((g) => g.id).toSet();
-    final sorted = [...lines]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-    for (final g in groups) {
-      final members = sorted.where((l) => l.groupId == g.id).toList();
-      if (members.isEmpty) continue;
-      final basis = _groupBasisMinor(members);
-      final key = _shareSplitControllerKeyForGroup(g.id, participantId);
-      final o = _shareAmountMinorOverride[key];
-      if (o != null) {
-        sumMinor += o;
-        continue;
-      }
-      if (_groupHasAnyShareAmountOverride(g, pids)) {
-        final w = await _ratioWeightGroup(g.id, participantId);
-        sumMinor += (basis * w / 10000).round();
-      } else {
-        final weights = <int>[
-          for (final pid in pids) await _ratioWeightGroup(g.id, pid),
-        ];
-        sumMinor += splitMinorByWeights(basis, weights)[idx];
-      }
-    }
-
-    for (final line in sorted) {
-      final gid = line.groupId;
-      if (gid != null && knownGroupIds.contains(gid)) continue;
-      final key = '${line.id}:$participantId';
-      final o = _shareAmountMinorOverride[key];
-      if (o != null) {
-        sumMinor += o;
-        continue;
-      }
-      if (_lineHasAnyShareAmountOverride(line, pids)) {
-        final w = await _ratioWeight(line.id, participantId);
-        final basis = _splitBasisMinor(line);
-        sumMinor += (basis * w / 10000).round();
-      } else {
-        final basis = _splitBasisMinor(line);
-        final weights = <int>[
-          for (final pid in pids) await _ratioWeight(line.id, pid),
-        ];
-        sumMinor += splitMinorByWeights(basis, weights)[idx];
-      }
-    }
-    return sumMinor / 100.0;
   }
 
   List<Widget> _earlyWithdrawalRuleContent(AppLocalizations l10n) {
@@ -3883,6 +2241,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     }
   }
 
+
   Widget _stepAgreementRules() {
     final l10n = AppLocalizations.of(context);
     return ListView(
@@ -4005,7 +2364,6 @@ class _SummarySnapshot {
     required this.lines,
     required this.agr,
     required this.ratios,
-    required this.planGroups,
     required this.proposalPkg,
   });
 
@@ -4013,7 +2371,6 @@ class _SummarySnapshot {
   final List<PlanLine> lines;
   final Agreement? agr;
   final List<PlanRatio> ratios;
-  final List<PlanGroup> planGroups;
   final ProposalPackage? proposalPkg;
 }
 
@@ -4024,7 +2381,6 @@ class _SummaryView extends StatefulWidget {
     required this.prefs,
     required this.reloadToken,
     required this.avatarIcons,
-    required this.shareMinorOverrides,
     required this.onEditPlan,
     required this.onInvite,
     required this.onDestroy,
@@ -4036,8 +2392,6 @@ class _SummaryView extends StatefulWidget {
   final int reloadToken;
   final List<IconData> avatarIcons;
 
-  /// Keys `lineId:participantId`; same map as split-step manual amount pins.
-  final Map<String, int> shareMinorOverrides;
   final VoidCallback onEditPlan;
   final VoidCallback onInvite;
   final VoidCallback onDestroy;
@@ -4085,7 +2439,6 @@ class _SummaryViewState extends State<_SummaryView> {
       widget.db.listPlanLines(widget.planId),
       widget.db.getAgreementForPlan(widget.planId),
       widget.db.listPlanRatios(widget.planId),
-      widget.db.listPlanGroups(widget.planId),
       (widget.db.select(
         widget.db.proposalPackages,
       )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull(),
@@ -4095,8 +2448,7 @@ class _SummaryViewState extends State<_SummaryView> {
       lines: r[1] as List<PlanLine>,
       agr: r[2] as Agreement?,
       ratios: r[3] as List<PlanRatio>,
-      planGroups: r[4] as List<PlanGroup>,
-      proposalPkg: r[5] as ProposalPackage?,
+      proposalPkg: r[4] as ProposalPackage?,
     );
   }
 
@@ -4137,7 +2489,6 @@ class _SummaryViewState extends State<_SummaryView> {
         final lines = data.lines;
         final agr = data.agr;
         final ratios = data.ratios;
-        final planGroups = data.planGroups;
         final hasPending = data.proposalPkg?.pendingRevisionId != null;
         if (hasPending) {
           _hadPendingProposal = true;
@@ -4164,7 +2515,6 @@ class _SummaryViewState extends State<_SummaryView> {
           planMonthlyTotalMinor += PlanProjection.unitMinor(line);
         }
 
-        final knownGroupIds = planGroups.map((g) => g.id).toSet();
         final sortedLines = [...lines]
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
@@ -4176,87 +2526,22 @@ class _SummaryViewState extends State<_SummaryView> {
           );
         }
 
-        bool lineRowHasPinnedShare(PlanLine line) {
-          for (final id in rosterIds) {
-            if (widget.shareMinorOverrides.containsKey('${line.id}:$id')) {
-              return true;
-            }
-          }
-          return false;
-        }
-
-        bool groupRowHasPinnedShare(PlanGroup g) {
-          for (final id in rosterIds) {
-            if (widget.shareMinorOverrides.containsKey('g:${g.id}:$id')) {
-              return true;
-            }
-          }
-          return false;
-        }
-
         int participantShareMinor(String participantId) {
           final idx = rosterIds.indexOf(participantId);
           if (idx < 0) return 0;
           var participantMonthlyMinor = 0;
-          for (final g in planGroups) {
-            final mem = sortedLines.where((l) => l.groupId == g.id).toList();
-            if (mem.isEmpty) continue;
-            final basis = mem.fold<int>(
-              0,
-              (a, l) => a + PlanProjection.unitMinor(l),
-            );
-            final gKey = 'g:${g.id}:$participantId';
-            final o = widget.shareMinorOverrides[gKey];
-            if (o != null) {
-              participantMonthlyMinor += o;
-              continue;
-            }
-            final w = ratios
-                .where(
-                  (r) => r.groupId == g.id && r.participantId == participantId,
-                )
-                .fold<int>(0, (a, r) => a + r.weight);
-            if (groupRowHasPinnedShare(g)) {
-              participantMonthlyMinor += (basis * w / 10000).round();
-            } else {
-              final ws = <int>[
-                for (final rid in rosterIds)
-                  ratios
-                      .where((r) => r.groupId == g.id && r.participantId == rid)
-                      .fold<int>(0, (a, r) => a + r.weight),
-              ];
-              participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
-            }
-          }
           for (final line in sortedLines) {
-            final gid = line.groupId;
-            if (gid != null && knownGroupIds.contains(gid)) continue;
-            final key = '${line.id}:$participantId';
-            final o = widget.shareMinorOverrides[key];
-            if (o != null) {
-              participantMonthlyMinor += o;
-              continue;
-            }
-            final w = ratios
-                .where(
-                  (r) =>
-                      r.lineId == line.id && r.participantId == participantId,
-                )
-                .fold<int>(0, (a, r) => a + r.weight);
             final basis = PlanProjection.unitMinor(line);
-            if (lineRowHasPinnedShare(line)) {
-              participantMonthlyMinor += (basis * w / 10000).round();
-            } else {
-              final ws = <int>[
-                for (final rid in rosterIds)
-                  ratios
-                      .where(
-                        (r) => r.lineId == line.id && r.participantId == rid,
-                      )
-                      .fold<int>(0, (a, r) => a + r.weight),
-              ];
-              participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
-            }
+            if (basis <= 0) continue;
+            final ws = <int>[
+              for (final rid in rosterIds)
+                ratios
+                    .where(
+                      (r) => r.lineId == line.id && r.participantId == rid,
+                    )
+                    .fold<int>(0, (a, r) => a + r.weight),
+            ];
+            participantMonthlyMinor += splitMinorByWeights(basis, ws)[idx];
           }
           return participantMonthlyMinor;
         }
@@ -4269,7 +2554,7 @@ class _SummaryViewState extends State<_SummaryView> {
             ? <InviteSunburstSlice>[]
             : buildInviteSunburstSlices(
                 lines: lines,
-                groups: planGroups,
+                groups: const [],
                 ratios: ratios,
                 participantIdsOrdered: rosterIds,
                 participantId: focusedParticipant.id,
@@ -4481,353 +2766,3 @@ class _SummaryViewState extends State<_SummaryView> {
   }
 }
 
-class _CategoryDraft {
-  const _CategoryDraft({required this.title, required this.description});
-
-  final String title;
-  final String description;
-}
-
-class _CategoryEditorDialog extends StatefulWidget {
-  const _CategoryEditorDialog({this.initial});
-
-  final PlanGroup? initial;
-
-  @override
-  State<_CategoryEditorDialog> createState() => _CategoryEditorDialogState();
-}
-
-class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
-  late final TextEditingController _title = TextEditingController(
-    text: widget.initial?.title ?? '',
-  );
-  late final TextEditingController _description = TextEditingController(
-    text: widget.initial?.description ?? '',
-  );
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _description.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final canSave = _title.text.trim().isNotEmpty;
-    return AlertDialog(
-      title: Text(
-        widget.initial == null
-            ? l10n.housingPlanAddCategoryTitle
-            : l10n.housingPlanEditCategoryTitle,
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _title,
-              decoration: InputDecoration(
-                labelText: l10n.housingPlanCategoryNameLabel,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                l10n.housingPlanCategoryDescriptionLabel,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 2,
-                softWrap: true,
-              ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _description,
-              decoration: const InputDecoration(alignLabelWithHint: true),
-              maxLines: 5,
-              minLines: 2,
-              onChanged: (_) => setState(() {}),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.housingPlanCancel),
-        ),
-        FilledButton(
-          onPressed: canSave
-              ? () {
-                  Navigator.of(context).pop(
-                    _CategoryDraft(
-                      title: _title.text.trim(),
-                      description: _description.text.trim(),
-                    ),
-                  );
-                }
-              : null,
-          child: Text(l10n.housingPlanSave),
-        ),
-      ],
-    );
-  }
-}
-
-class _LineDraft {
-  const _LineDraft({
-    required this.title,
-    required this.currency,
-    required this.isRecurring,
-    required this.amountUsesRange,
-    required this.amountMinor,
-    required this.minMinor,
-    required this.maxMinor,
-    required this.description,
-    required this.cadence,
-    required this.recurrenceDayOfMonth,
-    this.groupId,
-  });
-
-  final String title;
-  final String currency;
-  final bool isRecurring;
-  final bool amountUsesRange;
-  final int amountMinor;
-  final int minMinor;
-  final int maxMinor;
-  final String description;
-  final String cadence;
-  final int recurrenceDayOfMonth;
-  final String? groupId;
-}
-
-class _LineEditorDialog extends StatefulWidget {
-  const _LineEditorDialog({
-    this.initial,
-    this.groups = const [],
-    this.defaultCurrency = 'CAD',
-  });
-
-  final PlanLine? initial;
-  final List<PlanGroup> groups;
-  final String defaultCurrency;
-
-  @override
-  State<_LineEditorDialog> createState() => _LineEditorDialogState();
-}
-
-class _LineEditorDialogState extends State<_LineEditorDialog> {
-  late bool _isRecurring = widget.initial?.isRecurring ?? true;
-  late bool _amountUsesRange = widget.initial?.amountUsesRange ?? false;
-  late final TextEditingController _title = TextEditingController(
-    text: widget.initial?.title ?? '',
-  );
-  late final TextEditingController _amount = TextEditingController(
-    text: _minorToText(widget.initial?.amountMinor),
-  );
-  late final TextEditingController _min = TextEditingController(
-    text: _minorToText(widget.initial?.minAmountMinor),
-  );
-  late final TextEditingController _max = TextEditingController(
-    text: _minorToText(widget.initial?.maxAmountMinor),
-  );
-  late final TextEditingController _description = TextEditingController(
-    text: widget.initial?.description ?? '',
-  );
-  late int _dayOfMonth;
-  late String _currency;
-  String? _groupId;
-
-  @override
-  void initState() {
-    super.initState();
-    _dayOfMonth = widget.initial?.recurrenceDayOfMonth ?? 1;
-    _currency = widget.initial?.currency ?? widget.defaultCurrency;
-    final gid = widget.initial?.groupId;
-    _groupId = gid != null && widget.groups.any((g) => g.id == gid)
-        ? gid
-        : null;
-  }
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _amount.dispose();
-    _min.dispose();
-    _max.dispose();
-    _description.dispose();
-    super.dispose();
-  }
-
-  bool get _fixedOk => _parseMinor(_amount.text) != null;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final canSave =
-        _title.text.trim().isNotEmpty &&
-        (!_isRecurring || (_dayOfMonth >= 1 && _dayOfMonth <= 31)) &&
-        (_amountUsesRange ? _rangeValid() : _fixedOk);
-    return AlertDialog(
-      title: Text(
-        widget.initial == null
-            ? l10n.housingPlanAddExpenseTitle
-            : l10n.housingPlanEditExpenseTitle,
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SwitchListTile(
-              title: Text(l10n.housingPlanRecurringSwitch),
-              value: _isRecurring,
-              onChanged: (v) => setState(() => _isRecurring = v),
-            ),
-            SwitchListTile(
-              title: Text(l10n.housingPlanApproximateAmountSwitch),
-              value: _amountUsesRange,
-              onChanged: (v) => setState(() => _amountUsesRange = v),
-            ),
-            TextField(
-              controller: _title,
-              decoration: InputDecoration(
-                labelText: l10n.housingPlanExpenseTitleLabel,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            if (widget.groups.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String?>(
-                key: ValueKey<String?>(_groupId),
-                initialValue: _groupId,
-                decoration: InputDecoration(
-                  labelText: l10n.housingPlanCategoryOptionalLabel,
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: null,
-                    child: Text(l10n.housingPlanCategoryNone),
-                  ),
-                  ...widget.groups.map(
-                    (g) => DropdownMenuItem(value: g.id, child: Text(g.title)),
-                  ),
-                ],
-                onChanged: (v) => setState(() => _groupId = v),
-              ),
-            ],
-            const SizedBox(height: 8),
-            TextField(
-              controller: _description,
-              decoration: InputDecoration(
-                labelText: l10n.housingPlanExpenseDescriptionLabel,
-                alignLabelWithHint: true,
-              ),
-              maxLines: 4,
-              minLines: 2,
-              onChanged: (_) => setState(() {}),
-            ),
-            if (_isRecurring) ...[
-              const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                initialValue: _dayOfMonth,
-                decoration: InputDecoration(
-                  labelText: l10n.housingPlanDayOfMonthLabel,
-                ),
-                items: [
-                  for (var d = 1; d <= 31; d++)
-                    DropdownMenuItem(value: d, child: Text('$d')),
-                ],
-                onChanged: (v) => setState(() => _dayOfMonth = v ?? 1),
-              ),
-            ],
-            if (_amountUsesRange) ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _min,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.housingPlanMinLabel,
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              TextField(
-                controller: _max,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.housingPlanMaxLabel,
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ] else ...[
-              const SizedBox(height: 8),
-              TextField(
-                controller: _amount,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.housingPlanAmountLabel,
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.housingPlanCancel),
-        ),
-        FilledButton(
-          onPressed: canSave
-              ? () {
-                  Navigator.of(context).pop(
-                    _LineDraft(
-                      title: _title.text.trim(),
-                      currency: _currency,
-                      isRecurring: _isRecurring,
-                      amountUsesRange: _amountUsesRange,
-                      amountMinor: _parseMinor(_amount.text) ?? 0,
-                      minMinor: _parseMinor(_min.text) ?? 0,
-                      maxMinor: _parseMinor(_max.text) ?? 0,
-                      description: _description.text.trim(),
-                      cadence: 'monthly',
-                      recurrenceDayOfMonth: _dayOfMonth,
-                      groupId: _groupId,
-                    ),
-                  );
-                }
-              : null,
-          child: Text(l10n.housingPlanSave),
-        ),
-      ],
-    );
-  }
-
-  bool _rangeValid() {
-    final a = _parseMinor(_min.text);
-    final b = _parseMinor(_max.text);
-    if (a == null || b == null) return false;
-    return a <= b;
-  }
-
-  int? _parseMinor(String text) {
-    final t = text.trim().replaceAll(',', '.');
-    if (t.isEmpty) return null;
-    final v = double.tryParse(t);
-    if (v == null) return null;
-    return (v * 100).round();
-  }
-
-  String _minorToText(int? minor) {
-    if (minor == null) return '';
-    return (minor / 100).toStringAsFixed(2);
-  }
-}

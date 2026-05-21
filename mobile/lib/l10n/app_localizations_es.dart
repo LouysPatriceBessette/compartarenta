@@ -505,7 +505,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingPlanExpenseValidationMessage =>
-      'Añade al menos un gasto. Cada uno necesita un importe válido (fijo o rango mín/máx) y los recurrentes requieren un día del mes.';
+      'Añade al menos un gasto. Cada uno necesita un importe, reparto que sume el 100 % entre participantes, y los recurrentes una programación válida.';
 
   @override
   String get housingPlanSplitValidationMessage =>

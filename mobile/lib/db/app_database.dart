@@ -597,32 +597,38 @@ class AppDatabase extends _$AppDatabase {
         await _migrateAddColumn(m, contacts, contacts.theirLabelForMe);
       }
       if (from < 15) {
-        await m.createTable(planRatioTemplates);
-        await _migrateAddColumn(m, planLines, planLines.amountIsBudgetCap);
-        await _migrateAddColumn(
-          m,
-          planLines,
-          planLines.paymentResponsibleParticipantId,
-        );
-        await _migrateAddColumn(m, planLines, planLines.recurrenceSpecJson);
-        await _migrateAddColumn(m, planLines, planLines.ratioTemplateId);
-        // amountUsesRange meant approximate band → budget cap.
-        await customStatement('''
-              UPDATE plan_lines
-              SET amount_is_budget_cap = amount_uses_range
-              WHERE amount_uses_range = 1
-            ''');
-        await customStatement('''
-              UPDATE plan_lines
-              SET recurrence_spec_json = json_object(
-                'kind', 'monthlyDay',
-                'day', recurrence_day_of_month,
-                'anchor', NULL
-              )
-              WHERE is_recurring = 1
-                AND recurrence_day_of_month IS NOT NULL
-                AND (recurrence_spec_json IS NULL OR recurrence_spec_json = '')
-            ''');
+        if (!await _sqliteTableExists('plan_ratio_templates')) {
+          await m.createTable(planRatioTemplates);
+        }
+        // v8-only DBs (participants/contacts) never had housing tables; skip
+        // plan line backfill when jumping past v3 in one upgrade.
+        if (await _sqliteTableExists('plan_lines')) {
+          await _migrateAddColumn(m, planLines, planLines.amountIsBudgetCap);
+          await _migrateAddColumn(
+            m,
+            planLines,
+            planLines.paymentResponsibleParticipantId,
+          );
+          await _migrateAddColumn(m, planLines, planLines.recurrenceSpecJson);
+          await _migrateAddColumn(m, planLines, planLines.ratioTemplateId);
+          // amountUsesRange meant approximate band → budget cap.
+          await customStatement('''
+                UPDATE plan_lines
+                SET amount_is_budget_cap = amount_uses_range
+                WHERE amount_uses_range = 1
+              ''');
+          await customStatement('''
+                UPDATE plan_lines
+                SET recurrence_spec_json = json_object(
+                  'kind', 'monthlyDay',
+                  'day', recurrence_day_of_month,
+                  'anchor', NULL
+                )
+                WHERE is_recurring = 1
+                  AND recurrence_day_of_month IS NOT NULL
+                  AND (recurrence_spec_json IS NULL OR recurrence_spec_json = '')
+              ''');
+        }
       }
     },
     beforeOpen: (details) async {

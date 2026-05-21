@@ -35,23 +35,23 @@
 
 ## Pass 3 — Wizard integration (PR #2)
 
-- [ ] 3.1 Reduce `_housingPlanStepCount` to 4; reindex agreement rules step
-- [ ] 3.2 Replace step 2 body with expense list (from old step 3); `+` navigates to `ExpensePlanLineForm` route
-- [ ] 3.3 Remove `_stepExpenseCategories`, category FAB, `_CategoryEditorDialog`
-- [ ] 3.4 Remove `_stepRatios` and related state (`_ratioParticipantIndex`, sliders, tick fractions, `_shareAmountControllers`, etc.)
-- [ ] 3.5 Update `_inferResumeStepIndex`, `_isHousingPlanWizardFullyDoneInDb`, footer Next validation (per-line ratios complete)
-- [ ] 3.6 Delete `_LineEditorDialog` / `_LineDraft` after form route works
-- [ ] 3.7 Update housing summary / presentation chart: one item per `PlanLine` (no group/template aggregation), budget cap semantics, drop category-step assumptions
+- [x] 3.1 Reduce `_housingPlanStepCount` to 4; reindex agreement rules step
+- [x] 3.2 Replace step 2 body with expense list (from old step 3); `+` navigates to `ExpensePlanLineForm` route
+- [x] 3.3 Remove `_stepExpenseCategories`, category FAB, `_CategoryEditorDialog`
+- [x] 3.4 Remove `_stepRatios` and related state (`_ratioParticipantIndex`, sliders, tick fractions, `_shareAmountControllers`, etc.)
+- [x] 3.5 Update `_inferResumeStepIndex`, `_isHousingPlanWizardFullyDoneInDb`, footer Next validation (per-line ratios complete)
+- [x] 3.6 Delete `_LineEditorDialog` / `_LineDraft` after form route works
+- [x] 3.7 Update housing summary / presentation chart: one item per `PlanLine` (no group/template aggregation), budget cap semantics, drop category-step assumptions
 
 ---
 
 ## Pass 4 — Cleanup and conformance (PR #2)
 
-- [ ] 4.1 Stop writing `amountUsesRange`, `minAmountMinor`, `maxAmountMinor` on new saves
-- [ ] 4.2 Local DB: migrate or strip orphan **group-level** `PlanRatio` rows (draft plans on device only)
-- [ ] 4.3 Update `housing-plan-entry-spec-conformance-checklist.md` rows E1, E3, E7, E8
+- [x] 4.1 Stop writing `amountUsesRange`, `minAmountMinor`, `maxAmountMinor` on new saves
+- [x] 4.2 Local DB: migrate or strip orphan **group-level** `PlanRatio` rows (draft plans on device only)
+- [x] 4.3 Update `housing-plan-entry-spec-conformance-checklist.md` rows E1, E3, E7, E8
 - [ ] 4.4 Manual QA: add 3 expenses (equal, custom, Like), recurring confirm dialog, proposal payload fields on send
-- [ ] 4.5 Note notification + budget-threshold follow-up in `repo-maintenance-backlog` (active in-force flow)
+- [x] 4.5 Note notification + budget-threshold follow-up in `repo-maintenance-backlog` (active in-force flow)
 
 ---
 
@@ -68,8 +68,8 @@ Requires the **in-force plan usage** product flow to be specified first. Track i
 
 ## Verification checklist (acceptance)
 
-- [ ] Wizard shows 4 steps; no standalone categories or split steps
-- [ ] Expense form is full screen; dialog not used for add/edit
+- [x] Wizard shows 4 steps; no standalone categories or split steps
+- [x] Expense form is full screen; dialog not used for add/edit
 - [ ] Approximate/min/max UI absent; Determined / Budgeted (max) works
 - [ ] Grid hidden without amount; correction row blocks save
 - [ ] Like selector appears after first non-equal expense; copying then editing clears Like

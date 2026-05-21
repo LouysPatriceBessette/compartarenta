@@ -507,7 +507,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingPlanExpenseValidationMessage =>
-      'Ajoutez au moins une dépense. Chacune doit avoir un montant valide (fixe ou fourchette min/max) et les dépenses récurrentes nécessitent un jour du mois.';
+      'Ajoutez au moins une dépense. Chacune doit avoir un montant, une répartition totalisant 100 % entre les participants, et les dépenses récurrentes une échéance valide.';
 
   @override
   String get housingPlanSplitValidationMessage =>

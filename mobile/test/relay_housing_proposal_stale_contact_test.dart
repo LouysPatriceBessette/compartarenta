@@ -6,16 +6,14 @@ import 'package:compartarenta/contacts/invitation_code.dart';
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/db/repositories/contacts_repository.dart';
 import 'package:compartarenta/notifications/contact_notification_service.dart';
-import 'package:compartarenta/housing/proposals/housing_proposal_transport_service.dart';
 import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.dart';
 import 'package:compartarenta/relay/envelopes.dart';
 import 'package:compartarenta/relay/handshake_orchestrator.dart';
 import 'package:compartarenta/relay/identity_keystore.dart';
-import 'package:compartarenta/relay/relay_client.dart';
 import 'package:compartarenta/relay/routing.dart';
 import 'package:compartarenta/relay/testing/fake_relay_client.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 

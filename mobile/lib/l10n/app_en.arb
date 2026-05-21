@@ -168,7 +168,7 @@
   "housingPlanBack": "Back",
   "housingPlanNext": "Next",
   "housingPlanFinish": "Finish",
-  "housingPlanExpenseValidationMessage": "Add at least one expense. Each needs a valid amount (fixed or min/max range) and recurring items need a day of month.",
+  "housingPlanExpenseValidationMessage": "Add at least one expense. Each needs an amount, split totaling 100% across participants, and recurring items need a valid schedule.",
   "housingPlanSplitValidationMessage": "Each expense or category must total 100% across participants.",
   "housingPlanCouldNotContinue": "Could not continue: {error}",
   "@housingPlanCouldNotContinue": {

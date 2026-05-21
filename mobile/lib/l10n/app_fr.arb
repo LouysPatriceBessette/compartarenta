@@ -168,7 +168,7 @@
   "housingPlanBack": "Retour",
   "housingPlanNext": "Suivant",
   "housingPlanFinish": "Terminer",
-  "housingPlanExpenseValidationMessage": "Ajoutez au moins une dépense. Chacune doit avoir un montant valide (fixe ou fourchette min/max) et les dépenses récurrentes nécessitent un jour du mois.",
+  "housingPlanExpenseValidationMessage": "Ajoutez au moins une dépense. Chacune doit avoir un montant, une répartition totalisant 100 % entre les participants, et les dépenses récurrentes une échéance valide.",
   "housingPlanSplitValidationMessage": "Chaque dépense ou catégorie doit totaliser 100 % entre les participants.",
   "housingPlanCouldNotContinue": "Impossible de continuer : {error}",
   "@housingPlanCouldNotContinue": {

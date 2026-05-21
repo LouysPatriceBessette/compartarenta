@@ -62,13 +62,20 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final o in options)
-                    RadioListTile<ExpenseRecurrenceSpec>(
-                      title: Text(o.label),
-                      value: o.spec,
-                      groupValue: picked,
-                      onChanged: (v) => setDialogState(() => picked = v),
+                  RadioGroup<ExpenseRecurrenceSpec>(
+                    groupValue: picked,
+                    onChanged: (v) => setDialogState(() => picked = v),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final o in options)
+                          RadioListTile<ExpenseRecurrenceSpec>(
+                            title: Text(o.label),
+                            value: o.spec,
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),

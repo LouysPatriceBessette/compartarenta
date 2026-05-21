@@ -267,17 +267,25 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
           ),
           const SizedBox(height: 8),
           Text(l10n.housingExpenseAmountTypeLabel, style: Theme.of(context).textTheme.titleSmall),
-          RadioListTile<bool>(
-            title: Text(l10n.housingExpenseAmountDetermined),
-            value: false,
+          RadioGroup<bool>(
             groupValue: _amountIsBudgetCap,
-            onChanged: (v) => setState(() => _amountIsBudgetCap = v ?? false),
-          ),
-          RadioListTile<bool>(
-            title: Text(l10n.housingExpenseAmountBudgetMax),
-            value: true,
-            groupValue: _amountIsBudgetCap,
-            onChanged: (v) => setState(() => _amountIsBudgetCap = v ?? true),
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() => _amountIsBudgetCap = v);
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                RadioListTile<bool>(
+                  title: Text(l10n.housingExpenseAmountDetermined),
+                  value: false,
+                ),
+                RadioListTile<bool>(
+                  title: Text(l10n.housingExpenseAmountBudgetMax),
+                  value: true,
+                ),
+              ],
+            ),
           ),
           DropdownButtonFormField<String?>(
             initialValue: _paymentResponsibleId,

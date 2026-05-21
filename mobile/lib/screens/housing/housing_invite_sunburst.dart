@@ -37,13 +37,7 @@ int _weightLine(List<PlanRatio> ratios, String lineId, String participantId) {
       .fold<int>(0, (a, r) => a + r.weight);
 }
 
-int _weightGroup(List<PlanRatio> ratios, String groupId, String participantId) {
-  return ratios
-      .where((r) => r.groupId == groupId && r.participantId == participantId)
-      .fold<int>(0, (a, r) => a + r.weight);
-}
-
-/// Inner-ring slices: each plan group with lines, then uncategorized lines.
+/// Inner-ring slices: one slice per expense line (no category/group aggregation).
 ///
 /// [participantIdsOrdered] must list every plan participant in the same order
 /// used for ratio weights (so Hamilton splits match the rest of the app).
@@ -71,39 +65,9 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   Color nextColor() => palette[colorIdx++ % palette.length];
 
   final sorted = [...lines]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-  final knownGroupIds = groups.map((g) => g.id).toSet();
   final out = <InviteSunburstSlice>[];
 
-  for (final g in groups) {
-    final members = sorted.where((l) => l.groupId == g.id).toList();
-    if (members.isEmpty) continue;
-    final basis = members.fold<int>(
-      0,
-      (a, l) => a + PlanProjection.unitMinor(l),
-    );
-    if (basis <= 0) continue;
-    final wg = <int>[
-      for (final pid in participantIdsOrdered) _weightGroup(ratios, g.id, pid),
-    ];
-    final shares = splitMinorByWeights(basis, wg);
-    final userIdx = participantIdsOrdered.indexOf(participantId);
-    final userPart = userIdx < 0 ? 0 : shares[userIdx];
-    out.add(
-      InviteSunburstSlice(
-        label: g.title.trim().isEmpty ? l10n.housingPlanCategoryNone : g.title,
-        totalMinor: basis,
-        userMinor: userPart,
-        baseColor: nextColor(),
-        currency: displayCurrency,
-      ),
-    );
-  }
-
-  final unc = sorted.where((l) {
-    final gid = l.groupId;
-    return gid == null || !knownGroupIds.contains(gid);
-  }).toList();
-  for (final line in unc) {
+  for (final line in sorted) {
     final b = PlanProjection.unitMinor(line);
     if (b <= 0) continue;
     final wRow = <int>[

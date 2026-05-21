@@ -8,6 +8,7 @@ Deferred engineering chores. Pick these up when convenient; they are
 - [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  
   Wire `ExpensePlanLineForm` on accepted plans; budget-cap threshold confirmation when a live expense exceeds the monthly max; notifications (default **All**: every participant gets before-date + overdue reminders; single designated payer per product annex).  
   Deferred from `housing-unified-expense-entry` pass 5 / `tasks.md` § Deferred.  
+  **Presentation chart:** budget cap = high estimate for sunburst/summary only; threshold alerts / push when over cap → this backlog item (not wizard PR #2).  
   **Depends on:** in-force plan usage UX defined first.
 
 - [ ] **Mobile dependencies — phase 3 (remaining majors).**  

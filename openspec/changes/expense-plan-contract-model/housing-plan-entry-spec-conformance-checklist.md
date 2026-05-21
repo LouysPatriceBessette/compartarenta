@@ -33,14 +33,14 @@ Items **E6**, **E9**, **W1**, **W2** (and peer-visible **P4** / **P5** once a dr
 
 | # | Requirement / scenario (summary) | Status | Notes |
 |---|-----------------------------------|--------|-------|
-| E1 | Author a **detailed draft** expense plan locally (recurring + one-off ranges + ratios). | **Yes** | Wizard: expenses, categories, split step, persistence. |
+| E1 | Author a **detailed draft** expense plan locally (recurring + one-off ranges + ratios). | **Yes** | 4-step wizard; full-screen `ExpensePlanLineForm` (amount, recurrence, per-line split, Like templates). |
 | E2 | Recurring line with ratios summing to product tolerance → persisted and in summaries. | **Yes** | 100% weights (bps); summary uses ratios. |
-| E3 | One-off estimate with min/max → **min ≤ max** validated, both stored for projection. | **Partial** | Range mode in line editor; confirm dedicated validation UX for all edge cases if required. |
+| E3 | One-off estimate with min/max → **min ≤ max** validated, both stored for projection. | **Partial** | New saves use determined / budgeted (max) only (`amountMinor` + `amountIsBudgetCap`); legacy min/max rows may remain until edited. |
 | E4 | **Non-blocking encouragement** (checklist, tips, readiness, summary gaps). | **Partial** | Stepper + inline hints/snackbars; no dedicated checklist / readiness score. |
 | E5 | **Readiness hints** when draft lacks key fields (ratios, period, …) without deleting work. | **Partial** | Validations on “Next”; not a standing checklist of gaps. |
 | E6 | **Optional gate** before “Propose to group” with explanation when incomplete. | **No** | No “Propose to group” action in this screen. **Implement with** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md) (deadline + send to connected roster). |
-| E7 | Ratios stored **per line or per group** consistently. | **Yes** | `PlanRatio` line vs group scope. |
-| E8 | Group-level ratios apply to bundled lines for projection/allocation. | **Yes** | Split UI and projection paths handle groups. |
+| E7 | Ratios stored **per line or per group** consistently. | **Yes** | Unified flow: **per-line** `PlanRatio` only on save; orphan group-level rows stripped on plan load. |
+| E8 | Group-level ratios apply to bundled lines for projection/allocation. | **Partial** | Legacy DB may still have groups; chart/summary use **one slice per line**; no group split step in wizard. |
 | E9 | Draft remains **local** until user explicitly proposes. | **Partial** | Data stays on device; **explicit propose** from this UI is absent (`PlanAgreementProposalService` not wired from app screens). **Wire send path per** [`housing-plan-proposal-offer-flow`](../housing-plan-proposal-offer-and-responses/specs/housing-plan-proposal-offer-flow/spec.md). |
 
 ---
