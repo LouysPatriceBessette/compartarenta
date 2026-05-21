@@ -46,7 +46,8 @@ Proposal payload (`PlanAgreementProposalService`) mirrors line/ratio/group field
 - Full **minor plan amendment** flow (only form reusability and `ExpensePlanLineFormScope` API).
 - Car-sharing module parity.
 - Relay protocol versioning or server-side validation.
-- Migrating in-flight proposal packages on other peers (best-effort import of legacy fields).
+- Legacy **proposal payload import** mapping (no plan export feature shipped; not required for this change).
+- **Active plan in-force** usage flow (Pass 5 / `ExpensePlanLineFormScope.minorEdit`, budget threshold dialog, notifications).
 
 ## Reuse / Modify / Add / Remove matrix
 
@@ -72,7 +73,7 @@ Proposal payload (`PlanAgreementProposalService`) mirrors line/ratio/group field
 | `PlanProjection.unitMinor` | Budget cap: use `amountMinor` as cap, not midpoint of min/max |
 | `_validateStep2Expenses` | Recurrence spec + amount + ratios consistent; rename to `_validateExpensesStep` |
 | `_inferResumeStepIndex` / `_isHousingPlanWizardFullyDoneInDb` | New indices |
-| Import/export proposal | Map new fields; legacy `amountUsesRange` → `amountIsBudgetCap` on read |
+| Proposal payload JSON | Add new fields when building/sending proposals; no legacy import mapping |
 | Conformance checklist | E1, E3, E7, E8 rows |
 
 ### Add
@@ -96,9 +97,9 @@ Proposal payload (`PlanAgreementProposalService`) mirrors line/ratio/group field
 | `_splitTickFractionsForParticipantCount`, slider tick UI | “Vinculum” periodic ticks |
 | `RationalPercentText` in split step | Keep widget elsewhere if needed; not in expense form grid (use 1-decimal terminating / 4+ellipsis per display rules) |
 | `amountUsesRange` switch + min/max fields | Replaced by radio |
-| Category dropdown in line editor | Replaced by auto group + “Like” |
+| Category dropdown in line editor | Replaced by ratio templates + “Like” (no `PlanGroup`) |
 | `_initRatiosIfNeeded` on wizard Next | Ratios written on form save |
-| Group-level ratio authoring in wizard | Lines always own `PlanRatio` rows; groups only for bundling/projection if auto-created |
+| Group-level ratio authoring in wizard | Lines always own `PlanRatio` rows; chart does not bundle by group |
 
 ## Decisions
 
@@ -112,7 +113,8 @@ Merge old steps 3–5 into new step 3 (code index 2). **Agreement rules** become
 
 - **Weights** always stored per line in `PlanRatio` at save.
 - **`ratioTemplateId`** (nullable) records which “Like” option was used at save time for analytics only; editing template source line does not update other lines.
-- **`PlanGroup`**: created when saved weights are not equal parts; `title` = expense name at first creation; `groupId` set on that line. Further lines using “Like” copy weights only; they need not share `groupId` unless we want projection grouping — **default: do not auto-assign `groupId` on “Like” copies** (only non-equal first save creates group). Clarify in Open Questions.
+- **`PlanGroup`**: not created by the unified expense flow; ratio templates replace the old manual/auto category UX. Lines that use “Like” copy **weights only** and MUST NOT receive a `groupId` from the template.
+- **Presentation chart**: **one chart item per expense line**; no aggregation by `PlanGroup`, template, or category.
 
 **Alternative:** Reuse `groupId` as template id — conflates bundling with UI aid; rejected.
 
@@ -130,7 +132,7 @@ Treat split as equal when `weightsAreMaximallyBalanced` after mapping to bps (sa
 ### D5 — Amount type radio
 
 - **Determined:** `amountIsBudgetCap = false`; `amountMinor` required.
-- **Budgeted (max):** `amountIsBudgetCap = true`; `amountMinor` is ceiling for projection/settlement semantics (document in projection).
+- **Budgeted (max):** `amountIsBudgetCap = true`; `amountMinor` is the **upper-bound estimate** for the plan presentation chart. Threshold-exceed confirmation dialog and peer notifications when a live expense exceeds the cap are deferred to the **active plan in-force** flow.
 
 ### D6 — Recurrence storage
 
@@ -148,30 +150,47 @@ Minor edit scope hides wizard-only chrome but keeps same validation.
 
 ### D8 — Relay / transport
 
-Client-only payload extension; old recipients ignore unknown keys. Import maps legacy lines: `amountUsesRange: true` → `amountIsBudgetCap: true`, midpoint not used going forward.
+Client-only payload extension when proposals are sent; relay remains opaque JSON. **No legacy payload import** in this change (plan export is not implemented). Local DB migration may still backfill existing draft rows on device (`amountUsesRange` → `amountIsBudgetCap`, `recurrenceDayOfMonth` → `recurrenceSpecJson`).
 
 ## Risks / Trade-offs
 
 | Risk | Mitigation |
 |------|------------|
-| Large single PR | Phased tasks (below); form extract before deleting split step |
+| Large change set | **Two PRs:** PR1 = passes 1–2, PR2 = passes 3–4; form extract before deleting split step in PR2 |
 | Legacy DB rows with groups + group ratios | Migration: expand group ratios onto member lines or delete orphan group ratios |
 | Recurrence inference wrong | Mandatory confirm dialog; store only after confirm |
 | Percent display vs bps drift | Persist bps; display via existing percent formatters; save blocked on money mismatch not bps drift |
-| Proposal peers on old app version | Transport keeps sending `recurrenceDayOfMonth` as fallback during transition |
+| Proposal peers on old app version | Not a concern until export/send is widely used; encode new fields only |
 
 ## Migration Plan
 
 1. Add columns / `plan_ratio_templates` table (schema v15+).
 2. Backfill: `amountUsesRange` → `amountIsBudgetCap`; drop min/max from active UI; one-time script sets `recurrenceSpecJson` from `recurrenceDayOfMonth` when possible.
 3. Ship new wizard; update checklist.
-4. Later: remove deprecated columns from payload export after all clients updated.
+4. Later: drop deprecated DB columns once all local drafts are migrated.
 
-## Open Questions
+## Delivery plan (2 PRs)
 
-1. **Auto `groupId` on “Like”:** Should a line that copies “Like Loyer” also join the `PlanGroup` named Loyer, or only copy weights? (Spec assumes **weights only** unless product wants grouped projection.)
-2. **One-off + recurrence UI:** Show recurrence calendar only when `isRecurring == true`? (Assumed **yes**.)
-3. **Budget cap in projection:** Use full cap, 80% estimate, or actuals only at settlement? (Assumed **cap = `amountMinor`** for preview upper bound.)
-4. **Template deduplication:** Same weight vector → same template id even if titles differ? (Assumed **yes**, display title from first registrant.)
-5. **Minor edit:** Which fields are editable post-acceptance? (Out of scope; form API only.)
-6. **Percent column input:** Allow user typing non-terminating values or round on blur to bps? (Assumed **bps authoritative**, display follows `display-number-rounding` rule.)
+| PR | Passes | Scope |
+|----|--------|--------|
+| **#1** | 1 + 2 | Schema, projection, proposal payload fields, `ExpensePlanLineForm` module (usable in isolation; wizard still on old steps until PR2) |
+| **#2** | 3 + 4 | Wizard cutover, remove split/categories UI, cleanup, checklist |
+
+## Deferred — active plan in-force flow (separate change, after usage flow is designed)
+
+Tracked outside this change (see `repo-maintenance-backlog` entry). Includes:
+
+- `ExpensePlanLineFormScope` for editing lines on an **accepted / in-force** plan
+- Budget-cap **threshold** confirmation when a submitted expense exceeds the monthly cap
+- **Notifications:** optional designated payer (before-date reminder to payer only; on-payment and overdue to others); when default **All** is selected, **every** participant gets before-date reminder and overdue reminder if unpaid
+- Pass 5 tasks from `tasks.md` (form scope stub → full wiring)
+
+## Resolved product decisions
+
+1. **Like / chart:** “Like” copies weights only; no auto `groupId`. Presentation chart: **one item per expense line**; no grouping by template or category.
+2. **Recurrence UI:** Calendar only when `isRecurring` is on.
+3. **Budget cap:** `amountMinor` is the high estimate for the presentation chart; threshold dialog + notifications → active in-force flow.
+4. **Template deduplication:** Same weight vector → one internal template id; display title from first expense that registered it.
+5. **Payment responsible:** Optional. Default UI = **All** (stored as null): all participants receive before-date and overdue reminders. Single designated payer → that participant gets before-date reminder; others per annex (on payment / overdue) when that flow ships.
+6. **Percent input:** Basis points authoritative at save; display per `display-number-rounding`.
+7. **Legacy data:** No proposal payload legacy import. Local DB may still migrate draft rows and orphan **group-level** ratios on device.

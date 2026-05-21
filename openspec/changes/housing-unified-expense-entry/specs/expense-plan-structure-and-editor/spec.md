@@ -16,7 +16,7 @@
 
 ### Requirement: Ratios stored per line or per group consistently
 
-Ratios SHALL be stored per line for all newly authored housing expenses. Group-level ratio rows MAY exist for legacy data but MUST NOT be required by the unified wizard.
+Ratios SHALL be stored per line for all newly authored housing expenses. Orphan group-level ratio rows on local drafts MAY be migrated or removed in implementation; proposal payload legacy import is not required.
 
 #### Scenario: New expense save
 

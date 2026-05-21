@@ -33,14 +33,14 @@ Persisted recurrence MUST be stored in a structured recurrence spec on the line 
 - **WHEN** the user confirms fixed day 10 monthly from June 10 2026
 - **THEN** the line stores a recurrence spec encoding that kind and anchor
 
-### Requirement: Legacy import maps old recurrence
+### Requirement: Local draft lines without recurrence spec
 
-When loading a line that only has `recurrenceDayOfMonth`, the form SHALL synthesize a recurrence spec for editing where possible.
+When opening a **local** `PlanLine` that only has `recurrenceDayOfMonth` and no `recurrenceSpecJson`, the form SHALL synthesize a recurrence spec for editing where possible. This applies to on-device draft migration only, not proposal payload import (plan export is not implemented).
 
-#### Scenario: Open legacy line
+#### Scenario: Open local draft line
 
-- **WHEN** the user edits a line with day-of-month 15 and no spec json
-- **THEN** the form shows recurring state consistent with legacy data
+- **WHEN** the user edits a local line with day-of-month 15 and no spec json
+- **THEN** the form shows recurring state consistent with that row
 
 ## MODIFIED Requirements
 

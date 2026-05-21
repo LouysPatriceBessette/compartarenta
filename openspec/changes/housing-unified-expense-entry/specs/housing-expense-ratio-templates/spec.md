@@ -18,6 +18,11 @@ The Like selector (localized; not “category” in the label) SHALL offer a bla
 - **WHEN** the user selects Like “Rent” on a new 800 expense
 - **THEN** row percents match the Rent template and row amounts are recomputed from 800
 
+#### Scenario: Like does not set groupId
+
+- **WHEN** the user saves an expense after selecting Like “Rent”
+- **THEN** the line’s `groupId` is null and only `PlanRatio` weights (and optional `ratioTemplateId`) reflect the template
+
 #### Scenario: Manual grid edit clears Like selection
 
 - **WHEN** the user selected Like “Rent” then edits a grid cell
@@ -46,19 +51,28 @@ If a saved expense produces the same weight vector as an existing template, the 
 - **WHEN** the user saves “Groceries” with the same weights as an existing template
 - **THEN** no duplicate template row is created and Like list still shows the first title
 
-### Requirement: Auto category on non-equal save
+### Requirement: Non-equal save registers template only not PlanGroup
 
-When an expense is saved with non-equal split, the system SHALL create a `PlanGroup` if needed, using the expense Name as the group title, and associate that line with the group. Manual category wizard step is not used.
+When an expense is saved with non-equal split, the system SHALL register a ratio template (if new weight vector) but MUST NOT create a `PlanGroup` or set `groupId` on the line. The template display title supplies the “category name” for the Like selector only.
 
-#### Scenario: Non-equal save creates group
+#### Scenario: Non-equal save creates template without group
 
-- **WHEN** the user saves “Rent” with non-equal split and no matching group exists
-- **THEN** a plan group titled “Rent” exists and the line references it
+- **WHEN** the user saves “Rent” with non-equal split
+- **THEN** a ratio template titled “Rent” exists, the line has `groupId` null, and `PlanRatio` rows exist for that line
 
-#### Scenario: Equal split does not create template or group
+#### Scenario: Equal split does not create template
 
 - **WHEN** the user saves with equal parts split
-- **THEN** no new ratio template is registered and no group is created solely for that reason
+- **THEN** no new ratio template is registered
+
+### Requirement: Presentation chart one item per expense line
+
+The plan presentation chart (summary / preview) SHALL show **one item per `PlanLine`**. It MUST NOT aggregate or group lines by `PlanGroup`, ratio template, or shared weights.
+
+#### Scenario: Two lines same template weights
+
+- **WHEN** the plan has two expenses that used the same weight template
+- **THEN** the chart shows two separate items (one per line title), not one combined group
 
 ### Requirement: Manual category authoring removed from wizard
 

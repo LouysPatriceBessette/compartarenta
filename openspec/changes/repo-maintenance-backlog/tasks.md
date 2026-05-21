@@ -5,6 +5,11 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
+- [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  
+  Wire `ExpensePlanLineForm` on accepted plans; budget-cap threshold confirmation when a live expense exceeds the monthly max; notifications (default **All**: every participant gets before-date + overdue reminders; single designated payer per product annex).  
+  Deferred from `housing-unified-expense-entry` pass 5 / `tasks.md` § Deferred.  
+  **Depends on:** in-force plan usage UX defined first.
+
 - [ ] **Mobile dependencies — phase 3 (remaining majors).**  
   `go_router`, `flutter_secure_storage`, `app_links`, … as features need them.  
   **Mobile-only**; relay wake stays on `closed-app-push-delivery`.  

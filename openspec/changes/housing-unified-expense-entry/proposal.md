@@ -9,8 +9,9 @@ The housing plan wizard currently splits **expense categories**, **expense lines
 - **BREAKING (recurrence):** Replace day-of-month dropdown with **date-range–driven recurrence** (fixed day of month, every *n* days, or nth weekday of month), confirmed via a disambiguation dialog, bounded by agreement period.
 - **New:** Reusable `ExpensePlanLineForm` (proposal + future minor plan edit).
 - **New:** Inline **3-column split grid** (amount / participant / percent) with row-local recalculation, correction row when totals diverge, **Equal parts** reset, and **Like** selector copying prior ratio templates (UI-only; no cross-line linkage after save).
-- **New:** Auto-created **ratio templates** (internal id + display label from first expense using that weight vector); optional auto **category** (`PlanGroup`) when split is not equal—categories are no longer authored manually in the wizard.
-- **New:** **Payment responsible** participant (nullable; default “no designated payer”); notification behavior deferred to a follow-up change.
+- **New:** Auto-created **ratio templates** (internal id + display label from first expense using that weight vector) when split is not equal—replacing manual categories; no new `PlanGroup` rows in this flow.
+- **Presentation chart:** One item per expense line (no grouping by category or template).
+- **New:** **Payment responsible** participant (optional; default **All** / every participant for notification routing); notification delivery deferred to the **active plan in-force** flow (not this change).
 - **Removed:** Manual category step and category editor dialog in the wizard; group-level split step UI; slider + vinculum tick fractions + `RationalPercentText` on the split step; `_initRatiosIfNeeded` lazy fill on “Next.”
 - **Reuse:** `PlanLine` / `PlanRatio` / `PlanGroup` tables (extended), `splitMinorByWeights`, list/reorder UI from current expenses step, most `_LineEditorDialog` fields (renamed labels).
 
@@ -20,7 +21,8 @@ The housing plan wizard currently splits **expense categories**, **expense lines
 
 - `housing-expense-line-form`: Full-page reusable form, field order, validation gates, save contract, and embedding contexts (wizard vs future minor edit).
 - `housing-expense-split-grid`: Per-line amount/percent grid, correction row, equal-parts reset, and persistence to `PlanRatio` weights.
-- `housing-expense-ratio-templates`: Internal ratio template ids, “Like” selector (two-line items), auto category creation rules, and immutability of copied ratios after save.
+- `housing-expense-ratio-templates`: Internal ratio template ids, “Like” selector (two-line items), template registration on non-equal save, and immutability of copied ratios after save.
+- `housing-plan-presentation-chart`: One chart item per expense line; no category/template grouping.
 - `housing-expense-recurrence-picker`: Date-range UI inside agreement bounds, inference + confirmation dialog for the three recurrence kinds.
 
 ### Modified Capabilities
@@ -35,7 +37,7 @@ The housing plan wizard currently splits **expense categories**, **expense lines
 | New modules under `mobile/lib/housing/expense_form/` (suggested) | Form, grid, recurrence, templates |
 | `mobile/lib/db/app_database.dart` | Schema migration: line fields, optional `plan_ratio_templates`, deprecate min/max/range |
 | `mobile/lib/housing/projection/plan_projection.dart` | Budget-cap semantics (no midpoint for capped lines) |
-| `plan_agreement_proposal_service.dart` / transport import | Payload fields for recurrence + budget flag + payer; backward-compatible read |
+| `plan_agreement_proposal_service.dart` / proposal payload JSON | New fields for recurrence, budget cap, and payer when a proposal is built/sent; **no legacy payload import** (plan export is not implemented; received packages use current encoding only) |
 | `openspec/.../housing-plan-entry-spec-conformance-checklist.md` | Rows E1–E8 need re-triage after implementation |
 | Relay | **No relay source change expected** (opaque JSON payload); peers on old builds may ignore new fields until upgraded |
 | Notifications | Specified in annex but **out of scope** for implementation passes here |

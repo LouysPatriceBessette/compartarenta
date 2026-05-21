@@ -24,7 +24,7 @@ The form SHALL present fields in this order when all applicability conditions ar
 4. Recurrence period control (calendar affordance) when Recurring is on
 5. Amount (numeric)
 6. Amount type (radio): Determined | Budgeted (max)
-7. Payment responsible (select; default “No designated payer”)
+7. Payment responsible (select; default **All** / optional single participant)
 8. Visual separator
 9. Section title “Split” (localized; not the word “ratio” in user-facing copy)
 10. Equal parts control
@@ -50,14 +50,21 @@ The system MUST NOT expose approximate amount, min amount, or max amount fields 
 - **WHEN** the user selects Determined and enters amount 300
 - **THEN** the system stores `amountIsBudgetCap = false` and `amountMinor = 30000`
 
-### Requirement: Payment responsible defaults to none
+### Requirement: Payment responsible is optional with default All
 
-The payment responsible select SHALL list every plan participant plus an option meaning no designated payer. The default selection MUST be no designated payer.
+The payment responsible select SHALL list every plan participant plus a default option **All** (localized; e.g. “Tous”). Designating one participant is optional. The default selection MUST be **All**.
 
-#### Scenario: Save without changing payer
+When **All** is selected, the stored payer participant id MUST be null. Notification routing (before-date and overdue reminders to every participant) is specified in the **active plan in-force** flow, not in this change.
+
+#### Scenario: Save with default All
 
 - **WHEN** the user saves a new expense without changing payment responsible
-- **THEN** the stored payer participant id is null
+- **THEN** the stored payer participant id is null and the UI shows All as selected
+
+#### Scenario: Save with one designated payer
+
+- **WHEN** the user selects a single participant as payment responsible
+- **THEN** the stored payer participant id is that participant’s id
 
 ### Requirement: Save is blocked when split totals mismatch
 
