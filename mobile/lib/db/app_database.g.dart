@@ -939,6 +939,55 @@ class $PlanLinesTable extends PlanLines
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _amountIsBudgetCapMeta = const VerificationMeta(
+    'amountIsBudgetCap',
+  );
+  @override
+  late final GeneratedColumn<bool> amountIsBudgetCap = GeneratedColumn<bool>(
+    'amount_is_budget_cap',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("amount_is_budget_cap" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _paymentResponsibleParticipantIdMeta =
+      const VerificationMeta('paymentResponsibleParticipantId');
+  @override
+  late final GeneratedColumn<String> paymentResponsibleParticipantId =
+      GeneratedColumn<String>(
+        'payment_responsible_participant_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recurrenceSpecJsonMeta =
+      const VerificationMeta('recurrenceSpecJson');
+  @override
+  late final GeneratedColumn<String> recurrenceSpecJson =
+      GeneratedColumn<String>(
+        'recurrence_spec_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _ratioTemplateIdMeta = const VerificationMeta(
+    'ratioTemplateId',
+  );
+  @override
+  late final GeneratedColumn<String> ratioTemplateId = GeneratedColumn<String>(
+    'ratio_template_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -966,6 +1015,10 @@ class $PlanLinesTable extends PlanLines
     recurrenceDayOfMonth,
     sortOrder,
     groupId,
+    amountIsBudgetCap,
+    paymentResponsibleParticipantId,
+    recurrenceSpecJson,
+    ratioTemplateId,
     createdAt,
   ];
   @override
@@ -1092,6 +1145,42 @@ class $PlanLinesTable extends PlanLines
         groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
       );
     }
+    if (data.containsKey('amount_is_budget_cap')) {
+      context.handle(
+        _amountIsBudgetCapMeta,
+        amountIsBudgetCap.isAcceptableOrUnknown(
+          data['amount_is_budget_cap']!,
+          _amountIsBudgetCapMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payment_responsible_participant_id')) {
+      context.handle(
+        _paymentResponsibleParticipantIdMeta,
+        paymentResponsibleParticipantId.isAcceptableOrUnknown(
+          data['payment_responsible_participant_id']!,
+          _paymentResponsibleParticipantIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_spec_json')) {
+      context.handle(
+        _recurrenceSpecJsonMeta,
+        recurrenceSpecJson.isAcceptableOrUnknown(
+          data['recurrence_spec_json']!,
+          _recurrenceSpecJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ratio_template_id')) {
+      context.handle(
+        _ratioTemplateIdMeta,
+        ratioTemplateId.isAcceptableOrUnknown(
+          data['ratio_template_id']!,
+          _ratioTemplateIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1165,6 +1254,22 @@ class $PlanLinesTable extends PlanLines
         DriftSqlType.string,
         data['${effectivePrefix}group_id'],
       ),
+      amountIsBudgetCap: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}amount_is_budget_cap'],
+      )!,
+      paymentResponsibleParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_responsible_participant_id'],
+      ),
+      recurrenceSpecJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurrence_spec_json'],
+      )!,
+      ratioTemplateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ratio_template_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1202,6 +1307,18 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
   /// Display order within the plan (lower first).
   final int sortOrder;
   final String? groupId;
+
+  /// When true, [amountMinor] is a budget ceiling (high estimate), not a fixed amount.
+  final bool amountIsBudgetCap;
+
+  /// Nullable; null means all participants (notification routing deferred).
+  final String? paymentResponsibleParticipantId;
+
+  /// JSON recurrence spec (see `ExpenseRecurrenceSpec`).
+  final String recurrenceSpecJson;
+
+  /// Optional link to a ratio template used at save (UI aid only).
+  final String? ratioTemplateId;
   final DateTime createdAt;
   const PlanLine({
     required this.id,
@@ -1218,6 +1335,10 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     this.recurrenceDayOfMonth,
     required this.sortOrder,
     this.groupId,
+    required this.amountIsBudgetCap,
+    this.paymentResponsibleParticipantId,
+    required this.recurrenceSpecJson,
+    this.ratioTemplateId,
     required this.createdAt,
   });
   @override
@@ -1246,6 +1367,16 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     map['sort_order'] = Variable<int>(sortOrder);
     if (!nullToAbsent || groupId != null) {
       map['group_id'] = Variable<String>(groupId);
+    }
+    map['amount_is_budget_cap'] = Variable<bool>(amountIsBudgetCap);
+    if (!nullToAbsent || paymentResponsibleParticipantId != null) {
+      map['payment_responsible_participant_id'] = Variable<String>(
+        paymentResponsibleParticipantId,
+      );
+    }
+    map['recurrence_spec_json'] = Variable<String>(recurrenceSpecJson);
+    if (!nullToAbsent || ratioTemplateId != null) {
+      map['ratio_template_id'] = Variable<String>(ratioTemplateId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1277,6 +1408,15 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       groupId: groupId == null && nullToAbsent
           ? const Value.absent()
           : Value(groupId),
+      amountIsBudgetCap: Value(amountIsBudgetCap),
+      paymentResponsibleParticipantId:
+          paymentResponsibleParticipantId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentResponsibleParticipantId),
+      recurrenceSpecJson: Value(recurrenceSpecJson),
+      ratioTemplateId: ratioTemplateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratioTemplateId),
       createdAt: Value(createdAt),
     );
   }
@@ -1303,6 +1443,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       ),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       groupId: serializer.fromJson<String?>(json['groupId']),
+      amountIsBudgetCap: serializer.fromJson<bool>(json['amountIsBudgetCap']),
+      paymentResponsibleParticipantId: serializer.fromJson<String?>(
+        json['paymentResponsibleParticipantId'],
+      ),
+      recurrenceSpecJson: serializer.fromJson<String>(
+        json['recurrenceSpecJson'],
+      ),
+      ratioTemplateId: serializer.fromJson<String?>(json['ratioTemplateId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1324,6 +1472,12 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
       'recurrenceDayOfMonth': serializer.toJson<int?>(recurrenceDayOfMonth),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'groupId': serializer.toJson<String?>(groupId),
+      'amountIsBudgetCap': serializer.toJson<bool>(amountIsBudgetCap),
+      'paymentResponsibleParticipantId': serializer.toJson<String?>(
+        paymentResponsibleParticipantId,
+      ),
+      'recurrenceSpecJson': serializer.toJson<String>(recurrenceSpecJson),
+      'ratioTemplateId': serializer.toJson<String?>(ratioTemplateId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1343,6 +1497,10 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     Value<int?> recurrenceDayOfMonth = const Value.absent(),
     int? sortOrder,
     Value<String?> groupId = const Value.absent(),
+    bool? amountIsBudgetCap,
+    Value<String?> paymentResponsibleParticipantId = const Value.absent(),
+    String? recurrenceSpecJson,
+    Value<String?> ratioTemplateId = const Value.absent(),
     DateTime? createdAt,
   }) => PlanLine(
     id: id ?? this.id,
@@ -1365,6 +1523,14 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
         : this.recurrenceDayOfMonth,
     sortOrder: sortOrder ?? this.sortOrder,
     groupId: groupId.present ? groupId.value : this.groupId,
+    amountIsBudgetCap: amountIsBudgetCap ?? this.amountIsBudgetCap,
+    paymentResponsibleParticipantId: paymentResponsibleParticipantId.present
+        ? paymentResponsibleParticipantId.value
+        : this.paymentResponsibleParticipantId,
+    recurrenceSpecJson: recurrenceSpecJson ?? this.recurrenceSpecJson,
+    ratioTemplateId: ratioTemplateId.present
+        ? ratioTemplateId.value
+        : this.ratioTemplateId,
     createdAt: createdAt ?? this.createdAt,
   );
   PlanLine copyWithCompanion(PlanLinesCompanion data) {
@@ -1397,6 +1563,19 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           : this.recurrenceDayOfMonth,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      amountIsBudgetCap: data.amountIsBudgetCap.present
+          ? data.amountIsBudgetCap.value
+          : this.amountIsBudgetCap,
+      paymentResponsibleParticipantId:
+          data.paymentResponsibleParticipantId.present
+          ? data.paymentResponsibleParticipantId.value
+          : this.paymentResponsibleParticipantId,
+      recurrenceSpecJson: data.recurrenceSpecJson.present
+          ? data.recurrenceSpecJson.value
+          : this.recurrenceSpecJson,
+      ratioTemplateId: data.ratioTemplateId.present
+          ? data.ratioTemplateId.value
+          : this.ratioTemplateId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1418,6 +1597,12 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           ..write('recurrenceDayOfMonth: $recurrenceDayOfMonth, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('groupId: $groupId, ')
+          ..write('amountIsBudgetCap: $amountIsBudgetCap, ')
+          ..write(
+            'paymentResponsibleParticipantId: $paymentResponsibleParticipantId, ',
+          )
+          ..write('recurrenceSpecJson: $recurrenceSpecJson, ')
+          ..write('ratioTemplateId: $ratioTemplateId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1439,6 +1624,10 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
     recurrenceDayOfMonth,
     sortOrder,
     groupId,
+    amountIsBudgetCap,
+    paymentResponsibleParticipantId,
+    recurrenceSpecJson,
+    ratioTemplateId,
     createdAt,
   );
   @override
@@ -1459,6 +1648,11 @@ class PlanLine extends DataClass implements Insertable<PlanLine> {
           other.recurrenceDayOfMonth == this.recurrenceDayOfMonth &&
           other.sortOrder == this.sortOrder &&
           other.groupId == this.groupId &&
+          other.amountIsBudgetCap == this.amountIsBudgetCap &&
+          other.paymentResponsibleParticipantId ==
+              this.paymentResponsibleParticipantId &&
+          other.recurrenceSpecJson == this.recurrenceSpecJson &&
+          other.ratioTemplateId == this.ratioTemplateId &&
           other.createdAt == this.createdAt);
 }
 
@@ -1477,6 +1671,10 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
   final Value<int?> recurrenceDayOfMonth;
   final Value<int> sortOrder;
   final Value<String?> groupId;
+  final Value<bool> amountIsBudgetCap;
+  final Value<String?> paymentResponsibleParticipantId;
+  final Value<String> recurrenceSpecJson;
+  final Value<String?> ratioTemplateId;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const PlanLinesCompanion({
@@ -1494,6 +1692,10 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     this.recurrenceDayOfMonth = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.groupId = const Value.absent(),
+    this.amountIsBudgetCap = const Value.absent(),
+    this.paymentResponsibleParticipantId = const Value.absent(),
+    this.recurrenceSpecJson = const Value.absent(),
+    this.ratioTemplateId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1512,6 +1714,10 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     this.recurrenceDayOfMonth = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.groupId = const Value.absent(),
+    this.amountIsBudgetCap = const Value.absent(),
+    this.paymentResponsibleParticipantId = const Value.absent(),
+    this.recurrenceSpecJson = const Value.absent(),
+    this.ratioTemplateId = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1535,6 +1741,10 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     Expression<int>? recurrenceDayOfMonth,
     Expression<int>? sortOrder,
     Expression<String>? groupId,
+    Expression<bool>? amountIsBudgetCap,
+    Expression<String>? paymentResponsibleParticipantId,
+    Expression<String>? recurrenceSpecJson,
+    Expression<String>? ratioTemplateId,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -1554,6 +1764,12 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
         'recurrence_day_of_month': recurrenceDayOfMonth,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (groupId != null) 'group_id': groupId,
+      if (amountIsBudgetCap != null) 'amount_is_budget_cap': amountIsBudgetCap,
+      if (paymentResponsibleParticipantId != null)
+        'payment_responsible_participant_id': paymentResponsibleParticipantId,
+      if (recurrenceSpecJson != null)
+        'recurrence_spec_json': recurrenceSpecJson,
+      if (ratioTemplateId != null) 'ratio_template_id': ratioTemplateId,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1574,6 +1790,10 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     Value<int?>? recurrenceDayOfMonth,
     Value<int>? sortOrder,
     Value<String?>? groupId,
+    Value<bool>? amountIsBudgetCap,
+    Value<String?>? paymentResponsibleParticipantId,
+    Value<String>? recurrenceSpecJson,
+    Value<String?>? ratioTemplateId,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -1592,6 +1812,12 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
       recurrenceDayOfMonth: recurrenceDayOfMonth ?? this.recurrenceDayOfMonth,
       sortOrder: sortOrder ?? this.sortOrder,
       groupId: groupId ?? this.groupId,
+      amountIsBudgetCap: amountIsBudgetCap ?? this.amountIsBudgetCap,
+      paymentResponsibleParticipantId:
+          paymentResponsibleParticipantId ??
+          this.paymentResponsibleParticipantId,
+      recurrenceSpecJson: recurrenceSpecJson ?? this.recurrenceSpecJson,
+      ratioTemplateId: ratioTemplateId ?? this.ratioTemplateId,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1644,6 +1870,20 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
     if (groupId.present) {
       map['group_id'] = Variable<String>(groupId.value);
     }
+    if (amountIsBudgetCap.present) {
+      map['amount_is_budget_cap'] = Variable<bool>(amountIsBudgetCap.value);
+    }
+    if (paymentResponsibleParticipantId.present) {
+      map['payment_responsible_participant_id'] = Variable<String>(
+        paymentResponsibleParticipantId.value,
+      );
+    }
+    if (recurrenceSpecJson.present) {
+      map['recurrence_spec_json'] = Variable<String>(recurrenceSpecJson.value);
+    }
+    if (ratioTemplateId.present) {
+      map['ratio_template_id'] = Variable<String>(ratioTemplateId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1670,6 +1910,12 @@ class PlanLinesCompanion extends UpdateCompanion<PlanLine> {
           ..write('recurrenceDayOfMonth: $recurrenceDayOfMonth, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('groupId: $groupId, ')
+          ..write('amountIsBudgetCap: $amountIsBudgetCap, ')
+          ..write(
+            'paymentResponsibleParticipantId: $paymentResponsibleParticipantId, ',
+          )
+          ..write('recurrenceSpecJson: $recurrenceSpecJson, ')
+          ..write('ratioTemplateId: $ratioTemplateId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2498,6 +2744,380 @@ class PlanRatiosCompanion extends UpdateCompanion<PlanRatio> {
           ..write('lineId: $lineId, ')
           ..write('groupId: $groupId, ')
           ..write('weight: $weight, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlanRatioTemplatesTable extends PlanRatioTemplates
+    with TableInfo<$PlanRatioTemplatesTable, PlanRatioTemplate> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlanRatioTemplatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayTitleMeta = const VerificationMeta(
+    'displayTitle',
+  );
+  @override
+  late final GeneratedColumn<String> displayTitle = GeneratedColumn<String>(
+    'display_title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weightsJsonMeta = const VerificationMeta(
+    'weightsJson',
+  );
+  @override
+  late final GeneratedColumn<String> weightsJson = GeneratedColumn<String>(
+    'weights_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    displayTitle,
+    weightsJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plan_ratio_templates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlanRatioTemplate> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('display_title')) {
+      context.handle(
+        _displayTitleMeta,
+        displayTitle.isAcceptableOrUnknown(
+          data['display_title']!,
+          _displayTitleMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayTitleMeta);
+    }
+    if (data.containsKey('weights_json')) {
+      context.handle(
+        _weightsJsonMeta,
+        weightsJson.isAcceptableOrUnknown(
+          data['weights_json']!,
+          _weightsJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_weightsJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlanRatioTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlanRatioTemplate(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      displayTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_title'],
+      )!,
+      weightsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}weights_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PlanRatioTemplatesTable createAlias(String alias) {
+    return $PlanRatioTemplatesTable(attachedDatabase, alias);
+  }
+}
+
+class PlanRatioTemplate extends DataClass
+    implements Insertable<PlanRatioTemplate> {
+  final String id;
+  final String planId;
+  final String displayTitle;
+
+  /// JSON map participantId -> weight basis points (sum 10000).
+  final String weightsJson;
+  final DateTime createdAt;
+  const PlanRatioTemplate({
+    required this.id,
+    required this.planId,
+    required this.displayTitle,
+    required this.weightsJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['display_title'] = Variable<String>(displayTitle);
+    map['weights_json'] = Variable<String>(weightsJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PlanRatioTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return PlanRatioTemplatesCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      displayTitle: Value(displayTitle),
+      weightsJson: Value(weightsJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PlanRatioTemplate.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlanRatioTemplate(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      displayTitle: serializer.fromJson<String>(json['displayTitle']),
+      weightsJson: serializer.fromJson<String>(json['weightsJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'displayTitle': serializer.toJson<String>(displayTitle),
+      'weightsJson': serializer.toJson<String>(weightsJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PlanRatioTemplate copyWith({
+    String? id,
+    String? planId,
+    String? displayTitle,
+    String? weightsJson,
+    DateTime? createdAt,
+  }) => PlanRatioTemplate(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    displayTitle: displayTitle ?? this.displayTitle,
+    weightsJson: weightsJson ?? this.weightsJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PlanRatioTemplate copyWithCompanion(PlanRatioTemplatesCompanion data) {
+    return PlanRatioTemplate(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      displayTitle: data.displayTitle.present
+          ? data.displayTitle.value
+          : this.displayTitle,
+      weightsJson: data.weightsJson.present
+          ? data.weightsJson.value
+          : this.weightsJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanRatioTemplate(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('displayTitle: $displayTitle, ')
+          ..write('weightsJson: $weightsJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, planId, displayTitle, weightsJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlanRatioTemplate &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.displayTitle == this.displayTitle &&
+          other.weightsJson == this.weightsJson &&
+          other.createdAt == this.createdAt);
+}
+
+class PlanRatioTemplatesCompanion extends UpdateCompanion<PlanRatioTemplate> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> displayTitle;
+  final Value<String> weightsJson;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const PlanRatioTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.displayTitle = const Value.absent(),
+    this.weightsJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlanRatioTemplatesCompanion.insert({
+    required String id,
+    required String planId,
+    required String displayTitle,
+    required String weightsJson,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       displayTitle = Value(displayTitle),
+       weightsJson = Value(weightsJson),
+       createdAt = Value(createdAt);
+  static Insertable<PlanRatioTemplate> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? displayTitle,
+    Expression<String>? weightsJson,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (displayTitle != null) 'display_title': displayTitle,
+      if (weightsJson != null) 'weights_json': weightsJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlanRatioTemplatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String>? displayTitle,
+    Value<String>? weightsJson,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PlanRatioTemplatesCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      displayTitle: displayTitle ?? this.displayTitle,
+      weightsJson: weightsJson ?? this.weightsJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (displayTitle.present) {
+      map['display_title'] = Variable<String>(displayTitle.value);
+    }
+    if (weightsJson.present) {
+      map['weights_json'] = Variable<String>(weightsJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanRatioTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('displayTitle: $displayTitle, ')
+          ..write('weightsJson: $weightsJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6635,6 +7255,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlanLinesTable planLines = $PlanLinesTable(this);
   late final $PlanGroupsTable planGroups = $PlanGroupsTable(this);
   late final $PlanRatiosTable planRatios = $PlanRatiosTable(this);
+  late final $PlanRatioTemplatesTable planRatioTemplates =
+      $PlanRatioTemplatesTable(this);
   late final $AgreementsTable agreements = $AgreementsTable(this);
   late final $ProposalPackagesTable proposalPackages = $ProposalPackagesTable(
     this,
@@ -6658,6 +7280,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     planLines,
     planGroups,
     planRatios,
+    planRatioTemplates,
     agreements,
     proposalPackages,
     proposalRevisions,
@@ -7098,6 +7721,10 @@ typedef $$PlanLinesTableCreateCompanionBuilder =
       Value<int?> recurrenceDayOfMonth,
       Value<int> sortOrder,
       Value<String?> groupId,
+      Value<bool> amountIsBudgetCap,
+      Value<String?> paymentResponsibleParticipantId,
+      Value<String> recurrenceSpecJson,
+      Value<String?> ratioTemplateId,
       required DateTime createdAt,
       Value<int> rowid,
     });
@@ -7117,6 +7744,10 @@ typedef $$PlanLinesTableUpdateCompanionBuilder =
       Value<int?> recurrenceDayOfMonth,
       Value<int> sortOrder,
       Value<String?> groupId,
+      Value<bool> amountIsBudgetCap,
+      Value<String?> paymentResponsibleParticipantId,
+      Value<String> recurrenceSpecJson,
+      Value<String?> ratioTemplateId,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -7197,6 +7828,27 @@ class $$PlanLinesTableFilterComposer
 
   ColumnFilters<String> get groupId => $composableBuilder(
     column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get amountIsBudgetCap => $composableBuilder(
+    column: $table.amountIsBudgetCap,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentResponsibleParticipantId =>
+      $composableBuilder(
+        column: $table.paymentResponsibleParticipantId,
+        builder: (column) => ColumnFilters(column),
+      );
+
+  ColumnFilters<String> get recurrenceSpecJson => $composableBuilder(
+    column: $table.recurrenceSpecJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ratioTemplateId => $composableBuilder(
+    column: $table.ratioTemplateId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7285,6 +7937,27 @@ class $$PlanLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get amountIsBudgetCap => $composableBuilder(
+    column: $table.amountIsBudgetCap,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentResponsibleParticipantId =>
+      $composableBuilder(
+        column: $table.paymentResponsibleParticipantId,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<String> get recurrenceSpecJson => $composableBuilder(
+    column: $table.recurrenceSpecJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ratioTemplateId => $composableBuilder(
+    column: $table.ratioTemplateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7356,6 +8029,27 @@ class $$PlanLinesTableAnnotationComposer
   GeneratedColumn<String> get groupId =>
       $composableBuilder(column: $table.groupId, builder: (column) => column);
 
+  GeneratedColumn<bool> get amountIsBudgetCap => $composableBuilder(
+    column: $table.amountIsBudgetCap,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentResponsibleParticipantId =>
+      $composableBuilder(
+        column: $table.paymentResponsibleParticipantId,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get recurrenceSpecJson => $composableBuilder(
+    column: $table.recurrenceSpecJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ratioTemplateId => $composableBuilder(
+    column: $table.ratioTemplateId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -7402,6 +8096,11 @@ class $$PlanLinesTableTableManager
                 Value<int?> recurrenceDayOfMonth = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
+                Value<bool> amountIsBudgetCap = const Value.absent(),
+                Value<String?> paymentResponsibleParticipantId =
+                    const Value.absent(),
+                Value<String> recurrenceSpecJson = const Value.absent(),
+                Value<String?> ratioTemplateId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlanLinesCompanion(
@@ -7419,6 +8118,11 @@ class $$PlanLinesTableTableManager
                 recurrenceDayOfMonth: recurrenceDayOfMonth,
                 sortOrder: sortOrder,
                 groupId: groupId,
+                amountIsBudgetCap: amountIsBudgetCap,
+                paymentResponsibleParticipantId:
+                    paymentResponsibleParticipantId,
+                recurrenceSpecJson: recurrenceSpecJson,
+                ratioTemplateId: ratioTemplateId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -7438,6 +8142,11 @@ class $$PlanLinesTableTableManager
                 Value<int?> recurrenceDayOfMonth = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<String?> groupId = const Value.absent(),
+                Value<bool> amountIsBudgetCap = const Value.absent(),
+                Value<String?> paymentResponsibleParticipantId =
+                    const Value.absent(),
+                Value<String> recurrenceSpecJson = const Value.absent(),
+                Value<String?> ratioTemplateId = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => PlanLinesCompanion.insert(
@@ -7455,6 +8164,11 @@ class $$PlanLinesTableTableManager
                 recurrenceDayOfMonth: recurrenceDayOfMonth,
                 sortOrder: sortOrder,
                 groupId: groupId,
+                amountIsBudgetCap: amountIsBudgetCap,
+                paymentResponsibleParticipantId:
+                    paymentResponsibleParticipantId,
+                recurrenceSpecJson: recurrenceSpecJson,
+                ratioTemplateId: ratioTemplateId,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -7914,6 +8628,223 @@ typedef $$PlanRatiosTableProcessedTableManager =
       $$PlanRatiosTableUpdateCompanionBuilder,
       (PlanRatio, BaseReferences<_$AppDatabase, $PlanRatiosTable, PlanRatio>),
       PlanRatio,
+      PrefetchHooks Function()
+    >;
+typedef $$PlanRatioTemplatesTableCreateCompanionBuilder =
+    PlanRatioTemplatesCompanion Function({
+      required String id,
+      required String planId,
+      required String displayTitle,
+      required String weightsJson,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$PlanRatioTemplatesTableUpdateCompanionBuilder =
+    PlanRatioTemplatesCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String> displayTitle,
+      Value<String> weightsJson,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$PlanRatioTemplatesTableFilterComposer
+    extends Composer<_$AppDatabase, $PlanRatioTemplatesTable> {
+  $$PlanRatioTemplatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayTitle => $composableBuilder(
+    column: $table.displayTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weightsJson => $composableBuilder(
+    column: $table.weightsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlanRatioTemplatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlanRatioTemplatesTable> {
+  $$PlanRatioTemplatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayTitle => $composableBuilder(
+    column: $table.displayTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weightsJson => $composableBuilder(
+    column: $table.weightsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlanRatioTemplatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlanRatioTemplatesTable> {
+  $$PlanRatioTemplatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get displayTitle => $composableBuilder(
+    column: $table.displayTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get weightsJson => $composableBuilder(
+    column: $table.weightsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PlanRatioTemplatesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlanRatioTemplatesTable,
+          PlanRatioTemplate,
+          $$PlanRatioTemplatesTableFilterComposer,
+          $$PlanRatioTemplatesTableOrderingComposer,
+          $$PlanRatioTemplatesTableAnnotationComposer,
+          $$PlanRatioTemplatesTableCreateCompanionBuilder,
+          $$PlanRatioTemplatesTableUpdateCompanionBuilder,
+          (
+            PlanRatioTemplate,
+            BaseReferences<
+              _$AppDatabase,
+              $PlanRatioTemplatesTable,
+              PlanRatioTemplate
+            >,
+          ),
+          PlanRatioTemplate,
+          PrefetchHooks Function()
+        > {
+  $$PlanRatioTemplatesTableTableManager(
+    _$AppDatabase db,
+    $PlanRatioTemplatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlanRatioTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlanRatioTemplatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlanRatioTemplatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> displayTitle = const Value.absent(),
+                Value<String> weightsJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlanRatioTemplatesCompanion(
+                id: id,
+                planId: planId,
+                displayTitle: displayTitle,
+                weightsJson: weightsJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                required String displayTitle,
+                required String weightsJson,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PlanRatioTemplatesCompanion.insert(
+                id: id,
+                planId: planId,
+                displayTitle: displayTitle,
+                weightsJson: weightsJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlanRatioTemplatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlanRatioTemplatesTable,
+      PlanRatioTemplate,
+      $$PlanRatioTemplatesTableFilterComposer,
+      $$PlanRatioTemplatesTableOrderingComposer,
+      $$PlanRatioTemplatesTableAnnotationComposer,
+      $$PlanRatioTemplatesTableCreateCompanionBuilder,
+      $$PlanRatioTemplatesTableUpdateCompanionBuilder,
+      (
+        PlanRatioTemplate,
+        BaseReferences<
+          _$AppDatabase,
+          $PlanRatioTemplatesTable,
+          PlanRatioTemplate
+        >,
+      ),
+      PlanRatioTemplate,
       PrefetchHooks Function()
     >;
 typedef $$AgreementsTableCreateCompanionBuilder =
@@ -9956,6 +10887,8 @@ class $AppDatabaseManager {
       $$PlanGroupsTableTableManager(_db, _db.planGroups);
   $$PlanRatiosTableTableManager get planRatios =>
       $$PlanRatiosTableTableManager(_db, _db.planRatios);
+  $$PlanRatioTemplatesTableTableManager get planRatioTemplates =>
+      $$PlanRatioTemplatesTableTableManager(_db, _db.planRatioTemplates);
   $$AgreementsTableTableManager get agreements =>
       $$AgreementsTableTableManager(_db, _db.agreements);
   $$ProposalPackagesTableTableManager get proposalPackages =>

@@ -15,6 +15,7 @@ import '../../housing/projection/plan_projection.dart';
 import '../../housing/proposals/agreement_period_day_overlap.dart';
 import '../../housing/proposals/housing_plan_period_gate.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
+import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
@@ -2256,52 +2257,35 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   }
 
   Future<void> _editLine(PlanLine? existing) async {
-    final groups = await _db.listPlanGroups(_planId);
-    if (!mounted) return;
-    final result = await showDialog<_LineDraft>(
-      context: context,
-      builder: (context) => _LineEditorDialog(
-        initial: existing,
-        groups: groups,
-        defaultCurrency: widget.prefs.currency.trim().isEmpty
-            ? 'CAD'
-            : widget.prefs.currency.trim(),
-      ),
-    );
-    if (result == null) return;
-    final now = DateTime.now().toUtc();
+    final agr = await _db.getAgreementForPlan(_planId);
+    if (agr == null || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final pids = _allParticipantIds();
+    final names = [
+      for (var i = 0; i < pids.length; i++) _ratioParticipantLabel(l10n, i),
+    ];
     final lines = await _db.listPlanLines(_planId);
     final nextOrder = lines.isEmpty
         ? 0
         : lines.map((e) => e.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
-    final id = existing?.id ?? 'line:${now.microsecondsSinceEpoch}';
-    await _db.upsertPlanLine(
-      PlanLinesCompanion.insert(
-        id: id,
-        planId: _planId,
-        isRecurring: result.isRecurring,
-        title: result.title,
-        currency: result.currency,
-        amountMinor: result.amountUsesRange
-            ? const drift.Value.absent()
-            : drift.Value(result.amountMinor),
-        minAmountMinor: result.amountUsesRange
-            ? drift.Value(result.minMinor)
-            : const drift.Value.absent(),
-        maxAmountMinor: result.amountUsesRange
-            ? drift.Value(result.maxMinor)
-            : const drift.Value.absent(),
-        amountUsesRange: drift.Value(result.amountUsesRange),
-        description: drift.Value(result.description),
-        cadence: drift.Value(result.cadence),
-        recurrenceDayOfMonth: result.isRecurring
-            ? drift.Value(result.recurrenceDayOfMonth)
-            : const drift.Value.absent(),
-        sortOrder: drift.Value(existing?.sortOrder ?? nextOrder),
-        groupId: drift.Value(result.groupId),
-        createdAt: existing?.createdAt ?? now,
+    final currency = widget.prefs.currency.trim().isEmpty
+        ? 'CAD'
+        : widget.prefs.currency.trim();
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => ExpensePlanLineFormScreen(
+          planId: _planId,
+          participantIds: pids,
+          participantNames: names,
+          periodStart: agr.periodStart,
+          periodEnd: agr.periodEnd,
+          defaultCurrency: currency,
+          existingLineId: existing?.id,
+          initialSortOrder: existing?.sortOrder ?? nextOrder,
+        ),
       ),
     );
+    if (saved == true && mounted) setState(() => _linesEpoch++);
   }
 
   List<_SplitListEntry> _splitDisplayEntries(

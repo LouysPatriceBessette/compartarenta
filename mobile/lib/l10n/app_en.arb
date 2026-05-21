@@ -386,6 +386,43 @@
   "housingPlanMinLabel": "Min",
   "housingPlanMaxLabel": "Max",
   "housingPlanAmountLabel": "Amount",
+  "housingExpenseNameLabel": "Name",
+  "housingExpenseAmountTypeLabel": "Amount type",
+  "housingExpenseAmountDetermined": "Determined",
+  "housingExpenseAmountBudgetMax": "Budgeted (max)",
+  "housingExpensePaymentResponsibleLabel": "Payment responsible",
+  "housingExpensePaymentResponsibleAll": "All",
+  "housingExpenseSplitSectionTitle": "Split",
+  "housingExpenseEqualParts": "Equal parts",
+  "housingExpenseLikeLabel": "Like",
+  "housingExpenseLikeBlankHint": "—",
+  "housingExpenseSplitAmountColumn": "Amount",
+  "housingExpenseSplitParticipantColumn": "Participant",
+  "housingExpenseSplitPercentColumn": "Share",
+  "housingExpenseSplitCorrectRow": "Correct!",
+  "housingExpenseRecurrenceTapToSet": "Set payment recurrence",
+  "housingExpenseRecurrenceSet": "Recurrence configured",
+  "housingExpenseRecurrenceConfirmTitle": "Confirm recurrence",
+  "housingExpenseRecurrenceMonthlyDay": "On day {day} of each month, from {anchor}",
+  "@housingExpenseRecurrenceMonthlyDay": {
+    "placeholders": {
+      "day": { "type": "int" },
+      "anchor": { "type": "String" }
+    }
+  },
+  "housingExpenseRecurrenceEveryNDays": "Every {days} days, from {anchor}",
+  "@housingExpenseRecurrenceEveryNDays": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "anchor": { "type": "String" }
+    }
+  },
+  "housingExpenseRecurrenceNthWeekday": "Nth weekday of month, from {anchor}",
+  "@housingExpenseRecurrenceNthWeekday": {
+    "placeholders": {
+      "anchor": { "type": "String" }
+    }
+  },
   "housingPlanDurationMonthsCount": "{count, plural, one{1 month} other{{count} months}}",
   "@housingPlanDurationMonthsCount": {
     "description": "Months segment of plan calendar duration (step 2).",

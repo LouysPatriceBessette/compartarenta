@@ -5,13 +5,15 @@ import '../../db/app_database.dart';
 /// Assumptions (v1):
 /// - Recurring lines are monthly and multiply by the number of covered months
 ///   (inclusive of both start and end months).
-/// - When [PlanLine.amountUsesRange] is true, the midpoint of
-///   [minAmountMinor, maxAmountMinor] is used (recurring: per month, one-off: once).
-/// - When it is false, [amountMinor] is the fixed amount (same semantics).
+/// - [PlanLine.amountMinor] is the unit amount (fixed or budget cap high estimate).
+/// - Legacy [amountUsesRange] with min/max: still uses midpoint until rows are migrated.
 /// - Null numeric values are treated as 0.
 class PlanProjection {
   /// Single period amount in minor units (one month for recurring, total for one-off).
   static int unitMinor(PlanLine line) {
+    if (line.amountIsBudgetCap) {
+      return line.amountMinor ?? 0;
+    }
     if (line.amountUsesRange) {
       final minV = line.minAmountMinor ?? 0;
       final maxV = line.maxAmountMinor ?? 0;
@@ -50,4 +52,3 @@ class PlanProjection {
     return (b.year - a.year) * 12 + (b.month - a.month) + 1;
   }
 }
-

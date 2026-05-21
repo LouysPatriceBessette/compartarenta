@@ -42,8 +42,35 @@ class PlanLines extends Table {
   /// Display order within the plan (lower first).
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
-  // Optional group bucket.
+  // Optional group bucket (legacy; unified expense flow does not set this).
   TextColumn get groupId => text().nullable()();
+
+  /// When true, [amountMinor] is a budget ceiling (high estimate), not a fixed amount.
+  BoolColumn get amountIsBudgetCap =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Nullable; null means all participants (notification routing deferred).
+  TextColumn get paymentResponsibleParticipantId => text().nullable()();
+
+  /// JSON recurrence spec (see `ExpenseRecurrenceSpec`).
+  TextColumn get recurrenceSpecJson => text().withDefault(const Constant(''))();
+
+  /// Optional link to a ratio template used at save (UI aid only).
+  TextColumn get ratioTemplateId => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PlanRatioTemplates extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text()();
+  TextColumn get displayTitle => text()();
+
+  /// JSON map participantId -> weight basis points (sum 10000).
+  TextColumn get weightsJson => text()();
 
   DateTimeColumn get createdAt => dateTime()();
 
@@ -354,6 +381,7 @@ class ProposalResponses extends Table {
     PlanLines,
     PlanGroups,
     PlanRatios,
+    PlanRatioTemplates,
     Agreements,
     ProposalPackages,
     ProposalRevisions,
@@ -435,7 +463,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -568,6 +596,34 @@ class AppDatabase extends _$AppDatabase {
       if (from < 14) {
         await _migrateAddColumn(m, contacts, contacts.theirLabelForMe);
       }
+      if (from < 15) {
+        await m.createTable(planRatioTemplates);
+        await _migrateAddColumn(m, planLines, planLines.amountIsBudgetCap);
+        await _migrateAddColumn(
+          m,
+          planLines,
+          planLines.paymentResponsibleParticipantId,
+        );
+        await _migrateAddColumn(m, planLines, planLines.recurrenceSpecJson);
+        await _migrateAddColumn(m, planLines, planLines.ratioTemplateId);
+        // amountUsesRange meant approximate band → budget cap.
+        await customStatement('''
+              UPDATE plan_lines
+              SET amount_is_budget_cap = amount_uses_range
+              WHERE amount_uses_range = 1
+            ''');
+        await customStatement('''
+              UPDATE plan_lines
+              SET recurrence_spec_json = json_object(
+                'kind', 'monthlyDay',
+                'day', recurrence_day_of_month,
+                'anchor', NULL
+              )
+              WHERE is_recurring = 1
+                AND recurrence_day_of_month IS NOT NULL
+                AND (recurrence_spec_json IS NULL OR recurrence_spec_json = '')
+            ''');
+      }
     },
     beforeOpen: (details) async {
       // Drift will run onCreate/onUpgrade automatically.
@@ -654,6 +710,18 @@ class AppDatabase extends _$AppDatabase {
   Future<List<PlanRatio>> listPlanRatios(String planId) =>
       (select(planRatios)..where((t) => t.planId.equals(planId))).get();
 
+  Future<void> upsertPlanRatioTemplate(PlanRatioTemplatesCompanion row) =>
+      into(planRatioTemplates).insertOnConflictUpdate(row);
+
+  Future<List<PlanRatioTemplate>> listPlanRatioTemplates(String planId) =>
+      (select(planRatioTemplates)
+            ..where((t) => t.planId.equals(planId))
+            ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+          .get();
+
+  Future<void> deletePlanRatioTemplate(String id) =>
+      (delete(planRatioTemplates)..where((t) => t.id.equals(id))).go();
+
   /// Deletes plan lines, ratios, agreement, groups, proposal state, and
   /// participants whose ids start with `planId:p` (housing draft roster).
   Future<void> deletePlanRelatedData(String planId) async {
@@ -678,6 +746,9 @@ class AppDatabase extends _$AppDatabase {
         )..where((t) => t.id.equals(pkg.id))).go();
       }
       await (delete(planRatios)..where((t) => t.planId.equals(planId))).go();
+      await (delete(planRatioTemplates)
+            ..where((t) => t.planId.equals(planId)))
+          .go();
       await (delete(planLines)..where((t) => t.planId.equals(planId))).go();
       await (delete(agreements)..where((t) => t.planId.equals(planId))).go();
       await (delete(planGroups)..where((t) => t.planId.equals(planId))).go();

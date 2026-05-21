@@ -1863,6 +1863,126 @@ abstract class AppLocalizations {
   /// **'Amount'**
   String get housingPlanAmountLabel;
 
+  /// No description provided for @housingExpenseNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get housingExpenseNameLabel;
+
+  /// No description provided for @housingExpenseAmountTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount type'**
+  String get housingExpenseAmountTypeLabel;
+
+  /// No description provided for @housingExpenseAmountDetermined.
+  ///
+  /// In en, this message translates to:
+  /// **'Determined'**
+  String get housingExpenseAmountDetermined;
+
+  /// No description provided for @housingExpenseAmountBudgetMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgeted (max)'**
+  String get housingExpenseAmountBudgetMax;
+
+  /// No description provided for @housingExpensePaymentResponsibleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment responsible'**
+  String get housingExpensePaymentResponsibleLabel;
+
+  /// No description provided for @housingExpensePaymentResponsibleAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get housingExpensePaymentResponsibleAll;
+
+  /// No description provided for @housingExpenseSplitSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get housingExpenseSplitSectionTitle;
+
+  /// No description provided for @housingExpenseEqualParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal parts'**
+  String get housingExpenseEqualParts;
+
+  /// No description provided for @housingExpenseLikeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get housingExpenseLikeLabel;
+
+  /// No description provided for @housingExpenseLikeBlankHint.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get housingExpenseLikeBlankHint;
+
+  /// No description provided for @housingExpenseSplitAmountColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get housingExpenseSplitAmountColumn;
+
+  /// No description provided for @housingExpenseSplitParticipantColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant'**
+  String get housingExpenseSplitParticipantColumn;
+
+  /// No description provided for @housingExpenseSplitPercentColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get housingExpenseSplitPercentColumn;
+
+  /// No description provided for @housingExpenseSplitCorrectRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct!'**
+  String get housingExpenseSplitCorrectRow;
+
+  /// No description provided for @housingExpenseRecurrenceTapToSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set payment recurrence'**
+  String get housingExpenseRecurrenceTapToSet;
+
+  /// No description provided for @housingExpenseRecurrenceSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurrence configured'**
+  String get housingExpenseRecurrenceSet;
+
+  /// No description provided for @housingExpenseRecurrenceConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm recurrence'**
+  String get housingExpenseRecurrenceConfirmTitle;
+
+  /// No description provided for @housingExpenseRecurrenceMonthlyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On day {day} of each month, from {anchor}'**
+  String housingExpenseRecurrenceMonthlyDay(int day, String anchor);
+
+  /// No description provided for @housingExpenseRecurrenceEveryNDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {days} days, from {anchor}'**
+  String housingExpenseRecurrenceEveryNDays(int days, String anchor);
+
+  /// No description provided for @housingExpenseRecurrenceNthWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nth weekday of month, from {anchor}'**
+  String housingExpenseRecurrenceNthWeekday(String anchor);
+
   /// Months segment of plan calendar duration (step 2).
   ///
   /// In en, this message translates to:

@@ -1012,6 +1012,72 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingPlanAmountLabel => 'Importe';
 
   @override
+  String get housingExpenseNameLabel => 'Nombre';
+
+  @override
+  String get housingExpenseAmountTypeLabel => 'Tipo de importe';
+
+  @override
+  String get housingExpenseAmountDetermined => 'Determinado';
+
+  @override
+  String get housingExpenseAmountBudgetMax => 'Presupuestado (máx.)';
+
+  @override
+  String get housingExpensePaymentResponsibleLabel => 'Responsable del pago';
+
+  @override
+  String get housingExpensePaymentResponsibleAll => 'Todos';
+
+  @override
+  String get housingExpenseSplitSectionTitle => 'Reparto';
+
+  @override
+  String get housingExpenseEqualParts => 'Partes iguales';
+
+  @override
+  String get housingExpenseLikeLabel => 'Como para';
+
+  @override
+  String get housingExpenseLikeBlankHint => '—';
+
+  @override
+  String get housingExpenseSplitAmountColumn => 'Importe';
+
+  @override
+  String get housingExpenseSplitParticipantColumn => 'Participante';
+
+  @override
+  String get housingExpenseSplitPercentColumn => 'Parte';
+
+  @override
+  String get housingExpenseSplitCorrectRow => '¡Corrija!';
+
+  @override
+  String get housingExpenseRecurrenceTapToSet => 'Definir recurrencia';
+
+  @override
+  String get housingExpenseRecurrenceSet => 'Recurrencia definida';
+
+  @override
+  String get housingExpenseRecurrenceConfirmTitle => 'Confirmar recurrencia';
+
+  @override
+  String housingExpenseRecurrenceMonthlyDay(int day, String anchor) {
+    return 'El día $day de cada mes, desde $anchor';
+  }
+
+  @override
+  String housingExpenseRecurrenceEveryNDays(int days, String anchor) {
+    return 'Cada $days días, desde $anchor';
+  }
+
+  @override
+  String housingExpenseRecurrenceNthWeekday(String anchor) {
+    return 'Día de la semana del mes, desde $anchor';
+  }
+
+  @override
   String housingPlanDurationMonthsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

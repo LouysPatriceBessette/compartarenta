@@ -45,6 +45,7 @@ void main() {
     PlanLine recurring({
       required int amountMinor,
       bool amountUsesRange = false,
+      bool amountIsBudgetCap = false,
     }) {
       return PlanLine(
         id: 'l1',
@@ -61,6 +62,10 @@ void main() {
         recurrenceDayOfMonth: 1,
         sortOrder: 0,
         groupId: null,
+        amountIsBudgetCap: amountIsBudgetCap,
+        paymentResponsibleParticipantId: null,
+        recurrenceSpecJson: '',
+        ratioTemplateId: null,
         createdAt: DateTime.utc(2026, 1, 1),
       );
     }
@@ -85,9 +90,20 @@ void main() {
         recurrenceDayOfMonth: null,
         sortOrder: 0,
         groupId: null,
+        amountIsBudgetCap: false,
+        paymentResponsibleParticipantId: null,
+        recurrenceSpecJson: '',
+        ratioTemplateId: null,
         createdAt: DateTime.utc(2026, 1, 1),
       );
     }
+
+    test('budget cap uses amountMinor as unit high estimate', () {
+      expect(
+        PlanProjection.unitMinor(recurring(amountMinor: 5000, amountIsBudgetCap: true)),
+        5000,
+      );
+    });
 
     test('recurring monthly multiplies by covered months (inclusive)', () {
       final total = PlanProjection.projectTotalMinor(
@@ -129,6 +145,10 @@ void main() {
             recurrenceDayOfMonth: null,
             sortOrder: 0,
             groupId: null,
+            amountIsBudgetCap: false,
+            paymentResponsibleParticipantId: null,
+            recurrenceSpecJson: '',
+            ratioTemplateId: null,
             createdAt: DateTime.utc(2026, 1, 1),
           ),
         ],
@@ -170,6 +190,10 @@ void main() {
             recurrenceDayOfMonth: null,
             sortOrder: 0,
             groupId: null,
+            amountIsBudgetCap: false,
+            paymentResponsibleParticipantId: null,
+            recurrenceSpecJson: '',
+            ratioTemplateId: null,
             createdAt: DateTime.utc(2026, 1, 1),
           ),
         ],
@@ -199,6 +223,10 @@ void main() {
             recurrenceDayOfMonth: 15,
             sortOrder: 0,
             groupId: null,
+            amountIsBudgetCap: false,
+            paymentResponsibleParticipantId: null,
+            recurrenceSpecJson: '',
+            ratioTemplateId: null,
             createdAt: DateTime.utc(2026, 1, 1),
           ),
         ],

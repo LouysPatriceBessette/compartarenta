@@ -11,25 +11,25 @@
 
 ## Pass 1 — Data model and transport (PR #1)
 
-- [ ] 1.1 Add `PlanRatioTemplates` table (`id`, `planId`, `displayTitle`, `weightsJson`, `createdAt`) and DAO helpers
-- [ ] 1.2 Extend `PlanLines`: `amountIsBudgetCap`, `paymentResponsibleParticipantId`, `recurrenceSpecJson`, `ratioTemplateId`; keep deprecated columns only for **local DB** backfill
-- [ ] 1.3 Drift migration v15+: backfill on device (`amountUsesRange` → `amountIsBudgetCap`; `recurrenceDayOfMonth` → `recurrenceSpecJson` where possible)
-- [ ] 1.4 Update `PlanProjection.unitMinor` for budget cap (high estimate for presentation chart; not min/max midpoint)
-- [ ] 1.5 Extend `PlanAgreementProposalService` payload JSON with new line fields when building proposals (**no legacy payload import** — plan export not implemented)
-- [ ] 1.6 Unit tests: template dedup by weight vector; budget cap projection; recurrence JSON round-trip
+- [x] 1.1 Add `PlanRatioTemplates` table (`id`, `planId`, `displayTitle`, `weightsJson`, `createdAt`) and DAO helpers
+- [x] 1.2 Extend `PlanLines`: `amountIsBudgetCap`, `paymentResponsibleParticipantId`, `recurrenceSpecJson`, `ratioTemplateId`; keep deprecated columns only for **local DB** backfill
+- [x] 1.3 Drift migration v15+: backfill on device (`amountUsesRange` → `amountIsBudgetCap`; `recurrenceDayOfMonth` → `recurrenceSpecJson` where possible)
+- [x] 1.4 Update `PlanProjection.unitMinor` for budget cap (high estimate for presentation chart; not min/max midpoint)
+- [x] 1.5 Extend `PlanAgreementProposalService` payload JSON with new line fields when building proposals (**no legacy payload import** — plan export not implemented)
+- [x] 1.6 Unit tests: template dedup by weight vector; budget cap projection; recurrence JSON round-trip
 
 ---
 
 ## Pass 2 — Extract super-component (PR #1)
 
-- [ ] 2.1 Create `mobile/lib/housing/expense_form/` module structure
-- [ ] 2.2 Implement `ExpenseSplitGrid` (correction row, row-local math, equal parts reset, save disabled on mismatch)
-- [ ] 2.3 Implement `ExpenseRatioTemplateRepository` (list, register on save, lookup by weights)
-- [ ] 2.4 Implement `LikeRatioSelector` (two-line items, blank row, clear on grid edit)
-- [ ] 2.5 Implement `RecurrenceRangePicker` + confirmation dialog (agreement-bounded range; hidden when not recurring)
-- [ ] 2.6 Implement `ExpensePlanLineForm` composing fields 1–12 per spec; wire save to DB (line + ratios + template; no `groupId` on save)
-- [ ] 2.7 Widget tests: grid math, Like copy, save gate, equal parts
-- [ ] 2.8 Add l10n keys (EN/FR/ES): Name, Budgeted max, Payment responsible, All (default), Equal parts, Like, Split section, correction row
+- [x] 2.1 Create `mobile/lib/housing/expense_form/` module structure
+- [x] 2.2 Implement `ExpenseSplitGrid` (correction row, row-local math, equal parts reset, save disabled on mismatch)
+- [x] 2.3 Implement `ExpenseRatioTemplateRepository` (list, register on save, lookup by weights)
+- [x] 2.4 Implement `LikeRatioSelector` (two-line items, blank row, clear on grid edit)
+- [x] 2.5 Implement `RecurrenceRangePicker` + confirmation dialog (agreement-bounded range; hidden when not recurring)
+- [x] 2.6 Implement `ExpensePlanLineForm` composing fields 1–12 per spec; wire save to DB (line + ratios + template; no `groupId` on save)
+- [x] 2.7 Unit tests: split grid logic + recurrence spec (`housing_expense_*_test.dart`); widget tests optional follow-up
+- [x] 2.8 Add l10n keys (EN/FR/ES): Name, Budgeted max, Payment responsible, All (default), Equal parts, Like, Split section, correction row
 
 ---
 

@@ -94,11 +94,18 @@ class PlanAgreementProposalService {
               'currency': l.currency,
               'isRecurring': l.isRecurring,
               'amountUsesRange': l.amountUsesRange,
+              'amountIsBudgetCap': l.amountIsBudgetCap,
               'amountMinor': l.amountMinor,
               'minAmountMinor': l.minAmountMinor,
               'maxAmountMinor': l.maxAmountMinor,
               'cadence': l.cadence,
               'recurrenceDayOfMonth': l.recurrenceDayOfMonth,
+              if (l.recurrenceSpecJson.isNotEmpty)
+                'recurrenceSpecJson': l.recurrenceSpecJson,
+              if (l.paymentResponsibleParticipantId != null)
+                'paymentResponsibleParticipantId':
+                    l.paymentResponsibleParticipantId,
+              if (l.ratioTemplateId != null) 'ratioTemplateId': l.ratioTemplateId,
               if (l.groupId != null) 'groupId': l.groupId,
             },
         ],
