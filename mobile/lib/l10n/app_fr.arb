@@ -208,6 +208,7 @@
   "housingPlanMinimumNoticeDays": "Préavis minimum (jours)",
   "housingPlanPenaltyAmount": "Montant de la pénalité",
   "housingPlanSummaryMissingAgreement": "Accord manquant",
+  "housingPlanSummaryMissingParticipants": "Aucun participant pour ce plan. Modifiez le plan pour les configurer à nouveau.",
   "housingPlanSummaryEditPlan": "Modifier le plan",
   "housingPlanSummaryInvite": "Soumettre mon plan",
   "housingWorkbenchTitle": "Plans logement",
@@ -296,6 +297,10 @@
       "failedCount": { "type": "int" }
     }
   },
+  "housingInviteTransportFailed": "La proposition n'a pu être livrée à aucun participant. Vous pouvez modifier le plan et réessayer.",
+  "housingInviteResendProposalAction": "Renvoyer la proposition",
+  "housingInviteReceivedWhileEditingSnack": "Vous avez reçu une proposition de logement d'un participant.",
+  "housingInviteReceivedOpenAction": "Voir",
   "pushNotificationHousingProposalTitle": "Proposition de logement",
   "pushNotificationHousingProposalBody": "Ouvrez l'application pour consulter la proposition.",
   "pushNotificationHousingDecisionTitle": "Réponse à une proposition de logement",
@@ -345,6 +350,25 @@
   "@housingInviteSunburstCenterParticipation": {
     "placeholders": {
       "pct": { "type": "String" }
+    }
+  },
+  "housingInviteViewExpensesDetail": "Voir les dépenses en détail",
+  "housingInviteExpensesDetailTitle": "Dépenses en détail",
+  "housingInviteExpensesDetailSwipeHint": "Glissez à gauche ou à droite pour parcourir chaque dépense.",
+  "housingInviteExpensesDetailPageIndicator": "{current} sur {total}",
+  "@housingInviteExpensesDetailPageIndicator": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "housingInviteExpensesDetailLoadError": "Impossible de charger cette dépense.",
+  "housingInviteExpensesDetailPrevious": "Dépense précédente",
+  "housingInviteExpensesDetailNext": "Dépense suivante",
+  "housingExpenseSunburstBudgetLabel": "{name} (budgétisé max)",
+  "@housingExpenseSunburstBudgetLabel": {
+    "placeholders": {
+      "name": { "type": "String" }
     }
   },
   "housingInviteSunburstEmptyHint": "Aucune donnée de dépense à afficher pour ce plan.",

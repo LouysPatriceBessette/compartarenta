@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -53,11 +56,43 @@ class HousingModuleEntryScreen extends StatefulWidget {
 class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   /// Must be stable across rebuilds — a new [Future] each [build] restarts
   /// [FutureBuilder] forever (visible as a flickering screen).
-  late final Future<_HousingEntrySnapshot> _entryFuture = _loadEntry();
+  Future<_HousingEntrySnapshot>? _entryFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryFuture = _loadEntry();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
+  }
+
+  @override
+  void dispose() {
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    setState(() => _entryFuture = _loadEntry());
+  }
 
   Future<_HousingEntrySnapshot> _loadEntry() async {
     final db = AppDatabase.processScope;
-    await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) {
+      debugPrint('housing entry inbox poll skipped: relay not configured');
+    } else {
+      // Do not block the housing route on relay I/O (can take seconds per contact).
+      unawaited(
+        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing entry inbox poll: $e\n$st');
+        }),
+      );
+    }
     final plans = await housingPlansWithSelfParticipant(db);
     if (plans.length != 1) {
       return _HousingEntrySnapshot(plans: plans);
@@ -84,7 +119,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
         if (!didPop) context.go('/');
       },
       child: FutureBuilder<_HousingEntrySnapshot>(
-        future: _entryFuture,
+        future: _entryFuture ?? _loadEntry(),
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Scaffold(

@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
+import '../../housing/housing_plan_draft_backup.dart';
+import '../../prefs/app_preferences.dart';
 import 'expense_ratio_template_repository.dart';
 import 'expense_recurrence_spec.dart';
 import 'expense_split_grid_logic.dart';
@@ -26,8 +28,10 @@ class ExpenseLinePersistence {
     required int sortOrder,
     required DateTime createdAt,
     required ExpenseRatioTemplateRepository templates,
+    AppPreferences? prefsForBackup,
   }) async {
-    final lineId = existingLineId ?? 'line:${createdAt.microsecondsSinceEpoch}';
+    final lineId = existingLineId ??
+        HousingPlanDraftBackup.newLineId(createdAt);
     final specJson = recurrenceSpec == null
         ? ''
         : ExpenseRecurrenceSpec.encode(recurrenceSpec);
@@ -68,27 +72,69 @@ class ExpenseLinePersistence {
           paymentResponsibleParticipantId,
         ),
         ratioTemplateId: drift.Value(ratioTemplateId),
-        createdAt: existingLineId == null ? createdAt : createdAt,
+        createdAt: createdAt,
       ),
     );
 
+    final ratiosForLine = <PlanRatio>[];
     if (split != null && split.totalMinor > 0) {
       await (_db.delete(_db.planRatios)
             ..where((t) => t.lineId.equals(lineId)))
           .go();
       for (final row in split.rows) {
+        final ratio = PlanRatio(
+          id: 'ratio:$planId:$lineId:${row.participantId}',
+          planId: planId,
+          participantId: row.participantId,
+          lineId: lineId,
+          groupId: null,
+          weight: row.weightBps,
+          createdAt: createdAt,
+        );
+        ratiosForLine.add(ratio);
         await _db.upsertPlanRatio(
           PlanRatiosCompanion.insert(
-            id: 'ratio:$planId:$lineId:${row.participantId}',
-            planId: planId,
-            participantId: row.participantId,
-            lineId: drift.Value(lineId),
+            id: ratio.id,
+            planId: ratio.planId,
+            participantId: ratio.participantId,
+            lineId: drift.Value(ratio.lineId),
             groupId: const drift.Value.absent(),
-            weight: row.weightBps,
-            createdAt: createdAt,
+            weight: ratio.weight,
+            createdAt: ratio.createdAt,
           ),
         );
       }
+    }
+
+    final prefs = prefsForBackup;
+    if (prefs != null) {
+      await HousingPlanDraftBackup.recordExpenseSave(
+        db: _db,
+        prefs: prefs,
+        line: PlanLine(
+          id: lineId,
+          planId: planId,
+          isRecurring: isRecurring,
+          title: title.trim(),
+          currency: currency,
+          amountUsesRange: false,
+          amountMinor: amountMinor,
+          minAmountMinor: null,
+          maxAmountMinor: null,
+          description: description.trim(),
+          cadence: 'monthly',
+          recurrenceDayOfMonth: null,
+          sortOrder: sortOrder,
+          groupId: null,
+          amountIsBudgetCap: amountIsBudgetCap,
+          paymentResponsibleParticipantId: paymentResponsibleParticipantId,
+          recurrenceSpecJson: specJson,
+          ratioTemplateId: ratioTemplateId,
+          createdAt: createdAt,
+        ),
+        ratiosForLine: ratiosForLine,
+      );
+      await _db.syncWebStorageToDisk();
     }
   }
 }

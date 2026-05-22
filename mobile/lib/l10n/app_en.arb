@@ -208,6 +208,7 @@
   "housingPlanMinimumNoticeDays": "Minimum notice (days)",
   "housingPlanPenaltyAmount": "Penalty amount",
   "housingPlanSummaryMissingAgreement": "Missing agreement",
+  "housingPlanSummaryMissingParticipants": "No participants found for this plan. Edit the plan to set them up again.",
   "housingPlanSummaryEditPlan": "Edit plan",
   "housingPlanSummaryInvite": "Submit my plan",
   "housingWorkbenchTitle": "Housing plans",
@@ -296,6 +297,10 @@
       "failedCount": { "type": "int" }
     }
   },
+  "housingInviteTransportFailed": "The proposal could not be delivered to any participant. You can edit the plan and try again.",
+  "housingInviteResendProposalAction": "Resend proposal",
+  "housingInviteReceivedWhileEditingSnack": "You received a housing proposal from a participant.",
+  "housingInviteReceivedOpenAction": "View",
   "pushNotificationHousingProposalTitle": "Housing proposal",
   "pushNotificationHousingProposalBody": "Open the app to review the proposal.",
   "pushNotificationHousingDecisionTitle": "Housing proposal response",
@@ -345,6 +350,25 @@
   "@housingInviteSunburstCenterParticipation": {
     "placeholders": {
       "pct": { "type": "String" }
+    }
+  },
+  "housingInviteViewExpensesDetail": "View expenses in detail",
+  "housingInviteExpensesDetailTitle": "Expenses in detail",
+  "housingInviteExpensesDetailSwipeHint": "Swipe left or right to browse each expense.",
+  "housingInviteExpensesDetailPageIndicator": "{current} of {total}",
+  "@housingInviteExpensesDetailPageIndicator": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "housingInviteExpensesDetailLoadError": "Could not load this expense.",
+  "housingInviteExpensesDetailPrevious": "Previous expense",
+  "housingInviteExpensesDetailNext": "Next expense",
+  "housingExpenseSunburstBudgetLabel": "{name} (budgeted max)",
+  "@housingExpenseSunburstBudgetLabel": {
+    "placeholders": {
+      "name": { "type": "String" }
     }
   },
   "housingInviteSunburstEmptyHint": "No expense data to chart for this plan.",

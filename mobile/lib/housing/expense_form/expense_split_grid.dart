@@ -17,8 +17,22 @@ class ExpenseSplitGrid extends StatelessWidget {
     required this.onChanged,
     required this.onRowAmountChanged,
     required this.onRowPercentChanged,
-  });
+  }) : readOnly = false;
 
+  const ExpenseSplitGrid.readOnly({
+    super.key,
+    required this.state,
+    required this.currencyCode,
+  }) : readOnly = true,
+       onChanged = _noop,
+       onRowAmountChanged = _noopIndexAmount,
+       onRowPercentChanged = _noopIndexPercent;
+
+  static void _noop() {}
+  static void _noopIndexAmount(int index, int amountMinor) {}
+  static void _noopIndexPercent(int index, int percentTenths) {}
+
+  final bool readOnly;
   final ExpenseSplitGridState state;
   final String currencyCode;
   final VoidCallback onChanged;
@@ -62,15 +76,22 @@ class ExpenseSplitGrid extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         for (var i = 0; i < state.rows.length; i++)
-          _SplitRow(
-            key: ValueKey(state.rows[i].participantId),
-            displayName: state.rows[i].displayName,
-            amountMinor: state.rows[i].amountMinor,
-            totalMinor: state.totalMinor,
-            onAmount: (minor) => onRowAmountChanged(i, minor),
-            onPercentTenths: (t) => onRowPercentChanged(i, t),
-            onChanged: onChanged,
-          ),
+          readOnly
+              ? _ReadOnlySplitRow(
+                  displayName: state.rows[i].displayName,
+                  amountMinor: state.rows[i].amountMinor,
+                  totalMinor: state.totalMinor,
+                  currencyCode: currencyCode,
+                )
+              : _SplitRow(
+                  key: ValueKey(state.rows[i].participantId),
+                  displayName: state.rows[i].displayName,
+                  amountMinor: state.rows[i].amountMinor,
+                  totalMinor: state.totalMinor,
+                  onAmount: (minor) => onRowAmountChanged(i, minor),
+                  onPercentTenths: (t) => onRowPercentChanged(i, t),
+                  onChanged: onChanged,
+                ),
         if (state.hasAmountMismatch) ...[
           const Divider(),
           _CorrectionRow(
@@ -82,6 +103,77 @@ class ExpenseSplitGrid extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _ReadOnlySplitRow extends StatelessWidget {
+  const _ReadOnlySplitRow({
+    required this.displayName,
+    required this.amountMinor,
+    required this.totalMinor,
+    required this.currencyCode,
+  });
+
+  final String displayName;
+  final int amountMinor;
+  final int totalMinor;
+  final String currencyCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final nameStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+    final pct = totalMinor > 0
+        ? '${formatShareOfTotalPercentNoSuffix(
+            context,
+            shareNumeratorMinor: amountMinor,
+            totalDenominatorMinor: totalMinor,
+          )}%'
+        : '—';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                formatMinorAsMoney(context, amountMinor, currencyCode),
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: nameStyle,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                pct,
+                textAlign: TextAlign.end,
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

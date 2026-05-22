@@ -603,6 +603,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanSummaryMissingAgreement => 'Missing agreement';
 
   @override
+  String get housingPlanSummaryMissingParticipants =>
+      'No participants found for this plan. Edit the plan to set them up again.';
+
+  @override
   String get housingPlanSummaryEditPlan => 'Edit plan';
 
   @override
@@ -797,6 +801,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get housingInviteTransportFailed =>
+      'The proposal could not be delivered to any participant. You can edit the plan and try again.';
+
+  @override
+  String get housingInviteResendProposalAction => 'Resend proposal';
+
+  @override
+  String get housingInviteReceivedWhileEditingSnack =>
+      'You received a housing proposal from a participant.';
+
+  @override
+  String get housingInviteReceivedOpenAction => 'View';
+
+  @override
   String get pushNotificationHousingProposalTitle => 'Housing proposal';
 
   @override
@@ -915,6 +933,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String housingInviteSunburstCenterParticipation(String pct) {
     return 'Overall participation $pct%';
+  }
+
+  @override
+  String get housingInviteViewExpensesDetail => 'View expenses in detail';
+
+  @override
+  String get housingInviteExpensesDetailTitle => 'Expenses in detail';
+
+  @override
+  String get housingInviteExpensesDetailSwipeHint =>
+      'Swipe left or right to browse each expense.';
+
+  @override
+  String housingInviteExpensesDetailPageIndicator(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get housingInviteExpensesDetailLoadError =>
+      'Could not load this expense.';
+
+  @override
+  String get housingInviteExpensesDetailPrevious => 'Previous expense';
+
+  @override
+  String get housingInviteExpensesDetailNext => 'Next expense';
+
+  @override
+  String housingExpenseSunburstBudgetLabel(String name) {
+    return '$name (budgeted max)';
   }
 
   @override

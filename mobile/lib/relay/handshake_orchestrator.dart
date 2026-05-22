@@ -684,10 +684,7 @@ class HandshakeOrchestrator {
     final rows = await activePendingHandshakeRows();
     if (rows.isEmpty) {
       await refreshIncomingHandshakes();
-      final hasConnected = (await _contacts.list()).any(
-        (c) => c.kind == 'connected',
-      );
-      if (!hasConnected) {
+      if (!await _hasSteadyInboxPollTargets()) {
         stopPolling();
       }
       return;
@@ -728,29 +725,65 @@ class HandshakeOrchestrator {
         code == 'relay_unavailable';
   }
 
-  /// Polls the relay steady-state inbox once per connected contact for
-  /// inbound [EnvelopeKind.profileUpdate] and [EnvelopeKind.disconnect].
+  /// Contacts with a stored peer long-term public key, deduped by that key.
+  /// Includes `connected` rows and demoted / handshake rows so a reinstall on
+  /// the peer device does not hide the inbox when an older row is still stored.
+  Future<List<({Contact contact, Uint8List peerPub})>> _steadyInboxPollPeers() async {
+    final all = await _contacts.list();
+    final seenPeer = <String>{};
+    final out = <({Contact contact, Uint8List peerPub})>[];
+    for (final c in all) {
+      if (c.id.startsWith('contact:local:')) continue;
+      final peerB64 = c.peerPublicMaterial;
+      if (peerB64 == null || peerB64.isEmpty) continue;
+      if (!seenPeer.add(peerB64)) continue;
+      try {
+        out.add((contact: c, peerPub: RelayRouting.unb64(peerB64)));
+      } catch (_) {
+        // ignore invalid peer material
+      }
+    }
+    return out;
+  }
+
+  Future<bool> _hasSteadyInboxPollTargets() async {
+    return (await _steadyInboxPollPeers()).isNotEmpty;
+  }
+
+  Future<Contact?> _contactForPeerPublicKey(Uint8List peerPub) async {
+    for (final c in await _contacts.list()) {
+      final b64 = c.peerPublicMaterial;
+      if (b64 == null || b64.isEmpty) continue;
+      try {
+        if (_bytesEqual(RelayRouting.unb64(b64), peerPub)) return c;
+      } catch (_) {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  /// Polls the relay steady-state inbox once per known peer public key for
+  /// inbound steady envelopes (profile, disconnect, housing proposal, …).
   ///
   /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
   Future<void> pollSteadyStateInboxes() async {
-    final connected = (await _contacts.list())
-        .where((c) => c.kind == 'connected')
-        .toList();
-    if (connected.isEmpty) return;
+    final targets = await _steadyInboxPollPeers();
+    if (targets.isEmpty) {
+      final total = (await _contacts.list()).length;
+      debugPrint(
+        'steady inbox poll skipped: no peer keys ($total contact row(s))',
+      );
+      return;
+    }
+    debugPrint('steady inbox poll: ${targets.length} peer key(s)');
 
     final selfPriv = await _identity.loadOrCreatePrivateKey();
     final selfPub = await _identity.publicKey();
 
-    for (final contact in connected) {
-      final peerB64 = contact.peerPublicMaterial;
-      if (peerB64 == null || peerB64.isEmpty) continue;
-
-      final Uint8List peerPub;
-      try {
-        peerPub = RelayRouting.unb64(peerB64);
-      } catch (_) {
-        continue;
-      }
+    for (final target in targets) {
+      final contact = target.contact;
+      final peerPub = target.peerPub;
 
       final Uint8List myListen = await RelayRouting.steadyStateAddress(
         firstPub: selfPub,
@@ -766,7 +799,9 @@ class HandshakeOrchestrator {
         debugPrint('steady inbox fetch timed out for ${contact.id}: $e');
         continue;
       }
-      if (envs.isNotEmpty) {
+      if (envs.isEmpty) {
+        debugPrint('steady inbox empty for ${contact.id}');
+      } else {
         debugPrint(
           'steady inbox fetched ${envs.length} envelope(s) for ${contact.id}',
         );
@@ -824,6 +859,18 @@ class HandshakeOrchestrator {
         }
       }
     }
+  }
+
+  /// Ensures the relay has an active steady-state row for [selfListenAddr] and
+  /// [peerListenAddr]. Idempotent (re-register after relay wipe or reinstall).
+  Future<void> _ensureSteadyRoutingRegistered({
+    required Uint8List selfListenAddr,
+    required Uint8List peerListenAddr,
+  }) async {
+    await _relay.establishRouting(
+      selfIdentity: selfListenAddr,
+      peerIdentity: peerListenAddr,
+    );
   }
 
   /// Recipient routing ids whose inboxes this device polls: steady-state
@@ -1040,33 +1087,44 @@ class HandshakeOrchestrator {
       );
       return;
     }
+    var senderContact = contact;
     if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      final matched = await _contactForPeerPublicKey(
+        decrypted.senderLongTermPublicKey,
+      );
+      if (matched == null) {
+        debugPrint(
+          'housing_proposal sender pubkey mismatch for ${contact.id} '
+          '(envelope ${envelope.envelopeId})',
+        );
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
       debugPrint(
-        'housing_proposal sender pubkey mismatch for ${contact.id} '
-        '(envelope ${envelope.envelopeId})',
+        'housing_proposal sender matched contact ${matched.id} '
+        '(polled via ${contact.id})',
       );
-      await _relay.ackEnvelope(
-        envelopeId: envelope.envelopeId,
-        recipient: myListenAddr,
-      );
-      return;
+      senderContact = matched;
     }
 
     await HousingProposalTransportService(_db).importReceivedProposal(
       proposalJson: decrypted.proposalJson,
       targetParticipantId: decrypted.targetParticipantId,
-      senderContactId: contact.id,
-      senderDisplayName: contact.displayName,
-      senderAvatarId: contact.avatarId,
+      senderContactId: senderContact.id,
+      senderDisplayName: senderContact.displayName,
+      senderAvatarId: senderContact.avatarId,
     );
-    debugPrint('housing_proposal imported from ${contact.id}');
+    debugPrint('housing_proposal imported from ${senderContact.id}');
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     await PushNotificationService.showLocalHousingProposalNotification(
-      senderDisplayName: contact.displayName,
+      senderDisplayName: senderContact.displayName,
     );
   }
 
@@ -1594,6 +1652,10 @@ class HandshakeOrchestrator {
               firstPub: peerPub,
               secondPub: selfPub,
             );
+            await _ensureSteadyRoutingRegistered(
+              selfListenAddr: selfAddr,
+              peerListenAddr: peerAddr,
+            );
             await _relay.postEnvelope(
               senderIdentity: selfAddr,
               recipientIdentity: peerAddr,
@@ -1786,6 +1848,10 @@ class HandshakeOrchestrator {
         final peerAddr = await RelayRouting.steadyStateAddress(
           firstPub: peerPub,
           secondPub: selfPub,
+        );
+        await _ensureSteadyRoutingRegistered(
+          selfListenAddr: selfAddr,
+          peerListenAddr: peerAddr,
         );
         await _relay.postEnvelope(
           senderIdentity: selfAddr,

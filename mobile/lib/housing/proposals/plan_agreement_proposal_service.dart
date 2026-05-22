@@ -184,6 +184,64 @@ class PlanAgreementProposalService {
     return revisionId;
   }
 
+  /// Clears [pendingRevisionId] and removes the pending revision and its responses.
+  /// Used when relay transport failed before any invitee received the proposal.
+  Future<bool> abandonPendingRevision(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    final pendingId = pkg?.pendingRevisionId;
+    if (pkg == null || pendingId == null) return false;
+
+    await _db.transaction(() async {
+      await (_db.delete(
+        _db.proposalResponses,
+      )..where((t) => t.revisionId.equals(pendingId))).go();
+      await (_db.delete(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(pendingId))).go();
+      await (_db.update(
+        _db.proposalPackages,
+      )..where((t) => t.id.equals(pkg.id))).write(
+        const ProposalPackagesCompanion(
+          pendingRevisionId: drift.Value.absent(),
+        ),
+      );
+    });
+    return true;
+  }
+
+  /// True when the author may retry relay delivery for the current pending revision
+  /// (proposer accepted; every invitee still pending).
+  Future<bool> canResendPendingProposal(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    final pendingId = pkg?.pendingRevisionId;
+    if (pendingId == null) return false;
+
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+    if (rev == null) return false;
+
+    final responses = await (_db.select(
+      _db.proposalResponses,
+    )..where((t) => t.revisionId.equals(pendingId))).get();
+    if (responses.isEmpty) return false;
+
+    var inviteeCount = 0;
+    for (final r in responses) {
+      if (r.participantId == rev.proposerParticipantId) {
+        if (r.status != ProposalResponseStatus.accepted.name) return false;
+        continue;
+      }
+      inviteeCount++;
+      if (r.status != ProposalResponseStatus.pending.name) return false;
+    }
+    return inviteeCount > 0;
+  }
+
   Future<void> recordResponse({
     required String revisionId,
     required String participantId,

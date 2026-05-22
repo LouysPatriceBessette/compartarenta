@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'db_paths.dart';
 
@@ -419,6 +420,21 @@ class AppDatabase extends _$AppDatabase {
   static void clearProcessScopeIfReferencing(AppDatabase db) {
     if (identical(_processScope, db)) {
       _processScope = null;
+    }
+  }
+
+  /// Nudges Drift's web WASM storage to flush after important housing writes.
+  Future<void> syncWebStorageToDisk() async {
+    if (!kIsWeb) return;
+    try {
+      await customStatement('PRAGMA synchronous = FULL');
+    } catch (_) {
+      // Ignore on backends that reject the pragma.
+    }
+    try {
+      await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (_) {
+      // WAL is not available on all web sqlite builds.
     }
   }
 
@@ -911,6 +927,14 @@ QueryExecutor _openConnection() {
     web: DriftWebOptions(
       sqlite3Wasm: Uri.parse('sqlite3.wasm'),
       driftWorker: Uri.parse('drift_worker.dart.js'),
+      onResult: kDebugMode
+          ? (result) {
+              debugPrint(
+                'Drift web storage: ${result.chosenImplementation} '
+                '(missing: ${result.missingFeatures})',
+              );
+            }
+          : null,
     ),
   );
 }

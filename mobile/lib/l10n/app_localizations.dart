@@ -1180,6 +1180,12 @@ abstract class AppLocalizations {
   /// **'Missing agreement'**
   String get housingPlanSummaryMissingAgreement;
 
+  /// No description provided for @housingPlanSummaryMissingParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'No participants found for this plan. Edit the plan to set them up again.'**
+  String get housingPlanSummaryMissingParticipants;
+
   /// No description provided for @housingPlanSummaryEditPlan.
   ///
   /// In en, this message translates to:
@@ -1522,6 +1528,30 @@ abstract class AppLocalizations {
   /// **'Proposal sent to {sentCount} participant(s); {failedCount} participant(s) could not be reached.'**
   String housingInviteTransportPartial(int sentCount, int failedCount);
 
+  /// No description provided for @housingInviteTransportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The proposal could not be delivered to any participant. You can edit the plan and try again.'**
+  String get housingInviteTransportFailed;
+
+  /// No description provided for @housingInviteResendProposalAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend proposal'**
+  String get housingInviteResendProposalAction;
+
+  /// No description provided for @housingInviteReceivedWhileEditingSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'You received a housing proposal from a participant.'**
+  String get housingInviteReceivedWhileEditingSnack;
+
+  /// No description provided for @housingInviteReceivedOpenAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get housingInviteReceivedOpenAction;
+
   /// No description provided for @pushNotificationHousingProposalTitle.
   ///
   /// In en, this message translates to:
@@ -1707,6 +1737,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Overall participation {pct}%'**
   String housingInviteSunburstCenterParticipation(String pct);
+
+  /// No description provided for @housingInviteViewExpensesDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'View expenses in detail'**
+  String get housingInviteViewExpensesDetail;
+
+  /// No description provided for @housingInviteExpensesDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses in detail'**
+  String get housingInviteExpensesDetailTitle;
+
+  /// No description provided for @housingInviteExpensesDetailSwipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left or right to browse each expense.'**
+  String get housingInviteExpensesDetailSwipeHint;
+
+  /// No description provided for @housingInviteExpensesDetailPageIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String housingInviteExpensesDetailPageIndicator(int current, int total);
+
+  /// No description provided for @housingInviteExpensesDetailLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this expense.'**
+  String get housingInviteExpensesDetailLoadError;
+
+  /// No description provided for @housingInviteExpensesDetailPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous expense'**
+  String get housingInviteExpensesDetailPrevious;
+
+  /// No description provided for @housingInviteExpensesDetailNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next expense'**
+  String get housingInviteExpensesDetailNext;
+
+  /// No description provided for @housingExpenseSunburstBudgetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (budgeted max)'**
+  String housingExpenseSunburstBudgetLabel(String name);
 
   /// No description provided for @housingInviteSunburstEmptyHint.
   ///

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 
@@ -38,6 +39,7 @@ Future<void> showHousingInvitationStatusDialog(
   required String planId,
   required AppPreferences prefs,
   String? revisionId,
+  VoidCallback? onAfterResend,
 }) async {
   final l10n = AppLocalizations.of(context);
   await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
@@ -109,6 +111,10 @@ Future<void> showHousingInvitationStatusDialog(
           .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
           .toList()
         ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
+
+  final canResend = await PlanAgreementProposalService(
+    db,
+  ).canResendPendingProposal(planId);
 
   if (!context.mounted) return;
   await showDialog<void>(
@@ -186,6 +192,21 @@ Future<void> showHousingInvitationStatusDialog(
           ),
         ),
         actions: [
+          if (canResend)
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                if (!context.mounted) return;
+                await _resendPendingProposalDelivery(
+                  context,
+                  db: db,
+                  planId: planId,
+                  revisionId: selectedRevisionId,
+                );
+                onAfterResend?.call();
+              },
+              child: Text(l10n.housingInviteResendProposalAction),
+            ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(l10n.onboardingOk),
@@ -194,6 +215,46 @@ Future<void> showHousingInvitationStatusDialog(
       );
     },
   );
+}
+
+Future<void> _resendPendingProposalDelivery(
+  BuildContext context, {
+  required AppDatabase db,
+  required String planId,
+  required String revisionId,
+}) async {
+  final l10n = AppLocalizations.of(context);
+  try {
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) {
+      throw HandshakeOrchestratorError('relay_unavailable');
+    }
+    final send = await orchestrator.sendHousingProposalToPlanParticipants(
+      planId: planId,
+      revisionId: revisionId,
+    );
+    if (!context.mounted) return;
+    if (send.sentCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingInviteTransportFailed)),
+      );
+      return;
+    }
+    final message = send.failedParticipantIds.isEmpty
+        ? l10n.housingInviteTransportSent(send.sentCount)
+        : l10n.housingInviteTransportPartial(
+            send.sentCount,
+            send.failedParticipantIds.length,
+          );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+    );
+  }
 }
 
 String _displayNameForParticipantId(String id, List<Participant> roster) {

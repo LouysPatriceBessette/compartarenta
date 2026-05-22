@@ -30,7 +30,28 @@ class LikeRatioSelector extends StatelessWidget {
     return DropdownButtonFormField<String?>(
       key: ValueKey<String?>(selectedTemplateId),
       initialValue: selectedTemplateId ?? blankValue,
+      isExpanded: true,
+      // Menu rows: two lines (title + percents). Closed field: one line only.
+      itemHeight: 64,
       decoration: InputDecoration(labelText: l10n.housingExpenseLikeLabel),
+      selectedItemBuilder: (context) => [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            l10n.housingExpenseLikeBlankHint,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+          ),
+        ),
+        for (final t in templates)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              t.displayTitle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
       items: [
         DropdownMenuItem(
           value: blankValue,
@@ -88,9 +109,16 @@ class _TwoLineTemplateItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         Text(
           parts.join(' / '),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

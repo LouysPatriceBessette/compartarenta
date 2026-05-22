@@ -30,9 +30,26 @@ if [[ "$*" != *--web-port* ]]; then
   web_port_args=(--web-port="${WEB_PORT:-5001}")
 fi
 
+# Flutter's default Chrome profile for `flutter run -d chrome` is ephemeral:
+# IndexedDB (Drift) and localStorage are wiped when the dev server stops.
+# Reuse a stable user-data dir so housing drafts, contacts, and prefs survive
+# melos/CTRL+C restarts on the same machine.
+CHROME_USER_DATA_DIR="${COMPARTARENTA_WEB_USER_DATA_DIR:-${HOME}/.cache/compartarenta/flutter-web-chrome}"
+mkdir -p "${CHROME_USER_DATA_DIR}"
+web_browser_flag_args=()
+if [[ "$*" != *user-data-dir* ]]; then
+  web_browser_flag_args+=(--web-browser-flag="--user-data-dir=${CHROME_USER_DATA_DIR}")
+fi
+
+# COOP/COEP enable Drift's more reliable OPFS-backed web storage (see
+# docs/development-roadmap.md). Without them, IndexedDB fallback may lose
+# very recent writes when this process stops Chrome on restart.
 ./tool/flutterw run \
   -d chrome \
   "${web_port_args[@]}" \
+  "${web_browser_flag_args[@]}" \
+  --web-header=Cross-Origin-Opener-Policy=same-origin \
+  --web-header=Cross-Origin-Embedder-Policy=require-corp \
   --dart-define=ENV=dev \
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
   "$@"

@@ -9,6 +9,7 @@ import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_invite_sunburst.dart';
+import 'housing_proposal_expenses_detail_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../notifications/push_notification_service.dart';
@@ -616,11 +617,9 @@ class _HousingInviteProposalScreenState
             clausesFallback: proposalClauses ?? agr.clauses,
           );
           final pids = roster.map((p) => p.id).toList();
-          _focusedParticipantIndex = _focusedParticipantIndex.clamp(
-            0,
-            pids.length - 1,
-          );
-          final idx = _focusedParticipantIndex;
+          final idx = pids.isEmpty
+              ? 0
+              : _focusedParticipantIndex.clamp(0, pids.length - 1);
           final selfParticipantId = '${widget.planId}:self';
           final isAuthor =
               _isDraftSendPreview ||
@@ -740,6 +739,38 @@ class _HousingInviteProposalScreenState
                       slices: sunSlices,
                       participantName: roster[idx].displayName,
                     ),
+                    if (lines.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Center(
+                        child: FilledButton.tonal(
+                          onPressed: () {
+                            final dateFmt = widget.prefs.dateFormat.trim().isEmpty
+                                ? 'YYYY-MM-DD'
+                                : widget.prefs.dateFormat.trim();
+                            final currency = displayCurrencyCodeForPlan(
+                              widget.prefs,
+                              lines,
+                            );
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (context) =>
+                                    HousingProposalExpensesDetailScreen(
+                                  db: widget.db,
+                                  planId: widget.planId,
+                                  participantIds: pids,
+                                  participantNames: [
+                                    for (final p in roster) p.displayName,
+                                  ],
+                                  defaultCurrency: currency,
+                                  dateFormat: dateFmt,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(l10n.housingInviteViewExpensesDetail),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     _readOnlyRules(
                       context,

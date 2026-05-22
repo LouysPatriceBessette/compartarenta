@@ -23,14 +23,20 @@
 - [x] 1.19 Archive invalidated proposals with response summary messages; prompt Negotiate responders to fork; prevent Refuse responders from forking the refused revision.
 - [x] 1.20 Housing entry archive/new-plan page before step 1; eligible archive opens editable fork, ineligible archive opens read-only review.
 - [ ] 1.21 Wishlist: detect and retire stale connected contacts after a peer reinstalls / loses local data and reconnects under a new identity, so proposal sends do not need fallback fan-out.
-- [ ] 1.22 Bug: investigate missing Housing proposal delivery/notification after repeated web data resets and reconnections.
-  - Steps to reproduce:
-    1. Start with Android and web connected through the relay.
-    2. Restart `run:dev:web`, losing the web-side local data.
-    3. Recreate a web user and reconnect it with the same Android user; repeat enough times that Android has multiple connected contacts, some stale/non-existent.
-    4. From web, create a Housing plan and send the proposal to the Android participant.
-    5. On Android, observe that no local notification is shown.
-    6. Open `Logement` on Android and observe that the received proposal is not displayed.
-  - Current observed logs: Android shows no steady-state Housing fetch/import lines; web shows handshake polling but no confirmed recipient-side Housing import.
-  - Expected behavior: the current Android identity receives, imports, and displays the proposal, and the configured local notification is shown.
+- [ ] 1.22 Bug: Housing proposal delivery/notification unreliable after identity drift (web resets, stale contacts, reconnects). **Not closed** — happy path validated May 2026; drift scenarios still open.
+  - **Validated (May 2026, dev):** Fresh handshake on both sides (no stale/disconnected rows); same relay URL; web `housing_proposal posted` + `delivered`; Android `steady inbox fetched` + `housing_proposal imported` + local notification; proposal in a `received:…` plan (not the author’s `housing:default`). Web plan draft survives `CTRL+C` on `run:dev:web` (persistent Chrome profile + draft backup) — reduces how often step 2 below is needed.
+  - **Still uncertain / not proven fixed:**
+    - Web local data wipe + new identity without a clean reciprocal handshake on Android (stale `connected` rows, mismatched `peerPublicMaterial`, `no_routing_relationship`, or poll on wrong steady inbox → `steady inbox empty` on all contacts).
+    - Participant `contactId` pointing at an obsolete handshake row while another row has the current peer key (related to **1.21**).
+    - Android app sleep / cold start before poll (push wake not relied on in dev; Firebase API key errors on Android dev flavor).
+    - Author looking at `housing:default` on the recipient device instead of `received:…` or workbench (UX confusion, not always transport failure).
+  - **Repro when still broken (drift):**
+    1. Android and web connected through the relay.
+    2. Restart `run:dev:web` and lose web-side data (or reset web DB / identity without matching Android contact cleanup).
+    3. Recreate web user and reconnect; repeat until Android has multiple contact rows or mismatched ids (`contact:handshake:…` vs `contact:redeemed:…` with different peer keys).
+    4. From web, send a housing proposal.
+    5. On Android: no `housing_proposal imported` and/or empty Housing module for the invitee role.
+  - **Log triage:** Web: `posted` / `delivered` vs `failed` / `no_routing_relationship`. Android: `steady inbox poll skipped: no peer keys` vs `steady inbox empty for …` (wrong inbox) vs `fetched` without `imported` (decrypt / sender key mismatch) vs `imported from contact:…` (success). See `dev-ideas/2026-05-20-housing-bug-1-22-investigation.md`.
+  - **Mitigations already in app (do not close 1.22):** `establishRouting` before proposal POST; abandon pending revision on total send failure + resend; poll all contacts with `peerPublicMaterial`; sender-key reconciliation on import; housing entry poll on resume / inbox tick.
+  - **Expected behavior:** Current Android identity receives, imports, and displays the proposal; local notification when prefs allow.
 

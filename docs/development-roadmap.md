@@ -58,6 +58,7 @@ When this step is started, it will:
 #### Step 1 follow-ups (developer workflow)
 
 - **Drift web runtime assets.** When the app is run in a desktop browser, Drift loads `sqlite3` as a WebAssembly module and offloads queries to a background worker. Both assets — `mobile/web/sqlite3.wasm` and `mobile/web/drift_worker.dart.js` — must match the `sqlite3` and `drift` versions pinned in `pubspec.lock`. The helper `mobile/tool/install_web_assets.sh` (also exposed as `melos run web:assets`) fetches the matching files from GitHub releases. Refresh after any bump of those two packages.
+- **Persistent Chrome profile for `melos run:dev:web`.** By default, `flutter run -d chrome` uses an ephemeral browser profile: Drift (IndexedDB) and other site data are discarded when the dev server stops (CTRL+C / melos restart). `mobile/tool/run_dev_web.sh` passes `--user-data-dir` (default `~/.cache/compartarenta/flutter-web-chrome`) so local drafts survive across dev sessions on the same machine. Override with `COMPARTARENTA_WEB_USER_DATA_DIR` if needed.
 
 #### Step 4 follow-ups (deferred until before the first public mobile release)
 

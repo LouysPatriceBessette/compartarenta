@@ -31,6 +31,16 @@ class InviteSunburstSlice {
       totalMinor <= 0 ? 0.0 : (userMinor / totalMinor).clamp(0.0, 1.0);
 }
 
+String _expenseSliceLabel(PlanLine line, AppLocalizations l10n) {
+  final base = line.title.trim().isEmpty
+      ? l10n.housingPlanSplitNoCategory
+      : line.title.trim();
+  if (line.amountIsBudgetCap) {
+    return l10n.housingExpenseSunburstBudgetLabel(base);
+  }
+  return base;
+}
+
 int _weightLine(List<PlanRatio> ratios, String lineId, String participantId) {
   return ratios
       .where((r) => r.lineId == lineId && r.participantId == participantId)
@@ -79,9 +89,7 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
     final userPart = userIdx < 0 ? 0 : shares[userIdx];
     out.add(
       InviteSunburstSlice(
-        label: line.title.trim().isEmpty
-            ? l10n.housingPlanSplitNoCategory
-            : line.title,
+        label: _expenseSliceLabel(line, l10n),
         totalMinor: b,
         userMinor: userPart,
         baseColor: nextColor(),

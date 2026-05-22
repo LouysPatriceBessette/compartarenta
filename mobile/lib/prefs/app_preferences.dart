@@ -48,7 +48,13 @@ class AppPreferences extends ChangeNotifier {
   /// Default housing draft plan reached the post-wizard summary at least once.
   static const _kHousingDefaultSummaryReached =
       'housing.default.summaryReached';
+  /// Legacy single-plan backup key (v1); migrated on read for [housing:default].
+  static const _kHousingDefaultPlanDraftBackupLegacy =
+      'housing.default.planDraftBackupJson';
   static const _kCarSharingPlanDraft = 'carSharing.planDraftJson';
+
+  static String _housingPlanDraftBackupKey(String planId) =>
+      'housing.planDraftBackup.$planId';
 
   static Future<AppPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -255,6 +261,26 @@ class AppPreferences extends ChangeNotifier {
   Future<void> setHousingDefaultPlanSummaryReached(bool value) async {
     await _prefs.setBool(_kHousingDefaultSummaryReached, value);
     notifyListeners();
+  }
+
+  String? housingPlanDraftBackupJson(String planId) =>
+      _prefs.getString(_housingPlanDraftBackupKey(planId));
+
+  Future<void> setHousingPlanDraftBackupJson(String planId, String? value) async {
+    final key = _housingPlanDraftBackupKey(planId);
+    if (value == null || value.isEmpty) {
+      await _prefs.remove(key);
+    } else {
+      await _prefs.setString(key, value);
+    }
+  }
+
+  /// One-time read of the pre–per-plan backup key (housing:default only).
+  String? get housingDefaultPlanDraftBackupJsonLegacy =>
+      _prefs.getString(_kHousingDefaultPlanDraftBackupLegacy);
+
+  Future<void> clearHousingDefaultPlanDraftBackupLegacy() async {
+    await _prefs.remove(_kHousingDefaultPlanDraftBackupLegacy);
   }
 
   String get carSharingPlanDraftJson =>

@@ -611,6 +611,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanSummaryMissingAgreement => 'Accord manquant';
 
   @override
+  String get housingPlanSummaryMissingParticipants =>
+      'Aucun participant pour ce plan. Modifiez le plan pour les configurer à nouveau.';
+
+  @override
   String get housingPlanSummaryEditPlan => 'Modifier le plan';
 
   @override
@@ -805,6 +809,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get housingInviteTransportFailed =>
+      'La proposition n\'a pu être livrée à aucun participant. Vous pouvez modifier le plan et réessayer.';
+
+  @override
+  String get housingInviteResendProposalAction => 'Renvoyer la proposition';
+
+  @override
+  String get housingInviteReceivedWhileEditingSnack =>
+      'Vous avez reçu une proposition de logement d\'un participant.';
+
+  @override
+  String get housingInviteReceivedOpenAction => 'Voir';
+
+  @override
   String get pushNotificationHousingProposalTitle => 'Proposition de logement';
 
   @override
@@ -922,6 +940,36 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String housingInviteSunburstCenterParticipation(String pct) {
     return 'Participation globale $pct%';
+  }
+
+  @override
+  String get housingInviteViewExpensesDetail => 'Voir les dépenses en détail';
+
+  @override
+  String get housingInviteExpensesDetailTitle => 'Dépenses en détail';
+
+  @override
+  String get housingInviteExpensesDetailSwipeHint =>
+      'Glissez à gauche ou à droite pour parcourir chaque dépense.';
+
+  @override
+  String housingInviteExpensesDetailPageIndicator(int current, int total) {
+    return '$current sur $total';
+  }
+
+  @override
+  String get housingInviteExpensesDetailLoadError =>
+      'Impossible de charger cette dépense.';
+
+  @override
+  String get housingInviteExpensesDetailPrevious => 'Dépense précédente';
+
+  @override
+  String get housingInviteExpensesDetailNext => 'Dépense suivante';
+
+  @override
+  String housingExpenseSunburstBudgetLabel(String name) {
+    return '$name (budgétisé max)';
   }
 
   @override

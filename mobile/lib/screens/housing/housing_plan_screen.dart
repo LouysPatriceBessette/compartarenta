@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -16,6 +17,7 @@ import '../../housing/proposals/housing_plan_period_gate.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
+import '../../housing/housing_plan_draft_backup.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,7 +30,10 @@ import '../../widgets/rational_percent_text.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
 import 'housing_archive_entry_screen.dart';
+import 'housing_invite_proposal_screen.dart';
 import 'housing_invite_sunburst.dart';
+import 'housing_module_entry_screen.dart';
+import 'housing_proposal_expenses_detail_screen.dart';
 
 /// Housing plan setup: vertical stepper (4 steps) then summary.
 class HousingPlanScreen extends StatefulWidget {
@@ -49,7 +54,8 @@ class HousingPlanScreen extends StatefulWidget {
   State<HousingPlanScreen> createState() => _HousingPlanScreenState();
 }
 
-class _HousingPlanScreenState extends State<HousingPlanScreen> {
+class _HousingPlanScreenState extends State<HousingPlanScreen>
+    with WidgetsBindingObserver {
   AppDatabase get _db => AppDatabase.processScope;
 
   String get _planId => widget.planId;
@@ -158,17 +164,91 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
   final Set<String> _expandedSuggestionIds = {};
 
   late final Future<void> _boot;
+  bool _draftLoadedFromDb = false;
+  Future<void>? _autosaveChain;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
+    _pollRelayInbox();
+    assert(() {
+      debugPrint('HousingPlanScreen planId=$_planId');
+      return true;
+    }());
     _resizeCoParticipantEditors(_otherParticipantCount);
     _resizeWithdrawalEditors(1 + _otherParticipantCount);
     _boot = _loadFromDb();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _pollRelayInbox();
+    }
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    setState(() => _summaryReloadToken++);
+    unawaited(_openReceivedProposalIfPending());
+  }
+
+  void _pollRelayInbox() {
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) {
+      debugPrint('housing plan inbox poll skipped: relay not configured');
+      return;
+    }
+    unawaited(
+      orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing plan inbox poll failed: $e\n$st');
+      }),
+    );
+  }
+
+  Future<void> _openReceivedProposalIfPending() async {
+    final plans = await housingPlansWithSelfParticipant(_db);
+    for (final plan in plans) {
+      if (!plan.id.startsWith('received:')) continue;
+      final pkg = await (_db.select(
+        _db.proposalPackages,
+      )..where((t) => t.planId.equals(plan.id))).getSingleOrNull();
+      if (pkg?.pendingRevisionId == null) continue;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.housingInviteReceivedWhileEditingSnack),
+          action: SnackBarAction(
+            label: l10n.housingInviteReceivedOpenAction,
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => HousingInviteProposalScreen(
+                    db: _db,
+                    planId: plan.id,
+                    prefs: widget.prefs,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
     for (final c in _nameControllers) {
       c.dispose();
     }
@@ -183,6 +263,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     _buildingRulesBody.dispose();
     _customRuleEditTitle?.dispose();
     _customRuleEditBody?.dispose();
+    if (HousingPlanDraftBackup.appliesToPlan(_planId)) {
+      unawaited(
+        _autosavePlanDraftToDb().then(
+          (_) => HousingPlanDraftBackup.snapshot(_db, widget.prefs, _planId),
+        ),
+      );
+    }
     // Do not close [AppDatabase.processScope] here — it is bound once in
     // bootstrap for the whole process. Closing it breaks any screen that
     // opens after navigating away (e.g. system back from Plan logement).
@@ -260,6 +347,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       _nameControllers[index].text = selected.effectiveDisplayName;
       _avatarIds[index] = selected.avatarId;
     });
+    unawaited(_autosavePlanDraftToDb());
   }
 
   Future<void> _ensurePlanShell() async {
@@ -349,6 +437,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
 
   Future<void> _loadFromDb() async {
     await _ensurePlanShell();
+    if (kIsWeb && HousingPlanDraftBackup.appliesToPlan(_planId)) {
+      final restored = await HousingPlanDraftBackup.restoreIfNeeded(
+        _db,
+        widget.prefs,
+        _planId,
+      );
+      if (restored) {
+        _linesEpoch++;
+      }
+    }
     await _stripOrphanGroupPlanRatios();
     final roster = await _db.listParticipants();
     final coRows = roster.where((p) => p.id.startsWith('$_planId:p')).toList()
@@ -405,12 +503,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
     if (dbComplete) {
       _showSummary = !widget.openEditorInitially;
+      if (_showSummary) {
+        _summaryReloadToken++;
+      }
       await widget.prefs.setHousingDefaultPlanSummaryReached(true);
     } else {
       _showSummary = false;
       await widget.prefs.setHousingDefaultPlanSummaryReached(false);
       _stepIndex = await _inferResumeStepIndex();
     }
+    _draftLoadedFromDb = true;
   }
 
   Future<void> _onEditPlanFromSummary() async {
@@ -513,6 +615,48 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       default:
         return true;
     }
+  }
+
+  /// Writes the current wizard state to Drift (best-effort, incremental).
+  Future<void> _autosavePlanDraftToDb() {
+    if (!_draftLoadedFromDb) return Future<void>.value();
+    final prior = _autosaveChain ?? Future<void>.value();
+    final gate = Completer<void>();
+    _autosaveChain = gate.future;
+    return prior.then((_) => _runAutosavePlanDraftToDb()).whenComplete(gate.complete);
+  }
+
+  Future<void> _runAutosavePlanDraftToDb() async {
+    try {
+      await _persistParticipants();
+    } catch (e, st) {
+      assert(() {
+        debugPrint('housing_plan_draft autosave participants: $e\n$st');
+        return true;
+      }());
+    }
+    try {
+      if (_datesStepValid()) {
+        await _persistPeriod();
+      }
+    } catch (e, st) {
+      assert(() {
+        debugPrint('housing_plan_draft autosave period: $e\n$st');
+        return true;
+      }());
+    }
+    try {
+      final agr = await _db.getAgreementForPlan(_planId);
+      if (agr != null) {
+        await _persistAgreementRules();
+      }
+    } catch (e, st) {
+      assert(() {
+        debugPrint('housing_plan_draft autosave rules: $e\n$st');
+        return true;
+      }());
+    }
+    await _db.syncWebStorageToDisk();
   }
 
   Future<void> _persistParticipants() async {
@@ -767,7 +911,44 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
       return false;
     }
 
-    var sent = false;
+    final sent = await _deliverHousingProposalRevision(
+      flowContext: flowContext,
+      revisionId: revisionId,
+      rollbackPendingOnTotalFailure: true,
+    );
+    if (!mounted) return sent;
+    setState(() => _summaryReloadToken++);
+    return sent;
+  }
+
+  Future<void> _resendPendingProposal() async {
+    final canResend = await PlanAgreementProposalService(
+      _db,
+    ).canResendPendingProposal(_planId);
+    if (!canResend || !mounted) return;
+    final revisionId = await HousingProposalTransportService(
+      _db,
+    ).pendingRevisionIdForPlan(_planId);
+    if (revisionId == null || !mounted) return;
+    final sent = await _deliverHousingProposalRevision(
+      flowContext: context,
+      revisionId: revisionId,
+      rollbackPendingOnTotalFailure: false,
+    );
+    if (!mounted) return;
+    setState(() => _summaryReloadToken++);
+    if (sent) return;
+  }
+
+  /// Posts the pending revision to invitees via the relay. When
+  /// [rollbackPendingOnTotalFailure] is true and nobody receives it, clears the
+  /// local pending revision so the author can submit again.
+  Future<bool> _deliverHousingProposalRevision({
+    required BuildContext flowContext,
+    required String revisionId,
+    required bool rollbackPendingOnTotalFailure,
+  }) async {
+    final l10n = AppLocalizations.of(flowContext);
     try {
       final orchestrator = HandshakeOrchestrator.maybeInstance;
       if (orchestrator == null) {
@@ -778,29 +959,38 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
         revisionId: revisionId,
       );
       if (!mounted || !flowContext.mounted) return false;
+      if (send.sentCount == 0) {
+        if (rollbackPendingOnTotalFailure) {
+          await PlanAgreementProposalService(_db).abandonPendingRevision(
+            _planId,
+          );
+        }
+        ScaffoldMessenger.of(flowContext).showSnackBar(
+          SnackBar(content: Text(l10n.housingInviteTransportFailed)),
+        );
+        return false;
+      }
       final message = send.failedParticipantIds.isEmpty
           ? l10n.housingInviteTransportSent(send.sentCount)
           : l10n.housingInviteTransportPartial(
               send.sentCount,
               send.failedParticipantIds.length,
             );
-      // Show the success message on the summary route, which remains after the
-      // preview route pops itself on a successful send.
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
-      sent = send.sentCount > 0;
+      return true;
     } catch (e, st) {
       if (!mounted || !flowContext.mounted) return false;
       debugPrintStack(stackTrace: st);
+      if (rollbackPendingOnTotalFailure) {
+        await PlanAgreementProposalService(_db).abandonPendingRevision(_planId);
+      }
       ScaffoldMessenger.of(flowContext).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );
+      return false;
     }
-
-    if (!mounted) return sent;
-    setState(() => _summaryReloadToken++);
-    return sent;
   }
 
   Future<void> _onDestroyPlan() async {
@@ -824,6 +1014,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
     );
     if (ok != true || !mounted) return;
     await _db.deletePlanRelatedData(_planId);
+    if (HousingPlanDraftBackup.appliesToPlan(_planId)) {
+      await HousingPlanDraftBackup.clear(widget.prefs, _planId);
+    }
     await widget.prefs.setHousingDefaultPlanSummaryReached(false);
     await _ensurePlanShell();
     setState(() {
@@ -921,6 +1114,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           }
           if (_showSummary) {
             return _SummaryView(
+              key: ValueKey<int>(_summaryReloadToken),
               db: _db,
               planId: _planId,
               prefs: widget.prefs,
@@ -928,6 +1122,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
               avatarIcons: _avatarIcons,
               onEditPlan: _onEditPlanFromSummary,
               onInvite: _openInviteProposalFlow,
+              onResendProposal: _resendPendingProposal,
               onDestroy: _onDestroyPlan,
             );
           }
@@ -1084,9 +1279,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                                     true,
                                                   );
                                               if (mounted) {
-                                                setState(
-                                                  () => _showSummary = true,
-                                                );
+                                                setState(() {
+                                                  _showSummary = true;
+                                                  _summaryReloadToken++;
+                                                });
                                               }
                                               return;
                                             }
@@ -1250,6 +1446,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           ).toUtc();
                           _ensureEndAfterStartCalendar();
                         });
+                        unawaited(_autosavePlanDraftToDb());
                       }
                     },
                   ),
@@ -1279,6 +1476,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                             picked.day,
                           ).toUtc(),
                         );
+                        unawaited(_autosavePlanDraftToDb());
                       }
                     },
                   ),
@@ -1334,29 +1532,74 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                         copy.insert(newI, item);
                         for (var i = 0; i < copy.length; i++) {
                           final c = copy[i];
+                          copy[i] = PlanLine(
+                            id: c.id,
+                            planId: c.planId,
+                            isRecurring: c.isRecurring,
+                            title: c.title,
+                            currency: c.currency,
+                            amountUsesRange: c.amountUsesRange,
+                            amountMinor: c.amountMinor,
+                            minAmountMinor: c.minAmountMinor,
+                            maxAmountMinor: c.maxAmountMinor,
+                            description: c.description,
+                            cadence: c.cadence,
+                            recurrenceDayOfMonth: c.recurrenceDayOfMonth,
+                            sortOrder: i,
+                            groupId: c.groupId,
+                            amountIsBudgetCap: c.amountIsBudgetCap,
+                            paymentResponsibleParticipantId:
+                                c.paymentResponsibleParticipantId,
+                            recurrenceSpecJson: c.recurrenceSpecJson,
+                            ratioTemplateId: c.ratioTemplateId,
+                            createdAt: c.createdAt,
+                          );
+                          final row = copy[i];
                           await _db.upsertPlanLine(
                             PlanLinesCompanion(
-                              id: drift.Value(c.id),
-                              planId: drift.Value(c.planId),
-                              isRecurring: drift.Value(c.isRecurring),
-                              title: drift.Value(c.title),
-                              currency: drift.Value(c.currency),
-                              amountMinor: drift.Value(c.amountMinor),
-                              minAmountMinor: drift.Value(c.minAmountMinor),
-                              maxAmountMinor: drift.Value(c.maxAmountMinor),
-                              cadence: drift.Value(c.cadence),
+                              id: drift.Value(row.id),
+                              planId: drift.Value(row.planId),
+                              isRecurring: drift.Value(row.isRecurring),
+                              title: drift.Value(row.title),
+                              currency: drift.Value(row.currency),
+                              amountMinor: drift.Value(row.amountMinor),
+                              minAmountMinor: drift.Value(row.minAmountMinor),
+                              maxAmountMinor: drift.Value(row.maxAmountMinor),
+                              cadence: drift.Value(row.cadence),
                               recurrenceDayOfMonth: drift.Value(
-                                c.recurrenceDayOfMonth,
+                                row.recurrenceDayOfMonth,
                               ),
-                              sortOrder: drift.Value(i),
-                              groupId: drift.Value(c.groupId),
-                              amountUsesRange: drift.Value(c.amountUsesRange),
-                              description: drift.Value(c.description),
-                              createdAt: drift.Value(c.createdAt),
+                              sortOrder: drift.Value(row.sortOrder),
+                              groupId: drift.Value(row.groupId),
+                              amountUsesRange: drift.Value(row.amountUsesRange),
+                              amountIsBudgetCap: drift.Value(
+                                row.amountIsBudgetCap,
+                              ),
+                              description: drift.Value(row.description),
+                              paymentResponsibleParticipantId: drift.Value(
+                                row.paymentResponsibleParticipantId,
+                              ),
+                              recurrenceSpecJson: drift.Value(
+                                row.recurrenceSpecJson,
+                              ),
+                              ratioTemplateId: drift.Value(row.ratioTemplateId),
+                              createdAt: drift.Value(row.createdAt),
                             ),
                           );
                         }
-                        if (mounted) setState(() => _linesEpoch++);
+                        if (HousingPlanDraftBackup.appliesToPlan(_planId)) {
+                          final ratios = await _db.listPlanRatios(_planId);
+                          await HousingPlanDraftBackup.replaceAllLines(
+                            prefs: widget.prefs,
+                            lines: copy,
+                            lineRatios: ratios
+                                .where((r) => r.lineId != null)
+                                .toList(),
+                          );
+                        }
+                        if (mounted) {
+                          setState(() => _linesEpoch++);
+                        }
                       },
                       itemBuilder: (context, index) {
                         final line = lines[index];
@@ -1366,6 +1609,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                           child: Card(
                             child: ListTile(
                               title: Text(line.title),
+                              subtitle: line.amountIsBudgetCap
+                                  ? Text(l10n.housingExpenseAmountBudgetMax)
+                                  : Text(l10n.housingExpenseAmountDetermined),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1389,6 +1635,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
                                             _db.planLines,
                                           )..where((t) => t.id.equals(line.id)))
                                           .go();
+                                      if (HousingPlanDraftBackup.appliesToPlan(
+                                        _planId,
+                                      )) {
+                                        await HousingPlanDraftBackup.removeLine(
+                                          widget.prefs,
+                                          _planId,
+                                          line.id,
+                                        );
+                                      }
                                       if (mounted) {
                                         setState(() => _linesEpoch++);
                                       }
@@ -1440,12 +1695,18 @@ class _HousingPlanScreenState extends State<HousingPlanScreen> {
           dateFormat: widget.prefs.dateFormat.trim().isEmpty
               ? 'YYYY-MM-DD'
               : widget.prefs.dateFormat.trim(),
+          prefsForBackup: HousingPlanDraftBackup.appliesToPlan(_planId)
+              ? widget.prefs
+              : null,
           existingLineId: existing?.id,
           initialSortOrder: existing?.sortOrder ?? nextOrder,
         ),
       ),
     );
-    if (saved == true && mounted) setState(() => _linesEpoch++);
+    if (saved == true && mounted) {
+      setState(() => _linesEpoch++);
+      unawaited(_autosavePlanDraftToDb());
+    }
   }
 
   List<Widget> _earlyWithdrawalRuleContent(AppLocalizations l10n) {
@@ -2368,6 +2629,7 @@ class _SummarySnapshot {
     required this.agr,
     required this.ratios,
     required this.proposalPkg,
+    required this.canResendPendingProposal,
   });
 
   final List<Participant> participants;
@@ -2375,10 +2637,12 @@ class _SummarySnapshot {
   final Agreement? agr;
   final List<PlanRatio> ratios;
   final ProposalPackage? proposalPkg;
+  final bool canResendPendingProposal;
 }
 
 class _SummaryView extends StatefulWidget {
   const _SummaryView({
+    super.key,
     required this.db,
     required this.planId,
     required this.prefs,
@@ -2386,6 +2650,7 @@ class _SummaryView extends StatefulWidget {
     required this.avatarIcons,
     required this.onEditPlan,
     required this.onInvite,
+    required this.onResendProposal,
     required this.onDestroy,
   });
 
@@ -2397,6 +2662,7 @@ class _SummaryView extends StatefulWidget {
 
   final VoidCallback onEditPlan;
   final VoidCallback onInvite;
+  final VoidCallback onResendProposal;
   final VoidCallback onDestroy;
 
   @override
@@ -2413,12 +2679,22 @@ class _SummaryViewState extends State<_SummaryView> {
   void initState() {
     super.initState();
     _snapshotFuture = _load();
+    _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
+  }
+
+  /// Polls relay + reloads only while a proposal is pending (responses may arrive).
+  /// Draft plan summary (not submitted) does not need periodic UI refresh.
+  void _scheduleRefreshTimerIfNeeded(_SummarySnapshot data) {
+    if (!mounted) return;
+    _refreshTimer?.cancel();
+    if (data.proposalPkg?.pendingRevisionId == null) return;
     _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
       if (!mounted) return;
       setState(() {
         _snapshotFuture = _load();
       });
+      _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
     });
   }
 
@@ -2446,12 +2722,16 @@ class _SummaryViewState extends State<_SummaryView> {
         widget.db.proposalPackages,
       )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull(),
     ]);
+    final canResend = await PlanAgreementProposalService(
+      widget.db,
+    ).canResendPendingProposal(widget.planId);
     return _SummarySnapshot(
       participants: r[0] as List<Participant>,
       lines: r[1] as List<PlanLine>,
       agr: r[2] as Agreement?,
       ratios: r[3] as List<PlanRatio>,
       proposalPkg: r[4] as ProposalPackage?,
+      canResendPendingProposal: canResend,
     );
   }
 
@@ -2469,6 +2749,22 @@ class _SummaryViewState extends State<_SummaryView> {
     return FutureBuilder<_SummarySnapshot>(
       future: _snapshotFuture,
       builder: (context, AsyncSnapshot<_SummarySnapshot> snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                AppLocalizations.of(context).housingPlanLoadError(
+                  '${snap.error}',
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -2522,12 +2818,9 @@ class _SummaryViewState extends State<_SummaryView> {
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
         final rosterIds = roster.map((e) => e.id).toList();
-        if (rosterIds.isNotEmpty) {
-          _focusedParticipantIndex = _focusedParticipantIndex.clamp(
-            0,
-            rosterIds.length - 1,
-          );
-        }
+        final focusIdx = rosterIds.isEmpty
+            ? 0
+            : _focusedParticipantIndex.clamp(0, rosterIds.length - 1);
 
         int participantShareMinor(String participantId) {
           final idx = rosterIds.indexOf(participantId);
@@ -2549,9 +2842,7 @@ class _SummaryViewState extends State<_SummaryView> {
           return participantMonthlyMinor;
         }
 
-        final focusedParticipant = roster.isEmpty
-            ? null
-            : roster[_focusedParticipantIndex];
+        final focusedParticipant = roster.isEmpty ? null : roster[focusIdx];
         final displayCurrency = displayCurrencyCodeForPlan(widget.prefs, lines);
         final sunSlices = focusedParticipant == null
             ? <InviteSunburstSlice>[]
@@ -2619,30 +2910,83 @@ class _SummaryViewState extends State<_SummaryView> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (var i = 0; i < roster.length; i++)
-                        ChoiceChip(
-                          selected: _focusedParticipantIndex == i,
-                          label: Text(roster[i].displayName),
-                          onSelected: (selected) {
-                            if (!selected) return;
-                            setState(() => _focusedParticipantIndex = i);
-                          },
+                    const SizedBox(height: 8),
+                    if (roster.isEmpty)
+                      Text(
+                        l10n.housingPlanSummaryMissingParticipants,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
                         ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (var i = 0; i < roster.length; i++)
+                            ChoiceChip(
+                              selected: focusIdx == i,
+                              label: Text(roster[i].displayName),
+                              onSelected: (selected) {
+                                if (!selected) return;
+                                setState(() => _focusedParticipantIndex = i);
+                              },
+                            ),
+                        ],
+                      ),
+                    const SizedBox(height: 20),
+                    if (focusedParticipant != null)
+                      HousingInviteSunburstChart(
+                        l10n: l10n,
+                        slices: sunSlices,
+                        participantName: focusedParticipant.displayName,
+                      ),
+                    if (sortedLines.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Center(
+                        child: FilledButton.tonal(
+                          onPressed: roster.isEmpty
+                              ? null
+                              : () {
+                                  final dateFmt =
+                                      widget.prefs.dateFormat.trim().isEmpty
+                                      ? 'YYYY-MM-DD'
+                                      : widget.prefs.dateFormat.trim();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (context) =>
+                                          HousingProposalExpensesDetailScreen(
+                                        db: widget.db,
+                                        planId: widget.planId,
+                                        participantIds: rosterIds,
+                                        participantNames: [
+                                          for (final p in roster)
+                                            p.displayName,
+                                        ],
+                                        defaultCurrency: displayCurrency,
+                                        dateFormat: dateFmt,
+                                      ),
+                                    ),
+                                  );
+                                },
+                          child: Text(l10n.housingInviteViewExpensesDetail),
+                        ),
+                      ),
                     ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (focusedParticipant != null)
-                    HousingInviteSunburstChart(
-                      l10n: l10n,
-                      slices: sunSlices,
-                      participantName: focusedParticipant.displayName,
-                    ),
-                  const SizedBox(height: 20),
+                    if (sortedLines.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          l10n.housingPlanAddExpensesFirst,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color:
+                                    Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
                   for (var i = 0; i < roster.length; i++) ...[
                     Builder(
                       builder: (context) {
@@ -2740,9 +3084,22 @@ class _SummaryViewState extends State<_SummaryView> {
                         db: widget.db,
                         planId: widget.planId,
                         prefs: widget.prefs,
+                        onAfterResend: () {
+                          if (!mounted) return;
+                          setState(() {
+                            _snapshotFuture = _load();
+                          });
+                        },
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),
                     ),
+                    if (data.canResendPendingProposal) ...[
+                      const SizedBox(height: 8),
+                      FilledButton(
+                        onPressed: widget.onResendProposal,
+                        child: Text(l10n.housingInviteResendProposalAction),
+                      ),
+                    ],
                   ] else ...[
                     FilledButton.tonal(
                       onPressed: widget.onEditPlan,

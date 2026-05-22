@@ -11,6 +11,8 @@ import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
 import 'notifications/notification_permission_gate.dart';
 import 'notifications/push_notification_service.dart';
+import 'notifications/push_background_registration_stub.dart'
+    if (dart.library.io) 'notifications/push_background_registration_io.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'relay/identity_keystore.dart';
 import 'relay/relay_client.dart';
@@ -22,66 +24,71 @@ Future<void> bootstrap() async {
     defaultValue: '',
   );
 
-  final appDb = AppDatabase();
-  AppDatabase.bindProcessScope(appDb);
-
-  unawaited(_initializePushIfAlreadyAuthorized());
-
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    if (sentryDsn.isNotEmpty) {
-      Sentry.captureException(details.exception, stackTrace: details.stack);
-    }
-  };
-
-  PlatformDispatcher.instance.onError = (error, stack) {
-    if (sentryDsn.isNotEmpty) {
-      Sentry.captureException(error, stackTrace: stack);
-    }
-    return false;
-  };
-
-  // Wire the relay / Contacts handshake plumbing once per process so any
-  // screen can reach it through [HandshakeOrchestrator.instance]. We
-  // skip the install when no relay base URL is configured (default
-  // `https://example.invalid` in dart-defines) so test/dev runs that
-  // do not target a live relay don't accidentally spam HTTP requests.
-  if (config.apiBaseUrl.host != 'example.invalid') {
-    try {
-      final identity = IdentityKeystore.secureStorage();
-      final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
-      final orchestrator = HandshakeOrchestrator(
-        db: appDb,
-        identity: identity,
-        relay: relay,
-        contacts: ContactsRepository(appDb),
-        invitations: ContactInvitationsRepository(appDb),
-      );
-      HandshakeOrchestrator.install(orchestrator);
-      unawaited(
-        orchestrator.processAllPendingHandshakes().catchError((
-          Object error,
-          StackTrace stack,
-        ) {
-          debugPrint('Initial handshake polling failed: $error\n$stack');
-        }),
-      );
-      unawaited(
-        orchestrator.pollSteadyStateInboxes().catchError((
-          Object error,
-          StackTrace stack,
-        ) {
-          debugPrint('Initial steady inbox poll failed: $error\n$stack');
-        }),
-      );
-      orchestrator.startPolling();
-    } catch (error, stack) {
-      debugPrint('Relay handshake bootstrap failed: $error\n$stack');
-    }
-  }
-
   await runZonedGuarded(
     () async {
+      // Drift (path_provider), secure storage, and plugins require binding first.
+      // Opening [AppDatabase] before this can hang on Android (stuck native splash).
+      WidgetsFlutterBinding.ensureInitialized();
+      registerPushBackgroundHandler();
+
+      final appDb = AppDatabase();
+      AppDatabase.bindProcessScope(appDb);
+
+      unawaited(_initializePushIfAlreadyAuthorized());
+
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        if (sentryDsn.isNotEmpty) {
+          Sentry.captureException(details.exception, stackTrace: details.stack);
+        }
+      };
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        if (sentryDsn.isNotEmpty) {
+          Sentry.captureException(error, stackTrace: stack);
+        }
+        return false;
+      };
+
+      // Wire the relay / Contacts handshake plumbing once per process so any
+      // screen can reach it through [HandshakeOrchestrator.instance]. We
+      // skip the install when no relay base URL is configured (default
+      // `https://example.invalid` in dart-defines) so test/dev runs that
+      // do not target a live relay don't accidentally spam HTTP requests.
+      if (config.apiBaseUrl.host != 'example.invalid') {
+        try {
+          final identity = IdentityKeystore.secureStorage();
+          final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
+          final orchestrator = HandshakeOrchestrator(
+            db: appDb,
+            identity: identity,
+            relay: relay,
+            contacts: ContactsRepository(appDb),
+            invitations: ContactInvitationsRepository(appDb),
+          );
+          HandshakeOrchestrator.install(orchestrator);
+          unawaited(
+            orchestrator.processAllPendingHandshakes().catchError((
+              Object error,
+              StackTrace stack,
+            ) {
+              debugPrint('Initial handshake polling failed: $error\n$stack');
+            }),
+          );
+          unawaited(
+            orchestrator.pollSteadyStateInboxes().catchError((
+              Object error,
+              StackTrace stack,
+            ) {
+              debugPrint('Initial steady inbox poll failed: $error\n$stack');
+            }),
+          );
+          orchestrator.startPolling();
+        } catch (error, stack) {
+          debugPrint('Relay handshake bootstrap failed: $error\n$stack');
+        }
+      }
+
       if (sentryDsn.isEmpty) {
         runApp(CompartarentaApp(config: config));
         return;

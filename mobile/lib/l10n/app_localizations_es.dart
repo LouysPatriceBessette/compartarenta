@@ -608,6 +608,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingPlanSummaryMissingAgreement => 'Falta el acuerdo';
 
   @override
+  String get housingPlanSummaryMissingParticipants =>
+      'No hay participantes en este plan. Edite el plan para configurarlos de nuevo.';
+
+  @override
   String get housingPlanSummaryEditPlan => 'Editar plan';
 
   @override
@@ -804,6 +808,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get housingInviteTransportFailed =>
+      'No se pudo entregar la propuesta a ningún participante. Puede editar el plan e intentarlo de nuevo.';
+
+  @override
+  String get housingInviteResendProposalAction => 'Reenviar propuesta';
+
+  @override
+  String get housingInviteReceivedWhileEditingSnack =>
+      'Ha recibido una propuesta de vivienda de un participante.';
+
+  @override
+  String get housingInviteReceivedOpenAction => 'Ver';
+
+  @override
   String get pushNotificationHousingProposalTitle => 'Propuesta de vivienda';
 
   @override
@@ -922,6 +940,36 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String housingInviteSunburstCenterParticipation(String pct) {
     return 'Participación global $pct %';
+  }
+
+  @override
+  String get housingInviteViewExpensesDetail => 'Ver gastos en detalle';
+
+  @override
+  String get housingInviteExpensesDetailTitle => 'Gastos en detalle';
+
+  @override
+  String get housingInviteExpensesDetailSwipeHint =>
+      'Deslice a la izquierda o derecha para ver cada gasto.';
+
+  @override
+  String housingInviteExpensesDetailPageIndicator(int current, int total) {
+    return '$current de $total';
+  }
+
+  @override
+  String get housingInviteExpensesDetailLoadError =>
+      'No se pudo cargar este gasto.';
+
+  @override
+  String get housingInviteExpensesDetailPrevious => 'Gasto anterior';
+
+  @override
+  String get housingInviteExpensesDetailNext => 'Gasto siguiente';
+
+  @override
+  String housingExpenseSunburstBudgetLabel(String name) {
+    return '$name (presupuesto máx.)';
   }
 
   @override

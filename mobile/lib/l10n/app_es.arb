@@ -208,6 +208,7 @@
   "housingPlanMinimumNoticeDays": "Preaviso mínimo (días)",
   "housingPlanPenaltyAmount": "Importe de la penalización",
   "housingPlanSummaryMissingAgreement": "Falta el acuerdo",
+  "housingPlanSummaryMissingParticipants": "No hay participantes en este plan. Edite el plan para configurarlos de nuevo.",
   "housingPlanSummaryEditPlan": "Editar plan",
   "housingPlanSummaryInvite": "Enviar mi plan",
   "housingWorkbenchTitle": "Planes de vivienda",
@@ -296,6 +297,10 @@
       "failedCount": { "type": "int" }
     }
   },
+  "housingInviteTransportFailed": "No se pudo entregar la propuesta a ningún participante. Puede editar el plan e intentarlo de nuevo.",
+  "housingInviteResendProposalAction": "Reenviar propuesta",
+  "housingInviteReceivedWhileEditingSnack": "Ha recibido una propuesta de vivienda de un participante.",
+  "housingInviteReceivedOpenAction": "Ver",
   "pushNotificationHousingProposalTitle": "Propuesta de vivienda",
   "pushNotificationHousingProposalBody": "Abra la aplicación para revisar la propuesta.",
   "pushNotificationHousingDecisionTitle": "Respuesta a una propuesta de vivienda",
@@ -345,6 +350,25 @@
   "@housingInviteSunburstCenterParticipation": {
     "placeholders": {
       "pct": { "type": "String" }
+    }
+  },
+  "housingInviteViewExpensesDetail": "Ver gastos en detalle",
+  "housingInviteExpensesDetailTitle": "Gastos en detalle",
+  "housingInviteExpensesDetailSwipeHint": "Deslice a la izquierda o derecha para ver cada gasto.",
+  "housingInviteExpensesDetailPageIndicator": "{current} de {total}",
+  "@housingInviteExpensesDetailPageIndicator": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "housingInviteExpensesDetailLoadError": "No se pudo cargar este gasto.",
+  "housingInviteExpensesDetailPrevious": "Gasto anterior",
+  "housingInviteExpensesDetailNext": "Gasto siguiente",
+  "housingExpenseSunburstBudgetLabel": "{name} (presupuesto máx.)",
+  "@housingExpenseSunburstBudgetLabel": {
+    "placeholders": {
+      "name": { "type": "String" }
     }
   },
   "housingInviteSunburstEmptyHint": "No hay datos de gastos para este gráfico en este plan.",
