@@ -1357,7 +1357,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsActivityLogTitle.
   ///
   /// In en, this message translates to:
-  /// **'My activity log'**
+  /// **'Event journal'**
   String get settingsActivityLogTitle;
 
   /// No description provided for @settingsActivityLogSubtitle.
@@ -1371,6 +1371,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No events match your filters.'**
   String get activityLogEmpty;
+
+  /// No description provided for @activityLogNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No log entries yet.'**
+  String get activityLogNoEntries;
+
+  /// No description provided for @activityLogFiltersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get activityLogFiltersTitle;
+
+  /// No description provided for @activityLogFilterDatesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get activityLogFilterDatesLabel;
 
   /// No description provided for @activityLogFilterInitiatorLabel.
   ///
@@ -1395,6 +1413,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact'**
   String get activityLogFilterInitiatorContact;
+
+  /// No description provided for @activityLogFilterEmitterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Emitter'**
+  String get activityLogFilterEmitterLabel;
+
+  /// No description provided for @activityLogFilterEmitterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get activityLogFilterEmitterAll;
+
+  /// No description provided for @activityLogFilterEmitterSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get activityLogFilterEmitterSystem;
 
   /// No description provided for @activityLogFilterFromLabel.
   ///

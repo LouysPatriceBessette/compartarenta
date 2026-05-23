@@ -704,13 +704,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingInviteStatusRelayUnknown => '—';
 
   @override
-  String get settingsActivityLogTitle => 'My activity log';
+  String get settingsActivityLogTitle => 'Event journal';
 
   @override
   String get settingsActivityLogSubtitle => 'Relay events on this device';
 
   @override
   String get activityLogEmpty => 'No events match your filters.';
+
+  @override
+  String get activityLogNoEntries => 'No log entries yet.';
+
+  @override
+  String get activityLogFiltersTitle => 'Filters';
+
+  @override
+  String get activityLogFilterDatesLabel => 'Dates';
 
   @override
   String get activityLogFilterInitiatorLabel => 'Initiator';
@@ -723,6 +732,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityLogFilterInitiatorContact => 'Contact';
+
+  @override
+  String get activityLogFilterEmitterLabel => 'Emitter';
+
+  @override
+  String get activityLogFilterEmitterAll => 'All';
+
+  @override
+  String get activityLogFilterEmitterSystem => 'System';
 
   @override
   String get activityLogFilterFromLabel => 'From (date)';

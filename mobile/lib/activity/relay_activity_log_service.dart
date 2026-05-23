@@ -44,11 +44,123 @@ class RelayActivityLogService {
         );
   }
 
+  /// Stable keys for the activity-log emitter filter dropdown.
+  static const emitterFilterAll = '';
+  static const emitterFilterSystem = 'emitter:system';
+  static const emitterFilterSelf = 'emitter:self';
+  static String emitterFilterContact(String contactId) =>
+      'emitter:contact:$contactId';
+  static String emitterFilterDisplayName(String displayName) =>
+      'emitter:name:${displayName.toLowerCase()}';
+
+  /// Distinct emitters present in the log (system, self, contacts by name).
+  Future<List<ActivityLogEmitterFilterOption>> emitterFilterOptions({
+    required String selfDisplayName,
+    required String allLabel,
+    required String systemLabel,
+    required String selfFallbackLabel,
+  }) async {
+    final rows = await _db.select(_db.relayActivityLogEntries).get();
+    final options = <ActivityLogEmitterFilterOption>[
+      ActivityLogEmitterFilterOption(key: emitterFilterAll, label: allLabel),
+    ];
+
+    var hasSystem = false;
+    var hasSelf = false;
+    final contactsById = <String, String>{};
+    final namesWithoutId = <String>{};
+
+    for (final row in rows) {
+      switch (row.initiatorKind) {
+        case initiatorSystem:
+          hasSystem = true;
+        case initiatorSelf:
+          hasSelf = true;
+        case initiatorContact:
+          final id = row.initiatorContactId;
+          if (id != null && id.isNotEmpty) {
+            final name = row.initiatorDisplayName.trim();
+            contactsById[id] = name.isNotEmpty ? name : contactsById[id] ?? '';
+          } else {
+            final name = row.initiatorDisplayName.trim();
+            if (name.isNotEmpty) namesWithoutId.add(name);
+          }
+      }
+    }
+
+    if (hasSystem) {
+      options.add(
+        ActivityLogEmitterFilterOption(
+          key: emitterFilterSystem,
+          label: systemLabel,
+        ),
+      );
+    }
+    if (hasSelf) {
+      final selfLabel = selfDisplayName.trim().isNotEmpty
+          ? selfDisplayName.trim()
+          : selfFallbackLabel;
+      options.add(
+        ActivityLogEmitterFilterOption(
+          key: emitterFilterSelf,
+          label: selfLabel,
+        ),
+      );
+    }
+
+    final sortedContacts = contactsById.entries.toList()
+      ..sort((a, b) => _emitterLabel(a.value, a.key)
+          .compareTo(_emitterLabel(b.value, b.key)));
+    for (final entry in sortedContacts) {
+      options.add(
+        ActivityLogEmitterFilterOption(
+          key: emitterFilterContact(entry.key),
+          label: _emitterLabel(entry.value, entry.key),
+        ),
+      );
+    }
+
+    final sortedNames = namesWithoutId.toList()..sort();
+    for (final name in sortedNames) {
+      if (contactsById.values.any((v) => v == name)) continue;
+      options.add(
+        ActivityLogEmitterFilterOption(
+          key: emitterFilterDisplayName(name),
+          label: name,
+        ),
+      );
+    }
+
+    return options;
+  }
+
+  static String _emitterLabel(String displayName, String fallback) {
+    final trimmed = displayName.trim();
+    return trimmed.isNotEmpty ? trimmed : fallback;
+  }
+
+  static bool matchesEmitterFilter(
+    RelayActivityLogEntry row,
+    String emitterFilterKey,
+  ) {
+    if (emitterFilterKey.isEmpty) return true;
+    return switch (emitterFilterKey) {
+      emitterFilterSystem => row.initiatorKind == initiatorSystem,
+      emitterFilterSelf => row.initiatorKind == initiatorSelf,
+      final key when key.startsWith('emitter:contact:') =>
+        row.initiatorContactId ==
+            key.substring('emitter:contact:'.length),
+      final key when key.startsWith('emitter:name:') =>
+        row.initiatorDisplayName.trim().toLowerCase() ==
+            key.substring('emitter:name:'.length),
+      _ => true,
+    };
+  }
+
   Future<List<RelayActivityLogEntry>> listFiltered({
     DateTime? fromUtc,
     DateTime? toUtc,
-    String? initiatorKind,
-    String? initiatorContactId,
+    String emitterFilterKey = emitterFilterAll,
     int limit = 500,
   }) async {
     final q = _db.select(_db.relayActivityLogEntries)
@@ -58,16 +170,22 @@ class RelayActivityLogService {
     return rows.where((row) {
       if (fromUtc != null && row.occurredAt.isBefore(fromUtc)) return false;
       if (toUtc != null && row.occurredAt.isAfter(toUtc)) return false;
-      if (initiatorKind != null && row.initiatorKind != initiatorKind) {
-        return false;
-      }
-      if (initiatorContactId != null &&
-          row.initiatorContactId != initiatorContactId) {
-        return false;
-      }
+      if (!matchesEmitterFilter(row, emitterFilterKey)) return false;
       return true;
     }).toList(growable: false);
   }
+}
+
+/// One row in the activity-log emitter filter dropdown.
+class ActivityLogEmitterFilterOption {
+  const ActivityLogEmitterFilterOption({
+    required this.key,
+    required this.label,
+  });
+
+  /// [RelayActivityLogService.emitterFilterAll] means no emitter filter.
+  final String key;
+  final String label;
 }
 
 /// Stable event kind strings for [RelayActivityLogService.append].

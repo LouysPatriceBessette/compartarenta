@@ -20,21 +20,71 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
   final _db = AppDatabase.processScope;
   late Future<List<RelayActivityLogEntry>> _load = _fetch();
 
-  String? _initiatorFilter;
-  String? _contactIdFilter;
+  String _emitterFilterKey = RelayActivityLogService.emitterFilterAll;
   DateTime? _fromUtc;
   DateTime? _toUtc;
+  bool _emitterFilterEnabled = false;
+  bool _dateFilterEnabled = false;
+
+  List<ActivityLogEmitterFilterOption> _emitterOptions = const [];
+  bool _emitterOptionsLoading = true;
+  bool _emitterOptionsRequested = false;
+
+  bool get _emitterFilterActive =>
+      _emitterFilterEnabled &&
+      _emitterFilterKey != RelayActivityLogService.emitterFilterAll;
+
+  bool get _dateFilterActive =>
+      _dateFilterEnabled && _fromUtc != null && _toUtc != null;
+
+  bool get _hasActiveFilters => _emitterFilterActive || _dateFilterActive;
 
   Future<List<RelayActivityLogEntry>> _fetch() {
     return RelayActivityLogService(_db).listFiltered(
-      fromUtc: _fromUtc,
-      toUtc: _toUtc,
-      initiatorKind: _initiatorFilter,
-      initiatorContactId: _contactIdFilter,
+      fromUtc: _dateFilterActive ? _fromUtc : null,
+      toUtc: _dateFilterActive ? _toUtc : null,
+      emitterFilterKey: _emitterFilterActive
+          ? _emitterFilterKey
+          : RelayActivityLogService.emitterFilterAll,
     );
   }
 
-  void _reload() => setState(() => _load = _fetch());
+  void _refreshList() {
+    setState(() {
+      _load = _fetch();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_emitterOptionsRequested) return;
+    _emitterOptionsRequested = true;
+    _loadEmitterOptions();
+  }
+
+  Future<void> _loadEmitterOptions() async {
+    final l10n = AppLocalizations.of(context);
+    final options = await RelayActivityLogService(_db).emitterFilterOptions(
+      selfDisplayName: widget.prefs.displayName,
+      allLabel: l10n.activityLogFilterEmitterAll,
+      systemLabel: l10n.activityLogFilterEmitterSystem,
+      selfFallbackLabel: l10n.activityLogFilterInitiatorSelf,
+    );
+    if (!mounted) return;
+    setState(() {
+      _emitterOptions = options;
+      _emitterOptionsLoading = false;
+      if (!options.any((o) => o.key == _emitterFilterKey)) {
+        _emitterFilterKey = RelayActivityLogService.emitterFilterAll;
+      }
+    });
+  }
+
+  String _emptyMessage(AppLocalizations l10n) {
+    if (_hasActiveFilters) return l10n.activityLogEmpty;
+    return l10n.activityLogNoEntries;
+  }
 
   String _kindLabel(AppLocalizations l10n, String kind) => switch (kind) {
         RelayActivityLogKinds.contactHandshakeReceived =>
@@ -58,20 +108,29 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
         _ => kind,
       };
 
-  String _initiatorLabel(AppLocalizations l10n, RelayActivityLogEntry row) {
+  String _emitterLabel(AppLocalizations l10n, RelayActivityLogEntry row) {
     return switch (row.initiatorKind) {
-      RelayActivityLogService.initiatorSelf => l10n.activityLogFilterInitiatorSelf,
+      RelayActivityLogService.initiatorSelf =>
+        row.initiatorDisplayName.trim().isNotEmpty
+            ? row.initiatorDisplayName.trim()
+            : (widget.prefs.displayName.trim().isNotEmpty
+                ? widget.prefs.displayName.trim()
+                : l10n.activityLogFilterInitiatorSelf),
+      RelayActivityLogService.initiatorSystem =>
+        l10n.activityLogFilterEmitterSystem,
       RelayActivityLogService.initiatorContact =>
-        row.initiatorDisplayName.isNotEmpty
-            ? row.initiatorDisplayName
-            : (row.initiatorContactId ?? l10n.activityLogFilterInitiatorContact),
-      _ => row.initiatorDisplayName.isNotEmpty
-          ? row.initiatorDisplayName
+        row.initiatorDisplayName.trim().isNotEmpty
+            ? row.initiatorDisplayName.trim()
+            : (row.initiatorContactId ??
+                l10n.activityLogFilterInitiatorContact),
+      _ => row.initiatorDisplayName.trim().isNotEmpty
+          ? row.initiatorDisplayName.trim()
           : row.initiatorKind,
     };
   }
 
   Future<void> _pickDate({required bool isFrom}) async {
+    if (!_dateFilterEnabled) return;
     final initial = (isFrom ? _fromUtc : _toUtc)?.toLocal() ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -80,10 +139,9 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
       lastDate: DateTime(2100),
     );
     if (picked == null) return;
-    final utc = DateTime(picked.year, picked.month, picked.day).toUtc();
     setState(() {
       if (isFrom) {
-        _fromUtc = utc;
+        _fromUtc = DateTime.utc(picked.year, picked.month, picked.day);
       } else {
         _toUtc = DateTime.utc(
           picked.year,
@@ -95,80 +153,202 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
         );
       }
     });
+    _refreshList();
+  }
+
+  Widget _filterCheckbox({
+    required bool value,
+    required String label,
+    required ValueChanged<bool?> onChanged,
+  }) {
+    return Row(
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dateChip({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    final style = Theme.of(context).textTheme.bodySmall;
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final dateFmt = effectiveDateFormat(widget.prefs);
+    final datePlaceholder = dateFmt;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsActivityLogTitle)),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          ExpansionTile(
+            initiallyExpanded: false,
+            title: Row(
               children: [
-                DropdownButtonFormField<String?>(
-                  key: ValueKey<String?>(_initiatorFilter),
-                  initialValue: _initiatorFilter,
-                  decoration: InputDecoration(
-                    labelText: l10n.activityLogFilterInitiatorLabel,
+                Text(
+                  l10n.activityLogFiltersTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (_hasActiveFilters) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade600,
+                    size: 20,
+                    semanticLabel: l10n.activityLogFiltersTitle,
                   ),
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(l10n.activityLogFilterInitiatorAll),
-                    ),
-                    DropdownMenuItem(
-                      value: RelayActivityLogService.initiatorSelf,
-                      child: Text(l10n.activityLogFilterInitiatorSelf),
-                    ),
-                    DropdownMenuItem(
-                      value: RelayActivityLogService.initiatorContact,
-                      child: Text(l10n.activityLogFilterInitiatorContact),
-                    ),
-                  ],
-                  onChanged: (v) => setState(() {
-                    _initiatorFilter = v;
-                    _contactIdFilter = null;
-                  }),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _pickDate(isFrom: true),
-                        child: Text(
-                          _fromUtc == null
-                              ? l10n.activityLogFilterFromLabel
-                              : formatPreferenceDate(_fromUtc, dateFmt),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _pickDate(isFrom: false),
-                        child: Text(
-                          _toUtc == null
-                              ? l10n.activityLogFilterToLabel
-                              : formatPreferenceDate(_toUtc, dateFmt),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: _reload,
-                  child: Text(l10n.activityLogApplyFilters),
-                ),
+                ],
               ],
             ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 132,
+                          child: _filterCheckbox(
+                            value: _emitterFilterEnabled,
+                            label: l10n.activityLogFilterEmitterLabel,
+                            onChanged: (enabled) {
+                              if (enabled == null) return;
+                              setState(() => _emitterFilterEnabled = enabled);
+                              _refreshList();
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _emitterOptionsLoading
+                              ? const LinearProgressIndicator()
+                              : DropdownButtonFormField<String>(
+                                  key: ValueKey(_emitterFilterKey),
+                                  isExpanded: true,
+                                  initialValue: _emitterFilterKey,
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  items: [
+                                    for (final option in _emitterOptions)
+                                      DropdownMenuItem(
+                                        value: option.key,
+                                        child: Text(
+                                          option.label,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                  ],
+                                  onChanged: _emitterFilterEnabled
+                                      ? (key) {
+                                          if (key == null) return;
+                                          setState(
+                                            () => _emitterFilterKey = key,
+                                          );
+                                          _refreshList();
+                                        }
+                                      : null,
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 132,
+                          child: _filterCheckbox(
+                            value: _dateFilterEnabled,
+                            label: l10n.activityLogFilterDatesLabel,
+                            onChanged: (enabled) {
+                              if (enabled == null) return;
+                              setState(() => _dateFilterEnabled = enabled);
+                              _refreshList();
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _dateChip(
+                                  label: _fromUtc == null
+                                      ? datePlaceholder
+                                      : formatPreferenceDate(
+                                          _fromUtc,
+                                          dateFmt,
+                                        ),
+                                  onPressed: _dateFilterEnabled
+                                      ? () => _pickDate(isFrom: true)
+                                      : null,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                child: Text(
+                                  '–',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                              Expanded(
+                                child: _dateChip(
+                                  label: _toUtc == null
+                                      ? datePlaceholder
+                                      : formatPreferenceDate(
+                                          _toUtc,
+                                          dateFmt,
+                                        ),
+                                  onPressed: _dateFilterEnabled
+                                      ? () => _pickDate(isFrom: false)
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const Divider(height: 1),
           Expanded(
@@ -180,7 +360,15 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
                 }
                 final rows = snap.data!;
                 if (rows.isEmpty) {
-                  return Center(child: Text(l10n.activityLogEmpty));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _emptyMessage(l10n),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
                 }
                 return ListView.separated(
                   itemCount: rows.length,
@@ -194,7 +382,7 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
                     return ListTile(
                       title: Text(_kindLabel(l10n, row.kind)),
                       subtitle: Text(
-                        '${_initiatorLabel(l10n, row)}\n$when',
+                        '${_emitterLabel(l10n, row)}\n$when',
                       ),
                       isThreeLine: true,
                     );

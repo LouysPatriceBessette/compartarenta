@@ -713,7 +713,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingInviteStatusRelayUnknown => '—';
 
   @override
-  String get settingsActivityLogTitle => 'Log de mon activité';
+  String get settingsActivityLogTitle => 'Journal d\'évènements';
 
   @override
   String get settingsActivityLogSubtitle =>
@@ -721,6 +721,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get activityLogEmpty => 'Aucun événement ne correspond aux filtres.';
+
+  @override
+  String get activityLogNoEntries => 'Aucun événement dans le journal.';
+
+  @override
+  String get activityLogFiltersTitle => 'Filtres';
+
+  @override
+  String get activityLogFilterDatesLabel => 'Dates';
 
   @override
   String get activityLogFilterInitiatorLabel => 'Initiateur';
@@ -733,6 +742,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get activityLogFilterInitiatorContact => 'Contact';
+
+  @override
+  String get activityLogFilterEmitterLabel => 'Émetteur';
+
+  @override
+  String get activityLogFilterEmitterAll => 'Tous';
+
+  @override
+  String get activityLogFilterEmitterSystem => 'Système';
 
   @override
   String get activityLogFilterFromLabel => 'Du (date)';
