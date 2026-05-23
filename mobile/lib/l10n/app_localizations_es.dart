@@ -1123,6 +1123,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get housingInviteSunburstMonthlyNormalizedFootnote =>
+      'Importe mensualizado (equivalente a 30 días).';
+
+  @override
   String housingInviteSunburstLegendYouParticipation(
     String participantName,
     String userAmount,

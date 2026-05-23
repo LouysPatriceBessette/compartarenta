@@ -443,6 +443,7 @@
       "pct": { "type": "String" }
     }
   },
+  "housingInviteSunburstMonthlyNormalizedFootnote": "Amount monthlyized (30-day equivalent).",
   "housingInviteSunburstLegendYouParticipation": "{participantName}'s share: {userAmount}/{totalAmount} ({pct}%)",
   "@housingInviteSunburstLegendYouParticipation": {
     "placeholders": {

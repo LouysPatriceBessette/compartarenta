@@ -3165,7 +3165,7 @@ class _SummaryViewState extends State<_SummaryView> {
 
         var planMonthlyTotalMinor = 0;
         for (final line in lines) {
-          planMonthlyTotalMinor += PlanProjection.unitMinor(line);
+          planMonthlyTotalMinor += PlanProjection.monthlyChartUnitMinor(line);
         }
 
         final sortedLines = [...lines]
@@ -3181,7 +3181,7 @@ class _SummaryViewState extends State<_SummaryView> {
           if (idx < 0) return 0;
           var participantMonthlyMinor = 0;
           for (final line in sortedLines) {
-            final basis = PlanProjection.unitMinor(line);
+            final basis = PlanProjection.monthlyChartUnitMinor(line);
             if (basis <= 0) continue;
             final ws = <int>[
               for (final rid in rosterIds)
@@ -3324,6 +3324,8 @@ class _SummaryViewState extends State<_SummaryView> {
                           child: Text(l10n.housingInviteViewExpensesDetail),
                         ),
                       ),
+                      if (sunburstSlicesHaveMonthlyNormalized(sunSlices))
+                        HousingInviteSunburstMonthlyFootnote(l10n: l10n),
                     ],
                     if (sortedLines.isEmpty)
                       Padding(

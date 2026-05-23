@@ -643,6 +643,8 @@ class _HousingInviteProposalScreenState
                           child: Text(l10n.housingInviteViewExpensesDetail),
                         ),
                       ),
+                      if (sunburstSlicesHaveMonthlyNormalized(sunSlices))
+                        HousingInviteSunburstMonthlyFootnote(l10n: l10n),
                     ],
                     const SizedBox(height: 20),
                     HousingAgreementRulesReadOnlyCard(
@@ -719,7 +721,7 @@ class _HousingInviteProposalScreenState
                         ),
                       ],
                     ],
-                    SizedBox(height: 24 + MediaQuery.paddingOf(context).bottom),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),

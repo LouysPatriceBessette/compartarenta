@@ -17,6 +17,8 @@ class InviteSunburstSlice {
     required this.userMinor,
     required this.baseColor,
     required this.currency,
+    this.monthlyNormalized = false,
+    this.recurrencePeriodDays,
   });
 
   final String label;
@@ -27,8 +29,52 @@ class InviteSunburstSlice {
   /// ISO currency code used for legend formatting (plan or user preference).
   final String currency;
 
+  /// True when [totalMinor] was scaled to a 30-day month for chart display.
+  final bool monthlyNormalized;
+
+  /// Source recurrence period in days when [monthlyNormalized] is true.
+  final int? recurrencePeriodDays;
+
   double get userFraction =>
       totalMinor <= 0 ? 0.0 : (userMinor / totalMinor).clamp(0.0, 1.0);
+}
+
+/// True when at least one slice uses [InviteSunburstSlice.monthlyNormalized].
+bool sunburstSlicesHaveMonthlyNormalized(List<InviteSunburstSlice> slices) =>
+    slices.any((s) => s.monthlyNormalized);
+
+/// Footnote for the red asterisk on monthly-normalized legend lines.
+class HousingInviteSunburstMonthlyFootnote extends StatelessWidget {
+  const HousingInviteSunburstMonthlyFootnote({super.key, required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final base = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Text.rich(
+        TextSpan(
+          style: base,
+          children: [
+            TextSpan(
+              text: '* ',
+              style: base?.copyWith(
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextSpan(text: l10n.housingInviteSunburstMonthlyNormalizedFootnote),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 String _expenseSliceLabel(PlanLine line, AppLocalizations l10n) {
@@ -78,8 +124,12 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   final out = <InviteSunburstSlice>[];
 
   for (final line in sorted) {
-    final b = PlanProjection.unitMinor(line);
+    final b = PlanProjection.monthlyChartUnitMinor(line);
     if (b <= 0) continue;
+    final normalized = PlanProjection.isMonthlyChartNormalized(line);
+    final periodDays = normalized
+        ? PlanProjection.recurrencePeriodDays(line)
+        : null;
     final wRow = <int>[
       for (final pid in participantIdsOrdered)
         _weightLine(ratios, line.id, pid),
@@ -94,6 +144,8 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
         userMinor: userPart,
         baseColor: nextColor(),
         currency: displayCurrency,
+        monthlyNormalized: normalized,
+        recurrencePeriodDays: periodDays,
       ),
     );
   }
@@ -238,7 +290,9 @@ class _InviteSunburstPainter extends CustomPainter {
       if (a.label != b.label ||
           a.totalMinor != b.totalMinor ||
           a.userMinor != b.userMinor ||
-          a.baseColor != b.baseColor) {
+          a.baseColor != b.baseColor ||
+          a.monthlyNormalized != b.monthlyNormalized ||
+          a.recurrencePeriodDays != b.recurrencePeriodDays) {
         return true;
       }
     }
@@ -383,15 +437,37 @@ class HousingInviteSunburstChart extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        l10n.housingInviteSunburstLegendYouParticipation(
-                          participantName,
-                          formatMinorAsMoney(context, s.userMinor, s.currency),
-                          formatMinorAsMoney(context, s.totalMinor, s.currency),
-                          userPctNoSuffix,
-                        ),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Text.rich(
+                        TextSpan(
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          children: [
+                            if (s.monthlyNormalized)
+                              TextSpan(
+                                text: '* ',
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            TextSpan(
+                              text: l10n.housingInviteSunburstLegendYouParticipation(
+                                participantName,
+                                formatMinorAsMoney(
+                                  context,
+                                  s.userMinor,
+                                  s.currency,
+                                ),
+                                formatMinorAsMoney(
+                                  context,
+                                  s.totalMinor,
+                                  s.currency,
+                                ),
+                                userPctNoSuffix,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

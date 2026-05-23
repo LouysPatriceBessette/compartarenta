@@ -2044,6 +2044,12 @@ abstract class AppLocalizations {
   /// **'{name} - {pct}% of the agreement'**
   String housingInviteSunburstLegendAgreementShare(String name, String pct);
 
+  /// No description provided for @housingInviteSunburstMonthlyNormalizedFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount monthlyized (30-day equivalent).'**
+  String get housingInviteSunburstMonthlyNormalizedFootnote;
+
   /// No description provided for @housingInviteSunburstLegendYouParticipation.
   ///
   /// In en, this message translates to:

@@ -1,4 +1,5 @@
 import 'package:compartarenta/db/app_database.dart';
+import 'package:compartarenta/housing/expense_form/expense_recurrence_spec.dart';
 import 'package:compartarenta/housing/projection/plan_projection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,6 +19,64 @@ void main() {
         DateTime.utc(2026, 6, 1),
       );
       expect(months, 2);
+    });
+  });
+
+  group('PlanProjection.monthlyChartUnitMinor', () {
+    PlanLine everyNDays({
+      required int amountMinor,
+      required int n,
+    }) {
+      return PlanLine(
+        id: 'l-n',
+        planId: 'p1',
+        isRecurring: true,
+        title: 'Maint',
+        currency: 'CAD',
+        amountUsesRange: false,
+        amountMinor: amountMinor,
+        minAmountMinor: null,
+        maxAmountMinor: null,
+        description: '',
+        cadence: 'monthly',
+        recurrenceDayOfMonth: null,
+        sortOrder: 0,
+        groupId: null,
+        amountIsBudgetCap: true,
+        paymentResponsibleParticipantId: null,
+        recurrenceSpecJson: ExpenseRecurrenceSpec.encode(
+          EveryNDaysRecurrence(n: n, anchorIso: '2026-05-01'),
+        ),
+        ratioTemplateId: null,
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+    }
+
+    test('period 61 days is normalized to 30-day month', () {
+      final line = everyNDays(amountMinor: 7500, n: 61);
+      expect(PlanProjection.monthlyChartUnitMinor(line), 3689);
+      expect(PlanProjection.isMonthlyChartNormalized(line), isTrue);
+    });
+
+    test('period 92 days is normalized to 30-day month', () {
+      final line = everyNDays(amountMinor: 10000, n: 92);
+      expect(PlanProjection.monthlyChartUnitMinor(line), 3261);
+    });
+
+    test('period 30 days is left unchanged', () {
+      final line = everyNDays(amountMinor: 7500, n: 30);
+      expect(PlanProjection.monthlyChartUnitMinor(line), 7500);
+      expect(PlanProjection.isMonthlyChartNormalized(line), isFalse);
+    });
+
+    test('period 28 days is left unchanged', () {
+      final line = everyNDays(amountMinor: 7500, n: 28);
+      expect(PlanProjection.monthlyChartUnitMinor(line), 7500);
+    });
+
+    test('period 7 days is normalized upward', () {
+      final line = everyNDays(amountMinor: 700, n: 7);
+      expect(PlanProjection.monthlyChartUnitMinor(line), 3000);
     });
   });
 
