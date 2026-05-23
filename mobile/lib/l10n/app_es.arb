@@ -136,6 +136,15 @@
   "housingQuietHoursAbsolute": "Silencio absoluto",
   "housingQuietHoursModerate": "Silencio moderado",
   "housingQuietHoursNoneThisDay": "Sin horario",
+  "housingQuietHoursCopyDayTooltip": "Copiar este día a otros días",
+  "housingQuietHoursCopyDayDialogMessage": "¿Copiar el horario del día {sourceDay} a qué otros días?",
+  "@housingQuietHoursCopyDayDialogMessage": {
+    "placeholders": {
+      "sourceDay": {
+        "type": "String"
+      }
+    }
+  },
   "housingAgreementRuleEarlyWithdrawalTitle": "Retirada anticipada",
   "housingAgreementRuleBuildingTitle": "Normas del edificio / vivienda",
   "housingAgreementRuleBuildingHint": "Sugerencias que puedes copiar o adaptar:\n• No fumadores\n• Sin mascotas\n• Nada en los pasillos\n• …",

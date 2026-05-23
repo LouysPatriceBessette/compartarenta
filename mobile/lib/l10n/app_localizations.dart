@@ -838,6 +838,18 @@ abstract class AppLocalizations {
   /// **'No quiet hours'**
   String get housingQuietHoursNoneThisDay;
 
+  /// No description provided for @housingQuietHoursCopyDayTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this day to other days'**
+  String get housingQuietHoursCopyDayTooltip;
+
+  /// No description provided for @housingQuietHoursCopyDayDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the schedule for {sourceDay} to which other days?'**
+  String housingQuietHoursCopyDayDialogMessage(String sourceDay);
+
   /// No description provided for @housingAgreementRuleEarlyWithdrawalTitle.
   ///
   /// In en, this message translates to:

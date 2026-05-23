@@ -1631,14 +1631,64 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                         final line = lines[index];
                         return Card(
                           key: ValueKey(line.id),
-                          child: ListTile(
-                              title: Text(line.title),
-                              subtitle: line.amountIsBudgetCap
-                                  ? Text(l10n.housingExpenseAmountBudgetMax)
-                                  : Text(l10n.housingExpenseAmountDetermined),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
+                          child: InkWell(
+                            onTap: () async {
+                              await _editLine(line);
+                              if (mounted) setState(() => _linesEpoch++);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                4,
+                                8,
+                                8,
+                                8,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
+                                  ReorderableDragStartListener(
+                                    index: index,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsetsDirectional.fromSTEB(
+                                        4,
+                                        0,
+                                        8,
+                                        0,
+                                      ),
+                                      child: Icon(
+                                        Icons.drag_indicator,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          line.title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                        ),
+                                        Text(
+                                          line.amountIsBudgetCap
+                                              ? l10n
+                                                  .housingExpenseAmountBudgetMax
+                                              : l10n
+                                                  .housingExpenseAmountDetermined,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Text(
                                     formatMinorAsMoney(
                                       context,
@@ -1648,19 +1698,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                         lines,
                                       ),
                                     ),
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
-                                  ),
-                                  ReorderableDragStartListener(
-                                    index: index,
-                                    child: const Padding(
-                                      padding: EdgeInsetsDirectional.only(
-                                        start: 4,
-                                        end: 4,
-                                      ),
-                                      child: Icon(Icons.drag_handle),
-                                    ),
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall,
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline),
@@ -1685,11 +1724,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                   ),
                                 ],
                               ),
-                              onTap: () async {
-                                await _editLine(line);
-                                if (mounted) setState(() => _linesEpoch++);
-                              },
                             ),
+                          ),
                         );
                       },
                     ),
@@ -1961,6 +1997,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   Widget _agreementRulesActionRow({
     required AppLocalizations l10n,
+    bool showPaste = false,
+    bool pasteEnabled = false,
+    VoidCallback? onPaste,
+    String? pasteTooltip,
     required bool pencilEnabled,
     required VoidCallback? onPencil,
     required bool trashEnabled,
@@ -1972,6 +2012,17 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (showPaste)
+            IconButton(
+              tooltip: pasteTooltip ?? l10n.housingQuietHoursCopyDayTooltip,
+              icon: const Icon(Icons.content_paste),
+              onPressed: pasteEnabled ? onPaste : null,
+              visualDensity: VisualDensity.compact,
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 2, 4),
+              ),
+            ),
           IconButton(
             tooltip: l10n.housingAgreementRuleEdit,
             icon: const Icon(Icons.edit_outlined),
@@ -2128,6 +2179,83 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     });
   }
 
+  bool _curfewQuietGridHasEditChanges() {
+    if (!_curfewEditing || _quietGridSnapshotForEdit == null) return false;
+    return !quietHoursGridsEqual(
+      _rulesDraft.quietHalfHours,
+      _quietGridSnapshotForEdit!,
+    );
+  }
+
+  Future<void> _showCopyQuietDayDialog(AppLocalizations l10n) async {
+    final sourceUiDay = _quietUiDayIndex;
+    final sourceDayName = quietHoursUiDayDisplayName(context, sourceUiDay);
+    final selected = <int>{};
+
+    final copied = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) {
+          final targetDays = [
+            for (var i = 0; i < kQuietHoursDays; i++)
+              if (i != sourceUiDay) i,
+          ];
+          return AlertDialog(
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.housingQuietHoursCopyDayDialogMessage(sourceDayName),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final uiDay in targetDays)
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Text(quietHoursUiDayDisplayName(ctx, uiDay)),
+                      value: selected.contains(uiDay),
+                      onChanged: (v) {
+                        setLocal(() {
+                          if (v == true) {
+                            selected.add(uiDay);
+                          } else {
+                            selected.remove(uiDay);
+                          }
+                        });
+                      },
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.housingPlanCancel),
+              ),
+              FilledButton(
+                onPressed: selected.isEmpty
+                    ? null
+                    : () => Navigator.pop(ctx, true),
+                child: Text(l10n.commonCopy),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (copied != true || !mounted || selected.isEmpty) return;
+    setState(() {
+      quietHoursCopyUiDay(
+        _rulesDraft.quietHalfHours,
+        sourceUiDay,
+        selected,
+      );
+    });
+  }
+
   Widget _buildingRulesReadOnlyContent(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     final bodyStyle = Theme.of(context).textTheme.bodyMedium;
@@ -2166,6 +2294,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       expandedChildren: [
         _agreementRulesActionRow(
           l10n: l10n,
+          showPaste: true,
+          pasteEnabled: _curfewEditing && _curfewQuietGridHasEditChanges(),
+          onPaste: () => _showCopyQuietDayDialog(l10n),
+          pasteTooltip: l10n.housingQuietHoursCopyDayTooltip,
           pencilEnabled: !_curfewEditing,
           onPencil: () => setState(() {
             _quietGridSnapshotForEdit = quietHoursDeepCopy(

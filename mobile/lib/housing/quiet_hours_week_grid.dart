@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Half-hour slots per day: 00:00, 00:30, …, 23:30 (48 slots).
 const int kQuietHoursSlotsPerDay = 48;
@@ -23,6 +24,29 @@ void quietHoursReplaceFrom(List<List<int>> target, List<List<int>> source) {
     for (var s = 0; s < kQuietHoursSlotsPerDay; s++) {
       target[d][s] = source[d][s].clamp(0, 2);
     }
+  }
+}
+
+bool quietHoursGridsEqual(List<List<int>> a, List<List<int>> b) {
+  for (var d = 0; d < kQuietHoursDays; d++) {
+    for (var s = 0; s < kQuietHoursSlotsPerDay; s++) {
+      if (a[d][s] != b[d][s]) return false;
+    }
+  }
+  return true;
+}
+
+/// Copies all half-hour slots from [sourceUiDay] into each [targetUiDays] column.
+void quietHoursCopyUiDay(
+  List<List<int>> grid,
+  int sourceUiDay,
+  Iterable<int> targetUiDays,
+) {
+  if (sourceUiDay < 0 || sourceUiDay >= kQuietHoursDays) return;
+  final src = grid[sourceUiDay];
+  for (final t in targetUiDays) {
+    if (t == sourceUiDay || t < 0 || t >= kQuietHoursDays) continue;
+    grid[t].setAll(0, List<int>.from(src));
   }
 }
 
@@ -138,6 +162,16 @@ String _narrowDayLetter(MaterialLocalizations mat, int calendarWeekday0Sun) {
 
 int _calendarWeekdayForUiColumn(MaterialLocalizations mat, int uiDayIndex) {
   return (mat.firstDayOfWeekIndex + uiDayIndex) % 7;
+}
+
+/// Localized weekday name for a quiet-hours UI day column (locale week start).
+String quietHoursUiDayDisplayName(BuildContext context, int uiDayIndex) {
+  final mat = MaterialLocalizations.of(context);
+  final locale = Localizations.localeOf(context);
+  final materialWeekday = _calendarWeekdayForUiColumn(mat, uiDayIndex);
+  // 2024-01-07 is a Sunday (Material weekday index 0).
+  final ref = DateTime(2024, 1, 7 + materialWeekday);
+  return DateFormat.EEEE(locale.toString()).format(ref);
 }
 
 /// [startG] global half-hour index 0..335; [lengthSlots] along the circular week.

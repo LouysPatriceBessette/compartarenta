@@ -413,6 +413,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingQuietHoursNoneThisDay => 'Aucun horaire';
 
   @override
+  String get housingQuietHoursCopyDayTooltip =>
+      'Copier cette journée vers d\'autres jours';
+
+  @override
+  String housingQuietHoursCopyDayDialogMessage(String sourceDay) {
+    return 'Copier l\'horaire de la journée de $sourceDay sur quels autres jours ?';
+  }
+
+  @override
   String get housingAgreementRuleEarlyWithdrawalTitle => 'Retrait anticipé';
 
   @override

@@ -136,6 +136,15 @@
   "housingQuietHoursAbsolute": "Absolute quiet",
   "housingQuietHoursModerate": "Moderate quiet",
   "housingQuietHoursNoneThisDay": "No quiet hours",
+  "housingQuietHoursCopyDayTooltip": "Copy this day to other days",
+  "housingQuietHoursCopyDayDialogMessage": "Copy the schedule for {sourceDay} to which other days?",
+  "@housingQuietHoursCopyDayDialogMessage": {
+    "placeholders": {
+      "sourceDay": {
+        "type": "String"
+      }
+    }
+  },
   "housingAgreementRuleEarlyWithdrawalTitle": "Early withdrawal",
   "housingAgreementRuleBuildingTitle": "Building / household rules",
   "housingAgreementRuleBuildingHint": "Suggested topics you can copy or adapt:\n• Non-smoking\n• No pets\n• Nothing stored in hallways\n• …",
