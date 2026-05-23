@@ -26,6 +26,7 @@ import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
+import '../../util/week_start_calendar.dart';
 import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
@@ -1431,7 +1432,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       listenable: widget.prefs,
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
-        final fmt = widget.prefs.dateFormat;
+        final fmt = effectiveDateFormat(widget.prefs);
         final durationText = formatContractCalendarDuration(
           _periodStart,
           _periodEnd,
@@ -1456,8 +1457,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     onTap: () async {
-                      final picked = await showDatePicker(
+                      final picked = await showAppDatePicker(
                         context: context,
+                        prefs: widget.prefs,
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2100),
                         initialDate: (_periodStart ?? DateTime.now()).toLocal(),
@@ -1487,8 +1489,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     onTap: () async {
-                      final picked = await showDatePicker(
+                      final picked = await showAppDatePicker(
                         context: context,
+                        prefs: widget.prefs,
                         firstDate: _endDatePickerFirstDate(),
                         lastDate: DateTime(2100),
                         initialDate: _endDatePickerInitialDate(),
@@ -1761,9 +1764,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           periodStart: agr.periodStart,
           periodEnd: agr.periodEnd,
           defaultCurrency: currency,
-          dateFormat: widget.prefs.dateFormat.trim().isEmpty
-              ? 'YYYY-MM-DD'
-              : widget.prefs.dateFormat.trim(),
+          dateFormat: effectiveDateFormat(widget.prefs),
+          prefs: widget.prefs,
           prefsForBackup: HousingPlanDraftBackup.appliesToPlan(_planId)
               ? widget.prefs
               : null,
@@ -2326,6 +2328,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           labelAbsolute: l10n.housingQuietHoursAbsolute,
           labelModerate: l10n.housingQuietHoursModerate,
           emptyDayLabel: l10n.housingQuietHoursNoneThisDay,
+          firstDayOfWeekIndex: widget.prefs.resolvedFirstDayOfWeekIndex(
+            Localizations.localeOf(context),
+          ),
         ),
         if (_curfewEditing)
           Padding(
@@ -3198,9 +3203,9 @@ class _SummaryViewState extends State<_SummaryView> {
                 displayCurrency: displayCurrency,
               );
 
-        const dateIso = 'YYYY-MM-DD';
+        final dateFmt = effectiveDateFormat(widget.prefs);
         final dateRangeLine =
-            '${formatPreferenceDate(agr.periodStart, dateIso)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateIso)}';
+            '${formatPreferenceDate(agr.periodStart, dateFmt)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateFmt)}';
 
         return Column(
           children: [
@@ -3291,9 +3296,7 @@ class _SummaryViewState extends State<_SummaryView> {
                               ? null
                               : () {
                                   final dateFmt =
-                                      widget.prefs.dateFormat.trim().isEmpty
-                                      ? 'YYYY-MM-DD'
-                                      : widget.prefs.dateFormat.trim();
+                                      effectiveDateFormat(widget.prefs);
                                   Navigator.of(context).push(
                                     MaterialPageRoute<void>(
                                       builder: (context) =>
@@ -3337,6 +3340,9 @@ class _SummaryViewState extends State<_SummaryView> {
                       ),
                       roster: roster,
                       displayCurrency: displayCurrency,
+                      firstDayOfWeekIndex: widget.prefs.resolvedFirstDayOfWeekIndex(
+                        Localizations.localeOf(context),
+                      ),
                     ),
                     const SizedBox(height: 20),
                   for (var i = 0; i < roster.length; i++) ...[

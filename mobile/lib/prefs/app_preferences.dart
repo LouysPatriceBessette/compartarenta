@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
 
@@ -24,6 +27,8 @@ class AppPreferences extends ChangeNotifier {
   static const _kDateFormat = 'prefs.dateFormat';
   static const _kDistanceUnit = 'prefs.distanceUnit';
   static const _kTimeZonePolicy = 'prefs.timeZonePolicy';
+  static const _kTimeZoneId = 'prefs.timeZoneId';
+  static const _kWeekStart = 'prefs.weekStart';
   static const _kLanguageCode = 'prefs.languageCode';
 
   static const _kNotificationsEnabled = 'notifications.enabled';
@@ -149,6 +154,35 @@ class AppPreferences extends ChangeNotifier {
   Future<void> setTimeZonePolicy(String value) async {
     await _prefs.setString(_kTimeZonePolicy, value);
     notifyListeners();
+  }
+
+  /// IANA id when [timeZonePolicy] is explicit (e.g. `America/Toronto`).
+  String get timeZoneId => _prefs.getString(_kTimeZoneId) ?? '';
+
+  Future<void> setTimeZoneId(String? ianaId) async {
+    if (ianaId == null || ianaId.isEmpty) {
+      await _prefs.remove(_kTimeZoneId);
+    } else {
+      await _prefs.setString(_kTimeZoneId, ianaId);
+    }
+    notifyListeners();
+  }
+
+  WeekStart? get weekStart => weekStartFromStored(_prefs.getString(_kWeekStart));
+
+  Future<void> setWeekStart(WeekStart value) async {
+    await _prefs.setString(_kWeekStart, value.name);
+    notifyListeners();
+  }
+
+  /// Stored week start, or [defaultWeekStartForLocale] when unset.
+  WeekStart resolveWeekStart(Locale locale) {
+    return weekStart ?? defaultWeekStartForLocale(locale);
+  }
+
+  /// [MaterialLocalizations.firstDayOfWeekIndex] for week grids and pickers.
+  int resolvedFirstDayOfWeekIndex(Locale locale) {
+    return firstDayOfWeekIndexFor(resolveWeekStart(locale));
   }
 
   String? get languageCode => _prefs.getString(_kLanguageCode);
@@ -320,6 +354,8 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kDateFormat);
     await _prefs.remove(_kDistanceUnit);
     await _prefs.remove(_kTimeZonePolicy);
+    await _prefs.remove(_kTimeZoneId);
+    await _prefs.remove(_kWeekStart);
     await _prefs.remove(_kLanguageCode);
 
     await _prefs.remove(_kNotificationsEnabled);

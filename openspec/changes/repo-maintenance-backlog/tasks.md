@@ -7,8 +7,6 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 - [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
 
-- [ ] **User units + calendar week start** — see `openspec/changes/user-units-and-calendar-preferences/` (editable date/distance/TZ in settings, week starts Sunday/Monday, currency edit TBD).
-
 - [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  
   Wire `ExpensePlanLineForm` on accepted plans; budget-cap threshold confirmation when a live expense exceeds the monthly max; notifications (default **All**: every participant gets before-date + overdue reminders; single designated payer per product annex).  
   Deferred from `housing-unified-expense-entry` pass 5 / `tasks.md` § Deferred.  
@@ -21,6 +19,8 @@ Deferred engineering chores. Pick these up when convenient; they are
   **Scope:** `mobile/` + workspace `pubspec.lock` only.
 
 ## Done
+
+- [x] **User units + calendar week start** — `openspec/changes/user-units-and-calendar-preferences/`: editable date format and distance in Settings → Units; week start (Sunday/Monday) in onboarding and settings; `showAppDatePicker` / `showAppDateRangePicker`; quiet-hours and car availability week columns use `prefs.resolvedFirstDayOfWeekIndex`. Currency and time-zone policy edit remain TBD (2026-05-22).
 
 - [x] **Mobile dependencies — phase 2 (notifications + permissions).**  
   Bumped `flutter_local_notifications` ^21.0.0 and `permission_handler` ^12.0.1.

@@ -102,9 +102,12 @@
   "prefsDistanceUnitLabel": "Unité de distance",
   "prefsDistanceUnitKm": "Kilomètres (km)",
   "prefsDistanceUnitMiles": "Miles",
+  "prefsWeekStartLabel": "Début de la semaine",
+  "prefsWeekStartSunday": "Dimanche",
+  "prefsWeekStartMonday": "Lundi",
   "prefsTimeZoneLabel": "Fuseau horaire",
   "prefsTimeZoneDevice": "Utiliser l’heure locale de l’appareil",
-  "prefsTimeZoneExplicit": "Choisir un fuseau horaire (plus tard)",
+  "prefsTimeZoneSearchHint": "Rechercher un fuseau horaire",
 
   "errorSomethingWentWrongTitle": "Une erreur est survenue",
   "errorSomethingWentWrongBody": "Veuillez réessayer. Si le problème persiste, contactez le support.",

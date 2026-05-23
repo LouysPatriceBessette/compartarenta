@@ -102,9 +102,12 @@
   "prefsDistanceUnitLabel": "Unidad de distancia",
   "prefsDistanceUnitKm": "Kilómetros (km)",
   "prefsDistanceUnitMiles": "Millas",
+  "prefsWeekStartLabel": "Inicio de la semana",
+  "prefsWeekStartSunday": "Domingo",
+  "prefsWeekStartMonday": "Lunes",
   "prefsTimeZoneLabel": "Zona horaria",
   "prefsTimeZoneDevice": "Usar hora local del dispositivo",
-  "prefsTimeZoneExplicit": "Elegir una zona horaria (más tarde)",
+  "prefsTimeZoneSearchHint": "Buscar zona horaria",
 
   "errorSomethingWentWrongTitle": "Algo salió mal",
   "errorSomethingWentWrongBody": "Por favor, inténtalo de nuevo. Si continúa, contacta con soporte.",

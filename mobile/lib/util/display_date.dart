@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../prefs/app_preferences.dart';
+
+/// User date-format preference, or ISO-style default when unset.
+String effectiveDateFormat(AppPreferences prefs) {
+  final raw = prefs.dateFormat.trim();
+  return raw.isEmpty ? 'YYYY-MM-DD' : raw;
+}
 
 /// Formats a stored instant as a **calendar date** in the user's locale,
 /// following the same pattern strings as onboarding (`YYYY-MM-DD`, etc.).

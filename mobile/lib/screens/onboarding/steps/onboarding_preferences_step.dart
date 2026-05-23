@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../prefs/app_preferences.dart';
+import '../../../prefs/regional_unit_choices.dart';
+import '../../../data/supported_time_zones.dart';
+import '../../../prefs/time_zone_preference_field.dart';
+import '../../../prefs/week_start.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../data/supported_currencies.dart';
 import '../../../widgets/supported_currency_picker_sheet.dart';
@@ -25,13 +29,9 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
   late String _dateFormat = widget.prefs.dateFormat;
   late DistanceUnit _distanceUnit =
       widget.prefs.distanceUnit ?? DistanceUnit.km;
-  late String _timeZonePolicy = widget.prefs.timeZonePolicy;
-
-  static const _dateFormats = <String>[
-    'YYYY-MM-DD',
-    'DD/MM/YYYY',
-    'MM/DD/YYYY',
-  ];
+  late bool _useDeviceTimeZone = true;
+  late String _timeZoneIanaId = kDefaultExplicitTimeZoneId;
+  late WeekStart _weekStart = WeekStart.monday;
 
   late final TextEditingController _currencyField = TextEditingController(
     text: _currencyLine(),
@@ -47,6 +47,17 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
   void initState() {
     super.initState();
     _currencyField.text = _currencyLine();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _weekStart = widget.prefs.weekStart ??
+        defaultWeekStartForLocale(Localizations.localeOf(context));
+    _useDeviceTimeZone = widget.prefs.usesDeviceTimeZone;
+    _timeZoneIanaId = widget.prefs.timeZoneId.isEmpty
+        ? kDefaultExplicitTimeZoneId
+        : widget.prefs.timeZoneId;
   }
 
   @override
@@ -104,11 +115,11 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      initialValue: _dateFormat.isEmpty ? null : _dateFormat,
+                      value: _dateFormat.isEmpty ? null : _dateFormat,
                       decoration: InputDecoration(
                         labelText: l10n.prefsDateFormatLabel,
                       ),
-                      items: _dateFormats
+                      items: kPreferenceDateFormats
                           .map(
                             (f) => DropdownMenuItem(value: f, child: Text(f)),
                           )
@@ -119,7 +130,7 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<DistanceUnit>(
                       isExpanded: true,
-                      initialValue: _distanceUnit,
+                      value: _distanceUnit,
                       decoration: InputDecoration(
                         labelText: l10n.prefsDistanceUnitLabel,
                       ),
@@ -144,30 +155,38 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      initialValue: _timeZonePolicy,
-                      decoration: InputDecoration(
-                        labelText: l10n.prefsTimeZoneLabel,
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'device',
-                          child: Text(
-                            l10n.prefsTimeZoneDevice,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    TimeZonePreferenceField(
+                      useDevice: _useDeviceTimeZone,
+                      ianaId: _timeZoneIanaId,
+                      onSelected: ({required useDevice, required ianaId}) {
+                        setState(() {
+                          _useDeviceTimeZone = useDevice;
+                          _timeZoneIanaId = ianaId;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.prefsWeekStartLabel,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    SegmentedButton<WeekStart>(
+                      segments: [
+                        ButtonSegment(
+                          value: WeekStart.sunday,
+                          label: Text(l10n.prefsWeekStartSunday),
                         ),
-                        DropdownMenuItem(
-                          value: 'explicit',
-                          child: Text(
-                            l10n.prefsTimeZoneExplicit,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        ButtonSegment(
+                          value: WeekStart.monday,
+                          label: Text(l10n.prefsWeekStartMonday),
                         ),
                       ],
-                      onChanged: (value) =>
-                          setState(() => _timeZonePolicy = value ?? 'device'),
+                      selected: {_weekStart},
+                      onSelectionChanged: (selected) {
+                        if (selected.isEmpty) return;
+                        setState(() => _weekStart = selected.first);
+                      },
                     ),
                     const Spacer(),
                     const SizedBox(height: 16),
@@ -177,9 +196,14 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                               await widget.prefs.setCurrency(_currency);
                               await widget.prefs.setDateFormat(_dateFormat);
                               await widget.prefs.setDistanceUnit(_distanceUnit);
-                              await widget.prefs.setTimeZonePolicy(
-                                _timeZonePolicy,
-                              );
+                              await widget.prefs.setWeekStart(_weekStart);
+                              if (_useDeviceTimeZone) {
+                                await widget.prefs.setTimeZoneToDevice();
+                              } else {
+                                await widget.prefs.setTimeZoneExplicit(
+                                  _timeZoneIanaId,
+                                );
+                              }
                               widget.onFinish();
                             }
                           : null,

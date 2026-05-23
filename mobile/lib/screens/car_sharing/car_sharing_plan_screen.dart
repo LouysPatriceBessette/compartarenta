@@ -540,6 +540,9 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
           grid: _draft.availabilityHalfHours,
           uiSelectedDayIndex: _availabilityDayIndex,
           onSelectDay: (i) => setState(() => _availabilityDayIndex = i),
+          firstDayOfWeekIndex: widget.prefs.resolvedFirstDayOfWeekIndex(
+            Localizations.localeOf(context),
+          ),
           onToggleCell: (day, slot) {
             setState(() {
               final v = _draft.availabilityHalfHours[day][slot];

@@ -12,9 +12,6 @@ String _narrowDayLetter(MaterialLocalizations mat, int calendarWeekday0Sun) {
   return mat.narrowWeekdays[calendarWeekday0Sun % 7];
 }
 
-int _calendarWeekdayForUiColumn(MaterialLocalizations mat, int uiDayIndex) {
-  return (mat.firstDayOfWeekIndex + uiDayIndex) % 7;
-}
 
 /// Half-hour week grid: tap toggles between 0 (owner use) and 1 (offered to co-sharers).
 class BinaryAvailabilityWeekEditor extends StatelessWidget {
@@ -26,6 +23,7 @@ class BinaryAvailabilityWeekEditor extends StatelessWidget {
     required this.onToggleCell,
     required this.labelAvailable,
     required this.labelOwnerOnly,
+    required this.firstDayOfWeekIndex,
     this.rowHeight = 22,
   });
 
@@ -35,6 +33,7 @@ class BinaryAvailabilityWeekEditor extends StatelessWidget {
   final void Function(int uiDay, int slot) onToggleCell;
   final String labelAvailable;
   final String labelOwnerOnly;
+  final int firstDayOfWeekIndex;
   final double rowHeight;
 
   static const double _timeColWidth = 52;
@@ -45,7 +44,10 @@ class BinaryAvailabilityWeekEditor extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final dayLetters = List.generate(
       kQuietHoursDays,
-      (i) => _narrowDayLetter(mat, _calendarWeekdayForUiColumn(mat, i)),
+      (i) => _narrowDayLetter(
+        mat,
+        quietHoursCalendarWeekdayForUiColumn(firstDayOfWeekIndex, i),
+      ),
     );
 
     return Column(

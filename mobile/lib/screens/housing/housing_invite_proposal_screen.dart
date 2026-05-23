@@ -463,9 +463,9 @@ class _HousingInviteProposalScreenState
                 ),
               ),
             );
-          const dateIso = 'YYYY-MM-DD';
+          final dateFmt = effectiveDateFormat(widget.prefs);
           final dateRangeLine =
-              '${formatPreferenceDate(agr.periodStart, dateIso)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateIso)}';
+              '${formatPreferenceDate(agr.periodStart, dateFmt)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateFmt)}';
           final sunSlices = buildInviteSunburstSlices(
             lines: lines,
             groups: groups,
@@ -558,9 +558,7 @@ class _HousingInviteProposalScreenState
                       Center(
                         child: FilledButton.tonal(
                           onPressed: () {
-                            final dateFmt = widget.prefs.dateFormat.trim().isEmpty
-                                ? 'YYYY-MM-DD'
-                                : widget.prefs.dateFormat.trim();
+                            final dateFmt = effectiveDateFormat(widget.prefs);
                             final currency = displayCurrencyCodeForPlan(
                               widget.prefs,
                               lines,
@@ -593,6 +591,9 @@ class _HousingInviteProposalScreenState
                       displayCurrency: displayCurrencyCodeForPlan(
                         widget.prefs,
                         lines,
+                      ),
+                      firstDayOfWeekIndex: widget.prefs.resolvedFirstDayOfWeekIndex(
+                        Localizations.localeOf(context),
                       ),
                     ),
                     if (!isAuthor && canRespond && !hasActivePlan) ...[

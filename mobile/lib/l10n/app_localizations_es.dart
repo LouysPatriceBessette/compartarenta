@@ -329,13 +329,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get prefsDistanceUnitMiles => 'Millas';
 
   @override
+  String get prefsWeekStartLabel => 'Inicio de la semana';
+
+  @override
+  String get prefsWeekStartSunday => 'Domingo';
+
+  @override
+  String get prefsWeekStartMonday => 'Lunes';
+
+  @override
   String get prefsTimeZoneLabel => 'Zona horaria';
 
   @override
   String get prefsTimeZoneDevice => 'Usar hora local del dispositivo';
 
   @override
-  String get prefsTimeZoneExplicit => 'Elegir una zona horaria (más tarde)';
+  String get prefsTimeZoneSearchHint => 'Buscar zona horaria';
 
   @override
   String get errorSomethingWentWrongTitle => 'Algo salió mal';

@@ -160,15 +160,19 @@ String _narrowDayLetter(MaterialLocalizations mat, int calendarWeekday0Sun) {
   return mat.narrowWeekdays[calendarWeekday0Sun % 7];
 }
 
-int _calendarWeekdayForUiColumn(MaterialLocalizations mat, int uiDayIndex) {
-  return (mat.firstDayOfWeekIndex + uiDayIndex) % 7;
+int quietHoursCalendarWeekdayForUiColumn(
+  int firstDayOfWeekIndex,
+  int uiDayIndex,
+) {
+  return (firstDayOfWeekIndex + uiDayIndex) % 7;
 }
 
 /// Localized weekday name for a quiet-hours UI day column (locale week start).
 String quietHoursUiDayDisplayName(BuildContext context, int uiDayIndex) {
   final mat = MaterialLocalizations.of(context);
   final locale = Localizations.localeOf(context);
-  final materialWeekday = _calendarWeekdayForUiColumn(mat, uiDayIndex);
+  final materialWeekday =
+      quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, uiDayIndex);
   // 2024-01-07 is a Sunday (Material weekday index 0).
   final ref = DateTime(2024, 1, 7 + materialWeekday);
   return DateFormat.EEEE(locale.toString()).format(ref);
@@ -189,8 +193,8 @@ String _formatArcRangeLabel(MaterialLocalizations mat, int startG, int lengthSlo
 
   final startMin = startSlot * 30;
   final endMinInclusive = (lastSlot + 1) * 30 - 1;
-  final d0 = _calendarWeekdayForUiColumn(mat, startUi);
-  final d1 = _calendarWeekdayForUiColumn(mat, lastUi);
+  final d0 = quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, startUi);
+  final d1 = quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, lastUi);
   final l0 = _narrowDayLetter(mat, d0);
   final l1 = _narrowDayLetter(mat, d1);
   final t0 = _formatHm24(startMin);
@@ -304,6 +308,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
     required this.labelAbsolute,
     required this.labelModerate,
     required this.emptyDayLabel,
+    required this.firstDayOfWeekIndex,
     this.rowHeight = 22,
   });
 
@@ -316,6 +321,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
   final String labelModerate;
   /// Shown when the selected day has no absolute or moderate quiet periods (view mode).
   final String emptyDayLabel;
+  final int firstDayOfWeekIndex;
   final double rowHeight;
 
   static const double _timeColWidth = 52;
@@ -665,7 +671,10 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
     final mat = MaterialLocalizations.of(context);
     final dayLetters = List.generate(
       kQuietHoursDays,
-      (i) => _narrowDayLetter(mat, _calendarWeekdayForUiColumn(mat, i)),
+      (i) => _narrowDayLetter(
+        mat,
+        quietHoursCalendarWeekdayForUiColumn(firstDayOfWeekIndex, i),
+      ),
     );
 
     final segments = quietHoursSegmentsForUiDay(

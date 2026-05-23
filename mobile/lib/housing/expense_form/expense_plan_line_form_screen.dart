@@ -23,6 +23,7 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
     required this.periodEnd,
     required this.defaultCurrency,
     required this.dateFormat,
+    required this.prefs,
     this.prefsForBackup,
     this.existingLineId,
     this.initialSortOrder = 0,
@@ -35,6 +36,7 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
   final DateTime periodEnd;
   final String defaultCurrency;
   final String dateFormat;
+  final AppPreferences prefs;
   final AppPreferences? prefsForBackup;
   final String? existingLineId;
   final int initialSortOrder;
@@ -266,6 +268,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             onRecurrenceTap: () async {
               final spec = await showExpenseRecurrenceFlow(
                 context: context,
+                prefs: widget.prefs,
                 periodStart: widget.periodStart,
                 periodEnd: widget.periodEnd,
                 initial: _recurrence,

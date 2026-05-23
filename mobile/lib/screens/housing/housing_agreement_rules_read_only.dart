@@ -17,12 +17,14 @@ class HousingAgreementRulesReadOnlyCard extends StatefulWidget {
     required this.rules,
     required this.roster,
     required this.displayCurrency,
+    required this.firstDayOfWeekIndex,
   });
 
   final Agreement agr;
   final AgreementRulesDraft rules;
   final List<Participant> roster;
   final String displayCurrency;
+  final int firstDayOfWeekIndex;
 
   @override
   State<HousingAgreementRulesReadOnlyCard> createState() =>
@@ -84,6 +86,7 @@ class _HousingAgreementRulesReadOnlyCardState
             labelAbsolute: l10n.housingQuietHoursAbsolute,
             labelModerate: l10n.housingQuietHoursModerate,
             emptyDayLabel: l10n.housingQuietHoursNoneThisDay,
+            firstDayOfWeekIndex: widget.firstDayOfWeekIndex,
           ),
           if (!widget.rules.curfewEnabled)
             Padding(

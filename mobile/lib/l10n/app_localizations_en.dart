@@ -327,13 +327,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prefsDistanceUnitMiles => 'Miles';
 
   @override
+  String get prefsWeekStartLabel => 'Week starts on';
+
+  @override
+  String get prefsWeekStartSunday => 'Sunday';
+
+  @override
+  String get prefsWeekStartMonday => 'Monday';
+
+  @override
   String get prefsTimeZoneLabel => 'Time zone';
 
   @override
   String get prefsTimeZoneDevice => 'Use device local time';
 
   @override
-  String get prefsTimeZoneExplicit => 'Choose a specific time zone (later)';
+  String get prefsTimeZoneSearchHint => 'Search time zones';
 
   @override
   String get errorSomethingWentWrongTitle => 'Something went wrong';

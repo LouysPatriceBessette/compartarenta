@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/week_start_calendar.dart';
 import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 
@@ -9,6 +11,7 @@ import 'expense_recurrence_spec.dart';
 /// Returns `null` when the user cancels either step or does not confirm a type.
 Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
   required BuildContext context,
+  required AppPreferences prefs,
   required DateTime periodStart,
   required DateTime periodEnd,
   required ExpenseRecurrenceSpec? initial,
@@ -17,8 +20,9 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
   final l10n = AppLocalizations.of(context);
   final startLocal = DateUtils.dateOnly(periodStart.toLocal());
   final endLocal = DateUtils.dateOnly(periodEnd.toLocal());
-  final range = await showDateRangePicker(
+  final range = await showAppDateRangePicker(
     context: context,
+    prefs: prefs,
     firstDate: startLocal,
     lastDate: endLocal,
     saveText: l10n.housingExpenseRecurrenceUseRange,

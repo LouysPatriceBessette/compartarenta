@@ -11,7 +11,7 @@ import '../../util/display_date.dart';
 
 String _formatUtcDateTime(DateTime utc, AppPreferences prefs) {
   final local = utc.toLocal();
-  final fmt = prefs.dateFormat.trim().isEmpty ? 'YYYY-MM-DD' : prefs.dateFormat;
+  final fmt = effectiveDateFormat(prefs);
   final date = formatPreferenceDate(utc, fmt);
   final h = local.hour.toString().padLeft(2, '0');
   final m = local.minute.toString().padLeft(2, '0');

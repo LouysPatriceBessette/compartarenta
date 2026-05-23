@@ -102,9 +102,12 @@
   "prefsDistanceUnitLabel": "Distance unit",
   "prefsDistanceUnitKm": "Kilometers (km)",
   "prefsDistanceUnitMiles": "Miles",
+  "prefsWeekStartLabel": "Week starts on",
+  "prefsWeekStartSunday": "Sunday",
+  "prefsWeekStartMonday": "Monday",
   "prefsTimeZoneLabel": "Time zone",
   "prefsTimeZoneDevice": "Use device local time",
-  "prefsTimeZoneExplicit": "Choose a specific time zone (later)",
+  "prefsTimeZoneSearchHint": "Search time zones",
 
   "errorSomethingWentWrongTitle": "Something went wrong",
   "errorSomethingWentWrongBody": "Please try again. If this keeps happening, contact support.",

@@ -682,6 +682,24 @@ abstract class AppLocalizations {
   /// **'Miles'**
   String get prefsDistanceUnitMiles;
 
+  /// No description provided for @prefsWeekStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Week starts on'**
+  String get prefsWeekStartLabel;
+
+  /// No description provided for @prefsWeekStartSunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get prefsWeekStartSunday;
+
+  /// No description provided for @prefsWeekStartMonday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get prefsWeekStartMonday;
+
   /// No description provided for @prefsTimeZoneLabel.
   ///
   /// In en, this message translates to:
@@ -694,11 +712,11 @@ abstract class AppLocalizations {
   /// **'Use device local time'**
   String get prefsTimeZoneDevice;
 
-  /// No description provided for @prefsTimeZoneExplicit.
+  /// No description provided for @prefsTimeZoneSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Choose a specific time zone (later)'**
-  String get prefsTimeZoneExplicit;
+  /// **'Search time zones'**
+  String get prefsTimeZoneSearchHint;
 
   /// No description provided for @errorSomethingWentWrongTitle.
   ///

@@ -330,13 +330,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get prefsDistanceUnitMiles => 'Miles';
 
   @override
+  String get prefsWeekStartLabel => 'Début de la semaine';
+
+  @override
+  String get prefsWeekStartSunday => 'Dimanche';
+
+  @override
+  String get prefsWeekStartMonday => 'Lundi';
+
+  @override
   String get prefsTimeZoneLabel => 'Fuseau horaire';
 
   @override
   String get prefsTimeZoneDevice => 'Utiliser l’heure locale de l’appareil';
 
   @override
-  String get prefsTimeZoneExplicit => 'Choisir un fuseau horaire (plus tard)';
+  String get prefsTimeZoneSearchHint => 'Rechercher un fuseau horaire';
 
   @override
   String get errorSomethingWentWrongTitle => 'Une erreur est survenue';
