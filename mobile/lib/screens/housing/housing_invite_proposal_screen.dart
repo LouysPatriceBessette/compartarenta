@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
-import '../../housing/quiet_hours_week_grid.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
+import 'housing_agreement_rules_read_only.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
 import '../../l10n/app_localizations.dart';
@@ -74,7 +74,6 @@ class _HousingInviteProposalScreenState
   late Future<List<dynamic>> _proposalFuture;
 
   int _focusedParticipantIndex = 0;
-  int _previewQuietDayIndex = 0;
 
   final Map<int, HousingInviteParticipantUiStatus> _statusByRosterIndex = {};
 
@@ -399,191 +398,6 @@ class _HousingInviteProposalScreenState
     );
   }
 
-  String _displayNameForParticipantId(String id, List<Participant> roster) {
-    for (final p in roster) {
-      if (p.id == id) return p.displayName;
-    }
-    return id;
-  }
-
-  Widget _readOnlyRules(
-    BuildContext context,
-    AppLocalizations l10n,
-    Agreement agr,
-    AgreementRulesDraft rules,
-    List<Participant> roster,
-    String displayCurrency,
-  ) {
-    final theme = Theme.of(context);
-    final perMap = () {
-      try {
-        final m =
-            jsonDecode(agr.withdrawalPerParticipantJson)
-                as Map<String, dynamic>?;
-        return m ?? {};
-      } catch (_) {
-        return <String, dynamic>{};
-      }
-    }();
-
-    final tiles = <Widget>[
-      ExpansionTile(
-        title: Text(l10n.housingAgreementRuleCurfewTitle),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        children: [
-          QuietHoursWeekDayEditor(
-            grid: rules.quietHalfHours,
-            uiSelectedDayIndex: _previewQuietDayIndex,
-            onSelectDay: (i) => setState(() => _previewQuietDayIndex = i),
-            editing: false,
-            onToggleCell: (_, _) {},
-            labelAbsolute: l10n.housingQuietHoursAbsolute,
-            labelModerate: l10n.housingQuietHoursModerate,
-            emptyDayLabel: l10n.housingQuietHoursNoneThisDay,
-          ),
-          if (!rules.curfewEnabled)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                l10n.housingInviteRuleOffHint,
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
-        ],
-      ),
-      ExpansionTile(
-        title: Text(l10n.housingAgreementRuleEarlyWithdrawalTitle),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        children: [
-          if (!rules.earlyWithdrawalEnabled)
-            Text(
-              l10n.housingInviteRuleOffHint,
-              style: theme.textTheme.bodySmall,
-            )
-          else ...[
-            if (agr.withdrawalSameForAll == 'true') ...[
-              Text(
-                '${l10n.housingPlanMinimumNoticeDays}: ${agr.minNoticeDays}',
-              ),
-              Text(
-                '${l10n.housingPlanPenaltyAmount}: ${formatMinorAsMoney(context, agr.penaltyMinor, displayCurrency)}',
-              ),
-            ] else ...[
-              Text(
-                l10n.housingInviteWithdrawalPerParticipantIntro,
-                style: theme.textTheme.bodySmall,
-              ),
-              if (perMap.isNotEmpty)
-                ...perMap.entries.map((e) {
-                  final v = e.value;
-                  if (v is! Map) return const SizedBox.shrink();
-                  final notice = (v['minNoticeDays'] as num?)?.toInt() ?? 0;
-                  final pen = (v['penaltyMinor'] as num?)?.toInt() ?? 0;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      '${_displayNameForParticipantId(e.key.toString(), roster)}: '
-                      '${l10n.housingPlanMinimumNoticeDays} $notice; '
-                      '${l10n.housingPlanPenaltyAmount} ${formatMinorAsMoney(context, pen, displayCurrency)}',
-                    ),
-                  );
-                }),
-            ],
-          ],
-        ],
-      ),
-      ExpansionTile(
-        title: Text(l10n.housingAgreementRuleBuildingTitle),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        children: [
-          if (!rules.buildingRulesEnabled)
-            Text(
-              l10n.housingInviteRuleOffHint,
-              style: theme.textTheme.bodySmall,
-            )
-          else
-            Text(
-              rules.buildingRulesText.trim().isEmpty
-                  ? agr.clauses
-                  : rules.buildingRulesText,
-              style: theme.textTheme.bodyMedium,
-            ),
-        ],
-      ),
-    ];
-
-    for (final r in rules.customRules) {
-      if (!r.enabled) continue;
-      tiles.add(
-        ExpansionTile(
-          title: Text(
-            r.title.isEmpty
-                ? l10n.housingAgreementRuleCustomTitleLabel
-                : r.title,
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          children: [Text(r.body, style: theme.textTheme.bodyMedium)],
-        ),
-      );
-    }
-
-    if (!rules.dismissedSuggestionIds.contains(
-      kAgreementSuggestionCommonCleanliness,
-    )) {
-      tiles.add(
-        ExpansionTile(
-          title: Text(
-            '${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionCleanlinessTitle}',
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          children: [
-            Text(
-              l10n.housingAgreementSuggestionCleanlinessBody,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      );
-    }
-    if (!rules.dismissedSuggestionIds.contains(
-      kAgreementSuggestionFridgeManagement,
-    )) {
-      tiles.add(
-        ExpansionTile(
-          title: Text(
-            '${l10n.housingAgreementSuggestionLabel}: ${l10n.housingAgreementSuggestionFridgeTitle}',
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          children: [
-            Text(
-              l10n.housingAgreementSuggestionFridgeBody,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              l10n.housingInviteRulesSectionTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ...tiles,
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -772,13 +586,14 @@ class _HousingInviteProposalScreenState
                       ),
                     ],
                     const SizedBox(height: 20),
-                    _readOnlyRules(
-                      context,
-                      l10n,
-                      agr,
-                      rules,
-                      roster,
-                      displayCurrencyCodeForPlan(widget.prefs, lines),
+                    HousingAgreementRulesReadOnlyCard(
+                      agr: agr,
+                      rules: rules,
+                      roster: roster,
+                      displayCurrency: displayCurrencyCodeForPlan(
+                        widget.prefs,
+                        lines,
+                      ),
                     ),
                     if (!isAuthor && canRespond && !hasActivePlan) ...[
                       const SizedBox(height: 24),

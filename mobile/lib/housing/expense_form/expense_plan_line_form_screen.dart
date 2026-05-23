@@ -63,6 +63,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   late int _sortOrder = widget.initialSortOrder;
   DateTime? _createdAt;
   bool _loading = true;
+  bool _saving = false;
 
   final ValueNotifier<int> _splitRevision = ValueNotifier(0);
 
@@ -170,26 +171,45 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving || !_canSave) return;
+    _saving = true;
+    if (mounted) setState(() {});
     final now = DateTime.now().toUtc();
     final minor = parseAmountMinorFromText(_amountCtrl.text)!;
-    await ExpenseLinePersistence(_db).save(
-      planId: widget.planId,
-      existingLineId: widget.existingLineId,
-      title: _titleCtrl.text,
-      description: _descCtrl.text,
-      currency: widget.defaultCurrency,
-      isRecurring: _isRecurring,
-      recurrenceSpec: _isRecurring ? _recurrence : null,
-      amountMinor: minor,
-      amountIsBudgetCap: _amountIsBudgetCap,
-      paymentResponsibleParticipantId: _paymentResponsibleId,
-      split: _split,
-      sortOrder: _sortOrder,
-      createdAt: _createdAt ?? now,
-      templates: ExpenseRatioTemplateRepository(_db),
-      prefsForBackup: widget.prefsForBackup,
-    );
-    if (mounted) Navigator.pop(context, true);
+    try {
+      await ExpenseLinePersistence(_db).save(
+        planId: widget.planId,
+        existingLineId: widget.existingLineId,
+        title: _titleCtrl.text,
+        description: _descCtrl.text,
+        currency: widget.defaultCurrency,
+        isRecurring: _isRecurring,
+        recurrenceSpec: _isRecurring ? _recurrence : null,
+        amountMinor: minor,
+        amountIsBudgetCap: _amountIsBudgetCap,
+        paymentResponsibleParticipantId: _paymentResponsibleId,
+        split: _split,
+        sortOrder: _sortOrder,
+        createdAt: _createdAt ?? now,
+        templates: ExpenseRatioTemplateRepository(_db),
+        prefsForBackup: widget.prefsForBackup,
+      );
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(true);
+    } catch (e, st) {
+      assert(() {
+        debugPrint('ExpensePlanLineFormScreen save failed: $e\n$st');
+        return true;
+      }());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).housingPlanLoadError('$e'))),
+        );
+      }
+    } finally {
+      _saving = false;
+      if (mounted) setState(() {});
+    }
   }
 
   void _onLikeSelected(String? templateId) {
@@ -291,7 +311,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: FilledButton(
-                onPressed: _canSave ? _save : null,
+                onPressed: _canSave && !_saving ? _save : null,
                 child: Text(l10n.housingPlanSave),
               ),
             ),

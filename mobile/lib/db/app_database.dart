@@ -416,6 +416,13 @@ class AppDatabase extends _$AppDatabase {
     return s;
   }
 
+  /// Opens the native/web SQLite file while platform channels are registered.
+  ///
+  /// Call once from [bootstrap] after [WidgetsFlutterBinding.ensureInitialized].
+  /// Skipping this and touching the DB after a hot restart can surface
+  /// [MissingPluginException] from `path_provider` during relay polling.
+  Future<void> warmUpStorage() => customSelect('SELECT 1').get();
+
   /// Clears the global reference after [close] (e.g. dev database reset).
   static void clearProcessScopeIfReferencing(AppDatabase db) {
     if (identical(_processScope, db)) {

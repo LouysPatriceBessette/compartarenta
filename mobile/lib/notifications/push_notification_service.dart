@@ -11,6 +11,7 @@ import '../app_root_navigator.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
+import '../relay/handshake_orchestrator.dart';
 import 'closed_app_push_registration_service.dart';
 import 'wake_inbox_background_poll.dart';
 
@@ -131,10 +132,25 @@ class PushNotificationService {
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
       ),
-      onDidReceiveNotificationResponse: _onLocalNotificationTapped,
+      onDidReceiveNotificationResponse: dispatchLocalNotificationTap,
     );
     await _ensureAndroidChannel();
-    if (identical(plugin, _plugin)) _localStarted = true;
+    if (identical(plugin, _plugin)) {
+      _localStarted = true;
+      final launch = await plugin.getNotificationAppLaunchDetails();
+      final response = launch?.notificationResponse;
+      if (launch?.didNotificationLaunchApp == true &&
+          response?.payload == _housingTapPayload) {
+        dispatchLocalNotificationTap(response!);
+      }
+    }
+  }
+
+  /// Shared tap handler for all local notification payloads (housing + contacts).
+  static void dispatchLocalNotificationTap(NotificationResponse response) {
+    if (response.payload == _housingTapPayload) {
+      _navigateToHousing();
+    }
   }
 
   static void _onForegroundMessage(RemoteMessage message) {
@@ -360,15 +376,31 @@ class PushNotificationService {
     );
   }
 
-  static void _onLocalNotificationTapped(NotificationResponse response) {
-    if (response.payload != _housingTapPayload) return;
-    _navigateToHousing();
-  }
-
   static void _navigateToHousing() {
-    final ctx = appRootNavigatorKey.currentContext;
-    if (ctx == null) return;
-    ctx.go('/housing');
+    void attempt([int tries = 0]) {
+      final ctx = appRootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        unawaited(
+          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
+        );
+        final router = GoRouter.of(ctx);
+        if (router.state.matchedLocation != '/housing') {
+          router.push('/housing');
+        } else {
+          router.go('/housing');
+        }
+        return;
+      }
+      if (tries >= 30) {
+        debugPrint(
+          'PushNotificationService: navigate to /housing skipped (no context)',
+        );
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
+    }
+
+    attempt();
   }
 
   static void _handleOpenData(Map<String, dynamic> data) {

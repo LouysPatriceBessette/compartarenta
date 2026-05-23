@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import 'housing_active_plan_screen.dart';
@@ -62,9 +62,14 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   void initState() {
     super.initState();
     _entryFuture = _loadEntry();
-    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
-      _onSteadyInboxTick,
-    );
+    // Register after the first frame so an inbox tick during build cannot
+    // call setState while the route is still mounting.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+        _onSteadyInboxTick,
+      );
+    });
   }
 
   @override
@@ -77,7 +82,16 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
 
   void _onSteadyInboxTick() {
     if (!mounted) return;
-    setState(() => _entryFuture = _loadEntry());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _reloadEntry();
+    });
+  }
+
+  void _reloadEntry() {
+    setState(() {
+      _entryFuture = _loadEntry();
+    });
   }
 
   Future<_HousingEntrySnapshot> _loadEntry() async {
@@ -124,6 +138,32 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
           if (snap.connectionState != ConnectionState.done) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snap.hasError) {
+            final l10n = AppLocalizations.of(context);
+            return Scaffold(
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.housingPlanLoadError('${snap.error}'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _reloadEntry,
+                        child: Text(l10n.commonRestart),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           }
           final entry =

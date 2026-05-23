@@ -117,7 +117,12 @@ class HousingProposalTransportService {
       createdAt: createdAt,
     );
     await _upsertGroups(receivedPlanId, payload, createdAt);
-    await _upsertLines(receivedPlanId, payload, createdAt);
+    await _upsertLines(
+      receivedPlanId,
+      payload,
+      createdAt,
+      sourceToLocalParticipant: sourceToLocalParticipant,
+    );
     await _upsertRatios(
       receivedPlanId: receivedPlanId,
       payload: payload,
@@ -465,7 +470,12 @@ class HousingProposalTransportService {
       createdAt: now,
     );
     await _upsertGroups(draftPlanId, payload, now);
-    await _upsertLines(draftPlanId, payload, now);
+    await _upsertLines(
+      draftPlanId,
+      payload,
+      now,
+      sourceToLocalParticipant: sourceToDraftParticipant,
+    );
     await _upsertRatios(
       receivedPlanId: draftPlanId,
       payload: payload,
@@ -723,6 +733,23 @@ class HousingProposalTransportService {
     }
   }
 
+  /// Maps a source participant id from the proposal payload to a local tail (`self`, `p0`, …).
+  String? _localParticipantTail(
+    String sourceId,
+    Map<String, String> sourceToLocalParticipant,
+  ) {
+    if (sourceId.isEmpty) return null;
+    final direct = sourceToLocalParticipant[sourceId];
+    if (direct != null) return direct;
+    final tail = sourceId.contains(':') ? sourceId.split(':').last : sourceId;
+    final byTail = sourceToLocalParticipant[tail];
+    if (byTail != null) return byTail;
+    for (final entry in sourceToLocalParticipant.entries) {
+      if (entry.key == tail || entry.key.endsWith(':$tail')) return entry.value;
+    }
+    return null;
+  }
+
   Map<String, String> _participantIdMap({
     required Map<String, dynamic> payload,
     required String targetParticipantId,
@@ -746,6 +773,14 @@ class HousingProposalTransportService {
       if (ratios is List) {
         for (final item in ratios) {
           if (item is Map) add(_string(item['participantId']));
+        }
+      }
+      final lines = plan['lines'];
+      if (lines is List) {
+        for (final item in lines) {
+          if (item is Map) {
+            add(_string(item['paymentResponsibleParticipantId']));
+          }
         }
       }
     }
@@ -967,12 +1002,15 @@ class HousingProposalTransportService {
   Future<void> _upsertLines(
     String receivedPlanId,
     Map<String, dynamic> payload,
-    DateTime createdAt,
-  ) async {
+    DateTime createdAt, {
+    required Map<String, String> sourceToLocalParticipant,
+  }) async {
     final lines = _list(_map(payload['plan'])['lines']);
     for (final line in lines.whereType<Map>()) {
       final sourceId = _string(line['id']);
       final sourceGroupId = _string(line['groupId']);
+      final paySource = _string(line['paymentResponsibleParticipantId']);
+      final payLocal = _localParticipantTail(paySource, sourceToLocalParticipant);
       await _db.upsertPlanLine(
         PlanLinesCompanion.insert(
           id: '$receivedPlanId:line:$sourceId',
@@ -991,6 +1029,14 @@ class HousingProposalTransportService {
           groupId: sourceGroupId.isEmpty
               ? const drift.Value.absent()
               : drift.Value('$receivedPlanId:grp:$sourceGroupId'),
+          paymentResponsibleParticipantId: payLocal == null
+              ? const drift.Value.absent()
+              : drift.Value('$receivedPlanId:$payLocal'),
+          recurrenceSpecJson: drift.Value(
+            _string(line['recurrenceSpecJson']),
+          ),
+          ratioTemplateId: drift.Value(_string(line['ratioTemplateId'])),
+          amountIsBudgetCap: drift.Value(_bool(line['amountIsBudgetCap'])),
           createdAt: createdAt,
         ),
       );

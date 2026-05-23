@@ -8,6 +8,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 
 import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
+import '../../housing/agreement_rules_display.dart';
 import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import 'housing_invitation_status_dialog.dart';
@@ -29,6 +30,7 @@ import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
+import 'housing_agreement_rules_read_only.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_invite_sunburst.dart';
@@ -140,6 +142,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   String? _customRuleEditingId;
   TextEditingController? _customRuleEditTitle;
   TextEditingController? _customRuleEditBody;
+  String? _suggestionEditingId;
+  TextEditingController? _suggestionEditTitle;
+  TextEditingController? _suggestionEditBody;
 
   static const double _kAgreementRuleHPad = 8;
 
@@ -263,6 +268,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     _buildingRulesBody.dispose();
     _customRuleEditTitle?.dispose();
     _customRuleEditBody?.dispose();
+    _suggestionEditTitle?.dispose();
+    _suggestionEditBody?.dispose();
     if (HousingPlanDraftBackup.appliesToPlan(_planId)) {
       unawaited(
         _autosavePlanDraftToDb().then(
@@ -410,10 +417,28 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         .go();
   }
 
+  int _ratioWeightBps(List<PlanRatio> ratios, String lineId, String pid) {
+    for (final r in ratios) {
+      if (r.lineId != lineId) continue;
+      if (r.participantId == pid) return r.weight;
+      final tail = pid.split(':').last;
+      if (r.participantId.endsWith(':$tail')) return r.weight;
+    }
+    return 0;
+  }
+
   Future<bool> _validateExpensesStep() async {
+    if (HousingPlanDraftBackup.appliesToPlan(_planId)) {
+      await HousingPlanDraftBackup.restoreIfNeeded(
+        _db,
+        widget.prefs,
+        _planId,
+      );
+    }
     final lines = await _db.listPlanLines(_planId);
     if (lines.isEmpty) return false;
     final pids = _allParticipantIds();
+    if (pids.isEmpty) return false;
     final ratios = await _db.listPlanRatios(_planId);
     for (final l in lines) {
       if (l.amountMinor == null || l.amountMinor! <= 0) return false;
@@ -426,9 +451,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       }
       var sum = 0;
       for (final pid in pids) {
-        sum += ratios
-            .where((r) => r.lineId == l.id && r.participantId == pid)
-            .fold<int>(0, (a, r) => a + r.weight);
+        sum += _ratioWeightBps(ratios, l.id, pid);
       }
       if (sum != 10000) return false;
     }
@@ -541,7 +564,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _curfewEditing ||
       _withdrawalEditing ||
       _buildingRulesEditing ||
-      _customRuleEditingId != null;
+      _customRuleEditingId != null ||
+      _suggestionEditingId != null;
 
   /// While editing agreement rule content, block wizard navigation on agreement step.
   bool get _agreementRulesStepFooterLocked =>
@@ -917,7 +941,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       rollbackPendingOnTotalFailure: true,
     );
     if (!mounted) return sent;
-    setState(() => _summaryReloadToken++);
+    await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
+    if (mounted) setState(() => _summaryReloadToken++);
     return sent;
   }
 
@@ -1523,6 +1548,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
               child: lines.isEmpty
                   ? Center(child: Text(l10n.housingPlanTapToAddExpense))
                   : ReorderableListView.builder(
+                      buildDefaultDragHandles: false,
                       padding: const EdgeInsets.all(8),
                       itemCount: lines.length,
                       onReorder: (oldI, newI) async {
@@ -1603,11 +1629,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       },
                       itemBuilder: (context, index) {
                         final line = lines[index];
-                        return ReorderableDelayedDragStartListener(
+                        return Card(
                           key: ValueKey(line.id),
-                          index: index,
-                          child: Card(
-                            child: ListTile(
+                          child: ListTile(
                               title: Text(line.title),
                               subtitle: line.amountIsBudgetCap
                                   ? Text(l10n.housingExpenseAmountBudgetMax)
@@ -1627,6 +1651,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                     style: Theme.of(
                                       context,
                                     ).textTheme.titleSmall,
+                                  ),
+                                  ReorderableDragStartListener(
+                                    index: index,
+                                    child: const Padding(
+                                      padding: EdgeInsetsDirectional.only(
+                                        start: 4,
+                                        end: 4,
+                                      ),
+                                      child: Icon(Icons.drag_handle),
+                                    ),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline),
@@ -1656,7 +1690,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                 if (mounted) setState(() => _linesEpoch++);
                               },
                             ),
-                          ),
                         );
                       },
                     ),
@@ -1683,8 +1716,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final currency = widget.prefs.currency.trim().isEmpty
         ? 'CAD'
         : widget.prefs.currency.trim();
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+    final saved = await Navigator.of(context, rootNavigator: true).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (context) => ExpensePlanLineFormScreen(
           planId: _planId,
           participantIds: pids,
@@ -1871,9 +1904,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     );
   }
 
-  Widget _agreementLeadingSuggestionCheckbox() {
-    return _agreementLeadingCheckbox(value: true, onChanged: null);
-  }
 
   Widget _agreementRuleAccordionShell({
     required Widget leading,
@@ -2000,6 +2030,70 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _customRuleEditBody = TextEditingController(text: rule.body);
     });
     _disposeTextControllersNextFrame(oldTitle, oldBody);
+  }
+
+  void _cancelEditingSuggestion() {
+    if (_suggestionEditingId == null) return;
+    final a = _suggestionEditTitle;
+    final b = _suggestionEditBody;
+    setState(() {
+      _suggestionEditingId = null;
+      _suggestionEditTitle = null;
+      _suggestionEditBody = null;
+    });
+    _disposeTextControllersNextFrame(a, b);
+  }
+
+  void _startEditingSuggestion({
+    required String suggestionId,
+    required String defaultTitle,
+    required String defaultBody,
+  }) {
+    if (_suggestionEditingId == suggestionId) return;
+    final edit = _rulesDraft.suggestionEdits[suggestionId];
+    final oldTitle = _suggestionEditTitle;
+    final oldBody = _suggestionEditBody;
+    setState(() {
+      _suggestionEditingId = suggestionId;
+      _expandedSuggestionIds.add(suggestionId);
+      _suggestionEditTitle = TextEditingController(
+        text: edit?.title ?? defaultTitle,
+      );
+      _suggestionEditBody = TextEditingController(
+        text: edit?.body ?? defaultBody,
+      );
+    });
+    _disposeTextControllersNextFrame(oldTitle, oldBody);
+  }
+
+  void _saveEditingSuggestion(
+    AppLocalizations l10n, {
+    required String suggestionId,
+  }) {
+    if (_suggestionEditingId != suggestionId ||
+        _suggestionEditTitle == null ||
+        _suggestionEditBody == null) {
+      return;
+    }
+    final t = _suggestionEditTitle!.text.trim();
+    if (t.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.housingAgreementRuleTitleRequired)),
+      );
+      return;
+    }
+    final a = _suggestionEditTitle;
+    final b = _suggestionEditBody;
+    setState(() {
+      _rulesDraft.suggestionEdits[suggestionId] = AgreementSuggestionEdit(
+        title: t,
+        body: _suggestionEditBody!.text.trim(),
+      );
+      _suggestionEditingId = null;
+      _suggestionEditTitle = null;
+      _suggestionEditBody = null;
+    });
+    _disposeTextControllersNextFrame(a, b);
   }
 
   void _saveEditingCustomRule(AppLocalizations l10n, AgreementCustomRule rule) {
@@ -2386,12 +2480,24 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   Widget _suggestionAgreementRuleTile(
     AppLocalizations l10n, {
     required String suggestionId,
-    required String title,
-    required String body,
+    required String defaultTitle,
+    required String defaultBody,
   }) {
+    final edit = _rulesDraft.suggestionEdits[suggestionId];
+    final title = edit?.title ?? defaultTitle;
+    final body = agreementRuleBodyPlain(edit?.body ?? defaultBody);
     final expanded = _expandedSuggestionIds.contains(suggestionId);
+    final isEditing = _suggestionEditingId == suggestionId;
+    final enabled = agreementSuggestionIsEnabled(_rulesDraft, suggestionId);
+    final showSuggestionLabel = !agreementSuggestionWasEdited(
+      _rulesDraft,
+      suggestionId,
+      defaultTitle: defaultTitle,
+      defaultBody: defaultBody,
+    );
 
     void onHeaderTap() {
+      if (isEditing) return;
       setState(() {
         if (expanded) {
           _expandedSuggestionIds.remove(suggestionId);
@@ -2402,18 +2508,36 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
 
     return _agreementRuleAccordionShell(
-      leading: _agreementLeadingSuggestionCheckbox(),
+      leading: _agreementLeadingCheckbox(
+        value: enabled,
+        onChanged: isEditing
+            ? null
+            : (v) => setState(() {
+                if (v ?? false) {
+                  _rulesDraft.enabledSuggestionIds.add(suggestionId);
+                } else {
+                  _rulesDraft.enabledSuggestionIds.remove(suggestionId);
+                }
+              }),
+      ),
       title: Text(title),
       expanded: expanded,
       onHeaderTap: onHeaderTap,
       expandedChildren: [
         _agreementRulesActionRow(
           l10n: l10n,
-          pencilEnabled: false,
-          onPencil: null,
-          trashEnabled: !_rulesRemovalLocked,
-          onTrash: !_rulesRemovalLocked
+          pencilEnabled: !isEditing,
+          onPencil: () => _startEditingSuggestion(
+            suggestionId: suggestionId,
+            defaultTitle: defaultTitle,
+            defaultBody: defaultBody,
+          ),
+          trashEnabled: !isEditing && !_rulesRemovalLocked,
+          onTrash: !isEditing && !_rulesRemovalLocked
               ? () => setState(() {
+                  if (_suggestionEditingId == suggestionId) {
+                    _cancelEditingSuggestion();
+                  }
                   if (!_rulesDraft.dismissedSuggestionIds.contains(
                     suggestionId,
                   )) {
@@ -2423,14 +2547,68 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
               : null,
           trashTooltip: l10n.housingAgreementRuleDismissSuggestion,
         ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            l10n.housingAgreementSuggestionLabel,
-            style: Theme.of(context).textTheme.labelSmall,
+        if (showSuggestionLabel)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              l10n.housingAgreementSuggestionLabel,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
           ),
-        ),
-        Text(body, style: Theme.of(context).textTheme.bodyMedium),
+        if (isEditing)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _suggestionEditTitle,
+                decoration: InputDecoration(
+                  labelText: l10n.housingAgreementRuleCustomTitleLabel,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _suggestionEditBody,
+                decoration: InputDecoration(
+                  labelText: l10n.housingAgreementRuleCustomBodyLabel,
+                  alignLabelWithHint: true,
+                ),
+                minLines: 3,
+                maxLines: 8,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: _cancelEditingSuggestion,
+                    child: Text(l10n.housingPlanCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () =>
+                        _saveEditingSuggestion(l10n, suggestionId: suggestionId),
+                    child: Text(l10n.housingPlanSave),
+                  ),
+                ],
+              ),
+            ],
+          )
+        else
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: body.trim().isEmpty
+                ? Text(
+                    defaultBody,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  )
+                : Text(
+                    body,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+          ),
       ],
     );
   }
@@ -2534,8 +2712,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           _suggestionAgreementRuleTile(
             l10n,
             suggestionId: kAgreementSuggestionCommonCleanliness,
-            title: l10n.housingAgreementSuggestionCleanlinessTitle,
-            body: l10n.housingAgreementSuggestionCleanlinessBody,
+            defaultTitle: l10n.housingAgreementSuggestionCleanlinessTitle,
+            defaultBody: l10n.housingAgreementSuggestionCleanlinessBody,
           ),
         if (!_rulesDraft.dismissedSuggestionIds.contains(
           kAgreementSuggestionFridgeManagement,
@@ -2543,8 +2721,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           _suggestionAgreementRuleTile(
             l10n,
             suggestionId: kAgreementSuggestionFridgeManagement,
-            title: l10n.housingAgreementSuggestionFridgeTitle,
-            body: l10n.housingAgreementSuggestionFridgeBody,
+            defaultTitle: l10n.housingAgreementSuggestionFridgeTitle,
+            defaultBody: l10n.housingAgreementSuggestionFridgeBody,
           ),
         const SizedBox(height: 8),
         Align(
@@ -2630,6 +2808,7 @@ class _SummarySnapshot {
     required this.ratios,
     required this.proposalPkg,
     required this.canResendPendingProposal,
+    this.latestSentArchive,
   });
 
   final List<Participant> participants;
@@ -2638,6 +2817,9 @@ class _SummarySnapshot {
   final List<PlanRatio> ratios;
   final ProposalPackage? proposalPkg;
   final bool canResendPendingProposal;
+
+  /// Most recent submitted proposal (pending or archived), if any.
+  final HousingProposalArchive? latestSentArchive;
 }
 
 class _SummaryView extends StatefulWidget {
@@ -2680,6 +2862,9 @@ class _SummaryViewState extends State<_SummaryView> {
     super.initState();
     _snapshotFuture = _load();
     _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
   }
 
   /// Polls relay + reloads only while a proposal is pending (responses may arrive).
@@ -2701,7 +2886,21 @@ class _SummaryViewState extends State<_SummaryView> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
     super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _snapshotFuture = _load();
+      });
+      _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
+    });
   }
 
   @override
@@ -2725,6 +2924,15 @@ class _SummaryViewState extends State<_SummaryView> {
     final canResend = await PlanAgreementProposalService(
       widget.db,
     ).canResendPendingProposal(widget.planId);
+    final archives = await HousingProposalTransportService(
+      widget.db,
+    ).listArchivesForPlan(widget.planId);
+    HousingProposalArchive? latestSent;
+    for (final a in archives) {
+      if (a.isDraft) continue;
+      latestSent = a;
+      break;
+    }
     return _SummarySnapshot(
       participants: r[0] as List<Participant>,
       lines: r[1] as List<PlanLine>,
@@ -2732,6 +2940,7 @@ class _SummaryViewState extends State<_SummaryView> {
       ratios: r[3] as List<PlanRatio>,
       proposalPkg: r[4] as ProposalPackage?,
       canResendPendingProposal: canResend,
+      latestSentArchive: latestSent,
     );
   }
 
@@ -2789,6 +2998,7 @@ class _SummaryViewState extends State<_SummaryView> {
         final agr = data.agr;
         final ratios = data.ratios;
         final hasPending = data.proposalPkg?.pendingRevisionId != null;
+        final hasSentProposal = data.latestSentArchive != null;
         if (hasPending) {
           _hadPendingProposal = true;
         } else if (_hadPendingProposal) {
@@ -2987,6 +3197,16 @@ class _SummaryViewState extends State<_SummaryView> {
                         ),
                       ),
                     const SizedBox(height: 20),
+                    HousingAgreementRulesReadOnlyCard(
+                      agr: agr,
+                      rules: AgreementRulesDraft.parseStored(
+                        agreementRulesJson: agr.agreementRulesJson,
+                        clausesFallback: agr.clauses,
+                      ),
+                      roster: roster,
+                      displayCurrency: displayCurrency,
+                    ),
+                    const SizedBox(height: 20),
                   for (var i = 0; i < roster.length; i++) ...[
                     Builder(
                       builder: (context) {
@@ -3077,7 +3297,7 @@ class _SummaryViewState extends State<_SummaryView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (hasPending) ...[
+                  if (hasPending || hasSentProposal) ...[
                     FilledButton.tonal(
                       onPressed: () => showHousingInvitationStatusDialog(
                         context,
@@ -3093,7 +3313,27 @@ class _SummaryViewState extends State<_SummaryView> {
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),
                     ),
-                    if (data.canResendPendingProposal) ...[
+                    if (hasSentProposal &&
+                        data.latestSentArchive?.revisionId != null) ...[
+                      const SizedBox(height: 8),
+                      FilledButton(
+                        onPressed: () {
+                          final revId = data.latestSentArchive!.revisionId;
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute<void>(
+                              builder: (_) => HousingInviteProposalScreen(
+                                db: widget.db,
+                                planId: widget.planId,
+                                prefs: widget.prefs,
+                                revisionId: revId,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(l10n.housingInviteViewSentProposalAction),
+                      ),
+                    ],
+                    if (hasPending && data.canResendPendingProposal) ...[
                       const SizedBox(height: 8),
                       FilledButton(
                         onPressed: widget.onResendProposal,

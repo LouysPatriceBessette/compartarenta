@@ -889,7 +889,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAgreementSuggestionCleanlinessBody.
   ///
   /// In en, this message translates to:
-  /// **'• Keep clothing in assigned storage only.\n• Clean the shower and toilet after each use.\n• Wipe kitchen counters after cooking.\n• …'**
+  /// **'Keep clothing in assigned storage only.\nClean the shower and toilet after each use.\nWipe kitchen counters after cooking.'**
   String get housingAgreementSuggestionCleanlinessBody;
 
   /// No description provided for @housingAgreementSuggestionFridgeTitle.
@@ -901,7 +901,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAgreementSuggestionFridgeBody.
   ///
   /// In en, this message translates to:
-  /// **'• Label food you do not want to share.\n• Throw away expired items regularly.\n• Keep shelves and door clean.\n• …'**
+  /// **'Label food you do not want to share.\nThrow away expired items regularly.\nKeep shelves and door clean.'**
   String get housingAgreementSuggestionFridgeBody;
 
   /// No description provided for @housingAgreementRuleRemove.
@@ -1539,6 +1539,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resend proposal'**
   String get housingInviteResendProposalAction;
+
+  /// No description provided for @housingInviteViewSentProposalAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View sent proposal'**
+  String get housingInviteViewSentProposalAction;
 
   /// No description provided for @housingInviteReceivedWhileEditingSnack.
   ///

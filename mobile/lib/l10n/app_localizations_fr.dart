@@ -442,7 +442,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAgreementSuggestionCleanlinessBody =>
-      '• Gardez vos vêtements aux emplacements prévus.\n• Nettoyez douche et toilettes après usage.\n• Essuyez le plan de travail après cuisine.\n• …';
+      'Gardez vos vêtements aux emplacements prévus.\nNettoyez douche et toilettes après usage.\nEssuyez le plan de travail après cuisine.';
 
   @override
   String get housingAgreementSuggestionFridgeTitle =>
@@ -450,7 +450,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAgreementSuggestionFridgeBody =>
-      '• Identifiez clairement ce que vous ne partagez pas.\n• Jetez régulièrement ce qui n\'est plus bon.\n• Gardez tablettes et portes propres.\n• …';
+      'Identifiez clairement ce que vous ne partagez pas.\nJetez régulièrement ce qui n\'est plus bon.\nGardez tablettes et portes propres.';
 
   @override
   String get housingAgreementRuleRemove => 'Retirer la règle';
@@ -814,6 +814,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingInviteResendProposalAction => 'Renvoyer la proposition';
+
+  @override
+  String get housingInviteViewSentProposalAction =>
+      'Voir la proposition envoyée';
 
   @override
   String get housingInviteReceivedWhileEditingSnack =>

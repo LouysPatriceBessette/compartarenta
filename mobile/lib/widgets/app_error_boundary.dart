@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../app_root_navigator.dart';
 import '../l10n/app_localizations.dart';
 
 class AppErrorBoundary extends StatefulWidget {
@@ -57,6 +59,12 @@ class _AppErrorBoundaryState extends State<AppErrorBoundary> {
     setState(() {
       _error = null;
       _stackTrace = null;
+    });
+    // Rebuild the same route (e.g. /housing) that just crashed; go home first.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = appRootNavigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      GoRouter.of(ctx).go('/');
     });
   }
 

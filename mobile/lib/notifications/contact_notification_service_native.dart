@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_root_navigator.dart';
+import 'push_notification_service.dart';
 
 final FlutterLocalNotificationsPlugin _plugin =
     FlutterLocalNotificationsPlugin();
@@ -66,10 +67,11 @@ Future<void> _ensureInitialized() async {
       iOS: DarwinInitializationSettings(),
     ),
     onDidReceiveNotificationResponse: (response) {
+      PushNotificationService.dispatchLocalNotificationTap(response);
       if (response.payload != _contactsPayload) return;
       final ctx = appRootNavigatorKey.currentContext;
-      if (ctx == null) return;
-      ctx.go('/contacts');
+      if (ctx == null || !ctx.mounted) return;
+      GoRouter.of(ctx).push('/contacts');
     },
   );
 

@@ -37,7 +37,9 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
   }
 
   void _reload() {
-    setState(() => _future = _loadContacts());
+    setState(() {
+      _future = _loadContacts();
+    });
   }
 
   Future<void> _inviteContact() async {

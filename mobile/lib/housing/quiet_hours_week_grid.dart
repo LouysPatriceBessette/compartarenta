@@ -579,15 +579,9 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
             ),
           );
         } else {
-          rightCell = Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => onToggleCell(uiSelectedDayIndex, slot),
-              child: SizedBox(
-                width: double.infinity,
-                height: rowHeight,
-              ),
-            ),
+          rightCell = SizedBox(
+            width: double.infinity,
+            height: rowHeight,
           );
         }
 
@@ -600,28 +594,32 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
               })()
             : rowHeight;
 
+        final toggleSlot = segStart?.startRow ?? slot;
         return SizedBox(
           height: h,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: _timeColWidth,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 6, end: 4),
-                  child: Align(
-                    alignment: segStart != null
-                        ? AlignmentDirectional.topStart
-                        : AlignmentDirectional.centerStart,
-                    child: Text(
-                      timeLabel,
-                      style: Theme.of(context).textTheme.bodySmall,
+          child: InkWell(
+            onTap: () => onToggleCell(uiSelectedDayIndex, toggleSlot),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: _timeColWidth,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 6, end: 4),
+                    child: Align(
+                      alignment: segStart != null
+                          ? AlignmentDirectional.topStart
+                          : AlignmentDirectional.centerStart,
+                      child: Text(
+                        timeLabel,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(child: rightCell),
-            ],
+                Expanded(child: rightCell),
+              ],
+            ),
           ),
         );
       },

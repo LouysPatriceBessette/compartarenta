@@ -768,6 +768,14 @@ class HandshakeOrchestrator {
   ///
   /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
   Future<void> pollSteadyStateInboxes() async {
+    try {
+      await _pollSteadyStateInboxesBody();
+    } catch (e, st) {
+      debugPrint('pollSteadyStateInboxes failed: $e\n$st');
+    }
+  }
+
+  Future<void> _pollSteadyStateInboxesBody() async {
     final targets = await _steadyInboxPollPeers();
     if (targets.isEmpty) {
       final total = (await _contacts.list()).length;

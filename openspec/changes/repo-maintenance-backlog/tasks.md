@@ -5,6 +5,8 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
+- [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
+
 - [ ] **User units + calendar week start** — see `openspec/changes/user-units-and-calendar-preferences/` (editable date/distance/TZ in settings, week starts Sunday/Monday, currency edit TBD).
 
 - [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  

@@ -33,6 +33,14 @@ Future<void> bootstrap() async {
 
       final appDb = AppDatabase();
       AppDatabase.bindProcessScope(appDb);
+      try {
+        await appDb.warmUpStorage();
+      } catch (error, stack) {
+        debugPrint(
+          'AppDatabase warmUpStorage failed (full stop the app, then '
+          '`flutter run` — hot restart breaks path_provider): $error\n$stack',
+        );
+      }
 
       unawaited(_initializePushIfAlreadyAuthorized());
 

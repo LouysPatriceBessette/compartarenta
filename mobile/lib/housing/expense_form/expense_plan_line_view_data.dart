@@ -47,8 +47,15 @@ class ExpensePlanLineViewData {
         ExpenseRecurrenceSpec.fromLegacyDayOfMonth(line.recurrenceDayOfMonth);
 
     String paymentLabel = l10n.housingExpensePaymentResponsibleAll;
-    if (line.paymentResponsibleParticipantId != null) {
-      final idx = participantIds.indexOf(line.paymentResponsibleParticipantId!);
+    final payId = line.paymentResponsibleParticipantId;
+    if (payId != null && payId.isNotEmpty) {
+      var idx = participantIds.indexOf(payId);
+      if (idx < 0) {
+        final tail = payId.contains(':') ? payId.split(':').last : payId;
+        idx = participantIds.indexWhere(
+          (id) => id == tail || id.endsWith(':$tail'),
+        );
+      }
       if (idx >= 0) {
         paymentLabel = participantNames[idx];
       }
