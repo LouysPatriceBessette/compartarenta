@@ -11,6 +11,8 @@ import '../../notifications/contact_notification_service.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../util/deadline_remaining.dart';
+import '../../util/display_date.dart';
 
 /// Screen for the invitee to enter a received invitation code.
 ///
@@ -32,6 +34,7 @@ class RedeemInvitationScreen extends StatefulWidget {
 class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   final _controller = TextEditingController();
   InvitationCodeParseResult? _result;
+  DateTime? _resolvedExpiresAtUtc;
   bool _dispatching = false;
   String? _dispatchError;
   bool _dispatched = false;
@@ -72,8 +75,14 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
 
   void _validate() {
     final value = _controller.text;
+    final parsed = parseInvitationInput(value);
+    DateTime? expiresAt;
+    if (parsed is InvitationCodeOk) {
+      expiresAt = parsed.expiresAtUtc;
+    }
     setState(() {
-      _result = parseInvitationInput(value);
+      _result = parsed;
+      _resolvedExpiresAtUtc = expiresAt;
       _dispatchError = null;
       _dispatched = false;
       _completed = false;
@@ -82,6 +91,23 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _outcomePollTimer = null;
       _redeemHandshakeId = null;
     });
+    if (parsed is InvitationCodeOk && expiresAt == null) {
+      unawaited(_resolveExpiryFromLocalInvitation(parsed.code));
+    }
+  }
+
+  Future<void> _resolveExpiryFromLocalInvitation(InvitationCode code) async {
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator == null) return;
+    final expiresAt = await orchestrator.lookupInvitationExpiresAtUtc(code);
+    if (!mounted || expiresAt == null) return;
+    setState(() => _resolvedExpiresAtUtc = expiresAt);
+  }
+
+  bool _isInvitationExpired() {
+    final expiresAt = _resolvedExpiresAtUtc;
+    if (expiresAt == null) return false;
+    return DeadlineRemaining.compute(expiresAt, DateTime.now().toUtc()).isExpired;
   }
 
   Future<void> _connect(InvitationCode code) async {
@@ -287,6 +313,14 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final result = _result;
+    final expiresAt = _resolvedExpiresAtUtc;
+    final showDeadline =
+        result is InvitationCodeOk &&
+        expiresAt != null &&
+        !_dispatched &&
+        !_completed &&
+        !_rejected;
+    final codeExpired = _isInvitationExpired();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.contactsEnterInviteCodeTitle)),
       body: SafeArea(
@@ -327,6 +361,23 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               const SizedBox(height: 16),
               if (result is InvitationCodeOk)
                 _OkResult(invitationIdHex: result.code.invitationIdHex()),
+              if (showDeadline) ...[
+                const SizedBox(height: 8),
+                FutureBuilder<AppPreferences>(
+                  future: AppPreferences.load(),
+                  builder: (context, snap) {
+                    if (!snap.hasData) return const SizedBox.shrink();
+                    return Center(
+                      child: DeadlineDisplay(
+                        title: l10n.contactsInviteDeadlineTitle,
+                        deadlineUtc: expiresAt,
+                        dateFormat: effectiveDateFormat(snap.data!),
+                        l10n: l10n,
+                      ),
+                    );
+                  },
+                ),
+              ],
               if (result is InvitationCodeBad) _BadResult(error: result.error),
               if (_dispatchError != null) ...[
                 const SizedBox(height: 8),
@@ -386,7 +437,8 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                         !_dispatching &&
                         !_dispatched &&
                         !_completed &&
-                        !_rejected)
+                        !_rejected &&
+                        !codeExpired)
                     ? () => _connect(result.code)
                     : null,
               ),

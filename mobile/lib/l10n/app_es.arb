@@ -235,8 +235,42 @@
   "housingInvitePeriodOverlapTitle": "Conflicto de periodo del acuerdo",
   "housingInvitePeriodOverlapBody": "Este acuerdo se solapa en más de un día calendario con otro plan de vivienda en el que usted participa. Cambie las fechas o resuelva el otro plan antes de enviar.",
   "housingInvitePeriodOverlapDetail": "Este acuerdo se solapa en más de un día calendario con «{planTitle}» ({dateRange}). Cambie las fechas o resuelva ese plan antes de enviar.",
-  "housingInviteResponseDeadlineLabel": "Plazo de respuesta: {when}",
-  "housingInviteResponseDeadlineTimezone": "Mostrado en la zona horaria del dispositivo.",
+  "housingInviteResponseDeadlineTitle": "Plazo de respuesta:",
+  "housingInviteResponseDeadlineInDays": "{count, plural, one{En 1 día} other{En {count} días}}",
+  "@housingInviteResponseDeadlineInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "housingInviteResponseDeadlineToday": "Hoy",
+  "deadlineRemainingInDays": "{count, plural, one{En 1 día} other{En {count} días}}",
+  "@deadlineRemainingInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deadlineRemainingToday": "Hoy",
+  "deadlineRemainingCountdown": "En {time}",
+  "@deadlineRemainingCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deadlineRemainingExpired": "Caducado",
+  "housingInviteResponseDeadlineCountdown": "En {time}",
+  "@housingInviteResponseDeadlineCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "housingInviteOfferClosedHint": "Esta oferta ya no admite respuestas.",
   "housingInviteForkedFromLabel": "Versión derivada de una propuesta anterior ({revisionId}).",
   "housingArchiveExpiredTitle": "Propuesta caducada",
@@ -593,6 +627,7 @@
   "@contactsInviteExpiresAt": {
     "placeholders": { "when": { "type": "String" } }
   },
+  "contactsInviteDeadlineTitle": "Validez el código hasta:",
   "contactsInviteRevokeAction": "Revocar",
   "contactsInvitationsTitle": "Invitaciones enviadas",
   "contactsInvitationsEmpty": "Aún no se han enviado invitaciones.",

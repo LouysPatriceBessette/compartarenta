@@ -241,13 +241,42 @@
       "dateRange": { "type": "String" }
     }
   },
-  "housingInviteResponseDeadlineLabel": "Response deadline: {when}",
-  "@housingInviteResponseDeadlineLabel": {
+  "housingInviteResponseDeadlineTitle": "Response deadline:",
+  "housingInviteResponseDeadlineInDays": "{count, plural, one{In 1 day} other{In {count} days}}",
+  "@housingInviteResponseDeadlineInDays": {
     "placeholders": {
-      "when": { "type": "String" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-  "housingInviteResponseDeadlineTimezone": "Shown in your device time zone.",
+  "housingInviteResponseDeadlineToday": "Today",
+  "deadlineRemainingInDays": "{count, plural, one{In 1 day} other{In {count} days}}",
+  "@deadlineRemainingInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deadlineRemainingToday": "Today",
+  "deadlineRemainingCountdown": "In {time}",
+  "@deadlineRemainingCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deadlineRemainingExpired": "Expired",
+  "housingInviteResponseDeadlineCountdown": "In {time}",
+  "@housingInviteResponseDeadlineCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "housingInviteOfferClosedHint": "This offer is no longer open for responses.",
   "housingInviteForkedFromLabel": "Derived from a previous proposal ({revisionId}).",
   "@housingInviteForkedFromLabel": {
@@ -630,6 +659,7 @@
   "@contactsInviteExpiresAt": {
     "placeholders": { "when": { "type": "String" } }
   },
+  "contactsInviteDeadlineTitle": "Code valid until:",
   "contactsInviteRevokeAction": "Revoke",
   "contactsInvitationsTitle": "Sent invitations",
   "contactsInvitationsEmpty": "No invitations sent yet.",

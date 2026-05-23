@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/housing_response_deadline_display.dart';
 import '../../housing/proposals/housing_proposal_revision_state.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
@@ -542,21 +543,10 @@ class _HousingInviteProposalScreenState
                     if (expiresUtc != null) ...[
                       const SizedBox(height: 12),
                       Center(
-                        child: Text(
-                          l10n.housingInviteResponseDeadlineLabel(
-                            formatPreferenceDateTime(expiresUtc, dateFmt),
-                          ),
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Center(
-                        child: Text(
-                          l10n.housingInviteResponseDeadlineTimezone,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                        child: HousingResponseDeadlineDisplay(
+                          expiresUtc: expiresUtc,
+                          dateFormat: dateFmt,
+                          l10n: l10n,
                         ),
                       ),
                     ],

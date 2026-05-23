@@ -89,9 +89,10 @@ class InvitationCode {
 
   /// Deep-link representation suitable for OS share sheets and QR encoders.
   /// The scheme is intentionally app-local; the relay does not parse it.
-  String renderDeepLink() {
+  String renderDeepLink({DateTime? expiresAtUtc}) {
     final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
-    return 'compartarenta://contact/invite?v=$version&c=$encoded';
+    final e = _expiresQueryParam(expiresAtUtc);
+    return 'compartarenta://contact/invite?v=$version&c=$encoded${e == null ? '' : '&e=$e'}';
   }
 
   /// HTTPS representation suitable for email, SMS, and messaging apps.
@@ -105,14 +106,23 @@ class InvitationCode {
   /// relay’s static invite page can show a “copy short code” affordance.
   /// [parseInvitationLink] ignores `s` and continues to rely only on `v` and
   /// `c`.
-  String renderWebLink({String origin = defaultInvitationLinkOrigin}) {
+  String renderWebLink({
+    String origin = defaultInvitationLinkOrigin,
+    DateTime? expiresAtUtc,
+  }) {
     final encoded = base64Url.encode(_payloadBytes()).replaceAll('=', '');
     final base = origin.endsWith('/')
         ? origin.substring(0, origin.length - 1)
         : origin;
     final short = renderShort();
     final s = Uri.encodeQueryComponent(short);
-    return '$base/contact/invite?v=$version&c=$encoded&s=$s';
+    final e = _expiresQueryParam(expiresAtUtc);
+    return '$base/contact/invite?v=$version&c=$encoded&s=$s${e == null ? '' : '&e=$e'}';
+  }
+
+  static String? _expiresQueryParam(DateTime? expiresAtUtc) {
+    if (expiresAtUtc == null) return null;
+    return (expiresAtUtc.toUtc().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
   /// Hex representation of the nonce, suitable for storing in the local
@@ -157,8 +167,12 @@ sealed class InvitationCodeParseResult {
 }
 
 class InvitationCodeOk extends InvitationCodeParseResult {
-  const InvitationCodeOk(this.code);
+  const InvitationCodeOk(this.code, {this.expiresAtUtc});
+
   final InvitationCode code;
+
+  /// UTC expiry from link query `e` when present; null for short-code-only input.
+  final DateTime? expiresAtUtc;
 }
 
 enum InvitationCodeError {
@@ -222,6 +236,13 @@ InvitationCodeParseResult parseInvitationCode(String input) {
   return InvitationCodeOk(
     InvitationCode._(version: version, invitationId: invId, nonce: nonce),
   );
+}
+
+DateTime? _expiresAtFromLinkQuery(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  final seconds = int.tryParse(raw);
+  if (seconds == null || seconds <= 0) return null;
+  return DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true);
 }
 
 /// Parses either a human-readable invitation code or a deep/web link produced
@@ -301,6 +322,7 @@ InvitationCodeParseResult parseInvitationLink(String input) {
   );
   return InvitationCodeOk(
     InvitationCode._(version: version!, invitationId: invId, nonce: nonce),
+    expiresAtUtc: _expiresAtFromLinkQuery(uri.queryParameters['e']),
   );
 }
 

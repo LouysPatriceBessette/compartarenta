@@ -235,8 +235,42 @@
   "housingInvitePeriodOverlapTitle": "Conflit de période d'accord",
   "housingInvitePeriodOverlapBody": "Cet accord chevauche plus d'un jour calendaire avec un autre plan logement où vous êtes participant. Modifiez les dates ou réglez l'autre plan avant d'envoyer.",
   "housingInvitePeriodOverlapDetail": "Cet accord chevauche plus d'un jour calendaire avec « {planTitle} » ({dateRange}). Modifiez les dates ou réglez ce plan avant d'envoyer.",
-  "housingInviteResponseDeadlineLabel": "Fin du délai de réponse : {when}",
-  "housingInviteResponseDeadlineTimezone": "Affiché dans le fuseau horaire de l'appareil.",
+  "housingInviteResponseDeadlineTitle": "Fin du délai de réponse :",
+  "housingInviteResponseDeadlineInDays": "{count, plural, one{Dans 1 jour} other{Dans {count} jours}}",
+  "@housingInviteResponseDeadlineInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "housingInviteResponseDeadlineToday": "Aujourd'hui",
+  "deadlineRemainingInDays": "{count, plural, one{Dans 1 jour} other{Dans {count} jours}}",
+  "@deadlineRemainingInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deadlineRemainingToday": "Aujourd'hui",
+  "deadlineRemainingCountdown": "Dans {time}",
+  "@deadlineRemainingCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deadlineRemainingExpired": "Expiré",
+  "housingInviteResponseDeadlineCountdown": "Dans {time}",
+  "@housingInviteResponseDeadlineCountdown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "housingInviteOfferClosedHint": "Cette offre n'accepte plus de réponses.",
   "housingInviteForkedFromLabel": "Version dérivée d'une proposition antérieure ({revisionId}).",
   "housingArchiveExpiredTitle": "Proposition expirée",
@@ -593,6 +627,7 @@
   "@contactsInviteExpiresAt": {
     "placeholders": { "when": { "type": "String" } }
   },
+  "contactsInviteDeadlineTitle": "Fin de validité du code :",
   "contactsInviteRevokeAction": "Révoquer",
   "contactsInvitationsTitle": "Invitations envoyées",
   "contactsInvitationsEmpty": "Aucune invitation envoyée pour l’instant.",

@@ -1300,17 +1300,53 @@ abstract class AppLocalizations {
   /// **'This agreement overlaps by more than one calendar day with “{planTitle}” ({dateRange}). Change the dates or resolve that plan before sending.'**
   String housingInvitePeriodOverlapDetail(String planTitle, String dateRange);
 
-  /// No description provided for @housingInviteResponseDeadlineLabel.
+  /// No description provided for @housingInviteResponseDeadlineTitle.
   ///
   /// In en, this message translates to:
-  /// **'Response deadline: {when}'**
-  String housingInviteResponseDeadlineLabel(String when);
+  /// **'Response deadline:'**
+  String get housingInviteResponseDeadlineTitle;
 
-  /// No description provided for @housingInviteResponseDeadlineTimezone.
+  /// No description provided for @housingInviteResponseDeadlineInDays.
   ///
   /// In en, this message translates to:
-  /// **'Shown in your device time zone.'**
-  String get housingInviteResponseDeadlineTimezone;
+  /// **'{count, plural, one{In 1 day} other{In {count} days}}'**
+  String housingInviteResponseDeadlineInDays(int count);
+
+  /// No description provided for @housingInviteResponseDeadlineToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get housingInviteResponseDeadlineToday;
+
+  /// No description provided for @deadlineRemainingInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{In 1 day} other{In {count} days}}'**
+  String deadlineRemainingInDays(int count);
+
+  /// No description provided for @deadlineRemainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get deadlineRemainingToday;
+
+  /// No description provided for @deadlineRemainingCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'In {time}'**
+  String deadlineRemainingCountdown(String time);
+
+  /// No description provided for @deadlineRemainingExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get deadlineRemainingExpired;
+
+  /// No description provided for @housingInviteResponseDeadlineCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'In {time}'**
+  String housingInviteResponseDeadlineCountdown(String time);
 
   /// No description provided for @housingInviteOfferClosedHint.
   ///
@@ -2838,6 +2874,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expires {when}'**
   String contactsInviteExpiresAt(String when);
+
+  /// No description provided for @contactsInviteDeadlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code valid until:'**
+  String get contactsInviteDeadlineTitle;
 
   /// No description provided for @contactsInviteRevokeAction.
   ///

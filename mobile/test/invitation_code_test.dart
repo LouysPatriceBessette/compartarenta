@@ -173,6 +173,27 @@ void main() {
       expect(ok.code.renderShort(), code.renderShort());
     });
 
+    test('link query e carries invitation expiry for invitee UI', () {
+      InvitationCode.setRandomForTesting(_SeededRandom(15));
+      addTearDown(InvitationCode.resetRandomForTesting);
+      final code = InvitationCode.generate();
+      final expiresAt = DateTime.utc(2026, 6, 15, 18, 36);
+
+      final deep = parseInvitationDeepLink(
+        code.renderDeepLink(expiresAtUtc: expiresAt),
+      );
+      expect(deep, isA<InvitationCodeOk>());
+      expect(
+        (deep as InvitationCodeOk).expiresAtUtc,
+        expiresAt,
+      );
+
+      final web = parseInvitationLink(
+        code.renderWebLink(expiresAtUtc: expiresAt),
+      );
+      expect((web as InvitationCodeOk).expiresAtUtc, expiresAt);
+    });
+
     test(
       'parseInvitationInput accepts short code, deep link, and web link',
       () {

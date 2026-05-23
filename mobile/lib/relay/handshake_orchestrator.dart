@@ -321,6 +321,15 @@ class HandshakeOrchestrator {
   /// has a non-empty Contact to look at while the invitee thinks about
   /// the request. The display name will be **replaced** by the invitee's
   /// chosen self-name on accept.
+  /// Local invitation expiry for [code] when this device created the invite.
+  Future<DateTime?> lookupInvitationExpiresAtUtc(InvitationCode code) async {
+    final row = await (_db.select(_db.contactInvitations)
+          ..where((t) => t.id.equals(code.invitationIdHex())))
+        .getSingleOrNull();
+    if (row == null || row.status != InvitationStatus.pending) return null;
+    return row.expiresAt;
+  }
+
   Future<
     ({
       ContactInvitation invitation,
@@ -413,6 +422,7 @@ class HandshakeOrchestrator {
     startPolling();
     requestClosedAppPushRegistrationSync();
 
+    final expiresAt = created.add(validFor);
     final row = await (_db.select(
       _db.contactInvitations,
     )..where((t) => t.id.equals(invitationIdHex))).getSingle();
@@ -420,8 +430,8 @@ class HandshakeOrchestrator {
       invitation: row,
       localContactId: stubContactId,
       shortCode: code.renderShort(),
-      deepLink: code.renderDeepLink(),
-      webLink: code.renderWebLink(),
+      deepLink: code.renderDeepLink(expiresAtUtc: expiresAt),
+      webLink: code.renderWebLink(expiresAtUtc: expiresAt),
     );
   }
 

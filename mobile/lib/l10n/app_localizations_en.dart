@@ -671,13 +671,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String housingInviteResponseDeadlineLabel(String when) {
-    return 'Response deadline: $when';
+  String get housingInviteResponseDeadlineTitle => 'Response deadline:';
+
+  @override
+  String housingInviteResponseDeadlineInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In $count days',
+      one: 'In 1 day',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get housingInviteResponseDeadlineTimezone =>
-      'Shown in your device time zone.';
+  String get housingInviteResponseDeadlineToday => 'Today';
+
+  @override
+  String deadlineRemainingInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In $count days',
+      one: 'In 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deadlineRemainingToday => 'Today';
+
+  @override
+  String deadlineRemainingCountdown(String time) {
+    return 'In $time';
+  }
+
+  @override
+  String get deadlineRemainingExpired => 'Expired';
+
+  @override
+  String housingInviteResponseDeadlineCountdown(String time) {
+    return 'In $time';
+  }
 
   @override
   String get housingInviteOfferClosedHint =>
@@ -1564,6 +1599,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String contactsInviteExpiresAt(String when) {
     return 'Expires $when';
   }
+
+  @override
+  String get contactsInviteDeadlineTitle => 'Code valid until:';
 
   @override
   String get contactsInviteRevokeAction => 'Revoke';

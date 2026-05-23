@@ -11,6 +11,8 @@ import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../util/deadline_remaining.dart';
+import '../../util/display_date.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 
 /// Screen that generates a new invitation code and presents it for out-of-band
@@ -231,6 +233,8 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
                   deepLink: generated.deepLink,
                   webLink: generated.webLink,
                   expiresAt: generated.row.expiresAt,
+                  showDeadlineRemaining:
+                      generated.row.status == InvitationStatus.pending,
                   onRevoke: _revoke,
                   onDone: () => context.pop(),
                 ),
@@ -315,6 +319,7 @@ class _GeneratedView extends StatelessWidget {
     required this.deepLink,
     required this.webLink,
     required this.expiresAt,
+    required this.showDeadlineRemaining,
     required this.onRevoke,
     required this.onDone,
   });
@@ -323,6 +328,7 @@ class _GeneratedView extends StatelessWidget {
   final String deepLink;
   final String webLink;
   final DateTime expiresAt;
+  final bool showDeadlineRemaining;
   final VoidCallback onRevoke;
   final VoidCallback onDone;
 
@@ -415,11 +421,23 @@ class _GeneratedView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.contactsInviteExpiresAt(expiresAt.toLocal().toString()),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                if (showDeadlineRemaining) ...[
+                  const SizedBox(height: 16),
+                  FutureBuilder<AppPreferences>(
+                    future: AppPreferences.load(),
+                    builder: (context, snap) {
+                      if (!snap.hasData) return const SizedBox.shrink();
+                      return Center(
+                        child: DeadlineDisplay(
+                          title: l10n.contactsInviteDeadlineTitle,
+                          deadlineUtc: expiresAt,
+                          dateFormat: effectiveDateFormat(snap.data!),
+                          l10n: l10n,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),
