@@ -1616,6 +1616,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsInviteDeadlineTitle => 'Validez el código hasta:';
 
   @override
+  String get contactsInvitationStubTitle => 'Código de invitación';
+
+  @override
   String get contactsInviteRevokeAction => 'Revocar';
 
   @override

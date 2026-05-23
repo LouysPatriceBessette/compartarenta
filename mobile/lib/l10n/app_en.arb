@@ -660,6 +660,7 @@
     "placeholders": { "when": { "type": "String" } }
   },
   "contactsInviteDeadlineTitle": "Code valid until:",
+  "contactsInvitationStubTitle": "Invitation code",
   "contactsInviteRevokeAction": "Revoke",
   "contactsInvitationsTitle": "Sent invitations",
   "contactsInvitationsEmpty": "No invitations sent yet.",

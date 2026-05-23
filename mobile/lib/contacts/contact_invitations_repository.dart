@@ -59,6 +59,65 @@ class ContactInvitationsRepository {
   /// Returns invitations sorted most-recent-first. Status is re-evaluated
   /// against `now` so a row reported as pending by the database is also
   /// not silently past its `expiresAt`.
+  /// Outstanding inviter-side invitation tied to [contactStubId], if any.
+  Future<ContactInvitation?> forContactStub(
+    String contactStubId, {
+    DateTime? now,
+  }) async {
+    final rows = await listWithFreshStatus(now: now);
+    for (final row in rows) {
+      if (row.contactStubId != contactStubId) continue;
+      if (_isInvitationStubDisplayStatus(row.status)) return row;
+    }
+    return null;
+  }
+
+  /// Maps each contact stub id to its outstanding invitation row.
+  Future<Map<String, ContactInvitation>> mapOutstandingByContactStub({
+    DateTime? now,
+  }) async {
+    final rows = await listWithFreshStatus(now: now);
+    final out = <String, ContactInvitation>{};
+    for (final row in rows) {
+      final stubId = row.contactStubId;
+      if (stubId == null || stubId.isEmpty) continue;
+      if (!_isInvitationStubDisplayStatus(row.status)) continue;
+      out[stubId] = row;
+    }
+    return out;
+  }
+
+  InvitationCode codeFromRow(ContactInvitation row) {
+    return InvitationCode.fromStored(
+      invitationIdHex: row.id,
+      nonceHex: row.nonce,
+    );
+  }
+
+  ({String shortCode, String deepLink, String webLink}) sharePayloadFromRow(
+    ContactInvitation row,
+  ) {
+    final code = codeFromRow(row);
+    return (
+      shortCode: code.renderShort(),
+      deepLink: code.renderDeepLink(expiresAtUtc: row.expiresAt),
+      webLink: code.renderWebLink(expiresAtUtc: row.expiresAt),
+    );
+  }
+
+  Future<ContactInvitation?> getById(String invitationId) async {
+    final rows = await listWithFreshStatus();
+    for (final row in rows) {
+      if (row.id == invitationId) return row;
+    }
+    return null;
+  }
+
+  static bool _isInvitationStubDisplayStatus(String status) {
+    return status == InvitationStatus.pending ||
+        status == InvitationStatus.expired;
+  }
+
   Future<List<ContactInvitation>> listWithFreshStatus({DateTime? now}) async {
     final all = await _db.listContactInvitations();
     final reference = now ?? DateTime.now().toUtc();

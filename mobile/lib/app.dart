@@ -280,6 +280,12 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
             },
           ),
           GoRoute(
+            path: 'invite/code/:invitationId',
+            builder: (context, state) => GenerateInvitationScreen(
+              viewInvitationId: state.pathParameters['invitationId'],
+            ),
+          ),
+          GoRoute(
             path: 'invitations',
             builder: (context, state) => const OutstandingInvitationsScreen(),
           ),

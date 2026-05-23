@@ -628,6 +628,7 @@
     "placeholders": { "when": { "type": "String" } }
   },
   "contactsInviteDeadlineTitle": "Fin de validité du code :",
+  "contactsInvitationStubTitle": "Code d'invitation",
   "contactsInviteRevokeAction": "Révoquer",
   "contactsInvitationsTitle": "Invitations envoyées",
   "contactsInvitationsEmpty": "Aucune invitation envoyée pour l’instant.",

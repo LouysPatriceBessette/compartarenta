@@ -2881,6 +2881,12 @@ abstract class AppLocalizations {
   /// **'Code valid until:'**
   String get contactsInviteDeadlineTitle;
 
+  /// No description provided for @contactsInvitationStubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation code'**
+  String get contactsInvitationStubTitle;
+
   /// No description provided for @contactsInviteRevokeAction.
   ///
   /// In en, this message translates to:

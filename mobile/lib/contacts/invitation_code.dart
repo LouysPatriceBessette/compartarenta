@@ -159,6 +159,30 @@ class InvitationCode {
     }
     return buf.toString();
   }
+
+  /// Rebuilds a shareable code from a persisted [ContactInvitations] row.
+  factory InvitationCode.fromStored({
+    required String invitationIdHex,
+    required String nonceHex,
+  }) {
+    return InvitationCode._(
+      version: currentVersion,
+      invitationId: _fromHex(invitationIdHex),
+      nonce: _fromHex(nonceHex),
+    );
+  }
+
+  static Uint8List _fromHex(String hex) {
+    final normalized = hex.trim();
+    if (normalized.length.isOdd) {
+      throw FormatException('invalid hex length');
+    }
+    final out = Uint8List(normalized.length ~/ 2);
+    for (var i = 0; i < out.length; i++) {
+      out[i] = int.parse(normalized.substring(i * 2, i * 2 + 2), radix: 16);
+    }
+    return out;
+  }
 }
 
 /// Outcome of decoding and locally validating a typed invitation code.

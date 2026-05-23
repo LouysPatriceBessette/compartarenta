@@ -18,9 +18,16 @@ import '../../widgets/standard_validity_duration_bar.dart';
 /// Screen that generates a new invitation code and presents it for out-of-band
 /// sharing.
 class GenerateInvitationScreen extends StatefulWidget {
-  const GenerateInvitationScreen({super.key, this.reconnectContactId});
+  const GenerateInvitationScreen({
+    super.key,
+    this.reconnectContactId,
+    this.viewInvitationId,
+  });
 
   final String? reconnectContactId;
+
+  /// When set, opens the share UI for an existing on-device invitation row.
+  final String? viewInvitationId;
 
   @override
   State<GenerateInvitationScreen> createState() =>
@@ -46,6 +53,43 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   void initState() {
     super.initState();
     _attachIncomingListener();
+    final viewId = widget.viewInvitationId?.trim();
+    if (viewId != null && viewId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_loadExistingInvitation(viewId));
+      });
+    }
+  }
+
+  Future<void> _loadExistingInvitation(String invitationId) async {
+    final row = await _repo.getById(invitationId);
+    if (!mounted) return;
+    if (row == null) {
+      setState(() => _error = AppLocalizations.of(context).contactsHandshakeErrorUnknown);
+      return;
+    }
+    if (row.status != InvitationStatus.pending &&
+        row.status != InvitationStatus.expired) {
+      if (!mounted) return;
+      context.pop();
+      return;
+    }
+    final share = _repo.sharePayloadFromRow(row);
+    setState(() {
+      _generated = _GeneratedInvitation(
+        row: row,
+        shortCode: share.shortCode,
+        deepLink: share.deepLink,
+        webLink: share.webLink,
+      );
+      _error = null;
+    });
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator != null && row.status == InvitationStatus.pending) {
+      _attachIncomingListener();
+      _startGeneratedPolling(orchestrator);
+      _routeToIncomingIfCurrentInvitationHasRequest();
+    }
   }
 
   @override

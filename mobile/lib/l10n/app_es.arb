@@ -628,6 +628,7 @@
     "placeholders": { "when": { "type": "String" } }
   },
   "contactsInviteDeadlineTitle": "Validez el código hasta:",
+  "contactsInvitationStubTitle": "Código de invitación",
   "contactsInviteRevokeAction": "Revocar",
   "contactsInvitationsTitle": "Invitaciones enviadas",
   "contactsInvitationsEmpty": "Aún no se han enviado invitaciones.",

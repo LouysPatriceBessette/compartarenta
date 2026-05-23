@@ -1621,6 +1621,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsInviteDeadlineTitle => 'Fin de validité du code :';
 
   @override
+  String get contactsInvitationStubTitle => 'Code d\'invitation';
+
+  @override
   String get contactsInviteRevokeAction => 'Révoquer';
 
   @override
