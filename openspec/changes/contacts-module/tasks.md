@@ -31,6 +31,14 @@
 - [x] 3.4 Implement out-of-band sharing entry points (copy, share sheet, QR display). *(Copy + deep-link landed; full share-sheet integration deferred to Wave B alongside QR.)*
 - [x] 3.5 Implement the outstanding-invitations list with statuses (pending, used, expired, revoked) and a revoke action.
 - [x] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call.
+- [ ] 3.7 **Invitation expiry reminder** notifications (outgoing pending invitations).
+  - **Implement together with** [`housing-plan-proposal-offer-and-responses` **1.4b**](../housing-plan-proposal-offer-and-responses/tasks.md) — shared local scheduling service, lead-time table, cancel/reschedule rules, and notification-prefs gating.
+  - For each **pending** invitation created on this device (`expiresAt` on the invitation row, code not yet consumed), schedule one or more **local notifications** before expiry.
+  - **Lead times** depend on the invitation validity duration / preset (product table aligned with housing deadline presets where sensible — document when fixed).
+  - **Cancel / reschedule** when the invitation is used, revoked, or expires; reschedule if validity is extended.
+  - Respect app-level master notification switch and the Contacts category for **invitation expiration** (enable the Settings switch that is today visible but disabled once this ships; see `notification-permission-management` wishlist).
+  - **Not** the same as the “incoming handshake request” notification; copy MUST distinguish invitation **expiring soon** vs **new connection request**.
+  - Log reminder-fired events in the Settings activity log when that store exists (`housing-plan-proposal-offer-and-responses` **1.8**).
 
 ## 4. Handshake protocol over the relay
 

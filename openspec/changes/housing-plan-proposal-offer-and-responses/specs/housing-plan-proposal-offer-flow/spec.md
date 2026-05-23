@@ -12,9 +12,11 @@ When the plan author sends a **housing expense plan + agreement** proposal, the 
 
 ---
 
-### Requirement: Author chooses a response deadline before send
+### Requirement: Author chooses a response deadline before each send
 
-The author SHALL select a **response deadline** (maximum time allowed for the ordered recipients to respond while the offer remains **open**) before dispatch. The deadline SHALL be stored on the revision metadata as an absolute **expires at** instant (implementation stores UTC; UI converts for display).
+The author SHALL select a **response deadline** (maximum time allowed for recipients to respond while **this send** of the offer remains **open**) immediately before each **dispatch** of a given `revisionId`. The chosen deadline SHALL be stored as an absolute **expires at** instant on **that revision for that send** (implementation stores UTC; UI converts for display).
+
+A **forked** child revision MUST NOT inherit the parent revision’s `expiresAt`. When the author sends a forked (or otherwise new) revision, they MUST choose a **new** deadline for that dispatch.
 
 #### Scenario: Deadline is visible to all recipients
 
@@ -42,18 +44,22 @@ After attempting dispatch, the author UI SHALL show, for each recipient, whether
 
 ### Requirement: Recipients are notified and can view without deciding
 
-Recipients SHALL receive a **notification** (OS-appropriate: push where configured, otherwise in-app/inbox badge) that a new offer exists. Opening the offer SHALL allow **back navigation** or **app backgrounding** without recording a decision. **No implicit** Accept / Negotiate / Refuse SHALL be inferred from dismiss or time passage alone (expiry is handled separately).
+Recipients SHALL receive a **notification** when a **new offer is received** on the device (OS-appropriate: local notification; push where configured and notification prefs allow). This notification means “a proposal awaits your review”, **not** “the response deadline is approaching”. **Deadline reminder** notifications (if ever added) are a separate product decision and are **out of scope** of this requirement.
+
+After decrypt and validate, the client SHALL **persist** the offer locally (package, revision, roster, `expiresAt`, response state) so the recipient can open it from Housing/workbench without relying on the relay queue still holding ciphertext.
+
+Opening the offer SHALL allow **back navigation** or **app backgrounding** without recording a decision. **No implicit** Accept / Negotiate / Refuse SHALL be inferred from dismiss or time passage alone (expiry is handled separately).
 
 #### Scenario: Close without action leaves state pending for that user
 
 - **WHEN** the user views the offer and returns to the home screen without choosing an action
-- **THEN** their response status remains **pending** (subject to expiry and serial gate rules below)
+- **THEN** their response status remains **pending** (subject to expiry and parallel-response rules below)
 
 ---
 
 ### Requirement: Recipients choose Accept, Negotiate, or Refuse with text rules
 
-While the offer is **open** for that recipient under the serial gate, they SHALL be able to submit exactly one of:
+While the offer is **open** for that recipient (any pending participant may respond — see **Parallel responses and invalidation**), they SHALL be able to submit exactly one of:
 
 - **Accept** — no free-text required.
 - **Negotiate** — free-text **required** (bounded length; empty not allowed).
@@ -79,58 +85,64 @@ Every submitted response (Accept, Negotiate, or Refuse) SHALL be delivered to **
 
 ---
 
-### Requirement: Serial response order and invalidation
+### Requirement: Parallel responses and invalidation (first come, first served)
 
-At offer creation, the app SHALL assign a **fixed response order** among **non-author** roster participants: default **ascending participant `sortOrder`**, tie-break by ascending `participantId` (stable string compare). The author is **not** in this queue (proposal emission records the author as proposer).
+There is **no serial turn-taking** among recipients. The author is **not** in the responder set (proposal emission records the author as proposer).
 
 While a `revisionId` is **open**:
 
-1. Only the **first** participant in the order whose status is still **pending** MAY submit a decision.
-2. **WHEN** they submit **Accept** — their status becomes **accepted**; the **next** pending participant in order becomes the active responder.
-3. **WHEN** they submit **Negotiate** or **Refuse** — the revision is **invalidated** for **all** participants who had not yet submitted **Accept** on this revision; their client state becomes **closed / superseded** (labels are localized). No further responses are accepted for that `revisionId`.
+1. **Every** non-author participant whose status is still **pending** MAY submit a decision at any time.
+2. **WHEN** a participant submits **Accept** — their status becomes **accepted**; other pending participants remain able to respond until the revision is invalidated, expires, or becomes unanimously accepted.
+3. **WHEN** the **first** **Negotiate** or **Refuse** is recorded for that revision — the revision is **invalidated** for **all** participants who had not yet submitted **Accept** on this revision; their client state becomes **closed / superseded** (labels are localized). No further responses are accepted for that `revisionId`.
 
-#### Scenario: Second participant cannot jump ahead
+#### Scenario: Two recipients may respond concurrently
 
-- **WHEN** participant 1 is still pending
-- **THEN** participant 2’s UI does not offer submit (or shows waiting) for that `revisionId`
+- **WHEN** participants B and C are both still pending on the same open `revisionId`
+- **THEN** both MAY submit Accept, Negotiate, or Refuse without waiting for the other
 
-#### Scenario: First responder refuses — offer closes for everyone pending
+#### Scenario: First non-Accept closes the offer for everyone still pending
 
-- **WHEN** participant 1 refuses
-- **THEN** participants 2..N see the offer as **no longer actionable** for that revision
-- **AND** history records the refusal and optional text
+- **WHEN** participant B refuses while C is still pending
+- **THEN** C sees the offer as **no longer actionable** for that revision
+- **AND** the activity log records the refusal and optional text
 
-#### Scenario: All ordered recipients accept — revision eligible for unanimous activation
+#### Scenario: All recipients accept — revision eligible for unanimous activation
 
-- **WHEN** every ordered recipient has submitted **Accept**
+- **WHEN** every non-author recipient has submitted **Accept**
 - **THEN** the revision meets the acceptance side of `contract-unanimous-renegotiation` together with the implicit proposer intent (see next requirement) and MAY transition to **pending activation** or **active** per activation rules defined elsewhere (this spec does not redefine activation mechanics beyond recording unanimity on the same `revisionId`)
 
 ---
 
 ### Requirement: Proposer intent on the same revision
 
-The author’s act of sending revision `R` SHALL be recorded in history as **proposed** (or **proposer accepted** if the product prefers explicit symmetry). Downstream logic SHALL treat unanimity as “proposer record + all ordered recipients **Accept** on `R`” without requiring the author to tap **Accept** again for the same unchanged payload, unless a future product decision explicitly requires it (if so, update this spec in a follow-up).
+The author’s act of sending revision `R` SHALL be recorded in history as **proposed** (or **proposer accepted** if the product prefers explicit symmetry). Downstream logic SHALL treat unanimity as “proposer record + all non-author recipients **Accept** on `R`” without requiring the author to tap **Accept** again for the same unchanged payload, unless a future product decision explicitly requires it (if so, update this spec in a follow-up).
 
 ---
 
 ### Requirement: Expiry closes the offer without a participant decision
 
-**WHEN** wall-clock passes **expires at** before the serial queue completes with all **Accept**:
+**WHEN** wall-clock passes **expires at** before every non-author recipient has submitted **Accept**:
 
 - **THEN** the revision is **invalidated** (same user-visible consequence as Negotiate/Refuse for remaining pending users)
-- **AND** history records **expired** with timestamp
+- **AND** the activity log records **expired** with timestamp
 
 ---
 
-### Requirement: Full proposal history is retained on every participant device
+### Requirement: Activity log on every participant device
 
-Each client SHALL retain a durable **event history** for proposal activity, at minimum keyed by `packageId` and `revisionId`, sufficient to render:
+Each client SHALL retain a durable, **append-only** **activity log** of relay-related events on that device. The log is the system of record for audit and MUST survive normal app restarts. The relay is not the system of record.
 
-- timeline of send, relay-accept per recipient (if captured), deliveries (if captured), responses, invalidations, expiry
-- message text for Negotiate/Refuse when present
-- **fork** provenance: `fork created` events and metadata linking child `revisionId` to `forkedFromRevisionId` / `forkedFromPackageId` (and optional proposer id), for every forked revision
+#### Requirement: Settings activity log UI
 
-History MUST survive normal app restarts and MUST NOT depend on the relay retaining ciphertext after ack/TTL (the relay is not the system of record).
+The app SHALL expose **Settings → “My activity log”** (localized title; e.g. FR *Log de mon activité*): a read-only chronological list built from the log. The user MAY filter by **date range** and by **initiator** (e.g. self, a specific contact, or local/system). The user MUST NOT edit, delete, or mutate log entries from this UI.
+
+Minimum event kinds include: contact add request (handshake), contact disconnected, contact deleted (where applicable), housing plan **sent** / **received**, housing proposal **response** (Accept / Negotiate / Refuse), revision **invalidated** / **expired**, and **fork created**. Additional relay kinds MAY be appended as they ship.
+
+Housing workbench / offer screens MAY read the same store to show thread status, but the Settings page is the canonical **audit trail** surface.
+
+Proposal-related entries SHALL be sufficient to render, per `packageId` / `revisionId` when applicable: send, relay-accept per recipient (if captured), deliveries (if captured), responses, invalidations, expiry, Negotiate/Refuse message text when present, and **fork** provenance (`fork created` with `forkedFromRevisionId` / `forkedFromPackageId`).
+
+The log MUST NOT depend on the relay retaining ciphertext after ack/TTL.
 
 #### Scenario: Offline peer catches up
 
@@ -147,7 +159,7 @@ History MUST survive normal app restarts and MUST NOT depend on the relay retain
 - **AND** participants MAY fork from the retained snapshot only when they are eligible under the invalidation reason.
 - **AND** a participant who submitted a **Refuse** response SHALL NOT be eligible to fork that same refused revision.
 - **AND** other participants MAY open the retained snapshot and **edit** it to produce a **new** revision with a new `revisionId` (same `packageId` lineage per `plan-contract-proposal-payload` when the group context is unchanged; a **new** `packageId` MAY be minted when the fork intentionally starts a new group context—implementation SHALL still record **fork lineage** fields)
-- **AND** the author of that new revision becomes the **proposer** for that revision’s history records
+- **AND** the author of that new revision becomes the **proposer** for that revision’s activity-log entries
 - **AND** the new revision SHALL carry **fork lineage** metadata (`forkedFromPackageId`, `forkedFromRevisionId`, …) as required in **Fork lineage is mandatory** above
 - **AND** **Fork from workbench only when source revision is not forkable-blocked** applies to UI affordances
 
@@ -203,17 +215,17 @@ The housing invitation / preview surface SHALL NOT present **contact invitation 
 
 ### Requirement: Multiple concurrent open offers are supported per participant
 
-A participant MAY have **more than one** proposal revision **open** at the same time when those revisions belong to **different** `packageId` values (e.g. two unrelated housing plans both addressing the same recipient) **or** when parallel **fork** revisions were created after an earlier revision was **invalidated** or **expired** (e.g. B and C each fork the same invalidated parent into two new revisions that are both in flight). The **serial response gate** applies **independently per `revisionId`**; the client SHALL not merge timelines across unrelated revisions.
+A participant MAY have **more than one** proposal revision **open** at the same time when those revisions belong to **different** `packageId` values (e.g. two unrelated housing plans both addressing the same recipient) **or** when parallel **fork** revisions were created after an earlier revision was **invalidated** or **expired** (e.g. B and C each fork the same invalidated parent into two new revisions that are both in flight). **Parallel response rules** apply **independently per `revisionId`**; the client SHALL not merge timelines across unrelated revisions.
 
 #### Scenario: Two proposers, one recipient (different plans)
 
 - **WHEN** A’s offer targets only B on plan `pkg:A` and C’s offer targets only B on plan `pkg:C`
-- **THEN** B’s inbox shows **two** distinct actionable threads, each keyed by its own `packageId` / `revisionId`, with independent deadlines and serial queues
+- **THEN** B’s inbox shows **two** distinct actionable threads, each keyed by its own `packageId` / `revisionId`, with independent deadlines and response state
 
 #### Scenario: Parallel forks after invalidation
 
 - **WHEN** A’s revision `R1` is invalidated by B’s refusal and both B and C fork `R1` into `R2` and `R3` respectively
-- **THEN** each new revision has its own `revisionId`, its own roster and response order, and participants who receive both SHALL see **two** open offers until each is resolved or invalidated
+- **THEN** each new revision has its own `revisionId`, its own roster and `expiresAt` (chosen at send), and participants who receive both SHALL see **two** open offers until each is resolved or invalidated
 
 ---
 
@@ -261,7 +273,7 @@ The app SHALL prevent a user from **(a)** **sending** (as proposer) a new housin
 #### Scenario: Multiple pending offers with at most one-day touch still OK
 
 - **WHEN** the user has several pending offers whose periods never share **two or more** days with any blocking interval
-- **THEN** they MAY view and respond per the serial gate without calendar-based blocking beyond this rule
+- **THEN** they MAY view and respond while that revision is open without calendar-based blocking beyond this rule
 
 ---
 
@@ -331,7 +343,7 @@ The home-screen **Housing** affordance SHALL open the **workbench selector** **W
 
 The workbench (and plan authoring steps) SHALL offer **Fork from this offer** only when the selected source revision is **fork-eligible**: its state is **invalidated**, **expired**, or otherwise **closed** for further responses per this spec **and** creating a draft from that fork would not immediately violate the **Agreement period overlap gate** (e.g. user may still need to adjust dates before send).
 
-**WHEN** a revision is still **open** (awaiting responses, including **waiting** in the serial queue after another participant’s pending turn) **THEN** the user SHALL **not** be offered fork from that revision as an editing source until they (or the group) resolve it; they MUST take or await a **decision** on that offer first.
+**WHEN** a revision is still **open** (awaiting responses from any pending participant) **THEN** the user SHALL **not** be offered fork from that revision as an editing source until that revision is **invalidated**, **expired**, or otherwise **closed**; they MUST take or await a **decision** on that offer first (or wait for expiry).
 
 #### Scenario: Cannot fork an open offer
 

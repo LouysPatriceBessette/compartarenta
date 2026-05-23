@@ -14,11 +14,12 @@
 - Reuse the logical shape in `plan-contract-proposal-payload` (`expensePlanContractProposal` with `packageId`, `revisionId`, `contentHash`, embedded `plan` + `contract`).
 - Wire encoding (new `kind` in the client frame vs reuse of an existing steady-state envelope) is an **implementation** choice subject to relay audit policy; the relay MUST remain unable to read plaintext.
 
-## Serial response gate
+## Parallel responses (first come, first served)
 
-- Fix a **response order** at offer creation time: all **recipients** (non-proposer participants in the plan roster) in a **stable order** documented in the spec (default: ascending housing participant `sortOrder`, then stable tie-break by participant id).
-- The proposer does **not** occupy a slot in this order; the proposer’s intent is implicit in **creating** the revision (recorded as `proposed` / equivalent in history).
-- While the offer is **open**, only the participant at the **head** of the queue who is still `pending` MAY submit a decision; others see **waiting** state. After that participant **Accepts**, the next pending participant becomes active. If they **Negotiate** or **Refuse**, the revision is **invalidated** for all remaining pending participants (see spec).
+- There is **no serial turn-taking** among recipients. The proposer’s intent is implicit in **sending** the revision (recorded as `proposed` / equivalent in the activity log).
+- While the offer is **open**, **every** non-author participant still **pending** MAY submit Accept, Negotiate, or Refuse at any time.
+- The **first** Negotiate or Refuse on that `revisionId` **invalidates** it for all participants who had not yet Accept. Expiry (`expiresAt`) applies the same close semantics if unanimity is not reached in time.
+- **Deadline** is chosen before **each send** of a `revisionId` and is **not** copied to forked child revisions (new deadline on fork send).
 
 ## Negotiate vs Refuse
 
@@ -27,15 +28,16 @@
 - **Refuse** is a hard refusal from the responding participant. The refuser keeps the archived snapshot and response summary for audit/review, but they cannot fork from that refused revision. Other participants can still fork the retained snapshot.
 - Immediately after a successful **Negotiate**, the responder is prompted to fork the archived snapshot now. Declining the prompt keeps the archive available in the Housing entry/workbench.
 
-## History
+## Activity log
 
-- Every device retains an **append-only** (or monotonic) **event log** per `revisionId` (and cross-revision thread keyed by `packageId`) sufficient to render timeline and audits offline, including invalidation reasons and message text when present.
-- **Fork** edges in the graph (`forkedFromRevisionId`, `forkedFromPackageId`) are part of the audit model so parallel revisions (Case #1) remain explainable after the fact.
-- MVP archive storage can reuse proposal revision payload metadata (`lifecycleState`, invalidation reason/responder, fork eligibility) without changing the relay or Drift schema; a later event-log table may normalize this.
+- Every device retains an **append-only** **activity log** of relay-related events (contact handshake, disconnect, housing send/receive, responses, invalidation, expiry, fork created, …).
+- **Settings → “My activity log”** (localized) is the canonical read-only audit UI: chronological list, filters by date range and **initiator**, no mutation of entries.
+- Housing workbench / offer UI may read the same store for thread status; proposal archive metadata can coexist until a normalized log table lands in Drift.
+- **Fork** edges (`forkedFromRevisionId`, `forkedFromPackageId`) are logged so parallel revisions (Case #1) remain explainable.
 
 ## Concurrent offers and workbench
 
-- **Per-revision serial gate** is unchanged: concurrency means **multiple revisions** in flight, each with its own queue—not one merged queue across packages.
+- **Per-revision parallel responses** apply independently: concurrency means **multiple revisions** in flight, each with its own `expiresAt` and response state—not one merged timeline across packages.
 - **Case #2** (two dwellings, same recipient B): two `packageId` values; B’s client lists two threads. **Final accept** and **send** are limited by the **Agreement period overlap gate** against B’s other participating plans—not by blanket withdrawal.
 - **Case #1** (parallel forks): after `R1` invalidates, `R2` and `R3` are independent open revisions; recipients may see two **actionable** threads until each resolves.
 - **Workbench selector** unifies navigation from home and authoring: draft row + per-offer rows; fork action is gated on **fork-eligibility** (not open).
