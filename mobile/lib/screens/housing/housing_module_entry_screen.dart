@@ -108,6 +108,10 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       );
     }
     final plans = await housingPlansWithSelfParticipant(db);
+    final transport = HousingProposalTransportService(db);
+    for (final plan in plans) {
+      await transport.expireOpenRevisionsForPlan(plan.id);
+    }
     if (plans.length != 1) {
       return _HousingEntrySnapshot(plans: plans);
     }

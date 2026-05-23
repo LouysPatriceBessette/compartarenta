@@ -1,13 +1,13 @@
 # Tasks — housing plan proposal offer flow (tracking)
 
-- [ ] 1.1 Replace or retire UI that suggests **only** “generate invitation codes” for housing participants; route send-offer to **connected** roster members with the preview payload.
-- [ ] 1.2 Author: **response deadline** before each **send** of a given `revisionId`.
+- [x] 1.1 Replace or retire UI that suggests **only** “generate invitation codes” for housing participants; route send-offer to **connected** roster members with the preview payload.
+- [x] 1.2 Author: **response deadline** before each **send** of a given `revisionId`.
   - Before dispatch, the author picks a deadline (product-defined presets, e.g. 48 h / 7 days / custom).
   - Persist `expiresAt` (UTC wall-clock instant) on **that revision only for that dispatch** — it defines when **this send** stops accepting responses.
   - **Fork / new revision:** a forked child revision MUST NOT inherit a parent’s `expiresAt`; the author is prompted to choose a **new** deadline when they send that revision.
   - UI/storage may keep `expiresAt` on revision rows, but semantics are **per send**, not lineage across forks.
-- [ ] 1.3 Author: multi-recipient relay POST fan-out + per-recipient **send status** (relay accepted vs error).
-- [ ] 1.4 Recipient: **inbox import** + **notification on offer receipt** (not deadline reminder).
+- [x] 1.3 Author: multi-recipient relay POST fan-out + per-recipient **send status** (relay accepted vs error).
+- [x] 1.4 Recipient: **inbox import** + **notification on offer receipt** (not deadline reminder).
   - **Local persistence:** after decrypt/validate, persist the offer locally (proposal package, `packageId` / `revisionId`, roster, `expiresAt`, pending response state) so the recipient can open it from Housing/workbench without re-fetching ciphertext from the relay.
   - **Notification on receipt:** when a new housing proposal envelope is imported, fire a **local notification** (and push when the platform and notification prefs allow — same category as “plan submission received”). This is **“you have a new offer to review”**, not “deadline approaching”.
   - **Out of scope for 1.4:** reminders as the response deadline nears → **1.4b** (implement together with `contacts-module` **3.7**).
@@ -19,28 +19,28 @@
   - Respect app-level master notification switch and the Housing category used for plan proposals (or a dedicated “response deadline reminder” category if split in Settings).
   - **Not** the same as 1.4 receipt notification; copy MUST distinguish “new offer” vs “deadline approaching”.
   - Log reminder-fired events in the activity log (1.8) when that store exists.
-- [ ] 1.5 Recipient: offer detail UI with **deadline** and **expiry** shown as `YYYY-MM-DD HH:MM` (timezone rule in spec).
-- [ ] 1.6 Recipient: **Accept** | **Negotiate** | **Refuse** + text rules; broadcast outcome envelope to **all** participants (including proposer and non-responding peers).
-- [ ] 1.7 **Parallel responses** (first come, first served) — not serial turn-taking.
+- [x] 1.5 Recipient: offer detail UI with **deadline** and **expiry** shown as `YYYY-MM-DD HH:MM` (timezone rule in spec).
+- [x] 1.6 Recipient: **Accept** | **Negotiate** | **Refuse** + text rules; broadcast outcome envelope to **all** participants (including proposer and non-responding peers).
+- [x] 1.7 **Parallel responses** (first come, first served) — not serial turn-taking.
   - While a `revisionId` is **open**, **every** non-author participant still **pending** MAY submit **Accept**, **Negotiate**, or **Refuse** at any time (no “your turn” / waiting for another recipient first).
   - **Invalidation:** the **first** recorded **Negotiate** or **Refuse** on that revision invalidates it for **all** participants who had not yet **Accept** on that revision (no further decisions on that `revisionId`).
   - **Unanimity:** when **every** non-author participant has **Accept**, the revision meets the acceptance side of unanimous activation (with proposer intent on send — see spec).
   - **Expiry:** if wall-clock passes `expiresAt` before unanimity, same invalidation consequence as 1.2 (see spec).
-- [ ] 1.8 **Activity log** (append-only, Settings) — relay-related events for this device.
+- [x] 1.8 **Activity log** (append-only, Settings) — relay-related events for this device.
   - **Store:** append-only local event log for transmissions handled via the relay (and their app-level outcomes), keyed at minimum by timestamp, event kind, `packageId` / `revisionId` when applicable, and **initiator** (local user vs identified peer / contact).
   - **UI:** **Settings → “My activity log”** (localized; FR example: *Log de mon activité*): chronological list generated as events arrive; **read-only** (no edit, delete, or replay actions on the list).
   - **Filters (view only):** date range; **initiator** (e.g. me / a specific contact / system-local).
   - **Minimum event kinds:** contact add request (handshake), contact disconnected, contact deleted (local actions that affect relay traffic where applicable), housing plan **sent** / **received**, housing proposal **response** (Accept / Negotiate / Refuse), revision **invalidated** / **expired**, **fork created** (links to 1.13). Extend with other relay kinds as they ship.
   - **Housing thread UI** (workbench / offer detail) may **read** the same store for status/timeline, but the Settings page is the canonical **audit trail** deliverable for this task.
-- [ ] 1.9 Invalidated offer: “**Fork / edit and submit**” entry for **any** participant from retained snapshot (new `revisionId`, same `packageId` lineage per `plan-contract-proposal-payload`).
-- [ ] 1.10 Wire protocol: define encrypted JSON message kinds (offer, response, invalidation notice) and document alongside `docs/contacts-module-relay-payload.md` (follow relay change-minimization: prefer client-only protocol docs unless relay must change).
-- [ ] 1.11 **Workbench model**: persist and list local draft(s), sent threads, received threads; compute `entries.length` for navigation rules.
-- [ ] 1.12 **Home Housing**: open workbench **selector** when `entries.length > 1`; preserve direct-to-summary for single lone draft (spec).
-- [ ] 1.13 **Fork lineage** fields on revision rows + `fork created` activity-log events (1.8); UI shows provenance (“forked from …”).
-- [ ] 1.14 **Fork gating** in editor/workbench: disable fork while source `revisionId` is **open**; enable when invalidated/expired/closed per spec.
-- [ ] 1.15 **Concurrent offers**: independent per-`revisionId` state machines; inbox UI lists multiple threads (Case #1 / #2).
-- [ ] 1.16 **Agreement period overlap gate**: compute **blocking intervals** per participating plan (active contract dates, else open revision proposed dates); compare **calendar days only** (strip time; no UTC for this test); block **send** / **final accept** when **S ≥ 2** shared days with any blocking interval; **S ≤ 1** never blocks (handoff on same calendar day allowed).
-- [ ] 1.17 **UX copy** for calendar conflicts (**≥ 2** shared days; show conflicting plan label + date range); optional suggest “adjust dates”.
+- [x] 1.9 Invalidated offer: “**Fork / edit and submit**” entry for **any** participant from retained snapshot (new `revisionId`, same `packageId` lineage per `plan-contract-proposal-payload`).
+- [x] 1.10 Wire protocol: define encrypted JSON message kinds (offer, response, invalidation notice) and document alongside `docs/contacts-module-relay-payload.md` (follow relay change-minimization: prefer client-only protocol docs unless relay must change).
+- [x] 1.11 **Workbench model**: persist and list local draft(s), sent threads, received threads; compute `entries.length` for navigation rules.
+- [x] 1.12 **Home Housing**: open workbench **selector** when `entries.length > 1`; preserve direct-to-summary for single lone draft (spec).
+- [x] 1.13 **Fork lineage** fields on revision rows + `fork created` activity-log events (1.8); UI shows provenance (“forked from …”).
+- [x] 1.14 **Fork gating** in editor/workbench: disable fork while source `revisionId` is **open**; enable when invalidated/expired/closed per spec.
+- [x] 1.15 **Concurrent offers**: independent per-`revisionId` state machines; inbox UI lists multiple threads (Case #1 / #2).
+- [x] 1.16 **Agreement period overlap gate**: compute **blocking intervals** per participating plan (active contract dates, else open revision proposed dates); compare **calendar days only** (strip time; no UTC for this test); block **send** / **final accept** when **S ≥ 2** shared days with any blocking interval; **S ≤ 1** never blocks (handoff on same calendar day allowed).
+- [x] 1.17 **UX copy** for calendar conflicts (**≥ 2** shared days; show conflicting plan label + date range); optional suggest “adjust dates”.
 
 
 - [ ] 1.18 Wire checklist [`housing-plan-entry-spec-conformance-checklist.md`](../expense-plan-contract-model/housing-plan-entry-spec-conformance-checklist.md) rows for home selector / workbench when implemented.

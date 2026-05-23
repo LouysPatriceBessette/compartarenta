@@ -666,6 +666,107 @@ class AppLocalizationsEn extends AppLocalizations {
       'This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.';
 
   @override
+  String housingInvitePeriodOverlapDetail(String planTitle, String dateRange) {
+    return 'This agreement overlaps by more than one calendar day with “$planTitle” ($dateRange). Change the dates or resolve that plan before sending.';
+  }
+
+  @override
+  String housingInviteResponseDeadlineLabel(String when) {
+    return 'Response deadline: $when';
+  }
+
+  @override
+  String get housingInviteResponseDeadlineTimezone =>
+      'Shown in your device time zone.';
+
+  @override
+  String get housingInviteOfferClosedHint =>
+      'This offer is no longer open for responses.';
+
+  @override
+  String housingInviteForkedFromLabel(String revisionId) {
+    return 'Derived from a previous proposal ($revisionId).';
+  }
+
+  @override
+  String get housingArchiveExpiredTitle => 'Expired proposal';
+
+  @override
+  String get housingInviteStatusTableRelay => 'Relay';
+
+  @override
+  String get housingInviteStatusRelayQueued => 'Queued';
+
+  @override
+  String get housingInviteStatusRelayFailed => 'Failed';
+
+  @override
+  String get housingInviteStatusRelayUnknown => '—';
+
+  @override
+  String get settingsActivityLogTitle => 'My activity log';
+
+  @override
+  String get settingsActivityLogSubtitle => 'Relay events on this device';
+
+  @override
+  String get activityLogEmpty => 'No events match your filters.';
+
+  @override
+  String get activityLogFilterInitiatorLabel => 'Initiator';
+
+  @override
+  String get activityLogFilterInitiatorAll => 'All';
+
+  @override
+  String get activityLogFilterInitiatorSelf => 'Me';
+
+  @override
+  String get activityLogFilterInitiatorContact => 'Contact';
+
+  @override
+  String get activityLogFilterFromLabel => 'From (date)';
+
+  @override
+  String get activityLogFilterToLabel => 'To (date)';
+
+  @override
+  String get activityLogApplyFilters => 'Apply filters';
+
+  @override
+  String get activityLogKindContactHandshakeReceived =>
+      'Contact connection request received';
+
+  @override
+  String get activityLogKindContactDisconnected => 'Contact disconnected';
+
+  @override
+  String get activityLogKindContactDeleted => 'Contact deleted';
+
+  @override
+  String get activityLogKindHousingProposalSent => 'Housing proposal sent';
+
+  @override
+  String get activityLogKindHousingProposalReceived =>
+      'Housing proposal received';
+
+  @override
+  String get activityLogKindHousingProposalResponse =>
+      'Housing proposal response';
+
+  @override
+  String get activityLogKindHousingProposalInvalidated =>
+      'Housing proposal closed';
+
+  @override
+  String get activityLogKindHousingProposalExpired =>
+      'Housing proposal expired';
+
+  @override
+  String get activityLogKindHousingProposalForkCreated =>
+      'Derived housing proposal started';
+
+  @override
   String get housingInviteProposalAppBarTitle => 'Invitation proposal';
 
   @override

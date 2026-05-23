@@ -375,6 +375,23 @@ class ProposalResponses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Append-only audit log of relay-related events on this device.
+class RelayActivityLogEntries extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get occurredAt => dateTime()();
+  TextColumn get kind => text()();
+  TextColumn get initiatorKind => text()();
+  TextColumn get initiatorContactId => text().nullable()();
+  TextColumn get initiatorDisplayName => text().withDefault(const Constant(''))();
+  TextColumn get planId => text().nullable()();
+  TextColumn get packageId => text().nullable()();
+  TextColumn get revisionId => text().nullable()();
+  TextColumn get detailsJson => text().withDefault(const Constant('{}'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Plans,
@@ -387,6 +404,7 @@ class ProposalResponses extends Table {
     ProposalPackages,
     ProposalRevisions,
     ProposalResponses,
+    RelayActivityLogEntries,
     Contacts,
     ContactInvitations,
     PendingHandshakes,
@@ -486,7 +504,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -652,6 +670,9 @@ class AppDatabase extends _$AppDatabase {
                   AND (recurrence_spec_json IS NULL OR recurrence_spec_json = '')
               ''');
         }
+      }
+      if (from < 16) {
+        await m.createTable(relayActivityLogEntries);
       }
     },
     beforeOpen: (details) async {

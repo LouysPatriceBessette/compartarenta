@@ -46,8 +46,9 @@ class UnitsSettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
+                key: ValueKey(dateFmt),
                 isExpanded: true,
-                value: dateFmt,
+                initialValue: dateFmt,
                 decoration: InputDecoration(
                   labelText: l10n.prefsDateFormatLabel,
                 ),
@@ -60,8 +61,9 @@ class UnitsSettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<DistanceUnit>(
+                key: ValueKey(distance),
                 isExpanded: true,
-                value: distance,
+                initialValue: distance,
                 decoration: InputDecoration(
                   labelText: l10n.prefsDistanceUnitLabel,
                 ),

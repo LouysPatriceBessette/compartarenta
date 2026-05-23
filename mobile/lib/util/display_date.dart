@@ -28,6 +28,15 @@ String formatPreferenceDate(DateTime? utc, String format) {
   }
 }
 
+/// Wall-clock instant as `YYYY-MM-DD HH:MM` in device local time (24-hour).
+String formatPreferenceDateTime(DateTime utc, String dateFormat) {
+  final date = formatPreferenceDate(utc, dateFormat);
+  final local = utc.toLocal();
+  final h = local.hour.toString().padLeft(2, '0');
+  final m = local.minute.toString().padLeft(2, '0');
+  return '$date $h:$m';
+}
+
 bool isStrictlyBeforeCalendarDate(DateTime a, DateTime b) {
   final da = DateUtils.dateOnly(a.toLocal());
   final db = DateUtils.dateOnly(b.toLocal());

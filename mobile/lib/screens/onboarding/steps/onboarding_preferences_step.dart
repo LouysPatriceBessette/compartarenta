@@ -114,8 +114,9 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
+                      key: ValueKey(_dateFormat),
                       isExpanded: true,
-                      value: _dateFormat.isEmpty ? null : _dateFormat,
+                      initialValue: _dateFormat.isEmpty ? null : _dateFormat,
                       decoration: InputDecoration(
                         labelText: l10n.prefsDateFormatLabel,
                       ),
@@ -129,8 +130,9 @@ class _OnboardingPreferencesStepState extends State<OnboardingPreferencesStep> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<DistanceUnit>(
+                      key: ValueKey(_distanceUnit),
                       isExpanded: true,
-                      value: _distanceUnit,
+                      initialValue: _distanceUnit,
                       decoration: InputDecoration(
                         labelText: l10n.prefsDistanceUnitLabel,
                       ),

@@ -11,6 +11,7 @@ import 'db/repositories/contacts_repository.dart';
 import 'prefs/app_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
+import 'screens/settings/activity_log_settings_screen.dart';
 import 'screens/settings/about_settings_screen.dart';
 import 'screens/settings/notification_settings_screen.dart';
 import 'screens/settings/profile_identity_settings_screen.dart';
@@ -244,6 +245,10 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       GoRoute(
         path: '/settings/units',
         builder: (context, state) => UnitsSettingsScreen(prefs: prefs),
+      ),
+      GoRoute(
+        path: '/settings/activity-log',
+        builder: (context, state) => ActivityLogSettingsScreen(prefs: prefs),
       ),
       GoRoute(
         path: '/settings/about',

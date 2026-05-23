@@ -672,6 +672,109 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este acuerdo se solapa en más de un día calendario con otro plan de vivienda en el que usted participa. Cambie las fechas o resuelva el otro plan antes de enviar.';
 
   @override
+  String housingInvitePeriodOverlapDetail(String planTitle, String dateRange) {
+    return 'Este acuerdo se solapa en más de un día calendario con «$planTitle» ($dateRange). Cambie las fechas o resuelva ese plan antes de enviar.';
+  }
+
+  @override
+  String housingInviteResponseDeadlineLabel(String when) {
+    return 'Plazo de respuesta: $when';
+  }
+
+  @override
+  String get housingInviteResponseDeadlineTimezone =>
+      'Mostrado en la zona horaria del dispositivo.';
+
+  @override
+  String get housingInviteOfferClosedHint =>
+      'Esta oferta ya no admite respuestas.';
+
+  @override
+  String housingInviteForkedFromLabel(String revisionId) {
+    return 'Versión derivada de una propuesta anterior ($revisionId).';
+  }
+
+  @override
+  String get housingArchiveExpiredTitle => 'Propuesta caducada';
+
+  @override
+  String get housingInviteStatusTableRelay => 'Relé';
+
+  @override
+  String get housingInviteStatusRelayQueued => 'En cola';
+
+  @override
+  String get housingInviteStatusRelayFailed => 'Error';
+
+  @override
+  String get housingInviteStatusRelayUnknown => '—';
+
+  @override
+  String get settingsActivityLogTitle => 'Registro de mi actividad';
+
+  @override
+  String get settingsActivityLogSubtitle =>
+      'Eventos del relé en este dispositivo';
+
+  @override
+  String get activityLogEmpty => 'Ningún evento coincide con los filtros.';
+
+  @override
+  String get activityLogFilterInitiatorLabel => 'Iniciador';
+
+  @override
+  String get activityLogFilterInitiatorAll => 'Todos';
+
+  @override
+  String get activityLogFilterInitiatorSelf => 'Yo';
+
+  @override
+  String get activityLogFilterInitiatorContact => 'Contacto';
+
+  @override
+  String get activityLogFilterFromLabel => 'Desde (fecha)';
+
+  @override
+  String get activityLogFilterToLabel => 'Hasta (fecha)';
+
+  @override
+  String get activityLogApplyFilters => 'Aplicar filtros';
+
+  @override
+  String get activityLogKindContactHandshakeReceived =>
+      'Solicitud de conexión recibida';
+
+  @override
+  String get activityLogKindContactDisconnected => 'Contacto desconectado';
+
+  @override
+  String get activityLogKindContactDeleted => 'Contacto eliminado';
+
+  @override
+  String get activityLogKindHousingProposalSent =>
+      'Propuesta de vivienda enviada';
+
+  @override
+  String get activityLogKindHousingProposalReceived =>
+      'Propuesta de vivienda recibida';
+
+  @override
+  String get activityLogKindHousingProposalResponse =>
+      'Respuesta a propuesta de vivienda';
+
+  @override
+  String get activityLogKindHousingProposalInvalidated =>
+      'Propuesta de vivienda cerrada';
+
+  @override
+  String get activityLogKindHousingProposalExpired =>
+      'Propuesta de vivienda caducada';
+
+  @override
+  String get activityLogKindHousingProposalForkCreated =>
+      'Versión derivada de vivienda iniciada';
+
+  @override
   String get housingInviteProposalAppBarTitle => 'Propuesta de invitación';
 
   @override

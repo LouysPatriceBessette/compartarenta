@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../db/app_database.dart';
 import 'agreement_period_day_overlap.dart';
 import 'housing_plan_period_gate.dart';
+import 'housing_proposal_revision_state.dart';
 
 /// Local-only proposal / renegotiation support (sync layer TBD).
 ///
@@ -248,6 +249,13 @@ class PlanAgreementProposalService {
     required ProposalResponseStatus status,
     String? message,
   }) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return;
+    final state = HousingProposalRevisionState.fromJson(rev.payloadJson);
+    if (!state.isOpen || state.isExpiredByClock) return;
+
     final id = 'resp:$revisionId:$participantId';
     await _db
         .into(_db.proposalResponses)

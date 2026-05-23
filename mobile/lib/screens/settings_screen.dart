@@ -79,6 +79,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/units'),
           ),
+          ListTile(
+            title: Text(l10n.settingsActivityLogTitle),
+            subtitle: Text(l10n.settingsActivityLogSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/activity-log'),
+          ),
           const Divider(),
           ListTile(
             title: Text(l10n.settingsAboutTitle),

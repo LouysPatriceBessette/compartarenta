@@ -3,34 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/housing_response_deadline_dialog.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
+import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
-import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
-
-String _formatUtcDateTime(DateTime utc, AppPreferences prefs) {
-  final local = utc.toLocal();
-  final fmt = effectiveDateFormat(prefs);
-  final date = formatPreferenceDate(utc, fmt);
-  final h = local.hour.toString().padLeft(2, '0');
-  final m = local.minute.toString().padLeft(2, '0');
-  return '$date $h:$m';
-}
-
-String _responseStatusLabel(AppLocalizations l10n, String? statusName) {
-  switch (statusName) {
-    case 'accepted':
-      return l10n.housingInviteStatusAccepted;
-    case 'rejected':
-      return l10n.housingInviteStatusRejected;
-    case 'negotiate':
-      return l10n.housingInviteStatusNegotiating;
-    case 'pending':
-    default:
-      return l10n.housingInviteStatusPending;
-  }
-}
 
 /// Shows invitation dispatch time, response deadline, and per-invitee DB status.
 Future<void> showHousingInvitationStatusDialog(
@@ -84,6 +63,10 @@ Future<void> showHousingInvitationStatusDialog(
   final responseMessages = Map<String, dynamic>.from(
     (payload['responseMessages'] as Map?) ?? const <String, dynamic>{},
   );
+  final relayStatus = Map<String, dynamic>.from(
+    (payload['relaySendStatusByParticipantId'] as Map?) ??
+        const <String, dynamic>{},
+  );
   final expiresStr = payload['responseExpiresAt'] as String?;
   DateTime? expiresUtc;
   if (expiresStr != null) {
@@ -117,13 +100,23 @@ Future<void> showHousingInvitationStatusDialog(
   ).canResendPendingProposal(planId);
 
   if (!context.mounted) return;
+  final dateFmt = effectiveDateFormat(prefs);
   await showDialog<void>(
     context: context,
     builder: (ctx) {
-      final sent = _formatUtcDateTime(rev.createdAt.toUtc(), prefs);
+      final sent = formatPreferenceDateTime(rev.createdAt.toUtc(), dateFmt);
       final deadline = expiresUtc != null
-          ? _formatUtcDateTime(expiresUtc.toUtc(), prefs)
+          ? formatPreferenceDateTime(expiresUtc.toUtc(), dateFmt)
           : l10n.housingInviteStatusDeadlineNotSet;
+
+      String relayLabel(String participantId) {
+        final raw = relayStatus[participantId]?.toString();
+        return switch (raw) {
+          'queued' => l10n.housingInviteStatusRelayQueued,
+          'failed' => l10n.housingInviteStatusRelayFailed,
+          _ => l10n.housingInviteStatusRelayUnknown,
+        };
+      }
 
       return AlertDialog(
         title: Text(l10n.housingInviteStatusDialogTitle),
@@ -157,19 +150,24 @@ Future<void> showHousingInvitationStatusDialog(
                     DataColumn(
                       label: Text(l10n.housingInviteStatusTableStatus),
                     ),
+                    DataColumn(
+                      label: Text(l10n.housingInviteStatusTableRelay),
+                    ),
                   ],
                   rows: [
                     for (final p in roster)
-                      DataRow(
-                        cells: [
-                          DataCell(Text(p.displayName)),
-                          DataCell(
-                            Text(
-                              _responseStatusLabel(l10n, byParticipant[p.id]),
+                      if (!p.id.endsWith(':self'))
+                        DataRow(
+                          cells: [
+                            DataCell(Text(p.displayName)),
+                            DataCell(
+                              Text(
+                                _responseStatusLabel(l10n, byParticipant[p.id]),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            DataCell(Text(relayLabel(p.id))),
+                          ],
+                        ),
                   ],
                 ),
               ),
@@ -202,6 +200,7 @@ Future<void> showHousingInvitationStatusDialog(
                   db: db,
                   planId: planId,
                   revisionId: selectedRevisionId,
+                  prefs: prefs,
                 );
                 onAfterResend?.call();
               },
@@ -222,8 +221,21 @@ Future<void> _resendPendingProposalDelivery(
   required AppDatabase db,
   required String planId,
   required String revisionId,
+  required AppPreferences prefs,
 }) async {
   final l10n = AppLocalizations.of(context);
+  final duration = await showHousingResponseDeadlineDialog(context);
+  if (duration == null || !context.mounted) return;
+
+  final expiresAt = DateTime.now().toUtc().add(duration);
+  await HousingProposalTransportService(db).updateRevisionPayload(
+    revisionId: revisionId,
+    mutate: (payload) {
+      payload['responseExpiresAt'] = expiresAt.toIso8601String();
+      payload['lifecycleState'] = 'open';
+    },
+  );
+
   try {
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator == null) {
@@ -233,6 +245,15 @@ Future<void> _resendPendingProposalDelivery(
       planId: planId,
       revisionId: revisionId,
     );
+    if (send.relayStatusByParticipantId.isNotEmpty) {
+      await HousingProposalTransportService(db).updateRevisionPayload(
+        revisionId: revisionId,
+        mutate: (payload) {
+          payload['relaySendStatusByParticipantId'] =
+              send.relayStatusByParticipantId;
+        },
+      );
+    }
     if (!context.mounted) return;
     if (send.sentCount == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -254,6 +275,20 @@ Future<void> _resendPendingProposalDelivery(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
     );
+  }
+}
+
+String _responseStatusLabel(AppLocalizations l10n, String? statusName) {
+  switch (statusName) {
+    case 'accepted':
+      return l10n.housingInviteStatusAccepted;
+    case 'rejected':
+      return l10n.housingInviteStatusRejected;
+    case 'negotiate':
+      return l10n.housingInviteStatusNegotiating;
+    case 'pending':
+    default:
+      return l10n.housingInviteStatusPending;
   }
 }
 

@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' as drift;
 
+import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
+import 'housing_proposal_revision_state.dart';
 import 'plan_agreement_proposal_service.dart';
 
 class ReceivedHousingProposalImport {
@@ -28,6 +30,7 @@ class HousingProposalArchive {
     this.pendingResponseCount = 0,
     this.participantCount = 0,
     this.editorPlanId,
+    this.isExpired = false,
   });
 
   final String planId;
@@ -41,6 +44,7 @@ class HousingProposalArchive {
   final int pendingResponseCount;
   final int participantCount;
   final String? editorPlanId;
+  final bool isExpired;
 }
 
 class HousingProposalTransportService {
@@ -230,6 +234,68 @@ class HousingProposalTransportService {
     );
   }
 
+  /// Closes an open revision when [responseExpiresAt] has passed (task 1.7 / 1.2).
+  Future<bool> expireRevisionIfNeeded({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return false;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final state = HousingProposalRevisionState.fromPayload(payload);
+    if (!state.isOpen || !state.isExpiredByClock) return false;
+
+    payload['lifecycleState'] = 'archived';
+    payload['invalidatedByStatus'] = 'expired';
+    payload.remove('invalidatedByParticipantId');
+    await (_db.update(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).write(
+      ProposalRevisionsCompanion(payloadJson: drift.Value(jsonEncode(payload))),
+    );
+    await (_db.update(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).write(
+      const ProposalPackagesCompanion(pendingRevisionId: drift.Value(null)),
+    );
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.housingProposalExpired,
+      initiatorKind: RelayActivityLogService.initiatorSystem,
+      planId: planId,
+      packageId: payload['packageId']?.toString(),
+      revisionId: revisionId,
+    );
+    return true;
+  }
+
+  Future<void> expireOpenRevisionsForPlan(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    final pendingId = pkg?.pendingRevisionId;
+    if (pendingId == null) return;
+    await expireRevisionIfNeeded(planId: planId, revisionId: pendingId);
+  }
+
+  Future<void> updateRevisionPayload({
+    required String revisionId,
+    required void Function(Map<String, dynamic> payload) mutate,
+  }) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    mutate(payload);
+    await (_db.update(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).write(
+      ProposalRevisionsCompanion(payloadJson: drift.Value(jsonEncode(payload))),
+    );
+  }
+
   Future<void> archiveInvalidatedProposal({
     required String planId,
     required String revisionId,
@@ -241,6 +307,7 @@ class HousingProposalTransportService {
     )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
     if (rev == null) return;
     final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    if (payload['lifecycleState'] == 'archived') return;
     payload['lifecycleState'] = 'archived';
     payload['invalidatedByStatus'] = status.name;
     payload['invalidatedByParticipantId'] = responderParticipantId;
@@ -262,6 +329,18 @@ class HousingProposalTransportService {
       _db.proposalPackages,
     )..where((t) => t.planId.equals(planId))).write(
       const ProposalPackagesCompanion(pendingRevisionId: drift.Value(null)),
+    );
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.housingProposalInvalidated,
+      initiatorKind: RelayActivityLogService.initiatorContact,
+      initiatorContactId: null,
+      planId: planId,
+      packageId: payload['packageId']?.toString(),
+      revisionId: revisionId,
+      details: {
+        'status': status.name,
+        'responderParticipantId': responderParticipantId,
+      },
     );
   }
 
@@ -338,9 +417,12 @@ class HousingProposalTransportService {
       }
       if (payload['lifecycleState'] != 'archived') continue;
       final statusName = _string(payload['invalidatedByStatus']);
-      final status = statusName == ProposalResponseStatus.negotiate.name
-          ? ProposalResponseStatus.negotiate
-          : ProposalResponseStatus.rejected;
+      final status = switch (statusName) {
+        'negotiate' => ProposalResponseStatus.negotiate,
+        'expired' => ProposalResponseStatus.pending,
+        _ => ProposalResponseStatus.rejected,
+      };
+      final isExpiredArchive = statusName == 'expired';
       final responderParticipantId = _string(
         payload['invalidatedByParticipantId'],
       );
@@ -363,6 +445,7 @@ class HousingProposalTransportService {
             revisionId: rev.id,
             localParticipantId: '$planId:self',
           ),
+          isExpired: isExpiredArchive,
         ),
       );
     }

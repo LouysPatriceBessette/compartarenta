@@ -212,7 +212,42 @@ These payloads are visible to the receiving client only.
 - The receiver demotes the corresponding Contact back to local-only and
   retires the steady-state routing on the relay.
 
-## 6. What is intentionally **not** on the wire
+## 6. Housing proposal envelopes (steady-state)
+
+Housing uses the same `POST /v1/envelopes` transport with distinct
+`kind` values on the relay row. Plaintext lives only inside the
+encrypted frame (same outer layout as Contacts steady-state messages).
+
+### 6.1 `housing_proposal`
+
+Delivers a self-contained `expensePlanContractProposal` JSON package to
+one roster participant. The frame includes the sender long-term public
+key, `targetParticipantId` (source roster id in the proposer’s plan), and
+`proposalJson`.
+
+### 6.2 `housing_proposal_response`
+
+Broadcasts one participant’s decision on a revision:
+
+```json
+{
+  "sourcePackageId": "<package-id>",
+  "sourceRevisionId": "<revision-id>",
+  "sourceParticipantId": "<participant-id in proposer roster>",
+  "status": "accepted | negotiate | rejected",
+  "message": "<optional bounded text>"
+}
+```
+
+Recipients apply **parallel response** rules locally: the first
+`negotiate` or `rejected` invalidates the revision for all participants
+still `pending`; `accepted` counts toward unanimous activation.
+
+Revision metadata on-device (not on the relay) also carries
+`responseExpiresAt` (per send, not inherited by forks) and optional
+`relaySendStatusByParticipantId` after the author dispatches.
+
+## 7. What is intentionally **not** on the wire
 
 The following are checked in code review and integration tests:
 

@@ -54,7 +54,8 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byType(TextFormField));
+    // Currency field is the first read-only TextFormField; timezone is second.
+    await tester.tap(find.byType(TextFormField).first);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

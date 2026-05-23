@@ -234,6 +234,51 @@
   "housingInviteResponseWindowBody": "Participants have until this date and time to respond (UTC).",
   "housingInvitePeriodOverlapTitle": "Agreement period conflict",
   "housingInvitePeriodOverlapBody": "This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.",
+  "housingInvitePeriodOverlapDetail": "This agreement overlaps by more than one calendar day with “{planTitle}” ({dateRange}). Change the dates or resolve that plan before sending.",
+  "@housingInvitePeriodOverlapDetail": {
+    "placeholders": {
+      "planTitle": { "type": "String" },
+      "dateRange": { "type": "String" }
+    }
+  },
+  "housingInviteResponseDeadlineLabel": "Response deadline: {when}",
+  "@housingInviteResponseDeadlineLabel": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingInviteResponseDeadlineTimezone": "Shown in your device time zone.",
+  "housingInviteOfferClosedHint": "This offer is no longer open for responses.",
+  "housingInviteForkedFromLabel": "Derived from a previous proposal ({revisionId}).",
+  "@housingInviteForkedFromLabel": {
+    "placeholders": {
+      "revisionId": { "type": "String" }
+    }
+  },
+  "housingArchiveExpiredTitle": "Expired proposal",
+  "housingInviteStatusTableRelay": "Relay",
+  "housingInviteStatusRelayQueued": "Queued",
+  "housingInviteStatusRelayFailed": "Failed",
+  "housingInviteStatusRelayUnknown": "—",
+  "settingsActivityLogTitle": "My activity log",
+  "settingsActivityLogSubtitle": "Relay events on this device",
+  "activityLogEmpty": "No events match your filters.",
+  "activityLogFilterInitiatorLabel": "Initiator",
+  "activityLogFilterInitiatorAll": "All",
+  "activityLogFilterInitiatorSelf": "Me",
+  "activityLogFilterInitiatorContact": "Contact",
+  "activityLogFilterFromLabel": "From (date)",
+  "activityLogFilterToLabel": "To (date)",
+  "activityLogApplyFilters": "Apply filters",
+  "activityLogKindContactHandshakeReceived": "Contact connection request received",
+  "activityLogKindContactDisconnected": "Contact disconnected",
+  "activityLogKindContactDeleted": "Contact deleted",
+  "activityLogKindHousingProposalSent": "Housing proposal sent",
+  "activityLogKindHousingProposalReceived": "Housing proposal received",
+  "activityLogKindHousingProposalResponse": "Housing proposal response",
+  "activityLogKindHousingProposalInvalidated": "Housing proposal closed",
+  "activityLogKindHousingProposalExpired": "Housing proposal expired",
+  "activityLogKindHousingProposalForkCreated": "Derived housing proposal started",
   "housingInviteProposalAppBarTitle": "Invitation proposal",
   "housingInviteProposalIntroTitle": "Here is the proposal that will be sent to each of your participants.",
   "housingInviteProposalSentIntroTitle": "Here is the proposal sent to each of your participants.",

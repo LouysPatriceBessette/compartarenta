@@ -1,4 +1,7 @@
-import 'dart:html' as html;
+// Web-only implementation (conditional export); package:web is intentional here.
+// ignore_for_file: avoid_web_libraries_in_flutter
+
+import 'package:web/web.dart' as web;
 
 import '../prefs/app_preferences.dart';
 
@@ -12,9 +15,9 @@ class HousingPlanDraftBackupPersist {
   const HousingPlanDraftBackupPersist._();
 
   static String? read(String planId, AppPreferences prefs) {
-    var raw = html.window.localStorage[_storageKey(planId)];
+    var raw = web.window.localStorage.getItem(_storageKey(planId));
     if ((raw == null || raw.isEmpty) && planId == 'housing:default') {
-      raw = html.window.localStorage[_legacyKey];
+      raw = web.window.localStorage.getItem(_legacyKey);
     }
     if (raw == null || raw.isEmpty) {
       raw = prefs.housingPlanDraftBackupJson(planId);
@@ -32,13 +35,13 @@ class HousingPlanDraftBackupPersist {
   ) async {
     final key = _storageKey(planId);
     if (json == null || json.isEmpty) {
-      html.window.localStorage.remove(key);
+      web.window.localStorage.removeItem(key);
       if (planId == 'housing:default') {
-        html.window.localStorage.remove(_legacyKey);
+        web.window.localStorage.removeItem(_legacyKey);
       }
       return;
     }
-    html.window.localStorage[key] = json;
+    web.window.localStorage.setItem(key, json);
     // Keep SharedPreferences in sync when the plugin works; localStorage is
     // the source of truth for abrupt dev-server restarts.
     await prefs.setHousingPlanDraftBackupJson(planId, json);

@@ -1294,6 +1294,180 @@ abstract class AppLocalizations {
   /// **'This agreement overlaps by more than one calendar day with another housing plan where you are a participant. Change the dates or resolve the other plan before sending.'**
   String get housingInvitePeriodOverlapBody;
 
+  /// No description provided for @housingInvitePeriodOverlapDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This agreement overlaps by more than one calendar day with “{planTitle}” ({dateRange}). Change the dates or resolve that plan before sending.'**
+  String housingInvitePeriodOverlapDetail(String planTitle, String dateRange);
+
+  /// No description provided for @housingInviteResponseDeadlineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Response deadline: {when}'**
+  String housingInviteResponseDeadlineLabel(String when);
+
+  /// No description provided for @housingInviteResponseDeadlineTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown in your device time zone.'**
+  String get housingInviteResponseDeadlineTimezone;
+
+  /// No description provided for @housingInviteOfferClosedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is no longer open for responses.'**
+  String get housingInviteOfferClosedHint;
+
+  /// No description provided for @housingInviteForkedFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Derived from a previous proposal ({revisionId}).'**
+  String housingInviteForkedFromLabel(String revisionId);
+
+  /// No description provided for @housingArchiveExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired proposal'**
+  String get housingArchiveExpiredTitle;
+
+  /// No description provided for @housingInviteStatusTableRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay'**
+  String get housingInviteStatusTableRelay;
+
+  /// No description provided for @housingInviteStatusRelayQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get housingInviteStatusRelayQueued;
+
+  /// No description provided for @housingInviteStatusRelayFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get housingInviteStatusRelayFailed;
+
+  /// No description provided for @housingInviteStatusRelayUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get housingInviteStatusRelayUnknown;
+
+  /// No description provided for @settingsActivityLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My activity log'**
+  String get settingsActivityLogTitle;
+
+  /// No description provided for @settingsActivityLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay events on this device'**
+  String get settingsActivityLogSubtitle;
+
+  /// No description provided for @activityLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No events match your filters.'**
+  String get activityLogEmpty;
+
+  /// No description provided for @activityLogFilterInitiatorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Initiator'**
+  String get activityLogFilterInitiatorLabel;
+
+  /// No description provided for @activityLogFilterInitiatorAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get activityLogFilterInitiatorAll;
+
+  /// No description provided for @activityLogFilterInitiatorSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get activityLogFilterInitiatorSelf;
+
+  /// No description provided for @activityLogFilterInitiatorContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get activityLogFilterInitiatorContact;
+
+  /// No description provided for @activityLogFilterFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From (date)'**
+  String get activityLogFilterFromLabel;
+
+  /// No description provided for @activityLogFilterToLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To (date)'**
+  String get activityLogFilterToLabel;
+
+  /// No description provided for @activityLogApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get activityLogApplyFilters;
+
+  /// No description provided for @activityLogKindContactHandshakeReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact connection request received'**
+  String get activityLogKindContactHandshakeReceived;
+
+  /// No description provided for @activityLogKindContactDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact disconnected'**
+  String get activityLogKindContactDisconnected;
+
+  /// No description provided for @activityLogKindContactDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact deleted'**
+  String get activityLogKindContactDeleted;
+
+  /// No description provided for @activityLogKindHousingProposalSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal sent'**
+  String get activityLogKindHousingProposalSent;
+
+  /// No description provided for @activityLogKindHousingProposalReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal received'**
+  String get activityLogKindHousingProposalReceived;
+
+  /// No description provided for @activityLogKindHousingProposalResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal response'**
+  String get activityLogKindHousingProposalResponse;
+
+  /// No description provided for @activityLogKindHousingProposalInvalidated.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal closed'**
+  String get activityLogKindHousingProposalInvalidated;
+
+  /// No description provided for @activityLogKindHousingProposalExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing proposal expired'**
+  String get activityLogKindHousingProposalExpired;
+
+  /// No description provided for @activityLogKindHousingProposalForkCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Derived housing proposal started'**
+  String get activityLogKindHousingProposalForkCreated;
+
   /// No description provided for @housingInviteProposalAppBarTitle.
   ///
   /// In en, this message translates to:

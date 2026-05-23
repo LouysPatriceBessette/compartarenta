@@ -5064,6 +5064,648 @@ class ProposalResponsesCompanion extends UpdateCompanion<ProposalResponse> {
   }
 }
 
+class $RelayActivityLogEntriesTable extends RelayActivityLogEntries
+    with TableInfo<$RelayActivityLogEntriesTable, RelayActivityLogEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RelayActivityLogEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> occurredAt = GeneratedColumn<DateTime>(
+    'occurred_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _initiatorKindMeta = const VerificationMeta(
+    'initiatorKind',
+  );
+  @override
+  late final GeneratedColumn<String> initiatorKind = GeneratedColumn<String>(
+    'initiator_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _initiatorContactIdMeta =
+      const VerificationMeta('initiatorContactId');
+  @override
+  late final GeneratedColumn<String> initiatorContactId =
+      GeneratedColumn<String>(
+        'initiator_contact_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _initiatorDisplayNameMeta =
+      const VerificationMeta('initiatorDisplayName');
+  @override
+  late final GeneratedColumn<String> initiatorDisplayName =
+      GeneratedColumn<String>(
+        'initiator_display_name',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _packageIdMeta = const VerificationMeta(
+    'packageId',
+  );
+  @override
+  late final GeneratedColumn<String> packageId = GeneratedColumn<String>(
+    'package_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _detailsJsonMeta = const VerificationMeta(
+    'detailsJson',
+  );
+  @override
+  late final GeneratedColumn<String> detailsJson = GeneratedColumn<String>(
+    'details_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    occurredAt,
+    kind,
+    initiatorKind,
+    initiatorContactId,
+    initiatorDisplayName,
+    planId,
+    packageId,
+    revisionId,
+    detailsJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'relay_activity_log_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RelayActivityLogEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('initiator_kind')) {
+      context.handle(
+        _initiatorKindMeta,
+        initiatorKind.isAcceptableOrUnknown(
+          data['initiator_kind']!,
+          _initiatorKindMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_initiatorKindMeta);
+    }
+    if (data.containsKey('initiator_contact_id')) {
+      context.handle(
+        _initiatorContactIdMeta,
+        initiatorContactId.isAcceptableOrUnknown(
+          data['initiator_contact_id']!,
+          _initiatorContactIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('initiator_display_name')) {
+      context.handle(
+        _initiatorDisplayNameMeta,
+        initiatorDisplayName.isAcceptableOrUnknown(
+          data['initiator_display_name']!,
+          _initiatorDisplayNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    }
+    if (data.containsKey('package_id')) {
+      context.handle(
+        _packageIdMeta,
+        packageId.isAcceptableOrUnknown(data['package_id']!, _packageIdMeta),
+      );
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    }
+    if (data.containsKey('details_json')) {
+      context.handle(
+        _detailsJsonMeta,
+        detailsJson.isAcceptableOrUnknown(
+          data['details_json']!,
+          _detailsJsonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RelayActivityLogEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RelayActivityLogEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      occurredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}occurred_at'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      initiatorKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}initiator_kind'],
+      )!,
+      initiatorContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}initiator_contact_id'],
+      ),
+      initiatorDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}initiator_display_name'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      ),
+      packageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}package_id'],
+      ),
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      ),
+      detailsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}details_json'],
+      )!,
+    );
+  }
+
+  @override
+  $RelayActivityLogEntriesTable createAlias(String alias) {
+    return $RelayActivityLogEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class RelayActivityLogEntry extends DataClass
+    implements Insertable<RelayActivityLogEntry> {
+  final String id;
+  final DateTime occurredAt;
+  final String kind;
+  final String initiatorKind;
+  final String? initiatorContactId;
+  final String initiatorDisplayName;
+  final String? planId;
+  final String? packageId;
+  final String? revisionId;
+  final String detailsJson;
+  const RelayActivityLogEntry({
+    required this.id,
+    required this.occurredAt,
+    required this.kind,
+    required this.initiatorKind,
+    this.initiatorContactId,
+    required this.initiatorDisplayName,
+    this.planId,
+    this.packageId,
+    this.revisionId,
+    required this.detailsJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['occurred_at'] = Variable<DateTime>(occurredAt);
+    map['kind'] = Variable<String>(kind);
+    map['initiator_kind'] = Variable<String>(initiatorKind);
+    if (!nullToAbsent || initiatorContactId != null) {
+      map['initiator_contact_id'] = Variable<String>(initiatorContactId);
+    }
+    map['initiator_display_name'] = Variable<String>(initiatorDisplayName);
+    if (!nullToAbsent || planId != null) {
+      map['plan_id'] = Variable<String>(planId);
+    }
+    if (!nullToAbsent || packageId != null) {
+      map['package_id'] = Variable<String>(packageId);
+    }
+    if (!nullToAbsent || revisionId != null) {
+      map['revision_id'] = Variable<String>(revisionId);
+    }
+    map['details_json'] = Variable<String>(detailsJson);
+    return map;
+  }
+
+  RelayActivityLogEntriesCompanion toCompanion(bool nullToAbsent) {
+    return RelayActivityLogEntriesCompanion(
+      id: Value(id),
+      occurredAt: Value(occurredAt),
+      kind: Value(kind),
+      initiatorKind: Value(initiatorKind),
+      initiatorContactId: initiatorContactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(initiatorContactId),
+      initiatorDisplayName: Value(initiatorDisplayName),
+      planId: planId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(planId),
+      packageId: packageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(packageId),
+      revisionId: revisionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(revisionId),
+      detailsJson: Value(detailsJson),
+    );
+  }
+
+  factory RelayActivityLogEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RelayActivityLogEntry(
+      id: serializer.fromJson<String>(json['id']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      kind: serializer.fromJson<String>(json['kind']),
+      initiatorKind: serializer.fromJson<String>(json['initiatorKind']),
+      initiatorContactId: serializer.fromJson<String?>(
+        json['initiatorContactId'],
+      ),
+      initiatorDisplayName: serializer.fromJson<String>(
+        json['initiatorDisplayName'],
+      ),
+      planId: serializer.fromJson<String?>(json['planId']),
+      packageId: serializer.fromJson<String?>(json['packageId']),
+      revisionId: serializer.fromJson<String?>(json['revisionId']),
+      detailsJson: serializer.fromJson<String>(json['detailsJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'kind': serializer.toJson<String>(kind),
+      'initiatorKind': serializer.toJson<String>(initiatorKind),
+      'initiatorContactId': serializer.toJson<String?>(initiatorContactId),
+      'initiatorDisplayName': serializer.toJson<String>(initiatorDisplayName),
+      'planId': serializer.toJson<String?>(planId),
+      'packageId': serializer.toJson<String?>(packageId),
+      'revisionId': serializer.toJson<String?>(revisionId),
+      'detailsJson': serializer.toJson<String>(detailsJson),
+    };
+  }
+
+  RelayActivityLogEntry copyWith({
+    String? id,
+    DateTime? occurredAt,
+    String? kind,
+    String? initiatorKind,
+    Value<String?> initiatorContactId = const Value.absent(),
+    String? initiatorDisplayName,
+    Value<String?> planId = const Value.absent(),
+    Value<String?> packageId = const Value.absent(),
+    Value<String?> revisionId = const Value.absent(),
+    String? detailsJson,
+  }) => RelayActivityLogEntry(
+    id: id ?? this.id,
+    occurredAt: occurredAt ?? this.occurredAt,
+    kind: kind ?? this.kind,
+    initiatorKind: initiatorKind ?? this.initiatorKind,
+    initiatorContactId: initiatorContactId.present
+        ? initiatorContactId.value
+        : this.initiatorContactId,
+    initiatorDisplayName: initiatorDisplayName ?? this.initiatorDisplayName,
+    planId: planId.present ? planId.value : this.planId,
+    packageId: packageId.present ? packageId.value : this.packageId,
+    revisionId: revisionId.present ? revisionId.value : this.revisionId,
+    detailsJson: detailsJson ?? this.detailsJson,
+  );
+  RelayActivityLogEntry copyWithCompanion(
+    RelayActivityLogEntriesCompanion data,
+  ) {
+    return RelayActivityLogEntry(
+      id: data.id.present ? data.id.value : this.id,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      initiatorKind: data.initiatorKind.present
+          ? data.initiatorKind.value
+          : this.initiatorKind,
+      initiatorContactId: data.initiatorContactId.present
+          ? data.initiatorContactId.value
+          : this.initiatorContactId,
+      initiatorDisplayName: data.initiatorDisplayName.present
+          ? data.initiatorDisplayName.value
+          : this.initiatorDisplayName,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      packageId: data.packageId.present ? data.packageId.value : this.packageId,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      detailsJson: data.detailsJson.present
+          ? data.detailsJson.value
+          : this.detailsJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RelayActivityLogEntry(')
+          ..write('id: $id, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('kind: $kind, ')
+          ..write('initiatorKind: $initiatorKind, ')
+          ..write('initiatorContactId: $initiatorContactId, ')
+          ..write('initiatorDisplayName: $initiatorDisplayName, ')
+          ..write('planId: $planId, ')
+          ..write('packageId: $packageId, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('detailsJson: $detailsJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    occurredAt,
+    kind,
+    initiatorKind,
+    initiatorContactId,
+    initiatorDisplayName,
+    planId,
+    packageId,
+    revisionId,
+    detailsJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RelayActivityLogEntry &&
+          other.id == this.id &&
+          other.occurredAt == this.occurredAt &&
+          other.kind == this.kind &&
+          other.initiatorKind == this.initiatorKind &&
+          other.initiatorContactId == this.initiatorContactId &&
+          other.initiatorDisplayName == this.initiatorDisplayName &&
+          other.planId == this.planId &&
+          other.packageId == this.packageId &&
+          other.revisionId == this.revisionId &&
+          other.detailsJson == this.detailsJson);
+}
+
+class RelayActivityLogEntriesCompanion
+    extends UpdateCompanion<RelayActivityLogEntry> {
+  final Value<String> id;
+  final Value<DateTime> occurredAt;
+  final Value<String> kind;
+  final Value<String> initiatorKind;
+  final Value<String?> initiatorContactId;
+  final Value<String> initiatorDisplayName;
+  final Value<String?> planId;
+  final Value<String?> packageId;
+  final Value<String?> revisionId;
+  final Value<String> detailsJson;
+  final Value<int> rowid;
+  const RelayActivityLogEntriesCompanion({
+    this.id = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.initiatorKind = const Value.absent(),
+    this.initiatorContactId = const Value.absent(),
+    this.initiatorDisplayName = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.packageId = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.detailsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RelayActivityLogEntriesCompanion.insert({
+    required String id,
+    required DateTime occurredAt,
+    required String kind,
+    required String initiatorKind,
+    this.initiatorContactId = const Value.absent(),
+    this.initiatorDisplayName = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.packageId = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.detailsJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       occurredAt = Value(occurredAt),
+       kind = Value(kind),
+       initiatorKind = Value(initiatorKind);
+  static Insertable<RelayActivityLogEntry> custom({
+    Expression<String>? id,
+    Expression<DateTime>? occurredAt,
+    Expression<String>? kind,
+    Expression<String>? initiatorKind,
+    Expression<String>? initiatorContactId,
+    Expression<String>? initiatorDisplayName,
+    Expression<String>? planId,
+    Expression<String>? packageId,
+    Expression<String>? revisionId,
+    Expression<String>? detailsJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (kind != null) 'kind': kind,
+      if (initiatorKind != null) 'initiator_kind': initiatorKind,
+      if (initiatorContactId != null)
+        'initiator_contact_id': initiatorContactId,
+      if (initiatorDisplayName != null)
+        'initiator_display_name': initiatorDisplayName,
+      if (planId != null) 'plan_id': planId,
+      if (packageId != null) 'package_id': packageId,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (detailsJson != null) 'details_json': detailsJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RelayActivityLogEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? occurredAt,
+    Value<String>? kind,
+    Value<String>? initiatorKind,
+    Value<String?>? initiatorContactId,
+    Value<String>? initiatorDisplayName,
+    Value<String?>? planId,
+    Value<String?>? packageId,
+    Value<String?>? revisionId,
+    Value<String>? detailsJson,
+    Value<int>? rowid,
+  }) {
+    return RelayActivityLogEntriesCompanion(
+      id: id ?? this.id,
+      occurredAt: occurredAt ?? this.occurredAt,
+      kind: kind ?? this.kind,
+      initiatorKind: initiatorKind ?? this.initiatorKind,
+      initiatorContactId: initiatorContactId ?? this.initiatorContactId,
+      initiatorDisplayName: initiatorDisplayName ?? this.initiatorDisplayName,
+      planId: planId ?? this.planId,
+      packageId: packageId ?? this.packageId,
+      revisionId: revisionId ?? this.revisionId,
+      detailsJson: detailsJson ?? this.detailsJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(occurredAt.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (initiatorKind.present) {
+      map['initiator_kind'] = Variable<String>(initiatorKind.value);
+    }
+    if (initiatorContactId.present) {
+      map['initiator_contact_id'] = Variable<String>(initiatorContactId.value);
+    }
+    if (initiatorDisplayName.present) {
+      map['initiator_display_name'] = Variable<String>(
+        initiatorDisplayName.value,
+      );
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (packageId.present) {
+      map['package_id'] = Variable<String>(packageId.value);
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (detailsJson.present) {
+      map['details_json'] = Variable<String>(detailsJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RelayActivityLogEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('kind: $kind, ')
+          ..write('initiatorKind: $initiatorKind, ')
+          ..write('initiatorContactId: $initiatorContactId, ')
+          ..write('initiatorDisplayName: $initiatorDisplayName, ')
+          ..write('planId: $planId, ')
+          ..write('packageId: $packageId, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('detailsJson: $detailsJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -7265,6 +7907,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProposalRevisionsTable(this);
   late final $ProposalResponsesTable proposalResponses =
       $ProposalResponsesTable(this);
+  late final $RelayActivityLogEntriesTable relayActivityLogEntries =
+      $RelayActivityLogEntriesTable(this);
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $ContactInvitationsTable contactInvitations =
       $ContactInvitationsTable(this);
@@ -7285,6 +7929,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     proposalPackages,
     proposalRevisions,
     proposalResponses,
+    relayActivityLogEntries,
     contacts,
     contactInvitations,
     pendingHandshakes,
@@ -9860,6 +10505,332 @@ typedef $$ProposalResponsesTableProcessedTableManager =
       ProposalResponse,
       PrefetchHooks Function()
     >;
+typedef $$RelayActivityLogEntriesTableCreateCompanionBuilder =
+    RelayActivityLogEntriesCompanion Function({
+      required String id,
+      required DateTime occurredAt,
+      required String kind,
+      required String initiatorKind,
+      Value<String?> initiatorContactId,
+      Value<String> initiatorDisplayName,
+      Value<String?> planId,
+      Value<String?> packageId,
+      Value<String?> revisionId,
+      Value<String> detailsJson,
+      Value<int> rowid,
+    });
+typedef $$RelayActivityLogEntriesTableUpdateCompanionBuilder =
+    RelayActivityLogEntriesCompanion Function({
+      Value<String> id,
+      Value<DateTime> occurredAt,
+      Value<String> kind,
+      Value<String> initiatorKind,
+      Value<String?> initiatorContactId,
+      Value<String> initiatorDisplayName,
+      Value<String?> planId,
+      Value<String?> packageId,
+      Value<String?> revisionId,
+      Value<String> detailsJson,
+      Value<int> rowid,
+    });
+
+class $$RelayActivityLogEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $RelayActivityLogEntriesTable> {
+  $$RelayActivityLogEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get initiatorKind => $composableBuilder(
+    column: $table.initiatorKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get initiatorContactId => $composableBuilder(
+    column: $table.initiatorContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get initiatorDisplayName => $composableBuilder(
+    column: $table.initiatorDisplayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detailsJson => $composableBuilder(
+    column: $table.detailsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RelayActivityLogEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RelayActivityLogEntriesTable> {
+  $$RelayActivityLogEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get initiatorKind => $composableBuilder(
+    column: $table.initiatorKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get initiatorContactId => $composableBuilder(
+    column: $table.initiatorContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get initiatorDisplayName => $composableBuilder(
+    column: $table.initiatorDisplayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detailsJson => $composableBuilder(
+    column: $table.detailsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RelayActivityLogEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RelayActivityLogEntriesTable> {
+  $$RelayActivityLogEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get initiatorKind => $composableBuilder(
+    column: $table.initiatorKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get initiatorContactId => $composableBuilder(
+    column: $table.initiatorContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get initiatorDisplayName => $composableBuilder(
+    column: $table.initiatorDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get packageId =>
+      $composableBuilder(column: $table.packageId, builder: (column) => column);
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get detailsJson => $composableBuilder(
+    column: $table.detailsJson,
+    builder: (column) => column,
+  );
+}
+
+class $$RelayActivityLogEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RelayActivityLogEntriesTable,
+          RelayActivityLogEntry,
+          $$RelayActivityLogEntriesTableFilterComposer,
+          $$RelayActivityLogEntriesTableOrderingComposer,
+          $$RelayActivityLogEntriesTableAnnotationComposer,
+          $$RelayActivityLogEntriesTableCreateCompanionBuilder,
+          $$RelayActivityLogEntriesTableUpdateCompanionBuilder,
+          (
+            RelayActivityLogEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $RelayActivityLogEntriesTable,
+              RelayActivityLogEntry
+            >,
+          ),
+          RelayActivityLogEntry,
+          PrefetchHooks Function()
+        > {
+  $$RelayActivityLogEntriesTableTableManager(
+    _$AppDatabase db,
+    $RelayActivityLogEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RelayActivityLogEntriesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$RelayActivityLogEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RelayActivityLogEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> initiatorKind = const Value.absent(),
+                Value<String?> initiatorContactId = const Value.absent(),
+                Value<String> initiatorDisplayName = const Value.absent(),
+                Value<String?> planId = const Value.absent(),
+                Value<String?> packageId = const Value.absent(),
+                Value<String?> revisionId = const Value.absent(),
+                Value<String> detailsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RelayActivityLogEntriesCompanion(
+                id: id,
+                occurredAt: occurredAt,
+                kind: kind,
+                initiatorKind: initiatorKind,
+                initiatorContactId: initiatorContactId,
+                initiatorDisplayName: initiatorDisplayName,
+                planId: planId,
+                packageId: packageId,
+                revisionId: revisionId,
+                detailsJson: detailsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime occurredAt,
+                required String kind,
+                required String initiatorKind,
+                Value<String?> initiatorContactId = const Value.absent(),
+                Value<String> initiatorDisplayName = const Value.absent(),
+                Value<String?> planId = const Value.absent(),
+                Value<String?> packageId = const Value.absent(),
+                Value<String?> revisionId = const Value.absent(),
+                Value<String> detailsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RelayActivityLogEntriesCompanion.insert(
+                id: id,
+                occurredAt: occurredAt,
+                kind: kind,
+                initiatorKind: initiatorKind,
+                initiatorContactId: initiatorContactId,
+                initiatorDisplayName: initiatorDisplayName,
+                planId: planId,
+                packageId: packageId,
+                revisionId: revisionId,
+                detailsJson: detailsJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RelayActivityLogEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RelayActivityLogEntriesTable,
+      RelayActivityLogEntry,
+      $$RelayActivityLogEntriesTableFilterComposer,
+      $$RelayActivityLogEntriesTableOrderingComposer,
+      $$RelayActivityLogEntriesTableAnnotationComposer,
+      $$RelayActivityLogEntriesTableCreateCompanionBuilder,
+      $$RelayActivityLogEntriesTableUpdateCompanionBuilder,
+      (
+        RelayActivityLogEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $RelayActivityLogEntriesTable,
+          RelayActivityLogEntry
+        >,
+      ),
+      RelayActivityLogEntry,
+      PrefetchHooks Function()
+    >;
 typedef $$ContactsTableCreateCompanionBuilder =
     ContactsCompanion Function({
       required String id,
@@ -10897,6 +11868,11 @@ class $AppDatabaseManager {
       $$ProposalRevisionsTableTableManager(_db, _db.proposalRevisions);
   $$ProposalResponsesTableTableManager get proposalResponses =>
       $$ProposalResponsesTableTableManager(_db, _db.proposalResponses);
+  $$RelayActivityLogEntriesTableTableManager get relayActivityLogEntries =>
+      $$RelayActivityLogEntriesTableTableManager(
+        _db,
+        _db.relayActivityLogEntries,
+      );
   $$ContactsTableTableManager get contacts =>
       $$ContactsTableTableManager(_db, _db.contacts);
   $$ContactInvitationsTableTableManager get contactInvitations =>

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/proposals/housing_proposal_revision_state.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_agreement_rules_read_only.dart';
 import 'housing_invite_sunburst.dart';
@@ -184,6 +186,10 @@ class _HousingInviteProposalScreenState
         payload: <String, dynamic>{},
       );
     }
+    await HousingProposalTransportService(widget.db).expireRevisionIfNeeded(
+      planId: widget.planId,
+      revisionId: revisionId,
+    );
     final revision = await (widget.db.select(
       widget.db.proposalRevisions,
     )..where((t) => t.id.equals(revisionId))).getSingle();
@@ -441,8 +447,17 @@ class _HousingInviteProposalScreenState
           final selfStatus =
               proposal.responsesByParticipantId[selfParticipantId]?.status ??
               ProposalResponseStatus.pending.name;
-          final canRespond =
-              !isAuthor && selfStatus == ProposalResponseStatus.pending.name;
+          final revisionState = HousingProposalRevisionState.fromPayload(
+            proposal.payload,
+          );
+          final canRespond = housingParticipantMayRespond(
+            revision: revisionState,
+            participantResponseStatus: selfStatus,
+            proposerParticipantId: proposal.proposerParticipantId,
+            participantId: selfParticipantId,
+          );
+          final expiresUtc = revisionState.responseExpiresAtUtc;
+          final forkFromId = revisionState.forkedFromRevisionId;
           final showParticipantStatus = proposal.revisionId != null;
           final hasActivePlan =
               proposal.revisionId != null &&
@@ -524,6 +539,52 @@ class _HousingInviteProposalScreenState
                         ),
                       ),
                     ),
+                    if (expiresUtc != null) ...[
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Text(
+                          l10n.housingInviteResponseDeadlineLabel(
+                            formatPreferenceDateTime(expiresUtc, dateFmt),
+                          ),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          l10n.housingInviteResponseDeadlineTimezone,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (forkFromId != null && forkFromId.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          l10n.housingInviteForkedFromLabel(forkFromId),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (!isAuthor &&
+                        !canRespond &&
+                        selfStatus ==
+                            ProposalResponseStatus.pending.name) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.housingInviteOfferClosedHint,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Text(
                       l10n.housingInviteParticipantsSectionTitle,

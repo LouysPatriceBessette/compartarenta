@@ -13,8 +13,9 @@ import '../../housing/agreement_rules_json.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import 'housing_invitation_status_dialog.dart';
 import '../../housing/projection/plan_projection.dart';
-import '../../housing/proposals/agreement_period_day_overlap.dart';
-import '../../housing/proposals/housing_plan_period_gate.dart';
+import '../../housing/housing_response_deadline_dialog.dart';
+import '../../housing/proposals/housing_agreement_period_conflict.dart';
+import '../../activity/relay_activity_log_service.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
@@ -29,7 +30,6 @@ import '../../util/display_date.dart';
 import '../../util/week_start_calendar.dart';
 import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
-import '../../widgets/standard_validity_duration_bar.dart';
 import '../contacts/contact_picker_sheet.dart';
 import 'housing_agreement_rules_read_only.dart';
 import 'housing_archive_entry_screen.dart';
@@ -832,42 +832,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       return false;
     }
 
-    var selected = StandardValidityDurations.values[2];
-
-    final proceed = await showDialog<bool>(
-      context: flowContext,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => AlertDialog(
-          title: Text(l10n.housingInviteResponseWindowTitle),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.housingInviteResponseWindowBody),
-                const SizedBox(height: 16),
-                StandardValidityDurationSegmented(
-                  selected: selected,
-                  onChanged: (d) => setLocal(() => selected = d),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.housingPlanCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.commonContinue),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (proceed != true || !mounted || !flowContext.mounted) return false;
+    final selected = await showHousingResponseDeadlineDialog(flowContext);
+    if (selected == null || !mounted || !flowContext.mounted) return false;
 
     // TODO(pre-prod): evaluate merging this notification trigger with the
     // response-window selector into a single reusable prompt flow.
@@ -887,21 +853,24 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
 
     final responseExpiresAt = DateTime.now().toUtc().add(selected);
-    final blocking = await listBlockingAgreementDayRanges(
-      _db,
+    final conflict = await findFirstAgreementPeriodConflict(
+      db: _db,
       excludePlanId: _planId,
+      candidateStart: agr.periodStart,
+      candidateEnd: agr.periodEnd,
     );
-    if (candidateConflictsWithAnyBlockingRange(
-      agr.periodStart,
-      agr.periodEnd,
-      blocking,
-    )) {
+    if (conflict != null) {
       if (!mounted || !flowContext.mounted) return false;
+      final fmt = effectiveDateFormat(widget.prefs);
+      final range =
+          '${formatPreferenceDate(conflict.start, fmt)} – ${formatPreferenceDate(conflict.end, fmt)}';
       await showDialog<void>(
         context: flowContext,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.housingInvitePeriodOverlapTitle),
-          content: Text(l10n.housingInvitePeriodOverlapBody),
+          content: Text(
+            l10n.housingInvitePeriodOverlapDetail(conflict.planTitle, range),
+          ),
           actions: [
             FilledButton(
               onPressed: () => Navigator.pop(ctx),
@@ -927,6 +896,18 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
             forkedFromPackageId: fork?.packageId,
             forkedFromRevisionId: fork?.revisionId,
           );
+      if (fork != null) {
+        await RelayActivityLogService(_db).append(
+          kind: RelayActivityLogKinds.housingProposalForkCreated,
+          initiatorKind: RelayActivityLogService.initiatorSelf,
+          planId: _planId,
+          revisionId: revisionId,
+          details: {
+            'forkedFromRevisionId': fork.revisionId,
+            'forkedFromPackageId': fork.packageId,
+          },
+        );
+      }
     } catch (e, st) {
       if (!mounted || !flowContext.mounted) return false;
       debugPrintStack(stackTrace: st);
@@ -935,6 +916,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       );
       return false;
     }
+
+    if (!mounted || !flowContext.mounted) return false;
 
     final sent = await _deliverHousingProposalRevision(
       flowContext: flowContext,
@@ -984,6 +967,28 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         planId: _planId,
         revisionId: revisionId,
       );
+      if (send.relayStatusByParticipantId.isNotEmpty) {
+        await HousingProposalTransportService(_db).updateRevisionPayload(
+          revisionId: revisionId,
+          mutate: (payload) {
+            payload['relaySendStatusByParticipantId'] =
+                send.relayStatusByParticipantId;
+          },
+        );
+      }
+      if (send.sentCount > 0) {
+        final payload = await PlanAgreementProposalService(
+          _db,
+        ).loadRevisionPayload(revisionId);
+        await RelayActivityLogService(_db).append(
+          kind: RelayActivityLogKinds.housingProposalSent,
+          initiatorKind: RelayActivityLogService.initiatorSelf,
+          planId: _planId,
+          packageId: payload['packageId']?.toString(),
+          revisionId: revisionId,
+          details: {'recipientCount': send.sentCount},
+        );
+      }
       if (!mounted || !flowContext.mounted) return false;
       if (send.sentCount == 0) {
         if (rollbackPendingOnTotalFailure) {
@@ -991,6 +996,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
             _planId,
           );
         }
+        if (!mounted || !flowContext.mounted) return false;
         ScaffoldMessenger.of(flowContext).showSnackBar(
           SnackBar(content: Text(l10n.housingInviteTransportFailed)),
         );
@@ -1002,9 +1008,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
               send.sentCount,
               send.failedParticipantIds.length,
             );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(flowContext).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
       return true;
     } catch (e, st) {
       if (!mounted || !flowContext.mounted) return false;
@@ -1012,6 +1018,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       if (rollbackPendingOnTotalFailure) {
         await PlanAgreementProposalService(_db).abandonPendingRevision(_planId);
       }
+      if (!mounted || !flowContext.mounted) return false;
       ScaffoldMessenger.of(flowContext).showSnackBar(
         SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
       );

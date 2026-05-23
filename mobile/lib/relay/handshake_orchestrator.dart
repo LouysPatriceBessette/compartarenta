@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 
+import '../activity/relay_activity_log_service.dart';
 import '../contacts/contact_display.dart';
 import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
@@ -97,10 +98,14 @@ class HousingProposalSendResult {
   const HousingProposalSendResult({
     required this.sentCount,
     required this.failedParticipantIds,
+    this.relayStatusByParticipantId = const {},
   });
 
   final int sentCount;
   final List<String> failedParticipantIds;
+
+  /// Per roster participant id: `queued` (relay POST ok) or `failed`.
+  final Map<String, String> relayStatusByParticipantId;
 }
 
 /// Errors surfaced by the orchestrator.
@@ -1118,7 +1123,8 @@ class HandshakeOrchestrator {
       senderContact = matched;
     }
 
-    await HousingProposalTransportService(_db).importReceivedProposal(
+    final imported = await HousingProposalTransportService(_db)
+        .importReceivedProposal(
       proposalJson: decrypted.proposalJson,
       targetParticipantId: decrypted.targetParticipantId,
       senderContactId: senderContact.id,
@@ -1126,6 +1132,14 @@ class HandshakeOrchestrator {
       senderAvatarId: senderContact.avatarId,
     );
     debugPrint('housing_proposal imported from ${senderContact.id}');
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.housingProposalReceived,
+      initiatorKind: RelayActivityLogService.initiatorContact,
+      initiatorContactId: senderContact.id,
+      initiatorDisplayName: senderContact.displayName,
+      planId: imported.planId,
+      revisionId: imported.revisionId,
+    );
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
@@ -1602,6 +1616,7 @@ class HandshakeOrchestrator {
       return const HousingProposalSendResult(
         sentCount: 0,
         failedParticipantIds: <String>[],
+        relayStatusByParticipantId: {},
       );
     }
 
@@ -1613,6 +1628,7 @@ class HandshakeOrchestrator {
         .toList(growable: false);
     var sent = 0;
     final failed = <String>[];
+    final relayStatusByParticipantId = <String, String>{};
 
     for (final participant in participants) {
       final contactId = participant.contactId;
@@ -1628,6 +1644,7 @@ class HandshakeOrchestrator {
           'housing_proposal no connected target for ${participant.id}',
         );
         failed.add(participant.id);
+        relayStatusByParticipantId[participant.id] = 'failed';
         continue;
       }
 
@@ -1688,14 +1705,17 @@ class HandshakeOrchestrator {
       if (deliveredToAnyTarget) {
         debugPrint('housing_proposal delivered for ${participant.id}');
         sent++;
+        relayStatusByParticipantId[participant.id] = 'queued';
       } else {
         failed.add(participant.id);
+        relayStatusByParticipantId[participant.id] = 'failed';
       }
     }
 
     return HousingProposalSendResult(
       sentCount: sent,
       failedParticipantIds: List.unmodifiable(failed),
+      relayStatusByParticipantId: Map.unmodifiable(relayStatusByParticipantId),
     );
   }
 
@@ -1756,6 +1776,10 @@ class HandshakeOrchestrator {
       throw HandshakeOrchestratorError('unknown');
     }
     final selfParticipantId = '$planId:self';
+    await transport.expireRevisionIfNeeded(
+      planId: planId,
+      revisionId: selectedRevisionId,
+    );
     await PlanAgreementProposalService(_db).recordResponse(
       revisionId: selectedRevisionId,
       participantId: selfParticipantId,
@@ -1789,6 +1813,14 @@ class HandshakeOrchestrator {
     final sendResult = await _broadcastHousingProposalResponse(
       planId: planId,
       response: response,
+    );
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.housingProposalResponse,
+      initiatorKind: RelayActivityLogService.initiatorSelf,
+      planId: planId,
+      packageId: sourcePackageId,
+      revisionId: selectedRevisionId,
+      details: {'status': status.name},
     );
     if (status == ProposalResponseStatus.accepted) {
       await transport.tryActivatePlanIfUnanimous(
@@ -1888,6 +1920,20 @@ class HandshakeOrchestrator {
   }) async {
     final revision = await _matchingHousingRevision(response.sourceRevisionId);
     if (revision == null) return;
+    final transport = HousingProposalTransportService(_db);
+    final pkgEarly = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(revision.packageId))).getSingleOrNull();
+    if (pkgEarly != null) {
+      await transport.expireRevisionIfNeeded(
+        planId: pkgEarly.planId,
+        revisionId: revision.id,
+      );
+    }
+    final revisionPayload =
+        jsonDecode(revision.payloadJson) as Map<String, dynamic>;
+    if (revisionPayload['lifecycleState'] == 'archived') return;
+
     ProposalResponseStatus? status;
     for (final candidate in ProposalResponseStatus.values) {
       if (candidate.name == response.status) {
@@ -1896,7 +1942,6 @@ class HandshakeOrchestrator {
       }
     }
     if (status == null) return;
-    final transport = HousingProposalTransportService(_db);
     final participantId = await transport.localParticipantIdForSource(
       revisionId: revision.id,
       sourceParticipantId: response.sourceParticipantId,

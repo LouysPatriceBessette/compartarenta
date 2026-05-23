@@ -130,6 +130,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
   String _archiveRowTitle(AppLocalizations l10n, _WorkbenchRow row) {
     final archive = row.archive;
     if (archive == null) return _rowTitle(row.plan);
+    if (archive.isExpired) return l10n.housingArchiveExpiredTitle;
     return switch (archive.status) {
       ProposalResponseStatus.negotiate => l10n.housingArchiveNegotiatingTitle,
       ProposalResponseStatus.rejected => l10n.housingArchiveRejectedTitle,
