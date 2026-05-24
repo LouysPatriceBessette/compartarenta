@@ -113,6 +113,33 @@ While a `revisionId` is **open**:
 
 ---
 
+### Requirement: Unanimous activation notifies all participants from the last acceptor device
+
+**WHEN** a `revisionId` becomes eligible for unanimous activation (every non-author recipient has **Accept** on that revision and proposer intent is satisfied per **Proposer intent on the same revision**):
+
+- **THEN** the client that records the **last** non-author **Accept** (the accept that completes unanimity on this device’s view of the revision) SHALL emit a **group activation notification** to **every** roster participant on that package, including the author and all recipients.
+- **THEN** the notification copy SHALL communicate that the group has reached a **unanimous agreement** (localized; e.g. FR *Nous avons une entente unanime!*).
+- **THEN** the notification SHALL deep-link or route into the **Housing** module for the activated `packageId` (active agreement hub per `housing-active-agreement-operations`), not back into the offer review screen for the closed revision.
+- **THEN** delivery SHALL respect app-level notification master switch and the Housing category used for plan proposals (or a dedicated “agreement activated” category if split in Settings).
+- **THEN** the activity log on the emitting device SHALL record an **agreement activated** (or equivalent) event tied to `packageId` / `revisionId`.
+
+Other participants’ devices MAY also learn activation from sync; they MUST NOT rely on receiving a second duplicate activation notification for the same `revisionId` if their client already recorded activation locally (implementation MAY dedupe by `revisionId`).
+
+This requirement is **distinct** from “new offer received” notifications and from **deadline reminder** notifications.
+
+#### Scenario: Last acceptor’s device notifies the whole roster
+
+- **WHEN** participant C is the last pending recipient and submits **Accept** on revision `R`
+- **THEN** C’s device sends the activation notification fan-out to all roster participants
+- **AND** opening the notification from any participant routes to the active agreement entry for that package
+
+#### Scenario: Author does not need a separate Accept tap for unchanged send
+
+- **WHEN** unanimity is reached via recipient Accepts only (author already recorded as proposer on send)
+- **THEN** the activation notification still fires from the device that recorded the completing Accept, not only from the author’s device
+
+---
+
 ### Requirement: Proposer intent on the same revision
 
 The author’s act of sending revision `R` SHALL be recorded in history as **proposed** (or **proposer accepted** if the product prefers explicit symmetry). Downstream logic SHALL treat unanimity as “proposer record + all non-author recipients **Accept** on `R`” without requiring the author to tap **Accept** again for the same unchanged payload, unless a future product decision explicitly requires it (if so, update this spec in a follow-up).

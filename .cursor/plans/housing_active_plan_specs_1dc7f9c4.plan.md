@@ -4,19 +4,19 @@ overview: Premier tri des idées brutes en trois capacités OpenSpec (saisie + p
 todos:
   - id: delta-unanimity-notif
     content: Ajouter exigence notification « entente unanime » (dernier accepteur) dans housing-plan-proposal-offer-flow
-    status: pending
+    status: completed
   - id: openspec-scaffold
     content: Créer change housing-active-agreement-operations avec 4 capability specs + design (hub, swiper note)
-    status: pending
+    status: completed
   - id: spec-entry
     content: "Itération B: rédiger housing-realized-expense-entry (saisie + preuves + chemins fichiers)"
-    status: pending
+    status: completed
   - id: spec-ledger
     content: "Itération C: rédiger housing-realized-expense-ledger (proposition, unanimité, vues, balances)"
-    status: pending
+    status: completed
   - id: spec-amend-export
     content: "Itérations D: housing-agreement-amendment-and-closure puis housing-agreement-data-portability"
-    status: pending
+    status: completed
 isProject: false
 ---
 

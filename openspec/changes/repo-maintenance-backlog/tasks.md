@@ -7,11 +7,14 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 - [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
 
-- [ ] **Housing — active plan in-force flow** (after usage-flow spec exists).  
-  Wire `ExpensePlanLineForm` on accepted plans; budget-cap threshold confirmation when a live expense exceeds the monthly max; notifications (default **All**: every participant gets before-date + overdue reminders; single designated payer per product annex).  
-  Deferred from `housing-unified-expense-entry` pass 5 / `tasks.md` § Deferred.  
-  **Presentation chart:** budget cap = high estimate for sunburst/summary only; threshold alerts / push when over cap → this backlog item (not wizard PR #2).  
-  **Depends on:** in-force plan usage UX defined first.
+- [ ] **Housing — post-activation onboarding swiper** (deferred UX).  
+  Multi-card dismissible explainer after unanimous activation (expenses, proofs, peer review, balances, amendments, export). Card copy **not** in OpenSpec yet.  
+  **Depends on:** hub implemented (`housing-active-agreement-operations`).  
+  **Track:** `openspec/changes/housing-active-agreement-operations/design.md` § Deferred UX.
+
+- [ ] **Housing — active plan in-force implementation** (spec exists: `housing-active-agreement-operations`).  
+  Implement passes in that change’s `tasks.md` (hub, realized expense entry/ledger, amendment, export).  
+  Supersedes the old “define usage-flow spec first” gate — specs are in `housing-realized-expense-entry`, `housing-realized-expense-ledger`, `housing-agreement-amendment-and-closure`, `housing-agreement-data-portability`.
 
 - [ ] **Mobile dependencies — phase 3 (remaining majors).**  
   `go_router`, `flutter_secure_storage`, `app_links`, … as features need them.  

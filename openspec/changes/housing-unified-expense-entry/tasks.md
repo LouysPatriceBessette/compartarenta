@@ -57,7 +57,7 @@
 
 ## Deferred — active plan in-force flow (not PR #1 or #2)
 
-Requires the **in-force plan usage** product flow to be specified first. Track in `openspec/changes/repo-maintenance-backlog/tasks.md`.
+Specified in `openspec/changes/housing-active-agreement-operations/`. Implementation tracked there and in `repo-maintenance-backlog`.
 
 - [ ] D.1 Wire `ExpensePlanLineForm` with `ExpensePlanLineFormScope` for accepted / in-force plans
 - [ ] D.2 Budgeted (max): confirmation dialog when a submitted expense exceeds the monthly cap
