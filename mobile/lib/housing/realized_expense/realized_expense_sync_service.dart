@@ -44,7 +44,7 @@ class RealizedExpenseSyncService {
       'package_id': expense.packageId,
       'plan_id': expense.planId,
       'plan_line_id': expense.planLineId,
-      if (lineTitle != null) 'plan_line_title': lineTitle,
+      'plan_line_title': ?lineTitle,
       'amount_minor': expense.amountMinor,
       'currency': expense.currency,
       'payment_date': expense.paymentDate.toUtc().toIso8601String(),
@@ -178,17 +178,98 @@ class RealizedExpenseSyncService {
 
     final roster = await participantsForPlan(_db, target.planId);
     for (final p in roster) {
+      final isPayer = p.id == payerId;
       await _db.into(_db.realizedExpenseAcceptances).insert(
             RealizedExpenseAcceptancesCompanion.insert(
               expenseId: expenseId,
               participantId: p.id,
-              decision: RealizedExpenseDecision.pending,
+              decision: isPayer
+                  ? RealizedExpenseDecision.accepted
+                  : RealizedExpenseDecision.pending,
+              decidedAt: drift.Value(isPayer ? now : null),
             ),
             mode: drift.InsertMode.insertOrIgnore,
           );
     }
 
     _log('import ok: $expenseId -> plan ${target.planId}');
+    return true;
+  }
+
+  Future<String> buildDecisionJson({
+    required String expenseId,
+    required String packageId,
+    required String participantId,
+    required String decision,
+    String? justification,
+  }) async {
+    final expense = await RealizedExpenseRepository(_db).getById(expenseId);
+    final roster = expense == null
+        ? <Participant>[]
+        : await participantsForPlan(_db, expense.planId);
+    return jsonEncode({
+      'expense_id': expenseId,
+      'package_id': packageId,
+      'decision': decision,
+      if (justification != null && justification.trim().isNotEmpty)
+        'justification': justification.trim(),
+      'participant_id': participantId,
+      'participant_snapshots': [
+        for (final p in roster)
+          {
+            'id': p.id,
+            'displayName': p.displayName,
+            if (p.contactId != null) 'contactId': p.contactId,
+          },
+      ],
+    });
+  }
+
+  /// Applies a peer accept/reject; returns false when skipped.
+  Future<bool> importDecisionFromPeer({
+    required String decisionJson,
+    required String senderContactId,
+  }) async {
+    final payload = jsonDecode(decisionJson) as Map<String, dynamic>;
+    final expenseId = payload['expense_id'] as String? ?? '';
+    if (expenseId.isEmpty) return false;
+
+    final expense = await (_db.select(_db.realizedExpenses)
+          ..where((t) => t.id.equals(expenseId)))
+        .getSingleOrNull();
+    if (expense == null) {
+      _log('decision skip: unknown expense $expenseId');
+      return false;
+    }
+
+    final sourceParticipantId = payload['participant_id'] as String? ?? '';
+    final sourceToLocal = await _mapSourceParticipantIds(
+      planId: expense.planId,
+      snapshots: payload['participant_snapshots'],
+    );
+    var localParticipantId = sourceToLocal[sourceParticipantId];
+    localParticipantId ??= await _localParticipantIdForContact(
+      planId: expense.planId,
+      contactId: senderContactId,
+    );
+    if (localParticipantId == null) {
+      _log('decision skip: participant not mapped for $expenseId');
+      return false;
+    }
+
+    final decision = payload['decision'] as String? ?? '';
+    if (decision != RealizedExpenseDecision.accepted &&
+        decision != RealizedExpenseDecision.rejected) {
+      return false;
+    }
+
+    await RealizedExpenseRepository(_db).applyPeerDecision(
+      expenseId: expenseId,
+      participantId: localParticipantId,
+      decision: decision,
+      justification: payload['justification'] as String?,
+    );
+    _log('decision ok: $decision on $expenseId by $localParticipantId');
     return true;
   }
 

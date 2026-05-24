@@ -6,6 +6,7 @@ import '../../housing/realized_expense/proof_attachment_storage.dart';
 import '../../housing/realized_expense/proof_pick_flow.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_repository.dart';
 import '../../housing/realized_expense/realized_expense_status.dart';
 import '../../l10n/app_localizations.dart';
@@ -232,6 +233,58 @@ class _HousingRealizedExpenseFormScreenState
     );
   }
 
+  Future<bool> _confirmBudgetCapIfNeeded(
+    AppLocalizations l10n,
+    _FormContext ctx,
+    int newAmountMinor,
+  ) async {
+    PlanLine? line;
+    for (final l in ctx.planLines) {
+      if (l.id == _planLineId) {
+        line = l;
+        break;
+      }
+    }
+    if (line == null || !line.amountIsBudgetCap || line.amountMinor == null) {
+      return true;
+    }
+    final cap = line.amountMinor!;
+    final payment = _paymentDate ?? DateTime.now();
+    final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
+    final sum = await ledger.sumPublishedMinorForLineMonth(
+      packageId: widget.packageId,
+      planId: widget.planId,
+      planLineId: line.id,
+      year: payment.year,
+      month: payment.month,
+    );
+    if (sum + newAmountMinor <= cap) return true;
+
+    if (!mounted) return false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.housingRealizedExpenseBudgetCapTitle),
+        content: Text(
+          l10n.housingRealizedExpenseBudgetCapBody(
+            formatMinorAsMoney(context, cap, ctx.currency),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.housingRealizedExpenseBudgetCapConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _submit(_FormContext ctx) async {
     final l10n = AppLocalizations.of(context);
     final error = _validate(l10n, ctx);
@@ -239,9 +292,11 @@ class _HousingRealizedExpenseFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
+    final minor = parseAmountMinorFromText(_amountController.text)!;
+    if (!await _confirmBudgetCapIfNeeded(l10n, ctx, minor)) return;
+
     setState(() => _submitting = true);
     try {
-      final minor = parseAmountMinorFromText(_amountController.text)!;
       final selfId = selfParticipantIdForPlan(widget.planId);
       final saved = await _repo.saveDraft(
         packageId: widget.packageId,
@@ -258,6 +313,9 @@ class _HousingRealizedExpenseFormScreenState
         attachments: _attachmentDrafts(),
       );
       await _repo.proposeLocally(saved.id);
+      await RealizedExpenseLedgerService(
+        AppDatabase.processScope,
+      ).markPlanActiveUseIfNeeded(widget.planId);
       final orchestrator = HandshakeOrchestrator.maybeInstance;
       if (orchestrator != null) {
         await orchestrator.sendRealizedExpensePropose(expenseId: saved.id);

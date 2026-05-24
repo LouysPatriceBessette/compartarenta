@@ -18,6 +18,8 @@ class EnvelopeKind {
   static const int housingProposal = 5;
   static const int housingProposalResponse = 6;
   static const int housingRealizedExpensePropose = 7;
+  static const int housingRealizedExpenseAccept = 8;
+  static const int housingRealizedExpenseReject = 9;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -168,6 +170,17 @@ class HousingRealizedExpenseEnvelope {
   final String expenseJson;
 }
 
+/// Accept or reject decision for a realized expense proposal.
+class HousingRealizedExpenseDecisionEnvelope {
+  HousingRealizedExpenseDecisionEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.decisionJson,
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String decisionJson;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -181,6 +194,10 @@ const String _housingProposalResponseAeadInfo =
     'compartarenta/steady-v1/housing-proposal-response-aead';
 const String _housingRealizedExpenseProposeAeadInfo =
     'compartarenta/steady-v1/housing-realized-expense-propose-aead';
+const String _housingRealizedExpenseAcceptAeadInfo =
+    'compartarenta/steady-v1/housing-realized-expense-accept-aead';
+const String _housingRealizedExpenseRejectAeadInfo =
+    'compartarenta/steady-v1/housing-realized-expense-reject-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -768,6 +785,79 @@ class EnvelopeCodec {
     return HousingRealizedExpenseEnvelope(
       senderLongTermPublicKey: senderPub,
       expenseJson: (json['expense_json'] as String?) ?? '{}',
+    );
+  }
+
+  static Future<Uint8List> encryptHousingRealizedExpenseDecision({
+    required int kind,
+    required HousingRealizedExpenseDecisionEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final info = kind == EnvelopeKind.housingRealizedExpenseAccept
+        ? _housingRealizedExpenseAcceptAeadInfo
+        : _housingRealizedExpenseRejectAeadInfo;
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: info,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: kind,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(
+      jsonEncode({'decision_json': envelope.decisionJson}),
+    );
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  static Future<HousingRealizedExpenseDecisionEnvelope>
+  decryptHousingRealizedExpenseDecision({
+    required int kind,
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, kind);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final info = kind == EnvelopeKind.housingRealizedExpenseAccept
+        ? _housingRealizedExpenseAcceptAeadInfo
+        : _housingRealizedExpenseRejectAeadInfo;
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: info,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingRealizedExpenseDecisionEnvelope(
+      senderLongTermPublicKey: senderPub,
+      decisionJson: (json['decision_json'] as String?) ?? '{}',
     );
   }
 }

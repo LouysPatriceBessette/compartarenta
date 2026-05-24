@@ -3,11 +3,21 @@
 // ignore: deprecated_member_use
 import 'dart:html' as html;
 
+import '../housing/housing_navigation_intent.dart';
+
 Future<void> showHousingBrowserNotification({
   required String title,
   required String body,
+  String? expenseId,
 }) async {
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
-  html.Notification(title, body: body);
+  final notification = html.Notification(title, body: body);
+  if (expenseId != null && expenseId.isNotEmpty) {
+    notification.onClick.listen((_) {
+      HousingNavigationIntent.requestReview(expenseId);
+      html.window.location.hash = '/housing';
+      notification.close();
+    });
+  }
 }

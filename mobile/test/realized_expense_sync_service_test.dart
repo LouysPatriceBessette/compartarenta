@@ -81,6 +81,21 @@ void main() {
         .getSingle();
     expect(row.payerParticipantId, '$planId:p0');
     expect(row.planLineId, 'line:rent');
+
+    final acceptances = await (db.select(db.realizedExpenseAcceptances)
+          ..where((t) => t.expenseId.equals('realized:1')))
+        .get();
+    final payerAcceptance = acceptances
+        .where((a) => a.participantId == '$planId:p0')
+        .single;
+    expect(payerAcceptance.decision, RealizedExpenseDecision.accepted);
+    expect(
+      acceptances
+          .where((a) => a.participantId == '$planId:self')
+          .single
+          .decision,
+      RealizedExpenseDecision.pending,
+    );
   });
 
   test('import uses local active plan when payload plan id is received:*', () async {

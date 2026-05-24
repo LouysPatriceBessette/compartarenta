@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_root_navigator.dart';
+import '../housing/housing_navigation_intent.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
@@ -47,6 +48,8 @@ class PushNotificationService {
   );
 
   static const String _housingTapPayload = 'housing_proposal';
+  static const String _housingRealizedExpenseReviewPrefix =
+      'housing_realized_expense:';
 
   static const List<String> _housingKinds = <String>[
     'housing_proposal',
@@ -151,8 +154,19 @@ class PushNotificationService {
 
   /// Shared tap handler for all local notification payloads (housing + contacts).
   static void dispatchLocalNotificationTap(NotificationResponse response) {
-    if (response.payload == _housingTapPayload) {
+    final payload = response.payload;
+    if (payload == null || payload.isEmpty) return;
+    if (payload == _housingTapPayload) {
       _navigateToHousing();
+      return;
+    }
+    if (payload.startsWith(_housingRealizedExpenseReviewPrefix)) {
+      final expenseId = payload.substring(
+        _housingRealizedExpenseReviewPrefix.length,
+      );
+      if (expenseId.isNotEmpty) {
+        _navigateToRealizedExpenseReview(expenseId);
+      }
     }
   }
 
@@ -305,6 +319,7 @@ class PushNotificationService {
 
   static Future<void> showLocalHousingRealizedExpenseNotification({
     required String senderDisplayName,
+    String? expenseId,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
@@ -314,6 +329,56 @@ class PushNotificationService {
     final body = senderDisplayName.trim().isEmpty
         ? l10n.pushNotificationHousingRealizedExpenseBody
         : l10n.pushNotificationHousingRealizedExpenseBodyFrom(
+            senderDisplayName.trim(),
+          );
+
+    final tapPayload = expenseId == null || expenseId.isEmpty
+        ? _housingTapPayload
+        : '$_housingRealizedExpenseReviewPrefix$expenseId';
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: title,
+        body: body,
+        expenseId: expenseId,
+      );
+      return;
+    }
+
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: tapPayload,
+    );
+  }
+
+  static Future<void> showLocalHousingRealizedExpenseRejectedNotification({
+    required String senderDisplayName,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingRealizedExpenseRejectedTitle;
+    final body = senderDisplayName.trim().isEmpty
+        ? l10n.pushNotificationHousingRealizedExpenseRejectedBody
+        : l10n.pushNotificationHousingRealizedExpenseRejectedBodyFrom(
             senderDisplayName.trim(),
           );
 
@@ -346,6 +411,11 @@ class PushNotificationService {
       ),
       payload: _housingTapPayload,
     );
+  }
+
+  static void _navigateToRealizedExpenseReview(String expenseId) {
+    HousingNavigationIntent.requestReview(expenseId);
+    _navigateToHousing();
   }
 
   static Future<void> showLocalHousingDecisionNotification({

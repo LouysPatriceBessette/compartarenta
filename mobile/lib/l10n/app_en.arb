@@ -282,6 +282,61 @@
   "housingRealizedExpenseCropTitle": "Crop proof",
   "housingRealizedExpenseCropConfirm": "Use cropped image",
   "housingRealizedExpenseCropFailed": "Could not crop image",
+  "housingActiveHubReviewPending": "{count, plural, one{1 expense awaiting your review} other{{count} expenses awaiting your review}}",
+  "@housingActiveHubReviewPending": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingRealizedExpenseReviewListTitle": "Review expenses",
+  "housingRealizedExpenseReviewEmpty": "No expenses to review.",
+  "housingRealizedExpenseReviewWaitingForYou": "Awaiting your review",
+  "housingRealizedExpenseReviewWaitingForOthers": "Awaiting other participants",
+  "housingRealizedExpenseReviewPublished": "Published",
+  "housingRealizedExpenseReviewRejected": "Rejected",
+  "housingRealizedExpenseReviewTitle": "Expense review",
+  "housingRealizedExpenseReviewPayer": "Paid by {name}",
+  "@housingRealizedExpenseReviewPayer": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewRejections": "Rejections",
+  "housingRealizedExpenseAccept": "Accept",
+  "housingRealizedExpenseReject": "Reject",
+  "housingRealizedExpenseRejectTitle": "Reject expense",
+  "housingRealizedExpenseRejectJustification": "Reason (required)",
+  "housingRealizedExpenseRejectConfirm": "Reject",
+  "housingRealizedExpenseAccepted": "Expense accepted",
+  "housingRealizedExpenseRejected": "Expense rejected",
+  "housingRealizedExpenseResubmit": "Correct and resubmit",
+  "housingMonthlyExpensesTitle": "Monthly expenses",
+  "housingMonthlyExpensesMonthLabel": "{year}-{month}",
+  "@housingMonthlyExpensesMonthLabel": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "month": { "type": "int" }
+    }
+  },
+  "housingMonthlyExpensesEmpty": "No published expenses for this month.",
+  "housingBalancesTitle": "Balances owed",
+  "housingBalancesEmpty": "No balances yet. Published expenses will appear here.",
+  "housingBalancesOwes": "{from} owes {to} {amount}",
+  "@housingBalancesOwes": {
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseBudgetCapTitle": "Monthly budget exceeded",
+  "housingRealizedExpenseBudgetCapBody": "This amount exceeds the monthly cap ({cap}) for this plan line. Submit anyway?",
+  "@housingRealizedExpenseBudgetCapBody": {
+    "placeholders": {
+      "cap": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseBudgetCapConfirm": "Submit anyway",
   "housingInviteResponseWindowTitle": "Response window",
   "housingInviteResponseWindowBody": "Participants have until this date and time to respond (UTC).",
   "housingInvitePeriodOverlapTitle": "Agreement period conflict",
@@ -452,6 +507,14 @@
   "pushNotificationHousingRealizedExpenseTitle": "Expense to review",
   "pushNotificationHousingRealizedExpenseBody": "A participant submitted an expense for your agreement.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} submitted an expense to review.",
+  "pushNotificationHousingRealizedExpenseRejectedTitle": "Expense rejected",
+  "pushNotificationHousingRealizedExpenseRejectedBody": "A participant rejected your expense.",
+  "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} rejected your expense.",
+  "@pushNotificationHousingRealizedExpenseRejectedBodyFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingRealizedExpenseBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

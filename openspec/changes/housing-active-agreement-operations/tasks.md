@@ -21,14 +21,24 @@
 
 ## Pass 3 — Ledger (`housing-realized-expense-ledger`)
 
-- [ ] 3.1 Encrypted envelope kinds + client protocol doc (propose, accept, reject, amend).
-- [ ] 3.2 Review queue UI: accept / reject with required justification on reject.
-- [ ] 3.3 Unanimous acceptance gate before expense affects balances.
-- [ ] 3.4 Resubmit after rejection (new proposal id, lineage to prior).
-- [ ] 3.5 Monthly summary + balances screens (hub routes).
-- [ ] 3.6 Budget-cap confirmation when realized amount exceeds plan line cap (D.2 from unified-expense-entry).
-- [ ] 3.7 Notifications: peer submitted expense; optional payment-responsible reminders (D.3).
-- [ ] 3.8 Licensing: first realized expense sync marks plan active use.
+- [x] 3.1 Encrypted envelope kinds + client protocol doc (propose, accept, reject, amend).
+- [x] 3.2 Review queue UI: accept / reject with required justification on reject.
+- [x] 3.3 Unanimous acceptance gate before expense affects balances.
+- [x] 3.4 Resubmit after rejection (new proposal id, lineage to prior).
+- [x] 3.5 Monthly summary + balances screens (hub routes).
+- [x] 3.6 Budget-cap confirmation when realized amount exceeds plan line cap (D.2 from unified-expense-entry).
+- [x] 3.7 Notifications: peer submitted expense; optional payment-responsible reminders (D.3).
+- [x] 3.8 Licensing: first realized expense sync marks plan active use.
+
+### Pass 3 — deferred QA / polish (see `qa-pass-3-follow-up.md`)
+
+- [ ] Q.1 Submitter visibility for in-flight (non-published) expenses
+- [ ] Q.2 Monthly expenses: detail row / drill-down
+- [ ] Q.3 Proof viewer (local attachments)
+- [ ] Q.4 Optional notification when a peer accepts
+- [ ] Q.5 Document picker regression QA
+- [ ] Q.6 Abandon rejected expense (originator)
+- [ ] Q.7 Resubmit must require changes vs. rejected version
 
 ## Pass 4 — Amendment & closure (`housing-agreement-amendment-and-closure`)
 

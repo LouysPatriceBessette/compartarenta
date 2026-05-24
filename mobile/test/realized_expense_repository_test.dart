@@ -122,6 +122,48 @@ void main() {
     expect(drafts.single.status, RealizedExpenseStatus.draft);
   });
 
+  test('proposeLocally auto-accepts payer not only self slot', () async {
+    const planId = 'housing:payer';
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'You',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:p1',
+            displayName: 'Alex',
+            avatarId: '1',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+    final draft = await repo.saveDraft(
+      packageId: 'pkg-1',
+      planId: planId,
+      planLineId: 'line:1',
+      amountMinor: 5000,
+      currency: 'CAD',
+      paymentDate: DateTime.utc(2026, 5, 1),
+      payerParticipantId: '$planId:p1',
+      kind: RealizedExpenseKind.normal,
+    );
+
+    await repo.proposeLocally(draft.id);
+    final acceptances = await repo.acceptancesFor(draft.id);
+    expect(
+      acceptances.where((a) => a.participantId == '$planId:p1').single.decision,
+      RealizedExpenseDecision.accepted,
+    );
+    expect(
+      acceptances.where((a) => a.participantId == '$planId:self').single.decision,
+      RealizedExpenseDecision.pending,
+    );
+  });
+
   test('proposeLocally sets proposed and pending acceptances', () async {
     const planId = 'housing:test';
     await db.into(db.participants).insert(
@@ -157,9 +199,129 @@ void main() {
 
     final acceptances = await repo.acceptancesFor(draft.id);
     expect(acceptances, hasLength(2));
+    final payer = acceptances
+        .where((a) => a.participantId == '$planId:self')
+        .single;
+    expect(payer.decision, RealizedExpenseDecision.accepted);
     expect(
-      acceptances.every((a) => a.decision == RealizedExpenseDecision.pending),
-      isTrue,
+      acceptances
+          .where((a) => a.participantId == '$planId:p1')
+          .single
+          .decision,
+      RealizedExpenseDecision.pending,
     );
+  });
+
+  test('unanimous accept publishes expense', () async {
+    const planId = 'housing:pub';
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'You',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:p1',
+            displayName: 'Alex',
+            avatarId: '1',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+    final draft = await repo.saveDraft(
+      packageId: 'pkg-1',
+      planId: planId,
+      planLineId: 'line:1',
+      amountMinor: 5000,
+      currency: 'CAD',
+      paymentDate: DateTime.utc(2026, 5, 1),
+      payerParticipantId: '$planId:self',
+      kind: RealizedExpenseKind.normal,
+    );
+    await repo.proposeLocally(draft.id);
+    await repo.recordLocalAccept(
+      expenseId: draft.id,
+      participantId: '$planId:p1',
+    );
+
+    final row = await repo.getById(draft.id);
+    expect(row?.status, RealizedExpenseStatus.published);
+  });
+
+  test('reject blocks publish', () async {
+    const planId = 'housing:rej';
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'You',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:p1',
+            displayName: 'Alex',
+            avatarId: '1',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+    final draft = await repo.saveDraft(
+      packageId: 'pkg-1',
+      planId: planId,
+      planLineId: 'line:1',
+      amountMinor: 5000,
+      currency: 'CAD',
+      paymentDate: DateTime.utc(2026, 5, 1),
+      payerParticipantId: '$planId:self',
+      kind: RealizedExpenseKind.normal,
+    );
+    await repo.proposeLocally(draft.id);
+    await repo.recordLocalReject(
+      expenseId: draft.id,
+      participantId: '$planId:p1',
+      justification: 'Wrong amount',
+    );
+
+    final row = await repo.getById(draft.id);
+    expect(row?.status, RealizedExpenseStatus.rejected);
+  });
+
+  test('resubmit creates new draft with prior link', () async {
+    const planId = 'housing:resubmit';
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'You',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+    final draft = await repo.saveDraft(
+      packageId: 'pkg-1',
+      planId: planId,
+      planLineId: 'line:1',
+      amountMinor: 5000,
+      currency: 'CAD',
+      paymentDate: DateTime.utc(2026, 5, 1),
+      payerParticipantId: '$planId:self',
+      kind: RealizedExpenseKind.normal,
+    );
+    await repo.proposeLocally(draft.id);
+    await repo.recordLocalReject(
+      expenseId: draft.id,
+      participantId: '$planId:self',
+      justification: 'Fix proof',
+    );
+
+    final resubmit = await repo.createResubmitDraftFromRejected(draft.id);
+    expect(resubmit.status, RealizedExpenseStatus.draft);
+    expect(resubmit.priorExpenseId, draft.id);
+    expect(resubmit.id, isNot(draft.id));
   });
 }

@@ -60,6 +60,9 @@ class AppPreferences extends ChangeNotifier {
   static String _housingPlanDraftBackupKey(String planId) =>
       'housing.planDraftBackup.$planId';
 
+  static String _housingPlanActiveUseStartedKey(String planId) =>
+      'licensing.housing.planActiveUseStarted.$planId';
+
   static Future<AppPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
     return AppPreferences._(prefs);
@@ -347,6 +350,26 @@ class AppPreferences extends ChangeNotifier {
 
   /// Development convenience: clears onboarding and user preferences.
   ///
+  /// When the housing plan first participated in realized-expense sync (trial clock).
+  DateTime? housingPlanActiveUseStartedAt(String planId) {
+    final raw = _prefs.getString(_housingPlanActiveUseStartedKey(planId));
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  bool isHousingPlanActiveUseStarted(String planId) =>
+      housingPlanActiveUseStartedAt(planId) != null;
+
+  Future<void> markHousingPlanActiveUseStarted(String planId) async {
+    final key = _housingPlanActiveUseStartedKey(planId);
+    if (_prefs.containsKey(key)) return;
+    await _prefs.setString(
+      key,
+      DateTime.now().toUtc().toIso8601String(),
+    );
+    notifyListeners();
+  }
+
   /// This is meant to help iterate during development. It MUST NOT be triggered
   /// automatically in release builds.
   Future<void> resetOnboardingAndPreferences() async {

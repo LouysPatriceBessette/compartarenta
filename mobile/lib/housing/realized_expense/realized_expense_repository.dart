@@ -125,7 +125,22 @@ class RealizedExpenseRepository {
         .go();
   }
 
-  /// Transitions a draft to `proposed` and seeds pending acceptances (sync in pass 3).
+  Future<List<RealizedExpense>> listRejectedBySelf({
+    required String packageId,
+    required String planId,
+    required String selfParticipantId,
+  }) async {
+    final rows = await (_db.select(_db.realizedExpenses)
+          ..where((t) => t.packageId.equals(packageId))
+          ..where((t) => t.planId.equals(planId))
+          ..where((t) => t.status.equals(RealizedExpenseStatus.rejected))
+          ..where((t) => t.payerParticipantId.equals(selfParticipantId))
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
+        .get();
+    return rows;
+  }
+
+  /// Transitions a draft to `proposed` and seeds acceptances (self auto-accepts).
   Future<RealizedExpense> proposeLocally(String expenseId) async {
     final row = await getById(expenseId);
     if (row == null) {
@@ -145,20 +160,199 @@ class RealizedExpenseRepository {
     );
 
     final roster = await participantsForPlan(_db, row.planId);
+    final payerId = row.payerParticipantId;
     await (_db.delete(_db.realizedExpenseAcceptances)
           ..where((t) => t.expenseId.equals(expenseId)))
         .go();
     for (final p in roster) {
+      final isPayer = p.id == payerId;
       await _db.into(_db.realizedExpenseAcceptances).insert(
             RealizedExpenseAcceptancesCompanion.insert(
               expenseId: expenseId,
               participantId: p.id,
-              decision: RealizedExpenseDecision.pending,
+              decision: isPayer
+                  ? RealizedExpenseDecision.accepted
+                  : RealizedExpenseDecision.pending,
+              decidedAt: drift.Value(isPayer ? now : null),
             ),
           );
     }
 
+    await _recomputeExpenseStatus(expenseId, now: now);
     return (await getById(expenseId))!;
+  }
+
+  /// Repairs proposals created before payer auto-accept (e.g. pass #2 QA data).
+  Future<void> ensurePayerAcceptedIfPending(RealizedExpense expense) async {
+    if (expense.status != RealizedExpenseStatus.proposed) return;
+    final acceptances = await acceptancesFor(expense.id);
+    for (final a in acceptances) {
+      if (a.participantId == expense.payerParticipantId &&
+          a.decision == RealizedExpenseDecision.pending) {
+        await recordLocalAccept(
+          expenseId: expense.id,
+          participantId: expense.payerParticipantId,
+        );
+        return;
+      }
+    }
+  }
+
+  Future<RealizedExpense> recordLocalAccept({
+    required String expenseId,
+    required String participantId,
+  }) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.realizedExpenseAcceptances)
+          ..where((t) => t.expenseId.equals(expenseId))
+          ..where((t) => t.participantId.equals(participantId)))
+        .write(
+      RealizedExpenseAcceptancesCompanion(
+        decision: drift.Value(RealizedExpenseDecision.accepted),
+        decidedAt: drift.Value(now),
+        rejectionJustification: const drift.Value(null),
+      ),
+    );
+    await _recomputeExpenseStatus(expenseId, now: now);
+    return (await getById(expenseId))!;
+  }
+
+  Future<RealizedExpense> recordLocalReject({
+    required String expenseId,
+    required String participantId,
+    required String justification,
+  }) async {
+    final trimmed = justification.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError('Rejection justification is required');
+    }
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.realizedExpenseAcceptances)
+          ..where((t) => t.expenseId.equals(expenseId))
+          ..where((t) => t.participantId.equals(participantId)))
+        .write(
+      RealizedExpenseAcceptancesCompanion(
+        decision: drift.Value(RealizedExpenseDecision.rejected),
+        decidedAt: drift.Value(now),
+        rejectionJustification: drift.Value(trimmed),
+      ),
+    );
+    await _recomputeExpenseStatus(expenseId, now: now);
+    return (await getById(expenseId))!;
+  }
+
+  Future<RealizedExpense> applyPeerDecision({
+    required String expenseId,
+    required String participantId,
+    required String decision,
+    String? justification,
+  }) async {
+    final now = DateTime.now().toUtc();
+    if (decision == RealizedExpenseDecision.accepted) {
+      await (_db.update(_db.realizedExpenseAcceptances)
+            ..where((t) => t.expenseId.equals(expenseId))
+            ..where((t) => t.participantId.equals(participantId)))
+          .write(
+        RealizedExpenseAcceptancesCompanion(
+          decision: drift.Value(RealizedExpenseDecision.accepted),
+          decidedAt: drift.Value(now),
+          rejectionJustification: const drift.Value(null),
+        ),
+      );
+    } else if (decision == RealizedExpenseDecision.rejected) {
+      final text = (justification ?? '').trim();
+      await (_db.update(_db.realizedExpenseAcceptances)
+            ..where((t) => t.expenseId.equals(expenseId))
+            ..where((t) => t.participantId.equals(participantId)))
+          .write(
+        RealizedExpenseAcceptancesCompanion(
+          decision: drift.Value(RealizedExpenseDecision.rejected),
+          decidedAt: drift.Value(now),
+          rejectionJustification: drift.Value(text.isEmpty ? '—' : text),
+        ),
+      );
+    }
+    await _recomputeExpenseStatus(expenseId, now: now);
+    return (await getById(expenseId))!;
+  }
+
+  Future<RealizedExpense> createResubmitDraftFromRejected(
+    String rejectedExpenseId,
+  ) async {
+    final row = await getById(rejectedExpenseId);
+    if (row == null) {
+      throw StateError('Expense not found: $rejectedExpenseId');
+    }
+    if (row.status != RealizedExpenseStatus.rejected) {
+      throw StateError('Only rejected expenses can be resubmitted');
+    }
+    if (row.payerParticipantId !=
+        selfParticipantIdForPlan(row.planId)) {
+      throw StateError('Only the payer can resubmit this expense');
+    }
+
+    final newId = newExpenseId();
+    final now = DateTime.now().toUtc();
+    await _db.into(_db.realizedExpenses).insert(
+          RealizedExpensesCompanion.insert(
+            id: newId,
+            packageId: row.packageId,
+            planId: row.planId,
+            planLineId: row.planLineId,
+            status: RealizedExpenseStatus.draft,
+            amountMinor: row.amountMinor,
+            currency: row.currency,
+            paymentDate: row.paymentDate,
+            payerParticipantId: row.payerParticipantId,
+            kind: row.kind,
+            beneficiaryParticipantId: drift.Value(row.beneficiaryParticipantId),
+            priorExpenseId: drift.Value(rejectedExpenseId),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    final attachments = await attachmentsFor(rejectedExpenseId);
+    for (final att in attachments) {
+      if (att.filePath.isEmpty) continue;
+      await _db.into(_db.realizedExpenseAttachments).insert(
+            RealizedExpenseAttachmentsCompanion.insert(
+              id: newAttachmentId(),
+              expenseId: newId,
+              filePath: att.filePath,
+              displayFileName: att.displayFileName,
+              contentHash: drift.Value(att.contentHash),
+              createdAt: now,
+            ),
+          );
+    }
+
+    return (await getById(newId))!;
+  }
+
+  Future<void> _recomputeExpenseStatus(
+    String expenseId, {
+    required DateTime now,
+  }) async {
+    final acceptances = await acceptancesFor(expenseId);
+    if (acceptances.isEmpty) return;
+
+    String nextStatus = RealizedExpenseStatus.proposed;
+    if (acceptances.any((a) => a.decision == RealizedExpenseDecision.rejected)) {
+      nextStatus = RealizedExpenseStatus.rejected;
+    } else if (acceptances.every(
+      (a) => a.decision == RealizedExpenseDecision.accepted,
+    )) {
+      nextStatus = RealizedExpenseStatus.published;
+    }
+
+    await (_db.update(_db.realizedExpenses)..where((t) => t.id.equals(expenseId)))
+        .write(
+      RealizedExpensesCompanion(
+        status: drift.Value(nextStatus),
+        updatedAt: drift.Value(now),
+      ),
+    );
   }
 }
 

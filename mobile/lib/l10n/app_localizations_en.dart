@@ -788,6 +788,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseCropFailed => 'Could not crop image';
 
   @override
+  String housingActiveHubReviewPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses awaiting your review',
+      one: '1 expense awaiting your review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get housingRealizedExpenseReviewListTitle => 'Review expenses';
+
+  @override
+  String get housingRealizedExpenseReviewEmpty => 'No expenses to review.';
+
+  @override
+  String get housingRealizedExpenseReviewWaitingForYou =>
+      'Awaiting your review';
+
+  @override
+  String get housingRealizedExpenseReviewWaitingForOthers =>
+      'Awaiting other participants';
+
+  @override
+  String get housingRealizedExpenseReviewPublished => 'Published';
+
+  @override
+  String get housingRealizedExpenseReviewRejected => 'Rejected';
+
+  @override
+  String get housingRealizedExpenseReviewTitle => 'Expense review';
+
+  @override
+  String housingRealizedExpenseReviewPayer(String name) {
+    return 'Paid by $name';
+  }
+
+  @override
+  String get housingRealizedExpenseReviewRejections => 'Rejections';
+
+  @override
+  String get housingRealizedExpenseAccept => 'Accept';
+
+  @override
+  String get housingRealizedExpenseReject => 'Reject';
+
+  @override
+  String get housingRealizedExpenseRejectTitle => 'Reject expense';
+
+  @override
+  String get housingRealizedExpenseRejectJustification => 'Reason (required)';
+
+  @override
+  String get housingRealizedExpenseRejectConfirm => 'Reject';
+
+  @override
+  String get housingRealizedExpenseAccepted => 'Expense accepted';
+
+  @override
+  String get housingRealizedExpenseRejected => 'Expense rejected';
+
+  @override
+  String get housingRealizedExpenseResubmit => 'Correct and resubmit';
+
+  @override
+  String get housingMonthlyExpensesTitle => 'Monthly expenses';
+
+  @override
+  String housingMonthlyExpensesMonthLabel(int year, int month) {
+    return '$year-$month';
+  }
+
+  @override
+  String get housingMonthlyExpensesEmpty =>
+      'No published expenses for this month.';
+
+  @override
+  String get housingBalancesTitle => 'Balances owed';
+
+  @override
+  String get housingBalancesEmpty =>
+      'No balances yet. Published expenses will appear here.';
+
+  @override
+  String housingBalancesOwes(String from, String to, String amount) {
+    return '$from owes $to $amount';
+  }
+
+  @override
+  String get housingRealizedExpenseBudgetCapTitle => 'Monthly budget exceeded';
+
+  @override
+  String housingRealizedExpenseBudgetCapBody(String cap) {
+    return 'This amount exceeds the monthly cap ($cap) for this plan line. Submit anyway?';
+  }
+
+  @override
+  String get housingRealizedExpenseBudgetCapConfirm => 'Submit anyway';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Response window';
 
   @override
@@ -1145,6 +1246,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String pushNotificationHousingRealizedExpenseBodyFrom(String name) {
     return '$name submitted an expense to review.';
+  }
+
+  @override
+  String get pushNotificationHousingRealizedExpenseRejectedTitle =>
+      'Expense rejected';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseRejectedBody =>
+      'A participant rejected your expense.';
+
+  @override
+  String pushNotificationHousingRealizedExpenseRejectedBodyFrom(String name) {
+    return '$name rejected your expense.';
   }
 
   @override
