@@ -337,6 +337,85 @@
     }
   },
   "housingRealizedExpenseBudgetCapConfirm": "Submit anyway",
+  "housingActivePlanReadOnlyTitle": "Current plan",
+  "housingActivePlanReadOnlyExpenses": "View expense lines",
+  "housingAmendmentRequestTitle": "Request plan modification",
+  "housingAmendmentRequestIntro": "Choose one change per proposal. Your group must accept unanimously before it takes effect.",
+  "housingAmendmentPendingBlocks": "A plan modification is already waiting for responses.",
+  "housingAmendmentPickLine": "Choose a plan line",
+  "housingAmendmentTypeLineAmount": "Change a line amount",
+  "housingAmendmentTypeLineAmountHint": "Update the price for one expense line",
+  "housingAmendmentTypeLineRecurrence": "Change recurrence",
+  "housingAmendmentTypeLineRecurrenceHint": "Update how often one line repeats",
+  "housingAmendmentTypeLinePayer": "Change who pays",
+  "housingAmendmentTypeLinePayerHint": "Update payment responsibility for one line",
+  "housingAmendmentTypeLineAdd": "Add an expense line",
+  "housingAmendmentTypeLineAddHint": "Add one new line to the plan",
+  "housingAmendmentTypeLineRemove": "Remove an expense line",
+  "housingAmendmentTypeLineRemoveHint": "Retire one line (past expenses stay linked)",
+  "housingAmendmentLineRemoveConfirm": "Remove this line from the plan? Existing realized expenses for this line are kept.",
+  "housingAmendmentLineRemoveConfirmAction": "Remove line",
+  "housingAmendmentTypeAgreementEnd": "Change agreement end date",
+  "housingAmendmentTypeAgreementEndHint": "Extend or shorten the agreement period",
+  "housingAmendmentEndDateSet": "End date set to {date}",
+  "@housingAmendmentEndDateSet": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "housingAmendmentTypeRuleChange": "Change agreement rules",
+  "housingAmendmentTypeRuleChangeHint": "Edit quiet hours, withdrawal, or other rules",
+  "housingAmendmentRosterChangeTitle": "Change participants",
+  "housingAmendmentRosterChangeHint": "Adding or removing roommates requires a new agreement",
+  "housingAmendmentRosterChangeBody": "Participant changes are not allowed as an in-force amendment. End this agreement or start a new term with a derived version of the current plan.",
+  "housingAgreementRenewalTitle": "New agreement term",
+  "housingAgreementRenewalIntro": "When your agreement period ends or your group changes, start a new unanimous proposal. You can derive it from the current plan to avoid retyping everything.",
+  "housingAgreementRenewalFork": "Start new term from current plan",
+  "housingAgreementEndNow": "End agreement today",
+  "housingAgreementEndConfirmTitle": "End agreement?",
+  "housingAgreementEndConfirmBody": "New realized expenses will be blocked after today. You can still review past expenses and start a new term later.",
+  "housingAgreementEndConfirmAction": "End today",
+  "housingAgreementEndedSnackbar": "Agreement period closed on this device",
+  "housingAgreementExpiredTitle": "Agreement period ended",
+  "housingAgreementExpiredBody": "You cannot enter new realized expenses for this period. Start a new agreement term to continue.",
+  "housingAmendmentDetailTitle": "Requested change",
+  "housingAmendmentDetailIntro": "{proposer} proposes to change {subject}.",
+  "@housingAmendmentDetailIntro": {
+    "placeholders": {
+      "proposer": { "type": "String" },
+      "subject": { "type": "String" }
+    }
+  },
+  "housingAmendmentDetailCurrent": "Currently",
+  "housingAmendmentDetailProposed": "Proposed",
+  "housingAmendmentSubjectAgreementEnd": "the agreement end date",
+  "housingAmendmentSubjectLineAmount": "the amount for “{line}”",
+  "@housingAmendmentSubjectLineAmount": {
+    "placeholders": { "line": { "type": "String" } }
+  },
+  "housingAmendmentSubjectLineRecurrence": "the recurrence for “{line}”",
+  "@housingAmendmentSubjectLineRecurrence": {
+    "placeholders": { "line": { "type": "String" } }
+  },
+  "housingAmendmentSubjectLinePayer": "who pays for “{line}”",
+  "@housingAmendmentSubjectLinePayer": {
+    "placeholders": { "line": { "type": "String" } }
+  },
+  "housingAmendmentSubjectLineAdd": "the plan (new expense line)",
+  "housingAmendmentSubjectLineRemove": "the plan (remove “{line}”)",
+  "@housingAmendmentSubjectLineRemove": {
+    "placeholders": { "line": { "type": "String" } }
+  },
+  "housingAmendmentSubjectRuleChange": "the agreement rules",
+  "housingAmendmentValueNotSet": "Not set",
+  "housingAmendmentValueNone": "None",
+  "housingAmendmentValueRemoved": "Removed from plan",
+  "housingAmendmentUnknownLine": "this line",
+  "housingAmendmentRulesCurrentPlaceholder": "Current rules (summary coming soon)",
+  "housingAmendmentRulesProposedPlaceholder": "Proposed rules (summary coming soon)",
+  "housingActiveHubPendingAmendment": "There is a change request",
+  "housingAmendmentDetailLoading": "Loading…",
+  "housingActiveHubViewPendingAmendment": "Requested change",
   "housingInviteResponseWindowTitle": "Response window",
   "housingInviteResponseWindowBody": "Participants have until this date and time to respond (UTC).",
   "housingInvitePeriodOverlapTitle": "Agreement period conflict",

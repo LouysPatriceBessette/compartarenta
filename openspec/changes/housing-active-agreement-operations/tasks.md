@@ -42,10 +42,10 @@
 
 ## Pass 4 — Amendment & closure (`housing-agreement-amendment-and-closure`)
 
-- [ ] 4.1 Read-only “view current plan” from active revision snapshot.
-- [ ] 4.2 Amendment entry: one change type per proposal; wire to existing renegotiation / offer flow.
-- [ ] 4.3 Enforce: roster changes require end + new agreement with fork.
-- [ ] 4.4 Agreement end + fork plan for renewal.
+- [x] 4.1 Read-only “view current plan” from active revision snapshot.
+- [x] 4.2 Amendment entry: one change type per proposal; wire to existing renegotiation / offer flow.
+- [x] 4.3 Enforce: roster changes require end + new agreement with fork.
+- [x] 4.4 Agreement end + fork plan for renewal.
 
 ## Pass 5 — Portability (`housing-agreement-data-portability`)
 

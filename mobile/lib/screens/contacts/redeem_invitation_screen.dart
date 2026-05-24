@@ -324,7 +324,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.contactsEnterInviteCodeTitle)),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,7 +419,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                   ),
                 ),
               ],
-              const Spacer(),
+              const SizedBox(height: 24),
               FilledButton.icon(
                 icon: _dispatching
                     ? const SizedBox.square(

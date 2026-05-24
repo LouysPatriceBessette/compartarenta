@@ -1684,6 +1684,342 @@ abstract class AppLocalizations {
   /// **'Submit anyway'**
   String get housingRealizedExpenseBudgetCapConfirm;
 
+  /// No description provided for @housingActivePlanReadOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current plan'**
+  String get housingActivePlanReadOnlyTitle;
+
+  /// No description provided for @housingActivePlanReadOnlyExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'View expense lines'**
+  String get housingActivePlanReadOnlyExpenses;
+
+  /// No description provided for @housingAmendmentRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request plan modification'**
+  String get housingAmendmentRequestTitle;
+
+  /// No description provided for @housingAmendmentRequestIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one change per proposal. Your group must accept unanimously before it takes effect.'**
+  String get housingAmendmentRequestIntro;
+
+  /// No description provided for @housingAmendmentPendingBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'A plan modification is already waiting for responses.'**
+  String get housingAmendmentPendingBlocks;
+
+  /// No description provided for @housingAmendmentPickLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a plan line'**
+  String get housingAmendmentPickLine;
+
+  /// No description provided for @housingAmendmentTypeLineAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Change a line amount'**
+  String get housingAmendmentTypeLineAmount;
+
+  /// No description provided for @housingAmendmentTypeLineAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the price for one expense line'**
+  String get housingAmendmentTypeLineAmountHint;
+
+  /// No description provided for @housingAmendmentTypeLineRecurrence.
+  ///
+  /// In en, this message translates to:
+  /// **'Change recurrence'**
+  String get housingAmendmentTypeLineRecurrence;
+
+  /// No description provided for @housingAmendmentTypeLineRecurrenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Update how often one line repeats'**
+  String get housingAmendmentTypeLineRecurrenceHint;
+
+  /// No description provided for @housingAmendmentTypeLinePayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Change who pays'**
+  String get housingAmendmentTypeLinePayer;
+
+  /// No description provided for @housingAmendmentTypeLinePayerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Update payment responsibility for one line'**
+  String get housingAmendmentTypeLinePayerHint;
+
+  /// No description provided for @housingAmendmentTypeLineAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expense line'**
+  String get housingAmendmentTypeLineAdd;
+
+  /// No description provided for @housingAmendmentTypeLineAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one new line to the plan'**
+  String get housingAmendmentTypeLineAddHint;
+
+  /// No description provided for @housingAmendmentTypeLineRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove an expense line'**
+  String get housingAmendmentTypeLineRemove;
+
+  /// No description provided for @housingAmendmentTypeLineRemoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Retire one line (past expenses stay linked)'**
+  String get housingAmendmentTypeLineRemoveHint;
+
+  /// No description provided for @housingAmendmentLineRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this line from the plan? Existing realized expenses for this line are kept.'**
+  String get housingAmendmentLineRemoveConfirm;
+
+  /// No description provided for @housingAmendmentLineRemoveConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove line'**
+  String get housingAmendmentLineRemoveConfirmAction;
+
+  /// No description provided for @housingAmendmentTypeAgreementEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Change agreement end date'**
+  String get housingAmendmentTypeAgreementEnd;
+
+  /// No description provided for @housingAmendmentTypeAgreementEndHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend or shorten the agreement period'**
+  String get housingAmendmentTypeAgreementEndHint;
+
+  /// No description provided for @housingAmendmentEndDateSet.
+  ///
+  /// In en, this message translates to:
+  /// **'End date set to {date}'**
+  String housingAmendmentEndDateSet(String date);
+
+  /// No description provided for @housingAmendmentTypeRuleChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change agreement rules'**
+  String get housingAmendmentTypeRuleChange;
+
+  /// No description provided for @housingAmendmentTypeRuleChangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quiet hours, withdrawal, or other rules'**
+  String get housingAmendmentTypeRuleChangeHint;
+
+  /// No description provided for @housingAmendmentRosterChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change participants'**
+  String get housingAmendmentRosterChangeTitle;
+
+  /// No description provided for @housingAmendmentRosterChangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding or removing roommates requires a new agreement'**
+  String get housingAmendmentRosterChangeHint;
+
+  /// No description provided for @housingAmendmentRosterChangeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant changes are not allowed as an in-force amendment. End this agreement or start a new term with a derived version of the current plan.'**
+  String get housingAmendmentRosterChangeBody;
+
+  /// No description provided for @housingAgreementRenewalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New agreement term'**
+  String get housingAgreementRenewalTitle;
+
+  /// No description provided for @housingAgreementRenewalIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When your agreement period ends or your group changes, start a new unanimous proposal. You can derive it from the current plan to avoid retyping everything.'**
+  String get housingAgreementRenewalIntro;
+
+  /// No description provided for @housingAgreementRenewalFork.
+  ///
+  /// In en, this message translates to:
+  /// **'Start new term from current plan'**
+  String get housingAgreementRenewalFork;
+
+  /// No description provided for @housingAgreementEndNow.
+  ///
+  /// In en, this message translates to:
+  /// **'End agreement today'**
+  String get housingAgreementEndNow;
+
+  /// No description provided for @housingAgreementEndConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End agreement?'**
+  String get housingAgreementEndConfirmTitle;
+
+  /// No description provided for @housingAgreementEndConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New realized expenses will be blocked after today. You can still review past expenses and start a new term later.'**
+  String get housingAgreementEndConfirmBody;
+
+  /// No description provided for @housingAgreementEndConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'End today'**
+  String get housingAgreementEndConfirmAction;
+
+  /// No description provided for @housingAgreementEndedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement period closed on this device'**
+  String get housingAgreementEndedSnackbar;
+
+  /// No description provided for @housingAgreementExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement period ended'**
+  String get housingAgreementExpiredTitle;
+
+  /// No description provided for @housingAgreementExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot enter new realized expenses for this period. Start a new agreement term to continue.'**
+  String get housingAgreementExpiredBody;
+
+  /// No description provided for @housingAmendmentDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested change'**
+  String get housingAmendmentDetailTitle;
+
+  /// No description provided for @housingAmendmentDetailIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{proposer} proposes to change {subject}.'**
+  String housingAmendmentDetailIntro(String proposer, String subject);
+
+  /// No description provided for @housingAmendmentDetailCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently'**
+  String get housingAmendmentDetailCurrent;
+
+  /// No description provided for @housingAmendmentDetailProposed.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed'**
+  String get housingAmendmentDetailProposed;
+
+  /// No description provided for @housingAmendmentSubjectAgreementEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'the agreement end date'**
+  String get housingAmendmentSubjectAgreementEnd;
+
+  /// No description provided for @housingAmendmentSubjectLineAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'the amount for “{line}”'**
+  String housingAmendmentSubjectLineAmount(String line);
+
+  /// No description provided for @housingAmendmentSubjectLineRecurrence.
+  ///
+  /// In en, this message translates to:
+  /// **'the recurrence for “{line}”'**
+  String housingAmendmentSubjectLineRecurrence(String line);
+
+  /// No description provided for @housingAmendmentSubjectLinePayer.
+  ///
+  /// In en, this message translates to:
+  /// **'who pays for “{line}”'**
+  String housingAmendmentSubjectLinePayer(String line);
+
+  /// No description provided for @housingAmendmentSubjectLineAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'the plan (new expense line)'**
+  String get housingAmendmentSubjectLineAdd;
+
+  /// No description provided for @housingAmendmentSubjectLineRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'the plan (remove “{line}”)'**
+  String housingAmendmentSubjectLineRemove(String line);
+
+  /// No description provided for @housingAmendmentSubjectRuleChange.
+  ///
+  /// In en, this message translates to:
+  /// **'the agreement rules'**
+  String get housingAmendmentSubjectRuleChange;
+
+  /// No description provided for @housingAmendmentValueNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get housingAmendmentValueNotSet;
+
+  /// No description provided for @housingAmendmentValueNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get housingAmendmentValueNone;
+
+  /// No description provided for @housingAmendmentValueRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from plan'**
+  String get housingAmendmentValueRemoved;
+
+  /// No description provided for @housingAmendmentUnknownLine.
+  ///
+  /// In en, this message translates to:
+  /// **'this line'**
+  String get housingAmendmentUnknownLine;
+
+  /// No description provided for @housingAmendmentRulesCurrentPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Current rules (summary coming soon)'**
+  String get housingAmendmentRulesCurrentPlaceholder;
+
+  /// No description provided for @housingAmendmentRulesProposedPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed rules (summary coming soon)'**
+  String get housingAmendmentRulesProposedPlaceholder;
+
+  /// No description provided for @housingActiveHubPendingAmendment.
+  ///
+  /// In en, this message translates to:
+  /// **'There is a change request'**
+  String get housingActiveHubPendingAmendment;
+
+  /// No description provided for @housingAmendmentDetailLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get housingAmendmentDetailLoading;
+
+  /// No description provided for @housingActiveHubViewPendingAmendment.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested change'**
+  String get housingActiveHubViewPendingAmendment;
+
   /// No description provided for @housingInviteResponseWindowTitle.
   ///
   /// In en, this message translates to:

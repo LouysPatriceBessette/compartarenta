@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import 'agreement_period_day_overlap.dart';
 import 'housing_plan_period_gate.dart';
 import 'housing_proposal_revision_state.dart';
+import 'housing_proposal_transport_service.dart';
 
 /// Local-only proposal / renegotiation support (sync layer TBD).
 ///
@@ -344,15 +345,37 @@ class PlanAgreementProposalService {
     }
 
     await _db.transaction(() async {
+      final rev = await (_db.select(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+      if (rev != null) {
+        final closedPayload =
+            jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+        closedPayload['lifecycleState'] = 'archived';
+        await (_db.update(
+          _db.proposalRevisions,
+        )..where((t) => t.id.equals(revisionId))).write(
+          ProposalRevisionsCompanion(
+            payloadJson: drift.Value(jsonEncode(closedPayload)),
+          ),
+        );
+      }
       await (_db.update(
         _db.proposalPackages,
       )..where((t) => t.id.equals(packageId))).write(
         ProposalPackagesCompanion(
           activeRevisionId: drift.Value(revisionId),
-          pendingRevisionId: const drift.Value.absent(),
+          pendingRevisionId: const drift.Value(null),
         ),
       );
     });
+    await HousingProposalTransportService(_db).applyActiveRevisionPayloadToPlan(
+      planId: planId,
+      revisionId: revisionId,
+    );
+    await HousingProposalTransportService(_db).reconcileStalePackagePending(
+      planId,
+    );
     return ProposalActivationOutcome.activated;
   }
 

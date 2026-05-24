@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -44,13 +45,61 @@ class CompartarentaApp extends StatefulWidget {
   State<CompartarentaApp> createState() => _CompartarentaAppState();
 }
 
-class _CompartarentaAppState extends State<CompartarentaApp> {
+class _CompartarentaAppState extends State<CompartarentaApp>
+    with WidgetsBindingObserver {
   late final Future<AppPreferences> _prefs = _loadPrefs();
 
   /// Reused across [ListenableBuilder] rebuilds so navigation state is kept.
   GoRouter? _router;
 
   String _lastRoutingPushPrefsSig = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (kIsWeb) {
+      if (state == AppLifecycleState.resumed) {
+        unawaited(
+          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes().catchError(
+            (Object error, StackTrace stack) {
+              debugPrint('Relay poll on web resume failed: $error\n$stack');
+            },
+          ),
+        );
+      }
+      switch (state) {
+        case AppLifecycleState.paused:
+        case AppLifecycleState.hidden:
+        case AppLifecycleState.detached:
+          break;
+        default:
+          return;
+      }
+      try {
+        unawaited(
+          AppDatabase.processScope.syncWebStorageToDisk().catchError(
+            (Object error, StackTrace stack) {
+              debugPrint('Drift web flush on $state failed: $error\n$stack');
+            },
+          ),
+        );
+      } on StateError {
+        // processScope not bound yet (tests).
+      }
+      return;
+    }
+  }
 
   Future<AppPreferences> _loadPrefs() async {
     final prefs = await AppPreferences.load();

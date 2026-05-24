@@ -33,7 +33,10 @@ fi
 # Flutter's default Chrome profile for `flutter run -d chrome` is ephemeral:
 # IndexedDB (Drift) and localStorage are wiped when the dev server stops.
 # Reuse a stable user-data dir so housing drafts, contacts, and prefs survive
-# melos/CTRL+C restarts on the same machine.
+# melos restarts on the same machine.
+#
+# Stop the dev server with `q` (quit) in this terminal when possible — gentler
+# than Ctrl+C. Equivalent launch without melos: cd mobile && ./tool/run_dev_web.sh
 CHROME_USER_DATA_DIR="${COMPARTARENTA_WEB_USER_DATA_DIR:-${HOME}/.cache/compartarenta/flutter-web-chrome}"
 mkdir -p "${CHROME_USER_DATA_DIR}"
 web_browser_flag_args=()

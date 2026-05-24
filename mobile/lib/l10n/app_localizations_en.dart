@@ -889,6 +889,203 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseBudgetCapConfirm => 'Submit anyway';
 
   @override
+  String get housingActivePlanReadOnlyTitle => 'Current plan';
+
+  @override
+  String get housingActivePlanReadOnlyExpenses => 'View expense lines';
+
+  @override
+  String get housingAmendmentRequestTitle => 'Request plan modification';
+
+  @override
+  String get housingAmendmentRequestIntro =>
+      'Choose one change per proposal. Your group must accept unanimously before it takes effect.';
+
+  @override
+  String get housingAmendmentPendingBlocks =>
+      'A plan modification is already waiting for responses.';
+
+  @override
+  String get housingAmendmentPickLine => 'Choose a plan line';
+
+  @override
+  String get housingAmendmentTypeLineAmount => 'Change a line amount';
+
+  @override
+  String get housingAmendmentTypeLineAmountHint =>
+      'Update the price for one expense line';
+
+  @override
+  String get housingAmendmentTypeLineRecurrence => 'Change recurrence';
+
+  @override
+  String get housingAmendmentTypeLineRecurrenceHint =>
+      'Update how often one line repeats';
+
+  @override
+  String get housingAmendmentTypeLinePayer => 'Change who pays';
+
+  @override
+  String get housingAmendmentTypeLinePayerHint =>
+      'Update payment responsibility for one line';
+
+  @override
+  String get housingAmendmentTypeLineAdd => 'Add an expense line';
+
+  @override
+  String get housingAmendmentTypeLineAddHint => 'Add one new line to the plan';
+
+  @override
+  String get housingAmendmentTypeLineRemove => 'Remove an expense line';
+
+  @override
+  String get housingAmendmentTypeLineRemoveHint =>
+      'Retire one line (past expenses stay linked)';
+
+  @override
+  String get housingAmendmentLineRemoveConfirm =>
+      'Remove this line from the plan? Existing realized expenses for this line are kept.';
+
+  @override
+  String get housingAmendmentLineRemoveConfirmAction => 'Remove line';
+
+  @override
+  String get housingAmendmentTypeAgreementEnd => 'Change agreement end date';
+
+  @override
+  String get housingAmendmentTypeAgreementEndHint =>
+      'Extend or shorten the agreement period';
+
+  @override
+  String housingAmendmentEndDateSet(String date) {
+    return 'End date set to $date';
+  }
+
+  @override
+  String get housingAmendmentTypeRuleChange => 'Change agreement rules';
+
+  @override
+  String get housingAmendmentTypeRuleChangeHint =>
+      'Edit quiet hours, withdrawal, or other rules';
+
+  @override
+  String get housingAmendmentRosterChangeTitle => 'Change participants';
+
+  @override
+  String get housingAmendmentRosterChangeHint =>
+      'Adding or removing roommates requires a new agreement';
+
+  @override
+  String get housingAmendmentRosterChangeBody =>
+      'Participant changes are not allowed as an in-force amendment. End this agreement or start a new term with a derived version of the current plan.';
+
+  @override
+  String get housingAgreementRenewalTitle => 'New agreement term';
+
+  @override
+  String get housingAgreementRenewalIntro =>
+      'When your agreement period ends or your group changes, start a new unanimous proposal. You can derive it from the current plan to avoid retyping everything.';
+
+  @override
+  String get housingAgreementRenewalFork => 'Start new term from current plan';
+
+  @override
+  String get housingAgreementEndNow => 'End agreement today';
+
+  @override
+  String get housingAgreementEndConfirmTitle => 'End agreement?';
+
+  @override
+  String get housingAgreementEndConfirmBody =>
+      'New realized expenses will be blocked after today. You can still review past expenses and start a new term later.';
+
+  @override
+  String get housingAgreementEndConfirmAction => 'End today';
+
+  @override
+  String get housingAgreementEndedSnackbar =>
+      'Agreement period closed on this device';
+
+  @override
+  String get housingAgreementExpiredTitle => 'Agreement period ended';
+
+  @override
+  String get housingAgreementExpiredBody =>
+      'You cannot enter new realized expenses for this period. Start a new agreement term to continue.';
+
+  @override
+  String get housingAmendmentDetailTitle => 'Requested change';
+
+  @override
+  String housingAmendmentDetailIntro(String proposer, String subject) {
+    return '$proposer proposes to change $subject.';
+  }
+
+  @override
+  String get housingAmendmentDetailCurrent => 'Currently';
+
+  @override
+  String get housingAmendmentDetailProposed => 'Proposed';
+
+  @override
+  String get housingAmendmentSubjectAgreementEnd => 'the agreement end date';
+
+  @override
+  String housingAmendmentSubjectLineAmount(String line) {
+    return 'the amount for “$line”';
+  }
+
+  @override
+  String housingAmendmentSubjectLineRecurrence(String line) {
+    return 'the recurrence for “$line”';
+  }
+
+  @override
+  String housingAmendmentSubjectLinePayer(String line) {
+    return 'who pays for “$line”';
+  }
+
+  @override
+  String get housingAmendmentSubjectLineAdd => 'the plan (new expense line)';
+
+  @override
+  String housingAmendmentSubjectLineRemove(String line) {
+    return 'the plan (remove “$line”)';
+  }
+
+  @override
+  String get housingAmendmentSubjectRuleChange => 'the agreement rules';
+
+  @override
+  String get housingAmendmentValueNotSet => 'Not set';
+
+  @override
+  String get housingAmendmentValueNone => 'None';
+
+  @override
+  String get housingAmendmentValueRemoved => 'Removed from plan';
+
+  @override
+  String get housingAmendmentUnknownLine => 'this line';
+
+  @override
+  String get housingAmendmentRulesCurrentPlaceholder =>
+      'Current rules (summary coming soon)';
+
+  @override
+  String get housingAmendmentRulesProposedPlaceholder =>
+      'Proposed rules (summary coming soon)';
+
+  @override
+  String get housingActiveHubPendingAmendment => 'There is a change request';
+
+  @override
+  String get housingAmendmentDetailLoading => 'Loading…';
+
+  @override
+  String get housingActiveHubViewPendingAmendment => 'Requested change';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Response window';
 
   @override

@@ -6,6 +6,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'app.dart';
 import 'config/app_config.dart';
+import 'debug/local_storage_startup_log.dart';
+import 'debug/web_storage_flush.dart';
 import 'contacts/contact_invitations_repository.dart';
 import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
@@ -33,8 +35,10 @@ Future<void> bootstrap() async {
 
       final appDb = AppDatabase();
       AppDatabase.bindProcessScope(appDb);
+      installWebStorageFlushOnPageHide();
       try {
         await appDb.warmUpStorage();
+        await logLocalStorageStartupDiagnostics(appDb);
       } catch (error, stack) {
         debugPrint(
           'AppDatabase warmUpStorage failed (full stop the app, then '

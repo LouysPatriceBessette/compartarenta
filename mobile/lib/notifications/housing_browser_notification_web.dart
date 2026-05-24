@@ -13,11 +13,11 @@ Future<void> showHousingBrowserNotification({
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
   final notification = html.Notification(title, body: body);
-  if (expenseId != null && expenseId.isNotEmpty) {
-    notification.onClick.listen((_) {
+  notification.onClick.listen((_) {
+    if (expenseId != null && expenseId.isNotEmpty) {
       HousingNavigationIntent.requestReview(expenseId);
-      html.window.location.hash = '/housing';
-      notification.close();
-    });
-  }
+    }
+    html.window.location.hash = '/housing';
+    notification.close();
+  });
 }

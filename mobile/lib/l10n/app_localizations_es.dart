@@ -902,6 +902,206 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingRealizedExpenseBudgetCapConfirm => 'Enviar de todos modos';
 
   @override
+  String get housingActivePlanReadOnlyTitle => 'Plan actual';
+
+  @override
+  String get housingActivePlanReadOnlyExpenses => 'Ver líneas de gasto';
+
+  @override
+  String get housingAmendmentRequestTitle => 'Solicitar modificación';
+
+  @override
+  String get housingAmendmentRequestIntro =>
+      'Elija un solo cambio por propuesta. El grupo debe aceptarlo por unanimidad.';
+
+  @override
+  String get housingAmendmentPendingBlocks =>
+      'Ya hay una modificación pendiente de respuesta.';
+
+  @override
+  String get housingAmendmentPickLine => 'Elegir una línea';
+
+  @override
+  String get housingAmendmentTypeLineAmount => 'Cambiar un importe';
+
+  @override
+  String get housingAmendmentTypeLineAmountHint =>
+      'Actualizar el precio de una línea';
+
+  @override
+  String get housingAmendmentTypeLineRecurrence => 'Cambiar recurrencia';
+
+  @override
+  String get housingAmendmentTypeLineRecurrenceHint =>
+      'Cambiar la frecuencia de una línea';
+
+  @override
+  String get housingAmendmentTypeLinePayer => 'Cambiar quién paga';
+
+  @override
+  String get housingAmendmentTypeLinePayerHint =>
+      'Cambiar el responsable del pago';
+
+  @override
+  String get housingAmendmentTypeLineAdd => 'Añadir una línea';
+
+  @override
+  String get housingAmendmentTypeLineAddHint =>
+      'Añadir una línea nueva al plan';
+
+  @override
+  String get housingAmendmentTypeLineRemove => 'Quitar una línea';
+
+  @override
+  String get housingAmendmentTypeLineRemoveHint =>
+      'Retirar una línea (los gastos pasados siguen vinculados)';
+
+  @override
+  String get housingAmendmentLineRemoveConfirm =>
+      '¿Quitar esta línea del plan? Los gastos realizados existentes se conservan.';
+
+  @override
+  String get housingAmendmentLineRemoveConfirmAction => 'Quitar línea';
+
+  @override
+  String get housingAmendmentTypeAgreementEnd => 'Cambiar fin del acuerdo';
+
+  @override
+  String get housingAmendmentTypeAgreementEndHint =>
+      'Ampliar o acortar el periodo';
+
+  @override
+  String housingAmendmentEndDateSet(String date) {
+    return 'Fin fijado al $date';
+  }
+
+  @override
+  String get housingAmendmentTypeRuleChange => 'Cambiar reglas';
+
+  @override
+  String get housingAmendmentTypeRuleChangeHint =>
+      'Toque de queda, retirada, etc.';
+
+  @override
+  String get housingAmendmentRosterChangeTitle => 'Cambiar participantes';
+
+  @override
+  String get housingAmendmentRosterChangeHint =>
+      'Añadir o quitar un compañero requiere un nuevo acuerdo';
+
+  @override
+  String get housingAmendmentRosterChangeBody =>
+      'Los cambios de participantes no son una modificación en vigor. Finalice el acuerdo o inicie un nuevo periodo derivado del plan actual.';
+
+  @override
+  String get housingAgreementRenewalTitle => 'Nuevo periodo de acuerdo';
+
+  @override
+  String get housingAgreementRenewalIntro =>
+      'Al terminar el periodo o cambiar el grupo, inicie una nueva propuesta unánime. Puede derivarla del plan actual.';
+
+  @override
+  String get housingAgreementRenewalFork =>
+      'Nuevo periodo desde el plan actual';
+
+  @override
+  String get housingAgreementEndNow => 'Finalizar acuerdo hoy';
+
+  @override
+  String get housingAgreementEndConfirmTitle => '¿Finalizar acuerdo?';
+
+  @override
+  String get housingAgreementEndConfirmBody =>
+      'No se podrán registrar nuevos gastos realizados después de hoy. Puede iniciar un nuevo periodo más tarde.';
+
+  @override
+  String get housingAgreementEndConfirmAction => 'Finalizar hoy';
+
+  @override
+  String get housingAgreementEndedSnackbar =>
+      'Periodo del acuerdo cerrado en este dispositivo';
+
+  @override
+  String get housingAgreementExpiredTitle => 'Periodo finalizado';
+
+  @override
+  String get housingAgreementExpiredBody =>
+      'No puede registrar gastos realizados para este periodo. Inicie un nuevo acuerdo para continuar.';
+
+  @override
+  String get housingAmendmentDetailTitle => 'Cambio solicitado';
+
+  @override
+  String housingAmendmentDetailIntro(String proposer, String subject) {
+    return '$proposer propone cambiar $subject.';
+  }
+
+  @override
+  String get housingAmendmentDetailCurrent => 'Actualmente';
+
+  @override
+  String get housingAmendmentDetailProposed => 'Propuesto';
+
+  @override
+  String get housingAmendmentSubjectAgreementEnd =>
+      'la fecha de fin del acuerdo';
+
+  @override
+  String housingAmendmentSubjectLineAmount(String line) {
+    return 'el importe de « $line »';
+  }
+
+  @override
+  String housingAmendmentSubjectLineRecurrence(String line) {
+    return 'la recurrencia de « $line »';
+  }
+
+  @override
+  String housingAmendmentSubjectLinePayer(String line) {
+    return 'quién paga « $line »';
+  }
+
+  @override
+  String get housingAmendmentSubjectLineAdd => 'el plan (nueva línea de gasto)';
+
+  @override
+  String housingAmendmentSubjectLineRemove(String line) {
+    return 'el plan (quitar « $line »)';
+  }
+
+  @override
+  String get housingAmendmentSubjectRuleChange => 'las reglas del acuerdo';
+
+  @override
+  String get housingAmendmentValueNotSet => 'Sin definir';
+
+  @override
+  String get housingAmendmentValueNone => 'Ninguna';
+
+  @override
+  String get housingAmendmentValueRemoved => 'Retirada del plan';
+
+  @override
+  String get housingAmendmentUnknownLine => 'esta línea';
+
+  @override
+  String get housingAmendmentRulesCurrentPlaceholder =>
+      'Reglas actuales (resumen próximamente)';
+
+  @override
+  String get housingAmendmentRulesProposedPlaceholder =>
+      'Reglas propuestas (resumen próximamente)';
+
+  @override
+  String get housingActiveHubPendingAmendment => 'Hay una solicitud de cambio';
+
+  @override
+  String get housingAmendmentDetailLoading => 'Cargando…';
+
+  @override
+  String get housingActiveHubViewPendingAmendment => 'Cambio solicitado';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Plazo de respuesta';
 
   @override

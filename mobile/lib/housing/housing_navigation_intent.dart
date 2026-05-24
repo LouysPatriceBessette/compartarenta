@@ -1,9 +1,8 @@
-/// Pending navigation after a housing expense notification tap.
+/// Pending navigation after a housing notification tap.
 class HousingNavigationIntent {
   HousingNavigationIntent._();
 
   static String? pendingRealizedExpenseReviewId;
-
   static void requestReview(String expenseId) {
     pendingRealizedExpenseReviewId = expenseId;
   }
@@ -13,4 +12,5 @@ class HousingNavigationIntent {
     pendingRealizedExpenseReviewId = null;
     return id;
   }
+
 }

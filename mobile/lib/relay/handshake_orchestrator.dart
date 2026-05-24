@@ -913,15 +913,46 @@ class HandshakeOrchestrator {
     }
   }
 
+  static const int _relayTransientRetryAttempts = 3;
+  static const Duration _relayTransientRetryBaseDelay = Duration(
+    milliseconds: 350,
+  );
+
+  /// Retries [operation] on transient relay/network failures (e.g. connection
+  /// closed before headers).
+  Future<T> _withTransientRelayRetries<T>(
+    String label,
+    Future<T> Function() operation,
+  ) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < _relayTransientRetryAttempts; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(
+          _relayTransientRetryBaseDelay * attempt,
+        );
+      }
+      try {
+        return await operation();
+      } on Object catch (e) {
+        lastError = e;
+        debugPrint('$label attempt ${attempt + 1} failed: $e');
+      }
+    }
+    Error.throwWithStackTrace(lastError!, StackTrace.current);
+  }
+
   /// Ensures the relay has an active steady-state row for [selfListenAddr] and
   /// [peerListenAddr]. Idempotent (re-register after relay wipe or reinstall).
   Future<void> _ensureSteadyRoutingRegistered({
     required Uint8List selfListenAddr,
     required Uint8List peerListenAddr,
   }) async {
-    await _relay.establishRouting(
-      selfIdentity: selfListenAddr,
-      peerIdentity: peerListenAddr,
+    await _withTransientRelayRetries(
+      'steady_routing_establish',
+      () => _relay.establishRouting(
+        selfIdentity: selfListenAddr,
+        peerIdentity: peerListenAddr,
+      ),
     );
   }
 
@@ -1186,6 +1217,7 @@ class HandshakeOrchestrator {
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     await PushNotificationService.showLocalHousingProposalNotification(
       senderDisplayName: senderContact.displayName,
+      planId: imported.planId,
     );
   }
 
@@ -1999,19 +2031,22 @@ class HandshakeOrchestrator {
       revisionId: selectedRevisionId,
       details: {'status': status.name},
     );
-    if (status == ProposalResponseStatus.accepted) {
-      await transport.tryActivatePlanIfUnanimous(
-        planId: planId,
-        revisionId: selectedRevisionId,
-      );
-    } else {
-      await transport.archiveInvalidatedProposal(
-        planId: planId,
-        revisionId: selectedRevisionId,
-        status: status,
-        responderParticipantId: selfParticipantId,
-      );
+    if (sendResult.sentCount > 0) {
+      if (status == ProposalResponseStatus.accepted) {
+        await transport.tryActivatePlanIfUnanimous(
+          planId: planId,
+          revisionId: selectedRevisionId,
+        );
+      } else {
+        await transport.archiveInvalidatedProposal(
+          planId: planId,
+          revisionId: selectedRevisionId,
+          status: status,
+          responderParticipantId: selfParticipantId,
+        );
+      }
     }
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     return sendResult;
   }
 
@@ -2020,11 +2055,7 @@ class HandshakeOrchestrator {
     required HousingProposalResponseEnvelope response,
   }) async {
     final participants = (await _db.listParticipants())
-        .where(
-          (p) =>
-              (p.id.startsWith('$planId:p') || p.id == '$planId:self') &&
-              p.contactId != null,
-        )
+        .where((p) => p.id.startsWith('$planId:p') && p.contactId != null)
         .toList(growable: false);
     if (participants.isEmpty) {
       return const HousingProposalSendResult(
@@ -2066,17 +2097,25 @@ class HandshakeOrchestrator {
           firstPub: peerPub,
           secondPub: selfPub,
         );
-        await _ensureSteadyRoutingRegistered(
-          selfListenAddr: selfAddr,
-          peerListenAddr: peerAddr,
+        await _withTransientRelayRetries(
+          'housing_proposal_response to ${participant.id}',
+          () async {
+            await _relay.establishRouting(
+              selfIdentity: selfAddr,
+              peerIdentity: peerAddr,
+            );
+            await _relay.postEnvelope(
+              senderIdentity: selfAddr,
+              recipientIdentity: peerAddr,
+              idempotencyKey: _randomBytes(16),
+              ciphertext: frame,
+              kind: EnvelopeKind.housingProposalResponse,
+              ttl: _steadyTtl,
+            );
+          },
         );
-        await _relay.postEnvelope(
-          senderIdentity: selfAddr,
-          recipientIdentity: peerAddr,
-          idempotencyKey: _randomBytes(16),
-          ciphertext: frame,
-          kind: EnvelopeKind.housingProposalResponse,
-          ttl: _steadyTtl,
+        debugPrint(
+          'housing_proposal_response posted for ${participant.id}',
         );
         sent++;
       } on Object catch (e) {

@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
+import '../amendment/housing_amendment_type.dart';
 import 'housing_proposal_revision_state.dart';
 import 'plan_agreement_proposal_service.dart';
 
@@ -109,6 +110,27 @@ class HousingProposalTransportService {
       receivedRevisionId: receivedRevisionId,
     );
 
+    final existingPkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(receivedPlanId))).getSingleOrNull();
+    final isAmendment = resolveAmendmentType(
+          pendingPayload: payload,
+          activeRevisionId: existingPkg?.activeRevisionId,
+          pendingRevisionId: receivedRevisionId,
+        ) !=
+        null;
+    if (existingPkg?.activeRevisionId != null && isAmendment) {
+      return _importAmendmentOntoActivePlan(
+        receivedPlanId: receivedPlanId,
+        receivedPackageId: receivedPackageId,
+        receivedRevisionId: receivedRevisionId,
+        importedPayload: importedPayload,
+        sourceToLocalParticipant: sourceToLocalParticipant,
+        sourcePayload: payload,
+        createdAt: createdAt,
+      );
+    }
+
     await _deleteReceivedPlanData(receivedPlanId);
     await _upsertPlan(receivedPlanId, payload, createdAt);
     await _upsertParticipants(
@@ -174,11 +196,189 @@ class HousingProposalTransportService {
     );
   }
 
+  /// Adds a pending amendment revision without wiping the in-force plan tables.
+  Future<ReceivedHousingProposalImport> _importAmendmentOntoActivePlan({
+    required String receivedPlanId,
+    required String receivedPackageId,
+    required String receivedRevisionId,
+    required Map<String, Object?> importedPayload,
+    required Map<String, String> sourceToLocalParticipant,
+    required Map<String, dynamic> sourcePayload,
+    required DateTime createdAt,
+  }) async {
+    final proposerTail =
+        sourceToLocalParticipant[_string(sourcePayload['proposerParticipantId'])] ??
+        'p0';
+    final proposerId = '$receivedPlanId:$proposerTail';
+
+    await _db
+        .into(_db.proposalRevisions)
+        .insertOnConflictUpdate(
+          ProposalRevisionsCompanion.insert(
+            id: receivedRevisionId,
+            packageId: receivedPackageId,
+            contentHash: _string(
+              sourcePayload['contentHash'],
+              fallback: 'received:$receivedRevisionId',
+            ),
+            proposerParticipantId: proposerId,
+            payloadJson: jsonEncode(importedPayload),
+            createdAt: createdAt,
+          ),
+        );
+
+    final existingPkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(receivedPackageId))).getSingle();
+    await (_db.update(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(receivedPackageId))).write(
+      ProposalPackagesCompanion(
+        activeRevisionId: drift.Value(existingPkg.activeRevisionId),
+        pendingRevisionId: drift.Value(receivedRevisionId),
+      ),
+    );
+
+    await _upsertResponses(
+      receivedPlanId: receivedPlanId,
+      revisionId: receivedRevisionId,
+      payload: sourcePayload,
+      sourceToLocalParticipant: sourceToLocalParticipant,
+      createdAt: createdAt,
+    );
+
+    return ReceivedHousingProposalImport(
+      planId: receivedPlanId,
+      revisionId: receivedRevisionId,
+    );
+  }
+
   Future<String?> pendingRevisionIdForPlan(String planId) async {
     final pkg = await (_db.select(
       _db.proposalPackages,
     )..where((t) => t.planId.equals(planId))).getSingleOrNull();
     return pkg?.pendingRevisionId;
+  }
+
+  /// When an agreement is already active, clears a stale [pendingRevisionId] left
+  /// from the initial proposal (not an open amendment awaiting responses).
+  Future<void> reconcileStalePackagePending(String planId) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    if (pkg == null) return;
+    final pendingId = pkg.pendingRevisionId;
+    final activeId = pkg.activeRevisionId;
+    if (pendingId == null || activeId == null) return;
+
+    var shouldClear = pendingId == activeId;
+    if (!shouldClear) {
+      final rev = await (_db.select(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+      if (rev == null) {
+        shouldClear = true;
+      } else {
+        final payload =
+            jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+        final isAmendment = resolveAmendmentType(
+              pendingPayload: payload,
+              activeRevisionId: activeId,
+              pendingRevisionId: pendingId,
+            ) !=
+            null;
+        if (!isAmendment) {
+          shouldClear = true;
+        } else {
+          final state = HousingProposalRevisionState.fromPayload(payload);
+          if (!state.isOpen || state.isExpiredByClock) {
+            shouldClear = true;
+          }
+        }
+      }
+    }
+
+    if (!shouldClear) return;
+    await (_db.update(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(pkg.id))).write(
+      const ProposalPackagesCompanion(pendingRevisionId: drift.Value(null)),
+    );
+  }
+
+  /// Whether an in-force amendment revision is open and awaiting responses.
+  Future<bool> hasOpenPendingAmendment(String planId) async {
+    await reconcileStalePackagePending(planId);
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
+    final pendingId = pkg?.pendingRevisionId;
+    if (pendingId == null) return false;
+
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+    if (rev == null) return false;
+
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    if (resolveAmendmentType(
+          pendingPayload: payload,
+          activeRevisionId: pkg?.activeRevisionId,
+          pendingRevisionId: pendingId,
+        ) ==
+        null) {
+      return false;
+    }
+    final state = HousingProposalRevisionState.fromPayload(payload);
+    return state.isOpen && !state.isExpiredByClock;
+  }
+
+  /// Whether the local user still needs to accept, negotiate, or refuse.
+  Future<bool> hasOpenPendingAmendmentAwaitingLocalResponse(
+    String planId,
+  ) async {
+    if (!await hasOpenPendingAmendment(planId)) return false;
+    final pendingId = await pendingRevisionIdForPlan(planId);
+    if (pendingId == null) return false;
+
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+    if (rev == null) return false;
+
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final state = HousingProposalRevisionState.fromPayload(payload);
+    final selfId = '$planId:self';
+    final responses = await (_db.select(
+      _db.proposalResponses,
+    )..where((t) => t.revisionId.equals(pendingId))).get();
+    final selfStatus = responses
+            .where((r) => r.participantId == selfId)
+            .map((r) => r.status)
+            .firstOrNull ??
+        ProposalResponseStatus.pending.name;
+
+    return housingParticipantMayRespond(
+      revision: state,
+      participantResponseStatus: selfStatus,
+      proposerParticipantId: rev.proposerParticipantId,
+      participantId: selfId,
+    );
+  }
+
+  /// Hub banner: local action required, or proposer waiting on co-participants.
+  Future<bool> shouldShowPendingAmendmentHubBanner(String planId) async {
+    if (!await hasOpenPendingAmendment(planId)) return false;
+    if (await hasOpenPendingAmendmentAwaitingLocalResponse(planId)) {
+      return true;
+    }
+    final pendingId = await pendingRevisionIdForPlan(planId);
+    if (pendingId == null) return false;
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+    if (rev == null) return false;
+    return rev.proposerParticipantId == '$planId:self';
   }
 
   Future<bool> hasActiveRevision(String planId) async {
@@ -529,6 +729,135 @@ class HousingProposalTransportService {
     )..where((t) => t.id.equals(revisionId))).write(
       ProposalRevisionsCompanion(payloadJson: drift.Value(jsonEncode(payload))),
     );
+  }
+
+  /// Copies the active revision snapshot into a new draft plan (renewal / new term).
+  Future<String> createForkDraftFromActiveRevision({
+    required String listPlanId,
+    required String draftPlanId,
+  }) async {
+    final pkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.planId.equals(listPlanId))).getSingleOrNull();
+    final activeId = pkg?.activeRevisionId;
+    if (pkg == null || activeId == null) {
+      throw StateError('No active revision for plan $listPlanId');
+    }
+    await createForkDraftFromArchive(
+      listPlanId: listPlanId,
+      revisionId: activeId,
+      draftPlanId: draftPlanId,
+    );
+    return draftPlanId;
+  }
+
+  /// Applies an accepted revision payload onto live plan tables (same [planId]).
+  Future<void> applyActiveRevisionPayloadToPlan({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return;
+    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    final now = DateTime.now().toUtc();
+
+    await _upsertPlan(planId, payload, now);
+
+    final lines = _list(_map(payload['plan'])['lines']);
+    final payloadLineIds = <String>{};
+    for (final line in lines.whereType<Map>()) {
+      final lineId = _resolveLineId(planId, _string(line['id']));
+      payloadLineIds.add(lineId);
+      final paySource = _string(line['paymentResponsibleParticipantId']);
+      final payLocal = paySource.isEmpty
+          ? null
+          : paySource.contains(':')
+              ? paySource
+              : '$planId:$paySource';
+      await _db.upsertPlanLine(
+        PlanLinesCompanion.insert(
+          id: lineId,
+          planId: planId,
+          isRecurring: _bool(line['isRecurring']),
+          title: _string(line['title'], fallback: lineId),
+          currency: _string(line['currency']),
+          amountUsesRange: drift.Value(_bool(line['amountUsesRange'])),
+          amountMinor: _intValue(line['amountMinor']),
+          minAmountMinor: _intValue(line['minAmountMinor']),
+          maxAmountMinor: _intValue(line['maxAmountMinor']),
+          description: drift.Value(_string(line['description'])),
+          cadence: drift.Value(_string(line['cadence'], fallback: 'monthly')),
+          recurrenceDayOfMonth: _intValue(line['recurrenceDayOfMonth']),
+          sortOrder: drift.Value(_int(line['sortOrder'])),
+          groupId: _string(line['groupId']).isEmpty
+              ? const drift.Value.absent()
+              : drift.Value(_resolveGroupId(planId, _string(line['groupId']))),
+          paymentResponsibleParticipantId: payLocal == null
+              ? const drift.Value.absent()
+              : drift.Value(payLocal),
+          recurrenceSpecJson: drift.Value(_string(line['recurrenceSpecJson'])),
+          ratioTemplateId: drift.Value(_string(line['ratioTemplateId'])),
+          amountIsBudgetCap: drift.Value(_bool(line['amountIsBudgetCap'])),
+          createdAt: now,
+        ),
+      );
+    }
+
+    final existingLines = await _db.listPlanLines(planId);
+    for (final line in existingLines) {
+      if (payloadLineIds.contains(line.id)) continue;
+      await (_db.delete(_db.planRatios)
+            ..where((t) => t.lineId.equals(line.id)))
+          .go();
+      await (_db.delete(_db.planLines)..where((t) => t.id.equals(line.id))).go();
+    }
+
+    await (_db.delete(_db.planRatios)..where((t) => t.planId.equals(planId))).go();
+    final ratios = _list(_map(payload['plan'])['ratios']);
+    for (final ratio in ratios.whereType<Map>()) {
+      final participant = _string(ratio['participantId']);
+      final participantId = participant.contains(':')
+          ? participant
+          : '$planId:$participant';
+      final sourceLineId = _string(ratio['lineId']);
+      final lineId = sourceLineId.isEmpty
+          ? null
+          : _resolveLineId(planId, sourceLineId);
+      final sourceGroupId = _string(ratio['groupId']);
+      await _db.upsertPlanRatio(
+        PlanRatiosCompanion.insert(
+          id: 'ratio:$planId:${lineId ?? 'grp:$sourceGroupId'}:$participantId',
+          planId: planId,
+          participantId: participantId,
+          lineId: lineId == null
+              ? const drift.Value.absent()
+              : drift.Value(lineId),
+          groupId: sourceGroupId.isEmpty
+              ? const drift.Value.absent()
+              : drift.Value(_resolveGroupId(planId, sourceGroupId)),
+          weight: _int(ratio['weight']),
+          createdAt: now,
+        ),
+      );
+    }
+
+    await _upsertAgreement(planId, payload, now);
+  }
+
+  String _resolveLineId(String planId, String sourceId) {
+    if (sourceId.isEmpty) {
+      return '$planId:line:${DateTime.now().microsecondsSinceEpoch}';
+    }
+    if (sourceId.startsWith('$planId:')) return sourceId;
+    if (sourceId.contains(':line:')) return sourceId;
+    return '$planId:line:$sourceId';
+  }
+
+  String _resolveGroupId(String planId, String sourceId) {
+    if (sourceId.startsWith('$planId:')) return sourceId;
+    return '$planId:grp:$sourceId';
   }
 
   Future<void> createForkDraftFromArchive({

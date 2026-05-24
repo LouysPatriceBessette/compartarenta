@@ -904,6 +904,206 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseBudgetCapConfirm => 'Soumettre quand même';
 
   @override
+  String get housingActivePlanReadOnlyTitle => 'Plan actuel';
+
+  @override
+  String get housingActivePlanReadOnlyExpenses => 'Voir les lignes de dépense';
+
+  @override
+  String get housingAmendmentRequestTitle => 'Demander une modification';
+
+  @override
+  String get housingAmendmentRequestIntro =>
+      'Choisissez un seul changement par proposition. Le groupe doit l\'accepter à l\'unanimité.';
+
+  @override
+  String get housingAmendmentPendingBlocks =>
+      'Une modification attend déjà des réponses.';
+
+  @override
+  String get housingAmendmentPickLine => 'Choisir une ligne';
+
+  @override
+  String get housingAmendmentTypeLineAmount => 'Modifier un montant';
+
+  @override
+  String get housingAmendmentTypeLineAmountHint =>
+      'Mettre à jour le prix d\'une ligne';
+
+  @override
+  String get housingAmendmentTypeLineRecurrence => 'Modifier la récurrence';
+
+  @override
+  String get housingAmendmentTypeLineRecurrenceHint =>
+      'Changer la fréquence d\'une ligne';
+
+  @override
+  String get housingAmendmentTypeLinePayer => 'Modifier qui paie';
+
+  @override
+  String get housingAmendmentTypeLinePayerHint =>
+      'Changer le responsable du paiement';
+
+  @override
+  String get housingAmendmentTypeLineAdd => 'Ajouter une ligne';
+
+  @override
+  String get housingAmendmentTypeLineAddHint =>
+      'Ajouter une nouvelle ligne au plan';
+
+  @override
+  String get housingAmendmentTypeLineRemove => 'Retirer une ligne';
+
+  @override
+  String get housingAmendmentTypeLineRemoveHint =>
+      'Retirer une ligne (les dépenses passées restent liées)';
+
+  @override
+  String get housingAmendmentLineRemoveConfirm =>
+      'Retirer cette ligne du plan ? Les dépenses déjà enregistrées pour cette ligne sont conservées.';
+
+  @override
+  String get housingAmendmentLineRemoveConfirmAction => 'Retirer la ligne';
+
+  @override
+  String get housingAmendmentTypeAgreementEnd => 'Modifier la fin d\'entente';
+
+  @override
+  String get housingAmendmentTypeAgreementEndHint =>
+      'Prolonger ou raccourcir la période';
+
+  @override
+  String housingAmendmentEndDateSet(String date) {
+    return 'Fin fixée au $date';
+  }
+
+  @override
+  String get housingAmendmentTypeRuleChange => 'Modifier les règles';
+
+  @override
+  String get housingAmendmentTypeRuleChangeHint => 'Couvre-feu, retrait, etc.';
+
+  @override
+  String get housingAmendmentRosterChangeTitle => 'Changer les participants';
+
+  @override
+  String get housingAmendmentRosterChangeHint =>
+      'Ajouter ou retirer un colocataire exige une nouvelle entente';
+
+  @override
+  String get housingAmendmentRosterChangeBody =>
+      'Les changements de participants ne sont pas une modification en cours d\'entente. Terminez l\'entente ou démarrez une nouvelle période à partir du plan actuel.';
+
+  @override
+  String get housingAgreementRenewalTitle => 'Nouvelle période d\'entente';
+
+  @override
+  String get housingAgreementRenewalIntro =>
+      'À la fin de la période ou pour un changement de groupe, démarrez une nouvelle proposition unanime. Vous pouvez la dériver du plan actuel.';
+
+  @override
+  String get housingAgreementRenewalFork =>
+      'Nouvelle période à partir du plan actuel';
+
+  @override
+  String get housingAgreementEndNow => 'Terminer l\'entente aujourd\'hui';
+
+  @override
+  String get housingAgreementEndConfirmTitle => 'Terminer l\'entente ?';
+
+  @override
+  String get housingAgreementEndConfirmBody =>
+      'Aucune nouvelle dépense réalisée après aujourd\'hui. Vous pourrez démarrer une nouvelle période plus tard.';
+
+  @override
+  String get housingAgreementEndConfirmAction => 'Terminer aujourd\'hui';
+
+  @override
+  String get housingAgreementEndedSnackbar =>
+      'Période d\'entente close sur cet appareil';
+
+  @override
+  String get housingAgreementExpiredTitle => 'Période terminée';
+
+  @override
+  String get housingAgreementExpiredBody =>
+      'Vous ne pouvez plus entrer de dépenses réalisées pour cette période. Démarrez une nouvelle entente pour continuer.';
+
+  @override
+  String get housingAmendmentDetailTitle => 'Changement demandé';
+
+  @override
+  String housingAmendmentDetailIntro(String proposer, String subject) {
+    return '$proposer propose de modifier $subject.';
+  }
+
+  @override
+  String get housingAmendmentDetailCurrent => 'Actuellement';
+
+  @override
+  String get housingAmendmentDetailProposed => 'Proposé';
+
+  @override
+  String get housingAmendmentSubjectAgreementEnd => 'la date de fin d\'entente';
+
+  @override
+  String housingAmendmentSubjectLineAmount(String line) {
+    return 'le montant de « $line »';
+  }
+
+  @override
+  String housingAmendmentSubjectLineRecurrence(String line) {
+    return 'la récurrence de « $line »';
+  }
+
+  @override
+  String housingAmendmentSubjectLinePayer(String line) {
+    return 'qui paie pour « $line »';
+  }
+
+  @override
+  String get housingAmendmentSubjectLineAdd =>
+      'le plan (nouvelle ligne de dépense)';
+
+  @override
+  String housingAmendmentSubjectLineRemove(String line) {
+    return 'le plan (retirer « $line »)';
+  }
+
+  @override
+  String get housingAmendmentSubjectRuleChange => 'les règles d\'entente';
+
+  @override
+  String get housingAmendmentValueNotSet => 'Non défini';
+
+  @override
+  String get housingAmendmentValueNone => 'Aucune';
+
+  @override
+  String get housingAmendmentValueRemoved => 'Retirée du plan';
+
+  @override
+  String get housingAmendmentUnknownLine => 'cette ligne';
+
+  @override
+  String get housingAmendmentRulesCurrentPlaceholder =>
+      'Règles actuelles (résumé à venir)';
+
+  @override
+  String get housingAmendmentRulesProposedPlaceholder =>
+      'Règles proposées (résumé à venir)';
+
+  @override
+  String get housingActiveHubPendingAmendment =>
+      'Il y a une demande de changement';
+
+  @override
+  String get housingAmendmentDetailLoading => 'Chargement…';
+
+  @override
+  String get housingActiveHubViewPendingAmendment => 'Changement demandé';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Délai de réponse';
 
   @override

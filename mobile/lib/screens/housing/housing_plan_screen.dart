@@ -45,6 +45,7 @@ class HousingPlanScreen extends StatefulWidget {
     required this.prefs,
     this.planId = 'housing:default',
     this.openEditorInitially = false,
+    this.amendmentRulesOnly = false,
   });
 
   final AppPreferences prefs;
@@ -52,6 +53,9 @@ class HousingPlanScreen extends StatefulWidget {
   /// Stable plan row id (participants use `{planId}:self`, `{planId}:p0`, …).
   final String planId;
   final bool openEditorInitially;
+
+  /// When true, opens only the agreement-rules step for a single rule amendment.
+  final bool amendmentRulesOnly;
 
   @override
   State<HousingPlanScreen> createState() => _HousingPlanScreenState();
@@ -523,6 +527,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
 
     _rulesRemovalLocked = await _db.planHasActiveAcceptedProposal(_planId);
+
+    if (widget.amendmentRulesOnly) {
+      _showSummary = false;
+      _stepIndex = 3;
+      _draftLoadedFromDb = true;
+      return;
+    }
 
     final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
     if (dbComplete) {
@@ -1307,6 +1318,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                             }
                                             if (_stepIndex == 3) {
                                               await _persistAgreementRules();
+                                              if (widget.amendmentRulesOnly) {
+                                                if (mounted) {
+                                                  Navigator.of(context).pop();
+                                                }
+                                                return;
+                                              }
                                               await widget.prefs
                                                   .setHousingDefaultPlanSummaryReached(
                                                     true,

@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/amendment/housing_amendment_type.dart';
 import '../../housing/housing_response_deadline_display.dart';
+import 'housing_amendment_detail_screen.dart';
 import '../../housing/proposals/housing_proposal_revision_state.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
@@ -83,6 +85,7 @@ class _HousingInviteProposalScreenState
 
   bool _negotiateExpanded = false;
   bool _sendingProposal = false;
+  bool _redirectedToAmendment = false;
   String? _displayRevisionId;
   Timer? _refreshTimer;
   final TextEditingController _negotiateController = TextEditingController();
@@ -250,6 +253,19 @@ class _HousingInviteProposalScreenState
         message: message,
         revisionId: revisionId,
       );
+      final relayDelivered = result.sentCount > 0;
+      if (!relayDelivered) {
+        if (status == ProposalResponseStatus.negotiate) {
+          await PushNotificationService.showLocalHousingResponseFailureNotification(
+            errorCode: 'send_failed',
+          );
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.housingInviteTransportFailed)),
+        );
+        return;
+      }
       if (status == ProposalResponseStatus.negotiate &&
           result.failedParticipantIds.isNotEmpty) {
         await PushNotificationService.showLocalHousingResponseFailureNotification(
@@ -427,6 +443,26 @@ class _HousingInviteProposalScreenState
           final proposal = snap.data![5] as _ProposalUiState;
           if (agr == null || roster.isEmpty) {
             return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
+          }
+          final amendmentType = HousingAmendmentTypeWire.parse(
+            proposal.payload['amendmentType'] as String?,
+          );
+          if (amendmentType != null && !_redirectedToAmendment) {
+            _redirectedToAmendment = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              Navigator.of(context).pushReplacement<void, void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => HousingAmendmentDetailScreen(
+                    db: widget.db,
+                    planId: widget.planId,
+                    prefs: widget.prefs,
+                    revisionId: proposal.revisionId,
+                  ),
+                ),
+              );
+            });
+            return const Center(child: CircularProgressIndicator());
           }
           final proposalAgreement = proposal.payload['agreement'] is Map
               ? (proposal.payload['agreement'] as Map).cast<String, dynamic>()
