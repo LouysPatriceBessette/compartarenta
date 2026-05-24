@@ -225,8 +225,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
           ],
         ),
       );
-      if (goRenew == true && context.mounted) {
+      if (goRenew == true) {
+        if (!context.mounted) return;
         final prefs = widget.prefs ?? await AppPreferences.load();
+        if (!context.mounted) return;
         await Navigator.of(context).push<void>(
           MaterialPageRoute<void>(
             builder: (_) => HousingAgreementRenewalScreen(
@@ -238,6 +240,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
       }
       return;
     }
+    if (!context.mounted) return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseFormScreen(

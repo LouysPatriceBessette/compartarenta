@@ -36,6 +36,7 @@ class HousingAmendmentProposalFlow {
       }
       return false;
     }
+    if (!context.mounted) return false;
 
     final selected = await showHousingResponseDeadlineDialog(context);
     if (selected == null || !context.mounted) return false;

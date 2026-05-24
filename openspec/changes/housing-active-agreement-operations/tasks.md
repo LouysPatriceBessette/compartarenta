@@ -47,6 +47,13 @@
 - [x] 4.3 Enforce: roster changes require end + new agreement with fork.
 - [x] 4.4 Agreement end + fork plan for renewal.
 
+### Pass 4 — QA (May 2026 dev)
+
+- [x] Q.4.1 Proposer sends amendment (web) → invitee notification + amendment detail (Android).
+- [x] Q.4.2 Invitee accepts → proposer hub applies change (relay + poll); web browser notification on decision.
+- [x] Q.4.3 Invitee hub banner/navigation after accept (snackbar, no stale “new request” form).
+- [ ] Q.4.4 Web hub live refresh without user interaction (Chrome may still throttle timers until tab focus).
+
 ## Pass 5 — Portability (`housing-agreement-data-portability`)
 
 - [ ] 5.1 Export JSON: housing module, single agreement, revision chain, checksum.

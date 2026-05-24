@@ -54,6 +54,7 @@
   - Activity log: **agreement activated** on emitter.
 - [ ] 1.22 Bug: Housing proposal delivery/notification unreliable after identity drift (web resets, stale contacts, reconnects). **Not closed** — happy path validated May 2026; drift scenarios still open.
   - **Validated (May 2026, dev):** Fresh handshake on both sides (no stale/disconnected rows); same relay URL; web `housing_proposal posted` + `delivered`; Android `steady inbox fetched` + `housing_proposal imported` + local notification; proposal in a `received:…` plan (not the author’s `housing:default`). Web plan draft survives `CTRL+C` on `run:dev:web` (persistent Chrome profile + draft backup) — reduces how often step 2 below is needed.
+  - **Validated (May 2026, dev):** In-force **amendment** send/accept across web (proposer) + Android (invitee): `housing_proposal_response` delivery, activation on proposer hub, decision notification on web; Android hub UX after accept. Export/import hub action not exercised.
   - **Still uncertain / not proven fixed:**
     - Web local data wipe + new identity without a clean reciprocal handshake on Android (stale `connected` rows, mismatched `peerPublicMaterial`, `no_routing_relationship`, or poll on wrong steady inbox → `steady inbox empty` on all contacts).
     - Participant `contactId` pointing at an obsolete handshake row while another row has the current peer key (related to **1.21**).

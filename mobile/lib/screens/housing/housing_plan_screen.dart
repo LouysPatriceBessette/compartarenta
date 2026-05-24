@@ -1318,10 +1318,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                             }
                                             if (_stepIndex == 3) {
                                               await _persistAgreementRules();
+                                              if (!context.mounted) return;
                                               if (widget.amendmentRulesOnly) {
-                                                if (mounted) {
-                                                  Navigator.of(context).pop();
-                                                }
+                                                Navigator.of(context).pop();
                                                 return;
                                               }
                                               await widget.prefs

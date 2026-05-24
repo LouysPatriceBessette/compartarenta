@@ -156,7 +156,9 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
       );
       return;
     }
+    if (!context.mounted) return;
     if (opt.isRosterRedirect) {
+      if (!context.mounted) return;
       await Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
           builder: (_) => HousingAgreementRenewalScreen(
@@ -171,18 +173,22 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
     final type = opt.type;
     if (type == null) return;
 
+    if (!context.mounted) return;
     if (type == HousingAmendmentType.agreementEnd) {
       await _amendAgreementEnd(context);
       return;
     }
+    if (!context.mounted) return;
     if (type == HousingAmendmentType.ruleChange) {
       await _amendRules(context);
       return;
     }
+    if (!context.mounted) return;
     if (type == HousingAmendmentType.lineAdd) {
       await _amendLineAdd(context);
       return;
     }
+    if (!context.mounted) return;
     if (type.requiresLinePicker) {
       await _amendExistingLine(context, type);
     }
