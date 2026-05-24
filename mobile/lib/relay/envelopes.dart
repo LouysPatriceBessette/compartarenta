@@ -17,6 +17,7 @@ class EnvelopeKind {
   static const int disconnect = 4;
   static const int housingProposal = 5;
   static const int housingProposalResponse = 6;
+  static const int housingRealizedExpensePropose = 7;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -156,6 +157,17 @@ class HousingProposalResponseEnvelope {
   final String message;
 }
 
+/// Steady-state realized expense proposal (active agreement ledger).
+class HousingRealizedExpenseEnvelope {
+  HousingRealizedExpenseEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.expenseJson,
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String expenseJson;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -167,6 +179,8 @@ const String _housingProposalAeadInfo =
     'compartarenta/steady-v1/housing-proposal-aead';
 const String _housingProposalResponseAeadInfo =
     'compartarenta/steady-v1/housing-proposal-response-aead';
+const String _housingRealizedExpenseProposeAeadInfo =
+    'compartarenta/steady-v1/housing-realized-expense-propose-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -690,6 +704,70 @@ class EnvelopeCodec {
       sourceParticipantId: (json['source_participant_id'] as String?) ?? '',
       status: (json['status'] as String?) ?? '',
       message: (json['message'] as String?) ?? '',
+    );
+  }
+
+  /// Encrypts a steady-state realized expense proposal envelope.
+  static Future<Uint8List> encryptHousingRealizedExpensePropose({
+    required HousingRealizedExpenseEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingRealizedExpenseProposeAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.housingRealizedExpensePropose,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(jsonEncode({'expense_json': envelope.expenseJson}));
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  /// Decrypts a steady-state realized expense proposal envelope.
+  static Future<HousingRealizedExpenseEnvelope> decryptHousingRealizedExpensePropose({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.housingRealizedExpensePropose);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingRealizedExpenseProposeAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingRealizedExpenseEnvelope(
+      senderLongTermPublicKey: senderPub,
+      expenseJson: (json['expense_json'] as String?) ?? '{}',
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -165,25 +166,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               title: const Text('Reset local database'),
-              subtitle: const Text(
-                'Deletes on-device SQLite (plans, agreements, contacts, '
-                'invitations, handshakes). Clears relay test identity when a '
-                'relay URL is configured.',
+              subtitle: Text(
+                kIsWeb
+                    ? 'Deletes browser Drift storage (OPFS) and housing draft '
+                        'mirrors in localStorage. Clears relay test identity '
+                        'when a relay URL is configured.'
+                    : 'Deletes on-device SQLite (plans, agreements, contacts, '
+                        'invitations, handshakes). Clears relay test identity '
+                        'when a relay URL is configured.',
               ),
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Reset local database?'),
-                    content: const Text(
-                      'This will delete the local database directory on this '
-                      'device, including all Contacts module data stored in '
-                      'SQLite. If this build targets a relay (non-placeholder '
-                      'API URL), the local X25519 test identity in secure '
-                      'storage is cleared as well.\n\n'
-                      'Fully restart the app afterward so the database and '
-                      'relay stack are recreated cleanly. '
-                      'Use only during development.',
+                    content: Text(
+                      kIsWeb
+                          ? 'This will delete the local Drift database in '
+                              'browser storage (OPFS) and housing draft mirrors '
+                              'in localStorage, including contacts and housing '
+                              'data. If this build targets a relay, the local '
+                              'X25519 test identity is cleared as well.\n\n'
+                              'Hard-reload this page afterward (not hot '
+                              'restart) so the database and relay stack are '
+                              'recreated cleanly. Use only during development.'
+                          : 'This will delete the local database directory on '
+                              'this device, including all Contacts module data '
+                              'stored in SQLite. If this build targets a relay '
+                              '(non-placeholder API URL), the local X25519 '
+                              'test identity in secure storage is cleared as '
+                              'well.\n\n'
+                              'Fully restart the app afterward so the database '
+                              'and relay stack are recreated cleanly. '
+                              'Use only during development.',
                     ),
                     actions: [
                       TextButton(
@@ -208,13 +223,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (widget.config.apiBaseUrl.host != 'example.invalid') {
                   await IdentityKeystore.secureStorage().deleteForTesting();
                 }
-                await DbReset.deleteLocalDbFiles();
+                await DbReset.deleteLocalDbFiles(prefs: widget.prefs);
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text(
-                      'Local database and contact-related storage cleared. '
-                      'Restart the app.',
+                      kIsWeb
+                          ? 'Browser database and mirrors cleared. '
+                              'Hard-reload this tab (F5).'
+                          : 'Local database and contact-related storage cleared. '
+                              'Restart the app.',
                     ),
                   ),
                 );

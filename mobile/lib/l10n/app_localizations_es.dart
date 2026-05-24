@@ -691,6 +691,114 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta pantalla estará disponible en la siguiente fase de implementación.';
 
   @override
+  String get housingRealizedExpenseTitle => 'Introducir un gasto';
+
+  @override
+  String get housingRealizedExpensePlanLine => 'Línea del plan';
+
+  @override
+  String get housingRealizedExpenseAmount => 'Importe pagado';
+
+  @override
+  String get housingRealizedExpensePaymentDate => 'Fecha de pago';
+
+  @override
+  String get housingRealizedExpensePaymentDatePick => 'Elegir una fecha';
+
+  @override
+  String get housingRealizedExpensePayer => 'Quién pagó';
+
+  @override
+  String get housingRealizedExpenseKind => 'Tipo de gasto';
+
+  @override
+  String get housingRealizedExpenseKindNormal => 'Normal';
+
+  @override
+  String get housingRealizedExpenseKindReimbursement => 'Reembolso';
+
+  @override
+  String get housingRealizedExpenseKindAdvance => 'Anticipo';
+
+  @override
+  String get housingRealizedExpenseBeneficiary => 'Parte reembolsada de';
+
+  @override
+  String get housingRealizedExpenseProofSection => 'Prueba (opcional)';
+
+  @override
+  String get housingRealizedExpenseProofEncourage =>
+      'Añadir un recibo o factura ayuda al grupo a validar este gasto.';
+
+  @override
+  String get housingRealizedExpenseAddProof => 'Añadir prueba';
+
+  @override
+  String get housingRealizedExpensePickCamera => 'Tomar una foto';
+
+  @override
+  String get housingRealizedExpensePickGallery => 'Elegir de la galería';
+
+  @override
+  String get housingRealizedExpensePickDocument => 'Elegir un documento';
+
+  @override
+  String housingRealizedExpenseStoragePath(String path) {
+    return 'Guardado en: $path';
+  }
+
+  @override
+  String get housingRealizedExpenseSaveDraft => 'Guardar borrador';
+
+  @override
+  String get housingRealizedExpenseSubmit => 'Enviar al grupo';
+
+  @override
+  String get housingRealizedExpenseDraftSaved =>
+      'Borrador guardado en este dispositivo';
+
+  @override
+  String get housingRealizedExpenseProposedSnackbar =>
+      'Gasto enviado para revisión del grupo';
+
+  @override
+  String get housingRealizedExpenseValidationLine =>
+      'Seleccione una línea del plan';
+
+  @override
+  String get housingRealizedExpenseValidationAmount =>
+      'Introduzca un importe válido';
+
+  @override
+  String get housingRealizedExpenseValidationPayer => 'Indique quién pagó';
+
+  @override
+  String get housingRealizedExpenseValidationDate =>
+      'Seleccione una fecha de pago';
+
+  @override
+  String get housingRealizedExpenseValidationBeneficiary =>
+      'Indique la parte reembolsada';
+
+  @override
+  String get housingRealizedExpenseNoPlanLines =>
+      'Este acuerdo aún no tiene líneas de gasto. Añádalas mediante una modificación del plan.';
+
+  @override
+  String get housingRealizedExpenseLoadFailed =>
+      'No se pudieron cargar los datos del acuerdo';
+
+  @override
+  String get housingRealizedExpenseCropTitle => 'Recortar prueba';
+
+  @override
+  String get housingRealizedExpenseCropConfirm => 'Usar imagen recortada';
+
+  @override
+  String get housingRealizedExpenseCropFailed =>
+      'No se pudo recortar la imagen';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Plazo de respuesta';
 
   @override
@@ -860,6 +968,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get activityLogKindHousingProposalForkCreated =>
       'Versión derivada de vivienda iniciada';
+
+  @override
+  String get housingInvitePlanActivating =>
+      'Todos los participantes han aceptado. Activando el acuerdo…';
 
   @override
   String get housingInviteProposalAppBarTitle => 'Propuesta de invitación';
@@ -1037,6 +1149,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pushNotificationHousingProposalBody =>
       'Abra la aplicación para revisar la propuesta.';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseTitle => 'Gasto por revisar';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseBody =>
+      'Un participante envió un gasto para su acuerdo.';
+
+  @override
+  String pushNotificationHousingRealizedExpenseBodyFrom(String name) {
+    return '$name envió un gasto por revisar.';
+  }
 
   @override
   String get pushNotificationHousingDecisionTitle =>

@@ -695,6 +695,114 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet écran sera disponible à la prochaine étape d\'implémentation.';
 
   @override
+  String get housingRealizedExpenseTitle => 'Entrer une dépense';
+
+  @override
+  String get housingRealizedExpensePlanLine => 'Ligne du plan';
+
+  @override
+  String get housingRealizedExpenseAmount => 'Montant payé';
+
+  @override
+  String get housingRealizedExpensePaymentDate => 'Date du paiement';
+
+  @override
+  String get housingRealizedExpensePaymentDatePick => 'Choisir une date';
+
+  @override
+  String get housingRealizedExpensePayer => 'Qui a payé';
+
+  @override
+  String get housingRealizedExpenseKind => 'Type de dépense';
+
+  @override
+  String get housingRealizedExpenseKindNormal => 'Normale';
+
+  @override
+  String get housingRealizedExpenseKindReimbursement => 'Remboursement';
+
+  @override
+  String get housingRealizedExpenseKindAdvance => 'Avance';
+
+  @override
+  String get housingRealizedExpenseBeneficiary => 'Part remboursée de';
+
+  @override
+  String get housingRealizedExpenseProofSection => 'Preuve (facultatif)';
+
+  @override
+  String get housingRealizedExpenseProofEncourage =>
+      'Ajouter un reçu ou une facture aide le groupe à valider cette dépense.';
+
+  @override
+  String get housingRealizedExpenseAddProof => 'Ajouter une preuve';
+
+  @override
+  String get housingRealizedExpensePickCamera => 'Prendre une photo';
+
+  @override
+  String get housingRealizedExpensePickGallery => 'Choisir dans la galerie';
+
+  @override
+  String get housingRealizedExpensePickDocument => 'Choisir un document';
+
+  @override
+  String housingRealizedExpenseStoragePath(String path) {
+    return 'Enregistré : $path';
+  }
+
+  @override
+  String get housingRealizedExpenseSaveDraft => 'Enregistrer le brouillon';
+
+  @override
+  String get housingRealizedExpenseSubmit => 'Soumettre au groupe';
+
+  @override
+  String get housingRealizedExpenseDraftSaved =>
+      'Brouillon enregistré sur cet appareil';
+
+  @override
+  String get housingRealizedExpenseProposedSnackbar =>
+      'Dépense soumise pour révision du groupe';
+
+  @override
+  String get housingRealizedExpenseValidationLine =>
+      'Sélectionnez une ligne du plan';
+
+  @override
+  String get housingRealizedExpenseValidationAmount =>
+      'Entrez un montant valide';
+
+  @override
+  String get housingRealizedExpenseValidationPayer => 'Indiquez qui a payé';
+
+  @override
+  String get housingRealizedExpenseValidationDate =>
+      'Sélectionnez une date de paiement';
+
+  @override
+  String get housingRealizedExpenseValidationBeneficiary =>
+      'Indiquez la part remboursée';
+
+  @override
+  String get housingRealizedExpenseNoPlanLines =>
+      'Cette entente n\'a pas encore de lignes de dépense. Ajoutez-en via une modification du plan.';
+
+  @override
+  String get housingRealizedExpenseLoadFailed =>
+      'Impossible de charger les données de l\'entente';
+
+  @override
+  String get housingRealizedExpenseCropTitle => 'Recadrer la preuve';
+
+  @override
+  String get housingRealizedExpenseCropConfirm => 'Utiliser l\'image recadrée';
+
+  @override
+  String get housingRealizedExpenseCropFailed =>
+      'Impossible de recadrer l\'image';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Délai de réponse';
 
   @override
@@ -863,6 +971,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get activityLogKindHousingProposalForkCreated =>
       'Version dérivée logement démarrée';
+
+  @override
+  String get housingInvitePlanActivating =>
+      'Tous les participants ont accepté. Activation de l\'entente…';
 
   @override
   String get housingInviteProposalAppBarTitle => 'Proposition d\'invitation';
@@ -1040,6 +1152,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get pushNotificationHousingProposalBody =>
       'Ouvrez l\'application pour consulter la proposition.';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseTitle => 'Dépense à réviser';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseBody =>
+      'Un participant a soumis une dépense pour votre entente.';
+
+  @override
+  String pushNotificationHousingRealizedExpenseBodyFrom(String name) {
+    return '$name a soumis une dépense à réviser.';
+  }
 
   @override
   String get pushNotificationHousingDecisionTitle =>

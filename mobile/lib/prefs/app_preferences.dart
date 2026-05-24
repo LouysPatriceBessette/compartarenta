@@ -316,6 +316,16 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kHousingDefaultPlanDraftBackupLegacy);
   }
 
+  /// Removes all per-plan housing draft mirror keys (dev database reset).
+  Future<void> clearHousingPlanDraftBackupMirrors() async {
+    await clearHousingDefaultPlanDraftBackupLegacy();
+    for (final key in _prefs.getKeys()) {
+      if (key.startsWith('housing.planDraftBackup.')) {
+        await _prefs.remove(key);
+      }
+    }
+  }
+
   String get carSharingPlanDraftJson =>
       _prefs.getString(_kCarSharingPlanDraft) ?? '';
 

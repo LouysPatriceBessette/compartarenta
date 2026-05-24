@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_active_hub_placeholder_screen.dart';
+import 'housing_realized_expense_form_screen.dart';
 
 /// Operational hub for an active housing agreement (menu of actions).
 class HousingActivePlanScreen extends StatelessWidget {
@@ -81,10 +82,17 @@ class HousingActivePlanScreen extends StatelessWidget {
                 _HubTile(
                   icon: Icons.add_card_outlined,
                   label: l10n.housingActiveHubEnterExpense,
-                  onTap: () => _openPlaceholder(
-                    context,
-                    l10n.housingActiveHubEnterExpense,
-                  ),
+                  onTap: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => HousingRealizedExpenseFormScreen(
+                          planId: planId,
+                          packageId: packageId,
+                          prefs: prefs,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 _HubTile(
                   icon: Icons.calendar_month_outlined,

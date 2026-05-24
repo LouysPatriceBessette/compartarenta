@@ -20,6 +20,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import 'housing_active_plan_screen.dart';
 import 'housing_invitation_status_dialog.dart';
 
 /// Per-participant response to a housing proposal (local UI state until relay exists).
@@ -467,7 +468,14 @@ class _HousingInviteProposalScreenState
                 (r) => r.status == ProposalResponseStatus.accepted.name,
               );
           if (hasActivePlan) {
-            return const Center(child: Text('Plan actif'));
+            _refreshTimer?.cancel();
+            _refreshTimer = null;
+            return _HousingUnanimousActiveGate(
+              db: widget.db,
+              planId: widget.planId,
+              prefs: widget.prefs,
+              revisionId: proposal.revisionId!,
+            );
           }
           _statusByRosterIndex
             ..clear()
@@ -776,6 +784,100 @@ class _HousingInviteProposalScreenState
           );
         },
       ),
+    );
+  }
+}
+
+/// After unanimous acceptance, opens the operational hub (pass 1) or activates first.
+class _HousingUnanimousActiveGate extends StatefulWidget {
+  const _HousingUnanimousActiveGate({
+    required this.db,
+    required this.planId,
+    required this.prefs,
+    required this.revisionId,
+  });
+
+  final AppDatabase db;
+  final String planId;
+  final AppPreferences prefs;
+  final String revisionId;
+
+  @override
+  State<_HousingUnanimousActiveGate> createState() =>
+      _HousingUnanimousActiveGateState();
+}
+
+class _HousingUnanimousActiveGateState extends State<_HousingUnanimousActiveGate> {
+  late Future<({String packageId, bool ready})> _readyFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _readyFuture = _resolveActivePackage();
+  }
+
+  Future<({String packageId, bool ready})> _resolveActivePackage() async {
+    final pkg = await (widget.db.select(widget.db.proposalPackages)
+          ..where((t) => t.planId.equals(widget.planId)))
+        .getSingleOrNull();
+    if (pkg == null) return (packageId: '', ready: false);
+
+    if (pkg.activeRevisionId != null) {
+      return (packageId: pkg.id, ready: true);
+    }
+
+    final outcome = await HousingProposalTransportService(
+      widget.db,
+    ).tryActivatePlanIfUnanimous(
+      planId: widget.planId,
+      revisionId: widget.revisionId,
+    );
+    if (outcome == ProposalActivationOutcome.activated) {
+      return (packageId: pkg.id, ready: true);
+    }
+
+    final again = await (widget.db.select(widget.db.proposalPackages)
+          ..where((t) => t.planId.equals(widget.planId)))
+        .getSingleOrNull();
+    return (
+      packageId: pkg.id,
+      ready: again?.activeRevisionId != null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return FutureBuilder<({String packageId, bool ready})>(
+      future: _readyFuture,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        final data = snap.data;
+        if (data != null && data.ready && data.packageId.isNotEmpty) {
+          return HousingActivePlanScreen(
+            planId: widget.planId,
+            packageId: data.packageId,
+            prefs: widget.prefs,
+          );
+        }
+        return Scaffold(
+          appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                l10n.housingInvitePlanActivating,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

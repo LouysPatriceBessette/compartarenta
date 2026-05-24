@@ -14,10 +14,10 @@
 
 ## Pass 2 — Entry (`housing-realized-expense-entry`)
 
-- [ ] 2.1 `HousingRealizedExpenseFormScreen`: plan line picker (active plan only).
-- [ ] 2.2 Fields: amount, payment date, payer participant, expense type (normal / reimbursement / advance).
-- [ ] 2.3 Proof capture: crop, compress, persist path + display name.
-- [ ] 2.4 Submit hands off to ledger propose flow.
+- [x] 2.1 `HousingRealizedExpenseFormScreen`: plan line picker (active plan only).
+- [x] 2.2 Fields: amount, payment date, payer participant, expense type (normal / reimbursement / advance).
+- [x] 2.3 Proof capture: crop, compress, persist path + display name.
+- [x] 2.4 Submit hands off to ledger propose flow.
 
 ## Pass 3 — Ledger (`housing-realized-expense-ledger`)
 

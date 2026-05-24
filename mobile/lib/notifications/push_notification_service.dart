@@ -13,6 +13,9 @@ import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import 'closed_app_push_registration_service.dart';
+import 'housing_browser_notification_stub.dart'
+    if (dart.library.html) 'housing_browser_notification_web.dart'
+    as housing_browser;
 import 'wake_inbox_background_poll.dart';
 
 /// FCM + local notifications for housing proposals (and future message types).
@@ -277,6 +280,51 @@ class PushNotificationService {
     final l10n = _l10nForUiLocale();
     final title = l10n.pushNotificationHousingProposalTitle;
     final body = l10n.pushNotificationHousingProposalBody;
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: _housingTapPayload,
+    );
+  }
+
+  static Future<void> showLocalHousingRealizedExpenseNotification({
+    required String senderDisplayName,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingRealizedExpenseTitle;
+    final body = senderDisplayName.trim().isEmpty
+        ? l10n.pushNotificationHousingRealizedExpenseBody
+        : l10n.pushNotificationHousingRealizedExpenseBodyFrom(
+            senderDisplayName.trim(),
+          );
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: title,
+        body: body,
+      );
+      return;
+    }
+
     await _ensureLocalNotificationsInitialized(_plugin);
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;

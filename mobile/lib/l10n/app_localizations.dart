@@ -1330,6 +1330,198 @@ abstract class AppLocalizations {
   /// **'This screen will be available in the next implementation pass.'**
   String get housingActiveHubPassPlaceholderBody;
 
+  /// No description provided for @housingRealizedExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an expense'**
+  String get housingRealizedExpenseTitle;
+
+  /// No description provided for @housingRealizedExpensePlanLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan line'**
+  String get housingRealizedExpensePlanLine;
+
+  /// No description provided for @housingRealizedExpenseAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount paid'**
+  String get housingRealizedExpenseAmount;
+
+  /// No description provided for @housingRealizedExpensePaymentDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment date'**
+  String get housingRealizedExpensePaymentDate;
+
+  /// No description provided for @housingRealizedExpensePaymentDatePick.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date'**
+  String get housingRealizedExpensePaymentDatePick;
+
+  /// No description provided for @housingRealizedExpensePayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid'**
+  String get housingRealizedExpensePayer;
+
+  /// No description provided for @housingRealizedExpenseKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense type'**
+  String get housingRealizedExpenseKind;
+
+  /// No description provided for @housingRealizedExpenseKindNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get housingRealizedExpenseKindNormal;
+
+  /// No description provided for @housingRealizedExpenseKindReimbursement.
+  ///
+  /// In en, this message translates to:
+  /// **'Reimbursement'**
+  String get housingRealizedExpenseKindReimbursement;
+
+  /// No description provided for @housingRealizedExpenseKindAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get housingRealizedExpenseKindAdvance;
+
+  /// No description provided for @housingRealizedExpenseBeneficiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Whose share is reimbursed'**
+  String get housingRealizedExpenseBeneficiary;
+
+  /// No description provided for @housingRealizedExpenseProofSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof (optional)'**
+  String get housingRealizedExpenseProofSection;
+
+  /// No description provided for @housingRealizedExpenseProofEncourage.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding a receipt or invoice helps your group validate this expense.'**
+  String get housingRealizedExpenseProofEncourage;
+
+  /// No description provided for @housingRealizedExpenseAddProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Add proof'**
+  String get housingRealizedExpenseAddProof;
+
+  /// No description provided for @housingRealizedExpensePickCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get housingRealizedExpensePickCamera;
+
+  /// No description provided for @housingRealizedExpensePickGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get housingRealizedExpensePickGallery;
+
+  /// No description provided for @housingRealizedExpensePickDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a document'**
+  String get housingRealizedExpensePickDocument;
+
+  /// No description provided for @housingRealizedExpenseStoragePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved at: {path}'**
+  String housingRealizedExpenseStoragePath(String path);
+
+  /// No description provided for @housingRealizedExpenseSaveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save draft'**
+  String get housingRealizedExpenseSaveDraft;
+
+  /// No description provided for @housingRealizedExpenseSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit to group'**
+  String get housingRealizedExpenseSubmit;
+
+  /// No description provided for @housingRealizedExpenseDraftSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft saved on this device'**
+  String get housingRealizedExpenseDraftSaved;
+
+  /// No description provided for @housingRealizedExpenseProposedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense submitted for group review'**
+  String get housingRealizedExpenseProposedSnackbar;
+
+  /// No description provided for @housingRealizedExpenseValidationLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a plan line'**
+  String get housingRealizedExpenseValidationLine;
+
+  /// No description provided for @housingRealizedExpenseValidationAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get housingRealizedExpenseValidationAmount;
+
+  /// No description provided for @housingRealizedExpenseValidationPayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select who paid'**
+  String get housingRealizedExpenseValidationPayer;
+
+  /// No description provided for @housingRealizedExpenseValidationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a payment date'**
+  String get housingRealizedExpenseValidationDate;
+
+  /// No description provided for @housingRealizedExpenseValidationBeneficiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Select whose share is reimbursed'**
+  String get housingRealizedExpenseValidationBeneficiary;
+
+  /// No description provided for @housingRealizedExpenseNoPlanLines.
+  ///
+  /// In en, this message translates to:
+  /// **'This agreement has no expense lines yet. Add lines through a plan amendment.'**
+  String get housingRealizedExpenseNoPlanLines;
+
+  /// No description provided for @housingRealizedExpenseLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load agreement data'**
+  String get housingRealizedExpenseLoadFailed;
+
+  /// No description provided for @housingRealizedExpenseCropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop proof'**
+  String get housingRealizedExpenseCropTitle;
+
+  /// No description provided for @housingRealizedExpenseCropConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Use cropped image'**
+  String get housingRealizedExpenseCropConfirm;
+
+  /// No description provided for @housingRealizedExpenseCropFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not crop image'**
+  String get housingRealizedExpenseCropFailed;
+
   /// No description provided for @housingInviteResponseWindowTitle.
   ///
   /// In en, this message translates to:
@@ -1599,6 +1791,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Derived housing proposal started'**
   String get activityLogKindHousingProposalForkCreated;
+
+  /// No description provided for @housingInvitePlanActivating.
+  ///
+  /// In en, this message translates to:
+  /// **'All participants have accepted. Activating the agreement…'**
+  String get housingInvitePlanActivating;
 
   /// No description provided for @housingInviteProposalAppBarTitle.
   ///
@@ -1905,6 +2103,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the app to review the proposal.'**
   String get pushNotificationHousingProposalBody;
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense to review'**
+  String get pushNotificationHousingRealizedExpenseTitle;
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant submitted an expense for your agreement.'**
+  String get pushNotificationHousingRealizedExpenseBody;
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} submitted an expense to review.'**
+  String pushNotificationHousingRealizedExpenseBodyFrom(String name);
 
   /// No description provided for @pushNotificationHousingDecisionTitle.
   ///

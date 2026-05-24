@@ -121,4 +121,45 @@ void main() {
     expect(drafts, hasLength(1));
     expect(drafts.single.status, RealizedExpenseStatus.draft);
   });
+
+  test('proposeLocally sets proposed and pending acceptances', () async {
+    const planId = 'housing:test';
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'You',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:p1',
+            displayName: 'Alex',
+            avatarId: '1',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+    final draft = await repo.saveDraft(
+      packageId: 'pkg-1',
+      planId: planId,
+      planLineId: 'line:1',
+      amountMinor: 5000,
+      currency: 'CAD',
+      paymentDate: DateTime.utc(2026, 5, 1),
+      payerParticipantId: '$planId:self',
+      kind: RealizedExpenseKind.normal,
+    );
+
+    final proposed = await repo.proposeLocally(draft.id);
+    expect(proposed.status, RealizedExpenseStatus.proposed);
+
+    final acceptances = await repo.acceptancesFor(draft.id);
+    expect(acceptances, hasLength(2));
+    expect(
+      acceptances.every((a) => a.decision == RealizedExpenseDecision.pending),
+      isTrue,
+    );
+  });
 }

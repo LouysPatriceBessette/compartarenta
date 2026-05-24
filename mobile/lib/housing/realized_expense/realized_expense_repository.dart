@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
+import 'realized_expense_participants.dart';
 import 'realized_expense_status.dart';
 
 /// Local persistence for realized expenses (draft save; sync in pass 3).
@@ -122,6 +123,42 @@ class RealizedExpenseRepository {
     await (_db.delete(_db.realizedExpenses)
           ..where((t) => t.id.equals(expenseId)))
         .go();
+  }
+
+  /// Transitions a draft to `proposed` and seeds pending acceptances (sync in pass 3).
+  Future<RealizedExpense> proposeLocally(String expenseId) async {
+    final row = await getById(expenseId);
+    if (row == null) {
+      throw StateError('Expense not found: $expenseId');
+    }
+    if (row.status != RealizedExpenseStatus.draft) {
+      throw StateError('Only draft expenses can be proposed');
+    }
+
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.realizedExpenses)..where((t) => t.id.equals(expenseId)))
+        .write(
+      RealizedExpensesCompanion(
+        status: drift.Value(RealizedExpenseStatus.proposed),
+        updatedAt: drift.Value(now),
+      ),
+    );
+
+    final roster = await participantsForPlan(_db, row.planId);
+    await (_db.delete(_db.realizedExpenseAcceptances)
+          ..where((t) => t.expenseId.equals(expenseId)))
+        .go();
+    for (final p in roster) {
+      await _db.into(_db.realizedExpenseAcceptances).insert(
+            RealizedExpenseAcceptancesCompanion.insert(
+              expenseId: expenseId,
+              participantId: p.id,
+              decision: RealizedExpenseDecision.pending,
+            ),
+          );
+    }
+
+    return (await getById(expenseId))!;
   }
 }
 
