@@ -7889,6 +7889,1695 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
   }
 }
 
+class $RealizedExpensesTable extends RealizedExpenses
+    with TableInfo<$RealizedExpensesTable, RealizedExpense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RealizedExpensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _packageIdMeta = const VerificationMeta(
+    'packageId',
+  );
+  @override
+  late final GeneratedColumn<String> packageId = GeneratedColumn<String>(
+    'package_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planLineIdMeta = const VerificationMeta(
+    'planLineId',
+  );
+  @override
+  late final GeneratedColumn<String> planLineId = GeneratedColumn<String>(
+    'plan_line_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentDateMeta = const VerificationMeta(
+    'paymentDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> paymentDate = GeneratedColumn<DateTime>(
+    'payment_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payerParticipantIdMeta =
+      const VerificationMeta('payerParticipantId');
+  @override
+  late final GeneratedColumn<String> payerParticipantId =
+      GeneratedColumn<String>(
+        'payer_participant_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _beneficiaryParticipantIdMeta =
+      const VerificationMeta('beneficiaryParticipantId');
+  @override
+  late final GeneratedColumn<String> beneficiaryParticipantId =
+      GeneratedColumn<String>(
+        'beneficiary_participant_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _priorExpenseIdMeta = const VerificationMeta(
+    'priorExpenseId',
+  );
+  @override
+  late final GeneratedColumn<String> priorExpenseId = GeneratedColumn<String>(
+    'prior_expense_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    packageId,
+    planId,
+    planLineId,
+    status,
+    amountMinor,
+    currency,
+    paymentDate,
+    payerParticipantId,
+    kind,
+    beneficiaryParticipantId,
+    priorExpenseId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'realized_expenses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RealizedExpense> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('package_id')) {
+      context.handle(
+        _packageIdMeta,
+        packageId.isAcceptableOrUnknown(data['package_id']!, _packageIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_packageIdMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('plan_line_id')) {
+      context.handle(
+        _planLineIdMeta,
+        planLineId.isAcceptableOrUnknown(
+          data['plan_line_id']!,
+          _planLineIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_planLineIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('payment_date')) {
+      context.handle(
+        _paymentDateMeta,
+        paymentDate.isAcceptableOrUnknown(
+          data['payment_date']!,
+          _paymentDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_paymentDateMeta);
+    }
+    if (data.containsKey('payer_participant_id')) {
+      context.handle(
+        _payerParticipantIdMeta,
+        payerParticipantId.isAcceptableOrUnknown(
+          data['payer_participant_id']!,
+          _payerParticipantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payerParticipantIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('beneficiary_participant_id')) {
+      context.handle(
+        _beneficiaryParticipantIdMeta,
+        beneficiaryParticipantId.isAcceptableOrUnknown(
+          data['beneficiary_participant_id']!,
+          _beneficiaryParticipantIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('prior_expense_id')) {
+      context.handle(
+        _priorExpenseIdMeta,
+        priorExpenseId.isAcceptableOrUnknown(
+          data['prior_expense_id']!,
+          _priorExpenseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RealizedExpense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RealizedExpense(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      packageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}package_id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      planLineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_line_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      paymentDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}payment_date'],
+      )!,
+      payerParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payer_participant_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      beneficiaryParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}beneficiary_participant_id'],
+      ),
+      priorExpenseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prior_expense_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RealizedExpensesTable createAlias(String alias) {
+    return $RealizedExpensesTable(attachedDatabase, alias);
+  }
+}
+
+class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
+  final String id;
+  final String packageId;
+  final String planId;
+  final String planLineId;
+
+  /// `draft` | `proposed` | `accepted` | `published` | `rejected`
+  final String status;
+  final int amountMinor;
+  final String currency;
+  final DateTime paymentDate;
+  final String payerParticipantId;
+
+  /// `normal` | `reimbursement` | `advance`
+  final String kind;
+  final String? beneficiaryParticipantId;
+
+  /// Prior proposal when this row is a resubmit (pass 3+).
+  final String? priorExpenseId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const RealizedExpense({
+    required this.id,
+    required this.packageId,
+    required this.planId,
+    required this.planLineId,
+    required this.status,
+    required this.amountMinor,
+    required this.currency,
+    required this.paymentDate,
+    required this.payerParticipantId,
+    required this.kind,
+    this.beneficiaryParticipantId,
+    this.priorExpenseId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['package_id'] = Variable<String>(packageId);
+    map['plan_id'] = Variable<String>(planId);
+    map['plan_line_id'] = Variable<String>(planLineId);
+    map['status'] = Variable<String>(status);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    map['currency'] = Variable<String>(currency);
+    map['payment_date'] = Variable<DateTime>(paymentDate);
+    map['payer_participant_id'] = Variable<String>(payerParticipantId);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || beneficiaryParticipantId != null) {
+      map['beneficiary_participant_id'] = Variable<String>(
+        beneficiaryParticipantId,
+      );
+    }
+    if (!nullToAbsent || priorExpenseId != null) {
+      map['prior_expense_id'] = Variable<String>(priorExpenseId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  RealizedExpensesCompanion toCompanion(bool nullToAbsent) {
+    return RealizedExpensesCompanion(
+      id: Value(id),
+      packageId: Value(packageId),
+      planId: Value(planId),
+      planLineId: Value(planLineId),
+      status: Value(status),
+      amountMinor: Value(amountMinor),
+      currency: Value(currency),
+      paymentDate: Value(paymentDate),
+      payerParticipantId: Value(payerParticipantId),
+      kind: Value(kind),
+      beneficiaryParticipantId: beneficiaryParticipantId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(beneficiaryParticipantId),
+      priorExpenseId: priorExpenseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priorExpenseId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory RealizedExpense.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RealizedExpense(
+      id: serializer.fromJson<String>(json['id']),
+      packageId: serializer.fromJson<String>(json['packageId']),
+      planId: serializer.fromJson<String>(json['planId']),
+      planLineId: serializer.fromJson<String>(json['planLineId']),
+      status: serializer.fromJson<String>(json['status']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      paymentDate: serializer.fromJson<DateTime>(json['paymentDate']),
+      payerParticipantId: serializer.fromJson<String>(
+        json['payerParticipantId'],
+      ),
+      kind: serializer.fromJson<String>(json['kind']),
+      beneficiaryParticipantId: serializer.fromJson<String?>(
+        json['beneficiaryParticipantId'],
+      ),
+      priorExpenseId: serializer.fromJson<String?>(json['priorExpenseId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'packageId': serializer.toJson<String>(packageId),
+      'planId': serializer.toJson<String>(planId),
+      'planLineId': serializer.toJson<String>(planLineId),
+      'status': serializer.toJson<String>(status),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+      'currency': serializer.toJson<String>(currency),
+      'paymentDate': serializer.toJson<DateTime>(paymentDate),
+      'payerParticipantId': serializer.toJson<String>(payerParticipantId),
+      'kind': serializer.toJson<String>(kind),
+      'beneficiaryParticipantId': serializer.toJson<String?>(
+        beneficiaryParticipantId,
+      ),
+      'priorExpenseId': serializer.toJson<String?>(priorExpenseId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  RealizedExpense copyWith({
+    String? id,
+    String? packageId,
+    String? planId,
+    String? planLineId,
+    String? status,
+    int? amountMinor,
+    String? currency,
+    DateTime? paymentDate,
+    String? payerParticipantId,
+    String? kind,
+    Value<String?> beneficiaryParticipantId = const Value.absent(),
+    Value<String?> priorExpenseId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => RealizedExpense(
+    id: id ?? this.id,
+    packageId: packageId ?? this.packageId,
+    planId: planId ?? this.planId,
+    planLineId: planLineId ?? this.planLineId,
+    status: status ?? this.status,
+    amountMinor: amountMinor ?? this.amountMinor,
+    currency: currency ?? this.currency,
+    paymentDate: paymentDate ?? this.paymentDate,
+    payerParticipantId: payerParticipantId ?? this.payerParticipantId,
+    kind: kind ?? this.kind,
+    beneficiaryParticipantId: beneficiaryParticipantId.present
+        ? beneficiaryParticipantId.value
+        : this.beneficiaryParticipantId,
+    priorExpenseId: priorExpenseId.present
+        ? priorExpenseId.value
+        : this.priorExpenseId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  RealizedExpense copyWithCompanion(RealizedExpensesCompanion data) {
+    return RealizedExpense(
+      id: data.id.present ? data.id.value : this.id,
+      packageId: data.packageId.present ? data.packageId.value : this.packageId,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      planLineId: data.planLineId.present
+          ? data.planLineId.value
+          : this.planLineId,
+      status: data.status.present ? data.status.value : this.status,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      paymentDate: data.paymentDate.present
+          ? data.paymentDate.value
+          : this.paymentDate,
+      payerParticipantId: data.payerParticipantId.present
+          ? data.payerParticipantId.value
+          : this.payerParticipantId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      beneficiaryParticipantId: data.beneficiaryParticipantId.present
+          ? data.beneficiaryParticipantId.value
+          : this.beneficiaryParticipantId,
+      priorExpenseId: data.priorExpenseId.present
+          ? data.priorExpenseId.value
+          : this.priorExpenseId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpense(')
+          ..write('id: $id, ')
+          ..write('packageId: $packageId, ')
+          ..write('planId: $planId, ')
+          ..write('planLineId: $planLineId, ')
+          ..write('status: $status, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('paymentDate: $paymentDate, ')
+          ..write('payerParticipantId: $payerParticipantId, ')
+          ..write('kind: $kind, ')
+          ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
+          ..write('priorExpenseId: $priorExpenseId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    packageId,
+    planId,
+    planLineId,
+    status,
+    amountMinor,
+    currency,
+    paymentDate,
+    payerParticipantId,
+    kind,
+    beneficiaryParticipantId,
+    priorExpenseId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RealizedExpense &&
+          other.id == this.id &&
+          other.packageId == this.packageId &&
+          other.planId == this.planId &&
+          other.planLineId == this.planLineId &&
+          other.status == this.status &&
+          other.amountMinor == this.amountMinor &&
+          other.currency == this.currency &&
+          other.paymentDate == this.paymentDate &&
+          other.payerParticipantId == this.payerParticipantId &&
+          other.kind == this.kind &&
+          other.beneficiaryParticipantId == this.beneficiaryParticipantId &&
+          other.priorExpenseId == this.priorExpenseId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
+  final Value<String> id;
+  final Value<String> packageId;
+  final Value<String> planId;
+  final Value<String> planLineId;
+  final Value<String> status;
+  final Value<int> amountMinor;
+  final Value<String> currency;
+  final Value<DateTime> paymentDate;
+  final Value<String> payerParticipantId;
+  final Value<String> kind;
+  final Value<String?> beneficiaryParticipantId;
+  final Value<String?> priorExpenseId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const RealizedExpensesCompanion({
+    this.id = const Value.absent(),
+    this.packageId = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.planLineId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.paymentDate = const Value.absent(),
+    this.payerParticipantId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.beneficiaryParticipantId = const Value.absent(),
+    this.priorExpenseId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RealizedExpensesCompanion.insert({
+    required String id,
+    required String packageId,
+    required String planId,
+    required String planLineId,
+    required String status,
+    required int amountMinor,
+    required String currency,
+    required DateTime paymentDate,
+    required String payerParticipantId,
+    required String kind,
+    this.beneficiaryParticipantId = const Value.absent(),
+    this.priorExpenseId = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       packageId = Value(packageId),
+       planId = Value(planId),
+       planLineId = Value(planLineId),
+       status = Value(status),
+       amountMinor = Value(amountMinor),
+       currency = Value(currency),
+       paymentDate = Value(paymentDate),
+       payerParticipantId = Value(payerParticipantId),
+       kind = Value(kind),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<RealizedExpense> custom({
+    Expression<String>? id,
+    Expression<String>? packageId,
+    Expression<String>? planId,
+    Expression<String>? planLineId,
+    Expression<String>? status,
+    Expression<int>? amountMinor,
+    Expression<String>? currency,
+    Expression<DateTime>? paymentDate,
+    Expression<String>? payerParticipantId,
+    Expression<String>? kind,
+    Expression<String>? beneficiaryParticipantId,
+    Expression<String>? priorExpenseId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (packageId != null) 'package_id': packageId,
+      if (planId != null) 'plan_id': planId,
+      if (planLineId != null) 'plan_line_id': planLineId,
+      if (status != null) 'status': status,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (currency != null) 'currency': currency,
+      if (paymentDate != null) 'payment_date': paymentDate,
+      if (payerParticipantId != null)
+        'payer_participant_id': payerParticipantId,
+      if (kind != null) 'kind': kind,
+      if (beneficiaryParticipantId != null)
+        'beneficiary_participant_id': beneficiaryParticipantId,
+      if (priorExpenseId != null) 'prior_expense_id': priorExpenseId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RealizedExpensesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? packageId,
+    Value<String>? planId,
+    Value<String>? planLineId,
+    Value<String>? status,
+    Value<int>? amountMinor,
+    Value<String>? currency,
+    Value<DateTime>? paymentDate,
+    Value<String>? payerParticipantId,
+    Value<String>? kind,
+    Value<String?>? beneficiaryParticipantId,
+    Value<String?>? priorExpenseId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return RealizedExpensesCompanion(
+      id: id ?? this.id,
+      packageId: packageId ?? this.packageId,
+      planId: planId ?? this.planId,
+      planLineId: planLineId ?? this.planLineId,
+      status: status ?? this.status,
+      amountMinor: amountMinor ?? this.amountMinor,
+      currency: currency ?? this.currency,
+      paymentDate: paymentDate ?? this.paymentDate,
+      payerParticipantId: payerParticipantId ?? this.payerParticipantId,
+      kind: kind ?? this.kind,
+      beneficiaryParticipantId:
+          beneficiaryParticipantId ?? this.beneficiaryParticipantId,
+      priorExpenseId: priorExpenseId ?? this.priorExpenseId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (packageId.present) {
+      map['package_id'] = Variable<String>(packageId.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (planLineId.present) {
+      map['plan_line_id'] = Variable<String>(planLineId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (paymentDate.present) {
+      map['payment_date'] = Variable<DateTime>(paymentDate.value);
+    }
+    if (payerParticipantId.present) {
+      map['payer_participant_id'] = Variable<String>(payerParticipantId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (beneficiaryParticipantId.present) {
+      map['beneficiary_participant_id'] = Variable<String>(
+        beneficiaryParticipantId.value,
+      );
+    }
+    if (priorExpenseId.present) {
+      map['prior_expense_id'] = Variable<String>(priorExpenseId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpensesCompanion(')
+          ..write('id: $id, ')
+          ..write('packageId: $packageId, ')
+          ..write('planId: $planId, ')
+          ..write('planLineId: $planLineId, ')
+          ..write('status: $status, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('paymentDate: $paymentDate, ')
+          ..write('payerParticipantId: $payerParticipantId, ')
+          ..write('kind: $kind, ')
+          ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
+          ..write('priorExpenseId: $priorExpenseId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RealizedExpenseAttachmentsTable extends RealizedExpenseAttachments
+    with
+        TableInfo<$RealizedExpenseAttachmentsTable, RealizedExpenseAttachment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RealizedExpenseAttachmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expenseIdMeta = const VerificationMeta(
+    'expenseId',
+  );
+  @override
+  late final GeneratedColumn<String> expenseId = GeneratedColumn<String>(
+    'expense_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayFileNameMeta = const VerificationMeta(
+    'displayFileName',
+  );
+  @override
+  late final GeneratedColumn<String> displayFileName = GeneratedColumn<String>(
+    'display_file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    expenseId,
+    filePath,
+    displayFileName,
+    contentHash,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'realized_expense_attachments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RealizedExpenseAttachment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('expense_id')) {
+      context.handle(
+        _expenseIdMeta,
+        expenseId.isAcceptableOrUnknown(data['expense_id']!, _expenseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expenseIdMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    if (data.containsKey('display_file_name')) {
+      context.handle(
+        _displayFileNameMeta,
+        displayFileName.isAcceptableOrUnknown(
+          data['display_file_name']!,
+          _displayFileNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayFileNameMeta);
+    }
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RealizedExpenseAttachment map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RealizedExpenseAttachment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      expenseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expense_id'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+      displayFileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_file_name'],
+      )!,
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RealizedExpenseAttachmentsTable createAlias(String alias) {
+    return $RealizedExpenseAttachmentsTable(attachedDatabase, alias);
+  }
+}
+
+class RealizedExpenseAttachment extends DataClass
+    implements Insertable<RealizedExpenseAttachment> {
+  final String id;
+  final String expenseId;
+  final String filePath;
+  final String displayFileName;
+  final String? contentHash;
+  final DateTime createdAt;
+  const RealizedExpenseAttachment({
+    required this.id,
+    required this.expenseId,
+    required this.filePath,
+    required this.displayFileName,
+    this.contentHash,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['expense_id'] = Variable<String>(expenseId);
+    map['file_path'] = Variable<String>(filePath);
+    map['display_file_name'] = Variable<String>(displayFileName);
+    if (!nullToAbsent || contentHash != null) {
+      map['content_hash'] = Variable<String>(contentHash);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RealizedExpenseAttachmentsCompanion toCompanion(bool nullToAbsent) {
+    return RealizedExpenseAttachmentsCompanion(
+      id: Value(id),
+      expenseId: Value(expenseId),
+      filePath: Value(filePath),
+      displayFileName: Value(displayFileName),
+      contentHash: contentHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contentHash),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RealizedExpenseAttachment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RealizedExpenseAttachment(
+      id: serializer.fromJson<String>(json['id']),
+      expenseId: serializer.fromJson<String>(json['expenseId']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+      displayFileName: serializer.fromJson<String>(json['displayFileName']),
+      contentHash: serializer.fromJson<String?>(json['contentHash']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'expenseId': serializer.toJson<String>(expenseId),
+      'filePath': serializer.toJson<String>(filePath),
+      'displayFileName': serializer.toJson<String>(displayFileName),
+      'contentHash': serializer.toJson<String?>(contentHash),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RealizedExpenseAttachment copyWith({
+    String? id,
+    String? expenseId,
+    String? filePath,
+    String? displayFileName,
+    Value<String?> contentHash = const Value.absent(),
+    DateTime? createdAt,
+  }) => RealizedExpenseAttachment(
+    id: id ?? this.id,
+    expenseId: expenseId ?? this.expenseId,
+    filePath: filePath ?? this.filePath,
+    displayFileName: displayFileName ?? this.displayFileName,
+    contentHash: contentHash.present ? contentHash.value : this.contentHash,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RealizedExpenseAttachment copyWithCompanion(
+    RealizedExpenseAttachmentsCompanion data,
+  ) {
+    return RealizedExpenseAttachment(
+      id: data.id.present ? data.id.value : this.id,
+      expenseId: data.expenseId.present ? data.expenseId.value : this.expenseId,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      displayFileName: data.displayFileName.present
+          ? data.displayFileName.value
+          : this.displayFileName,
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpenseAttachment(')
+          ..write('id: $id, ')
+          ..write('expenseId: $expenseId, ')
+          ..write('filePath: $filePath, ')
+          ..write('displayFileName: $displayFileName, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    expenseId,
+    filePath,
+    displayFileName,
+    contentHash,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RealizedExpenseAttachment &&
+          other.id == this.id &&
+          other.expenseId == this.expenseId &&
+          other.filePath == this.filePath &&
+          other.displayFileName == this.displayFileName &&
+          other.contentHash == this.contentHash &&
+          other.createdAt == this.createdAt);
+}
+
+class RealizedExpenseAttachmentsCompanion
+    extends UpdateCompanion<RealizedExpenseAttachment> {
+  final Value<String> id;
+  final Value<String> expenseId;
+  final Value<String> filePath;
+  final Value<String> displayFileName;
+  final Value<String?> contentHash;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const RealizedExpenseAttachmentsCompanion({
+    this.id = const Value.absent(),
+    this.expenseId = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.displayFileName = const Value.absent(),
+    this.contentHash = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RealizedExpenseAttachmentsCompanion.insert({
+    required String id,
+    required String expenseId,
+    required String filePath,
+    required String displayFileName,
+    this.contentHash = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       expenseId = Value(expenseId),
+       filePath = Value(filePath),
+       displayFileName = Value(displayFileName),
+       createdAt = Value(createdAt);
+  static Insertable<RealizedExpenseAttachment> custom({
+    Expression<String>? id,
+    Expression<String>? expenseId,
+    Expression<String>? filePath,
+    Expression<String>? displayFileName,
+    Expression<String>? contentHash,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (expenseId != null) 'expense_id': expenseId,
+      if (filePath != null) 'file_path': filePath,
+      if (displayFileName != null) 'display_file_name': displayFileName,
+      if (contentHash != null) 'content_hash': contentHash,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RealizedExpenseAttachmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? expenseId,
+    Value<String>? filePath,
+    Value<String>? displayFileName,
+    Value<String?>? contentHash,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return RealizedExpenseAttachmentsCompanion(
+      id: id ?? this.id,
+      expenseId: expenseId ?? this.expenseId,
+      filePath: filePath ?? this.filePath,
+      displayFileName: displayFileName ?? this.displayFileName,
+      contentHash: contentHash ?? this.contentHash,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (expenseId.present) {
+      map['expense_id'] = Variable<String>(expenseId.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (displayFileName.present) {
+      map['display_file_name'] = Variable<String>(displayFileName.value);
+    }
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpenseAttachmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('expenseId: $expenseId, ')
+          ..write('filePath: $filePath, ')
+          ..write('displayFileName: $displayFileName, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RealizedExpenseAcceptancesTable extends RealizedExpenseAcceptances
+    with
+        TableInfo<$RealizedExpenseAcceptancesTable, RealizedExpenseAcceptance> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RealizedExpenseAcceptancesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _expenseIdMeta = const VerificationMeta(
+    'expenseId',
+  );
+  @override
+  late final GeneratedColumn<String> expenseId = GeneratedColumn<String>(
+    'expense_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta(
+    'participantId',
+  );
+  @override
+  late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
+    'participant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _decisionMeta = const VerificationMeta(
+    'decision',
+  );
+  @override
+  late final GeneratedColumn<String> decision = GeneratedColumn<String>(
+    'decision',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rejectionJustificationMeta =
+      const VerificationMeta('rejectionJustification');
+  @override
+  late final GeneratedColumn<String> rejectionJustification =
+      GeneratedColumn<String>(
+        'rejection_justification',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _decidedAtMeta = const VerificationMeta(
+    'decidedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> decidedAt = GeneratedColumn<DateTime>(
+    'decided_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    expenseId,
+    participantId,
+    decision,
+    rejectionJustification,
+    decidedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'realized_expense_acceptances';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RealizedExpenseAcceptance> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('expense_id')) {
+      context.handle(
+        _expenseIdMeta,
+        expenseId.isAcceptableOrUnknown(data['expense_id']!, _expenseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expenseIdMeta);
+    }
+    if (data.containsKey('participant_id')) {
+      context.handle(
+        _participantIdMeta,
+        participantId.isAcceptableOrUnknown(
+          data['participant_id']!,
+          _participantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_participantIdMeta);
+    }
+    if (data.containsKey('decision')) {
+      context.handle(
+        _decisionMeta,
+        decision.isAcceptableOrUnknown(data['decision']!, _decisionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_decisionMeta);
+    }
+    if (data.containsKey('rejection_justification')) {
+      context.handle(
+        _rejectionJustificationMeta,
+        rejectionJustification.isAcceptableOrUnknown(
+          data['rejection_justification']!,
+          _rejectionJustificationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('decided_at')) {
+      context.handle(
+        _decidedAtMeta,
+        decidedAt.isAcceptableOrUnknown(data['decided_at']!, _decidedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {expenseId, participantId};
+  @override
+  RealizedExpenseAcceptance map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RealizedExpenseAcceptance(
+      expenseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expense_id'],
+      )!,
+      participantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}participant_id'],
+      )!,
+      decision: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}decision'],
+      )!,
+      rejectionJustification: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rejection_justification'],
+      ),
+      decidedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}decided_at'],
+      ),
+    );
+  }
+
+  @override
+  $RealizedExpenseAcceptancesTable createAlias(String alias) {
+    return $RealizedExpenseAcceptancesTable(attachedDatabase, alias);
+  }
+}
+
+class RealizedExpenseAcceptance extends DataClass
+    implements Insertable<RealizedExpenseAcceptance> {
+  final String expenseId;
+  final String participantId;
+
+  /// `pending` | `accepted` | `rejected`
+  final String decision;
+  final String? rejectionJustification;
+  final DateTime? decidedAt;
+  const RealizedExpenseAcceptance({
+    required this.expenseId,
+    required this.participantId,
+    required this.decision,
+    this.rejectionJustification,
+    this.decidedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['expense_id'] = Variable<String>(expenseId);
+    map['participant_id'] = Variable<String>(participantId);
+    map['decision'] = Variable<String>(decision);
+    if (!nullToAbsent || rejectionJustification != null) {
+      map['rejection_justification'] = Variable<String>(rejectionJustification);
+    }
+    if (!nullToAbsent || decidedAt != null) {
+      map['decided_at'] = Variable<DateTime>(decidedAt);
+    }
+    return map;
+  }
+
+  RealizedExpenseAcceptancesCompanion toCompanion(bool nullToAbsent) {
+    return RealizedExpenseAcceptancesCompanion(
+      expenseId: Value(expenseId),
+      participantId: Value(participantId),
+      decision: Value(decision),
+      rejectionJustification: rejectionJustification == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rejectionJustification),
+      decidedAt: decidedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decidedAt),
+    );
+  }
+
+  factory RealizedExpenseAcceptance.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RealizedExpenseAcceptance(
+      expenseId: serializer.fromJson<String>(json['expenseId']),
+      participantId: serializer.fromJson<String>(json['participantId']),
+      decision: serializer.fromJson<String>(json['decision']),
+      rejectionJustification: serializer.fromJson<String?>(
+        json['rejectionJustification'],
+      ),
+      decidedAt: serializer.fromJson<DateTime?>(json['decidedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'expenseId': serializer.toJson<String>(expenseId),
+      'participantId': serializer.toJson<String>(participantId),
+      'decision': serializer.toJson<String>(decision),
+      'rejectionJustification': serializer.toJson<String?>(
+        rejectionJustification,
+      ),
+      'decidedAt': serializer.toJson<DateTime?>(decidedAt),
+    };
+  }
+
+  RealizedExpenseAcceptance copyWith({
+    String? expenseId,
+    String? participantId,
+    String? decision,
+    Value<String?> rejectionJustification = const Value.absent(),
+    Value<DateTime?> decidedAt = const Value.absent(),
+  }) => RealizedExpenseAcceptance(
+    expenseId: expenseId ?? this.expenseId,
+    participantId: participantId ?? this.participantId,
+    decision: decision ?? this.decision,
+    rejectionJustification: rejectionJustification.present
+        ? rejectionJustification.value
+        : this.rejectionJustification,
+    decidedAt: decidedAt.present ? decidedAt.value : this.decidedAt,
+  );
+  RealizedExpenseAcceptance copyWithCompanion(
+    RealizedExpenseAcceptancesCompanion data,
+  ) {
+    return RealizedExpenseAcceptance(
+      expenseId: data.expenseId.present ? data.expenseId.value : this.expenseId,
+      participantId: data.participantId.present
+          ? data.participantId.value
+          : this.participantId,
+      decision: data.decision.present ? data.decision.value : this.decision,
+      rejectionJustification: data.rejectionJustification.present
+          ? data.rejectionJustification.value
+          : this.rejectionJustification,
+      decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpenseAcceptance(')
+          ..write('expenseId: $expenseId, ')
+          ..write('participantId: $participantId, ')
+          ..write('decision: $decision, ')
+          ..write('rejectionJustification: $rejectionJustification, ')
+          ..write('decidedAt: $decidedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    expenseId,
+    participantId,
+    decision,
+    rejectionJustification,
+    decidedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RealizedExpenseAcceptance &&
+          other.expenseId == this.expenseId &&
+          other.participantId == this.participantId &&
+          other.decision == this.decision &&
+          other.rejectionJustification == this.rejectionJustification &&
+          other.decidedAt == this.decidedAt);
+}
+
+class RealizedExpenseAcceptancesCompanion
+    extends UpdateCompanion<RealizedExpenseAcceptance> {
+  final Value<String> expenseId;
+  final Value<String> participantId;
+  final Value<String> decision;
+  final Value<String?> rejectionJustification;
+  final Value<DateTime?> decidedAt;
+  final Value<int> rowid;
+  const RealizedExpenseAcceptancesCompanion({
+    this.expenseId = const Value.absent(),
+    this.participantId = const Value.absent(),
+    this.decision = const Value.absent(),
+    this.rejectionJustification = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RealizedExpenseAcceptancesCompanion.insert({
+    required String expenseId,
+    required String participantId,
+    required String decision,
+    this.rejectionJustification = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : expenseId = Value(expenseId),
+       participantId = Value(participantId),
+       decision = Value(decision);
+  static Insertable<RealizedExpenseAcceptance> custom({
+    Expression<String>? expenseId,
+    Expression<String>? participantId,
+    Expression<String>? decision,
+    Expression<String>? rejectionJustification,
+    Expression<DateTime>? decidedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (expenseId != null) 'expense_id': expenseId,
+      if (participantId != null) 'participant_id': participantId,
+      if (decision != null) 'decision': decision,
+      if (rejectionJustification != null)
+        'rejection_justification': rejectionJustification,
+      if (decidedAt != null) 'decided_at': decidedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RealizedExpenseAcceptancesCompanion copyWith({
+    Value<String>? expenseId,
+    Value<String>? participantId,
+    Value<String>? decision,
+    Value<String?>? rejectionJustification,
+    Value<DateTime?>? decidedAt,
+    Value<int>? rowid,
+  }) {
+    return RealizedExpenseAcceptancesCompanion(
+      expenseId: expenseId ?? this.expenseId,
+      participantId: participantId ?? this.participantId,
+      decision: decision ?? this.decision,
+      rejectionJustification:
+          rejectionJustification ?? this.rejectionJustification,
+      decidedAt: decidedAt ?? this.decidedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (expenseId.present) {
+      map['expense_id'] = Variable<String>(expenseId.value);
+    }
+    if (participantId.present) {
+      map['participant_id'] = Variable<String>(participantId.value);
+    }
+    if (decision.present) {
+      map['decision'] = Variable<String>(decision.value);
+    }
+    if (rejectionJustification.present) {
+      map['rejection_justification'] = Variable<String>(
+        rejectionJustification.value,
+      );
+    }
+    if (decidedAt.present) {
+      map['decided_at'] = Variable<DateTime>(decidedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RealizedExpenseAcceptancesCompanion(')
+          ..write('expenseId: $expenseId, ')
+          ..write('participantId: $participantId, ')
+          ..write('decision: $decision, ')
+          ..write('rejectionJustification: $rejectionJustification, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7914,6 +9603,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ContactInvitationsTable(this);
   late final $PendingHandshakesTable pendingHandshakes =
       $PendingHandshakesTable(this);
+  late final $RealizedExpensesTable realizedExpenses = $RealizedExpensesTable(
+    this,
+  );
+  late final $RealizedExpenseAttachmentsTable realizedExpenseAttachments =
+      $RealizedExpenseAttachmentsTable(this);
+  late final $RealizedExpenseAcceptancesTable realizedExpenseAcceptances =
+      $RealizedExpenseAcceptancesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7933,6 +9629,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     contacts,
     contactInvitations,
     pendingHandshakes,
+    realizedExpenses,
+    realizedExpenseAttachments,
+    realizedExpenseAcceptances,
   ];
 }
 
@@ -11844,6 +13543,860 @@ typedef $$PendingHandshakesTableProcessedTableManager =
       PendingHandshake,
       PrefetchHooks Function()
     >;
+typedef $$RealizedExpensesTableCreateCompanionBuilder =
+    RealizedExpensesCompanion Function({
+      required String id,
+      required String packageId,
+      required String planId,
+      required String planLineId,
+      required String status,
+      required int amountMinor,
+      required String currency,
+      required DateTime paymentDate,
+      required String payerParticipantId,
+      required String kind,
+      Value<String?> beneficiaryParticipantId,
+      Value<String?> priorExpenseId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$RealizedExpensesTableUpdateCompanionBuilder =
+    RealizedExpensesCompanion Function({
+      Value<String> id,
+      Value<String> packageId,
+      Value<String> planId,
+      Value<String> planLineId,
+      Value<String> status,
+      Value<int> amountMinor,
+      Value<String> currency,
+      Value<DateTime> paymentDate,
+      Value<String> payerParticipantId,
+      Value<String> kind,
+      Value<String?> beneficiaryParticipantId,
+      Value<String?> priorExpenseId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$RealizedExpensesTableFilterComposer
+    extends Composer<_$AppDatabase, $RealizedExpensesTable> {
+  $$RealizedExpensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get paymentDate => $composableBuilder(
+    column: $table.paymentDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payerParticipantId => $composableBuilder(
+    column: $table.payerParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get beneficiaryParticipantId => $composableBuilder(
+    column: $table.beneficiaryParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priorExpenseId => $composableBuilder(
+    column: $table.priorExpenseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RealizedExpensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RealizedExpensesTable> {
+  $$RealizedExpensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get paymentDate => $composableBuilder(
+    column: $table.paymentDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payerParticipantId => $composableBuilder(
+    column: $table.payerParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get beneficiaryParticipantId => $composableBuilder(
+    column: $table.beneficiaryParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priorExpenseId => $composableBuilder(
+    column: $table.priorExpenseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RealizedExpensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RealizedExpensesTable> {
+  $$RealizedExpensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get packageId =>
+      $composableBuilder(column: $table.packageId, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get paymentDate => $composableBuilder(
+    column: $table.paymentDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payerParticipantId => $composableBuilder(
+    column: $table.payerParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get beneficiaryParticipantId => $composableBuilder(
+    column: $table.beneficiaryParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priorExpenseId => $composableBuilder(
+    column: $table.priorExpenseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$RealizedExpensesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RealizedExpensesTable,
+          RealizedExpense,
+          $$RealizedExpensesTableFilterComposer,
+          $$RealizedExpensesTableOrderingComposer,
+          $$RealizedExpensesTableAnnotationComposer,
+          $$RealizedExpensesTableCreateCompanionBuilder,
+          $$RealizedExpensesTableUpdateCompanionBuilder,
+          (
+            RealizedExpense,
+            BaseReferences<
+              _$AppDatabase,
+              $RealizedExpensesTable,
+              RealizedExpense
+            >,
+          ),
+          RealizedExpense,
+          PrefetchHooks Function()
+        > {
+  $$RealizedExpensesTableTableManager(
+    _$AppDatabase db,
+    $RealizedExpensesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RealizedExpensesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RealizedExpensesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RealizedExpensesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> packageId = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> planLineId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<DateTime> paymentDate = const Value.absent(),
+                Value<String> payerParticipantId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> beneficiaryParticipantId = const Value.absent(),
+                Value<String?> priorExpenseId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpensesCompanion(
+                id: id,
+                packageId: packageId,
+                planId: planId,
+                planLineId: planLineId,
+                status: status,
+                amountMinor: amountMinor,
+                currency: currency,
+                paymentDate: paymentDate,
+                payerParticipantId: payerParticipantId,
+                kind: kind,
+                beneficiaryParticipantId: beneficiaryParticipantId,
+                priorExpenseId: priorExpenseId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String packageId,
+                required String planId,
+                required String planLineId,
+                required String status,
+                required int amountMinor,
+                required String currency,
+                required DateTime paymentDate,
+                required String payerParticipantId,
+                required String kind,
+                Value<String?> beneficiaryParticipantId = const Value.absent(),
+                Value<String?> priorExpenseId = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpensesCompanion.insert(
+                id: id,
+                packageId: packageId,
+                planId: planId,
+                planLineId: planLineId,
+                status: status,
+                amountMinor: amountMinor,
+                currency: currency,
+                paymentDate: paymentDate,
+                payerParticipantId: payerParticipantId,
+                kind: kind,
+                beneficiaryParticipantId: beneficiaryParticipantId,
+                priorExpenseId: priorExpenseId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RealizedExpensesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RealizedExpensesTable,
+      RealizedExpense,
+      $$RealizedExpensesTableFilterComposer,
+      $$RealizedExpensesTableOrderingComposer,
+      $$RealizedExpensesTableAnnotationComposer,
+      $$RealizedExpensesTableCreateCompanionBuilder,
+      $$RealizedExpensesTableUpdateCompanionBuilder,
+      (
+        RealizedExpense,
+        BaseReferences<_$AppDatabase, $RealizedExpensesTable, RealizedExpense>,
+      ),
+      RealizedExpense,
+      PrefetchHooks Function()
+    >;
+typedef $$RealizedExpenseAttachmentsTableCreateCompanionBuilder =
+    RealizedExpenseAttachmentsCompanion Function({
+      required String id,
+      required String expenseId,
+      required String filePath,
+      required String displayFileName,
+      Value<String?> contentHash,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$RealizedExpenseAttachmentsTableUpdateCompanionBuilder =
+    RealizedExpenseAttachmentsCompanion Function({
+      Value<String> id,
+      Value<String> expenseId,
+      Value<String> filePath,
+      Value<String> displayFileName,
+      Value<String?> contentHash,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$RealizedExpenseAttachmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAttachmentsTable> {
+  $$RealizedExpenseAttachmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expenseId => $composableBuilder(
+    column: $table.expenseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayFileName => $composableBuilder(
+    column: $table.displayFileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RealizedExpenseAttachmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAttachmentsTable> {
+  $$RealizedExpenseAttachmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get expenseId => $composableBuilder(
+    column: $table.expenseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayFileName => $composableBuilder(
+    column: $table.displayFileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RealizedExpenseAttachmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAttachmentsTable> {
+  $$RealizedExpenseAttachmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get expenseId =>
+      $composableBuilder(column: $table.expenseId, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<String> get displayFileName => $composableBuilder(
+    column: $table.displayFileName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$RealizedExpenseAttachmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RealizedExpenseAttachmentsTable,
+          RealizedExpenseAttachment,
+          $$RealizedExpenseAttachmentsTableFilterComposer,
+          $$RealizedExpenseAttachmentsTableOrderingComposer,
+          $$RealizedExpenseAttachmentsTableAnnotationComposer,
+          $$RealizedExpenseAttachmentsTableCreateCompanionBuilder,
+          $$RealizedExpenseAttachmentsTableUpdateCompanionBuilder,
+          (
+            RealizedExpenseAttachment,
+            BaseReferences<
+              _$AppDatabase,
+              $RealizedExpenseAttachmentsTable,
+              RealizedExpenseAttachment
+            >,
+          ),
+          RealizedExpenseAttachment,
+          PrefetchHooks Function()
+        > {
+  $$RealizedExpenseAttachmentsTableTableManager(
+    _$AppDatabase db,
+    $RealizedExpenseAttachmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RealizedExpenseAttachmentsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$RealizedExpenseAttachmentsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RealizedExpenseAttachmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> expenseId = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<String> displayFileName = const Value.absent(),
+                Value<String?> contentHash = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpenseAttachmentsCompanion(
+                id: id,
+                expenseId: expenseId,
+                filePath: filePath,
+                displayFileName: displayFileName,
+                contentHash: contentHash,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String expenseId,
+                required String filePath,
+                required String displayFileName,
+                Value<String?> contentHash = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpenseAttachmentsCompanion.insert(
+                id: id,
+                expenseId: expenseId,
+                filePath: filePath,
+                displayFileName: displayFileName,
+                contentHash: contentHash,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RealizedExpenseAttachmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RealizedExpenseAttachmentsTable,
+      RealizedExpenseAttachment,
+      $$RealizedExpenseAttachmentsTableFilterComposer,
+      $$RealizedExpenseAttachmentsTableOrderingComposer,
+      $$RealizedExpenseAttachmentsTableAnnotationComposer,
+      $$RealizedExpenseAttachmentsTableCreateCompanionBuilder,
+      $$RealizedExpenseAttachmentsTableUpdateCompanionBuilder,
+      (
+        RealizedExpenseAttachment,
+        BaseReferences<
+          _$AppDatabase,
+          $RealizedExpenseAttachmentsTable,
+          RealizedExpenseAttachment
+        >,
+      ),
+      RealizedExpenseAttachment,
+      PrefetchHooks Function()
+    >;
+typedef $$RealizedExpenseAcceptancesTableCreateCompanionBuilder =
+    RealizedExpenseAcceptancesCompanion Function({
+      required String expenseId,
+      required String participantId,
+      required String decision,
+      Value<String?> rejectionJustification,
+      Value<DateTime?> decidedAt,
+      Value<int> rowid,
+    });
+typedef $$RealizedExpenseAcceptancesTableUpdateCompanionBuilder =
+    RealizedExpenseAcceptancesCompanion Function({
+      Value<String> expenseId,
+      Value<String> participantId,
+      Value<String> decision,
+      Value<String?> rejectionJustification,
+      Value<DateTime?> decidedAt,
+      Value<int> rowid,
+    });
+
+class $$RealizedExpenseAcceptancesTableFilterComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAcceptancesTable> {
+  $$RealizedExpenseAcceptancesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get expenseId => $composableBuilder(
+    column: $table.expenseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rejectionJustification => $composableBuilder(
+    column: $table.rejectionJustification,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RealizedExpenseAcceptancesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAcceptancesTable> {
+  $$RealizedExpenseAcceptancesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get expenseId => $composableBuilder(
+    column: $table.expenseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rejectionJustification => $composableBuilder(
+    column: $table.rejectionJustification,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RealizedExpenseAcceptancesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RealizedExpenseAcceptancesTable> {
+  $$RealizedExpenseAcceptancesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get expenseId =>
+      $composableBuilder(column: $table.expenseId, builder: (column) => column);
+
+  GeneratedColumn<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get decision =>
+      $composableBuilder(column: $table.decision, builder: (column) => column);
+
+  GeneratedColumn<String> get rejectionJustification => $composableBuilder(
+    column: $table.rejectionJustification,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get decidedAt =>
+      $composableBuilder(column: $table.decidedAt, builder: (column) => column);
+}
+
+class $$RealizedExpenseAcceptancesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RealizedExpenseAcceptancesTable,
+          RealizedExpenseAcceptance,
+          $$RealizedExpenseAcceptancesTableFilterComposer,
+          $$RealizedExpenseAcceptancesTableOrderingComposer,
+          $$RealizedExpenseAcceptancesTableAnnotationComposer,
+          $$RealizedExpenseAcceptancesTableCreateCompanionBuilder,
+          $$RealizedExpenseAcceptancesTableUpdateCompanionBuilder,
+          (
+            RealizedExpenseAcceptance,
+            BaseReferences<
+              _$AppDatabase,
+              $RealizedExpenseAcceptancesTable,
+              RealizedExpenseAcceptance
+            >,
+          ),
+          RealizedExpenseAcceptance,
+          PrefetchHooks Function()
+        > {
+  $$RealizedExpenseAcceptancesTableTableManager(
+    _$AppDatabase db,
+    $RealizedExpenseAcceptancesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RealizedExpenseAcceptancesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$RealizedExpenseAcceptancesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RealizedExpenseAcceptancesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> expenseId = const Value.absent(),
+                Value<String> participantId = const Value.absent(),
+                Value<String> decision = const Value.absent(),
+                Value<String?> rejectionJustification = const Value.absent(),
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpenseAcceptancesCompanion(
+                expenseId: expenseId,
+                participantId: participantId,
+                decision: decision,
+                rejectionJustification: rejectionJustification,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String expenseId,
+                required String participantId,
+                required String decision,
+                Value<String?> rejectionJustification = const Value.absent(),
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RealizedExpenseAcceptancesCompanion.insert(
+                expenseId: expenseId,
+                participantId: participantId,
+                decision: decision,
+                rejectionJustification: rejectionJustification,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RealizedExpenseAcceptancesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RealizedExpenseAcceptancesTable,
+      RealizedExpenseAcceptance,
+      $$RealizedExpenseAcceptancesTableFilterComposer,
+      $$RealizedExpenseAcceptancesTableOrderingComposer,
+      $$RealizedExpenseAcceptancesTableAnnotationComposer,
+      $$RealizedExpenseAcceptancesTableCreateCompanionBuilder,
+      $$RealizedExpenseAcceptancesTableUpdateCompanionBuilder,
+      (
+        RealizedExpenseAcceptance,
+        BaseReferences<
+          _$AppDatabase,
+          $RealizedExpenseAcceptancesTable,
+          RealizedExpenseAcceptance
+        >,
+      ),
+      RealizedExpenseAcceptance,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11879,4 +14432,18 @@ class $AppDatabaseManager {
       $$ContactInvitationsTableTableManager(_db, _db.contactInvitations);
   $$PendingHandshakesTableTableManager get pendingHandshakes =>
       $$PendingHandshakesTableTableManager(_db, _db.pendingHandshakes);
+  $$RealizedExpensesTableTableManager get realizedExpenses =>
+      $$RealizedExpensesTableTableManager(_db, _db.realizedExpenses);
+  $$RealizedExpenseAttachmentsTableTableManager
+  get realizedExpenseAttachments =>
+      $$RealizedExpenseAttachmentsTableTableManager(
+        _db,
+        _db.realizedExpenseAttachments,
+      );
+  $$RealizedExpenseAcceptancesTableTableManager
+  get realizedExpenseAcceptances =>
+      $$RealizedExpenseAcceptancesTableTableManager(
+        _db,
+        _db.realizedExpenseAcceptances,
+      );
 }

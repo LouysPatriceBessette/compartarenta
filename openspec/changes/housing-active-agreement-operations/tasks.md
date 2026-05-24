@@ -8,9 +8,9 @@
 
 ## Pass 1 — Hub and data model
 
-- [ ] 1.1 Replace `HousingActivePlanScreen` stub with hub menu (six actions + agreement header).
-- [ ] 1.2 Drift schema: `RealizedExpense`, attachment metadata, per-participant acceptance rows.
-- [ ] 1.3 Repository + draft save for realized expense (local only, not yet synced).
+- [x] 1.1 Replace `HousingActivePlanScreen` stub with hub menu (six actions + agreement header).
+- [x] 1.2 Drift schema: `RealizedExpense`, attachment metadata, per-participant acceptance rows.
+- [x] 1.3 Repository + draft save for realized expense (local only, not yet synced).
 
 ## Pass 2 — Entry (`housing-realized-expense-entry`)
 

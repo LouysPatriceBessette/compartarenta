@@ -230,6 +230,21 @@
   "housingWorkbenchActiveSection": "Active plans",
   "housingWorkbenchOpenPlan": "Open",
   "housingWorkbenchEmpty": "No housing plans with your profile on this device.",
+  "housingActiveHubTitle": "Active agreement",
+  "housingActiveHubPeriod": "{dateRange}",
+  "@housingActiveHubPeriod": {
+    "placeholders": {
+      "dateRange": { "type": "String" }
+    }
+  },
+  "housingActiveHubEnterExpense": "Enter an expense",
+  "housingActiveHubMonthlyExpenses": "Current month expenses",
+  "housingActiveHubBalances": "Balances owed",
+  "housingActiveHubViewPlan": "View current plan",
+  "housingActiveHubRequestAmendment": "Request plan modification",
+  "housingActiveHubExportImport": "Export / import data",
+  "housingActiveHubPassPlaceholderTitle": "Coming soon",
+  "housingActiveHubPassPlaceholderBody": "This screen will be available in the next implementation pass.",
   "housingInviteResponseWindowTitle": "Response window",
   "housingInviteResponseWindowBody": "Participants have until this date and time to respond (UTC).",
   "housingInvitePeriodOverlapTitle": "Agreement period conflict",

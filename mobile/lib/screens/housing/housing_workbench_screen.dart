@@ -19,6 +19,7 @@ class _WorkbenchRow {
     required this.sortDate,
     required this.pendingResponseCount,
     required this.participantCount,
+    this.packageId,
     this.archive,
   });
 
@@ -29,6 +30,7 @@ class _WorkbenchRow {
   final DateTime sortDate;
   final int pendingResponseCount;
   final int participantCount;
+  final String? packageId;
   final HousingProposalArchive? archive;
 }
 
@@ -97,6 +99,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
           sortDate: pendingDate ?? latestArchive?.invalidatedAt ?? p.createdAt,
           pendingResponseCount: pendingResponseCount,
           participantCount: await _participantCountForPlan(p.id),
+          packageId: pkg?.id,
           archive: latestArchive,
         ),
       );
@@ -177,9 +180,15 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
         .then((_) => _reload());
   }
 
-  void _openActivePlan() {
+  void _openActivePlan(String planId, String packageId) {
     Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => const HousingActivePlanScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => HousingActivePlanScreen(
+          planId: planId,
+          packageId: packageId,
+          prefs: widget.prefs,
+        ),
+      ),
     );
   }
 
@@ -363,7 +372,11 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
                     context,
                     title: _rowTitle(r.plan),
                     date: r.sortDate,
-                    onTap: _openActivePlan,
+                    onTap: () {
+                      final pkgId = r.packageId;
+                      if (pkgId == null) return;
+                      _openActivePlan(r.plan.id, pkgId);
+                    },
                   ),
                 const SizedBox(height: 24),
               ],

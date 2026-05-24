@@ -392,6 +392,61 @@ class RelayActivityLogEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A realized (actual) payment recorded against an active housing agreement.
+class RealizedExpenses extends Table {
+  TextColumn get id => text()();
+  TextColumn get packageId => text()();
+  TextColumn get planId => text()();
+  TextColumn get planLineId => text()();
+
+  /// `draft` | `proposed` | `accepted` | `published` | `rejected`
+  TextColumn get status => text()();
+
+  IntColumn get amountMinor => integer()();
+  TextColumn get currency => text()();
+  DateTimeColumn get paymentDate => dateTime()();
+  TextColumn get payerParticipantId => text()();
+
+  /// `normal` | `reimbursement` | `advance`
+  TextColumn get kind => text()();
+  TextColumn get beneficiaryParticipantId => text().nullable()();
+
+  /// Prior proposal when this row is a resubmit (pass 3+).
+  TextColumn get priorExpenseId => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class RealizedExpenseAttachments extends Table {
+  TextColumn get id => text()();
+  TextColumn get expenseId => text()();
+  TextColumn get filePath => text()();
+  TextColumn get displayFileName => text()();
+  TextColumn get contentHash => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Per-participant review of a realized expense (unanimous acceptance).
+class RealizedExpenseAcceptances extends Table {
+  TextColumn get expenseId => text()();
+  TextColumn get participantId => text()();
+
+  /// `pending` | `accepted` | `rejected`
+  TextColumn get decision => text()();
+  TextColumn get rejectionJustification => text().nullable()();
+  DateTimeColumn get decidedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {expenseId, participantId};
+}
+
 @DriftDatabase(
   tables: [
     Plans,
@@ -408,6 +463,9 @@ class RelayActivityLogEntries extends Table {
     Contacts,
     ContactInvitations,
     PendingHandshakes,
+    RealizedExpenses,
+    RealizedExpenseAttachments,
+    RealizedExpenseAcceptances,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -504,7 +562,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -673,6 +731,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 16) {
         await m.createTable(relayActivityLogEntries);
+      }
+      if (from < 17) {
+        await m.createTable(realizedExpenses);
+        await m.createTable(realizedExpenseAttachments);
+        await m.createTable(realizedExpenseAcceptances);
       }
     },
     beforeOpen: (details) async {

@@ -230,6 +230,21 @@
   "housingWorkbenchActiveSection": "Planes activos",
   "housingWorkbenchOpenPlan": "Abrir",
   "housingWorkbenchEmpty": "No hay planes de vivienda con su perfil en este dispositivo.",
+  "housingActiveHubTitle": "Acuerdo activo",
+  "housingActiveHubPeriod": "{dateRange}",
+  "@housingActiveHubPeriod": {
+    "placeholders": {
+      "dateRange": { "type": "String" }
+    }
+  },
+  "housingActiveHubEnterExpense": "Introducir un gasto",
+  "housingActiveHubMonthlyExpenses": "Gastos del mes en curso",
+  "housingActiveHubBalances": "Saldos pendientes",
+  "housingActiveHubViewPlan": "Ver plan actual",
+  "housingActiveHubRequestAmendment": "Solicitar modificación del plan",
+  "housingActiveHubExportImport": "Exportar / importar datos",
+  "housingActiveHubPassPlaceholderTitle": "Próximamente",
+  "housingActiveHubPassPlaceholderBody": "Esta pantalla estará disponible en la siguiente fase de implementación.",
   "housingInviteResponseWindowTitle": "Plazo de respuesta",
   "housingInviteResponseWindowBody": "Los participantes tienen hasta esta fecha y hora para responder (UTC).",
   "housingInvitePeriodOverlapTitle": "Conflicto de periodo del acuerdo",

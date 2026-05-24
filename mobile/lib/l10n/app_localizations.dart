@@ -1270,6 +1270,66 @@ abstract class AppLocalizations {
   /// **'No housing plans with your profile on this device.'**
   String get housingWorkbenchEmpty;
 
+  /// No description provided for @housingActiveHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active agreement'**
+  String get housingActiveHubTitle;
+
+  /// No description provided for @housingActiveHubPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{dateRange}'**
+  String housingActiveHubPeriod(String dateRange);
+
+  /// No description provided for @housingActiveHubEnterExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an expense'**
+  String get housingActiveHubEnterExpense;
+
+  /// No description provided for @housingActiveHubMonthlyExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Current month expenses'**
+  String get housingActiveHubMonthlyExpenses;
+
+  /// No description provided for @housingActiveHubBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances owed'**
+  String get housingActiveHubBalances;
+
+  /// No description provided for @housingActiveHubViewPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'View current plan'**
+  String get housingActiveHubViewPlan;
+
+  /// No description provided for @housingActiveHubRequestAmendment.
+  ///
+  /// In en, this message translates to:
+  /// **'Request plan modification'**
+  String get housingActiveHubRequestAmendment;
+
+  /// No description provided for @housingActiveHubExportImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export / import data'**
+  String get housingActiveHubExportImport;
+
+  /// No description provided for @housingActiveHubPassPlaceholderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get housingActiveHubPassPlaceholderTitle;
+
+  /// No description provided for @housingActiveHubPassPlaceholderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen will be available in the next implementation pass.'**
+  String get housingActiveHubPassPlaceholderBody;
+
   /// No description provided for @housingInviteResponseWindowTitle.
   ///
   /// In en, this message translates to:

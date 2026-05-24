@@ -661,6 +661,40 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun plan logement avec votre profil sur cet appareil.';
 
   @override
+  String get housingActiveHubTitle => 'Entente active';
+
+  @override
+  String housingActiveHubPeriod(String dateRange) {
+    return '$dateRange';
+  }
+
+  @override
+  String get housingActiveHubEnterExpense => 'Entrer une dépense';
+
+  @override
+  String get housingActiveHubMonthlyExpenses => 'Dépenses du mois en cours';
+
+  @override
+  String get housingActiveHubBalances => 'Balances dues de chacun';
+
+  @override
+  String get housingActiveHubViewPlan => 'Consulter le plan actuel';
+
+  @override
+  String get housingActiveHubRequestAmendment =>
+      'Demander une modification du plan';
+
+  @override
+  String get housingActiveHubExportImport => 'Exporter / importer les données';
+
+  @override
+  String get housingActiveHubPassPlaceholderTitle => 'Bientôt disponible';
+
+  @override
+  String get housingActiveHubPassPlaceholderBody =>
+      'Cet écran sera disponible à la prochaine étape d\'implémentation.';
+
+  @override
   String get housingInviteResponseWindowTitle => 'Délai de réponse';
 
   @override

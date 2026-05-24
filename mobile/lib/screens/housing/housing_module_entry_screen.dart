@@ -181,7 +181,11 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
           }
           final pkg = entry.package;
           if (pkg?.activeRevisionId != null) {
-            return const HousingActivePlanScreen();
+            return HousingActivePlanScreen(
+              planId: plans.single.id,
+              packageId: pkg!.id,
+              prefs: widget.prefs,
+            );
           }
           if (pkg?.pendingRevisionId != null) {
             return HousingInviteProposalScreen(
