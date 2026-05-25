@@ -672,7 +672,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingActiveHubEnterExpense => 'Entrer une dépense';
 
   @override
-  String get housingActiveHubMonthlyExpenses => 'Dépenses du mois en cours';
+  String get housingActiveHubMonthlyExpenses => 'Dépenses réalisées';
 
   @override
   String get housingActiveHubBalances => 'Balances dues de chacun';
@@ -701,10 +701,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpensePlanLine => 'Ligne du plan';
 
   @override
-  String get housingRealizedExpenseAmount => 'Montant payé';
+  String get housingRealizedExpenseAmount => 'Montant';
 
   @override
   String get housingRealizedExpensePaymentDate => 'Date du paiement';
+
+  @override
+  String get housingRealizedExpenseTransferDate => 'Date du virement';
 
   @override
   String get housingRealizedExpensePaymentDatePick => 'Choisir une date';
@@ -716,7 +719,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseKind => 'Type de dépense';
 
   @override
-  String get housingRealizedExpenseKindNormal => 'Normale';
+  String get housingRealizedExpenseKindNormal => 'Paiement';
 
   @override
   String get housingRealizedExpenseKindReimbursement => 'Remboursement';
@@ -725,10 +728,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseKindAdvance => 'Avance';
 
   @override
+  String get housingRealizedExpenseKindTransfer => 'Virement';
+
+  @override
   String get housingRealizedExpenseBeneficiary => 'Part remboursée de';
 
   @override
-  String get housingRealizedExpenseProofSection => 'Preuve (facultatif)';
+  String get housingRealizedExpenseTransferRecipient =>
+      'Participant qui a reçu le montant';
+
+  @override
+  String housingRealizedExpenseTransferRecipientSummary(String name) {
+    return 'Montant donné à $name';
+  }
+
+  @override
+  String get housingRealizedExpenseTransferDescription =>
+      'Description / commentaire (optionel)';
+
+  @override
+  String get housingRealizedExpenseProofSection => 'Preuve (optionel)';
 
   @override
   String get housingRealizedExpenseProofEncourage =>
@@ -782,7 +801,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseValidationBeneficiary =>
-      'Indiquez la part remboursée';
+      'Indiquez le participant qui a reçu le montant';
 
   @override
   String get housingRealizedExpenseNoPlanLines =>
@@ -869,7 +888,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseResubmit => 'Corriger et resoumettre';
 
   @override
-  String get housingMonthlyExpensesTitle => 'Dépenses mensuelles';
+  String get housingMonthlyExpensesTitle => 'Dépenses réalisées';
 
   @override
   String housingMonthlyExpensesMonthLabel(int year, int month) {

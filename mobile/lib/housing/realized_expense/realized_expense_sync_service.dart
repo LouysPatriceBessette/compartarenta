@@ -28,14 +28,16 @@ class RealizedExpenseSyncService {
     required List<RealizedExpenseAttachment> attachments,
   }) async {
     final roster = await participantsForPlan(_db, expense.planId);
-    final lines = await _db.listPlanLines(expense.planId);
     String? lineTitle;
-    for (final line in lines) {
-      if (line.id != expense.planLineId) continue;
-      final t = line.title.trim();
-      if (t.isNotEmpty) {
-        lineTitle = t;
-        break;
+    if (RealizedExpenseKind.usesPlanLine(expense.kind)) {
+      final lines = await _db.listPlanLines(expense.planId);
+      for (final line in lines) {
+        if (line.id != expense.planLineId) continue;
+        final t = line.title.trim();
+        if (t.isNotEmpty) {
+          lineTitle = t;
+          break;
+        }
       }
     }
 
@@ -50,6 +52,8 @@ class RealizedExpenseSyncService {
       'payment_date': expense.paymentDate.toUtc().toIso8601String(),
       'kind': expense.kind,
       'beneficiary_participant_id': expense.beneficiaryParticipantId,
+      if ((expense.description ?? '').trim().isNotEmpty)
+        'description': expense.description!.trim(),
       'participant_snapshots': [
         for (final p in roster)
           {
@@ -112,13 +116,18 @@ class RealizedExpenseSyncService {
       return false;
     }
 
-    final planLineId = await _resolvePlanLineId(
-      target.planId,
-      payload,
-    );
-    if (planLineId == null) {
-      _log('import skip: plan line not found on ${target.planId}');
-      return false;
+    final kind = payload['kind'] as String? ?? RealizedExpenseKind.normal;
+    String planLineId = '';
+    if (RealizedExpenseKind.usesPlanLine(kind)) {
+      final resolvedPlanLineId = await _resolvePlanLineId(
+        target.planId,
+        payload,
+      );
+      if (resolvedPlanLineId == null) {
+        _log('import skip: plan line not found on ${target.planId}');
+        return false;
+      }
+      planLineId = resolvedPlanLineId;
     }
 
     final sourceToLocal = await _mapSourceParticipantIds(
@@ -151,8 +160,9 @@ class RealizedExpenseSyncService {
             currency: payload['currency'] as String? ?? '',
             paymentDate: paymentDate,
             payerParticipantId: payerId,
-            kind: payload['kind'] as String? ?? RealizedExpenseKind.normal,
+            kind: kind,
             beneficiaryParticipantId: drift.Value(beneficiaryLocal),
+            description: drift.Value((payload['description'] as String?)?.trim()),
             createdAt: now,
             updatedAt: now,
           ),

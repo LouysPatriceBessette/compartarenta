@@ -67,6 +67,7 @@ class _HousingRealizedExpenseFormScreenState
     extends State<HousingRealizedExpenseFormScreen> {
   final _repo = RealizedExpenseRepository(AppDatabase.processScope);
   final _amountController = TextEditingController();
+  final _descriptionController = TextEditingController();
   Future<_FormContext?>? _loadFuture;
 
   String? _planLineId;
@@ -87,6 +88,7 @@ class _HousingRealizedExpenseFormScreenState
   @override
   void dispose() {
     _amountController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -104,8 +106,9 @@ class _HousingRealizedExpenseFormScreenState
       final expense = await _repo.getById(_draftExpenseId!);
       if (expense != null && expense.status == RealizedExpenseStatus.draft) {
         _planLineId = expense.planLineId;
-        _kind = expense.kind;
+        _kind = RealizedExpenseKind.normalizeForForm(expense.kind);
         _beneficiaryId = expense.beneficiaryParticipantId;
+        _descriptionController.text = (expense.description ?? '').trim();
         _paymentDate = expense.paymentDate;
         _amountController.text = minorToAmountText(expense.amountMinor);
         final atts = await _repo.attachmentsFor(expense.id);
@@ -142,21 +145,28 @@ class _HousingRealizedExpenseFormScreenState
   }
 
   Future<void> _pickPaymentDate(_FormContext ctx) async {
-    final initial = _paymentDate ?? DateTime.now();
+    final firstAllowed = DateTime(
+      ctx.periodStart.year,
+      ctx.periodStart.month,
+      ctx.periodStart.day,
+    );
+    final periodEnd = DateTime(
+      ctx.periodEnd.year,
+      ctx.periodEnd.month,
+      ctx.periodEnd.day,
+    );
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final lastAllowed = periodEnd.isBefore(todayDate) ? periodEnd : todayDate;
+    final initial = (_paymentDate ?? todayDate).isAfter(lastAllowed)
+        ? lastAllowed
+        : _paymentDate ?? todayDate;
     final picked = await showAppDatePicker(
       context: context,
       prefs: ctx.prefs,
       initialDate: initial,
-      firstDate: DateTime(
-        ctx.periodStart.year,
-        ctx.periodStart.month,
-        ctx.periodStart.day,
-      ),
-      lastDate: DateTime(
-        ctx.periodEnd.year,
-        ctx.periodEnd.month,
-        ctx.periodEnd.day,
-      ),
+      firstDate: firstAllowed,
+      lastDate: lastAllowed,
     );
     if (picked != null) {
       setState(() => _paymentDate = picked);
@@ -183,7 +193,8 @@ class _HousingRealizedExpenseFormScreenState
   }
 
   String? _validate(AppLocalizations l10n, _FormContext ctx) {
-    if (_planLineId == null || _planLineId!.isEmpty) {
+    if (RealizedExpenseKind.usesPlanLine(_kind) &&
+        (_planLineId == null || _planLineId!.isEmpty)) {
       return l10n.housingRealizedExpenseValidationLine;
     }
     final minor = parseAmountMinorFromText(_amountController.text);
@@ -193,11 +204,11 @@ class _HousingRealizedExpenseFormScreenState
     if (_paymentDate == null) {
       return l10n.housingRealizedExpenseValidationDate;
     }
-    if (_kind == RealizedExpenseKind.reimbursement &&
+    if (_kind == RealizedExpenseKind.transfer &&
         (_beneficiaryId == null || _beneficiaryId!.isEmpty)) {
       return l10n.housingRealizedExpenseValidationBeneficiary;
     }
-    if (ctx.planLines.isEmpty) {
+    if (RealizedExpenseKind.usesPlanLine(_kind) && ctx.planLines.isEmpty) {
       return l10n.housingRealizedExpenseNoPlanLines;
     }
     return null;
@@ -215,14 +226,19 @@ class _HousingRealizedExpenseFormScreenState
     final saved = await _repo.saveDraft(
       packageId: widget.packageId,
       planId: widget.planId,
-      planLineId: _planLineId!,
+      planLineId: RealizedExpenseKind.usesPlanLine(_kind) ? _planLineId! : '',
       amountMinor: minor,
       currency: ctx.currency,
       paymentDate: _paymentDate!,
       payerParticipantId: selfId,
       kind: _kind,
       beneficiaryParticipantId:
-          _kind == RealizedExpenseKind.reimbursement ? _beneficiaryId : null,
+          _kind == RealizedExpenseKind.transfer ? _beneficiaryId : null,
+      description:
+          _kind == RealizedExpenseKind.transfer ||
+                  _kind == RealizedExpenseKind.normal
+              ? _descriptionController.text
+              : null,
       existingExpenseId: _draftExpenseId,
       attachments: _attachmentDrafts(),
     );
@@ -238,6 +254,9 @@ class _HousingRealizedExpenseFormScreenState
     _FormContext ctx,
     int newAmountMinor,
   ) async {
+    if (!RealizedExpenseKind.usesPlanLine(_kind)) {
+      return true;
+    }
     PlanLine? line;
     for (final l in ctx.planLines) {
       if (l.id == _planLineId) {
@@ -301,14 +320,19 @@ class _HousingRealizedExpenseFormScreenState
       final saved = await _repo.saveDraft(
         packageId: widget.packageId,
         planId: widget.planId,
-        planLineId: _planLineId!,
+        planLineId: RealizedExpenseKind.usesPlanLine(_kind) ? _planLineId! : '',
         amountMinor: minor,
         currency: ctx.currency,
         paymentDate: _paymentDate!,
         payerParticipantId: selfId,
         kind: _kind,
         beneficiaryParticipantId:
-            _kind == RealizedExpenseKind.reimbursement ? _beneficiaryId : null,
+            _kind == RealizedExpenseKind.transfer ? _beneficiaryId : null,
+        description:
+            _kind == RealizedExpenseKind.transfer ||
+                    _kind == RealizedExpenseKind.normal
+                ? _descriptionController.text
+                : null,
         existingExpenseId: _draftExpenseId,
         attachments: _attachmentDrafts(),
       );
@@ -346,61 +370,28 @@ class _HousingRealizedExpenseFormScreenState
           if (ctx == null) {
             return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
           }
-          if (ctx.planLines.isEmpty) {
-            return Center(child: Text(l10n.housingRealizedExpenseNoPlanLines));
-          }
 
           final dateFmt = effectiveDateFormat(ctx.prefs);
           final paymentLabel = _paymentDate == null
               ? l10n.housingRealizedExpensePaymentDatePick
               : formatPreferenceDate(_paymentDate!, dateFmt);
+          final dateFieldLabel = _kind == RealizedExpenseKind.transfer
+              ? l10n.housingRealizedExpenseTransferDate
+              : l10n.housingRealizedExpensePaymentDate;
 
           final selfId = selfParticipantIdForPlan(widget.planId);
           final otherParticipants = ctx.participants
               .where((p) => p.id != selfId)
               .toList(growable: false);
+          final showPlanLineField = RealizedExpenseKind.usesPlanLine(_kind);
+          final showTransferFields = _kind == RealizedExpenseKind.transfer;
+          final showDescriptionField =
+              _kind == RealizedExpenseKind.transfer ||
+              _kind == RealizedExpenseKind.normal;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
-              DropdownButtonFormField<String>(
-                initialValue: _planLineId,
-                decoration: InputDecoration(
-                  labelText: l10n.housingRealizedExpensePlanLine,
-                ),
-                isExpanded: true,
-                items: [
-                  for (final line in ctx.planLines)
-                    DropdownMenuItem(
-                      value: line.id,
-                      child: Text(
-                        line.title.trim().isEmpty ? line.id : line.title.trim(),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
-                onChanged: (v) => setState(() => _planLineId = v),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                  labelText: l10n.housingRealizedExpenseAmount,
-                  suffixText: ctx.currency,
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.housingRealizedExpensePaymentDate),
-                subtitle: Text(paymentLabel),
-                trailing: const Icon(Icons.calendar_today_outlined),
-                onTap: () => _pickPaymentDate(ctx),
-              ),
-              const SizedBox(height: 16),
               Text(
                 l10n.housingRealizedExpenseKind,
                 style: Theme.of(context).textTheme.titleSmall,
@@ -413,12 +404,8 @@ class _HousingRealizedExpenseFormScreenState
                     label: Text(l10n.housingRealizedExpenseKindNormal),
                   ),
                   ButtonSegment(
-                    value: RealizedExpenseKind.reimbursement,
-                    label: Text(l10n.housingRealizedExpenseKindReimbursement),
-                  ),
-                  ButtonSegment(
-                    value: RealizedExpenseKind.advance,
-                    label: Text(l10n.housingRealizedExpenseKindAdvance),
+                    value: RealizedExpenseKind.transfer,
+                    label: Text(l10n.housingRealizedExpenseKindTransfer),
                   ),
                 ],
                 selected: {_kind},
@@ -427,18 +414,54 @@ class _HousingRealizedExpenseFormScreenState
                   if (selected.isEmpty) return;
                   setState(() {
                     _kind = selected.first;
-                    if (_kind != RealizedExpenseKind.reimbursement) {
+                    if (RealizedExpenseKind.usesPlanLine(_kind)) {
+                      _planLineId ??=
+                          ctx.planLines.isEmpty ? null : ctx.planLines.first.id;
+                    } else {
+                      _planLineId = null;
+                    }
+                    if (_kind != RealizedExpenseKind.transfer) {
                       _beneficiaryId = null;
                     }
                   });
                 },
               ),
-              if (_kind == RealizedExpenseKind.reimbursement) ...[
+              const SizedBox(height: 16),
+              if (showPlanLineField) ...[
+                if (ctx.planLines.isEmpty)
+                  Text(
+                    l10n.housingRealizedExpenseNoPlanLines,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    initialValue: _planLineId,
+                    decoration: InputDecoration(
+                      labelText: l10n.housingRealizedExpensePlanLine,
+                    ),
+                    isExpanded: true,
+                    items: [
+                      for (final line in ctx.planLines)
+                        DropdownMenuItem(
+                          value: line.id,
+                          child: Text(
+                            line.title.trim().isEmpty ? line.id : line.title.trim(),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (v) => setState(() => _planLineId = v),
+                  ),
+                const SizedBox(height: 16),
+              ],
+              if (showTransferFields) ...[
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: _beneficiaryId,
                   decoration: InputDecoration(
-                    labelText: l10n.housingRealizedExpenseBeneficiary,
+                    labelText: l10n.housingRealizedExpenseTransferRecipient,
                   ),
                   isExpanded: true,
                   items: [
@@ -453,6 +476,51 @@ class _HousingRealizedExpenseFormScreenState
                   onChanged: (v) => setState(() => _beneficiaryId = v),
                 ),
               ],
+              if (showDescriptionField) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: l10n.housingRealizedExpenseTransferDescription,
+                    alignLabelWithHint: true,
+                  ),
+                  minLines: 3,
+                  maxLines: 5,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _amountController,
+                      decoration: InputDecoration(
+                        labelText: l10n.housingRealizedExpenseAmount,
+                        suffixText: ctx.currency,
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () => _pickPaymentDate(ctx),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: dateFieldLabel,
+                          suffixIcon: const Icon(Icons.calendar_today_outlined),
+                        ),
+                        child: Text(paymentLabel),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
               Text(
                 l10n.housingRealizedExpenseProofSection,
@@ -471,8 +539,8 @@ class _HousingRealizedExpenseFormScreenState
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: Text(l10n.housingRealizedExpenseAddProof),
               ),
+              const SizedBox(height: 64),
               for (final att in _attachments) ...[
-                const SizedBox(height: 8),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.attach_file),

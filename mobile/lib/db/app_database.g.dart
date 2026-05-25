@@ -8008,6 +8008,17 @@ class $RealizedExpensesTable extends RealizedExpenses
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _priorExpenseIdMeta = const VerificationMeta(
     'priorExpenseId',
   );
@@ -8054,6 +8065,7 @@ class $RealizedExpensesTable extends RealizedExpenses
     payerParticipantId,
     kind,
     beneficiaryParticipantId,
+    description,
     priorExpenseId,
     createdAt,
     updatedAt,
@@ -8168,6 +8180,15 @@ class $RealizedExpensesTable extends RealizedExpenses
         ),
       );
     }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
     if (data.containsKey('prior_expense_id')) {
       context.handle(
         _priorExpenseIdMeta,
@@ -8246,6 +8267,10 @@ class $RealizedExpensesTable extends RealizedExpenses
         DriftSqlType.string,
         data['${effectivePrefix}beneficiary_participant_id'],
       ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
       priorExpenseId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}prior_expense_id'],
@@ -8280,9 +8305,10 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
   final DateTime paymentDate;
   final String payerParticipantId;
 
-  /// `normal` | `reimbursement` | `advance`
+  /// `normal` | `reimbursement` | `advance` | `transfer`
   final String kind;
   final String? beneficiaryParticipantId;
+  final String? description;
 
   /// Prior proposal when this row is a resubmit (pass 3+).
   final String? priorExpenseId;
@@ -8300,6 +8326,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     required this.payerParticipantId,
     required this.kind,
     this.beneficiaryParticipantId,
+    this.description,
     this.priorExpenseId,
     required this.createdAt,
     required this.updatedAt,
@@ -8321,6 +8348,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       map['beneficiary_participant_id'] = Variable<String>(
         beneficiaryParticipantId,
       );
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
     }
     if (!nullToAbsent || priorExpenseId != null) {
       map['prior_expense_id'] = Variable<String>(priorExpenseId);
@@ -8345,6 +8375,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       beneficiaryParticipantId: beneficiaryParticipantId == null && nullToAbsent
           ? const Value.absent()
           : Value(beneficiaryParticipantId),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
       priorExpenseId: priorExpenseId == null && nullToAbsent
           ? const Value.absent()
           : Value(priorExpenseId),
@@ -8374,6 +8407,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       beneficiaryParticipantId: serializer.fromJson<String?>(
         json['beneficiaryParticipantId'],
       ),
+      description: serializer.fromJson<String?>(json['description']),
       priorExpenseId: serializer.fromJson<String?>(json['priorExpenseId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -8396,6 +8430,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       'beneficiaryParticipantId': serializer.toJson<String?>(
         beneficiaryParticipantId,
       ),
+      'description': serializer.toJson<String?>(description),
       'priorExpenseId': serializer.toJson<String?>(priorExpenseId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -8414,6 +8449,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     String? payerParticipantId,
     String? kind,
     Value<String?> beneficiaryParticipantId = const Value.absent(),
+    Value<String?> description = const Value.absent(),
     Value<String?> priorExpenseId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -8431,6 +8467,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     beneficiaryParticipantId: beneficiaryParticipantId.present
         ? beneficiaryParticipantId.value
         : this.beneficiaryParticipantId,
+    description: description.present ? description.value : this.description,
     priorExpenseId: priorExpenseId.present
         ? priorExpenseId.value
         : this.priorExpenseId,
@@ -8460,6 +8497,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       beneficiaryParticipantId: data.beneficiaryParticipantId.present
           ? data.beneficiaryParticipantId.value
           : this.beneficiaryParticipantId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       priorExpenseId: data.priorExpenseId.present
           ? data.priorExpenseId.value
           : this.priorExpenseId,
@@ -8482,6 +8522,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           ..write('payerParticipantId: $payerParticipantId, ')
           ..write('kind: $kind, ')
           ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
+          ..write('description: $description, ')
           ..write('priorExpenseId: $priorExpenseId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -8502,6 +8543,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     payerParticipantId,
     kind,
     beneficiaryParticipantId,
+    description,
     priorExpenseId,
     createdAt,
     updatedAt,
@@ -8521,6 +8563,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           other.payerParticipantId == this.payerParticipantId &&
           other.kind == this.kind &&
           other.beneficiaryParticipantId == this.beneficiaryParticipantId &&
+          other.description == this.description &&
           other.priorExpenseId == this.priorExpenseId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -8538,6 +8581,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
   final Value<String> payerParticipantId;
   final Value<String> kind;
   final Value<String?> beneficiaryParticipantId;
+  final Value<String?> description;
   final Value<String?> priorExpenseId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -8554,6 +8598,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     this.payerParticipantId = const Value.absent(),
     this.kind = const Value.absent(),
     this.beneficiaryParticipantId = const Value.absent(),
+    this.description = const Value.absent(),
     this.priorExpenseId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -8571,6 +8616,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     required String payerParticipantId,
     required String kind,
     this.beneficiaryParticipantId = const Value.absent(),
+    this.description = const Value.absent(),
     this.priorExpenseId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -8599,6 +8645,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Expression<String>? payerParticipantId,
     Expression<String>? kind,
     Expression<String>? beneficiaryParticipantId,
+    Expression<String>? description,
     Expression<String>? priorExpenseId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -8618,6 +8665,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
       if (kind != null) 'kind': kind,
       if (beneficiaryParticipantId != null)
         'beneficiary_participant_id': beneficiaryParticipantId,
+      if (description != null) 'description': description,
       if (priorExpenseId != null) 'prior_expense_id': priorExpenseId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -8637,6 +8685,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Value<String>? payerParticipantId,
     Value<String>? kind,
     Value<String?>? beneficiaryParticipantId,
+    Value<String?>? description,
     Value<String?>? priorExpenseId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -8655,6 +8704,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
       kind: kind ?? this.kind,
       beneficiaryParticipantId:
           beneficiaryParticipantId ?? this.beneficiaryParticipantId,
+      description: description ?? this.description,
       priorExpenseId: priorExpenseId ?? this.priorExpenseId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -8700,6 +8750,9 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
         beneficiaryParticipantId.value,
       );
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
     if (priorExpenseId.present) {
       map['prior_expense_id'] = Variable<String>(priorExpenseId.value);
     }
@@ -8729,6 +8782,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
           ..write('payerParticipantId: $payerParticipantId, ')
           ..write('kind: $kind, ')
           ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
+          ..write('description: $description, ')
           ..write('priorExpenseId: $priorExpenseId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -13556,6 +13610,7 @@ typedef $$RealizedExpensesTableCreateCompanionBuilder =
       required String payerParticipantId,
       required String kind,
       Value<String?> beneficiaryParticipantId,
+      Value<String?> description,
       Value<String?> priorExpenseId,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -13574,6 +13629,7 @@ typedef $$RealizedExpensesTableUpdateCompanionBuilder =
       Value<String> payerParticipantId,
       Value<String> kind,
       Value<String?> beneficiaryParticipantId,
+      Value<String?> description,
       Value<String?> priorExpenseId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -13641,6 +13697,11 @@ class $$RealizedExpensesTableFilterComposer
 
   ColumnFilters<String> get beneficiaryParticipantId => $composableBuilder(
     column: $table.beneficiaryParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13724,6 +13785,11 @@ class $$RealizedExpensesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get priorExpenseId => $composableBuilder(
     column: $table.priorExpenseId,
     builder: (column) => ColumnOrderings(column),
@@ -13792,6 +13858,11 @@ class $$RealizedExpensesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get priorExpenseId => $composableBuilder(
     column: $table.priorExpenseId,
     builder: (column) => column,
@@ -13852,6 +13923,7 @@ class $$RealizedExpensesTableTableManager
                 Value<String> payerParticipantId = const Value.absent(),
                 Value<String> kind = const Value.absent(),
                 Value<String?> beneficiaryParticipantId = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<String?> priorExpenseId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -13868,6 +13940,7 @@ class $$RealizedExpensesTableTableManager
                 payerParticipantId: payerParticipantId,
                 kind: kind,
                 beneficiaryParticipantId: beneficiaryParticipantId,
+                description: description,
                 priorExpenseId: priorExpenseId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -13886,6 +13959,7 @@ class $$RealizedExpensesTableTableManager
                 required String payerParticipantId,
                 required String kind,
                 Value<String?> beneficiaryParticipantId = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<String?> priorExpenseId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -13902,6 +13976,7 @@ class $$RealizedExpensesTableTableManager
                 payerParticipantId: payerParticipantId,
                 kind: kind,
                 beneficiaryParticipantId: beneficiaryParticipantId,
+                description: description,
                 priorExpenseId: priorExpenseId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

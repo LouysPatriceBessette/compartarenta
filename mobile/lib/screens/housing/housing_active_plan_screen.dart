@@ -166,11 +166,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
     final dateFmt = effectiveDateFormat(prefs);
     final range =
         '${formatPreferenceDate(agreement.periodStart, dateFmt)}'
-        ' – '
+        ' - '
         '${formatPreferenceDate(agreement.periodEnd, dateFmt)}';
-    final title = plan.title.trim().isEmpty ? plan.id : plan.title.trim();
     return _HubHeader(
-      title: title,
       periodRange: range,
       currency: plan.currency.trim().isEmpty ? prefs.currency : plan.currency,
     );
@@ -262,7 +260,22 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
         if (!didPop) Navigator.of(context).pop();
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(l10n.housingActiveHubTitle)),
+        appBar: AppBar(
+          title: FutureBuilder<_HubHeader?>(
+            future: _headerFuture,
+            builder: (context, snap) {
+              final header = snap.data;
+              final title = header == null
+                  ? l10n.housingActiveHubTitle
+                  : '${l10n.housingActiveHubTitle}: ${header.periodRange}';
+              return Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              );
+            },
+          ),
+        ),
         body: FutureBuilder<_HubHeader?>(
           future: _headerFuture,
           builder: (context, snap) {
@@ -281,22 +294,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
                     return ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    if (header != null) ...[
-                      Text(
-                        header.title,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.housingActiveHubPeriod(header.periodRange),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
                     if (hasPendingAmendment)
                       Card(
                         color: Theme.of(context).colorScheme.tertiaryContainer,
@@ -414,12 +411,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
 
 class _HubHeader {
   const _HubHeader({
-    required this.title,
     required this.periodRange,
     required this.currency,
   });
 
-  final String title;
   final String periodRange;
   final String currency;
 }

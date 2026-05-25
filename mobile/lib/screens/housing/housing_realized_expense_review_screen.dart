@@ -17,6 +17,7 @@ class _ReviewContext {
     required this.expense,
     required this.lineTitle,
     required this.payerName,
+    required this.beneficiaryName,
     required this.visibility,
     required this.prefs,
     required this.rejections,
@@ -25,6 +26,7 @@ class _ReviewContext {
   final RealizedExpense expense;
   final String lineTitle;
   final String payerName;
+  final String? beneficiaryName;
   final RealizedExpenseReviewVisibility visibility;
   final AppPreferences prefs;
   final List<RealizedExpenseAcceptance> rejections;
@@ -67,13 +69,16 @@ class _HousingRealizedExpenseReviewScreenState
     final expense = await _repo.getById(widget.expenseId);
     if (expense == null) return null;
 
-    final lines = await db.listPlanLines(widget.planId);
-    var lineTitle = expense.planLineId;
-    for (final line in lines) {
-      if (line.id == expense.planLineId) {
-        final t = line.title.trim();
-        if (t.isNotEmpty) lineTitle = t;
-        break;
+    var lineTitle = '';
+    if (RealizedExpenseKind.usesPlanLine(expense.kind)) {
+      final lines = await db.listPlanLines(widget.planId);
+      lineTitle = expense.planLineId;
+      for (final line in lines) {
+        if (line.id == expense.planLineId) {
+          final t = line.title.trim();
+          if (t.isNotEmpty) lineTitle = t;
+          break;
+        }
       }
     }
 
@@ -82,6 +87,9 @@ class _HousingRealizedExpenseReviewScreenState
       expense.payerParticipantId,
       roster,
     );
+    final beneficiaryName = expense.beneficiaryParticipantId == null
+        ? null
+        : displayNameForParticipant(expense.beneficiaryParticipantId!, roster);
     final prefs = widget.prefs ?? await AppPreferences.load();
     final ledger = RealizedExpenseLedgerService(db);
     final visibility = await ledger.visibilityFor(
@@ -97,6 +105,7 @@ class _HousingRealizedExpenseReviewScreenState
       expense: expense,
       lineTitle: lineTitle,
       payerName: payerName,
+      beneficiaryName: beneficiaryName,
       visibility: visibility,
       prefs: prefs,
       rejections: rejections,
@@ -197,6 +206,7 @@ class _HousingRealizedExpenseReviewScreenState
 
   String _kindLabel(AppLocalizations l10n, String kind) {
     return switch (kind) {
+      RealizedExpenseKind.transfer => l10n.housingRealizedExpenseKindTransfer,
       RealizedExpenseKind.reimbursement =>
         l10n.housingRealizedExpenseKindReimbursement,
       RealizedExpenseKind.advance => l10n.housingRealizedExpenseKindAdvance,
@@ -240,8 +250,10 @@ class _HousingRealizedExpenseReviewScreenState
                 ),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 8),
-              Text(ctx.lineTitle),
+              if (ctx.lineTitle.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(ctx.lineTitle),
+              ],
               const SizedBox(height: 4),
               Text(
                 formatPreferenceDate(expense.paymentDate, dateFmt),
@@ -250,6 +262,18 @@ class _HousingRealizedExpenseReviewScreenState
               Text(l10n.housingRealizedExpenseReviewPayer(ctx.payerName)),
               const SizedBox(height: 4),
               Text(_kindLabel(l10n, expense.kind)),
+              if (ctx.beneficiaryName != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  l10n.housingRealizedExpenseTransferRecipientSummary(
+                    ctx.beneficiaryName!,
+                  ),
+                ),
+              ],
+              if ((expense.description ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(expense.description!.trim()),
+              ],
               const SizedBox(height: 16),
               if (ctx.rejections.isNotEmpty) ...[
                 Text(

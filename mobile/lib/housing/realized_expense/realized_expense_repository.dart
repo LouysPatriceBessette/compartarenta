@@ -58,6 +58,7 @@ class RealizedExpenseRepository {
     required String payerParticipantId,
     required String kind,
     String? beneficiaryParticipantId,
+    String? description,
     String? existingExpenseId,
     List<RealizedExpenseAttachmentDraft>? attachments,
   }) async {
@@ -82,6 +83,7 @@ class RealizedExpenseRepository {
             payerParticipantId: payerParticipantId,
             kind: kind,
             beneficiaryParticipantId: drift.Value(beneficiaryParticipantId),
+            description: drift.Value(description?.trim()),
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
           ),
@@ -306,6 +308,7 @@ class RealizedExpenseRepository {
             payerParticipantId: row.payerParticipantId,
             kind: row.kind,
             beneficiaryParticipantId: drift.Value(row.beneficiaryParticipantId),
+            description: drift.Value(row.description),
             priorExpenseId: drift.Value(rejectedExpenseId),
             createdAt: now,
             updatedAt: now,

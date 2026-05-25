@@ -663,7 +663,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingActiveHubEnterExpense => 'Enter an expense';
 
   @override
-  String get housingActiveHubMonthlyExpenses => 'Current month expenses';
+  String get housingActiveHubMonthlyExpenses => 'Recorded expenses';
 
   @override
   String get housingActiveHubBalances => 'Balances owed';
@@ -691,10 +691,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpensePlanLine => 'Plan line';
 
   @override
-  String get housingRealizedExpenseAmount => 'Amount paid';
+  String get housingRealizedExpenseAmount => 'Amount';
 
   @override
   String get housingRealizedExpensePaymentDate => 'Payment date';
+
+  @override
+  String get housingRealizedExpenseTransferDate => 'Transfer date';
 
   @override
   String get housingRealizedExpensePaymentDatePick => 'Select a date';
@@ -706,7 +709,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseKind => 'Expense type';
 
   @override
-  String get housingRealizedExpenseKindNormal => 'Normal';
+  String get housingRealizedExpenseKindNormal => 'Payment';
 
   @override
   String get housingRealizedExpenseKindReimbursement => 'Reimbursement';
@@ -715,7 +718,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseKindAdvance => 'Advance';
 
   @override
+  String get housingRealizedExpenseKindTransfer => 'Transfer';
+
+  @override
   String get housingRealizedExpenseBeneficiary => 'Whose share is reimbursed';
+
+  @override
+  String get housingRealizedExpenseTransferRecipient =>
+      'Participant who received the amount';
+
+  @override
+  String housingRealizedExpenseTransferRecipientSummary(String name) {
+    return 'Amount given to $name';
+  }
+
+  @override
+  String get housingRealizedExpenseTransferDescription =>
+      'Description / comment (optional)';
 
   @override
   String get housingRealizedExpenseProofSection => 'Proof (optional)';
@@ -768,7 +787,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseValidationBeneficiary =>
-      'Select whose share is reimbursed';
+      'Select the participant who received the amount';
 
   @override
   String get housingRealizedExpenseNoPlanLines =>
@@ -854,7 +873,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseResubmit => 'Correct and resubmit';
 
   @override
-  String get housingMonthlyExpensesTitle => 'Monthly expenses';
+  String get housingMonthlyExpensesTitle => 'Recorded expenses';
 
   @override
   String housingMonthlyExpensesMonthLabel(int year, int month) {

@@ -407,9 +407,10 @@ class RealizedExpenses extends Table {
   DateTimeColumn get paymentDate => dateTime()();
   TextColumn get payerParticipantId => text()();
 
-  /// `normal` | `reimbursement` | `advance`
+  /// `normal` | `reimbursement` | `advance` | `transfer`
   TextColumn get kind => text()();
   TextColumn get beneficiaryParticipantId => text().nullable()();
+  TextColumn get description => text().nullable()();
 
   /// Prior proposal when this row is a resubmit (pass 3+).
   TextColumn get priorExpenseId => text().nullable()();
@@ -562,7 +563,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -736,6 +737,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(realizedExpenses);
         await m.createTable(realizedExpenseAttachments);
         await m.createTable(realizedExpenseAcceptances);
+      }
+      if (from < 18) {
+        await _migrateAddColumn(m, realizedExpenses, realizedExpenses.description);
       }
     },
     beforeOpen: (details) async {

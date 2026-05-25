@@ -238,7 +238,7 @@
     }
   },
   "housingActiveHubEnterExpense": "Enter an expense",
-  "housingActiveHubMonthlyExpenses": "Current month expenses",
+  "housingActiveHubMonthlyExpenses": "Recorded expenses",
   "housingActiveHubBalances": "Balances owed",
   "housingActiveHubViewPlan": "View current plan",
   "housingActiveHubRequestAmendment": "Request plan modification",
@@ -247,15 +247,25 @@
   "housingActiveHubPassPlaceholderBody": "This screen will be available in the next implementation pass.",
   "housingRealizedExpenseTitle": "Enter an expense",
   "housingRealizedExpensePlanLine": "Plan line",
-  "housingRealizedExpenseAmount": "Amount paid",
+  "housingRealizedExpenseAmount": "Amount",
   "housingRealizedExpensePaymentDate": "Payment date",
+  "housingRealizedExpenseTransferDate": "Transfer date",
   "housingRealizedExpensePaymentDatePick": "Select a date",
   "housingRealizedExpensePayer": "Who paid",
   "housingRealizedExpenseKind": "Expense type",
-  "housingRealizedExpenseKindNormal": "Normal",
+  "housingRealizedExpenseKindNormal": "Payment",
   "housingRealizedExpenseKindReimbursement": "Reimbursement",
   "housingRealizedExpenseKindAdvance": "Advance",
+  "housingRealizedExpenseKindTransfer": "Transfer",
   "housingRealizedExpenseBeneficiary": "Whose share is reimbursed",
+  "housingRealizedExpenseTransferRecipient": "Participant who received the amount",
+  "housingRealizedExpenseTransferRecipientSummary": "Amount given to {name}",
+  "@housingRealizedExpenseTransferRecipientSummary": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseTransferDescription": "Description / comment (optional)",
   "housingRealizedExpenseProofSection": "Proof (optional)",
   "housingRealizedExpenseProofEncourage": "Adding a receipt or invoice helps your group validate this expense.",
   "housingRealizedExpenseAddProof": "Add proof",
@@ -276,7 +286,7 @@
   "housingRealizedExpenseValidationAmount": "Enter a valid amount",
   "housingRealizedExpenseValidationPayer": "Select who paid",
   "housingRealizedExpenseValidationDate": "Select a payment date",
-  "housingRealizedExpenseValidationBeneficiary": "Select whose share is reimbursed",
+  "housingRealizedExpenseValidationBeneficiary": "Select the participant who received the amount",
   "housingRealizedExpenseNoPlanLines": "This agreement has no expense lines yet. Add lines through a plan amendment.",
   "housingRealizedExpenseLoadFailed": "Could not load agreement data",
   "housingRealizedExpenseCropTitle": "Crop proof",
@@ -310,7 +320,7 @@
   "housingRealizedExpenseAccepted": "Expense accepted",
   "housingRealizedExpenseRejected": "Expense rejected",
   "housingRealizedExpenseResubmit": "Correct and resubmit",
-  "housingMonthlyExpensesTitle": "Monthly expenses",
+  "housingMonthlyExpensesTitle": "Recorded expenses",
   "housingMonthlyExpensesMonthLabel": "{year}-{month}",
   "@housingMonthlyExpensesMonthLabel": {
     "placeholders": {

@@ -37,6 +37,14 @@ List<PairwiseBalanceEntry> computePairwiseBalances({
   for (final expense in publishedExpenses) {
     if (expense.status != RealizedExpenseStatus.published) continue;
 
+    if (expense.kind == RealizedExpenseKind.transfer) {
+      final beneficiary = expense.beneficiaryParticipantId;
+      if (beneficiary != null) {
+        addOwed(beneficiary, expense.payerParticipantId, expense.amountMinor);
+      }
+      continue;
+    }
+
     final lineRatios = planRatios
         .where((r) => r.lineId == expense.planLineId)
         .toList(growable: false);

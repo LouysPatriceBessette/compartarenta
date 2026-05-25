@@ -1291,7 +1291,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingActiveHubMonthlyExpenses.
   ///
   /// In en, this message translates to:
-  /// **'Current month expenses'**
+  /// **'Recorded expenses'**
   String get housingActiveHubMonthlyExpenses;
 
   /// No description provided for @housingActiveHubBalances.
@@ -1345,7 +1345,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingRealizedExpenseAmount.
   ///
   /// In en, this message translates to:
-  /// **'Amount paid'**
+  /// **'Amount'**
   String get housingRealizedExpenseAmount;
 
   /// No description provided for @housingRealizedExpensePaymentDate.
@@ -1353,6 +1353,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment date'**
   String get housingRealizedExpensePaymentDate;
+
+  /// No description provided for @housingRealizedExpenseTransferDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer date'**
+  String get housingRealizedExpenseTransferDate;
 
   /// No description provided for @housingRealizedExpensePaymentDatePick.
   ///
@@ -1375,7 +1381,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingRealizedExpenseKindNormal.
   ///
   /// In en, this message translates to:
-  /// **'Normal'**
+  /// **'Payment'**
   String get housingRealizedExpenseKindNormal;
 
   /// No description provided for @housingRealizedExpenseKindReimbursement.
@@ -1390,11 +1396,35 @@ abstract class AppLocalizations {
   /// **'Advance'**
   String get housingRealizedExpenseKindAdvance;
 
+  /// No description provided for @housingRealizedExpenseKindTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get housingRealizedExpenseKindTransfer;
+
   /// No description provided for @housingRealizedExpenseBeneficiary.
   ///
   /// In en, this message translates to:
   /// **'Whose share is reimbursed'**
   String get housingRealizedExpenseBeneficiary;
+
+  /// No description provided for @housingRealizedExpenseTransferRecipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant who received the amount'**
+  String get housingRealizedExpenseTransferRecipient;
+
+  /// No description provided for @housingRealizedExpenseTransferRecipientSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount given to {name}'**
+  String housingRealizedExpenseTransferRecipientSummary(String name);
+
+  /// No description provided for @housingRealizedExpenseTransferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description / comment (optional)'**
+  String get housingRealizedExpenseTransferDescription;
 
   /// No description provided for @housingRealizedExpenseProofSection.
   ///
@@ -1489,7 +1519,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingRealizedExpenseValidationBeneficiary.
   ///
   /// In en, this message translates to:
-  /// **'Select whose share is reimbursed'**
+  /// **'Select the participant who received the amount'**
   String get housingRealizedExpenseValidationBeneficiary;
 
   /// No description provided for @housingRealizedExpenseNoPlanLines.
@@ -1633,7 +1663,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingMonthlyExpensesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Monthly expenses'**
+  /// **'Recorded expenses'**
   String get housingMonthlyExpensesTitle;
 
   /// No description provided for @housingMonthlyExpensesMonthLabel.
