@@ -20,6 +20,8 @@ Creating or importing a peer’s realized expense on a device SHALL follow `data
 
 A realized expense SHALL affect **published balances** on a device only after **every** roster participant has **accepted** that expense proposal on their device (or equivalent recorded acceptance synced per participant). Partial acceptance MUST NOT publish the expense to group totals.
 
+The system SHALL expose enough non-payload metadata for realized-expense decisions to allow server-side determination of unanimous acceptance for an expense within the accepted active roster of that housing plan.
+
 #### Scenario: One holdout blocks balance impact
 
 - **WHEN** all but one participant have accepted expense E
@@ -29,6 +31,10 @@ A realized expense SHALL affect **published balances** on a device only after **
 
 - **WHEN** every participant has accepted E
 - **THEN** E is treated as agreed ledger data for monthly summaries and balance views
+
+#### Scenario: Entitlement service derives unanimous acceptance
+- **WHEN** the entitlement service has observed `accept` decisions from every installation identity in the accepted active roster for expense E
+- **THEN** E is considered unanimously accepted for server-governed gating logic without reading business-domain ciphertext
 
 ---
 
@@ -126,10 +132,12 @@ When the linked `PlanLine` has `amountIsBudgetCap = true` and the realized amoun
 
 The first successful **propose** or **import** of a realized expense that participates in licensing metering SHALL mark the housing plan as **actively in use** per `free-until-active-plan-use` (trial start). Plan-only sync without realized expenses MUST NOT trigger this transition.
 
+The canonical trial start is recorded by the entitlement service, not inferred only from local UI state.
+
 #### Scenario: First propose starts trial clock
 
 - **WHEN** the group’s first realized expense sync occurs on this device
-- **THEN** the plan trial timeline starts per licensing spec
+- **THEN** the entitlement service starts the plan trial timeline per licensing spec
 
 ---
 
@@ -137,7 +145,9 @@ The first successful **propose** or **import** of a realized expense that partic
 
 The change SHALL document encrypted steady-state message kinds for at least: `housing_realized_expense_propose`, `housing_realized_expense_accept`, `housing_realized_expense_reject`, and `housing_realized_expense_amend` (if corrections are sent as amendments). Payloads include `packageId`, expense proposal id, plan line id, amounts, payer, dates, kind, attachment metadata hashes, and rejection text. Relay source changes are out of scope unless admission rules require new routing identities.
 
+The transport documentation SHALL also define the minimal relay-visible metadata required for server-side entitlement gating and unanimous-publication checks, including at minimum `module`, `plan_id`, `expense_id`, `participant_installation_id`, and `decision_kind` where applicable.
+
 #### Scenario: Protocol doc lists fields
 
 - **WHEN** an implementer reads `docs/` housing ledger protocol appendix
-- **THEN** they find field lists and idempotency expectations for each kind
+- **THEN** they find field lists, relay-visible metadata, and idempotency expectations for each kind

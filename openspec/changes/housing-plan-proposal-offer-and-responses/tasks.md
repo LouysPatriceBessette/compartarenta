@@ -34,6 +34,7 @@
   - **Housing thread UI** (workbench / offer detail) may **read** the same store for status/timeline, but the Settings page is the canonical **audit trail** deliverable for this task.
 - [x] 1.9 Invalidated offer: “**Fork / edit and submit**” entry for **any** participant from retained snapshot (new `revisionId`, same `packageId` lineage per `plan-contract-proposal-payload`).
 - [x] 1.10 Wire protocol: define encrypted JSON message kinds (offer, response, invalidation notice) and document alongside `docs/contacts-module-relay-payload.md` (follow relay change-minimization: prefer client-only protocol docs unless relay must change).
+- [ ] 1.10b Document minimal relay-visible metadata for proposal / amendment responses (`plan_id`, `revision_id`, `participant_installation_id`, `decision_kind`) so the entitlement layer can reconstruct accepted plan rosters without reading payloads.
 - [x] 1.11 **Workbench model**: persist and list local draft(s), sent threads, received threads; compute `entries.length` for navigation rules.
 - [x] 1.12 **Home Housing**: open workbench **selector** when `entries.length > 1`; preserve direct-to-summary for single lone draft (spec).
 - [x] 1.13 **Fork lineage** fields on revision rows + `fork created` activity-log events (1.8); UI shows provenance (“forked from …”).

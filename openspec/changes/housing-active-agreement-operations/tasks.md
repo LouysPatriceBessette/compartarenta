@@ -29,6 +29,7 @@
 - [x] 3.6 Budget-cap confirmation when realized amount exceeds plan line cap (D.2 from unified-expense-entry).
 - [x] 3.7 Notifications: peer submitted expense; optional payment-responsible reminders (D.3).
 - [x] 3.8 Licensing: first realized expense sync marks plan active use.
+- [ ] 3.9 Expose minimal relay-visible metadata for realized-expense decisions so server-side unanimity can be reconstructed without reading payloads.
 
 ### Pass 3 — deferred QA / polish (see `qa-pass-3-follow-up.md`)
 
@@ -46,6 +47,7 @@
 - [x] 4.2 Amendment entry: one change type per proposal; wire to existing renegotiation / offer flow.
 - [x] 4.3 Enforce: roster changes require end + new agreement with fork.
 - [x] 4.4 Agreement end + fork plan for renewal.
+- [ ] 4.5 Prevent in-force agreement start-date changes once the first realized expense reaches unanimous published state.
 
 ### Pass 4 — QA (May 2026 dev)
 
@@ -58,7 +60,8 @@
 
 - [ ] 5.1 Export JSON: housing module, single agreement, revision chain, checksum.
 - [ ] 5.2 Import: validate checksum + format version; reject tampered payloads.
-- [ ] 5.3 Hub export/import screen + security copy (plaintext file).
+- [ ] 5.3 Require valid housing entitlement for housing import while keeping housing export always available.
+- [ ] 5.4 Hub export/import screen + security copy (plaintext file).
 
 ## Pass 6 — Negotiation integration
 

@@ -38,3 +38,19 @@ For each proposal revision, the client SHALL retain sufficient metadata (ids, ti
 #### Scenario: Group status screen shows acceptance matrix
 - **WHEN** a proposal revision is pending
 - **THEN** each participant can see acceptance status for all participants without exposing draft edits that were never proposed
+
+### Requirement: Minimal acceptance metadata may be visible for server-side roster reconstruction
+The transport MAY expose a minimal non-payload metadata surface for proposal and amendment responses so an entitlement service can reconstruct the accepted active roster for a plan without reading the business payload.
+
+At minimum this metadata MAY include:
+
+- `plan_id`
+- `revision_id`
+- `participant_installation_id`
+- `decision_kind`
+
+This metadata MUST remain narrower than the business payload and MUST NOT expose plan line text, clause text, proof data, or other business-domain fields.
+
+#### Scenario: Server reconstructs accepted roster without payload access
+- **WHEN** the entitlement service observes response metadata for all participants on a proposal revision
+- **THEN** it can determine whether that revision became the active accepted roster for the plan without parsing business payload ciphertext

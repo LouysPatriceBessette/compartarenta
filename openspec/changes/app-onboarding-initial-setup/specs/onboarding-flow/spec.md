@@ -11,7 +11,7 @@ The onboarding sequence SHALL communicate, in plain language, that the app helps
 At the start of onboarding, the app MUST show a concise welcome message that:
 - thanks the user for trying the app,
 - explains that setup consists of configuring one or more “plans” (e.g., shared housing and/or car sharing),
-- explains the 6-week real-mode trial period,
+- explains the 2-week real-mode trial period,
 - reassures the user that the app does not collect their data,
 - and makes it clear the user can uninstall if they are not satisfied with the conditions.
 

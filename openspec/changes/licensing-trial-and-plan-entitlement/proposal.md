@@ -1,13 +1,14 @@
 ## Why
 
-The product is free and unlimited until a shared expense plan is **actively in use**. Once a plan is in active use, a 6-week trial begins, followed by individual paid licenses per participant. The rules around trial start, payment responsibility, delinquency, and dispute handling must be specified so implementation, UX, and public “privacy-first” claims stay aligned.
+The product is free and unlimited until a shared expense plan is **actively in use**. Once a plan is in active use, a 2-week trial begins, followed by individual paid licenses per participant. The rules around trial start, payment responsibility, relay-enforced entitlement gating, delinquency, and dispute handling must be specified so implementation, UX, and public “privacy-first” claims stay aligned.
 
 ## What Changes
 
 - Define when the app is free/unlimited vs when a plan enters “active use”.
-- Define the 6-week trial behavior and notification schedule.
+- Define the 2-week trial behavior and notification schedule.
 - Define license model: individual licenses, plan-level requirement that **all participants** are licensed, and plan-aligned monthly renewal date.
-- Define delinquency behavior: grace period notifications, read-only mode, and data export availability in read-only mode.
+- Define delinquency behavior: grace period notifications, read-only mode, and housing data export availability in read-only mode.
+- Define module-scoped import guard behavior for housing data and trial-consumption rules that persist across future housing plans.
 - Define “forced participant removal due to non-payment” behavior, including a plan diff artifact suitable for reference in disputes, and the product’s explicit limits (not legal advice).
 
 ## Capabilities
@@ -28,7 +29,7 @@ The product is free and unlimited until a shared expense plan is **actively in u
 ## Impact
 
 - Introduces plan-level entitlement logic distinct from subscription receipt validation.
-- Requires local state machine for plan lifecycle and trial timeline.
+- Requires a canonical entitlement state for plan lifecycle, trial timeline, and relay-facing authorization.
 - Requires messaging/notification UX and (optionally) OS-level notification permissions and scheduling.
-- Requires well-defined export behavior when features are gated.
+- Requires well-defined housing export/import behavior when features are gated.
 

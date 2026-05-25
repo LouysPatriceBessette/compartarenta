@@ -60,7 +60,7 @@ Rules for canonical mode:
 
 #### Scenario: Canonical import on replacement phone
 
-- **WHEN** a user imports a canonical snapshot exported by a colocataire
+- **WHEN** a user with valid housing entitlement imports a canonical snapshot exported by a colocataire
 - **THEN** the device reconstructs published ledger and plan revision chain if checksum and ids validate
 
 ---
@@ -83,6 +83,20 @@ The UI SHALL state that **manual editing** of export files is unsupported and li
 
 ---
 
+### Requirement: Housing import requires valid housing entitlement
+
+Import of housing agreement data SHALL require a valid housing entitlement. This restriction applies only to the housing module; other modules define their own import/export guards independently.
+
+Export remains available at all times, including read-only mode.
+
+#### Scenario: Housing import refused without housing entitlement
+
+- **WHEN** a user without valid housing entitlement attempts to import a housing agreement bundle
+- **THEN** import is refused with clear guidance
+- **THEN** no partial database write occurs
+
+---
+
 ### Requirement: Proof paths on import are best-effort
 
 Imported proof paths MAY not exist on the importing device. The UI SHALL display file names per `housing-realized-expense-entry` missing-file rules. Import MUST NOT fail solely because image files are absent.
@@ -100,7 +114,7 @@ The hub action **Export / import data** SHALL open a screen with export (pick ag
 
 #### Scenario: Import restores hub access
 
-- **WHEN** import completes for package P
+- **WHEN** import completes for package P under valid housing entitlement
 - **THEN** the user can open P’s active agreement hub
 
 ---

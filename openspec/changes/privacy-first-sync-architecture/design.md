@@ -32,7 +32,32 @@ The mobile app performs substantial computation using data that must remain on t
 
 1. **E2EE model**: Prefer asymmetric encryption for key agreement plus symmetric encryption for bulk payloads, or a pre-established sharing channel with rotated keys per space/group.
 2. **Relay unit**: Encrypted **ledger sync message** (proposal, accept/reject, amended proposal) with TTL, max size, idempotency key, stable **message** and **proposal** identifiers, and explicit “delivered to device then delete ciphertext” semantics—distinct from “accepted into ledger.”
-3. **Server truth for entitlement**: Store only what stores (Play/App Store) and your backend need to map a user or anonymous account to an active subscription window.
+3. **Server truth for entitlement**: Store only what stores (Play/App Store) and your backend need to map a user or anonymous account to an active subscription window, plus the minimal trial / accepted-roster metadata needed for relay-gated housing operations.
+
+## Relay-visible metadata for gated operations
+
+The relay and entitlement layer may observe a minimal metadata surface for gated operations while leaving the business payload fully end-to-end encrypted.
+
+For housing, the visible metadata may include:
+
+- `module = housing`
+- `message_kind`
+- `plan_id`
+- `revision_id` for plan/amendment response events
+- `expense_id` for realized expense decision events
+- `participant_installation_id`
+- `decision_kind`
+- sender / recipient opaque routing identities
+- authorization scope or signed entitlement assertion id
+
+This metadata exists so the entitlement service can reconstruct:
+
+- the accepted active roster for a housing plan,
+- whether any participating installation identity previously consumed housing trial,
+- whether a realized expense has reached unanimous acceptance,
+- whether the relay should allow or refuse a gated request.
+
+The relay still does not read plan lines, proofs, amounts, rejection text, or other business-domain payload fields.
 
 ## Risks and mitigations
 

@@ -39,6 +39,16 @@ The relay SHALL validate the framing of incoming envelopes (size limits, require
 - **THEN** the relay returns a documented validation error
 - **THEN** the envelope is not stored
 
+### Requirement: The relay can enforce entitlement decisions for configured gated operations
+For configured gated operations, the relay SHALL be able to enforce entitlement decisions using documented minimal metadata and either short-lived signed entitlement assertions, online entitlement checks, or a documented hybrid.
+
+This enforcement SHALL NOT require the relay to parse business-domain ciphertext or to contact Apple or Google directly.
+
+#### Scenario: Trial-expired housing request is refused
+- **WHEN** a gated housing request arrives for a plan that the entitlement service reports as trial-expired or not entitled
+- **THEN** the relay rejects the request with a documented refusal code
+- **THEN** the refusal can be surfaced to the sender without exposing business payload contents
+
 ### Requirement: The relay applies a documented size limit per envelope
 The relay SHALL enforce a documented maximum size for envelope ciphertext and for total request size. Oversized payloads SHALL be rejected without storing them.
 

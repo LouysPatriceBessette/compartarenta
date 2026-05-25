@@ -15,6 +15,8 @@ The repository SHALL include an English documentation page describing the app’
 ### Requirement: Disclose platform-managed payments and “In-App Purchases” labeling
 The product documentation and in-app licensing screen MUST disclose that payments (licenses/subscriptions) are processed by the platform stores (Apple App Store / Google Play) and that the store listing may label this as “In‑App Purchases”. This disclosure MUST be written in reassuring language to reduce user anxiety about payments and data handling.
 
+Store-supported promotional acquisition paths (such as offer-code or promo-code redemption) SHALL be described as alternative store-managed ways to obtain a valid entitlement, not as a separate product-side license class.
+
 #### Scenario: Licensing screen reassures users about payments and data
 - **WHEN** a user opens the licensing/trial screen
 - **THEN** the screen explains that payment processing is handled by Apple/Google

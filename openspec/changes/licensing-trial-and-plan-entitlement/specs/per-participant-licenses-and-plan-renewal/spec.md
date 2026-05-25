@@ -29,9 +29,15 @@ The system MUST persist enough store metadata to:
 - correlate renewals to the original purchase,
 - and explain the current license state to the user (e.g., expiration date).
 
+A participant license SHALL be considered valid whenever the platform store reports an active entitlement for the applicable product, including standard purchase, offer-code redemption, promo-code redemption, or other store-supported promotional acquisition.
+
 #### Scenario: App stores platform renewal metadata after purchase
 - **WHEN** a participant purchases or renews a license via the platform store
 - **THEN** the app records the relevant store metadata needed to determine license validity and renewal dates
+
+#### Scenario: Promotional store entitlement counts as a valid license
+- **WHEN** a participant redeems a store-supported offer code, promo code, or similar promotional entitlement for the housing license product
+- **THEN** the resulting active store entitlement is treated as a valid housing license without a separate app-side special case
 
 ### Requirement: Apple subscription metadata captured for licensing
 For Apple-managed purchases, the system MUST capture identifiers and timestamps sufficient to track renewals and expiry, including at minimum:
@@ -60,4 +66,20 @@ For Google Play managed purchases, the system MUST capture identifiers and times
 - **WHEN** Google Play renews a participant’s subscription
 - **THEN** the system obtains updated expiry/renewal state (via on-device signal or server verification)
 - **THEN** the participant license status is updated accordingly
+
+### Requirement: The entitlement service computes plan-level authorization for gated operations
+The entitlement service SHALL be able to answer whether a participant installation identity may perform relay-mediated operations for a given accepted plan and module scope.
+
+Relay-facing authorization MAY be enforced using short-lived signed entitlement assertions, online entitlement checks, or a hybrid of both.
+
+#### Scenario: Relay checks whether housing sync is allowed
+- **WHEN** the relay receives a gated housing request for accepted plan P from participant installation identity I
+- **THEN** it can obtain a documented allow/deny decision derived from the entitlement service without contacting Apple or Google directly
+
+### Requirement: Module-specific entitlements remain compartmentalized
+Licensing and entitlement decisions SHALL remain scoped to the relevant module. A valid housing entitlement does not automatically imply entitlement for future unrelated modules, and vice versa.
+
+#### Scenario: Housing entitlement does not imply other module access
+- **WHEN** a participant has a valid housing entitlement
+- **THEN** the system does not automatically grant access to import or gated synchronization in another module unless that module's entitlement policy also allows it
 

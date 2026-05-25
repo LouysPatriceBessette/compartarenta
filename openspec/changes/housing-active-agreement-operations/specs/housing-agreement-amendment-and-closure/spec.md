@@ -27,6 +27,8 @@ Allowed modification **types** (each is one proposal):
 | `agreement_end` | Change agreement end date (including **extension**) |
 | `rule_change` | Add, remove, or edit one agreement rule clause |
 
+Changing the **agreement start date** is not part of the normal in-force amendment picker once the agreement has produced published realized-expense history.
+
 #### Scenario: User changes one line amount
 
 - **WHEN** the user requests modification type `line_amount` for line L
@@ -36,6 +38,11 @@ Allowed modification **types** (each is one proposal):
 
 - **WHEN** the user extends the lease end date
 - **THEN** the proposal type is `agreement_end`, not a new `packageId`
+
+#### Scenario: Agreement start date becomes immutable after first published expense
+
+- **WHEN** at least one realized expense has reached unanimous published state for the active agreement
+- **THEN** the user cannot modify the agreement start date through in-force amendment flow
 
 ---
 
