@@ -347,7 +347,7 @@ Loaded from `/srv/compartarenta-relay/env/.env` at deploy time.
 | `BUILD_DIGEST`           | Built into the binary; surfaced via `/healthz`           | CI build                       |
 | `PUBLIC_LISTEN_ADDR`     | bind address for the relay protocol + health             | manifest (default `0.0.0.0:8080`) |
 | `PRIVATE_LISTEN_ADDR`    | bind address for `/metrics`                              | manifest (default `127.0.0.1:9090`) |
-| `ENVELOPE_MAX_BYTES`     | ciphertext cap per envelope                              | manifest                       |
+| `ENVELOPE_MAX_BYTES`     | ciphertext cap per envelope                              | manifest (recommended `262144` / 256 KiB) |
 | `ENVELOPE_TTL_MIN/MAX`   | per-envelope TTL clamp range                             | manifest                       |
 | `IDEMPOTENCY_TTL`        | idempotency entry lifetime                               | manifest                       |
 | `DISCONNECT_GRACE`       | grace window on disconnecting routing rows               | manifest                       |
@@ -360,6 +360,12 @@ Loaded from `/srv/compartarenta-relay/env/.env` at deploy time.
 The relay's `config.Load` refuses to start without `DATABASE_URL`. It
 also enforces ceiling bounds on `ENVELOPE_TTL_MAX` (~30 days) and
 `IDEMPOTENCY_TTL` (~7 days). Wider values trip an explicit error.
+
+The reference deployment manifest sets `ENVELOPE_MAX_BYTES=262144`
+(256 KiB). This is an operator-side configuration choice, not a Go-code
+default change: the binary still defaults to 64 KiB when the env var is
+omitted, but the documented deployment raises the cap so a single
+compressed proof image can fit in a ciphertext envelope.
 
 ## Deploying the first time
 

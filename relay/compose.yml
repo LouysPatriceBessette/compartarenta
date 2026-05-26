@@ -80,7 +80,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
       PUBLIC_LISTEN_ADDR: "0.0.0.0:8080"
       PRIVATE_LISTEN_ADDR: "0.0.0.0:9090"
-      ENVELOPE_MAX_BYTES: "65536"
+      # 256 KiB keeps single proof-bearing envelopes practical while staying
+      # well below the 1 MiB hard ceiling enforced by the binary.
+      ENVELOPE_MAX_BYTES: "262144"
       ENVELOPE_TTL_MIN: "24h"
       ENVELOPE_TTL_MAX: "168h"
       IDEMPOTENCY_TTL: "24h"
