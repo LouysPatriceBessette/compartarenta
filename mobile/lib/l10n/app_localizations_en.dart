@@ -847,6 +847,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseReviewPlanLineLabel => 'Plan line';
 
   @override
+  String get housingRealizedExpenseReviewDescriptionLabel =>
+      'Description / comment';
+
+  @override
   String housingRealizedExpenseTransferToYouBy(String name) {
     return 'Transferred to you by: $name';
   }
@@ -858,6 +862,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseReviewDescriptionNone => 'None';
+
+  @override
+  String get housingRealizedExpenseReviewAcceptedWord => 'Accepted';
+
+  @override
+  String get housingRealizedExpenseReviewRejectedWord => 'Rejected';
+
+  @override
+  String housingRealizedExpenseReviewByName(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String housingRealizedExpenseReviewAcceptedByOn(String name, String when) {
+    return 'Accepted by $name on $when';
+  }
+
+  @override
+  String housingRealizedExpenseReviewRejectedByOn(String name, String when) {
+    return 'Rejected by $name on $when';
+  }
 
   @override
   String get housingRealizedExpenseTransferReviewHint =>
@@ -906,6 +931,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get housingMonthlyExpensesEmpty =>
       'No published expenses for this month.';
+
+  @override
+  String get housingRejectedExpensesTitle => 'Rejected expenses';
+
+  @override
+  String get housingRejectedExpensesEmpty =>
+      'No rejected expenses for this month.';
 
   @override
   String get housingBalancesTitle => 'Balances owed';
@@ -1485,6 +1517,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String pushNotificationHousingRealizedExpenseBodyFrom(String name) {
     return '$name submitted an expense to review.';
+  }
+
+  @override
+  String get pushNotificationHousingRealizedExpenseAcceptedTitle =>
+      'Expense accepted';
+
+  @override
+  String get pushNotificationHousingRealizedExpenseAcceptedBody =>
+      'A participant accepted your expense.';
+
+  @override
+  String pushNotificationHousingRealizedExpenseAcceptedBodyFrom(String name) {
+    return '$name accepted your expense.';
   }
 
   @override

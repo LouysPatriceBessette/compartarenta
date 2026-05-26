@@ -263,16 +263,18 @@ class RealizedExpenseSyncService {
       return false;
     }
 
-    final sourceParticipantId = payload['participant_id'] as String? ?? '';
-    final sourceToLocal = await _mapSourceParticipantIds(
-      planId: expense.planId,
-      snapshots: payload['participant_snapshots'],
-    );
-    var localParticipantId = sourceToLocal[sourceParticipantId];
-    localParticipantId ??= await _localParticipantIdForContact(
+    var localParticipantId = await _localParticipantIdForContact(
       planId: expense.planId,
       contactId: senderContactId,
     );
+    if (localParticipantId == null) {
+      final sourceParticipantId = payload['participant_id'] as String? ?? '';
+      final sourceToLocal = await _mapSourceParticipantIds(
+        planId: expense.planId,
+        snapshots: payload['participant_snapshots'],
+      );
+      localParticipantId = sourceToLocal[sourceParticipantId];
+    }
     if (localParticipantId == null) {
       _log('decision skip: participant not mapped for $expenseId');
       return false;

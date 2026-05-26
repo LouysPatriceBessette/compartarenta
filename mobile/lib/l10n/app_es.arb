@@ -302,6 +302,7 @@
   "housingRealizedExpenseReviewTitle": "Revisión de gasto",
   "housingRealizedExpenseReviewTypeLabel": "Tipo",
   "housingRealizedExpenseReviewPlanLineLabel": "Línea del plan",
+  "housingRealizedExpenseReviewDescriptionLabel": "Descripción / comentario",
   "housingRealizedExpenseTransferToYouBy": "Transferido a usted por: {name}",
   "@housingRealizedExpenseTransferToYouBy": {
     "placeholders": {
@@ -315,6 +316,28 @@
     }
   },
   "housingRealizedExpenseReviewDescriptionNone": "Ninguno",
+  "housingRealizedExpenseReviewAcceptedWord": "Aceptado",
+  "housingRealizedExpenseReviewRejectedWord": "Rechazado",
+  "housingRealizedExpenseReviewByName": "por {name}",
+  "@housingRealizedExpenseReviewByName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewAcceptedByOn": "Aceptado por {name} el {when}",
+  "@housingRealizedExpenseReviewAcceptedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewRejectedByOn": "Rechazado por {name} el {when}",
+  "@housingRealizedExpenseReviewRejectedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseTransferReviewHint": "Verifique que realmente recibió la transferencia antes de aceptar. No hay límite de tiempo.",
   "housingRealizedExpenseReviewPayer": "Pagado por {name}",
   "housingRealizedExpenseReviewRejections": "Rechazos",
@@ -329,6 +352,8 @@
   "housingMonthlyExpensesTitle": "Gastos realizados",
   "housingMonthlyExpensesMonthLabel": "{year}-{month}",
   "housingMonthlyExpensesEmpty": "No hay gastos publicados para este mes.",
+  "housingRejectedExpensesTitle": "Gastos rechazados",
+  "housingRejectedExpensesEmpty": "No hay gastos rechazados para este mes.",
   "housingBalancesTitle": "Saldos pendientes",
   "housingBalancesEmpty": "Aún no hay saldos. Los gastos publicados aparecerán aquí.",
   "housingBalancesOwes": "{from} debe {amount} a {to}",
@@ -550,6 +575,12 @@
   "pushNotificationHousingRealizedExpenseTitle": "Gasto por revisar",
   "pushNotificationHousingRealizedExpenseBody": "Un participante envió un gasto para su acuerdo.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} envió un gasto por revisar.",
+  "pushNotificationHousingRealizedExpenseAcceptedTitle": "Gasto aceptado",
+  "pushNotificationHousingRealizedExpenseAcceptedBody": "Un participante aceptó su gasto.",
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFrom": "{name} aceptó su gasto.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Gasto rechazado",
   "pushNotificationHousingRealizedExpenseRejectedBody": "Un participante rechazó su gasto.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} rechazó su gasto.",

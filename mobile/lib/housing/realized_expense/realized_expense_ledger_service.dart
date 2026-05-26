@@ -25,6 +25,18 @@ class RealizedExpenseReviewItem {
   final RealizedExpenseReviewVisibility visibility;
 }
 
+class RealizedExpensePendingSummary {
+  const RealizedExpensePendingSummary({
+    required this.waitingForYouCount,
+    required this.waitingForOthersCount,
+  });
+
+  final int waitingForYouCount;
+  final int waitingForOthersCount;
+
+  int get totalPendingCount => waitingForYouCount + waitingForOthersCount;
+}
+
 /// Ledger queries and balance helpers (pass 3).
 class RealizedExpenseLedgerService {
   RealizedExpenseLedgerService(this._db);
@@ -75,8 +87,9 @@ class RealizedExpenseLedgerService {
       return RealizedExpenseReviewVisibility.waitingForOthers;
     }
 
-    final acceptances = await RealizedExpenseRepository(_db)
-        .acceptancesFor(row.id);
+    final acceptances = await RealizedExpenseRepository(
+      _db,
+    ).acceptancesFor(row.id);
     String? mine;
     for (final a in acceptances) {
       if (a.participantId == selfParticipantId) {
@@ -93,7 +106,9 @@ class RealizedExpenseLedgerService {
     if (acceptances.any((a) => a.decision == RealizedExpenseDecision.pending)) {
       return RealizedExpenseReviewVisibility.waitingForOthers;
     }
-    if (acceptances.every((a) => a.decision == RealizedExpenseDecision.accepted)) {
+    if (acceptances.every(
+      (a) => a.decision == RealizedExpenseDecision.accepted,
+    )) {
       return RealizedExpenseReviewVisibility.published;
     }
     return RealizedExpenseReviewVisibility.waitingForOthers;
@@ -104,17 +119,18 @@ class RealizedExpenseLedgerService {
     required String planId,
   }) async {
     final selfId = selfIdForPlan(planId);
-    final rows = await (_db.select(_db.realizedExpenses)
-          ..where((t) => t.packageId.equals(packageId))
-          ..where(
-            (t) => t.status.isIn([
-              RealizedExpenseStatus.proposed,
-              RealizedExpenseStatus.published,
-              RealizedExpenseStatus.rejected,
-            ]),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.realizedExpenses)
+              ..where((t) => t.packageId.equals(packageId))
+              ..where(
+                (t) => t.status.isIn([
+                  RealizedExpenseStatus.proposed,
+                  RealizedExpenseStatus.published,
+                  RealizedExpenseStatus.rejected,
+                ]),
+              )
+              ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
+            .get();
 
     final out = <RealizedExpenseReviewItem>[];
     for (final expense in rows) {
@@ -123,7 +139,13 @@ class RealizedExpenseLedgerService {
         selfParticipantId: selfId,
       );
       if (!_shouldShowInReviewQueue(expense, selfId)) continue;
-      out.add(RealizedExpenseReviewItem(expense: expense, visibility: visibility));
+      if (visibility != RealizedExpenseReviewVisibility.waitingForYou &&
+          visibility != RealizedExpenseReviewVisibility.waitingForOthers) {
+        continue;
+      }
+      out.add(
+        RealizedExpenseReviewItem(expense: expense, visibility: visibility),
+      );
     }
     return out;
   }
@@ -144,16 +166,49 @@ class RealizedExpenseLedgerService {
     required String selfParticipantId,
   }) => Future.value(expense.payerParticipantId == selfParticipantId);
 
+  Future<bool> shouldNotifyAcceptedDecision({
+    required RealizedExpense expense,
+    required String selfParticipantId,
+  }) => Future.value(
+    expense.payerParticipantId == selfParticipantId &&
+        expense.status == RealizedExpenseStatus.published,
+  );
+
   Future<int> countWaitingForYou({
     required String packageId,
     required String planId,
   }) async {
+    final summary = await pendingSummary(packageId: packageId, planId: planId);
+    return summary.waitingForYouCount;
+  }
+
+  Future<int> countWaitingForOthers({
+    required String packageId,
+    required String planId,
+  }) async {
+    final summary = await pendingSummary(packageId: packageId, planId: planId);
+    return summary.waitingForOthersCount;
+  }
+
+  Future<RealizedExpensePendingSummary> pendingSummary({
+    required String packageId,
+    required String planId,
+  }) async {
     final items = await listReviewItems(packageId: packageId, planId: planId);
-    return items
-        .where(
-          (i) => i.visibility == RealizedExpenseReviewVisibility.waitingForYou,
-        )
-        .length;
+    var waitingForYou = 0;
+    var waitingForOthers = 0;
+    for (final item in items) {
+      if (item.visibility == RealizedExpenseReviewVisibility.waitingForYou) {
+        waitingForYou++;
+      } else if (item.visibility ==
+          RealizedExpenseReviewVisibility.waitingForOthers) {
+        waitingForOthers++;
+      }
+    }
+    return RealizedExpensePendingSummary(
+      waitingForYouCount: waitingForYou,
+      waitingForOthersCount: waitingForOthers,
+    );
   }
 
   Future<List<RealizedExpense>> listPublishedForMonth({
@@ -165,15 +220,45 @@ class RealizedExpenseLedgerService {
     final end = month == 12
         ? DateTime.utc(year + 1, 1, 1)
         : DateTime.utc(year, month + 1, 1);
-    final rows = await (_db.select(_db.realizedExpenses)
-          ..where((t) => t.packageId.equals(packageId))
-          ..where((t) => t.status.equals(RealizedExpenseStatus.published))
-          ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
-        .get();
-    return rows.where((e) {
-      final d = e.paymentDate.toUtc();
-      return !d.isBefore(start) && d.isBefore(end);
-    }).toList(growable: false);
+    final rows =
+        await (_db.select(_db.realizedExpenses)
+              ..where((t) => t.packageId.equals(packageId))
+              ..where((t) => t.status.equals(RealizedExpenseStatus.published))
+              ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
+            .get();
+    return rows
+        .where((e) {
+          final d = e.paymentDate.toUtc();
+          return !d.isBefore(start) && d.isBefore(end);
+        })
+        .toList(growable: false);
+  }
+
+  Future<List<RealizedExpense>> listRejectedForMonth({
+    required String packageId,
+    required String planId,
+    required int year,
+    required int month,
+  }) async {
+    final selfId = selfIdForPlan(planId);
+    final start = DateTime.utc(year, month, 1);
+    final end = month == 12
+        ? DateTime.utc(year + 1, 1, 1)
+        : DateTime.utc(year, month + 1, 1);
+    final rows =
+        await (_db.select(_db.realizedExpenses)
+              ..where((t) => t.packageId.equals(packageId))
+              ..where((t) => t.status.equals(RealizedExpenseStatus.rejected))
+              ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
+            .get();
+    return rows
+        .where((e) {
+          final d = e.paymentDate.toUtc();
+          return !_shouldShowInReviewQueue(e, selfId)
+              ? false
+              : !d.isBefore(start) && d.isBefore(end);
+        })
+        .toList(growable: false);
   }
 
   Future<int> sumPublishedMinorForLineMonth({
@@ -198,10 +283,11 @@ class RealizedExpenseLedgerService {
   ) async {
     final roster = await participantsForPlan(_db, planId);
     final participantIds = roster.map((p) => p.id).toList(growable: false);
-    final published = await (_db.select(_db.realizedExpenses)
-          ..where((t) => t.planId.equals(planId))
-          ..where((t) => t.status.equals(RealizedExpenseStatus.published)))
-        .get();
+    final published =
+        await (_db.select(_db.realizedExpenses)
+              ..where((t) => t.planId.equals(planId))
+              ..where((t) => t.status.equals(RealizedExpenseStatus.published)))
+            .get();
     final ratios = await _db.listPlanRatios(planId);
     return computePairwiseBalances(
       publishedExpenses: published,

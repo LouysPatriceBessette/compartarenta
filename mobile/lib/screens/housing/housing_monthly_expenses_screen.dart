@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import 'housing_rejected_expenses_screen.dart';
+import 'housing_realized_expense_review_screen.dart';
 
 class HousingMonthlyExpensesScreen extends StatefulWidget {
   const HousingMonthlyExpensesScreen({
@@ -28,6 +33,7 @@ class _HousingMonthlyExpensesScreenState
     extends State<HousingMonthlyExpensesScreen> {
   late DateTime _month;
   late Future<_MonthWindow?> _windowFuture;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -35,6 +41,46 @@ class _HousingMonthlyExpensesScreenState
     final now = DateTime.now();
     _month = DateTime(now.year, now.month);
     _windowFuture = _loadWindow();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
+    _startRefreshPolling();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
+
+  void _startRefreshPolling() {
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) return;
+    unawaited(
+      orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing monthly expenses poll: $e\n$st');
+      }),
+    );
+    _refreshTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+      final pollOrch = HandshakeOrchestrator.maybeInstance;
+      if (pollOrch == null) return;
+      unawaited(
+        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing monthly expenses poll: $e\n$st');
+        }),
+      );
+    });
   }
 
   Future<_MonthWindow?> _loadWindow() async {
@@ -60,8 +106,7 @@ class _HousingMonthlyExpensesScreenState
       agreement.periodEnd.month,
       agreement.periodEnd.day,
     );
-    final extendToNextMonth =
-        monthEnd.difference(endDay).inDays.abs() <= 5;
+    final extendToNextMonth = monthEnd.difference(endDay).inDays.abs() <= 5;
     final lastMonth = extendToNextMonth
         ? DateTime(agreement.periodEnd.year, agreement.periodEnd.month + 1)
         : endMonth;
@@ -125,9 +170,11 @@ class _HousingMonthlyExpensesScreenState
                 ),
               ),
               Expanded(
-                child: FutureBuilder<List<RealizedExpense>>(
-                  future: ledger.listPublishedForMonth(
+                child: FutureBuilder<_MonthExpenseLists>(
+                  future: _loadMonthExpenseLists(
+                    ledger: ledger,
                     packageId: widget.packageId,
+                    planId: widget.planId,
                     year: year,
                     month: month,
                   ),
@@ -135,10 +182,13 @@ class _HousingMonthlyExpensesScreenState
                     if (snap.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    final rows = snap.data ?? const [];
-                    if (rows.isEmpty) {
-                      return Center(
-                        child: Text(l10n.housingMonthlyExpensesEmpty),
+                    final lists = snap.data ?? const _MonthExpenseLists();
+                    if (lists.published.isEmpty && lists.rejected.isEmpty) {
+                      return SafeArea(
+                        top: false,
+                        child: Center(
+                          child: Text(l10n.housingMonthlyExpensesEmpty),
+                        ),
                       );
                     }
                     return FutureBuilder<AppPreferences>(
@@ -150,40 +200,47 @@ class _HousingMonthlyExpensesScreenState
                         final dateFmt = prefs == null
                             ? null
                             : effectiveDateFormat(prefs);
-                        return ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: rows.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final expense = rows[index];
-                            final subtitleParts = <String>[];
-                            if (dateFmt != null) {
-                              subtitleParts.add(
-                                formatPreferenceDate(
-                                  expense.paymentDate,
-                                  dateFmt,
-                                ),
-                              );
-                            }
-                            final description = (expense.description ?? '').trim();
-                            if (description.isNotEmpty) {
-                              subtitleParts.add(description);
-                            }
-                            return Card(
+                        final children = <Widget>[
+                          for (final expense in lists.published)
+                            _buildPublishedExpenseCard(
+                              context,
+                              expense: expense,
+                              dateFmt: dateFmt,
+                            ),
+                          if (lists.rejected.isNotEmpty)
+                            Card(
                               child: ListTile(
-                                title: Text(
-                                  formatMinorAsMoney(
-                                    context,
-                                    expense.amountMinor,
-                                    expense.currency,
-                                  ),
-                                ),
-                                subtitle: subtitleParts.isEmpty
-                                    ? null
-                                    : Text(subtitleParts.join(' · ')),
+                                title: Text(l10n.housingRejectedExpensesTitle),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () async {
+                                  await Navigator.of(context).push<void>(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          HousingRejectedExpensesScreen(
+                                            packageId: widget.packageId,
+                                            planId: widget.planId,
+                                            year: year,
+                                            month: month,
+                                            prefs: widget.prefs,
+                                          ),
+                                    ),
+                                  );
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
                               ),
-                            );
-                          },
+                            ),
+                        ];
+                        return SafeArea(
+                          top: false,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                            itemCount: children.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) => children[index],
+                          ),
                         );
                       },
                     );
@@ -196,13 +253,72 @@ class _HousingMonthlyExpensesScreenState
       ),
     );
   }
+
+  Future<_MonthExpenseLists> _loadMonthExpenseLists({
+    required RealizedExpenseLedgerService ledger,
+    required String packageId,
+    required String planId,
+    required int year,
+    required int month,
+  }) async {
+    final published = await ledger.listPublishedForMonth(
+      packageId: packageId,
+      year: year,
+      month: month,
+    );
+    final rejected = await ledger.listRejectedForMonth(
+      packageId: packageId,
+      planId: planId,
+      year: year,
+      month: month,
+    );
+    return _MonthExpenseLists(published: published, rejected: rejected);
+  }
+
+  Widget _buildPublishedExpenseCard(
+    BuildContext context, {
+    required RealizedExpense expense,
+    required String? dateFmt,
+  }) {
+    final subtitleParts = <String>[];
+    if (dateFmt != null) {
+      subtitleParts.add(formatPreferenceDate(expense.paymentDate, dateFmt));
+    }
+    final description = (expense.description ?? '').trim();
+    if (description.isNotEmpty) {
+      subtitleParts.add(description);
+    }
+    return Card(
+      child: ListTile(
+        title: Text(
+          formatMinorAsMoney(context, expense.amountMinor, expense.currency),
+        ),
+        subtitle: subtitleParts.isEmpty
+            ? null
+            : Text(subtitleParts.join(' · ')),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => HousingRealizedExpenseReviewScreen(
+                expenseId: expense.id,
+                planId: widget.planId,
+                packageId: widget.packageId,
+                prefs: widget.prefs,
+              ),
+            ),
+          );
+          if (mounted) {
+            setState(() {});
+          }
+        },
+      ),
+    );
+  }
 }
 
 class _MonthWindow {
-  const _MonthWindow({
-    required this.firstMonth,
-    required this.lastMonth,
-  });
+  const _MonthWindow({required this.firstMonth, required this.lastMonth});
 
   final DateTime firstMonth;
   final DateTime lastMonth;
@@ -213,4 +329,14 @@ class _MonthWindow {
     if (normalized.isAfter(lastMonth)) return lastMonth;
     return normalized;
   }
+}
+
+class _MonthExpenseLists {
+  const _MonthExpenseLists({
+    this.published = const [],
+    this.rejected = const [],
+  });
+
+  final List<RealizedExpense> published;
+  final List<RealizedExpense> rejected;
 }

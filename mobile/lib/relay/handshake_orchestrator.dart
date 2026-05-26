@@ -328,9 +328,9 @@ class HandshakeOrchestrator {
   /// chosen self-name on accept.
   /// Local invitation expiry for [code] when this device created the invite.
   Future<DateTime?> lookupInvitationExpiresAtUtc(InvitationCode code) async {
-    final row = await (_db.select(_db.contactInvitations)
-          ..where((t) => t.id.equals(code.invitationIdHex())))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.contactInvitations,
+    )..where((t) => t.id.equals(code.invitationIdHex()))).getSingleOrNull();
     if (row == null || row.status != InvitationStatus.pending) return null;
     return row.expiresAt;
   }
@@ -748,7 +748,8 @@ class HandshakeOrchestrator {
   /// Contacts with a stored peer long-term public key, deduped by that key.
   /// Includes `connected` rows and demoted / handshake rows so a reinstall on
   /// the peer device does not hide the inbox when an older row is still stored.
-  Future<List<({Contact contact, Uint8List peerPub})>> _steadyInboxPollPeers() async {
+  Future<List<({Contact contact, Uint8List peerPub})>>
+  _steadyInboxPollPeers() async {
     final all = await _contacts.list();
     final seenPeer = <String>{};
     final out = <({Contact contact, Uint8List peerPub})>[];
@@ -927,9 +928,7 @@ class HandshakeOrchestrator {
     Object? lastError;
     for (var attempt = 0; attempt < _relayTransientRetryAttempts; attempt++) {
       if (attempt > 0) {
-        await Future<void>.delayed(
-          _relayTransientRetryBaseDelay * attempt,
-        );
+        await Future<void>.delayed(_relayTransientRetryBaseDelay * attempt);
       }
       try {
         return await operation();
@@ -1195,12 +1194,12 @@ class HandshakeOrchestrator {
 
     final imported = await HousingProposalTransportService(_db)
         .importReceivedProposal(
-      proposalJson: decrypted.proposalJson,
-      targetParticipantId: decrypted.targetParticipantId,
-      senderContactId: senderContact.id,
-      senderDisplayName: senderContact.displayName,
-      senderAvatarId: senderContact.avatarId,
-    );
+          proposalJson: decrypted.proposalJson,
+          targetParticipantId: decrypted.targetParticipantId,
+          senderContactId: senderContact.id,
+          senderDisplayName: senderContact.displayName,
+          senderAvatarId: senderContact.avatarId,
+        );
     debugPrint('housing_proposal imported from ${senderContact.id}');
     await RelayActivityLogService(_db).append(
       kind: RelayActivityLogKinds.housingProposalReceived,
@@ -1298,10 +1297,11 @@ class HandshakeOrchestrator {
       senderContact = matched;
     }
 
-    final imported = await RealizedExpenseSyncService(_db).importProposedFromPeer(
-      expenseJson: decrypted.expenseJson,
-      senderContactId: senderContact.id,
-    );
+    final imported = await RealizedExpenseSyncService(_db)
+        .importProposedFromPeer(
+          expenseJson: decrypted.expenseJson,
+          senderContactId: senderContact.id,
+        );
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
@@ -1385,10 +1385,11 @@ class HandshakeOrchestrator {
       senderContact = matched;
     }
 
-    final applied = await RealizedExpenseSyncService(_db).importDecisionFromPeer(
-      decisionJson: decrypted.decisionJson,
-      senderContactId: senderContact.id,
-    );
+    final applied = await RealizedExpenseSyncService(_db)
+        .importDecisionFromPeer(
+          decisionJson: decrypted.decisionJson,
+          senderContactId: senderContact.id,
+        );
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
@@ -1396,25 +1397,35 @@ class HandshakeOrchestrator {
     if (!applied) return;
 
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    final expenseId = _expenseIdFromDecisionJson(decrypted.decisionJson);
+    if (expenseId == null) return;
+    final expense = await RealizedExpenseRepository(_db).getById(expenseId);
+    if (expense == null) return;
+    final ledger = RealizedExpenseLedgerService(_db);
+    final selfParticipantId = ledger.selfIdForPlan(expense.planId);
     if (kind == EnvelopeKind.housingRealizedExpenseReject) {
-      final expenseId = _expenseIdFromDecisionJson(decrypted.decisionJson);
-      if (expenseId != null) {
-        final expense = await RealizedExpenseRepository(_db).getById(expenseId);
-        if (expense != null) {
-          final shouldNotify = await RealizedExpenseLedgerService(
-            _db,
-          ).shouldNotifyRejectedDecision(
-            expense: expense,
-            selfParticipantId: RealizedExpenseLedgerService(
-              _db,
-            ).selfIdForPlan(expense.planId),
-          );
-          if (shouldNotify) {
-            await PushNotificationService.showLocalHousingRealizedExpenseRejectedNotification(
-              senderDisplayName: senderContact.displayName,
-            );
-          }
-        }
+      final shouldNotify = await ledger.shouldNotifyRejectedDecision(
+        expense: expense,
+        selfParticipantId: selfParticipantId,
+      );
+      if (shouldNotify) {
+        await PushNotificationService.showLocalHousingRealizedExpenseRejectedNotification(
+          senderDisplayName: senderContact.displayName,
+          expenseId: expenseId,
+        );
+      }
+      return;
+    }
+    if (kind == EnvelopeKind.housingRealizedExpenseAccept) {
+      final shouldNotify = await ledger.shouldNotifyAcceptedDecision(
+        expense: expense,
+        selfParticipantId: selfParticipantId,
+      );
+      if (shouldNotify) {
+        await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
+          senderDisplayName: senderContact.displayName,
+          expenseId: expenseId,
+        );
       }
     }
   }
@@ -1965,18 +1976,20 @@ class HandshakeOrchestrator {
     required Contact? selectedContact,
     required List<Contact> connectedContacts,
     required int planParticipantCount,
+    bool allowNonConnectedCandidates = false,
   }) {
     final targets = <Contact>[];
     final seenPeerMaterial = <String>{};
 
-    void add(Contact? contact) {
-      if (contact == null || contact.kind != 'connected') return;
+    void add(Contact? contact, {bool allowNonConnected = false}) {
+      if (contact == null) return;
+      if (!allowNonConnected && contact.kind != 'connected') return;
       final peer = contact.peerPublicMaterial;
       if (peer == null || peer.isEmpty || !seenPeerMaterial.add(peer)) return;
       targets.add(contact);
     }
 
-    add(selectedContact);
+    add(selectedContact, allowNonConnected: true);
 
     final participantName = participant.displayName.trim().toLowerCase();
     final participantAvatar = participant.avatarId.trim();
@@ -1987,7 +2000,7 @@ class HandshakeOrchestrator {
       final avatarMatches =
           participantAvatar.isNotEmpty && contact.avatarId == participantAvatar;
       if (nameMatches || avatarMatches) {
-        add(contact);
+        add(contact, allowNonConnected: allowNonConnectedCandidates);
       }
     }
 
@@ -1997,7 +2010,7 @@ class HandshakeOrchestrator {
       // invitee plan, fan out to the local connected candidates so the current
       // reinstall identity can receive the proposal.
       for (final contact in connectedContacts) {
-        add(contact);
+        add(contact, allowNonConnected: allowNonConnectedCandidates);
       }
     }
 
@@ -2146,9 +2159,7 @@ class HandshakeOrchestrator {
             );
           },
         );
-        debugPrint(
-          'housing_proposal_response posted for ${participant.id}',
-        );
+        debugPrint('housing_proposal_response posted for ${participant.id}');
         sent++;
       } on Object catch (e) {
         debugPrint('housing_proposal_response to ${participant.id} failed: $e');
@@ -2169,10 +2180,9 @@ class HandshakeOrchestrator {
     if (expense == null) return;
 
     final attachments = await repo.attachmentsFor(expenseId);
-    final expenseJson = await RealizedExpenseSyncService(_db).buildProposeJson(
-      expense: expense,
-      attachments: attachments,
-    );
+    final expenseJson = await RealizedExpenseSyncService(
+      _db,
+    ).buildProposeJson(expense: expense, attachments: attachments);
 
     final planId = expense.planId;
     final participants = (await _db.listParticipants())
@@ -2185,8 +2195,13 @@ class HandshakeOrchestrator {
 
     final selfPriv = await _identity.loadOrCreatePrivateKey();
     final selfPub = await _identity.publicKey();
-    final allConnectedContacts = (await _contacts.list())
-        .where((c) => c.kind == 'connected')
+    final decisionCandidateContacts = (await _contacts.list())
+        .where((c) {
+          final peer = c.peerPublicMaterial;
+          return !c.id.startsWith('contact:local:') &&
+              peer != null &&
+              peer.isNotEmpty;
+        })
         .toList(growable: false);
 
     for (final participant in participants) {
@@ -2195,22 +2210,31 @@ class HandshakeOrchestrator {
       final targets = _housingProposalTargetContacts(
         participant: participant,
         selectedContact: contact,
-        connectedContacts: allConnectedContacts,
+        connectedContacts: decisionCandidateContacts,
         planParticipantCount: participants.length,
+        allowNonConnectedCandidates: true,
       );
+      if (targets.isEmpty) {
+        debugPrint(
+          'housing_realized_expense decision no targets for ${participant.id}'
+          ' (contactId=${contactId ?? '-'}, '
+          'candidateContacts=${decisionCandidateContacts.length})',
+        );
+      }
       for (final target in targets) {
         final peerPubB64 = target.peerPublicMaterial;
         if (peerPubB64 == null || peerPubB64.isEmpty) continue;
         try {
           final peerPub = RelayRouting.unb64(peerPubB64);
-          final frame = await EnvelopeCodec.encryptHousingRealizedExpensePropose(
-            envelope: HousingRealizedExpenseEnvelope(
-              senderLongTermPublicKey: selfPub,
-              expenseJson: expenseJson,
-            ),
-            senderLongTermPrivateKey: selfPriv,
-            peerLongTermPublicKey: peerPub,
-          );
+          final frame =
+              await EnvelopeCodec.encryptHousingRealizedExpensePropose(
+                envelope: HousingRealizedExpenseEnvelope(
+                  senderLongTermPublicKey: selfPub,
+                  expenseJson: expenseJson,
+                ),
+                senderLongTermPrivateKey: selfPriv,
+                peerLongTermPublicKey: peerPub,
+              );
           final selfAddr = await RelayRouting.steadyStateAddress(
             firstPub: selfPub,
             secondPub: peerPub,
@@ -2248,6 +2272,10 @@ class HandshakeOrchestrator {
     required String expenseId,
     required String participantId,
   }) async {
+    debugPrint(
+      'housing_realized_expense send accept called for $expenseId '
+      '(participantId=$participantId)',
+    );
     await _sendRealizedExpenseDecision(
       expenseId: expenseId,
       participantId: participantId,
@@ -2261,6 +2289,10 @@ class HandshakeOrchestrator {
     required String participantId,
     required String justification,
   }) async {
+    debugPrint(
+      'housing_realized_expense send reject called for $expenseId '
+      '(participantId=$participantId)',
+    );
     await _sendRealizedExpenseDecision(
       expenseId: expenseId,
       participantId: participantId,
@@ -2277,28 +2309,55 @@ class HandshakeOrchestrator {
     required int kind,
     String? justification,
   }) async {
-    final expense = await RealizedExpenseRepository(_db).getById(expenseId);
-    if (expense == null) return;
-
-    final decisionJson = await RealizedExpenseSyncService(_db).buildDecisionJson(
-      expenseId: expenseId,
-      packageId: expense.packageId,
-      participantId: participantId,
-      decision: decision,
-      justification: justification,
+    debugPrint(
+      'housing_realized_expense decision build start for $expenseId '
+      '(decision=$decision, participantId=$participantId)',
     );
+    final expense = await RealizedExpenseRepository(_db).getById(expenseId);
+    if (expense == null) {
+      debugPrint('housing_realized_expense decision abort: unknown $expenseId');
+      return;
+    }
+
+    final decisionJson = await RealizedExpenseSyncService(_db)
+        .buildDecisionJson(
+          expenseId: expenseId,
+          packageId: expense.packageId,
+          participantId: participantId,
+          decision: decision,
+          justification: justification,
+        );
 
     final planId = expense.planId;
     final participants = (await _db.listParticipants())
         .where((p) => p.id.startsWith('$planId:p'))
         .toList(growable: false);
-    if (participants.isEmpty) return;
+    debugPrint(
+      'housing_realized_expense decision participants for $expenseId: '
+      '${participants.length}',
+    );
+    if (participants.isEmpty) {
+      debugPrint(
+        'housing_realized_expense decision no participants for $expenseId '
+        '(planId=$planId)',
+      );
+      return;
+    }
 
     final selfPriv = await _identity.loadOrCreatePrivateKey();
     final selfPub = await _identity.publicKey();
-    final allConnectedContacts = (await _contacts.list())
-        .where((c) => c.kind == 'connected')
+    final decisionCandidateContacts = (await _contacts.list())
+        .where((c) {
+          final peer = c.peerPublicMaterial;
+          return !c.id.startsWith('contact:local:') &&
+              peer != null &&
+              peer.isNotEmpty;
+        })
         .toList(growable: false);
+    debugPrint(
+      'housing_realized_expense decision candidate contacts for $expenseId: '
+      '${decisionCandidateContacts.length}',
+    );
 
     for (final participant in participants) {
       final contactId = participant.contactId;
@@ -2306,23 +2365,32 @@ class HandshakeOrchestrator {
       final targets = _housingProposalTargetContacts(
         participant: participant,
         selectedContact: contact,
-        connectedContacts: allConnectedContacts,
+        connectedContacts: decisionCandidateContacts,
         planParticipantCount: participants.length,
+        allowNonConnectedCandidates: true,
       );
+      if (targets.isEmpty) {
+        debugPrint(
+          'housing_realized_expense decision no targets for ${participant.id}'
+          ' (contactId=${contactId ?? '-'}, '
+          'candidateContacts=${decisionCandidateContacts.length})',
+        );
+      }
       for (final target in targets) {
         final peerPubB64 = target.peerPublicMaterial;
         if (peerPubB64 == null || peerPubB64.isEmpty) continue;
         try {
           final peerPub = RelayRouting.unb64(peerPubB64);
-          final frame = await EnvelopeCodec.encryptHousingRealizedExpenseDecision(
-            kind: kind,
-            envelope: HousingRealizedExpenseDecisionEnvelope(
-              senderLongTermPublicKey: selfPub,
-              decisionJson: decisionJson,
-            ),
-            senderLongTermPrivateKey: selfPriv,
-            peerLongTermPublicKey: peerPub,
-          );
+          final frame =
+              await EnvelopeCodec.encryptHousingRealizedExpenseDecision(
+                kind: kind,
+                envelope: HousingRealizedExpenseDecisionEnvelope(
+                  senderLongTermPublicKey: selfPub,
+                  decisionJson: decisionJson,
+                ),
+                senderLongTermPrivateKey: selfPriv,
+                peerLongTermPublicKey: peerPub,
+              );
           final selfAddr = await RelayRouting.steadyStateAddress(
             firstPub: selfPub,
             secondPub: peerPub,
@@ -2343,6 +2411,10 @@ class HandshakeOrchestrator {
             kind: kind,
             ttl: _steadyTtl,
           );
+          debugPrint(
+            'housing_realized_expense decision posted for $expenseId '
+            'to ${participant.id}/${target.id}',
+          );
         } on Object catch (e) {
           debugPrint(
             'housing_realized_expense decision to ${participant.id}/'
@@ -2351,6 +2423,7 @@ class HandshakeOrchestrator {
         }
       }
     }
+    debugPrint('housing_realized_expense decision send done for $expenseId');
   }
 
   Future<void> _applyHousingProposalResponse(

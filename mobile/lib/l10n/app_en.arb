@@ -307,6 +307,7 @@
   "housingRealizedExpenseReviewTitle": "Expense review",
   "housingRealizedExpenseReviewTypeLabel": "Type",
   "housingRealizedExpenseReviewPlanLineLabel": "Plan line",
+  "housingRealizedExpenseReviewDescriptionLabel": "Description / comment",
   "housingRealizedExpenseTransferToYouBy": "Transferred to you by: {name}",
   "@housingRealizedExpenseTransferToYouBy": {
     "placeholders": {
@@ -320,6 +321,28 @@
     }
   },
   "housingRealizedExpenseReviewDescriptionNone": "None",
+  "housingRealizedExpenseReviewAcceptedWord": "Accepted",
+  "housingRealizedExpenseReviewRejectedWord": "Rejected",
+  "housingRealizedExpenseReviewByName": "by {name}",
+  "@housingRealizedExpenseReviewByName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewAcceptedByOn": "Accepted by {name} on {when}",
+  "@housingRealizedExpenseReviewAcceptedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewRejectedByOn": "Rejected by {name} on {when}",
+  "@housingRealizedExpenseReviewRejectedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseTransferReviewHint": "Make sure you have received the transfer before accepting. There is no deadline.",
   "housingRealizedExpenseReviewPayer": "Paid by {name}",
   "@housingRealizedExpenseReviewPayer": {
@@ -345,6 +368,8 @@
     }
   },
   "housingMonthlyExpensesEmpty": "No published expenses for this month.",
+  "housingRejectedExpensesTitle": "Rejected expenses",
+  "housingRejectedExpensesEmpty": "No rejected expenses for this month.",
   "housingBalancesTitle": "Balances owed",
   "housingBalancesEmpty": "No balances yet. Published expenses will appear here.",
   "housingBalancesOwes": "{from} owes {to} {amount}",
@@ -612,9 +637,17 @@
   "pushNotificationHousingRealizedExpenseTitle": "Expense to review",
   "pushNotificationHousingRealizedExpenseBody": "A participant submitted an expense for your agreement.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} submitted an expense to review.",
+  "pushNotificationHousingRealizedExpenseAcceptedTitle": "Expense accepted",
+  "pushNotificationHousingRealizedExpenseAcceptedBody": "A participant accepted your expense.",
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFrom": "{name} accepted your expense.",
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Expense rejected",
   "pushNotificationHousingRealizedExpenseRejectedBody": "A participant rejected your expense.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} rejected your expense.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFrom": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingRealizedExpenseRejectedBodyFrom": {
     "placeholders": {
       "name": { "type": "String" }

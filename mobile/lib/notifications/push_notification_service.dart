@@ -393,6 +393,7 @@ class PushNotificationService {
 
   static Future<void> showLocalHousingRealizedExpenseRejectedNotification({
     required String senderDisplayName,
+    String? expenseId,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
@@ -405,10 +406,15 @@ class PushNotificationService {
             senderDisplayName.trim(),
           );
 
+    final tapPayload = expenseId == null || expenseId.isEmpty
+        ? _housingTapPayload
+        : '$_housingRealizedExpenseReviewPrefix$expenseId';
+
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
         title: title,
         body: body,
+        expenseId: expenseId,
       );
       return;
     }
@@ -432,7 +438,58 @@ class PushNotificationService {
         ),
         iOS: DarwinNotificationDetails(presentSound: playSound),
       ),
-      payload: _housingTapPayload,
+      payload: tapPayload,
+    );
+  }
+
+  static Future<void> showLocalHousingRealizedExpenseAcceptedNotification({
+    required String senderDisplayName,
+    String? expenseId,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingRealizedExpenseAcceptedTitle;
+    final body = senderDisplayName.trim().isEmpty
+        ? l10n.pushNotificationHousingRealizedExpenseAcceptedBody
+        : l10n.pushNotificationHousingRealizedExpenseAcceptedBodyFrom(
+            senderDisplayName.trim(),
+          );
+
+    final tapPayload = expenseId == null || expenseId.isEmpty
+        ? _housingTapPayload
+        : '$_housingRealizedExpenseReviewPrefix$expenseId';
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: title,
+        body: body,
+        expenseId: expenseId,
+      );
+      return;
+    }
+
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: tapPayload,
     );
   }
 

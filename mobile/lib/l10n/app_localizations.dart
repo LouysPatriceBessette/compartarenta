@@ -1612,6 +1612,12 @@ abstract class AppLocalizations {
   /// **'Plan line'**
   String get housingRealizedExpenseReviewPlanLineLabel;
 
+  /// No description provided for @housingRealizedExpenseReviewDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description / comment'**
+  String get housingRealizedExpenseReviewDescriptionLabel;
+
   /// No description provided for @housingRealizedExpenseTransferToYouBy.
   ///
   /// In en, this message translates to:
@@ -1629,6 +1635,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get housingRealizedExpenseReviewDescriptionNone;
+
+  /// No description provided for @housingRealizedExpenseReviewAcceptedWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get housingRealizedExpenseReviewAcceptedWord;
+
+  /// No description provided for @housingRealizedExpenseReviewRejectedWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get housingRealizedExpenseReviewRejectedWord;
+
+  /// No description provided for @housingRealizedExpenseReviewByName.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String housingRealizedExpenseReviewByName(String name);
+
+  /// No description provided for @housingRealizedExpenseReviewAcceptedByOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted by {name} on {when}'**
+  String housingRealizedExpenseReviewAcceptedByOn(String name, String when);
+
+  /// No description provided for @housingRealizedExpenseReviewRejectedByOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected by {name} on {when}'**
+  String housingRealizedExpenseReviewRejectedByOn(String name, String when);
 
   /// No description provided for @housingRealizedExpenseTransferReviewHint.
   ///
@@ -1713,6 +1749,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No published expenses for this month.'**
   String get housingMonthlyExpensesEmpty;
+
+  /// No description provided for @housingRejectedExpensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected expenses'**
+  String get housingRejectedExpensesTitle;
+
+  /// No description provided for @housingRejectedExpensesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rejected expenses for this month.'**
+  String get housingRejectedExpensesEmpty;
 
   /// No description provided for @housingBalancesTitle.
   ///
@@ -2685,6 +2733,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} submitted an expense to review.'**
   String pushNotificationHousingRealizedExpenseBodyFrom(String name);
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense accepted'**
+  String get pushNotificationHousingRealizedExpenseAcceptedTitle;
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant accepted your expense.'**
+  String get pushNotificationHousingRealizedExpenseAcceptedBody;
+
+  /// No description provided for @pushNotificationHousingRealizedExpenseAcceptedBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your expense.'**
+  String pushNotificationHousingRealizedExpenseAcceptedBodyFrom(String name);
 
   /// No description provided for @pushNotificationHousingRealizedExpenseRejectedTitle.
   ///

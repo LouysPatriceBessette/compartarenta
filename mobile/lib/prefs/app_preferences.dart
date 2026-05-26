@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'week_start.dart';
@@ -52,6 +55,7 @@ class AppPreferences extends ChangeNotifier {
   /// Default housing draft plan reached the post-wizard summary at least once.
   static const _kHousingDefaultSummaryReached =
       'housing.default.summaryReached';
+
   /// Legacy single-plan backup key (v1); migrated on read for [housing:default].
   static const _kHousingDefaultPlanDraftBackupLegacy =
       'housing.default.planDraftBackupJson';
@@ -64,8 +68,38 @@ class AppPreferences extends ChangeNotifier {
       'licensing.housing.planActiveUseStarted.$planId';
 
   static Future<AppPreferences> load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _loadSharedPreferencesWithRetry();
     return AppPreferences._(prefs);
+  }
+
+  static Future<SharedPreferences> _loadSharedPreferencesWithRetry() async {
+    const delays = <Duration>[
+      Duration.zero,
+      Duration(milliseconds: 120),
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 500),
+      Duration(seconds: 1),
+    ];
+    Object? lastError;
+    StackTrace? lastStack;
+    for (var i = 0; i < delays.length; i++) {
+      if (delays[i] > Duration.zero) {
+        await Future<void>.delayed(delays[i]);
+      }
+      try {
+        return await SharedPreferences.getInstance();
+      } on MissingPluginException catch (e, st) {
+        lastError = e;
+        lastStack = st;
+      }
+    }
+    Error.throwWithStackTrace(
+      lastError ??
+          MissingPluginException(
+            'shared_preferences plugin was unavailable after retries',
+          ),
+      lastStack ?? StackTrace.current,
+    );
   }
 
   bool get onboardingComplete => _prefs.getBool(_kOnboardingComplete) ?? false;
@@ -170,7 +204,8 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
-  WeekStart? get weekStart => weekStartFromStored(_prefs.getString(_kWeekStart));
+  WeekStart? get weekStart =>
+      weekStartFromStored(_prefs.getString(_kWeekStart));
 
   Future<void> setWeekStart(WeekStart value) async {
     await _prefs.setString(_kWeekStart, value.name);
@@ -302,7 +337,10 @@ class AppPreferences extends ChangeNotifier {
   String? housingPlanDraftBackupJson(String planId) =>
       _prefs.getString(_housingPlanDraftBackupKey(planId));
 
-  Future<void> setHousingPlanDraftBackupJson(String planId, String? value) async {
+  Future<void> setHousingPlanDraftBackupJson(
+    String planId,
+    String? value,
+  ) async {
     final key = _housingPlanDraftBackupKey(planId);
     if (value == null || value.isEmpty) {
       await _prefs.remove(key);
@@ -363,10 +401,7 @@ class AppPreferences extends ChangeNotifier {
   Future<void> markHousingPlanActiveUseStarted(String planId) async {
     final key = _housingPlanActiveUseStartedKey(planId);
     if (_prefs.containsKey(key)) return;
-    await _prefs.setString(
-      key,
-      DateTime.now().toUtc().toIso8601String(),
-    );
+    await _prefs.setString(key, DateTime.now().toUtc().toIso8601String());
     notifyListeners();
   }
 

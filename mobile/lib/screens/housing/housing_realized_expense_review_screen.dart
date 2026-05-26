@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/housing_navigation_intent.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/realized_expense/realized_expense_repository.dart';
@@ -23,6 +26,7 @@ class _ReviewContext {
     required this.visibility,
     required this.prefs,
     required this.rejections,
+    required this.finalDecisionStatus,
   });
 
   final RealizedExpense expense;
@@ -33,6 +37,19 @@ class _ReviewContext {
   final RealizedExpenseReviewVisibility visibility;
   final AppPreferences prefs;
   final List<RealizedExpenseAcceptance> rejections;
+  final _FinalDecisionStatus? finalDecisionStatus;
+}
+
+class _FinalDecisionStatus {
+  const _FinalDecisionStatus({
+    required this.accepted,
+    required this.participantName,
+    required this.decidedAt,
+  });
+
+  final bool accepted;
+  final String participantName;
+  final DateTime decidedAt;
 }
 
 class HousingRealizedExpenseReviewScreen extends StatefulWidget {
@@ -59,14 +76,102 @@ class _HousingRealizedExpenseReviewScreenState
   final _repo = RealizedExpenseRepository(AppDatabase.processScope);
   Future<_ReviewContext?>? _loadFuture;
   bool _decisionSending = false;
+  Timer? _refreshTimer;
+  bool _openingPendingReview = false;
 
   @override
   void initState() {
     super.initState();
     _loadFuture = _load();
+    _loadFuture!.then(_scheduleRefreshTimerIfNeeded);
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
+    HousingNavigationIntent.reviewRequestTick.addListener(
+      _onPendingReviewIntent,
+    );
   }
 
-  void _reload() => setState(() => _loadFuture = _load());
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    HousingNavigationIntent.reviewRequestTick.removeListener(
+      _onPendingReviewIntent,
+    );
+    super.dispose();
+  }
+
+  void _reload() {
+    setState(() {
+      _loadFuture = _load();
+    });
+    _loadFuture!.then(_scheduleRefreshTimerIfNeeded);
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _reload();
+    });
+  }
+
+  void _onPendingReviewIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openPendingReviewIfAny();
+    });
+  }
+
+  void _openPendingReviewIfAny() {
+    if (_openingPendingReview) return;
+    final expenseId = HousingNavigationIntent.takePendingReview();
+    if (expenseId == null || !mounted) return;
+    if (expenseId == widget.expenseId) {
+      _reload();
+      return;
+    }
+    _openingPendingReview = true;
+    unawaited(
+      Navigator.of(context)
+          .pushReplacement<void, void>(
+            MaterialPageRoute<void>(
+              builder: (_) => HousingRealizedExpenseReviewScreen(
+                expenseId: expenseId,
+                planId: widget.planId,
+                packageId: widget.packageId,
+                prefs: widget.prefs,
+              ),
+            ),
+          )
+          .catchError((_) {
+            _openingPendingReview = false;
+          }),
+    );
+  }
+
+  void _scheduleRefreshTimerIfNeeded(_ReviewContext? ctx) {
+    if (!mounted) return;
+    _refreshTimer?.cancel();
+    if (ctx == null) return;
+    final isPending =
+        ctx.visibility == RealizedExpenseReviewVisibility.waitingForYou ||
+        ctx.visibility == RealizedExpenseReviewVisibility.waitingForOthers;
+    if (!isPending) return;
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch == null) return;
+      unawaited(
+        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing review poll: $e\n$st');
+        }),
+      );
+    });
+  }
 
   Future<_ReviewContext?> _load() async {
     final db = AppDatabase.processScope;
@@ -104,6 +209,11 @@ class _HousingRealizedExpenseReviewScreenState
     final rejections = acceptances
         .where((a) => a.decision == RealizedExpenseDecision.rejected)
         .toList(growable: false);
+    final finalDecisionStatus = _resolveFinalDecisionStatus(
+      expense: expense,
+      acceptances: acceptances,
+      roster: roster,
+    );
     final attachments = await _repo.attachmentsFor(expense.id);
 
     return _ReviewContext(
@@ -115,6 +225,47 @@ class _HousingRealizedExpenseReviewScreenState
       visibility: visibility,
       prefs: prefs,
       rejections: rejections,
+      finalDecisionStatus: finalDecisionStatus,
+    );
+  }
+
+  _FinalDecisionStatus? _resolveFinalDecisionStatus({
+    required RealizedExpense expense,
+    required List<RealizedExpenseAcceptance> acceptances,
+    required List<Participant> roster,
+  }) {
+    Iterable<RealizedExpenseAcceptance> matches;
+    var accepted = false;
+
+    if (expense.status == RealizedExpenseStatus.published) {
+      accepted = true;
+      matches = acceptances.where(
+        (a) =>
+            a.decision == RealizedExpenseDecision.accepted &&
+            a.decidedAt != null,
+      );
+    } else if (expense.status == RealizedExpenseStatus.rejected) {
+      matches = acceptances.where(
+        (a) =>
+            a.decision == RealizedExpenseDecision.rejected &&
+            a.decidedAt != null,
+      );
+    } else {
+      return null;
+    }
+
+    final candidateRows = matches.toList(growable: false);
+    if (candidateRows.isEmpty) return null;
+    final peerRows = candidateRows
+        .where((a) => a.participantId != expense.payerParticipantId)
+        .toList(growable: false);
+    final source = peerRows.isNotEmpty ? peerRows : candidateRows;
+    source.sort((a, b) => b.decidedAt!.compareTo(a.decidedAt!));
+    final row = source.first;
+    return _FinalDecisionStatus(
+      accepted: accepted,
+      participantName: displayNameForParticipant(row.participantId, roster),
+      decidedAt: row.decidedAt!,
     );
   }
 
@@ -123,16 +274,49 @@ class _HousingRealizedExpenseReviewScreenState
     setState(() => _decisionSending = true);
     final selfId = selfParticipantIdForPlan(widget.planId);
     try {
+      debugPrint(
+        'housing_realized_expense accept tapped for ${widget.expenseId} '
+        '(selfId=$selfId)',
+      );
       await _repo.recordLocalAccept(
         expenseId: widget.expenseId,
         participantId: selfId,
       );
-      if (mounted) _reload();
-      final orch = HandshakeOrchestrator.maybeInstance;
-      await orch?.sendRealizedExpenseAccept(
-        expenseId: widget.expenseId,
-        participantId: selfId,
+      debugPrint(
+        'housing_realized_expense local accept recorded for ${widget.expenseId}',
       );
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch == null) {
+        debugPrint(
+          'housing_realized_expense accept send skipped: orchestrator missing',
+        );
+      } else {
+        try {
+          debugPrint(
+            'housing_realized_expense accept send starting for ${widget.expenseId}',
+          );
+          await orch.sendRealizedExpenseAccept(
+            expenseId: widget.expenseId,
+            participantId: selfId,
+          );
+          debugPrint(
+            'housing_realized_expense accept send completed for ${widget.expenseId}',
+          );
+        } on Object catch (e, st) {
+          debugPrint(
+            'housing_realized_expense accept send failed for '
+            '${widget.expenseId}: $e\n$st',
+          );
+          rethrow;
+        }
+      }
+      if (mounted) {
+        debugPrint(
+          'housing_realized_expense reloading review after send for '
+          '${widget.expenseId}',
+        );
+        _reload();
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -203,9 +387,7 @@ class _HousingRealizedExpenseReviewScreenState
   }
 
   Future<void> _resubmit(_ReviewContext ctx) async {
-    final draft = await _repo.createResubmitDraftFromRejected(
-      widget.expenseId,
-    );
+    final draft = await _repo.createResubmitDraftFromRejected(widget.expenseId);
     if (!mounted) return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -323,21 +505,20 @@ class _HousingRealizedExpenseReviewScreenState
           final expense = ctx.expense;
           final dateFmt = effectiveDateFormat(ctx.prefs);
           final selfId = selfParticipantIdForPlan(widget.planId);
-          final canReview = !_decisionSending &&
-              ctx.visibility ==
-                  RealizedExpenseReviewVisibility.waitingForYou &&
+          final canReview =
+              !_decisionSending &&
+              ctx.visibility == RealizedExpenseReviewVisibility.waitingForYou &&
               expense.payerParticipantId != selfId;
-          final canResubmit = ctx.visibility ==
-                  RealizedExpenseReviewVisibility.rejected &&
+          final canResubmit =
+              ctx.visibility == RealizedExpenseReviewVisibility.rejected &&
               expense.payerParticipantId == selfId;
           final descriptionText = (expense.description ?? '').trim();
+          final finalDecisionStatus = ctx.finalDecisionStatus;
           final transferSummary =
               expense.kind == RealizedExpenseKind.transfer &&
                   ctx.beneficiaryName != null
               ? (selfId == expense.beneficiaryParticipantId
-                    ? l10n.housingRealizedExpenseTransferToYouBy(
-                        ctx.payerName,
-                      )
+                    ? l10n.housingRealizedExpenseTransferToYouBy(ctx.payerName)
                     : l10n.housingRealizedExpenseTransferToParticipant(
                         ctx.beneficiaryName!,
                       ))
@@ -373,7 +554,8 @@ class _HousingRealizedExpenseReviewScreenState
                             const SizedBox(height: 8),
                             _detailLine(
                               context,
-                              label: l10n.housingRealizedExpenseReviewPlanLineLabel,
+                              label: l10n
+                                  .housingRealizedExpenseReviewPlanLineLabel,
                               value: ctx.lineTitle,
                             ),
                           ],
@@ -400,7 +582,7 @@ class _HousingRealizedExpenseReviewScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.housingRealizedExpenseTransferDescription,
+                      l10n.housingRealizedExpenseReviewDescriptionLabel,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -422,18 +604,8 @@ class _HousingRealizedExpenseReviewScreenState
                   ],
                 ),
               ),
-              const SizedBox(height: 48),
-              if (expense.kind == RealizedExpenseKind.transfer) ...[
-                Text(
-                  l10n.housingRealizedExpenseTransferReviewHint,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              const SizedBox(height: 16),
               if (ctx.rejections.isNotEmpty) ...[
+                const SizedBox(height: 48),
                 Text(
                   l10n.housingRealizedExpenseReviewRejections,
                   style: Theme.of(context).textTheme.titleSmall,
@@ -447,6 +619,7 @@ class _HousingRealizedExpenseReviewScreenState
                 const SizedBox(height: 16),
               ],
               if (canReview) ...[
+                const SizedBox(height: 48),
                 FilledButton(
                   onPressed: () => _accept(ctx),
                   child: Text(l10n.housingRealizedExpenseAccept),
@@ -458,10 +631,61 @@ class _HousingRealizedExpenseReviewScreenState
                 ),
               ],
               if (canResubmit) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: ctx.rejections.isNotEmpty ? 8 : 48),
                 FilledButton.tonal(
                   onPressed: () => _resubmit(ctx),
                   child: Text(l10n.housingRealizedExpenseResubmit),
+                ),
+              ],
+              if (finalDecisionStatus != null) ...[
+                const SizedBox(height: 48),
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        finalDecisionStatus.accepted
+                            ? l10n.housingRealizedExpenseReviewAcceptedWord
+                            : l10n.housingRealizedExpenseReviewRejectedWord,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize:
+                              (Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.fontSize ??
+                                  16) *
+                              1.8,
+                          fontWeight: FontWeight.w700,
+                          color: finalDecisionStatus.accepted
+                              ? Colors.green.shade700
+                              : Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.housingRealizedExpenseReviewByName(
+                          finalDecisionStatus.participantName,
+                        ),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: finalDecisionStatus.accepted
+                              ? Colors.green.shade700
+                              : Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      Text(
+                        formatPreferenceDateTime(
+                          finalDecisionStatus.decidedAt,
+                          dateFmt,
+                        ),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: finalDecisionStatus.accepted
+                              ? Colors.green.shade700
+                              : Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ],

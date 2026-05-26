@@ -36,35 +36,61 @@ class HousingActivePlanScreen extends StatefulWidget {
   final AppPreferences? prefs;
 
   @override
-  State<HousingActivePlanScreen> createState() => _HousingActivePlanScreenState();
+  State<HousingActivePlanScreen> createState() =>
+      _HousingActivePlanScreenState();
 }
 
-class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
+class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
+    with WidgetsBindingObserver {
   Future<_HubHeader?>? _headerFuture;
-  Future<int>? _pendingReviewFuture;
+  Future<RealizedExpensePendingSummary>? _pendingExpenseFuture;
   Future<bool>? _pendingAmendmentFuture;
   Timer? _pendingAmendmentPollTimer;
+  Timer? _pendingExpensePollTimer;
+  bool _openingPendingReview = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _reload();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _openPendingReviewIfAny());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _openPendingReviewIfAny(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
         _onSteadyInboxTick,
       );
+      HousingNavigationIntent.reviewRequestTick.addListener(
+        _onPendingReviewIntent,
+      );
       unawaited(_syncPendingAmendmentPoll());
+      unawaited(_syncPendingExpensePoll());
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pendingAmendmentPollTimer?.cancel();
+    _pendingExpensePollTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
+    HousingNavigationIntent.reviewRequestTick.removeListener(
+      _onPendingReviewIntent,
+    );
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    _reload();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openPendingReviewIfAny();
+    });
   }
 
   /// While an amendment is open, poll the relay frequently. Browsers throttle the
@@ -88,12 +114,47 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
       );
     }
     if (_pendingAmendmentPollTimer != null) return;
-    _pendingAmendmentPollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _pendingAmendmentPollTimer = Timer.periodic(const Duration(seconds: 3), (
+      _,
+    ) {
       final pollOrch = HandshakeOrchestrator.maybeInstance;
       if (pollOrch == null) return;
       unawaited(
         pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
           debugPrint('housing hub pending poll: $e\n$st');
+        }),
+      );
+    });
+  }
+
+  /// Polls while realized expenses are still awaiting a local or peer decision.
+  Future<void> _syncPendingExpensePoll() async {
+    final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
+    final pending = await ledger.pendingSummary(
+      packageId: widget.packageId,
+      planId: widget.planId,
+    );
+    if (!mounted) return;
+    if (pending.totalPendingCount == 0) {
+      _pendingExpensePollTimer?.cancel();
+      _pendingExpensePollTimer = null;
+      return;
+    }
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      unawaited(
+        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing hub realized-expense poll: $e\n$st');
+        }),
+      );
+    }
+    if (_pendingExpensePollTimer != null) return;
+    _pendingExpensePollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      final pollOrch = HandshakeOrchestrator.maybeInstance;
+      if (pollOrch == null) return;
+      unawaited(
+        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing hub realized-expense poll: $e\n$st');
         }),
       );
     });
@@ -107,20 +168,27 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
     });
   }
 
+  void _onPendingReviewIntent() {
+    if (!mounted) return;
+    _reload();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openPendingReviewIfAny();
+    });
+  }
+
   void _reload() {
     setState(() {
       _headerFuture = _loadHeader();
-      _pendingReviewFuture = RealizedExpenseLedgerService(
+      _pendingExpenseFuture = RealizedExpenseLedgerService(
         AppDatabase.processScope,
-      ).countWaitingForYou(
-        packageId: widget.packageId,
-        planId: widget.planId,
-      );
+      ).pendingSummary(packageId: widget.packageId, planId: widget.planId);
       _pendingAmendmentFuture = HousingProposalTransportService(
         AppDatabase.processScope,
       ).shouldShowPendingAmendmentHubBanner(widget.planId);
     });
     unawaited(_syncPendingAmendmentPoll());
+    unawaited(_syncPendingExpensePoll());
   }
 
   /// Resolves pending amendment at tap time (not from a cached [FutureBuilder]).
@@ -157,9 +225,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
 
   Future<_HubHeader?> _loadHeader() async {
     final db = AppDatabase.processScope;
-    final plan = await (db.select(db.plans)
-          ..where((t) => t.id.equals(widget.planId)))
-        .getSingleOrNull();
+    final plan = await (db.select(
+      db.plans,
+    )..where((t) => t.id.equals(widget.planId))).getSingleOrNull();
     final agreement = await db.getAgreementForPlan(widget.planId);
     if (plan == null || agreement == null) return null;
     final prefs = widget.prefs ?? await AppPreferences.load();
@@ -175,20 +243,28 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
   }
 
   void _openPendingReviewIfAny() {
+    if (_openingPendingReview) return;
     final expenseId = HousingNavigationIntent.takePendingReview();
     if (expenseId == null || !mounted) return;
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => HousingRealizedExpenseReviewScreen(
-          expenseId: expenseId,
-          planId: widget.planId,
-          packageId: widget.packageId,
-          prefs: widget.prefs,
-        ),
-      ),
-    ).then((_) {
-      if (mounted) _reload();
-    });
+    _openingPendingReview = true;
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => HousingRealizedExpenseReviewScreen(
+              expenseId: expenseId,
+              planId: widget.planId,
+              packageId: widget.packageId,
+              prefs: widget.prefs,
+            ),
+          ),
+        )
+        .then((_) {
+          _openingPendingReview = false;
+          if (mounted) _reload();
+        })
+        .catchError((_) {
+          _openingPendingReview = false;
+        });
   }
 
   void _openPlaceholder(BuildContext context, String title) {
@@ -197,6 +273,19 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
         builder: (_) => HousingActiveHubPlaceholderScreen(title: title),
       ),
     );
+  }
+
+  Future<void> _openReviewList(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingRealizedExpenseReviewListScreen(
+          planId: widget.planId,
+          packageId: widget.packageId,
+          prefs: widget.prefs,
+        ),
+      ),
+    );
+    if (mounted) _reload();
   }
 
   Future<void> _openEnterExpense(BuildContext context) async {
@@ -268,11 +357,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
               final title = header == null
                   ? l10n.housingActiveHubTitle
                   : '${l10n.housingActiveHubTitle}: ${header.periodRange}';
-              return Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
+              return Text(title, maxLines: 1, overflow: TextOverflow.ellipsis);
             },
           ),
         ),
@@ -283,121 +368,125 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             final header = snap.data;
-            return FutureBuilder<int>(
-              future: _pendingReviewFuture,
+            return FutureBuilder<RealizedExpensePendingSummary>(
+              future: _pendingExpenseFuture,
               builder: (context, pendingSnap) {
-                final pendingCount = pendingSnap.data ?? 0;
+                final pending =
+                    pendingSnap.data ??
+                    const RealizedExpensePendingSummary(
+                      waitingForYouCount: 0,
+                      waitingForOthersCount: 0,
+                    );
                 return FutureBuilder<bool>(
                   future: _pendingAmendmentFuture,
                   builder: (context, amendmentSnap) {
                     final hasPendingAmendment = amendmentSnap.data ?? false;
                     return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (hasPendingAmendment)
-                      Card(
-                        color: Theme.of(context).colorScheme.tertiaryContainer,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: ListTile(
-                          leading: const Icon(Icons.edit_notifications_outlined),
-                          title: Text(l10n.housingActiveHubPendingAmendment),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _onAmendmentHubTap(context),
-                        ),
-                      ),
-                    if (pendingCount > 0)
-                      Card(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: ListTile(
-                          leading: const Icon(Icons.pending_actions),
-                          title: Text(
-                            l10n.housingActiveHubReviewPending(pendingCount),
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        if (hasPendingAmendment)
+                          Card(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.tertiaryContainer,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: ListTile(
+                              leading: const Icon(
+                                Icons.edit_notifications_outlined,
+                              ),
+                              title: Text(
+                                l10n.housingActiveHubPendingAmendment,
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => _onAmendmentHubTap(context),
+                            ),
                           ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () async {
-                            await Navigator.of(context).push<void>(
+                        if (pending.totalPendingCount > 0)
+                          Card(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: ListTile(
+                              leading: const Icon(Icons.pending_actions),
+                              title: Text(
+                                l10n.housingActiveHubReviewPending(
+                                  pending.totalPendingCount,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => _openReviewList(context),
+                            ),
+                          ),
+                        _HubTile(
+                          icon: Icons.add_card_outlined,
+                          label: l10n.housingActiveHubEnterExpense,
+                          onTap: () => _openEnterExpense(context),
+                        ),
+                        _HubTile(
+                          icon: Icons.calendar_month_outlined,
+                          label: l10n.housingActiveHubMonthlyExpenses,
+                          onTap: () {
+                            Navigator.of(context).push<void>(
                               MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    HousingRealizedExpenseReviewListScreen(
-                                  planId: widget.planId,
+                                builder: (_) => HousingMonthlyExpensesScreen(
                                   packageId: widget.packageId,
+                                  planId: widget.planId,
                                   prefs: widget.prefs,
                                 ),
                               ),
                             );
-                            if (mounted) _reload();
                           },
                         ),
-                      ),
-                    _HubTile(
-                      icon: Icons.add_card_outlined,
-                      label: l10n.housingActiveHubEnterExpense,
-                      onTap: () => _openEnterExpense(context),
-                    ),
-                    _HubTile(
-                      icon: Icons.calendar_month_outlined,
-                      label: l10n.housingActiveHubMonthlyExpenses,
-                      onTap: () {
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute<void>(
-                            builder: (_) => HousingMonthlyExpensesScreen(
-                              packageId: widget.packageId,
-                              planId: widget.planId,
-                              prefs: widget.prefs,
-                            ),
+                        _HubTile(
+                          icon: Icons.account_balance_wallet_outlined,
+                          label: l10n.housingActiveHubBalances,
+                          onTap: () {
+                            if (header == null) return;
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => HousingBalancesScreen(
+                                  planId: widget.planId,
+                                  currency: header.currency,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _HubTile(
+                          icon: Icons.description_outlined,
+                          label: l10n.housingActiveHubViewPlan,
+                          onTap: () async {
+                            final prefs =
+                                widget.prefs ?? await AppPreferences.load();
+                            if (!context.mounted) return;
+                            await Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => HousingActivePlanReadOnlyScreen(
+                                  planId: widget.planId,
+                                  prefs: prefs,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _HubTile(
+                          icon: Icons.edit_note_outlined,
+                          label: hasPendingAmendment
+                              ? l10n.housingActiveHubViewPendingAmendment
+                              : l10n.housingActiveHubRequestAmendment,
+                          onTap: () => _onAmendmentHubTap(context),
+                        ),
+                        _HubTile(
+                          icon: Icons.import_export_outlined,
+                          label: l10n.housingActiveHubExportImport,
+                          onTap: () => _openPlaceholder(
+                            context,
+                            l10n.housingActiveHubExportImport,
                           ),
-                        );
-                      },
-                    ),
-                    _HubTile(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: l10n.housingActiveHubBalances,
-                      onTap: () {
-                        if (header == null) return;
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute<void>(
-                            builder: (_) => HousingBalancesScreen(
-                              planId: widget.planId,
-                              currency: header.currency,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    _HubTile(
-                      icon: Icons.description_outlined,
-                      label: l10n.housingActiveHubViewPlan,
-                      onTap: () async {
-                        final prefs = widget.prefs ?? await AppPreferences.load();
-                        if (!context.mounted) return;
-                        await Navigator.of(context).push<void>(
-                          MaterialPageRoute<void>(
-                            builder: (_) => HousingActivePlanReadOnlyScreen(
-                              planId: widget.planId,
-                              prefs: prefs,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    _HubTile(
-                      icon: Icons.edit_note_outlined,
-                      label: hasPendingAmendment
-                          ? l10n.housingActiveHubViewPendingAmendment
-                          : l10n.housingActiveHubRequestAmendment,
-                      onTap: () => _onAmendmentHubTap(context),
-                    ),
-                    _HubTile(
-                      icon: Icons.import_export_outlined,
-                      label: l10n.housingActiveHubExportImport,
-                      onTap: () => _openPlaceholder(
-                        context,
-                        l10n.housingActiveHubExportImport,
-                      ),
-                    ),
-                  ],
-                );
+                        ),
+                      ],
+                    );
                   },
                 );
               },
@@ -410,10 +499,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen> {
 }
 
 class _HubHeader {
-  const _HubHeader({
-    required this.periodRange,
-    required this.currency,
-  });
+  const _HubHeader({required this.periodRange, required this.currency});
 
   final String periodRange;
   final String currency;

@@ -302,6 +302,7 @@
   "housingRealizedExpenseReviewTitle": "Révision de dépense",
   "housingRealizedExpenseReviewTypeLabel": "Type",
   "housingRealizedExpenseReviewPlanLineLabel": "Ligne du plan",
+  "housingRealizedExpenseReviewDescriptionLabel": "Description / commentaire",
   "housingRealizedExpenseTransferToYouBy": "Viré à vous par: {name}",
   "@housingRealizedExpenseTransferToYouBy": {
     "placeholders": {
@@ -315,6 +316,28 @@
     }
   },
   "housingRealizedExpenseReviewDescriptionNone": "Aucun",
+  "housingRealizedExpenseReviewAcceptedWord": "Accepté",
+  "housingRealizedExpenseReviewRejectedWord": "Refusé",
+  "housingRealizedExpenseReviewByName": "par {name}",
+  "@housingRealizedExpenseReviewByName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewAcceptedByOn": "Accepté par {name} le {when}",
+  "@housingRealizedExpenseReviewAcceptedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewRejectedByOn": "Refusé par {name} le {when}",
+  "@housingRealizedExpenseReviewRejectedByOn": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "when": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseTransferReviewHint": "Vérifiez que vous avez bien reçu le virement avant d'accepter. Il n'y a pas de délai limite.",
   "housingRealizedExpenseReviewPayer": "Payée par {name}",
   "housingRealizedExpenseReviewRejections": "Refus",
@@ -329,6 +352,8 @@
   "housingMonthlyExpensesTitle": "Dépenses réalisées",
   "housingMonthlyExpensesMonthLabel": "{year}-{month}",
   "housingMonthlyExpensesEmpty": "Aucune dépense publiée pour ce mois.",
+  "housingRejectedExpensesTitle": "Dépenses refusées",
+  "housingRejectedExpensesEmpty": "Aucune dépense refusée pour ce mois.",
   "housingBalancesTitle": "Balances dues",
   "housingBalancesEmpty": "Aucune balance pour l'instant. Les dépenses publiées apparaîtront ici.",
   "housingBalancesOwes": "{from} doit {amount} à {to}",
@@ -550,6 +575,12 @@
   "pushNotificationHousingRealizedExpenseTitle": "Dépense à réviser",
   "pushNotificationHousingRealizedExpenseBody": "Un participant a soumis une dépense pour votre entente.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} a soumis une dépense à réviser.",
+  "pushNotificationHousingRealizedExpenseAcceptedTitle": "Dépense acceptée",
+  "pushNotificationHousingRealizedExpenseAcceptedBody": "Un participant a accepté votre dépense.",
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFrom": "{name} a accepté votre dépense.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Dépense refusée",
   "pushNotificationHousingRealizedExpenseRejectedBody": "Un participant a refusé votre dépense.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} a refusé votre dépense.",
