@@ -68,7 +68,7 @@ Future<StoredProof?> _pickImage(BuildContext context, bool fromCamera) async {
   if (cropped == null) return null;
 
   final name = file.name.trim().isEmpty ? 'proof.jpg' : file.name;
-  return ProofAttachmentStorage.persistFromBytes(
+  return ProofAttachmentStorage.persistPickedImageBytes(
     bytes: cropped,
     displayFileName: name.endsWith('.jpg') || name.endsWith('.jpeg')
         ? name
@@ -87,6 +87,6 @@ Future<StoredProof?> _pickDocument(BuildContext context) async {
   return ProofAttachmentStorage.persistFromFile(
     source: file,
     displayFileName: name,
-    compressImage: false,
+    compressImage: true,
   );
 }

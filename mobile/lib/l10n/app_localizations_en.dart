@@ -841,6 +841,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseReviewTitle => 'Expense review';
 
   @override
+  String get housingRealizedExpenseReviewTypeLabel => 'Type';
+
+  @override
+  String get housingRealizedExpenseReviewPlanLineLabel => 'Plan line';
+
+  @override
+  String housingRealizedExpenseTransferToYouBy(String name) {
+    return 'Transferred to you by: $name';
+  }
+
+  @override
+  String housingRealizedExpenseTransferToParticipant(String name) {
+    return 'Transferred to: $name';
+  }
+
+  @override
+  String get housingRealizedExpenseReviewDescriptionNone => 'None';
+
+  @override
+  String get housingRealizedExpenseTransferReviewHint =>
+      'Make sure you have received the transfer before accepting. There is no deadline.';
+
+  @override
   String housingRealizedExpenseReviewPayer(String name) {
     return 'Paid by $name';
   }

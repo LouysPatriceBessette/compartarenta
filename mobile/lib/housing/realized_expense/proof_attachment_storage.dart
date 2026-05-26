@@ -24,6 +24,15 @@ class StoredProof {
 
 /// Writes proofs under [kExpenseProofsFolderName] with optional image compression.
 class ProofAttachmentStorage {
+  // Keep proof images comfortably below relay request limits after base64 + envelope overhead.
+  static const int _targetCompressedImageBytes = 120 * 1024;
+  static const List<({int maxDimension, int quality})> _compressionSteps = [
+    (maxDimension: 960, quality: 60),
+    (maxDimension: 800, quality: 50),
+    (maxDimension: 640, quality: 42),
+    (maxDimension: 512, quality: 35),
+  ];
+
   static Future<Directory> proofsDirectory() async {
     final base = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(base.path, kExpenseProofsFolderName));
@@ -48,21 +57,33 @@ class ProofAttachmentStorage {
   }) async {
     final ext = p.extension(displayFileName).toLowerCase();
     final isImage = _imageExtensions.contains(ext);
+    final bytes = await source.readAsBytes();
     if (isImage && compressImage && !kIsWeb) {
-      final compressed = await FlutterImageCompress.compressWithFile(
-        source.absolute.path,
-        minWidth: 1920,
-        minHeight: 1920,
-        quality: 82,
-      );
-      if (compressed != null && compressed.isNotEmpty) {
+      final compressed = await _compressImageBytesForRelay(bytes);
+      if (compressed != null) {
         return persistFromBytes(
           bytes: compressed,
           displayFileName: _jpegDisplayName(displayFileName),
         );
       }
     }
-    final bytes = await source.readAsBytes();
+    return persistFromBytes(bytes: bytes, displayFileName: displayFileName);
+  }
+
+  /// Persists picked/cropped image bytes after an explicit compression step.
+  static Future<StoredProof> persistPickedImageBytes({
+    required List<int> bytes,
+    required String displayFileName,
+  }) async {
+    if (!kIsWeb) {
+      final compressed = await _compressImageBytesForRelay(bytes);
+      if (compressed != null) {
+        return persistFromBytes(
+          bytes: compressed,
+          displayFileName: _jpegDisplayName(displayFileName),
+        );
+      }
+    }
     return persistFromBytes(bytes: bytes, displayFileName: displayFileName);
   }
 
@@ -94,5 +115,27 @@ class ProofAttachmentStorage {
   static String _safeFileName(String name) {
     final base = p.basename(name).replaceAll(RegExp(r'[^\w.\-]+'), '_');
     return base.isEmpty ? 'proof' : base;
+  }
+
+  static Future<Uint8List?> _compressImageBytesForRelay(List<int> bytes) async {
+    Uint8List? smallest;
+    for (final step in _compressionSteps) {
+      final compressed = await FlutterImageCompress.compressWithList(
+        Uint8List.fromList(bytes),
+        minWidth: step.maxDimension,
+        minHeight: step.maxDimension,
+        quality: step.quality,
+        format: CompressFormat.jpeg,
+      );
+      if (compressed.isEmpty) continue;
+      final candidate = Uint8List.fromList(compressed);
+      if (smallest == null || candidate.lengthInBytes < smallest.lengthInBytes) {
+        smallest = candidate;
+      }
+      if (candidate.lengthInBytes <= _targetCompressedImageBytes) {
+        return candidate;
+      }
+    }
+    return smallest;
   }
 }

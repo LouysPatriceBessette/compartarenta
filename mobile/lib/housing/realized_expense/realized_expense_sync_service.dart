@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import '../../db/app_database.dart';
+import 'proof_transport_payload.dart';
 import 'realized_expense_participants.dart';
 import 'realized_expense_repository.dart';
 import 'realized_expense_status.dart';
@@ -64,10 +65,7 @@ class RealizedExpenseSyncService {
       ],
       'attachments': [
         for (final a in attachments)
-          {
-            'display_file_name': a.displayFileName,
-            if (a.contentHash != null) 'content_hash': a.contentHash,
-          },
+          await buildSyncedProofAttachmentPayload(a),
       ],
     });
   }
@@ -139,6 +137,11 @@ class RealizedExpenseSyncService {
     final beneficiaryLocal = beneficiarySource == null
         ? null
         : sourceToLocal[beneficiarySource];
+    if (kind == RealizedExpenseKind.transfer &&
+        (beneficiaryLocal == null || beneficiaryLocal.isEmpty)) {
+      _log('import skip: transfer beneficiary not found on ${target.planId}');
+      return false;
+    }
 
     final paymentDate = DateTime.tryParse(
       payload['payment_date'] as String? ?? '',
@@ -168,16 +171,18 @@ class RealizedExpenseSyncService {
           ),
         );
 
+    final repo = RealizedExpenseRepository(_db);
     final attachments = payload['attachments'];
     if (attachments is List) {
       for (final raw in attachments) {
         if (raw is! Map) continue;
         final name = raw['display_file_name'] as String? ?? 'proof';
+        final persistedPath = await importSyncedProofAttachmentPath(raw);
         await _db.into(_db.realizedExpenseAttachments).insert(
               RealizedExpenseAttachmentsCompanion.insert(
-                id: RealizedExpenseRepository(_db).newAttachmentId(),
+                id: repo.newAttachmentId(),
                 expenseId: expenseId,
-                filePath: '',
+                filePath: persistedPath ?? '',
                 displayFileName: name,
                 contentHash: drift.Value(raw['content_hash'] as String?),
                 createdAt: now,
@@ -187,7 +192,13 @@ class RealizedExpenseSyncService {
     }
 
     final roster = await participantsForPlan(_db, target.planId);
+    final importedExpense = await repo.getById(expenseId);
+    if (importedExpense == null) {
+      _log('import skip: stored expense missing after insert');
+      return false;
+    }
     for (final p in roster) {
+      if (!repo.isTransferReviewParticipant(importedExpense, p.id)) continue;
       final isPayer = p.id == payerId;
       await _db.into(_db.realizedExpenseAcceptances).insert(
             RealizedExpenseAcceptancesCompanion.insert(

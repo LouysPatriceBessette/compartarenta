@@ -33,6 +33,21 @@ class RealizedExpenseLedgerService {
 
   String selfIdForPlan(String planId) => selfParticipantIdForPlan(planId);
 
+  bool _shouldHideTransferUntilPublished(
+    RealizedExpense expense,
+    String selfParticipantId,
+  ) {
+    if (expense.kind != RealizedExpenseKind.transfer) return false;
+    if (expense.status == RealizedExpenseStatus.published) return false;
+    return selfParticipantId != expense.payerParticipantId &&
+        selfParticipantId != expense.beneficiaryParticipantId;
+  }
+
+  bool _shouldShowInReviewQueue(
+    RealizedExpense expense,
+    String selfParticipantId,
+  ) => !_shouldHideTransferUntilPublished(expense, selfParticipantId);
+
   Future<RealizedExpenseReviewVisibility> visibilityFor({
     required RealizedExpense expense,
     required String selfParticipantId,
@@ -40,6 +55,10 @@ class RealizedExpenseLedgerService {
     await RealizedExpenseRepository(_db).ensurePayerAcceptedIfPending(expense);
     final current = await RealizedExpenseRepository(_db).getById(expense.id);
     final row = current ?? expense;
+
+    if (_shouldHideTransferUntilPublished(row, selfParticipantId)) {
+      return RealizedExpenseReviewVisibility.waitingForOthers;
+    }
 
     if (row.status == RealizedExpenseStatus.published) {
       return RealizedExpenseReviewVisibility.published;
@@ -103,10 +122,27 @@ class RealizedExpenseLedgerService {
         expense: expense,
         selfParticipantId: selfId,
       );
+      if (!_shouldShowInReviewQueue(expense, selfId)) continue;
       out.add(RealizedExpenseReviewItem(expense: expense, visibility: visibility));
     }
     return out;
   }
+
+  Future<bool> shouldNotifyImportedProposal({
+    required RealizedExpense expense,
+    required String selfParticipantId,
+  }) async {
+    final visibility = await visibilityFor(
+      expense: expense,
+      selfParticipantId: selfParticipantId,
+    );
+    return visibility == RealizedExpenseReviewVisibility.waitingForYou;
+  }
+
+  Future<bool> shouldNotifyRejectedDecision({
+    required RealizedExpense expense,
+    required String selfParticipantId,
+  }) => Future.value(expense.payerParticipantId == selfParticipantId);
 
   Future<int> countWaitingForYou({
     required String packageId,

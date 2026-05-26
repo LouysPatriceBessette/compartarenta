@@ -10,6 +10,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/local_file_image_provider.dart';
 import 'housing_realized_expense_form_screen.dart';
 
 class _ReviewContext {
@@ -18,6 +19,7 @@ class _ReviewContext {
     required this.lineTitle,
     required this.payerName,
     required this.beneficiaryName,
+    required this.proofAttachment,
     required this.visibility,
     required this.prefs,
     required this.rejections,
@@ -27,6 +29,7 @@ class _ReviewContext {
   final String lineTitle;
   final String payerName;
   final String? beneficiaryName;
+  final RealizedExpenseAttachment? proofAttachment;
   final RealizedExpenseReviewVisibility visibility;
   final AppPreferences prefs;
   final List<RealizedExpenseAcceptance> rejections;
@@ -55,6 +58,7 @@ class _HousingRealizedExpenseReviewScreenState
     extends State<HousingRealizedExpenseReviewScreen> {
   final _repo = RealizedExpenseRepository(AppDatabase.processScope);
   Future<_ReviewContext?>? _loadFuture;
+  bool _decisionSending = false;
 
   @override
   void initState() {
@@ -100,12 +104,14 @@ class _HousingRealizedExpenseReviewScreenState
     final rejections = acceptances
         .where((a) => a.decision == RealizedExpenseDecision.rejected)
         .toList(growable: false);
+    final attachments = await _repo.attachmentsFor(expense.id);
 
     return _ReviewContext(
       expense: expense,
       lineTitle: lineTitle,
       payerName: payerName,
       beneficiaryName: beneficiaryName,
+      proofAttachment: attachments.isEmpty ? null : attachments.first,
       visibility: visibility,
       prefs: prefs,
       rejections: rejections,
@@ -113,23 +119,33 @@ class _HousingRealizedExpenseReviewScreenState
   }
 
   Future<void> _accept(_ReviewContext ctx) async {
+    if (_decisionSending) return;
+    setState(() => _decisionSending = true);
     final selfId = selfParticipantIdForPlan(widget.planId);
-    await _repo.recordLocalAccept(
-      expenseId: widget.expenseId,
-      participantId: selfId,
-    );
-    final orch = HandshakeOrchestrator.maybeInstance;
-    await orch?.sendRealizedExpenseAccept(
-      expenseId: widget.expenseId,
-      participantId: selfId,
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).housingRealizedExpenseAccepted),
-      ),
-    );
-    _reload();
+    try {
+      await _repo.recordLocalAccept(
+        expenseId: widget.expenseId,
+        participantId: selfId,
+      );
+      if (mounted) _reload();
+      final orch = HandshakeOrchestrator.maybeInstance;
+      await orch?.sendRealizedExpenseAccept(
+        expenseId: widget.expenseId,
+        participantId: selfId,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).housingRealizedExpenseAccepted,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _decisionSending = false);
+      }
+    }
   }
 
   Future<void> _reject(_ReviewContext ctx) async {
@@ -214,6 +230,81 @@ class _HousingRealizedExpenseReviewScreenState
     };
   }
 
+  Widget _detailLine(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
+    final textTheme = Theme.of(context).textTheme;
+    return RichText(
+      text: TextSpan(
+        style: textTheme.bodyLarge?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        children: [
+          TextSpan(
+            text: '$label: ',
+            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          TextSpan(text: value),
+        ],
+      ),
+    );
+  }
+
+  bool _isPreviewableImage(RealizedExpenseAttachment? attachment) {
+    if (attachment == null) return false;
+    final name = attachment.displayFileName.toLowerCase();
+    return name.endsWith('.jpg') ||
+        name.endsWith('.jpeg') ||
+        name.endsWith('.png') ||
+        name.endsWith('.webp') ||
+        name.endsWith('.heic');
+  }
+
+  Widget _buildProofPlaceholder(BuildContext context, {double size = 148}) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Icon(
+        Icons.no_photography_outlined,
+        size: 36,
+        color: colors.onSurfaceVariant,
+      ),
+    );
+  }
+
+  Widget _buildProofPreview(BuildContext context, _ReviewContext ctx) {
+    const previewSize = 148.0;
+    final attachment = ctx.proofAttachment;
+    final provider = _isPreviewableImage(attachment) && attachment != null
+        ? localFileImageProvider(attachment.filePath)
+        : null;
+    if (provider == null) {
+      return _buildProofPlaceholder(context, size: previewSize);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: previewSize,
+        height: previewSize,
+        child: Image(
+          image: provider,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) {
+            return _buildProofPlaceholder(context, size: previewSize);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -232,12 +323,25 @@ class _HousingRealizedExpenseReviewScreenState
           final expense = ctx.expense;
           final dateFmt = effectiveDateFormat(ctx.prefs);
           final selfId = selfParticipantIdForPlan(widget.planId);
-          final canReview = ctx.visibility ==
+          final canReview = !_decisionSending &&
+              ctx.visibility ==
                   RealizedExpenseReviewVisibility.waitingForYou &&
               expense.payerParticipantId != selfId;
           final canResubmit = ctx.visibility ==
                   RealizedExpenseReviewVisibility.rejected &&
               expense.payerParticipantId == selfId;
+          final descriptionText = (expense.description ?? '').trim();
+          final transferSummary =
+              expense.kind == RealizedExpenseKind.transfer &&
+                  ctx.beneficiaryName != null
+              ? (selfId == expense.beneficiaryParticipantId
+                    ? l10n.housingRealizedExpenseTransferToYouBy(
+                        ctx.payerName,
+                      )
+                    : l10n.housingRealizedExpenseTransferToParticipant(
+                        ctx.beneficiaryName!,
+                      ))
+              : null;
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -250,29 +354,83 @@ class _HousingRealizedExpenseReviewScreenState
                 ),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              if (ctx.lineTitle.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(ctx.lineTitle),
-              ],
-              const SizedBox(height: 4),
-              Text(
-                formatPreferenceDate(expense.paymentDate, dateFmt),
-              ),
-              const SizedBox(height: 4),
-              Text(l10n.housingRealizedExpenseReviewPayer(ctx.payerName)),
-              const SizedBox(height: 4),
-              Text(_kindLabel(l10n, expense.kind)),
-              if (ctx.beneficiaryName != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  l10n.housingRealizedExpenseTransferRecipientSummary(
-                    ctx.beneficiaryName!,
-                  ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _detailLine(
+                            context,
+                            label: l10n.housingRealizedExpenseReviewTypeLabel,
+                            value: _kindLabel(l10n, expense.kind),
+                          ),
+                          if (ctx.lineTitle.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            _detailLine(
+                              context,
+                              label: l10n.housingRealizedExpenseReviewPlanLineLabel,
+                              value: ctx.lineTitle,
+                            ),
+                          ],
+                          if (transferSummary != null) ...[
+                            const SizedBox(height: 8),
+                            Text(transferSummary),
+                          ],
+                          const SizedBox(height: 8),
+                          Text(
+                            formatPreferenceDate(expense.paymentDate, dateFmt),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    _buildProofPreview(context, ctx),
+                  ],
                 ),
-              ],
-              if ((expense.description ?? '').trim().isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(expense.description!.trim()),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.housingRealizedExpenseTransferDescription,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        descriptionText.isEmpty
+                            ? l10n.housingRealizedExpenseReviewDescriptionNone
+                            : descriptionText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
+              if (expense.kind == RealizedExpenseKind.transfer) ...[
+                Text(
+                  l10n.housingRealizedExpenseTransferReviewHint,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 16),
               ],
               const SizedBox(height: 16),
               if (ctx.rejections.isNotEmpty) ...[

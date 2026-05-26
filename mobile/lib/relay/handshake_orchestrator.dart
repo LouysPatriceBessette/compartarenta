@@ -1312,9 +1312,18 @@ class HandshakeOrchestrator {
     if (expenseId != null) {
       final expense = await RealizedExpenseRepository(_db).getById(expenseId);
       if (expense != null) {
-        await RealizedExpenseLedgerService(_db).markPlanActiveUseIfNeeded(
-          expense.planId,
+        final ledger = RealizedExpenseLedgerService(_db);
+        await ledger.markPlanActiveUseIfNeeded(expense.planId);
+        final shouldNotify = await ledger.shouldNotifyImportedProposal(
+          expense: expense,
+          selfParticipantId: ledger.selfIdForPlan(expense.planId),
         );
+        if (shouldNotify) {
+          await PushNotificationService.showLocalHousingRealizedExpenseNotification(
+            senderDisplayName: senderContact.displayName,
+            expenseId: expenseId,
+          );
+        }
       }
     }
 
@@ -1322,10 +1331,6 @@ class HandshakeOrchestrator {
       'imported from ${senderContact.id}',
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
-    await PushNotificationService.showLocalHousingRealizedExpenseNotification(
-      senderDisplayName: senderContact.displayName,
-      expenseId: expenseId,
-    );
   }
 
   String? _expenseIdFromProposeJson(String expenseJson) {
@@ -1392,9 +1397,36 @@ class HandshakeOrchestrator {
 
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     if (kind == EnvelopeKind.housingRealizedExpenseReject) {
-      await PushNotificationService.showLocalHousingRealizedExpenseRejectedNotification(
-        senderDisplayName: senderContact.displayName,
-      );
+      final expenseId = _expenseIdFromDecisionJson(decrypted.decisionJson);
+      if (expenseId != null) {
+        final expense = await RealizedExpenseRepository(_db).getById(expenseId);
+        if (expense != null) {
+          final shouldNotify = await RealizedExpenseLedgerService(
+            _db,
+          ).shouldNotifyRejectedDecision(
+            expense: expense,
+            selfParticipantId: RealizedExpenseLedgerService(
+              _db,
+            ).selfIdForPlan(expense.planId),
+          );
+          if (shouldNotify) {
+            await PushNotificationService.showLocalHousingRealizedExpenseRejectedNotification(
+              senderDisplayName: senderContact.displayName,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  String? _expenseIdFromDecisionJson(String decisionJson) {
+    try {
+      final map = jsonDecode(decisionJson) as Map<String, dynamic>;
+      final id = map['expense_id'] as String?;
+      if (id == null || id.isEmpty) return null;
+      return id;
+    } on Object {
+      return null;
     }
   }
 

@@ -1600,6 +1600,42 @@ abstract class AppLocalizations {
   /// **'Expense review'**
   String get housingRealizedExpenseReviewTitle;
 
+  /// No description provided for @housingRealizedExpenseReviewTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get housingRealizedExpenseReviewTypeLabel;
+
+  /// No description provided for @housingRealizedExpenseReviewPlanLineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan line'**
+  String get housingRealizedExpenseReviewPlanLineLabel;
+
+  /// No description provided for @housingRealizedExpenseTransferToYouBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Transferred to you by: {name}'**
+  String housingRealizedExpenseTransferToYouBy(String name);
+
+  /// No description provided for @housingRealizedExpenseTransferToParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Transferred to: {name}'**
+  String housingRealizedExpenseTransferToParticipant(String name);
+
+  /// No description provided for @housingRealizedExpenseReviewDescriptionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get housingRealizedExpenseReviewDescriptionNone;
+
+  /// No description provided for @housingRealizedExpenseTransferReviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure you have received the transfer before accepting. There is no deadline.'**
+  String get housingRealizedExpenseTransferReviewHint;
+
   /// No description provided for @housingRealizedExpenseReviewPayer.
   ///
   /// In en, this message translates to:

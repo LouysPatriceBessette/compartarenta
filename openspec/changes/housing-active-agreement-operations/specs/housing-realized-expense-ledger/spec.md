@@ -16,31 +16,43 @@ Creating or importing a peer’s realized expense on a device SHALL follow `data
 
 ---
 
-### Requirement: Each realized expense requires unanimous acceptance
+### Requirement: Each realized expense publishes after its required reviewers accept
 
-A realized expense SHALL affect **published balances** on a device only after **every** roster participant has **accepted** that expense proposal on their device (or equivalent recorded acceptance synced per participant). Partial acceptance MUST NOT publish the expense to group totals.
+A realized expense SHALL affect **published balances** on a device only after all participants required by that expense kind have **accepted** the proposal on their device (or equivalent recorded acceptance synced per participant). Partial acceptance MUST NOT publish the expense to group totals.
 
-The system SHALL expose enough non-payload metadata for realized-expense decisions to allow server-side determination of unanimous acceptance for an expense within the accepted active roster of that housing plan.
+For a regular **payment**, the required reviewers are the full accepted active roster for that housing plan. For a **transfer**, the required reviewers are only:
 
-#### Scenario: One holdout blocks balance impact
+- the submitter/payer (auto-accepted when proposed), and
+- the beneficiary participant who received the amount.
 
-- **WHEN** all but one participant have accepted expense E
-- **THEN** published balances on any device still exclude E until the last participant accepts
+The system SHALL expose enough non-payload metadata for realized-expense decisions to allow server-side determination of publication eligibility for an expense within the accepted active roster of that housing plan.
 
-#### Scenario: Full acceptance publishes
+#### Scenario: Payment still waits for the last roster participant
 
-- **WHEN** every participant has accepted E
+- **WHEN** all but one roster participant have accepted payment expense E
+- **THEN** published balances on any device still exclude E until the last required participant accepts
+
+#### Scenario: Transfer waits only for beneficiary
+
+- **WHEN** the payer has proposed transfer expense E to beneficiary B
+- **THEN** E remains excluded from published balances until B accepts, regardless of other non-impacted roster participants
+
+#### Scenario: Required acceptance publishes
+
+- **WHEN** every participant required for expense E has accepted E
 - **THEN** E is treated as agreed ledger data for monthly summaries and balance views
 
-#### Scenario: Entitlement service derives unanimous acceptance
-- **WHEN** the entitlement service has observed `accept` decisions from every installation identity in the accepted active roster for expense E
-- **THEN** E is considered unanimously accepted for server-governed gating logic without reading business-domain ciphertext
+#### Scenario: Entitlement service derives publication eligibility
+- **WHEN** the entitlement service has observed `accept` decisions from every installation identity required for expense E
+- **THEN** E is considered published for server-governed gating logic without reading business-domain ciphertext
 
 ---
 
 ### Requirement: Participants review and accept or reject with justification
 
-When a pending expense is visible to a participant, they SHALL be able to **Accept** or **Reject**. **Reject** MUST require a non-empty **justification** (bounded length) explaining the reason (e.g. missing proof, wrong amount, wrong plan line).
+When a pending expense is visible to a participant and that participant is a required reviewer for the expense kind, they SHALL be able to **Accept** or **Reject**. **Reject** MUST require a non-empty **justification** (bounded length) explaining the reason (e.g. missing proof, wrong amount, wrong plan line).
+
+For a **transfer**, only the beneficiary participant SHALL receive a pending review decision on peer devices. Other non-impacted participants SHALL NOT be asked to decide on the transfer and SHALL only see it in published history after acceptance.
 
 #### Scenario: Reject without text blocked
 
@@ -86,12 +98,17 @@ Implementation MAY subdivide `proposed` / `accepted` per participant; user-visib
 
 ### Requirement: Notifications when peers submit expenses
 
-When a new realized expense proposal is imported for this user, the client SHALL fire a notification (local; push when configured) that a colocataire submitted an expense requiring review. This is distinct from plan offer notifications and from unanimous activation notifications.
+When a new realized expense proposal is imported for this user, the client SHALL fire a notification (local; push when configured) only if that user must review the proposal. This is distinct from plan offer notifications and from unanimous activation notifications.
 
 #### Scenario: Review notification opens queue
 
 - **WHEN** the user taps the notification
 - **THEN** the app opens the pending review entry for that expense
+
+#### Scenario: Non-impacted transfer participant is not notified
+
+- **WHEN** a transfer proposal is imported on a device belonging to a roster participant who is neither the payer nor the beneficiary
+- **THEN** the client stores the proposal without showing a review notification or review action for that participant
 
 ---
 
@@ -143,7 +160,7 @@ The canonical trial start is recorded by the entitlement service, not inferred o
 
 ### Requirement: Wire protocol kinds are documented client-side
 
-The change SHALL document encrypted steady-state message kinds for at least: `housing_realized_expense_propose`, `housing_realized_expense_accept`, `housing_realized_expense_reject`, and `housing_realized_expense_amend` (if corrections are sent as amendments). Payloads include `packageId`, expense proposal id, plan line id, amounts, payer, dates, kind, attachment metadata hashes, and rejection text. Relay source changes are out of scope unless admission rules require new routing identities.
+The change SHALL document encrypted steady-state message kinds for at least: `housing_realized_expense_propose`, `housing_realized_expense_accept`, `housing_realized_expense_reject`, and `housing_realized_expense_amend` (if corrections are sent as amendments). Payloads include `packageId`, expense proposal id, plan line id, amounts, payer, dates, kind, attachment display metadata, proof bytes when proof review is enabled, and rejection text. Relay source changes are out of scope unless admission rules require new routing identities.
 
 The transport documentation SHALL also define the minimal relay-visible metadata required for server-side entitlement gating and unanimous-publication checks, including at minimum `module`, `plan_id`, `expense_id`, `participant_installation_id`, and `decision_kind` where applicable.
 

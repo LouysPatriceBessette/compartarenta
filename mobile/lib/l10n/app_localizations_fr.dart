@@ -856,6 +856,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseReviewTitle => 'Révision de dépense';
 
   @override
+  String get housingRealizedExpenseReviewTypeLabel => 'Type';
+
+  @override
+  String get housingRealizedExpenseReviewPlanLineLabel => 'Ligne du plan';
+
+  @override
+  String housingRealizedExpenseTransferToYouBy(String name) {
+    return 'Viré à vous par: $name';
+  }
+
+  @override
+  String housingRealizedExpenseTransferToParticipant(String name) {
+    return 'Viré à $name';
+  }
+
+  @override
+  String get housingRealizedExpenseReviewDescriptionNone => 'Aucun';
+
+  @override
+  String get housingRealizedExpenseTransferReviewHint =>
+      'Vérifiez que vous avez bien reçu le virement avant d\'accepter. Il n\'y a pas de délai limite.';
+
+  @override
   String housingRealizedExpenseReviewPayer(String name) {
     return 'Payée par $name';
   }

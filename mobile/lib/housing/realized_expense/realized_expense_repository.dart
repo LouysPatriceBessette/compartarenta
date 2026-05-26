@@ -47,6 +47,15 @@ class RealizedExpenseRepository {
             ..where((t) => t.expenseId.equals(expenseId)))
           .get();
 
+  bool isTransferReviewParticipant(
+    RealizedExpense expense,
+    String participantId,
+  ) {
+    if (expense.kind != RealizedExpenseKind.transfer) return true;
+    return participantId == expense.payerParticipantId ||
+        participantId == expense.beneficiaryParticipantId;
+  }
+
   /// Saves or updates a **draft** realized expense (local only, not synced).
   Future<RealizedExpense> saveDraft({
     required String packageId,
@@ -142,7 +151,7 @@ class RealizedExpenseRepository {
     return rows;
   }
 
-  /// Transitions a draft to `proposed` and seeds acceptances (self auto-accepts).
+  /// Transitions a draft to `proposed` and seeds acceptance rows.
   Future<RealizedExpense> proposeLocally(String expenseId) async {
     final row = await getById(expenseId);
     if (row == null) {
@@ -163,10 +172,16 @@ class RealizedExpenseRepository {
 
     final roster = await participantsForPlan(_db, row.planId);
     final payerId = row.payerParticipantId;
+    final beneficiaryId = row.beneficiaryParticipantId;
+    if (row.kind == RealizedExpenseKind.transfer &&
+        (beneficiaryId == null || beneficiaryId.isEmpty)) {
+      throw StateError('Transfer expenses require a beneficiary participant');
+    }
     await (_db.delete(_db.realizedExpenseAcceptances)
           ..where((t) => t.expenseId.equals(expenseId)))
         .go();
     for (final p in roster) {
+      if (!isTransferReviewParticipant(row, p.id)) continue;
       final isPayer = p.id == payerId;
       await _db.into(_db.realizedExpenseAcceptances).insert(
             RealizedExpenseAcceptancesCompanion.insert(

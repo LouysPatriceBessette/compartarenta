@@ -300,6 +300,22 @@
   "housingRealizedExpenseReviewPublished": "Publicado",
   "housingRealizedExpenseReviewRejected": "Rechazado",
   "housingRealizedExpenseReviewTitle": "Revisión de gasto",
+  "housingRealizedExpenseReviewTypeLabel": "Tipo",
+  "housingRealizedExpenseReviewPlanLineLabel": "Línea del plan",
+  "housingRealizedExpenseTransferToYouBy": "Transferido a usted por: {name}",
+  "@housingRealizedExpenseTransferToYouBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseTransferToParticipant": "Transferido a: {name}",
+  "@housingRealizedExpenseTransferToParticipant": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingRealizedExpenseReviewDescriptionNone": "Ninguno",
+  "housingRealizedExpenseTransferReviewHint": "Verifique que realmente recibió la transferencia antes de aceptar. No hay límite de tiempo.",
   "housingRealizedExpenseReviewPayer": "Pagado por {name}",
   "housingRealizedExpenseReviewRejections": "Rechazos",
   "housingRealizedExpenseAccept": "Aceptar",
