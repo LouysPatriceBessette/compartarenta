@@ -1450,6 +1450,18 @@ abstract class AppLocalizations {
   /// **'Take a photo'**
   String get housingRealizedExpensePickCamera;
 
+  /// No description provided for @housingRealizedExpenseCapturePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture photo'**
+  String get housingRealizedExpenseCapturePhoto;
+
+  /// No description provided for @housingRealizedExpenseCameraStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access the camera on this device.'**
+  String get housingRealizedExpenseCameraStartFailed;
+
   /// No description provided for @housingRealizedExpensePickGallery.
   ///
   /// In en, this message translates to:
@@ -1551,6 +1563,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not crop image'**
   String get housingRealizedExpenseCropFailed;
+
+  /// No description provided for @housingRealizedExpenseProofTapToSaveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to save a copy'**
+  String get housingRealizedExpenseProofTapToSaveCopy;
+
+  /// No description provided for @housingRealizedExpenseProofSaveCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save a copy of the file'**
+  String get housingRealizedExpenseProofSaveCopyFailed;
+
+  /// No description provided for @housingRealizedExpenseProofImagesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an image file only (jpg, jpeg, png, webp, heic).'**
+  String get housingRealizedExpenseProofImagesOnly;
+
+  /// No description provided for @housingRealizedExpenseProofImageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This image is too large to process in the web app. Choose a smaller image or send it another way.'**
+  String get housingRealizedExpenseProofImageTooLarge;
 
   /// No description provided for @housingActiveHubReviewPending.
   ///

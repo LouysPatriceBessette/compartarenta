@@ -270,6 +270,8 @@
   "housingRealizedExpenseProofEncourage": "Adding a receipt or invoice helps your group validate this expense.",
   "housingRealizedExpenseAddProof": "Add proof",
   "housingRealizedExpensePickCamera": "Take a photo",
+  "housingRealizedExpenseCapturePhoto": "Capture photo",
+  "housingRealizedExpenseCameraStartFailed": "Could not access the camera on this device.",
   "housingRealizedExpensePickGallery": "Choose from gallery",
   "housingRealizedExpensePickDocument": "Choose a document",
   "housingRealizedExpenseStoragePath": "Saved at: {path}",
@@ -292,6 +294,10 @@
   "housingRealizedExpenseCropTitle": "Crop proof",
   "housingRealizedExpenseCropConfirm": "Use cropped image",
   "housingRealizedExpenseCropFailed": "Could not crop image",
+  "housingRealizedExpenseProofTapToSaveCopy": "Tap to save a copy",
+  "housingRealizedExpenseProofSaveCopyFailed": "Could not save a copy of the file",
+  "housingRealizedExpenseProofImagesOnly": "Select an image file only (jpg, jpeg, png, webp, heic).",
+  "housingRealizedExpenseProofImageTooLarge": "This image is too large to process in the web app. Choose a smaller image or send it another way.",
   "housingActiveHubReviewPending": "{count, plural, one{1 expense awaiting your review} other{{count} expenses awaiting your review}}",
   "@housingActiveHubReviewPending": {
     "placeholders": {

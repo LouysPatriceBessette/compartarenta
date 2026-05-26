@@ -75,16 +75,18 @@ class ProofAttachmentStorage {
     required List<int> bytes,
     required String displayFileName,
   }) async {
-    if (!kIsWeb) {
-      final compressed = await _compressImageBytesForRelay(bytes);
-      if (compressed != null) {
-        return persistFromBytes(
-          bytes: compressed,
-          displayFileName: _jpegDisplayName(displayFileName),
-        );
-      }
+    final compressed = await compressImageBytesForRelay(bytes);
+    if (compressed != null) {
+      return persistFromBytes(
+        bytes: compressed,
+        displayFileName: _jpegDisplayName(displayFileName),
+      );
     }
     return persistFromBytes(bytes: bytes, displayFileName: displayFileName);
+  }
+
+  static Future<Uint8List?> compressImageBytesForRelay(List<int> bytes) {
+    return _compressImageBytesForRelay(bytes);
   }
 
   static Future<StoredProof> persistFromBytes({

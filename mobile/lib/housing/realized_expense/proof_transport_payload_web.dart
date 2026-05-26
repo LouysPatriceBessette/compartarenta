@@ -19,10 +19,12 @@ Future<Map<String, dynamic>> buildSyncedProofAttachmentPayload(
   return out;
 }
 
-Future<String?> importSyncedProofAttachmentPath(Map<dynamic, dynamic> raw) async {
+Future<String?> importSyncedProofAttachmentPath(
+  Map<dynamic, dynamic> raw,
+) async {
   final bytesBase64 = raw['bytes_b64'] as String?;
   if (bytesBase64 == null || bytesBase64.isEmpty) return null;
   final mediaType = raw['media_type'] as String?;
-  if (mediaType == null || !mediaType.startsWith('image/')) return null;
+  if (mediaType == null || mediaType.isEmpty) return null;
   return 'data:$mediaType;base64,$bytesBase64';
 }

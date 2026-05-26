@@ -21,7 +21,7 @@ Future<Map<String, dynamic>> buildSyncedProofAttachmentPayload(
   if (bytes.isEmpty) return out;
   out['bytes_b64'] = base64Encode(bytes);
   final mediaType = _mediaTypeForName(attachment.displayFileName);
-  if (mediaType != null) out['media_type'] = mediaType;
+  out['media_type'] = mediaType;
   return out;
 }
 
@@ -40,13 +40,15 @@ Future<String?> importSyncedProofAttachmentPath(Map<dynamic, dynamic> raw) async
   }
 }
 
-String? _mediaTypeForName(String displayFileName) {
+String _mediaTypeForName(String displayFileName) {
   return switch (p.extension(displayFileName).toLowerCase()) {
     '.jpg' || '.jpeg' => 'image/jpeg',
     '.png' => 'image/png',
     '.webp' => 'image/webp',
     '.heic' => 'image/heic',
     '.pdf' => 'application/pdf',
-    _ => null,
+    '.txt' => 'text/plain',
+    '.json' => 'application/json',
+    _ => 'application/octet-stream',
   };
 }

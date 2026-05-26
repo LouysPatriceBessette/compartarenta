@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_amount_parse.dart';
+import '../../housing/realized_expense/proof_attachment_export.dart';
 import '../../housing/realized_expense/proof_attachment_storage.dart';
 import '../../housing/realized_expense/proof_pick_flow.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
@@ -54,10 +55,7 @@ class _FormContext {
 }
 
 class _AttachmentUi {
-  _AttachmentUi({
-    this.id,
-    required this.stored,
-  });
+  _AttachmentUi({this.id, required this.stored});
 
   final String? id;
   final StoredProof stored;
@@ -179,6 +177,23 @@ class _HousingRealizedExpenseFormScreenState
     setState(() => _attachments.add(_AttachmentUi(stored: stored)));
   }
 
+  Future<void> _exportAttachment(StoredProof stored) async {
+    final ok = await exportStoredProofCopy(
+      displayFileName: stored.displayFileName,
+      filePath: stored.filePath,
+    );
+    if (!mounted || ok) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).housingRealizedExpenseProofSaveCopyFailed,
+        ),
+      ),
+    );
+  }
+
   List<RealizedExpenseAttachmentDraft> _attachmentDrafts() {
     return _attachments
         .map(
@@ -218,7 +233,9 @@ class _HousingRealizedExpenseFormScreenState
     final l10n = AppLocalizations.of(context);
     final error = _validate(l10n, ctx);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final minor = parseAmountMinorFromText(_amountController.text)!;
@@ -232,13 +249,14 @@ class _HousingRealizedExpenseFormScreenState
       paymentDate: _paymentDate!,
       payerParticipantId: selfId,
       kind: _kind,
-      beneficiaryParticipantId:
-          _kind == RealizedExpenseKind.transfer ? _beneficiaryId : null,
+      beneficiaryParticipantId: _kind == RealizedExpenseKind.transfer
+          ? _beneficiaryId
+          : null,
       description:
           _kind == RealizedExpenseKind.transfer ||
-                  _kind == RealizedExpenseKind.normal
-              ? _descriptionController.text
-              : null,
+              _kind == RealizedExpenseKind.normal
+          ? _descriptionController.text
+          : null,
       existingExpenseId: _draftExpenseId,
       attachments: _attachmentDrafts(),
     );
@@ -308,7 +326,9 @@ class _HousingRealizedExpenseFormScreenState
     final l10n = AppLocalizations.of(context);
     final error = _validate(l10n, ctx);
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
     final minor = parseAmountMinorFromText(_amountController.text)!;
@@ -326,13 +346,14 @@ class _HousingRealizedExpenseFormScreenState
         paymentDate: _paymentDate!,
         payerParticipantId: selfId,
         kind: _kind,
-        beneficiaryParticipantId:
-            _kind == RealizedExpenseKind.transfer ? _beneficiaryId : null,
+        beneficiaryParticipantId: _kind == RealizedExpenseKind.transfer
+            ? _beneficiaryId
+            : null,
         description:
             _kind == RealizedExpenseKind.transfer ||
-                    _kind == RealizedExpenseKind.normal
-                ? _descriptionController.text
-                : null,
+                _kind == RealizedExpenseKind.normal
+            ? _descriptionController.text
+            : null,
         existingExpenseId: _draftExpenseId,
         attachments: _attachmentDrafts(),
       );
@@ -361,224 +382,229 @@ class _HousingRealizedExpenseFormScreenState
       appBar: AppBar(title: Text(l10n.housingRealizedExpenseTitle)),
       body: SafeArea(
         child: FutureBuilder<_FormContext?>(
-        future: _loadFuture,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final ctx = snap.data;
-          if (ctx == null) {
-            return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
-          }
+          future: _loadFuture,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final ctx = snap.data;
+            if (ctx == null) {
+              return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
+            }
 
-          final dateFmt = effectiveDateFormat(ctx.prefs);
-          final paymentLabel = _paymentDate == null
-              ? l10n.housingRealizedExpensePaymentDatePick
-              : formatPreferenceDate(_paymentDate!, dateFmt);
-          final dateFieldLabel = _kind == RealizedExpenseKind.transfer
-              ? l10n.housingRealizedExpenseTransferDate
-              : l10n.housingRealizedExpensePaymentDate;
+            final dateFmt = effectiveDateFormat(ctx.prefs);
+            final paymentLabel = _paymentDate == null
+                ? l10n.housingRealizedExpensePaymentDatePick
+                : formatPreferenceDate(_paymentDate!, dateFmt);
+            final dateFieldLabel = _kind == RealizedExpenseKind.transfer
+                ? l10n.housingRealizedExpenseTransferDate
+                : l10n.housingRealizedExpensePaymentDate;
 
-          final selfId = selfParticipantIdForPlan(widget.planId);
-          final otherParticipants = ctx.participants
-              .where((p) => p.id != selfId)
-              .toList(growable: false);
-          final showPlanLineField = RealizedExpenseKind.usesPlanLine(_kind);
-          final showTransferFields = _kind == RealizedExpenseKind.transfer;
-          final showDescriptionField =
-              _kind == RealizedExpenseKind.transfer ||
-              _kind == RealizedExpenseKind.normal;
+            final selfId = selfParticipantIdForPlan(widget.planId);
+            final otherParticipants = ctx.participants
+                .where((p) => p.id != selfId)
+                .toList(growable: false);
+            final showPlanLineField = RealizedExpenseKind.usesPlanLine(_kind);
+            final showTransferFields = _kind == RealizedExpenseKind.transfer;
+            final showDescriptionField =
+                _kind == RealizedExpenseKind.transfer ||
+                _kind == RealizedExpenseKind.normal;
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            children: [
-              Text(
-                l10n.housingRealizedExpenseKind,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: RealizedExpenseKind.normal,
-                    label: Text(l10n.housingRealizedExpenseKindNormal),
-                  ),
-                  ButtonSegment(
-                    value: RealizedExpenseKind.transfer,
-                    label: Text(l10n.housingRealizedExpenseKindTransfer),
-                  ),
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                Text(
+                  l10n.housingRealizedExpenseKind,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(
+                      value: RealizedExpenseKind.normal,
+                      label: Text(l10n.housingRealizedExpenseKindNormal),
+                    ),
+                    ButtonSegment(
+                      value: RealizedExpenseKind.transfer,
+                      label: Text(l10n.housingRealizedExpenseKindTransfer),
+                    ),
+                  ],
+                  selected: {_kind},
+                  emptySelectionAllowed: false,
+                  onSelectionChanged: (selected) {
+                    if (selected.isEmpty) return;
+                    setState(() {
+                      _kind = selected.first;
+                      if (RealizedExpenseKind.usesPlanLine(_kind)) {
+                        _planLineId ??= ctx.planLines.isEmpty
+                            ? null
+                            : ctx.planLines.first.id;
+                      } else {
+                        _planLineId = null;
+                      }
+                      if (_kind != RealizedExpenseKind.transfer) {
+                        _beneficiaryId = null;
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (showPlanLineField) ...[
+                  if (ctx.planLines.isEmpty)
+                    Text(
+                      l10n.housingRealizedExpenseNoPlanLines,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      initialValue: _planLineId,
+                      decoration: InputDecoration(
+                        labelText: l10n.housingRealizedExpensePlanLine,
+                      ),
+                      isExpanded: true,
+                      items: [
+                        for (final line in ctx.planLines)
+                          DropdownMenuItem(
+                            value: line.id,
+                            child: Text(
+                              line.title.trim().isEmpty
+                                  ? line.id
+                                  : line.title.trim(),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: (v) => setState(() => _planLineId = v),
+                    ),
+                  const SizedBox(height: 16),
                 ],
-                selected: {_kind},
-                emptySelectionAllowed: false,
-                onSelectionChanged: (selected) {
-                  if (selected.isEmpty) return;
-                  setState(() {
-                    _kind = selected.first;
-                    if (RealizedExpenseKind.usesPlanLine(_kind)) {
-                      _planLineId ??=
-                          ctx.planLines.isEmpty ? null : ctx.planLines.first.id;
-                    } else {
-                      _planLineId = null;
-                    }
-                    if (_kind != RealizedExpenseKind.transfer) {
-                      _beneficiaryId = null;
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              if (showPlanLineField) ...[
-                if (ctx.planLines.isEmpty)
-                  Text(
-                    l10n.housingRealizedExpenseNoPlanLines,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                  )
-                else
+                if (showTransferFields) ...[
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: _planLineId,
+                    initialValue: _beneficiaryId,
                     decoration: InputDecoration(
-                      labelText: l10n.housingRealizedExpensePlanLine,
+                      labelText: l10n.housingRealizedExpenseTransferRecipient,
                     ),
                     isExpanded: true,
                     items: [
-                      for (final line in ctx.planLines)
+                      for (final p in otherParticipants)
                         DropdownMenuItem(
-                          value: line.id,
+                          value: p.id,
                           child: Text(
-                            line.title.trim().isEmpty ? line.id : line.title.trim(),
-                            overflow: TextOverflow.ellipsis,
+                            displayNameForParticipant(p.id, ctx.participants),
                           ),
                         ),
                     ],
-                    onChanged: (v) => setState(() => _planLineId = v),
+                    onChanged: (v) => setState(() => _beneficiaryId = v),
                   ),
-                const SizedBox(height: 16),
-              ],
-              if (showTransferFields) ...[
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _beneficiaryId,
-                  decoration: InputDecoration(
-                    labelText: l10n.housingRealizedExpenseTransferRecipient,
+                ],
+                if (showDescriptionField) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: l10n.housingRealizedExpenseTransferDescription,
+                      alignLabelWithHint: true,
+                    ),
+                    minLines: 3,
+                    maxLines: 5,
+                    textCapitalization: TextCapitalization.sentences,
                   ),
-                  isExpanded: true,
-                  items: [
-                    for (final p in otherParticipants)
-                      DropdownMenuItem(
-                        value: p.id,
-                        child: Text(
-                          displayNameForParticipant(p.id, ctx.participants),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _amountController,
+                        decoration: InputDecoration(
+                          labelText: l10n.housingRealizedExpenseAmount,
+                          suffixText: ctx.currency,
                         ),
-                      ),
-                  ],
-                  onChanged: (v) => setState(() => _beneficiaryId = v),
-                ),
-              ],
-              if (showDescriptionField) ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: l10n.housingRealizedExpenseTransferDescription,
-                    alignLabelWithHint: true,
-                  ),
-                  minLines: 3,
-                  maxLines: 5,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _amountController,
-                      decoration: InputDecoration(
-                        labelText: l10n.housingRealizedExpenseAmount,
-                        suffixText: ctx.currency,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(4),
-                      onTap: () => _pickPaymentDate(ctx),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: dateFieldLabel,
-                          suffixIcon: const Icon(Icons.calendar_today_outlined),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => _pickPaymentDate(ctx),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: dateFieldLabel,
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                            ),
+                          ),
+                          child: Text(paymentLabel),
                         ),
-                        child: Text(paymentLabel),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.housingRealizedExpenseProofSection,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.housingRealizedExpenseProofEncourage,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _submitting ? null : _addProof,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: Text(l10n.housingRealizedExpenseAddProof),
+                ),
+                const SizedBox(height: 64),
+                for (final att in _attachments) ...[
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.attach_file),
+                      title: Text(att.stored.displayFileName),
+                      subtitle: Text(
+                        l10n.housingRealizedExpenseProofTapToSaveCopy,
+                      ),
+                      onTap: _submitting
+                          ? null
+                          : () => _exportAttachment(att.stored),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: _submitting
+                            ? null
+                            : () => setState(() => _attachments.remove(att)),
                       ),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.housingRealizedExpenseProofSection,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.housingRealizedExpenseProofEncourage,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: _submitting ? null : _addProof,
-                icon: const Icon(Icons.add_photo_alternate_outlined),
-                label: Text(l10n.housingRealizedExpenseAddProof),
-              ),
-              const SizedBox(height: 64),
-              for (final att in _attachments) ...[
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.attach_file),
-                    title: Text(att.stored.displayFileName),
-                    subtitle: Text(
-                      l10n.housingRealizedExpenseStoragePath(att.stored.filePath),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: _submitting
-                          ? null
-                          : () => setState(() => _attachments.remove(att)),
-                    ),
-                  ),
+                const SizedBox(height: 32),
+                OutlinedButton(
+                  onPressed: _submitting ? null : () => _saveDraft(ctx),
+                  child: Text(l10n.housingRealizedExpenseSaveDraft),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: _submitting ? null : () => _submit(ctx),
+                  child: _submitting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.housingRealizedExpenseSubmit),
                 ),
               ],
-              const SizedBox(height: 32),
-              OutlinedButton(
-                onPressed: _submitting ? null : () => _saveDraft(ctx),
-                child: Text(l10n.housingRealizedExpenseSaveDraft),
-              ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: _submitting ? null : () => _submit(ctx),
-                child: _submitting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.housingRealizedExpenseSubmit),
-              ),
-            ],
-          );
-        },
+            );
+          },
         ),
       ),
     );

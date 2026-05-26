@@ -750,6 +750,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpensePickCamera => 'Take a photo';
 
   @override
+  String get housingRealizedExpenseCapturePhoto => 'Capture photo';
+
+  @override
+  String get housingRealizedExpenseCameraStartFailed =>
+      'Could not access the camera on this device.';
+
+  @override
   String get housingRealizedExpensePickGallery => 'Choose from gallery';
 
   @override
@@ -805,6 +812,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseCropFailed => 'Could not crop image';
+
+  @override
+  String get housingRealizedExpenseProofTapToSaveCopy => 'Tap to save a copy';
+
+  @override
+  String get housingRealizedExpenseProofSaveCopyFailed =>
+      'Could not save a copy of the file';
+
+  @override
+  String get housingRealizedExpenseProofImagesOnly =>
+      'Select an image file only (jpg, jpeg, png, webp, heic).';
+
+  @override
+  String get housingRealizedExpenseProofImageTooLarge =>
+      'This image is too large to process in the web app. Choose a smaller image or send it another way.';
 
   @override
   String housingActiveHubReviewPending(int count) {

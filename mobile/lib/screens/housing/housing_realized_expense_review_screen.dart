@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/housing_navigation_intent.dart';
+import '../../housing/realized_expense/proof_attachment_export.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/realized_expense/realized_expense_repository.dart';
@@ -444,7 +445,11 @@ class _HousingRealizedExpenseReviewScreenState
         name.endsWith('.heic');
   }
 
-  Widget _buildProofPlaceholder(BuildContext context, {double size = 148}) {
+  Widget _buildProofPlaceholder(
+    BuildContext context, {
+    double size = 148,
+    IconData icon = Icons.no_photography_outlined,
+  }) {
     final colors = Theme.of(context).colorScheme;
     return Container(
       width: size,
@@ -454,11 +459,7 @@ class _HousingRealizedExpenseReviewScreenState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.outlineVariant),
       ),
-      child: Icon(
-        Icons.no_photography_outlined,
-        size: 36,
-        color: colors.onSurfaceVariant,
-      ),
+      child: Icon(icon, size: 36, color: colors.onSurfaceVariant),
     );
   }
 
@@ -469,7 +470,13 @@ class _HousingRealizedExpenseReviewScreenState
         ? localFileImageProvider(attachment.filePath)
         : null;
     if (provider == null) {
-      return _buildProofPlaceholder(context, size: previewSize);
+      return _buildProofPlaceholder(
+        context,
+        size: previewSize,
+        icon: attachment == null
+            ? Icons.no_photography_outlined
+            : Icons.insert_drive_file_outlined,
+      );
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -482,6 +489,23 @@ class _HousingRealizedExpenseReviewScreenState
           errorBuilder: (_, _, _) {
             return _buildProofPlaceholder(context, size: previewSize);
           },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportAttachment(RealizedExpenseAttachment attachment) async {
+    final ok = await exportStoredProofCopy(
+      displayFileName: attachment.displayFileName,
+      filePath: attachment.filePath,
+    );
+    if (!mounted || ok) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).housingRealizedExpenseProofSaveCopyFailed,
         ),
       ),
     );
@@ -604,6 +628,51 @@ class _HousingRealizedExpenseReviewScreenState
                   ],
                 ),
               ),
+              if (ctx.proofAttachment != null &&
+                  !_isPreviewableImage(ctx.proofAttachment)) ...[
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.only(left: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.housingRealizedExpenseProofSection,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Material(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => _exportAttachment(ctx.proofAttachment!),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  ctx.proofAttachment!.displayFileName,
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.housingRealizedExpenseProofTapToSaveCopy,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (ctx.rejections.isNotEmpty) ...[
                 const SizedBox(height: 48),
                 Text(
