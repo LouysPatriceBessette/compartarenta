@@ -14,6 +14,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/fullscreen_image_viewer_screen.dart';
 import '../../widgets/local_file_image_provider.dart';
 import 'housing_realized_expense_form_screen.dart';
 
@@ -466,9 +467,10 @@ class _HousingRealizedExpenseReviewScreenState
   Widget _buildProofPreview(BuildContext context, _ReviewContext ctx) {
     const previewSize = 148.0;
     final attachment = ctx.proofAttachment;
-    final provider = _isPreviewableImage(attachment) && attachment != null
-        ? localFileImageProvider(attachment.filePath)
-        : null;
+    final previewAttachment = _isPreviewableImage(attachment) ? attachment : null;
+    final provider = previewAttachment == null
+        ? null
+        : localFileImageProvider(previewAttachment.filePath);
     if (provider == null) {
       return _buildProofPlaceholder(
         context,
@@ -478,17 +480,35 @@ class _HousingRealizedExpenseReviewScreenState
             : Icons.insert_drive_file_outlined,
       );
     }
-    return ClipRRect(
+    final imageAttachment = previewAttachment!;
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: previewSize,
-        height: previewSize,
-        child: Image(
-          image: provider,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) {
-            return _buildProofPlaceholder(context, size: previewSize);
-          },
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => FullscreenImageViewerScreen(
+                image: provider,
+                title: imageAttachment.displayFileName,
+              ),
+            ),
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: previewSize,
+            height: previewSize,
+            child: Image(
+              image: provider,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) {
+                return _buildProofPlaceholder(context, size: previewSize);
+              },
+            ),
+          ),
         ),
       ),
     );

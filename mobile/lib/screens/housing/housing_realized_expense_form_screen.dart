@@ -63,6 +63,8 @@ class _AttachmentUi {
 
 class _HousingRealizedExpenseFormScreenState
     extends State<HousingRealizedExpenseFormScreen> {
+  static const bool _showDraftAction = false;
+
   final _repo = RealizedExpenseRepository(AppDatabase.processScope);
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -587,11 +589,13 @@ class _HousingRealizedExpenseFormScreenState
                   ),
                 ],
                 const SizedBox(height: 32),
-                OutlinedButton(
-                  onPressed: _submitting ? null : () => _saveDraft(ctx),
-                  child: Text(l10n.housingRealizedExpenseSaveDraft),
-                ),
-                const SizedBox(height: 8),
+                if (_showDraftAction) ...[
+                  OutlinedButton(
+                    onPressed: _submitting ? null : () => _saveDraft(ctx),
+                    child: Text(l10n.housingRealizedExpenseSaveDraft),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 FilledButton(
                   onPressed: _submitting ? null : () => _submit(ctx),
                   child: _submitting
