@@ -987,6 +987,23 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get housingBalancesModeReal => 'Reales';
+
+  @override
+  String get housingBalancesModeOptimized => 'Optimizados';
+
+  @override
+  String get housingBalancesLegendTitle => 'Leyenda';
+
+  @override
+  String get housingBalancesOwesNobody => 'No debe nada a nadie.';
+
+  @override
+  String housingBalancesOwesAmountTo(String amount, String to) {
+    return '$amount a $to';
+  }
+
+  @override
   String get housingRealizedExpenseBudgetCapTitle =>
       'Presupuesto mensual superado';
 

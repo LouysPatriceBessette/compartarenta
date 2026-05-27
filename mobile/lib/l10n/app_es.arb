@@ -363,6 +363,17 @@
   "housingBalancesTitle": "Saldos pendientes",
   "housingBalancesEmpty": "Aún no hay saldos. Los gastos publicados aparecerán aquí.",
   "housingBalancesOwes": "{from} debe {amount} a {to}",
+  "housingBalancesModeReal": "Reales",
+  "housingBalancesModeOptimized": "Optimizados",
+  "housingBalancesLegendTitle": "Leyenda",
+  "housingBalancesOwesNobody": "No debe nada a nadie.",
+  "housingBalancesOwesAmountTo": "{amount} a {to}",
+  "@housingBalancesOwesAmountTo": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseBudgetCapTitle": "Presupuesto mensual superado",
   "housingRealizedExpenseBudgetCapBody": "Este importe supera el tope mensual ({cap}) de esta línea. ¿Enviar de todos modos?",
   "housingRealizedExpenseBudgetCapConfirm": "Enviar de todos modos",

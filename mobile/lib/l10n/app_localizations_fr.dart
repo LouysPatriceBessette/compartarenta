@@ -990,6 +990,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get housingBalancesModeReal => 'Réels';
+
+  @override
+  String get housingBalancesModeOptimized => 'Optimisés';
+
+  @override
+  String get housingBalancesLegendTitle => 'Légende';
+
+  @override
+  String get housingBalancesOwesNobody => 'Ne doit rien à personne.';
+
+  @override
+  String housingBalancesOwesAmountTo(String amount, String to) {
+    return '$amount à $to';
+  }
+
+  @override
   String get housingRealizedExpenseBudgetCapTitle => 'Budget mensuel dépassé';
 
   @override

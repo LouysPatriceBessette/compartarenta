@@ -125,12 +125,32 @@ The active agreement hub SHALL include **Current month expenses** (localized) li
 
 ### Requirement: Hub routes to balances owed between participants
 
-The application SHALL compute **who owes whom** from **published** realized expenses and active plan line split weights, including **reimbursement** and **advance** kinds per entry spec rules. The hub action **Balances owed** opens a summary screen with pairwise or net-settlement presentation (algorithm choice is implementation; MUST be deterministic and documented).
+The application SHALL compute **who owes whom** from **published** realized expenses and active plan line split weights, including **reimbursement**, **advance**, and **transfer** kinds per entry spec rules. The hub action **Balances owed** opens a summary screen that exposes two deterministic views over the same published ledger:
+
+- **Real**: aggregate directed obligations exactly as produced by published expenses and transfers after line-split expansion
+- **Optimized**: a deterministic compensated settlement rebuilt from the Real view by netting each participant's incoming and outgoing obligations
+
+The application SHALL assign a stable participant letter and graph position from the accepted active roster order for the plan, and the same roster state SHALL produce the same graph on every device.
 
 #### Scenario: Published expenses update balances
 
 - **WHEN** a new expense reaches published state
 - **THEN** balance totals reflect the split for that payment
+
+#### Scenario: Real mode preserves opposite-direction obligations
+
+- **WHEN** participant A owes participant B from one published item and participant B owes participant A from another
+- **THEN** the Real mode SHALL display both directed obligations without cancelling them
+
+#### Scenario: Optimized mode compensates through deterministic net settlement
+
+- **WHEN** the same published ledger is viewed in Optimized mode
+- **THEN** the application SHALL recompute a deterministic net settlement graph from each participant's incoming and outgoing totals
+
+#### Scenario: Transfers participate in balance reconstruction
+
+- **WHEN** a published transfer and a published shared expense cancel each other
+- **THEN** Optimized balances SHALL reduce the pairwise debt accordingly, including to zero when fully offset
 
 ---
 

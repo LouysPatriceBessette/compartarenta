@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
-import '../../housing/realized_expense/realized_expense_balance.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
-import '../../housing/realized_expense/realized_expense_participants.dart';
+import '../../housing/realized_expense/realized_expense_balance.dart';
 import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
-import '../../util/format_money.dart';
+import 'widgets/housing_balances_graph.dart';
+import 'widgets/housing_balances_legend.dart';
 
 class HousingBalancesScreen extends StatefulWidget {
   const HousingBalancesScreen({
@@ -26,6 +26,7 @@ class HousingBalancesScreen extends StatefulWidget {
 
 class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
   Timer? _refreshTimer;
+  HousingBalanceMode _mode = HousingBalanceMode.real;
 
   @override
   void initState() {
@@ -79,48 +80,65 @@ class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingBalancesTitle)),
-      body: FutureBuilder<List<PairwiseBalanceEntry>>(
-        future: ledger.pairwiseBalancesForPlan(widget.planId),
+      body: FutureBuilder<HousingBalanceData>(
+        future: ledger.balanceDataForPlan(widget.planId),
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final balances = snap.data ?? const [];
-          if (balances.isEmpty) {
+          final data = snap.data;
+          if (data == null) {
             return Center(child: Text(l10n.housingBalancesEmpty));
           }
-          return FutureBuilder<List<Participant>>(
-            future: participantsForPlan(
-              AppDatabase.processScope,
-              widget.planId,
-            ),
-            builder: (context, rosterSnap) {
-              final roster = rosterSnap.data ?? const [];
-              String name(String id) => displayNameForParticipant(id, roster);
-              return ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: balances.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final entry = balances[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        l10n.housingBalancesOwes(
-                          name(entry.fromParticipantId),
-                          name(entry.toParticipantId),
-                          formatMinorAsMoney(
-                            context,
-                            entry.amountMinor,
-                            widget.currency,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
+          final modeData = data.modeData(_mode);
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              SegmentedButton<HousingBalanceMode>(
+                segments: [
+                  ButtonSegment(
+                    value: HousingBalanceMode.real,
+                    label: Text(l10n.housingBalancesModeReal),
+                  ),
+                  ButtonSegment(
+                    value: HousingBalanceMode.optimized,
+                    label: Text(l10n.housingBalancesModeOptimized),
+                  ),
+                ],
+                selected: {_mode},
+                emptySelectionAllowed: false,
+                onSelectionChanged: (selection) {
+                  if (selection.isEmpty) {
+                    return;
+                  }
+                  setState(() => _mode = selection.first);
                 },
-              );
-            },
+              ),
+              const SizedBox(height: 16),
+              if (modeData.edges.isEmpty) ...[
+                Text(
+                  l10n.housingBalancesEmpty,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+              ],
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: HousingBalancesGraph(
+                    participants: data.participants,
+                    modeData: modeData,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              HousingBalancesLegend(
+                participants: data.participants,
+                modeData: modeData,
+                currency: widget.currency,
+              ),
+            ],
           );
         },
       ),

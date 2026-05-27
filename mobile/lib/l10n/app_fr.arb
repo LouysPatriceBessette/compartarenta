@@ -363,6 +363,17 @@
   "housingBalancesTitle": "Balances dues",
   "housingBalancesEmpty": "Aucune balance pour l'instant. Les dépenses publiées apparaîtront ici.",
   "housingBalancesOwes": "{from} doit {amount} à {to}",
+  "housingBalancesModeReal": "Réels",
+  "housingBalancesModeOptimized": "Optimisés",
+  "housingBalancesLegendTitle": "Légende",
+  "housingBalancesOwesNobody": "Ne doit rien à personne.",
+  "housingBalancesOwesAmountTo": "{amount} à {to}",
+  "@housingBalancesOwesAmountTo": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseBudgetCapTitle": "Budget mensuel dépassé",
   "housingRealizedExpenseBudgetCapBody": "Ce montant dépasse le plafond mensuel ({cap}) pour cette ligne. Soumettre quand même ?",
   "housingRealizedExpenseBudgetCapConfirm": "Soumettre quand même",

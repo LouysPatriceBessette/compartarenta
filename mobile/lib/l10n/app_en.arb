@@ -379,11 +379,22 @@
   "housingBalancesTitle": "Balances owed",
   "housingBalancesEmpty": "No balances yet. Published expenses will appear here.",
   "housingBalancesOwes": "{from} owes {to} {amount}",
+  "housingBalancesModeReal": "Real",
+  "housingBalancesModeOptimized": "Optimized",
+  "housingBalancesLegendTitle": "Legend",
+  "housingBalancesOwesNobody": "Owes nobody.",
+  "housingBalancesOwesAmountTo": "{amount} to {to}",
   "@housingBalancesOwes": {
     "placeholders": {
       "from": { "type": "String" },
       "to": { "type": "String" },
       "amount": { "type": "String" }
+    }
+  },
+  "@housingBalancesOwesAmountTo": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "to": { "type": "String" }
     }
   },
   "housingRealizedExpenseBudgetCapTitle": "Monthly budget exceeded",

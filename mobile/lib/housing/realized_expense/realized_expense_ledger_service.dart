@@ -281,18 +281,34 @@ class RealizedExpenseLedgerService {
   Future<List<PairwiseBalanceEntry>> pairwiseBalancesForPlan(
     String planId,
   ) async {
-    final roster = await participantsForPlan(_db, planId);
-    final participantIds = roster.map((p) => p.id).toList(growable: false);
+    final data = await balanceDataForPlan(planId);
+    return data.optimizedMode.edges;
+  }
+
+  Future<HousingBalanceData> balanceDataForPlan(String planId) async {
+    final roster = sortParticipantsForPlan(
+      planId,
+      await participantsForPlan(_db, planId),
+    );
     final published =
         await (_db.select(_db.realizedExpenses)
               ..where((t) => t.planId.equals(planId))
               ..where((t) => t.status.equals(RealizedExpenseStatus.published)))
             .get();
     final ratios = await _db.listPlanRatios(planId);
-    return computePairwiseBalances(
+    final participants = [
+      for (var i = 0; i < roster.length; i++)
+        HousingBalanceParticipant(
+          participantId: roster[i].id,
+          displayName: displayNameForParticipant(roster[i].id, roster),
+          letter: String.fromCharCode(65 + i),
+          orderIndex: i,
+        ),
+    ];
+    return computeHousingBalanceData(
       publishedExpenses: published,
       planRatios: ratios,
-      participantIds: participantIds,
+      participants: participants,
     );
   }
 

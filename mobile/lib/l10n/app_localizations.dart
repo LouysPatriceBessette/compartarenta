@@ -1816,6 +1816,36 @@ abstract class AppLocalizations {
   /// **'{from} owes {to} {amount}'**
   String housingBalancesOwes(String from, String to, String amount);
 
+  /// No description provided for @housingBalancesModeReal.
+  ///
+  /// In en, this message translates to:
+  /// **'Real'**
+  String get housingBalancesModeReal;
+
+  /// No description provided for @housingBalancesModeOptimized.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimized'**
+  String get housingBalancesModeOptimized;
+
+  /// No description provided for @housingBalancesLegendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get housingBalancesLegendTitle;
+
+  /// No description provided for @housingBalancesOwesNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes nobody.'**
+  String get housingBalancesOwesNobody;
+
+  /// No description provided for @housingBalancesOwesAmountTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} to {to}'**
+  String housingBalancesOwesAmountTo(String amount, String to);
+
   /// No description provided for @housingRealizedExpenseBudgetCapTitle.
   ///
   /// In en, this message translates to:
