@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -39,20 +40,39 @@ final class HousingBalancesGraphPainter extends CustomPainter {
     };
 
     final skeletonPaint = Paint()
-      ..color = const Color(0xFFB8C1CC)
+      ..color = const Color(0xFFB8C1CC).withValues(alpha: 0.15)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final debtEdgePaint = Paint()
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.butt;
+
     for (var i = 0; i < centers.length; i++) {
       for (var j = i + 1; j < centers.length; j++) {
-        canvas.drawLine(centers[i], centers[j], skeletonPaint);
+        final vector = centers[j] - centers[i];
+        final distance = vector.distance;
+        if (distance <= 0) {
+          continue;
+        }
+        final unit = Offset(vector.dx / distance, vector.dy / distance);
+        final radiusI = _nodeRadius(
+          size,
+          nodeByParticipant[participants[i].participantId]?.diameterPercent ?? 0,
+        );
+        final radiusJ = _nodeRadius(
+          size,
+          nodeByParticipant[participants[j].participantId]?.diameterPercent ?? 0,
+        );
+        canvas.drawLine(
+          _linePointNearNode(centers[i], unit, radiusI, size),
+          _linePointNearNode(centers[j], -unit, radiusJ, size),
+          skeletonPaint,
+        );
       }
     }
 
-    final maxEdgeAmount = modeData.edges.fold<int>(
-      0,
-      (maxAmount, edge) =>
-          maxAmount > edge.amountMinor ? maxAmount : edge.amountMinor,
-    );
     for (final edge in modeData.edges) {
       final fromIndex = participantIndex[edge.fromParticipantId];
       final toIndex = participantIndex[edge.toParticipantId];
@@ -75,58 +95,41 @@ final class HousingBalancesGraphPainter extends CustomPainter {
         size,
         nodeByParticipant[edge.toParticipantId]?.diameterPercent ?? 0,
       );
-      const arrowLength = 10.0;
-      final start = fromCenter + (unit * fromRadius);
-      final tip = toCenter - (unit * toRadius);
-      final end = tip - (unit * arrowLength);
-      final strokeWidth = maxEdgeAmount <= 0
-          ? 3.0
-          : 2.5 + (1.5 * edge.amountMinor / maxEdgeAmount);
-      final edgePaint = Paint()
-        ..color = _palette[fromIndex % _palette.length].withValues(alpha: 0.82)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(start, end, edgePaint);
+      final start = _linePointNearNode(fromCenter, unit, fromRadius, size);
+      final end = _linePointNearNode(toCenter, -unit, toRadius, size);
 
-      final perpendicular = Offset(-unit.dy, unit.dx);
-      final arrowHalfWidth = 5.0;
-      final arrowPath = Path()
-        ..moveTo(tip.dx, tip.dy)
-        ..lineTo(
-          end.dx + (perpendicular.dx * arrowHalfWidth),
-          end.dy + (perpendicular.dy * arrowHalfWidth),
-        )
-        ..lineTo(
-          end.dx - (perpendicular.dx * arrowHalfWidth),
-          end.dy - (perpendicular.dy * arrowHalfWidth),
-        )
-        ..close();
-      final arrowPaint = Paint()
-        ..color = _palette[fromIndex % _palette.length].withValues(alpha: 0.82)
-        ..style = PaintingStyle.fill;
-      canvas.drawPath(arrowPath, arrowPaint);
+      final fromColor = _palette[fromIndex % _palette.length];
+      debtEdgePaint.shader = ui.Gradient.linear(
+        start,
+        end,
+        [
+          fromColor,
+          const Color(0xFFB8C1CC).withValues(alpha: 0.15),
+        ],
+        const [0.0, 0.9],
+      );
+      canvas.drawLine(start, end, debtEdgePaint);
     }
 
     for (var i = 0; i < participants.length; i++) {
       final participant = participants[i];
       final node = nodeByParticipant[participant.participantId];
+      final appearance = _nodeAppearance(
+        participantCount: participants.length,
+        diameterPercent: node?.diameterPercent ?? 0,
+        color: _palette[i % _palette.length],
+      );
       final radius = _nodeRadius(size, node?.diameterPercent ?? 0);
       final fillPaint = Paint()
-        ..color = _palette[i % _palette.length]
+        ..color = appearance.color.withValues(alpha: appearance.fillOpacity)
         ..style = PaintingStyle.fill;
-      final borderPaint = Paint()
-        ..color = Colors.white
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke;
       canvas.drawCircle(centers[i], radius, fillPaint);
-      canvas.drawCircle(centers[i], radius, borderPaint);
 
       final textPainter = TextPainter(
         text: TextSpan(
           text: participant.letter,
           style: TextStyle(
-            color: _palette[i % _palette.length],
+            color: appearance.color.withValues(alpha: appearance.labelOpacity),
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
@@ -147,13 +150,42 @@ final class HousingBalancesGraphPainter extends CustomPainter {
         oldDelegate.modeData != modeData;
   }
 
+  static const double _svgViewBoxMinSide = 500;
+  static const double _svgMinNodeRadius = 8;
+  static const double _svgMaxNodeRadius = 20;
+  /// Clearance between a line end and the node circle (SVG units).
+  static const double _svgLineNodeGap = 3;
+
+  static ({Color color, double fillOpacity, double labelOpacity}) _nodeAppearance({
+    required int participantCount,
+    required double diameterPercent,
+    required Color color,
+  }) {
+    final recessed = participantCount >= 3 && diameterPercent <= 0;
+    if (recessed) {
+      return (color: color, fillOpacity: 0.4, labelOpacity: 0.4);
+    }
+    return (color: color, fillOpacity: 1, labelOpacity: 1);
+  }
+
   static double _nodeRadius(Size size, double diameterPercent) {
     final minSide = math.min(size.width, size.height);
-    final minDiameter = minSide * 0.012;
-    final maxDiameter = minSide * 0.072;
-    final diameter =
-        minDiameter + ((diameterPercent / 100) * (maxDiameter - minDiameter));
-    return diameter / 2;
+    final svgRadius = _svgMinNodeRadius +
+        ((diameterPercent / 100) * (_svgMaxNodeRadius - _svgMinNodeRadius));
+    return svgRadius * (minSide / _svgViewBoxMinSide);
+  }
+
+  static double _lineNodeGap(Size size) =>
+      _svgLineNodeGap * (math.min(size.width, size.height) / _svgViewBoxMinSide);
+
+  /// [outwardUnit] points from the node center toward the other endpoint.
+  static Offset _linePointNearNode(
+    Offset center,
+    Offset outwardUnit,
+    double nodeRadius,
+    Size size,
+  ) {
+    return center + (outwardUnit * (nodeRadius + _lineNodeGap(size)));
   }
 
   static List<Offset> _nodeCenters(Size size, int count) {
