@@ -1870,6 +1870,12 @@ abstract class AppLocalizations {
   /// **'Current plan'**
   String get housingActivePlanReadOnlyTitle;
 
+  /// No description provided for @housingActivePlanDatesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan dates'**
+  String get housingActivePlanDatesLabel;
+
   /// No description provided for @housingActivePlanReadOnlyExpenses.
   ///
   /// In en, this message translates to:

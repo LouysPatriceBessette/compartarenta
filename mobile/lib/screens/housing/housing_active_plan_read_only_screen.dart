@@ -7,7 +7,6 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import 'housing_agreement_rules_read_only.dart';
-import 'housing_amendment_request_screen.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
 
@@ -38,24 +37,7 @@ class _HousingActivePlanReadOnlyScreenState
     final dateFmt = effectiveDateFormat(widget.prefs);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.housingActivePlanReadOnlyTitle),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => HousingAmendmentRequestScreen(
-                    planId: widget.planId,
-                    prefs: widget.prefs,
-                  ),
-                ),
-              );
-            },
-            child: Text(l10n.housingActiveHubRequestAmendment),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(l10n.housingActivePlanReadOnlyTitle)),
       body: FutureBuilder<_ReadOnlyPayload?>(
         future: _load(db, l10n, dateFmt),
         builder: (context, snap) {
@@ -84,15 +66,19 @@ class _HousingActivePlanReadOnlyScreenState
                   displayCurrency: data.currency,
                 );
 
+          final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
             children: [
               Text(
-                data.planTitle,
+                l10n.housingActivePlanDatesLabel,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
-              Text(l10n.housingActiveHubPeriod(data.periodRange)),
+              Text(
+                data.periodRange,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 16),
               Text(
                 l10n.housingInviteParticipantsSectionTitle,
@@ -203,7 +189,6 @@ class _HousingActivePlanReadOnlyScreenState
     final groups = await db.listPlanGroups(widget.planId);
 
     return _ReadOnlyPayload(
-      planTitle: plan.title.trim().isEmpty ? plan.id : plan.title.trim(),
       periodRange: range,
       agreement: agreement,
       rules: AgreementRulesDraft.parseStored(
@@ -221,7 +206,6 @@ class _HousingActivePlanReadOnlyScreenState
 
 class _ReadOnlyPayload {
   const _ReadOnlyPayload({
-    required this.planTitle,
     required this.periodRange,
     required this.agreement,
     required this.rules,
@@ -232,7 +216,6 @@ class _ReadOnlyPayload {
     required this.currency,
   });
 
-  final String planTitle;
   final String periodRange;
   final Agreement agreement;
   final AgreementRulesDraft rules;

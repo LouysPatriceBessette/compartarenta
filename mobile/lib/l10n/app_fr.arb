@@ -378,6 +378,7 @@
   "housingRealizedExpenseBudgetCapBody": "Ce montant dépasse le plafond mensuel ({cap}) pour cette ligne. Soumettre quand même ?",
   "housingRealizedExpenseBudgetCapConfirm": "Soumettre quand même",
   "housingActivePlanReadOnlyTitle": "Plan actuel",
+  "housingActivePlanDatesLabel": "Dates du plan",
   "housingActivePlanReadOnlyExpenses": "Voir les lignes de dépense",
   "housingAmendmentRequestTitle": "Demander une modification",
   "housingAmendmentRequestIntro": "Choisissez un seul changement par proposition. Le groupe doit l'accepter à l'unanimité.",

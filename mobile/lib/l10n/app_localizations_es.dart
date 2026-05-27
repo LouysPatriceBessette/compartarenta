@@ -1019,6 +1019,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingActivePlanReadOnlyTitle => 'Plan actual';
 
   @override
+  String get housingActivePlanDatesLabel => 'Fechas del plan';
+
+  @override
   String get housingActivePlanReadOnlyExpenses => 'Ver líneas de gasto';
 
   @override

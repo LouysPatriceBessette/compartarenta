@@ -378,6 +378,7 @@
   "housingRealizedExpenseBudgetCapBody": "Este importe supera el tope mensual ({cap}) de esta línea. ¿Enviar de todos modos?",
   "housingRealizedExpenseBudgetCapConfirm": "Enviar de todos modos",
   "housingActivePlanReadOnlyTitle": "Plan actual",
+  "housingActivePlanDatesLabel": "Fechas del plan",
   "housingActivePlanReadOnlyExpenses": "Ver líneas de gasto",
   "housingAmendmentRequestTitle": "Solicitar modificación",
   "housingAmendmentRequestIntro": "Elija un solo cambio por propuesta. El grupo debe aceptarlo por unanimidad.",

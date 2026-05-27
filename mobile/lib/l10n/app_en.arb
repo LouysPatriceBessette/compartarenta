@@ -406,6 +406,7 @@
   },
   "housingRealizedExpenseBudgetCapConfirm": "Submit anyway",
   "housingActivePlanReadOnlyTitle": "Current plan",
+  "housingActivePlanDatesLabel": "Plan dates",
   "housingActivePlanReadOnlyExpenses": "View expense lines",
   "housingAmendmentRequestTitle": "Request plan modification",
   "housingAmendmentRequestIntro": "Choose one change per proposal. Your group must accept unanimously before it takes effect.",
