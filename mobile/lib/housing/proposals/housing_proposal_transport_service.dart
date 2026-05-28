@@ -397,11 +397,7 @@ class HousingProposalTransportService {
             ..where((t) => t.id.equals('${plan.id}:self')))
           .getSingleOrNull();
       if (self == null) continue;
-      final pkg = await (_db.select(_db.proposalPackages)
-            ..where((t) => t.planId.equals(plan.id)))
-          .getSingleOrNull();
-      final activeId = pkg?.activeRevisionId;
-      if (activeId == null || activeId.isEmpty) continue;
+      if (!await hasActiveRevision(plan.id)) continue;
       if (found != null) return null;
       found = plan.id;
     }
@@ -412,16 +408,12 @@ class HousingProposalTransportService {
   Future<bool> anyOtherHousingPlanHasActiveRevision({
     required String exceptPlanId,
   }) async {
-    final rows = await (_db.select(_db.proposalPackages)).get();
-    for (final pkg in rows) {
-      if (pkg.planId == exceptPlanId) continue;
-      if (pkg.activeRevisionId == null || pkg.activeRevisionId!.isEmpty) {
-        continue;
-      }
-      final plan = await (_db.select(_db.plans)
-            ..where((t) => t.id.equals(pkg.planId)))
-          .getSingleOrNull();
-      if (plan?.type == 'housing') return true;
+    final housing = await (_db.select(_db.plans)
+          ..where((t) => t.type.equals('housing')))
+        .get();
+    for (final plan in housing) {
+      if (plan.id == exceptPlanId) continue;
+      if (await hasActiveRevision(plan.id)) return true;
     }
     return false;
   }
@@ -653,8 +645,7 @@ class HousingProposalTransportService {
       if (rev == null) continue;
       try {
         final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-        final state = (payload['lifecycleState'] as String?) ?? 'open';
-        if (state == 'archived') candidates.add(id);
+        if (_revisionPayloadIsInForceContract(payload)) candidates.add(id);
       } catch (_) {
         // Ignore unparsable payloads.
       }
@@ -868,11 +859,18 @@ class HousingProposalTransportService {
     )..where((t) => t.id.equals(revisionId))).write(
       ProposalRevisionsCompanion(payloadJson: drift.Value(jsonEncode(payload))),
     );
-    await (_db.update(
-      _db.proposalPackages,
-    )..where((t) => t.planId.equals(planId))).write(
-      const ProposalPackagesCompanion(pendingRevisionId: drift.Value(null)),
-    );
+    final packages = await proposalPackagesForPlan(planId);
+    for (final pkg in packages) {
+      await (_db.update(_db.proposalPackages)..where((t) => t.id.equals(pkg.id)))
+          .write(
+        ProposalPackagesCompanion(
+          pendingRevisionId: const drift.Value(null),
+          activeRevisionId: pkg.activeRevisionId == revisionId
+              ? const drift.Value(null)
+              : const drift.Value.absent(),
+        ),
+      );
+    }
     await RelayActivityLogService(_db).append(
       kind: RelayActivityLogKinds.housingProposalInvalidated,
       initiatorKind: RelayActivityLogService.initiatorContact,
@@ -936,6 +934,8 @@ class HousingProposalTransportService {
     }
     for (final rev in revisions) {
       if (rev.id == pkg.pendingRevisionId) continue;
+      // Activated in-force revisions are archived in payload but are not UI archives.
+      if (rev.id == pkg.activeRevisionId) continue;
       final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
       if (payload['lifecycleState'] == 'draft') {
         final draftPlanId = _string(payload['draftPlanId'], fallback: planId);
@@ -1904,6 +1904,14 @@ class HousingProposalTransportService {
             ),
           );
     }
+  }
+
+  /// True when [payload] is the archived snapshot of an activated in-force contract
+  /// (not a rejected, negotiated, or expired proposal).
+  bool _revisionPayloadIsInForceContract(Map<String, dynamic> payload) {
+    final state = (payload['lifecycleState'] as String?) ?? 'open';
+    if (state != 'archived') return false;
+    return _string(payload['invalidatedByStatus']).isEmpty;
   }
 
   Future<DateTime?> _agreementPeriodEndFromRevisionPayload(

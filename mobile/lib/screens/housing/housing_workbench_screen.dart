@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
+import '../../housing/housing_module_exit.dart';
+import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -299,7 +300,8 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
       );
       await Future<void>.delayed(const Duration(milliseconds: 150));
       if (!mounted) return;
-      await Navigator.of(context, rootNavigator: true).push<void>(
+      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+        context,
         MaterialPageRoute<void>(
           builder: (_) => HousingPlanScreen(
             prefs: widget.prefs,
@@ -321,7 +323,8 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
 
   Future<void> _newPlan() async {
     final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
-    await Navigator.of(context, rootNavigator: true).push<void>(
+    await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingPlanScreen(
           prefs: widget.prefs,
@@ -338,7 +341,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/')),
+        leading: BackButton(onPressed: () => exitHousingModule(context)),
         centerTitle: true,
         title: Text(l10n.housingWorkbenchTitle),
       ),

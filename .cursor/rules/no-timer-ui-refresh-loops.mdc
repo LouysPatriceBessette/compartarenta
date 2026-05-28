@@ -1,0 +1,42 @@
+---
+description: Do not poll UI with Timer.periodic while waiting for events; prefer event-driven updates
+alwaysApply: true
+---
+
+# No timer-driven UI refresh loops
+
+## Default (mandatory)
+
+Do **not** use `Timer.periodic` (or similar) to **reload screens**, `setState`, `FutureBuilder` futures, `GoRouter` remounts, or other full UI refresh while **waiting for something to happen**.
+
+The waited-for outcome **must** be applied when the **event** arrives (listener, notifier, stream, callback, inbox tick, DB watch, etc.) — not by hoping the next timer tick catches it.
+
+Especially forbidden when waiting for:
+
+- A **human** action (proposal accept/reject, form submit, navigation choice)
+- **Local state** that should already update synchronously after your own code path
+- **Navigation** after settlement (use explicit navigation intent + one-shot reload, not poll-until-right-screen)
+
+Removing a visual “flash” or adding a periodic refresh to “stabilize” the UI often **masks** routing, suppress flags, or stale overlays — as in the housing proposal settlement work (archive → new plan → accept).
+
+## What to do instead
+
+1. **Subscribe** to the source of truth once (`addListener` on `ValueNotifier`, relay `steadyStateInboxTick`, repository stream, etc.).
+2. On event: **minimal** update (reload the one snapshot, bump a reload token, call a dedicated navigation helper).
+3. **Cancel** any timer in `dispose` when the screen is left.
+4. Prefer **one-shot** `pollSteadyStateInboxes()` at resume or after send, not a 3s UI loop for the whole pending phase.
+
+## Allowed exception (rare; must disclose)
+
+A short poll is acceptable **only** when **all** apply:
+
+- Waiting for a **quasi-instant machine** response (e.g. relay inbox delivery seconds after send), not a human decision
+- No existing event/hook exists yet and adding one is disproportionate for the scope
+- Poll is **scoped** (single screen, cancelled on dispose), not app-wide
+- Interval is the **minimum** needed (not a blunt 3s default on every housing screen)
+
+If you introduce or keep such a loop, **tell the user explicitly** in the delivery message: what is polled, why events are insufficient today, interval, and the maintenance/UX trade-off.
+
+## Before delivery
+
+If you touch waiting/pending UI, ask: “Could this update on the event alone?” If yes, remove the timer loop or do not add one.

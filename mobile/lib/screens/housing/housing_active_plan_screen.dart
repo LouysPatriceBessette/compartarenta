@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/amendment/housing_active_agreement_service.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
+import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
@@ -408,13 +408,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     if (mounted) _reload();
   }
 
-  void _handleHubBack(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    } else {
-      context.go('/');
-    }
-  }
+  void _handleHubBack(BuildContext context) => exitHousingModule(context);
 
   @override
   Widget build(BuildContext context) {

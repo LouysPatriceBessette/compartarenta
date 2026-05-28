@@ -1,0 +1,35 @@
+---
+description: Run flutter analyze and flutter test after every code change; deliver only when fully green
+alwaysApply: true
+---
+
+# Flutter verify on every change
+
+After **any** edit under `mobile/` (or shared packages consumed by the mobile app), before telling the user the work is done:
+
+1. **Analyze** (must report zero issues — no errors, no warnings, no info):
+
+   ```bash
+   cd mobile && ./tool/flutterw analyze --fatal-infos .
+   ```
+
+   Prefer `./tool/flutterw` over a global `flutter` binary.
+
+2. **Test** (full suite must pass):
+
+   ```bash
+   cd mobile && ./tool/flutterw test
+   ```
+
+   When the change is scoped, you may run a targeted file first for speed, then the full suite before delivery.
+
+3. **Iterate** until both commands are fully green. Do not hand off with a failing or skipped verification step.
+
+## If an existing test fails
+
+- If the failure is **clearly caused by your change**, fix the product code or update the test as appropriate and re-run until green.
+- If the failure appears **unrelated** to your change, **stop** and tell the user which test failed (name + file + short error). Do **not** change that test unless they explicitly allow it. After they respond, continue iterating until analyze and test are green.
+
+## Delivery bar
+
+Only report completion when `flutter analyze --fatal-infos` and `flutter test` both succeed with no remaining issues.

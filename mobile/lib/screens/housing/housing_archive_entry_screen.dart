@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/housing_module_exit.dart';
+import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -43,14 +44,20 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
     setState(() => _creatingDerivedDraft = true);
     final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
     try {
-      await HousingProposalTransportService(_db).createForkDraftFromArchive(
-        listPlanId: widget.planId,
-        revisionId: archive.revisionId,
-        draftPlanId: id,
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 150));
+      HousingNavigationIntent.pushSuppressProposalSettledRedirect();
+      try {
+        await HousingProposalTransportService(_db).createForkDraftFromArchive(
+          listPlanId: widget.planId,
+          revisionId: archive.revisionId,
+          draftPlanId: id,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      } finally {
+        HousingNavigationIntent.popSuppressProposalSettledRedirect();
+      }
       if (!mounted) return;
-      await Navigator.of(context, rootNavigator: true).push<void>(
+      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+        context,
         MaterialPageRoute<void>(
           builder: (_) => HousingPlanScreen(
             prefs: widget.prefs,
@@ -71,7 +78,8 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   }
 
   Future<void> _editDraft(HousingProposalArchive archive) async {
-    await Navigator.of(context, rootNavigator: true).push<void>(
+    await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingPlanScreen(
           prefs: widget.prefs,
@@ -99,21 +107,42 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   }
 
   Future<void> _newPlan() async {
+    if (_creatingDerivedDraft) return;
+    setState(() => _creatingDerivedDraft = true);
     final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
-    await HousingProposalTransportService(
-      _db,
-    ).createStandaloneDraftEntry(listPlanId: widget.planId, draftPlanId: id);
-    if (!mounted) return;
-    await Navigator.of(context, rootNavigator: true).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => HousingPlanScreen(
-          prefs: widget.prefs,
-          planId: id,
-          openEditorInitially: true,
+    try {
+      HousingNavigationIntent.pushSuppressProposalSettledRedirect();
+      try {
+        await HousingProposalTransportService(
+          _db,
+        ).createStandaloneDraftEntry(
+          listPlanId: widget.planId,
+          draftPlanId: id,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      } finally {
+        HousingNavigationIntent.popSuppressProposalSettledRedirect();
+      }
+      if (!mounted) return;
+      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => HousingPlanScreen(
+            prefs: widget.prefs,
+            planId: id,
+            openEditorInitially: true,
+          ),
         ),
-      ),
-    );
-    if (mounted) _reload();
+      );
+      await HousingProposalTransportService(
+        _db,
+      ).revealDraftEntry(listPlanId: widget.planId, draftPlanId: id);
+    } finally {
+      if (mounted) {
+        setState(() => _creatingDerivedDraft = false);
+        _reload();
+      }
+    }
   }
 
   String _archiveTitle(AppLocalizations l10n, HousingProposalArchive archive) {
@@ -146,14 +175,12 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.go('/');
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(l10n.housingArchiveEntryTitle)),
-        body: FutureBuilder<List<HousingProposalArchive>>(
+    return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => exitHousingModule(context)),
+        title: Text(l10n.housingArchiveEntryTitle),
+      ),
+      body: FutureBuilder<List<HousingProposalArchive>>(
           future: _load,
           builder: (context, snap) {
             if (!snap.hasData) {
@@ -204,7 +231,6 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
             );
           },
         ),
-      ),
     );
   }
 

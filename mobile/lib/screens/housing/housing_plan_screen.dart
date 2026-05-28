@@ -20,6 +20,7 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
 import '../../housing/housing_plan_draft_backup.dart';
+import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
@@ -32,7 +33,6 @@ import '../../util/format_money.dart';
 import '../../widgets/rational_percent_text.dart';
 import '../contacts/contact_picker_sheet.dart';
 import 'housing_agreement_rules_read_only.dart';
-import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_module_entry_screen.dart';
@@ -112,6 +112,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   /// Bumps when the summary should re-query DB (e.g. after creating a proposal revision).
   int _summaryReloadToken = 0;
+  final GlobalKey<_SummaryViewState> _summaryViewKey =
+      GlobalKey<_SummaryViewState>();
 
   /// 0–5 = wizard steps; summary when true.
   bool _showSummary = false;
@@ -205,7 +207,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   void _onSteadyInboxTick() {
     if (!mounted) return;
-    setState(() => _summaryReloadToken++);
     unawaited(_openReceivedProposalIfPending());
   }
 
@@ -938,8 +939,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       rollbackPendingOnTotalFailure: true,
     );
     if (!mounted) return sent;
-    await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
-    if (mounted) setState(() => _summaryReloadToken++);
+    _summaryViewKey.currentState?.reloadSnapshot(schedulePendingPoll: false);
     return sent;
   }
 
@@ -958,8 +958,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       rollbackPendingOnTotalFailure: false,
     );
     if (!mounted) return;
-    setState(() => _summaryReloadToken++);
-    if (sent) return;
+    if (sent) {
+      _summaryViewKey.currentState?.reloadSnapshot(schedulePendingPoll: false);
+    }
   }
 
   /// Posts the pending revision to invitees via the relay. When
@@ -1160,7 +1161,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           }
           if (_showSummary) {
             return _SummaryView(
-              key: ValueKey<int>(_summaryReloadToken),
+              key: _summaryViewKey,
               db: _db,
               planId: _planId,
               prefs: widget.prefs,
@@ -2975,6 +2976,7 @@ class _SummarySnapshot {
     required this.proposalPkg,
     required this.canResendPendingProposal,
     this.latestSentArchive,
+    this.inForceRevisionId,
   });
 
   final List<Participant> participants;
@@ -2986,6 +2988,9 @@ class _SummarySnapshot {
 
   /// Most recent submitted proposal (pending or archived), if any.
   final HousingProposalArchive? latestSentArchive;
+
+  /// Set when this plan has an activated in-force contract revision.
+  final String? inForceRevisionId;
 }
 
 class _SummaryView extends StatefulWidget {
@@ -3021,6 +3026,7 @@ class _SummaryViewState extends State<_SummaryView> {
   Future<_SummarySnapshot>? _snapshotFuture;
   int _focusedParticipantIndex = 0;
   bool _hadPendingProposal = false;
+  bool _settlementRedirectScheduled = false;
   Timer? _refreshTimer;
 
   @override
@@ -3062,18 +3068,39 @@ class _SummaryViewState extends State<_SummaryView> {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      setState(() {
-        _snapshotFuture = _load();
-      });
-      _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
+      reloadSnapshot();
     });
+  }
+
+  /// Reloads summary data. When [schedulePendingPoll] is false, skips starting the
+  /// 3s relay poll (e.g. right after the proposer sends — avoids a visible refresh).
+  void reloadSnapshot({bool schedulePendingPoll = true}) {
+    unawaited(_reloadSnapshotAsync(schedulePendingPoll: schedulePendingPoll));
+  }
+
+  Future<void> _reloadSnapshotAsync({required bool schedulePendingPoll}) async {
+    try {
+      final next = await _load();
+      if (!mounted) return;
+      setState(() {
+        _snapshotFuture = Future.value(next);
+      });
+      if (schedulePendingPoll) {
+        _scheduleRefreshTimerIfNeeded(next);
+      }
+    } catch (e, st) {
+      assert(() {
+        debugPrint('Housing plan summary reload: $e\n$st');
+        return true;
+      }());
+    }
   }
 
   @override
   void didUpdateWidget(covariant _SummaryView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.reloadToken != widget.reloadToken) {
-      _snapshotFuture = _load();
+      reloadSnapshot();
     }
   }
 
@@ -3090,9 +3117,10 @@ class _SummaryViewState extends State<_SummaryView> {
     final canResend = await PlanAgreementProposalService(
       widget.db,
     ).canResendPendingProposal(widget.planId);
-    final archives = await HousingProposalTransportService(
-      widget.db,
-    ).listArchivesForPlan(widget.planId);
+    final transport = HousingProposalTransportService(widget.db);
+    final inForceRevisionId =
+        await transport.resolveActiveRevisionIdForPlan(widget.planId);
+    final archives = await transport.listArchivesForPlan(widget.planId);
     HousingProposalArchive? latestSent;
     for (final a in archives) {
       if (a.isDraft) continue;
@@ -3107,6 +3135,7 @@ class _SummaryViewState extends State<_SummaryView> {
       proposalPkg: r[4] as ProposalPackage?,
       canResendPendingProposal: canResend,
       latestSentArchive: latestSent,
+      inForceRevisionId: inForceRevisionId,
     );
   }
 
@@ -3165,20 +3194,25 @@ class _SummaryViewState extends State<_SummaryView> {
         final ratios = data.ratios;
         final hasPending = data.proposalPkg?.pendingRevisionId != null;
         final hasSentProposal = data.latestSentArchive != null;
+        final isActive = data.inForceRevisionId != null;
         if (hasPending) {
           _hadPendingProposal = true;
-        } else if (_hadPendingProposal) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            Navigator.of(context).pushReplacement<void, void>(
-              MaterialPageRoute<void>(
-                builder: (_) => HousingArchiveEntryScreen(
-                  prefs: widget.prefs,
-                  planId: widget.planId,
-                ),
-              ),
-            );
-          });
+        } else {
+          final hadPending = _hadPendingProposal;
+          if (hadPending) {
+            _hadPendingProposal = false;
+          }
+          final shouldLeaveSummary =
+              isActive || hadPending;
+          if (shouldLeaveSummary && !_settlementRedirectScheduled) {
+            _settlementRedirectScheduled = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              HousingNavigationIntent.onProposalSettled(context);
+            });
+          }
+        }
+        if (_settlementRedirectScheduled) {
           return const Center(child: CircularProgressIndicator());
         }
         if (agr == null) {
@@ -3475,9 +3509,7 @@ class _SummaryViewState extends State<_SummaryView> {
                         prefs: widget.prefs,
                         onAfterResend: () {
                           if (!mounted) return;
-                          setState(() {
-                            _snapshotFuture = _load();
-                          });
+                          reloadSnapshot(schedulePendingPoll: false);
                         },
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),

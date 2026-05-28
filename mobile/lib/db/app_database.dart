@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -760,10 +761,27 @@ class AppDatabase extends _$AppDatabase {
   /// True when a proposal package for [planId] has an active (accepted) revision.
   /// Used to lock removal of agreement rules that were part of a binding package.
   Future<bool> planHasActiveAcceptedProposal(String planId) async {
-    final row = await (select(
+    final packages = await (select(
       proposalPackages,
-    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
-    return row?.activeRevisionId != null;
+    )..where((t) => t.planId.equals(planId))).get();
+    for (final pkg in packages) {
+      final id = pkg.activeRevisionId;
+      if (id == null || id.isEmpty) continue;
+      final rev = await (select(
+        proposalRevisions,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (rev == null) continue;
+      try {
+        final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+        final state = (payload['lifecycleState'] as String?) ?? 'open';
+        if (state != 'archived') continue;
+        final invalidated = payload['invalidatedByStatus']?.toString() ?? '';
+        if (invalidated.isEmpty) return true;
+      } catch (_) {
+        // Ignore malformed payloads.
+      }
+    }
+    return false;
   }
 
   Future<Agreement?> getAgreementForPlan(String planId) async {

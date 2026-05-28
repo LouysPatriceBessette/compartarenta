@@ -1,8 +1,49 @@
+import 'dart:convert';
+
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Seeds another housing plan as **in force** on this device (archived revision
+/// with empty [invalidatedByStatus], matching [AppDatabase.planHasActiveAcceptedProposal]).
+Future<void> seedInForceHousingPlanOnDevice({
+  required AppDatabase db,
+  required String planId,
+  required DateTime periodStart,
+  required DateTime periodEnd,
+}) async {
+  final packageId = 'pkg:$planId';
+  final revisionId = 'rev:$planId:inforce';
+  final payload = <String, Object?>{
+    'kind': PlanAgreementProposalService.kind,
+    'lifecycleState': 'archived',
+    'agreement': {
+      'periodStart': periodStart.toUtc().toIso8601String(),
+      'periodEnd': periodEnd.toUtc().toIso8601String(),
+    },
+  };
+  await db.into(db.proposalPackages).insertOnConflictUpdate(
+        ProposalPackagesCompanion.insert(
+          id: packageId,
+          planId: planId,
+          createdAt: DateTime.utc(2026, 1, 1),
+          activeRevisionId: drift.Value(revisionId),
+          pendingRevisionId: const drift.Value.absent(),
+        ),
+      );
+  await db.into(db.proposalRevisions).insert(
+        ProposalRevisionsCompanion.insert(
+          id: revisionId,
+          packageId: packageId,
+          contentHash: 'test:$revisionId',
+          proposerParticipantId: '$planId:self',
+          payloadJson: jsonEncode(payload),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+}
 
 void main() {
   test('partial acceptance does not activate a pending revision', () async {
@@ -243,15 +284,13 @@ void main() {
       ),
     );
 
-    await db.into(db.proposalPackages).insert(
-          ProposalPackagesCompanion.insert(
-            id: 'pkg:ov-b',
-            planId: 'ov-b',
-            createdAt: DateTime.utc(2026, 1, 1),
-            activeRevisionId: const drift.Value('rev:ov-b'),
-            pendingRevisionId: const drift.Value.absent(),
-          ),
-        );
+    await seedInForceHousingPlanOnDevice(
+      db: db,
+      planId: 'ov-b',
+      periodStart: DateTime.utc(2026, 6, 10),
+      periodEnd: DateTime.utc(2026, 6, 20),
+    );
+    expect(await db.planHasActiveAcceptedProposal('ov-b'), isTrue);
 
     final rev = await svc.createRevisionFromCurrentDraft(
       planId: 'ov-a',
@@ -356,15 +395,13 @@ void main() {
       ),
     );
 
-    await db.into(db.proposalPackages).insert(
-          ProposalPackagesCompanion.insert(
-            id: 'pkg:edge-b',
-            planId: 'edge-b',
-            createdAt: DateTime.utc(2026, 1, 1),
-            activeRevisionId: const drift.Value('rev:edge-b'),
-            pendingRevisionId: const drift.Value.absent(),
-          ),
-        );
+    await seedInForceHousingPlanOnDevice(
+      db: db,
+      planId: 'edge-b',
+      periodStart: DateTime.utc(2026, 6, 30),
+      periodEnd: DateTime.utc(2026, 7, 31),
+    );
+    expect(await db.planHasActiveAcceptedProposal('edge-b'), isTrue);
 
     final rev = await svc.createRevisionFromCurrentDraft(
       planId: 'edge-a',

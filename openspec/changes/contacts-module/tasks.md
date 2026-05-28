@@ -102,3 +102,25 @@ work.
       for layout; follow each platform’s badge artwork guidelines). Wire real
       store URLs in a follow-up tracked with store release (see
       `mobile-app-store-release` tasks).
+
+## 9. Known bugs (backlog)
+
+- [ ] 9.1 **Bug (medium / non-blocking):** Contact handshake may report relay failure or expiry while the peer completes the connection — invitee left without a connected contact.
+  - **Severity:** medium / non-blocking.
+  - **Reproducibility:** uncertain (observed once in dev, May 2026).
+  - **Screenshots:**
+    - [`assets/bugs/contact-handshake-relay-unreachable-2026-05-28.png`](assets/bugs/contact-handshake-relay-unreachable-2026-05-28.png) — redeem screen after first submit: valid code format, then *Relais injoignable. Vérifiez votre connexion et réessayez.*
+    - [`assets/bugs/contact-handshake-code-expired-on-retry-2026-05-28.png`](assets/bugs/contact-handshake-code-expired-on-retry-2026-05-28.png) — resubmitting the same code: *Cette invitation a expiré.*
+    - [`assets/bugs/contact-handshake-web-connected-peer-2026-05-28.png`](assets/bugs/contact-handshake-web-connected-peer-2026-05-28.png) — inviter (web): contact *Louys* shows **Connected**.
+    - [`assets/bugs/contact-handshake-android-empty-contacts-2026-05-28.png`](assets/bugs/contact-handshake-android-empty-contacts-2026-05-28.png) — invitee (Android): Contacts list still empty.
+  - **Repro (reported):**
+    1. On the invitee device, open **Enter a code** and submit an invitation code.
+    2. UI shows relay unreachable (*Relais injoignable* / `contactsHandshakeErrorRelayUnavailable`).
+    3. On the inviter device, the incoming handshake is received and **accepted**.
+    4. On the invitee device, submit the **same** code again.
+    5. UI shows invitation expired (*Cette invitation a expiré* / `contactsHandshakeErrorExpired`).
+  - **Actual:** Asymmetric outcome — inviter has a connected contact; invitee does not. Retry is blocked by expired / consumed invitation state.
+  - **Expected:** If the `hello` reached the relay and the inviter accepted, the invitee should eventually reach **Connected** (or show a recoverable in-progress state), not a false negative followed by a one-way success. Resubmitting the same code should not be required when the handshake already completed on the peer.
+  - **Hypothesis:** Relay feedback window or initial HTTP error handling is too aggressive (`HandshakeOrchestrator.redeemInvitation` → `relay_unavailable`; `RedeemInvitationScreen` outcome polling / error mapping). The inviter may consume the nonce while the invitee still shows failure; late `ack` may not promote the invitee contact row.
+  - **Likely area:** `mobile/lib/relay/handshake_orchestrator.dart`, `mobile/lib/screens/contacts/redeem_invitation_screen.dart`, pending-handshake rows and `processAllPendingHandshakes` / steady inbox poll timing.
+  - **Related:** task **4.4** (nonce consumption on `hello`), task **4.7** (promotion to connected on both sides).

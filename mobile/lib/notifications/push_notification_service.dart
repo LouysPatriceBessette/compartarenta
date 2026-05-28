@@ -643,8 +643,7 @@ class PushNotificationService {
         unawaited(
           HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
         );
-        final router = GoRouter.of(ctx);
-        router.go('/housing');
+        HousingNavigationIntent.remountHousingModule(ctx);
         return;
       }
       if (tries >= 30) {

@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
+import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -30,11 +30,7 @@ Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
       db.participants,
     )..where((t) => t.id.equals('${p.id}:self'))).getSingleOrNull();
     if (self == null) continue;
-    final pkg = await (db.select(db.proposalPackages)
-          ..where((t) => t.planId.equals(p.id)))
-        .getSingleOrNull();
-    final hasActive = pkg?.activeRevisionId != null;
-    if (!hasActive &&
+    if (!await transport.hasActiveRevision(p.id) &&
         await transport.anyOtherHousingPlanHasActiveRevision(
           exceptPlanId: p.id,
         )) {
@@ -94,6 +90,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       HousingNavigationIntent.openProposalTick.addListener(
         _onOpenProposalIntent,
       );
+      HousingNavigationIntent.entryReloadTick.addListener(_onEntryReloadIntent);
       _openPendingAmendmentFromNotificationIfAny();
       _openPendingProposalFromNotificationIfAny();
     });
@@ -107,7 +104,15 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     HousingNavigationIntent.openProposalTick.removeListener(
       _onOpenProposalIntent,
     );
+    HousingNavigationIntent.entryReloadTick.removeListener(
+      _onEntryReloadIntent,
+    );
     super.dispose();
+  }
+
+  void _onEntryReloadIntent() {
+    if (!mounted) return;
+    _reloadEntry();
   }
 
   void _onOpenAmendmentIntent() {
@@ -264,8 +269,8 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       plans: plans,
       package: pkg,
       hasArchives: hasArchives,
-      primaryActivePlan: primaryActivePlan ?? plans.single,
-      primaryActivePackage: primaryActivePackage ?? pkg,
+      primaryActivePlan: primaryActivePlan,
+      primaryActivePackage: primaryActivePackage,
     );
   }
 
@@ -274,7 +279,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.go('/');
+        if (!didPop) exitHousingModule(context);
       },
       child: FutureBuilder<_HousingEntrySnapshot>(
         future: _entryFuture ?? _loadEntry(),
@@ -333,14 +338,6 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
             return HousingPlanScreen(prefs: widget.prefs);
           }
           final pkg = entry.package;
-          if (pkg?.activeRevisionId != null) {
-            return HousingActivePlanScreen(
-              key: ValueKey('active-hub-${plans.single.id}'),
-              planId: plans.single.id,
-              packageId: pkg!.id,
-              prefs: widget.prefs,
-            );
-          }
           if (pkg?.pendingRevisionId != null) {
             return FutureBuilder<bool>(
               future: pendingRevisionIsAmendment(
@@ -354,11 +351,11 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
                   );
                 }
                 final isAmendment = amendmentSnap.data ?? false;
-                if (isAmendment && pkg!.activeRevisionId != null) {
+                if (isAmendment && primary != null && primaryPkg != null) {
                   return HousingActivePlanScreen(
-                    key: ValueKey('active-hub-${plans.single.id}'),
-                    planId: plans.single.id,
-                    packageId: pkg.id,
+                    key: ValueKey('active-hub-${primary.id}'),
+                    planId: primary.id,
+                    packageId: primaryPkg.id,
                     prefs: widget.prefs,
                   );
                 }
