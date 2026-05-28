@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
@@ -12,10 +13,12 @@ class ReceivedHousingProposalImport {
   const ReceivedHousingProposalImport({
     required this.planId,
     required this.revisionId,
+    this.isInForceAmendment = false,
   });
 
   final String planId;
   final String revisionId;
+  final bool isInForceAmendment;
 }
 
 class HousingProposalArchive {
@@ -28,6 +31,7 @@ class HousingProposalArchive {
     required this.canFork,
     this.isDraft = false,
     this.isPending = false,
+    this.isAmendment = false,
     this.pendingResponseCount = 0,
     this.participantCount = 0,
     this.editorPlanId,
@@ -42,6 +46,7 @@ class HousingProposalArchive {
   final bool canFork;
   final bool isDraft;
   final bool isPending;
+  final bool isAmendment;
   final int pendingResponseCount;
   final int participantCount;
   final String? editorPlanId;
@@ -102,32 +107,88 @@ class HousingProposalTransportService {
       payload: payload,
       targetParticipantId: targetParticipantId,
     );
-    final importedPayload = _remapPayload(
+
+    var targetPlanId = receivedPlanId;
+    var targetPackageId = receivedPackageId;
+    var targetRevisionId = receivedRevisionId;
+    var importedPayload = _remapPayload(
       payload,
-      receivedPlanId: receivedPlanId,
+      receivedPlanId: targetPlanId,
       sourceToLocalParticipant: sourceToLocalParticipant,
-      receivedPackageId: receivedPackageId,
-      receivedRevisionId: receivedRevisionId,
+      receivedPackageId: targetPackageId,
+      receivedRevisionId: targetRevisionId,
     );
 
-    final existingPkg = await (_db.select(
+    var existingPkg = await (_db.select(
       _db.proposalPackages,
-    )..where((t) => t.planId.equals(receivedPlanId))).getSingleOrNull();
-    final isAmendment = resolveAmendmentType(
+    )..where((t) => t.planId.equals(targetPlanId))).getSingleOrNull();
+    final soleActivePlanId = await _soleActiveHousingPlanIdForSelf();
+    final activeRevisionForDetect =
+        existingPkg?.activeRevisionId ??
+        (soleActivePlanId == null
+            ? null
+            : (await (_db.select(_db.proposalPackages)
+                      ..where((t) => t.planId.equals(soleActivePlanId)))
+                    .getSingleOrNull())
+                ?.activeRevisionId);
+    final isAmendment = HousingAmendmentTypeWire.parse(
+              payload['amendmentType'] as String?,
+            ) !=
+            null ||
+        resolveAmendmentType(
           pendingPayload: payload,
-          activeRevisionId: existingPkg?.activeRevisionId,
-          pendingRevisionId: receivedRevisionId,
+          activeRevisionId: activeRevisionForDetect,
+          pendingRevisionId: targetRevisionId,
         ) !=
         null;
-    if (existingPkg?.activeRevisionId != null && isAmendment) {
+
+    // Proposer package ids differ per device (`received:<token>`). Route in-force
+    // amendments onto this device's active housing plan instead of creating a
+    // second received plan (which hides the hub banner and breaks comparison).
+    if (isAmendment &&
+        (existingPkg?.activeRevisionId == null ||
+            existingPkg!.activeRevisionId!.isEmpty) &&
+        soleActivePlanId != null) {
+      final rerouted = soleActivePlanId != targetPlanId;
+      targetPlanId = soleActivePlanId;
+      targetPackageId = 'pkg:$targetPlanId';
+      targetRevisionId = 'rev:$targetPlanId:${_token(sourceRevisionId)}';
+      importedPayload = _remapPayload(
+        payload,
+        receivedPlanId: targetPlanId,
+        sourceToLocalParticipant: sourceToLocalParticipant,
+        receivedPackageId: targetPackageId,
+        receivedRevisionId: targetRevisionId,
+      );
+      existingPkg = await (_db.select(
+        _db.proposalPackages,
+      )..where((t) => t.planId.equals(targetPlanId))).getSingleOrNull();
+      if (rerouted) {
+        debugPrint(
+          'housing: amendment import routed to active plan $targetPlanId '
+          '(source package $sourcePackageId → received:$receivedPlanId)',
+        );
+      }
+    }
+
+    if (existingPkg?.activeRevisionId != null &&
+        existingPkg!.activeRevisionId!.isNotEmpty &&
+        isAmendment) {
       return _importAmendmentOntoActivePlan(
-        receivedPlanId: receivedPlanId,
-        receivedPackageId: receivedPackageId,
-        receivedRevisionId: receivedRevisionId,
+        receivedPlanId: targetPlanId,
+        receivedPackageId: targetPackageId,
+        receivedRevisionId: targetRevisionId,
         importedPayload: importedPayload,
         sourceToLocalParticipant: sourceToLocalParticipant,
         sourcePayload: payload,
         createdAt: createdAt,
+      );
+    }
+
+    if (isAmendment) {
+      debugPrint(
+        'housing: amendment envelope not applied in-force '
+        '(target=$targetPlanId active=${existingPkg?.activeRevisionId})',
       );
     }
 
@@ -211,6 +272,19 @@ class HousingProposalTransportService {
         'p0';
     final proposerId = '$receivedPlanId:$proposerTail';
 
+    var existingPkg = await (_db.select(
+      _db.proposalPackages,
+    )..where((t) => t.id.equals(receivedPackageId))).getSingleOrNull();
+    final activeId = existingPkg?.activeRevisionId;
+    if (activeId != null && activeId.isNotEmpty) {
+      importedPayload['forkedFromRevisionId'] = activeId;
+      importedPayload['forkedFromPackageId'] = existingPkg!.id;
+    }
+    if (sourcePayload['amendmentType'] != null) {
+      importedPayload['amendmentType'] ??= sourcePayload['amendmentType'];
+    }
+    importedPayload['lifecycleState'] ??= 'open';
+
     await _db
         .into(_db.proposalRevisions)
         .insertOnConflictUpdate(
@@ -227,17 +301,26 @@ class HousingProposalTransportService {
           ),
         );
 
-    final existingPkg = await (_db.select(
-      _db.proposalPackages,
-    )..where((t) => t.id.equals(receivedPackageId))).getSingle();
-    await (_db.update(
-      _db.proposalPackages,
-    )..where((t) => t.id.equals(receivedPackageId))).write(
-      ProposalPackagesCompanion(
-        activeRevisionId: drift.Value(existingPkg.activeRevisionId),
-        pendingRevisionId: drift.Value(receivedRevisionId),
-      ),
-    );
+    if (existingPkg == null) {
+      await _db.into(_db.proposalPackages).insert(
+            ProposalPackagesCompanion.insert(
+              id: receivedPackageId,
+              planId: receivedPlanId,
+              activeRevisionId: const drift.Value.absent(),
+              pendingRevisionId: drift.Value(receivedRevisionId),
+              createdAt: createdAt,
+            ),
+          );
+    } else {
+      await (_db.update(
+        _db.proposalPackages,
+      )..where((t) => t.id.equals(receivedPackageId))).write(
+        ProposalPackagesCompanion(
+          activeRevisionId: drift.Value(existingPkg.activeRevisionId),
+          pendingRevisionId: drift.Value(receivedRevisionId),
+        ),
+      );
+    }
 
     await _upsertResponses(
       receivedPlanId: receivedPlanId,
@@ -250,6 +333,7 @@ class HousingProposalTransportService {
     return ReceivedHousingProposalImport(
       planId: receivedPlanId,
       revisionId: receivedRevisionId,
+      isInForceAmendment: true,
     );
   }
 
@@ -263,6 +347,7 @@ class HousingProposalTransportService {
   /// When an agreement is already active, clears a stale [pendingRevisionId] left
   /// from the initial proposal (not an open amendment awaiting responses).
   Future<void> reconcileStalePackagePending(String planId) async {
+    await repairPendingAmendmentForkMetadata(planId);
     final pkg = await (_db.select(
       _db.proposalPackages,
     )..where((t) => t.planId.equals(planId))).getSingleOrNull();
@@ -271,29 +356,26 @@ class HousingProposalTransportService {
     final activeId = pkg.activeRevisionId;
     if (pendingId == null || activeId == null) return;
 
-    var shouldClear = pendingId == activeId;
-    if (!shouldClear) {
-      final rev = await (_db.select(
-        _db.proposalRevisions,
-      )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
-      if (rev == null) {
-        shouldClear = true;
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
+
+    var shouldClear = false;
+    if (rev == null) {
+      shouldClear = true;
+    } else {
+      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      final isAmendment = _revisionIsPendingAmendment(
+        payload: payload,
+        activeRevisionId: activeId,
+        pendingRevisionId: pendingId,
+      );
+      if (!isAmendment) {
+        shouldClear = pendingId == activeId;
       } else {
-        final payload =
-            jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-        final isAmendment = resolveAmendmentType(
-              pendingPayload: payload,
-              activeRevisionId: activeId,
-              pendingRevisionId: pendingId,
-            ) !=
-            null;
-        if (!isAmendment) {
+        final state = HousingProposalRevisionState.fromPayload(payload);
+        if (!_pendingAmendmentStillVisible(state)) {
           shouldClear = true;
-        } else {
-          final state = HousingProposalRevisionState.fromPayload(payload);
-          if (!state.isOpen || state.isExpiredByClock) {
-            shouldClear = true;
-          }
         }
       }
     }
@@ -306,38 +388,201 @@ class HousingProposalTransportService {
     );
   }
 
-  /// Whether an in-force amendment revision is open and awaiting responses.
-  Future<bool> hasOpenPendingAmendment(String planId) async {
-    await reconcileStalePackagePending(planId);
+  /// The only housing plan with a local self row and an in-force revision, if unique.
+  Future<String?> _soleActiveHousingPlanIdForSelf() async {
+    final housing = await (_db.select(_db.plans)
+          ..where((t) => t.type.equals('housing')))
+        .get();
+    String? found;
+    for (final plan in housing) {
+      if (await isHiddenDraftPlan(plan.id)) continue;
+      final self = await (_db.select(_db.participants)
+            ..where((t) => t.id.equals('${plan.id}:self')))
+          .getSingleOrNull();
+      if (self == null) continue;
+      final pkg = await (_db.select(_db.proposalPackages)
+            ..where((t) => t.planId.equals(plan.id)))
+          .getSingleOrNull();
+      final activeId = pkg?.activeRevisionId;
+      if (activeId == null || activeId.isEmpty) continue;
+      if (found != null) return null;
+      found = plan.id;
+    }
+    return found;
+  }
+
+  /// Another housing plan on this device already has an in-force agreement.
+  Future<bool> anyOtherHousingPlanHasActiveRevision({
+    required String exceptPlanId,
+  }) async {
+    final rows = await (_db.select(_db.proposalPackages)).get();
+    for (final pkg in rows) {
+      if (pkg.planId == exceptPlanId) continue;
+      if (pkg.activeRevisionId == null || pkg.activeRevisionId!.isEmpty) {
+        continue;
+      }
+      final plan = await (_db.select(_db.plans)
+            ..where((t) => t.id.equals(pkg.planId)))
+          .getSingleOrNull();
+      if (plan?.type == 'housing') return true;
+    }
+    return false;
+  }
+
+  /// Persists missing fork metadata on imported amendment revisions (legacy imports).
+  Future<void> repairPendingAmendmentForkMetadata(String planId) async {
+    final pkg = await (_db.select(_db.proposalPackages)
+          ..where((t) => t.planId.equals(planId)))
+        .getSingleOrNull();
+    final pendingId = pkg?.pendingRevisionId;
+    final activeId = pkg?.activeRevisionId;
+    if (pendingId == null ||
+        activeId == null ||
+        activeId.isEmpty ||
+        pendingId == activeId) {
+      return;
+    }
+
+    final rev = await (_db.select(_db.proposalRevisions)
+          ..where((t) => t.id.equals(pendingId)))
+        .getSingleOrNull();
+    if (rev == null) return;
+
+    Map<String, dynamic> payload;
+    try {
+      payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    } catch (_) {
+      return;
+    }
+
+    final isAmendment = HousingAmendmentTypeWire.parse(
+              payload['amendmentType'] as String?,
+            ) !=
+            null ||
+        resolveAmendmentType(
+              pendingPayload: payload,
+              activeRevisionId: activeId,
+              pendingRevisionId: pendingId,
+            ) !=
+            null;
+    if (!isAmendment) return;
+
+    final fork = payload['forkedFromRevisionId']?.toString();
+    if (fork != null && fork.isNotEmpty) return;
+
+    payload['forkedFromRevisionId'] = activeId;
+    payload['forkedFromPackageId'] = pkg!.id;
+    payload['lifecycleState'] ??= 'open';
+    await (_db.update(_db.proposalRevisions)
+          ..where((t) => t.id.equals(pendingId)))
+        .write(
+      ProposalRevisionsCompanion(
+        payloadJson: drift.Value(jsonEncode(payload)),
+      ),
+    );
+  }
+
+  bool _revisionIsPendingAmendment({
+    required Map<String, dynamic> payload,
+    required String? activeRevisionId,
+    required String pendingRevisionId,
+  }) {
+    if (activeRevisionId == null || activeRevisionId.isEmpty) return false;
+    if (HousingAmendmentTypeWire.parse(payload['amendmentType'] as String?) !=
+        null) {
+      return true;
+    }
+    return resolveAmendmentType(
+          pendingPayload: payload,
+          activeRevisionId: activeRevisionId,
+          pendingRevisionId: pendingRevisionId,
+        ) !=
+        null;
+  }
+
+  bool _pendingAmendmentStillVisible(HousingProposalRevisionState state) {
+    if (state.isArchived || state.isExpiredByClock) return false;
+    return true;
+  }
+
+  /// Pending in-force amendment visible in hub / workbench (not strict lifecycle).
+  Future<bool> hasPendingAmendmentForUi(
+    String planId, {
+    bool reconcileFirst = true,
+  }) async {
+    if (reconcileFirst) {
+      await reconcileStalePackagePending(planId);
+    }
     final pkg = await (_db.select(
       _db.proposalPackages,
     )..where((t) => t.planId.equals(planId))).getSingleOrNull();
     final pendingId = pkg?.pendingRevisionId;
-    if (pendingId == null) return false;
+    final activeId = pkg?.activeRevisionId;
+    if (pendingId == null || activeId == null || activeId.isEmpty) {
+      return false;
+    }
 
     final rev = await (_db.select(
       _db.proposalRevisions,
     )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
     if (rev == null) return false;
 
-    final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-    if (resolveAmendmentType(
-          pendingPayload: payload,
-          activeRevisionId: pkg?.activeRevisionId,
-          pendingRevisionId: pendingId,
-        ) ==
-        null) {
+    Map<String, dynamic> payload;
+    try {
+      payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+    } catch (_) {
       return false;
     }
-    final state = HousingProposalRevisionState.fromPayload(payload);
-    return state.isOpen && !state.isExpiredByClock;
+    if (!_revisionIsPendingAmendment(
+      payload: payload,
+      activeRevisionId: activeId,
+      pendingRevisionId: pendingId,
+    )) {
+      return false;
+    }
+    final visible = _pendingAmendmentStillVisible(
+      HousingProposalRevisionState.fromPayload(payload),
+    );
+    if (!visible) {
+      debugPrint(
+        'housing: pending amendment on $planId not visible '
+        '(lifecycle=${payload['lifecycleState']})',
+      );
+    }
+    return visible;
+  }
+
+  /// Whether an in-force amendment revision is open and awaiting responses.
+  Future<bool> hasOpenPendingAmendment(
+    String planId, {
+    bool reconcileFirst = true,
+  }) async {
+    return hasPendingAmendmentForUi(planId, reconcileFirst: reconcileFirst);
+  }
+
+  /// First housing plan where the local user must respond to a pending amendment.
+  Future<String?> housingPlanIdWithAmendmentAwaitingLocalResponse() async {
+    final housing = await (_db.select(_db.plans)
+          ..where((t) => t.type.equals('housing')))
+        .get();
+    for (final plan in housing) {
+      if (await isHiddenDraftPlan(plan.id)) continue;
+      final self = await (_db.select(_db.participants)
+            ..where((t) => t.id.equals('${plan.id}:self')))
+          .getSingleOrNull();
+      if (self == null) continue;
+      if (await hasOpenPendingAmendmentAwaitingLocalResponse(plan.id)) {
+        return plan.id;
+      }
+    }
+    return null;
   }
 
   /// Whether the local user still needs to accept, negotiate, or refuse.
   Future<bool> hasOpenPendingAmendmentAwaitingLocalResponse(
     String planId,
   ) async {
-    if (!await hasOpenPendingAmendment(planId)) return false;
+    if (!await hasPendingAmendmentForUi(planId)) return false;
     final pendingId = await pendingRevisionIdForPlan(planId);
     if (pendingId == null) return false;
 
@@ -366,19 +611,9 @@ class HousingProposalTransportService {
     );
   }
 
-  /// Hub banner: local action required, or proposer waiting on co-participants.
+  /// Hub banner whenever an in-force amendment is still open on this plan.
   Future<bool> shouldShowPendingAmendmentHubBanner(String planId) async {
-    if (!await hasOpenPendingAmendment(planId)) return false;
-    if (await hasOpenPendingAmendmentAwaitingLocalResponse(planId)) {
-      return true;
-    }
-    final pendingId = await pendingRevisionIdForPlan(planId);
-    if (pendingId == null) return false;
-    final rev = await (_db.select(
-      _db.proposalRevisions,
-    )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
-    if (rev == null) return false;
-    return rev.proposerParticipantId == '$planId:self';
+    return hasPendingAmendmentForUi(planId);
   }
 
   Future<bool> hasActiveRevision(String planId) async {
@@ -563,24 +798,32 @@ class HousingProposalTransportService {
       if (pending != null) {
         pendingRevisionIds.add(pending.id);
         final payload = jsonDecode(pending.payloadJson) as Map<String, dynamic>;
-        final responses = await (_db.select(
-          _db.proposalResponses,
-        )..where((t) => t.revisionId.equals(pending.id))).get();
-        out.add(
-          HousingProposalArchive(
-            planId: planId,
-            revisionId: pending.id,
-            title: _string(_map(payload['plan'])['title'], fallback: planId),
-            status: ProposalResponseStatus.pending,
-            invalidatedAt: pending.createdAt,
-            canFork: false,
-            isPending: true,
-            pendingResponseCount: responses
-                .where((r) => r.status == ProposalResponseStatus.pending.name)
-                .length,
-            editorPlanId: planId,
-          ),
-        );
+        final isAmendment = resolveAmendmentType(
+              pendingPayload: payload,
+              activeRevisionId: pkg.activeRevisionId,
+              pendingRevisionId: pending.id,
+            ) !=
+            null;
+        if (!isAmendment) {
+          final responses = await (_db.select(
+            _db.proposalResponses,
+          )..where((t) => t.revisionId.equals(pending.id))).get();
+          out.add(
+            HousingProposalArchive(
+              planId: planId,
+              revisionId: pending.id,
+              title: _string(_map(payload['plan'])['title'], fallback: planId),
+              status: ProposalResponseStatus.pending,
+              invalidatedAt: pending.createdAt,
+              canFork: false,
+              isPending: true,
+              pendingResponseCount: responses
+                  .where((r) => r.status == ProposalResponseStatus.pending.name)
+                  .length,
+              editorPlanId: planId,
+            ),
+          );
+        }
       }
     }
     for (final rev in revisions) {
@@ -634,6 +877,12 @@ class HousingProposalTransportService {
                     (t) => t.participantId.equals(responderParticipantId),
                   ))
                 .getSingleOrNull();
+      final isAmendment = resolveAmendmentType(
+            pendingPayload: payload,
+            activeRevisionId: pkg.activeRevisionId,
+            pendingRevisionId: rev.id,
+          ) !=
+          null;
       out.add(
         HousingProposalArchive(
           planId: planId,
@@ -645,6 +894,7 @@ class HousingProposalTransportService {
             revisionId: rev.id,
             localParticipantId: '$planId:self',
           ),
+          isAmendment: isAmendment,
           isExpired: isExpiredArchive,
         ),
       );

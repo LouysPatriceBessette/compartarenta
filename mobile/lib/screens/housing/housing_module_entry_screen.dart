@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_navigation.dart';
+import '../../housing/amendment/housing_amendment_summary.dart';
+import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -19,12 +22,25 @@ Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
   final housing = await (db.select(
     db.plans,
   )..where((t) => t.type.equals('housing'))).get();
+  final transport = HousingProposalTransportService(db);
   final out = <Plan>[];
   for (final p in housing) {
+    if (await transport.isHiddenDraftPlan(p.id)) continue;
     final self = await (db.select(
       db.participants,
     )..where((t) => t.id.equals('${p.id}:self'))).getSingleOrNull();
-    if (self != null) out.add(p);
+    if (self == null) continue;
+    final pkg = await (db.select(db.proposalPackages)
+          ..where((t) => t.planId.equals(p.id)))
+        .getSingleOrNull();
+    final hasActive = pkg?.activeRevisionId != null;
+    if (!hasActive &&
+        await transport.anyOtherHousingPlanHasActiveRevision(
+          exceptPlanId: p.id,
+        )) {
+      continue;
+    }
+    out.add(p);
   }
   return out;
 }
@@ -34,11 +50,16 @@ class _HousingEntrySnapshot {
     required this.plans,
     this.package,
     this.hasArchives = false,
+    this.primaryActivePlan,
+    this.primaryActivePackage,
   });
 
   final List<Plan> plans;
   final ProposalPackage? package;
   final bool hasArchives;
+  /// When exactly one housing plan has an in-force agreement, open its hub.
+  final Plan? primaryActivePlan;
+  final ProposalPackage? primaryActivePackage;
 }
 
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
@@ -57,6 +78,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   /// Must be stable across rebuilds — a new [Future] each [build] restarts
   /// [FutureBuilder] forever (visible as a flickering screen).
   Future<_HousingEntrySnapshot>? _entryFuture;
+  int _workbenchReloadToken = 0;
 
   @override
   void initState() {
@@ -66,30 +88,65 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     // call setState while the route is still mounting.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
-        _onSteadyInboxTick,
+      HousingNavigationIntent.openAmendmentTick.addListener(
+        _onOpenAmendmentIntent,
       );
+      _openPendingAmendmentFromNotificationIfAny();
     });
   }
 
   @override
   void dispose() {
-    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
-      _onSteadyInboxTick,
+    HousingNavigationIntent.openAmendmentTick.removeListener(
+      _onOpenAmendmentIntent,
     );
     super.dispose();
   }
 
-  void _onSteadyInboxTick() {
+  void _onOpenAmendmentIntent() {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _reloadEntry();
+      _openPendingAmendmentFromNotificationIfAny();
     });
+  }
+
+  Future<void> _openPendingAmendmentFromNotificationIfAny() async {
+    var planId = HousingNavigationIntent.takePendingOpenAmendmentPlanId();
+    if (!mounted) return;
+    final db = AppDatabase.processScope;
+    final transport = HousingProposalTransportService(db);
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing amendment open poll: $e\n$st');
+      });
+    }
+    planId ??= await transport.housingPlanIdWithAmendmentAwaitingLocalResponse();
+    if (planId == null) {
+      debugPrint('housing: notification tap but no pending amendment plan');
+      return;
+    }
+    final pendingId = await transport.pendingRevisionIdForPlan(planId);
+    if (pendingId == null) {
+      debugPrint('housing: no pendingRevisionId on plan $planId');
+      return;
+    }
+    if (!mounted) return;
+    await openHousingPendingProposalOrAmendment(
+      context,
+      db: db,
+      planId: planId,
+      prefs: widget.prefs,
+      revisionId: pendingId,
+      isAmendment: true,
+    );
+    if (mounted) _reloadEntry();
   }
 
   void _reloadEntry() {
     setState(() {
+      _workbenchReloadToken++;
       _entryFuture = _loadEntry();
     });
   }
@@ -100,20 +157,38 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     if (orch == null) {
       debugPrint('housing entry inbox poll skipped: relay not configured');
     } else {
-      // Do not block the housing route on relay I/O (can take seconds per contact).
-      unawaited(
-        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing entry inbox poll: $e\n$st');
-        }),
-      );
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing entry inbox poll: $e\n$st');
+      });
     }
     final plans = await housingPlansWithSelfParticipant(db);
     final transport = HousingProposalTransportService(db);
     for (final plan in plans) {
       await transport.expireOpenRevisionsForPlan(plan.id);
+      await transport.reconcileStalePackagePending(plan.id);
     }
+
+    Plan? primaryActivePlan;
+    ProposalPackage? primaryActivePackage;
+    for (final plan in plans) {
+      if (!await transport.hasActiveRevision(plan.id)) continue;
+      if (primaryActivePlan != null) {
+        primaryActivePlan = null;
+        primaryActivePackage = null;
+        break;
+      }
+      primaryActivePlan = plan;
+      primaryActivePackage = await (db.select(db.proposalPackages)
+            ..where((t) => t.planId.equals(plan.id)))
+          .getSingleOrNull();
+    }
+
     if (plans.length != 1) {
-      return _HousingEntrySnapshot(plans: plans);
+      return _HousingEntrySnapshot(
+        plans: plans,
+        primaryActivePlan: primaryActivePlan,
+        primaryActivePackage: primaryActivePackage,
+      );
     }
     final planId = plans.single.id;
     final pkg = await (db.select(
@@ -126,6 +201,8 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       plans: plans,
       package: pkg,
       hasArchives: hasArchives,
+      primaryActivePlan: primaryActivePlan ?? plans.single,
+      primaryActivePackage: primaryActivePackage ?? pkg,
     );
   }
 
@@ -173,8 +250,21 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
           final entry =
               snap.data ?? const _HousingEntrySnapshot(plans: <Plan>[]);
           final plans = entry.plans;
+          final primary = entry.primaryActivePlan;
+          final primaryPkg = entry.primaryActivePackage;
+          if (primary != null && primaryPkg != null) {
+            return HousingActivePlanScreen(
+              key: ValueKey('active-hub-${primary.id}'),
+              planId: primary.id,
+              packageId: primaryPkg.id,
+              prefs: widget.prefs,
+            );
+          }
           if (plans.length > 1) {
-            return HousingWorkbenchScreen(prefs: widget.prefs);
+            return HousingWorkbenchScreen(
+              key: ValueKey(_workbenchReloadToken),
+              prefs: widget.prefs,
+            );
           }
           if (plans.isEmpty) {
             return HousingPlanScreen(prefs: widget.prefs);
@@ -182,16 +272,39 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
           final pkg = entry.package;
           if (pkg?.activeRevisionId != null) {
             return HousingActivePlanScreen(
+              key: ValueKey('active-hub-${plans.single.id}'),
               planId: plans.single.id,
               packageId: pkg!.id,
               prefs: widget.prefs,
             );
           }
           if (pkg?.pendingRevisionId != null) {
-            return HousingInviteProposalScreen(
-              db: AppDatabase.processScope,
-              planId: plans.single.id,
-              prefs: widget.prefs,
+            return FutureBuilder<bool>(
+              future: pendingRevisionIsAmendment(
+                AppDatabase.processScope,
+                plans.single.id,
+              ),
+              builder: (context, amendmentSnap) {
+                if (amendmentSnap.connectionState != ConnectionState.done) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final isAmendment = amendmentSnap.data ?? false;
+                if (isAmendment && pkg!.activeRevisionId != null) {
+                  return HousingActivePlanScreen(
+                    key: ValueKey('active-hub-${plans.single.id}'),
+                    planId: plans.single.id,
+                    packageId: pkg.id,
+                    prefs: widget.prefs,
+                  );
+                }
+                return HousingInviteProposalScreen(
+                  db: AppDatabase.processScope,
+                  planId: plans.single.id,
+                  prefs: widget.prefs,
+                );
+              },
             );
           }
           if (entry.hasArchives) {

@@ -37,4 +37,19 @@ void main() {
       isNull,
     );
   });
+
+  test('resolveAmendmentType accepts active archived amendment with fork', () {
+    expect(
+      resolveAmendmentType(
+        pendingPayload: {
+          'forkedFromRevisionId': 'rev:baseline',
+          'amendmentType': 'agreement_end',
+          'lifecycleState': 'archived',
+        },
+        activeRevisionId: 'rev:amendment',
+        pendingRevisionId: 'rev:amendment',
+      ),
+      HousingAmendmentType.agreementEnd,
+    );
+  });
 }

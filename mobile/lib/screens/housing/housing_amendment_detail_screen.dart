@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_settlement.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
+import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/housing_response_deadline_display.dart';
 import '../../housing/proposals/housing_proposal_revision_state.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
@@ -22,12 +26,14 @@ class HousingAmendmentDetailScreen extends StatefulWidget {
     required this.planId,
     required this.prefs,
     this.revisionId,
+    this.readOnlySettled = false,
   });
 
   final AppDatabase db;
   final String planId;
   final AppPreferences prefs;
   final String? revisionId;
+  final bool readOnlySettled;
 
   @override
   State<HousingAmendmentDetailScreen> createState() =>
@@ -38,9 +44,6 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
   _AmendmentDetailPayload? _payload;
   bool _loading = true;
   bool _loadFailed = false;
-  bool _negotiateExpanded = false;
-  final _negotiateController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -87,12 +90,58 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
               .firstOrNull ??
           ProposalResponseStatus.pending.name;
 
+      bool? settledAccepted;
+      String? settledActorName;
+      DateTime? settledAt;
+      if (widget.readOnlySettled) {
+        final rev = await (widget.db.select(widget.db.proposalRevisions)
+              ..where((t) => t.id.equals(summary.revisionId)))
+            .getSingleOrNull();
+        if (rev != null) {
+          final payload =
+              jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+          settledAccepted = archivedAmendmentWasAccepted(payload);
+          final roster =
+              await participantsForPlan(widget.db, widget.planId);
+          final responderId =
+              payload['invalidatedByParticipantId']?.toString() ?? '';
+          settledActorName = responderId.isEmpty
+              ? summary.proposerDisplayName
+              : displayNameForParticipant(responderId, roster);
+          var settledWhen = rev.createdAt;
+          if (settledAccepted) {
+            final responses = await (widget.db.select(
+              widget.db.proposalResponses,
+            )..where((t) => t.revisionId.equals(rev.id))).get();
+            for (final r in responses) {
+              if (r.status != ProposalResponseStatus.accepted.name) {
+                continue;
+              }
+              final at = r.respondedAt;
+              if (at != null && at.isAfter(settledWhen)) settledWhen = at;
+            }
+          } else {
+            final response = responderId.isEmpty
+                ? null
+                : await (widget.db.select(widget.db.proposalResponses)
+                      ..where((t) => t.revisionId.equals(rev.id))
+                      ..where((t) => t.participantId.equals(responderId)))
+                    .getSingleOrNull();
+            settledWhen = response?.respondedAt ?? rev.createdAt;
+          }
+          settledAt = settledWhen;
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _payload = _AmendmentDetailPayload(
           summary: summary,
           selfParticipantId: selfId,
           selfStatus: selfStatus,
+          settledAccepted: settledAccepted,
+          settledActorName: settledActorName,
+          settledAt: settledAt,
         );
         _loading = false;
         _loadFailed = false;
@@ -180,10 +229,6 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
       if (!relayDelivered) {
         return;
       }
-      setState(() {
-        _negotiateExpanded = false;
-        _negotiateController.clear();
-      });
       if (status == ProposalResponseStatus.negotiate) {
         context.go('/');
         return;
@@ -266,12 +311,13 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           lifecycleState: 'open',
           responseExpiresAtUtc: summary.responseExpiresAtUtc,
         );
-        final canRespond = housingParticipantMayRespond(
-          revision: revisionState,
-          participantResponseStatus: data.selfStatus,
-          proposerParticipantId: summary.proposerParticipantId,
-          participantId: data.selfParticipantId,
-        );
+        final canRespond = !widget.readOnlySettled &&
+            housingParticipantMayRespond(
+              revision: revisionState,
+              participantResponseStatus: data.selfStatus,
+              proposerParticipantId: summary.proposerParticipantId,
+              participantId: data.selfParticipantId,
+            );
         final isProposer =
             summary.proposerParticipantId == data.selfParticipantId;
 
@@ -279,7 +325,12 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + MediaQuery.viewPaddingOf(context).bottom,
+                ),
                 children: [
                   Text(
                     l10n.housingAmendmentDetailIntro(
@@ -303,7 +354,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                   ],
                   const SizedBox(height: 24),
                   _ValueCard(
-                    label: l10n.housingAmendmentDetailCurrent,
+                    label: _beforeValueLabel(l10n, data),
                     value: summary.currentText,
                   ),
                   const SizedBox(height: 12),
@@ -312,18 +363,64 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                     value: summary.proposedText,
                     emphasized: true,
                   ),
-                  if (!isProposer && canRespond && !_negotiateExpanded) ...[
+                  if (widget.readOnlySettled &&
+                      data.settledAccepted != null &&
+                      data.settledActorName != null &&
+                      data.settledAt != null) ...[
+                    const SizedBox(height: 48),
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            data.settledAccepted!
+                                ? l10n.housingRealizedExpenseReviewAcceptedWord
+                                : l10n.housingRealizedExpenseReviewRejectedWord,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontSize:
+                                  (theme.textTheme.bodyLarge?.fontSize ?? 16) *
+                                      1.8,
+                              fontWeight: FontWeight.w700,
+                              color: data.settledAccepted!
+                                  ? Colors.green.shade700
+                                  : theme.colorScheme.error,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.housingRealizedExpenseReviewByName(
+                              data.settledActorName!,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: data.settledAccepted!
+                                  ? Colors.green.shade700
+                                  : theme.colorScheme.error,
+                            ),
+                          ),
+                          Text(
+                            formatPreferenceDateTime(
+                              data.settledAt!,
+                              dateFmt,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: data.settledAccepted!
+                                  ? Colors.green.shade700
+                                  : theme.colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (!isProposer && canRespond) ...[
                     const SizedBox(height: 32),
                     FilledButton(
                       onPressed: () => _submitResponse(
                         ProposalResponseStatus.accepted,
                       ),
-                      child: Text(l10n.housingInviteAcceptFull),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () => setState(() => _negotiateExpanded = true),
-                      child: Text(l10n.housingInviteNegotiate),
+                      child: Text(l10n.housingAmendmentAccept),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
@@ -333,40 +430,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                       onPressed: () => _submitResponse(
                         ProposalResponseStatus.rejected,
                       ),
-                      child: Text(l10n.housingInviteRejectBlock),
-                    ),
-                  ] else if (!isProposer &&
-                      canRespond &&
-                      _negotiateExpanded) ...[
-                    const SizedBox(height: 32),
-                    TextField(
-                      controller: _negotiateController,
-                      minLines: 3,
-                      maxLines: 8,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        labelText: l10n.housingInviteNegotiateMessageLabel,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton.tonal(
-                      onPressed: () {
-                        final t = _negotiateController.text.trim();
-                        if (t.isEmpty) return;
-                        _submitResponse(
-                          ProposalResponseStatus.negotiate,
-                          message: t,
-                        );
-                      },
-                      child: Text(l10n.commonSend),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () => setState(() {
-                        _negotiateExpanded = false;
-                        _negotiateController.clear();
-                      }),
-                      child: Text(l10n.commonCancel),
+                      child: Text(l10n.housingAmendmentReject),
                     ),
                   ],
                 ],
@@ -382,7 +446,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                       onPressed: _goBack,
                       child: Text(l10n.housingPlanBack),
                     ),
-                    if (isProposer) ...[
+                    if (isProposer && !widget.readOnlySettled) ...[
                       const SizedBox(height: 8),
                       FilledButton(
                         onPressed: () => showHousingInvitationStatusDialog(
@@ -392,7 +456,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                           prefs: widget.prefs,
                           revisionId: summary.revisionId,
                         ),
-                        child: Text(l10n.housingInviteInvitationStatusAction),
+                        child: Text(l10n.housingAmendmentRequestStatusAction),
                       ),
                     ],
                   ],
@@ -404,6 +468,16 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
       }(),
     );
   }
+
+  /// Label for the "before" value on archived decision screens (never "Currently").
+  String _beforeValueLabel(AppLocalizations l10n, _AmendmentDetailPayload data) {
+    if (widget.readOnlySettled && data.settledAccepted != null) {
+      return data.settledAccepted!
+          ? l10n.housingAmendmentDetailPrevious
+          : l10n.housingAmendmentDetailAtRequestTime;
+    }
+    return l10n.housingAmendmentDetailCurrent;
+  }
 }
 
 class _AmendmentDetailPayload {
@@ -411,11 +485,17 @@ class _AmendmentDetailPayload {
     required this.summary,
     required this.selfParticipantId,
     required this.selfStatus,
+    this.settledAccepted,
+    this.settledActorName,
+    this.settledAt,
   });
 
   final HousingAmendmentSummary summary;
   final String selfParticipantId;
   final String selfStatus;
+  final bool? settledAccepted;
+  final String? settledActorName;
+  final DateTime? settledAt;
 }
 
 class _ValueCard extends StatelessWidget {

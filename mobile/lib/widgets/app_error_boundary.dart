@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_root_navigator.dart';
 import '../l10n/app_localizations.dart';
+
+/// Placeholder until product defines the real bug-report destination.
+const kBugReportUrl = 'https://bug.exemple.com';
 
 class AppErrorBoundary extends StatefulWidget {
   const AppErrorBoundary({super.key, required this.child});
@@ -112,6 +116,17 @@ class _FallbackErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(l10n.errorSomethingWentWrongBody),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => launchUrl(
+                    Uri.parse(kBugReportUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Text(l10n.errorReportBugLink),
+                ),
+              ),
               const SizedBox(height: 12),
               Text(
                 '$error$details',

@@ -840,6 +840,15 @@ class HandshakeOrchestrator {
         RelayDiagnostics.logSteadyInbox(
           'steady inbox fetched ${envs.length} envelope(s) for ${contact.id}',
         );
+        if (kDebugMode) {
+          final kinds = <int, int>{};
+          for (final e in envs) {
+            kinds[e.kind] = (kinds[e.kind] ?? 0) + 1;
+          }
+          debugPrint(
+            'steady inbox kinds for ${contact.id}: $kinds',
+          );
+        }
       }
       for (final env in envs) {
         try {
@@ -1200,7 +1209,10 @@ class HandshakeOrchestrator {
           senderDisplayName: senderContact.displayName,
           senderAvatarId: senderContact.avatarId,
         );
-    debugPrint('housing_proposal imported from ${senderContact.id}');
+    debugPrint(
+      'housing_proposal imported from ${senderContact.id} '
+      'plan=${imported.planId} amendment=${imported.isInForceAmendment}',
+    );
     await RelayActivityLogService(_db).append(
       kind: RelayActivityLogKinds.housingProposalReceived,
       initiatorKind: RelayActivityLogService.initiatorContact,
@@ -1217,6 +1229,7 @@ class HandshakeOrchestrator {
     await PushNotificationService.showLocalHousingProposalNotification(
       senderDisplayName: senderContact.displayName,
       planId: imported.planId,
+      isInForceAmendment: imported.isInForceAmendment,
     );
   }
 
@@ -2485,6 +2498,7 @@ class HandshakeOrchestrator {
     }
     await PushNotificationService.showLocalHousingDecisionNotification(
       senderDisplayName: senderDisplayName,
+      planId: pkg?.planId,
     );
   }
 

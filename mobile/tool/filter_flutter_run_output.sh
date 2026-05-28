@@ -15,6 +15,7 @@ function has_useful_keyword(line) {
          line ~ /realized_expense/ ||
          line ~ /Handshake/ ||
          line ~ /steady inbox/ ||
+         line ~ /steady inbox kinds/ ||
          line ~ /local_storage_startup/ ||
          line ~ /Drift web storage/ ||
          line ~ /ClosedAppPushRegistrationService/ ||

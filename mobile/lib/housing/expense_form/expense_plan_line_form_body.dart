@@ -5,6 +5,7 @@ import 'expense_plan_line_view_data.dart';
 import 'expense_split_grid.dart';
 import 'expense_split_grid_logic.dart';
 import 'like_ratio_selector.dart';
+import 'plan_participant_dropdown_value.dart';
 import '../../db/app_database.dart';
 
 /// Shared expense line layout for edit and read-only presentation.
@@ -36,6 +37,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
     required this.onRowAmountChanged,
     required this.onRowPercentChanged,
     required this.splitRevision,
+    this.lockRecurrenceAndSplit = false,
   }) : readOnly = false,
        viewData = null;
 
@@ -67,7 +69,8 @@ class ExpensePlanLineFormBody extends StatelessWidget {
        onSplitChanged = null,
        onRowAmountChanged = null,
        onRowPercentChanged = null,
-       splitRevision = null;
+       splitRevision = null,
+       lockRecurrenceAndSplit = false;
 
   final bool readOnly;
   final ExpensePlanLineViewData? viewData;
@@ -97,6 +100,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
   final void Function(int index, int amountMinor)? onRowAmountChanged;
   final void Function(int index, int percentTenths)? onRowPercentChanged;
   final Listenable? splitRevision;
+  final bool lockRecurrenceAndSplit;
 
   @override
   Widget build(BuildContext context) {
@@ -153,22 +157,29 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           value: recurring,
           subtitle: recurring ? recurSummary : null,
         )
-      else ...[
-        SwitchListTile(
-          title: Text(l10n.housingPlanRecurringSwitch),
-          value: isRecurring,
-          onChanged: onRecurringChanged,
-        ),
-        if (isRecurring)
-          ListTile(
-            leading: const Icon(Icons.calendar_month),
-            title: Text(l10n.housingExpenseRecurrenceTapToSet),
-            subtitle: recurrenceSummary == null
-                ? null
-                : Text(recurrenceSummary!),
-            onTap: onRecurrenceTap,
+      else
+        _AmendmentLockedSection(
+          locked: lockRecurrenceAndSplit,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SwitchListTile(
+                title: Text(l10n.housingPlanRecurringSwitch),
+                value: isRecurring,
+                onChanged: lockRecurrenceAndSplit ? null : onRecurringChanged,
+              ),
+              if (isRecurring)
+                ListTile(
+                  leading: const Icon(Icons.calendar_month),
+                  title: Text(l10n.housingExpenseRecurrenceTapToSet),
+                  subtitle: recurrenceSummary == null
+                      ? null
+                      : Text(recurrenceSummary!),
+                  onTap: lockRecurrenceAndSplit ? null : onRecurrenceTap,
+                ),
+            ],
           ),
-      ],
+        ),
       const SizedBox(height: 8),
       if (readOnly)
         _readOnlyField(
@@ -222,27 +233,31 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           participantNames: participantNames,
           onChanged: onPaymentResponsibleChanged!,
         ),
-      if (splitRevision != null)
-        ListenableBuilder(
-          listenable: splitRevision!,
-          builder: (context, _) => _buildSplitSection(
-            context,
-            l10n,
-            theme,
-            splitState: currentSplitState?.call(),
-            currency: currency,
-            selectedTemplateId: selectedTemplateId,
-          ),
-        )
-      else
-        _buildSplitSection(
-          context,
-          l10n,
-          theme,
-          splitState: readOnly ? data!.split : currentSplitState?.call(),
-          currency: currency,
-          selectedTemplateId: selectedTemplateId,
-        ),
+      _AmendmentLockedSection(
+        locked: lockRecurrenceAndSplit,
+        child: splitRevision != null
+            ? ListenableBuilder(
+                listenable: splitRevision!,
+                builder: (context, _) => _buildSplitSection(
+                  context,
+                  l10n,
+                  theme,
+                  splitState: currentSplitState?.call(),
+                  currency: currency,
+                  selectedTemplateId: selectedTemplateId,
+                  interactionsEnabled: !lockRecurrenceAndSplit,
+                ),
+              )
+            : _buildSplitSection(
+                context,
+                l10n,
+                theme,
+                splitState: readOnly ? data!.split : currentSplitState?.call(),
+                currency: currency,
+                selectedTemplateId: selectedTemplateId,
+                interactionsEnabled: !lockRecurrenceAndSplit,
+              ),
+      ),
     ];
 
     return Column(
@@ -258,6 +273,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
     required ExpenseSplitGridState? splitState,
     required String currency,
     required String? selectedTemplateId,
+    bool interactionsEnabled = true,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -268,7 +284,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           style: theme.textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        if (!readOnly)
+        if (!readOnly && interactionsEnabled)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
@@ -276,7 +292,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
               child: Text(l10n.housingExpenseEqualParts),
             ),
           ),
-        if (!readOnly && templates.isNotEmpty) ...[
+        if (!readOnly && interactionsEnabled && templates.isNotEmpty) ...[
           LikeRatioSelector(
             templates: templates,
             participantIds: participantIds,
@@ -294,9 +310,11 @@ class ExpensePlanLineFormBody extends StatelessWidget {
               : ExpenseSplitGrid(
                   state: splitState,
                   currencyCode: currency,
-                  onChanged: onSplitChanged!,
-                  onRowAmountChanged: onRowAmountChanged!,
-                  onRowPercentChanged: onRowPercentChanged!,
+                  onChanged: interactionsEnabled ? onSplitChanged! : () {},
+                  onRowAmountChanged:
+                      interactionsEnabled ? onRowAmountChanged! : (_, _) {},
+                  onRowPercentChanged:
+                      interactionsEnabled ? onRowPercentChanged! : (_, _) {},
                 )
         else if (!readOnly)
           SizedBox(
@@ -359,8 +377,36 @@ class ExpensePlanLineFormBody extends StatelessWidget {
   }
 }
 
-/// Owns dropdown state so parent [setState] on amount does not reset the field.
-class _PaymentResponsibleField extends StatefulWidget {
+class _AmendmentLockedSection extends StatelessWidget {
+  const _AmendmentLockedSection({
+    required this.locked,
+    required this.child,
+  });
+
+  final bool locked;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!locked) return child;
+    return AbsorbPointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.55,
+              ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentResponsibleField extends StatelessWidget {
   const _PaymentResponsibleField({
     required this.value,
     required this.label,
@@ -378,37 +424,20 @@ class _PaymentResponsibleField extends StatefulWidget {
   final ValueChanged<String?> onChanged;
 
   @override
-  State<_PaymentResponsibleField> createState() => _PaymentResponsibleFieldState();
-}
-
-class _PaymentResponsibleFieldState extends State<_PaymentResponsibleField> {
-  late String? _selected = widget.value;
-
-  @override
-  void didUpdateWidget(covariant _PaymentResponsibleField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
-      _selected = widget.value;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final resolved = resolvePlanParticipantDropdownValue(value, participantIds);
     return DropdownButtonFormField<String?>(
-      initialValue: _selected,
-      decoration: InputDecoration(labelText: widget.label),
+      initialValue: resolved,
+      decoration: InputDecoration(labelText: label),
       items: [
-        DropdownMenuItem(value: null, child: Text(widget.allLabel)),
-        for (var i = 0; i < widget.participantIds.length; i++)
+        DropdownMenuItem(value: null, child: Text(allLabel)),
+        for (var i = 0; i < participantIds.length; i++)
           DropdownMenuItem(
-            value: widget.participantIds[i],
-            child: Text(widget.participantNames[i]),
+            value: participantIds[i],
+            child: Text(participantNames[i]),
           ),
       ],
-      onChanged: (v) {
-        setState(() => _selected = v);
-        widget.onChanged(v);
-      },
+      onChanged: onChanged,
     );
   }
 }

@@ -98,3 +98,9 @@ All accepted amendment revisions under one `packageId` during one continuous agr
 
 - **WHEN** the user exports after an accepted `line_amount` amendment
 - **THEN** the bundle includes both the original and amended revision metadata
+
+---
+
+### Task: Define in-app bug report destination
+
+The global error fallback screen links to a placeholder URL until product chooses the real destination (GitHub issues, operator VPS endpoint, or other). **TODO:** replace `bug.exemple.com` with the chosen channel and document it for support.

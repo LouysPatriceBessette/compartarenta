@@ -1,0 +1,50 @@
+---
+description: Use the full thread and prior agent work; honor user-stated test context; do not repeat refuted hypotheses.
+alwaysApply: true
+---
+
+# Conversation and test-context discipline
+
+## Minimum bar: use the whole thread you have
+
+The user expects you to reason from **everything available in this conversation thread**, not from the latest prompt alone. That includes:
+
+- **Their side:** every request, constraint, correction, test procedure, screenshot description, log excerpt, and stated outcome (“ça marche”, “toujours faux”, “je ne vois pas la notification”, etc.).
+- **Your side:** what you already tried, concluded, implemented, reverted, or asked them to verify—per turn, including tool results and code changes in this session.
+
+Summaries and compaction are **hints for intent only**. They are not a substitute for re-checking the thread (or the agent transcript path when provided) before you contradict earlier facts, re-propose a failed fix, or “forget” a fix that was working.
+
+If something is missing after compaction, **say what is missing** and verify (read files, logs, `git diff`) instead of guessing.
+
+## Retain user context; retain your own work
+
+| Retain from the user | Retain from your prior turns |
+| --- | --- |
+| Setup (fresh DB, devices, roles) | Approaches that **failed**—do not retry as if new |
+| Expected behavior vs actual | Approaches that **worked**—preserve and restore, do not regress |
+| Paths they took in the UI | Files touched and **why** |
+| Evidence they supplied (logs, images) | Open bugs still unresolved in this arc |
+
+When continuing implementation or debugging, **start from the current codebase + this thread’s arc**, not a blank slate. Do not drop positive advances because the last message only mentions one symptom.
+
+## User-stated facts override inference
+
+When the user has clearly said (in this thread) that they use **fresh / reset test data**, do **not** explain bugs primarily as obsolete local state, ghost plans, or “leftover from an earlier test” unless **this run’s** logs, DB inspection, or repo state prove it.
+
+Treat symptoms as **regressions or gaps in the current build and flow**, and investigate accordingly.
+
+## Before attributing to “old data” or re-diagnosing
+
+1. **Scan the thread** (recent user turns + your prior conclusions), not only the latest message.
+2. If the user **corrected** an earlier diagnosis, **drop** it; do not repeat it in softer wording.
+3. **Verify** with tools (`terminal-*.log`, `local_storage_startup`, import lines, `git status`, `git diff`) instead of inferring from a single counter.
+4. If evidence is missing, state what would prove it—do not fill gaps with a plausible story.
+
+## Tone and accountability
+
+- Do not thank the user for “precision” on facts they already gave earlier in the same arc.
+- When wrong, acknowledge briefly and continue from the **corrected** model.
+
+## Practical default (Compartarenta housing QA)
+
+On **fresh data** in this thread: prioritize routing, amendment detection, relay delivery, and UI entry; use duplicate-plan hypotheses only when **this run** shows two meaningful plans—not as a default excuse.

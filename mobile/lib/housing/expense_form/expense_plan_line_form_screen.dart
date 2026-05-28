@@ -11,6 +11,7 @@ import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 import 'expense_ratio_template_repository.dart';
 import 'expense_split_grid_logic.dart';
+import 'plan_participant_dropdown_value.dart';
 
 /// Full-screen add/edit expense form (proposal draft and future in-force scope).
 class ExpensePlanLineFormScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
     this.prefsForBackup,
     this.existingLineId,
     this.initialSortOrder = 0,
+    this.amendmentSubmitToGroup = false,
+    this.lockRecurrenceAndSplit = false,
   });
 
   final String planId;
@@ -40,6 +43,8 @@ class ExpensePlanLineFormScreen extends StatefulWidget {
   final AppPreferences? prefsForBackup;
   final String? existingLineId;
   final int initialSortOrder;
+  final bool amendmentSubmitToGroup;
+  final bool lockRecurrenceAndSplit;
 
   @override
   State<ExpensePlanLineFormScreen> createState() =>
@@ -95,8 +100,15 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
         _amountCtrl.text = minorToAmountText(loaded.amountMinor);
         _isRecurring = loaded.isRecurring;
         _amountIsBudgetCap = loaded.amountIsBudgetCap;
-        _paymentResponsibleId = loaded.paymentResponsibleParticipantId;
-        _selectedTemplateId = loaded.ratioTemplateId;
+        _paymentResponsibleId = resolvePlanParticipantDropdownValue(
+          loaded.paymentResponsibleParticipantId,
+          widget.participantIds,
+        );
+        final templateId = loaded.ratioTemplateId;
+        _selectedTemplateId = templateId != null &&
+                _templates.any((t) => t.id == templateId)
+            ? templateId
+            : null;
         _sortOrder = loaded.sortOrder;
         _createdAt = loaded.createdAt;
         _recurrence =
@@ -250,9 +262,15 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          16 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         children: [
           ExpensePlanLineFormBody.edit(
+            lockRecurrenceAndSplit: widget.lockRecurrenceAndSplit,
             titleController: _titleCtrl,
             descriptionController: _descCtrl,
             amountController: _amountCtrl,
@@ -315,7 +333,11 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
               padding: const EdgeInsets.all(16),
               child: FilledButton(
                 onPressed: _canSave && !_saving ? _save : null,
-                child: Text(l10n.housingPlanSave),
+                child: Text(
+                  widget.amendmentSubmitToGroup
+                      ? l10n.housingAmendmentSubmitToGroup
+                      : l10n.housingPlanSave,
+                ),
               ),
             ),
           );

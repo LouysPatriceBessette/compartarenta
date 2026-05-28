@@ -727,8 +727,14 @@ abstract class AppLocalizations {
   /// No description provided for @errorSomethingWentWrongBody.
   ///
   /// In en, this message translates to:
-  /// **'Please try again. If this keeps happening, contact support.'**
+  /// **'Please take a screenshot now and send it with a short description of the steps that led to this error.'**
   String get errorSomethingWentWrongBody;
+
+  /// No description provided for @errorReportBugLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this error'**
+  String get errorReportBugLink;
 
   /// No description provided for @errorUnknownOnboardingStep.
   ///
@@ -1906,6 +1912,18 @@ abstract class AppLocalizations {
   /// **'Choose a plan line'**
   String get housingAmendmentPickLine;
 
+  /// No description provided for @housingAmendmentTypeLineEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit an expense'**
+  String get housingAmendmentTypeLineEdit;
+
+  /// No description provided for @housingAmendmentTypeLineEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title, amount, description, or payer (not recurrence or split shares)'**
+  String get housingAmendmentTypeLineEditHint;
+
   /// No description provided for @housingAmendmentTypeLineAmount.
   ///
   /// In en, this message translates to:
@@ -1945,19 +1963,19 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentTypeLineAdd.
   ///
   /// In en, this message translates to:
-  /// **'Add an expense line'**
+  /// **'Add an expense'**
   String get housingAmendmentTypeLineAdd;
 
   /// No description provided for @housingAmendmentTypeLineAddHint.
   ///
   /// In en, this message translates to:
-  /// **'Add one new line to the plan'**
+  /// **'Add a new expense to the plan'**
   String get housingAmendmentTypeLineAddHint;
 
   /// No description provided for @housingAmendmentTypeLineRemove.
   ///
   /// In en, this message translates to:
-  /// **'Remove an expense line'**
+  /// **'Remove an expense'**
   String get housingAmendmentTypeLineRemove;
 
   /// No description provided for @housingAmendmentTypeLineRemoveHint.
@@ -2104,6 +2122,18 @@ abstract class AppLocalizations {
   /// **'Currently'**
   String get housingAmendmentDetailCurrent;
 
+  /// No description provided for @housingAmendmentDetailPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously'**
+  String get housingAmendmentDetailPrevious;
+
+  /// No description provided for @housingAmendmentDetailAtRequestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'At the time of the request'**
+  String get housingAmendmentDetailAtRequestTime;
+
   /// No description provided for @housingAmendmentDetailProposed.
   ///
   /// In en, this message translates to:
@@ -2115,6 +2145,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'the agreement end date'**
   String get housingAmendmentSubjectAgreementEnd;
+
+  /// No description provided for @housingAmendmentSubjectLineEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'the expense “{line}”'**
+  String housingAmendmentSubjectLineEdit(String line);
 
   /// No description provided for @housingAmendmentSubjectLineAmount.
   ///
@@ -2199,6 +2235,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading…'**
   String get housingAmendmentDetailLoading;
+
+  /// No description provided for @housingAmendmentAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get housingAmendmentAccept;
+
+  /// No description provided for @housingAmendmentReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get housingAmendmentReject;
+
+  /// No description provided for @housingAmendmentSubmitToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit to the group'**
+  String get housingAmendmentSubmitToGroup;
+
+  /// No description provided for @housingAmendmentPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request preview'**
+  String get housingAmendmentPreviewTitle;
+
+  /// No description provided for @housingAmendmentPreviewIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the proposed change to {subject} before sending it to the group.'**
+  String housingAmendmentPreviewIntro(String subject);
+
+  /// No description provided for @housingAmendmentNoMeaningfulChange.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no change compared to the current plan.'**
+  String get housingAmendmentNoMeaningfulChange;
+
+  /// No description provided for @housingAmendmentRequestStatusAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Request status'**
+  String get housingAmendmentRequestStatusAction;
+
+  /// No description provided for @housingAmendmentJournalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan change log'**
+  String get housingAmendmentJournalTitle;
+
+  /// No description provided for @housingAmendmentJournalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted and refused requests'**
+  String get housingAmendmentJournalSubtitle;
+
+  /// No description provided for @housingAmendmentJournalEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plan changes yet.'**
+  String get housingAmendmentJournalEmpty;
+
+  /// No description provided for @housingAmendmentJournalAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get housingAmendmentJournalAccepted;
+
+  /// No description provided for @housingAmendmentJournalRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused'**
+  String get housingAmendmentJournalRefused;
+
+  /// No description provided for @housingAmendmentJournalCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} — {status}'**
+  String housingAmendmentJournalCardTitle(String subject, String status);
+
+  /// No description provided for @housingAmendmentJournalCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'By {name} · {date}'**
+  String housingAmendmentJournalCardSubtitle(String name, String date);
+
+  /// No description provided for @housingAmendmentRulesSummaryShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement rules updated'**
+  String get housingAmendmentRulesSummaryShort;
 
   /// No description provided for @housingActiveHubViewPendingAmendment.
   ///
@@ -2601,6 +2727,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rejected plan'**
   String get housingArchiveRejectedTitle;
+
+  /// No description provided for @housingArchiveAmendmentRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change request refused'**
+  String get housingArchiveAmendmentRejectedTitle;
 
   /// No description provided for @housingArchiveDraftTitle.
   ///

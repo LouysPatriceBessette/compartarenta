@@ -352,7 +352,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorSomethingWentWrongBody =>
-      'Veuillez réessayer. Si le problème persiste, contactez le support.';
+      'S\'il vous plaît, prenez une capture d\'écran maintenant et envoyez-la avec une description des étapes qui vous ont mené à cette erreur.';
+
+  @override
+  String get errorReportBugLink => 'Rapporter cette erreur';
 
   @override
   String get errorUnknownOnboardingStep => 'Étape de configuration inconnue.';
@@ -1041,6 +1044,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingAmendmentPickLine => 'Choisir une ligne';
 
   @override
+  String get housingAmendmentTypeLineEdit => 'Modifier une dépense';
+
+  @override
+  String get housingAmendmentTypeLineEditHint =>
+      'Titre, montant, description ou responsable du paiement (pas la récurrence ni les parts)';
+
+  @override
   String get housingAmendmentTypeLineAmount => 'Modifier un montant';
 
   @override
@@ -1062,14 +1072,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Changer le responsable du paiement';
 
   @override
-  String get housingAmendmentTypeLineAdd => 'Ajouter une ligne';
+  String get housingAmendmentTypeLineAdd => 'Ajouter une dépense';
 
   @override
   String get housingAmendmentTypeLineAddHint =>
-      'Ajouter une nouvelle ligne au plan';
+      'Ajouter une nouvelle dépense au plan';
 
   @override
-  String get housingAmendmentTypeLineRemove => 'Retirer une ligne';
+  String get housingAmendmentTypeLineRemove => 'Retirer une dépense';
 
   @override
   String get housingAmendmentTypeLineRemoveHint =>
@@ -1158,10 +1168,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingAmendmentDetailCurrent => 'Actuellement';
 
   @override
+  String get housingAmendmentDetailPrevious => 'Auparavant';
+
+  @override
+  String get housingAmendmentDetailAtRequestTime => 'Au moment de la demande';
+
+  @override
   String get housingAmendmentDetailProposed => 'Proposé';
 
   @override
   String get housingAmendmentSubjectAgreementEnd => 'la date de fin d\'entente';
+
+  @override
+  String housingAmendmentSubjectLineEdit(String line) {
+    return 'la dépense « $line »';
+  }
 
   @override
   String housingAmendmentSubjectLineAmount(String line) {
@@ -1216,6 +1237,61 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAmendmentDetailLoading => 'Chargement…';
+
+  @override
+  String get housingAmendmentAccept => 'Accepter';
+
+  @override
+  String get housingAmendmentReject => 'Refuser';
+
+  @override
+  String get housingAmendmentSubmitToGroup => 'Soumettre au groupe';
+
+  @override
+  String get housingAmendmentPreviewTitle => 'Aperçu de la demande';
+
+  @override
+  String housingAmendmentPreviewIntro(String subject) {
+    return 'Vérifiez le changement proposé pour $subject avant l\'envoi au groupe.';
+  }
+
+  @override
+  String get housingAmendmentNoMeaningfulChange =>
+      'Aucun changement par rapport au plan actuel.';
+
+  @override
+  String get housingAmendmentRequestStatusAction => 'Statut de la demande';
+
+  @override
+  String get housingAmendmentJournalTitle => 'Journal des changements au plan';
+
+  @override
+  String get housingAmendmentJournalSubtitle =>
+      'Demandes acceptées et refusées';
+
+  @override
+  String get housingAmendmentJournalEmpty =>
+      'Aucun changement au plan pour le moment.';
+
+  @override
+  String get housingAmendmentJournalAccepted => 'Acceptée';
+
+  @override
+  String get housingAmendmentJournalRefused => 'Refusée';
+
+  @override
+  String housingAmendmentJournalCardTitle(String subject, String status) {
+    return '$subject — $status';
+  }
+
+  @override
+  String housingAmendmentJournalCardSubtitle(String name, String date) {
+    return 'Par $name · $date';
+  }
+
+  @override
+  String get housingAmendmentRulesSummaryShort =>
+      'Règles d\'entente mises à jour';
 
   @override
   String get housingActiveHubViewPendingAmendment => 'Changement demandé';
@@ -1459,6 +1535,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingArchiveRejectedTitle => 'Plan rejeté';
+
+  @override
+  String get housingArchiveAmendmentRejectedTitle => 'Modification refusée';
 
   @override
   String get housingArchiveDraftTitle => 'Ébauche de plan';

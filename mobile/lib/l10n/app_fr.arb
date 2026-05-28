@@ -110,7 +110,8 @@
   "prefsTimeZoneSearchHint": "Rechercher un fuseau horaire",
 
   "errorSomethingWentWrongTitle": "Une erreur est survenue",
-  "errorSomethingWentWrongBody": "Veuillez réessayer. Si le problème persiste, contactez le support.",
+  "errorSomethingWentWrongBody": "S'il vous plaît, prenez une capture d'écran maintenant et envoyez-la avec une description des étapes qui vous ont mené à cette erreur.",
+  "errorReportBugLink": "Rapporter cette erreur",
   "errorUnknownOnboardingStep": "Étape de configuration inconnue.",
 
   "homeHousingPlan": "Plan logement",
@@ -384,15 +385,17 @@
   "housingAmendmentRequestIntro": "Choisissez un seul changement par proposition. Le groupe doit l'accepter à l'unanimité.",
   "housingAmendmentPendingBlocks": "Une modification attend déjà des réponses.",
   "housingAmendmentPickLine": "Choisir une ligne",
+  "housingAmendmentTypeLineEdit": "Modifier une dépense",
+  "housingAmendmentTypeLineEditHint": "Titre, montant, description ou responsable du paiement (pas la récurrence ni les parts)",
   "housingAmendmentTypeLineAmount": "Modifier un montant",
   "housingAmendmentTypeLineAmountHint": "Mettre à jour le prix d'une ligne",
   "housingAmendmentTypeLineRecurrence": "Modifier la récurrence",
   "housingAmendmentTypeLineRecurrenceHint": "Changer la fréquence d'une ligne",
   "housingAmendmentTypeLinePayer": "Modifier qui paie",
   "housingAmendmentTypeLinePayerHint": "Changer le responsable du paiement",
-  "housingAmendmentTypeLineAdd": "Ajouter une ligne",
-  "housingAmendmentTypeLineAddHint": "Ajouter une nouvelle ligne au plan",
-  "housingAmendmentTypeLineRemove": "Retirer une ligne",
+  "housingAmendmentTypeLineAdd": "Ajouter une dépense",
+  "housingAmendmentTypeLineAddHint": "Ajouter une nouvelle dépense au plan",
+  "housingAmendmentTypeLineRemove": "Retirer une dépense",
   "housingAmendmentTypeLineRemoveHint": "Retirer une ligne (les dépenses passées restent liées)",
   "housingAmendmentLineRemoveConfirm": "Retirer cette ligne du plan ? Les dépenses déjà enregistrées pour cette ligne sont conservées.",
   "housingAmendmentLineRemoveConfirmAction": "Retirer la ligne",
@@ -417,8 +420,11 @@
   "housingAmendmentDetailTitle": "Changement demandé",
   "housingAmendmentDetailIntro": "{proposer} propose de modifier {subject}.",
   "housingAmendmentDetailCurrent": "Actuellement",
+  "housingAmendmentDetailPrevious": "Auparavant",
+  "housingAmendmentDetailAtRequestTime": "Au moment de la demande",
   "housingAmendmentDetailProposed": "Proposé",
   "housingAmendmentSubjectAgreementEnd": "la date de fin d'entente",
+  "housingAmendmentSubjectLineEdit": "la dépense « {line} »",
   "housingAmendmentSubjectLineAmount": "le montant de « {line} »",
   "housingAmendmentSubjectLineRecurrence": "la récurrence de « {line} »",
   "housingAmendmentSubjectLinePayer": "qui paie pour « {line} »",
@@ -433,6 +439,38 @@
   "housingAmendmentRulesProposedPlaceholder": "Règles proposées (résumé à venir)",
   "housingActiveHubPendingAmendment": "Il y a une demande de changement",
   "housingAmendmentDetailLoading": "Chargement…",
+  "housingAmendmentAccept": "Accepter",
+  "housingAmendmentReject": "Refuser",
+  "housingAmendmentSubmitToGroup": "Soumettre au groupe",
+  "housingAmendmentPreviewTitle": "Aperçu de la demande",
+  "housingAmendmentPreviewIntro": "Vérifiez le changement proposé pour {subject} avant l'envoi au groupe.",
+  "@housingAmendmentPreviewIntro": {
+    "placeholders": {
+      "subject": { "type": "String" }
+    }
+  },
+  "housingAmendmentNoMeaningfulChange": "Aucun changement par rapport au plan actuel.",
+  "housingAmendmentRequestStatusAction": "Statut de la demande",
+  "housingAmendmentJournalTitle": "Journal des changements au plan",
+  "housingAmendmentJournalSubtitle": "Demandes acceptées et refusées",
+  "housingAmendmentJournalEmpty": "Aucun changement au plan pour le moment.",
+  "housingAmendmentJournalAccepted": "Acceptée",
+  "housingAmendmentJournalRefused": "Refusée",
+  "housingAmendmentJournalCardTitle": "{subject} — {status}",
+  "@housingAmendmentJournalCardTitle": {
+    "placeholders": {
+      "subject": { "type": "String" },
+      "status": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalCardSubtitle": "Par {name} · {date}",
+  "@housingAmendmentJournalCardSubtitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "housingAmendmentRulesSummaryShort": "Règles d'entente mises à jour",
   "housingActiveHubViewPendingAmendment": "Changement demandé",
   "housingInviteResponseWindowTitle": "Délai de réponse",
   "housingInviteResponseWindowBody": "Les participants ont jusqu'à cette date et heure pour répondre (UTC).",
@@ -533,6 +571,7 @@
     }
   },
   "housingArchiveRejectedTitle": "Plan rejeté",
+  "housingArchiveAmendmentRejectedTitle": "Modification refusée",
   "housingArchiveDraftTitle": "Ébauche de plan",
   "housingArchiveDraftParticipantsTitle": "Plan de {count} participants",
   "@housingArchiveDraftParticipantsTitle": {

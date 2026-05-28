@@ -27,9 +27,14 @@ class LikeRatioSelector extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (templates.isEmpty) return const SizedBox.shrink();
 
+    final resolvedId = selectedTemplateId != null &&
+            templates.any((t) => t.id == selectedTemplateId)
+        ? selectedTemplateId
+        : null;
+
     return DropdownButtonFormField<String?>(
-      key: ValueKey<String?>(selectedTemplateId),
-      initialValue: selectedTemplateId ?? blankValue,
+      key: ValueKey<String?>(resolvedId),
+      initialValue: resolvedId ?? blankValue,
       isExpanded: true,
       // Menu rows: two lines (title + percents). Closed field: one line only.
       itemHeight: 64,

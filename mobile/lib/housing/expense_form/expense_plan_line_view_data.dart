@@ -2,6 +2,7 @@ import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import 'expense_amount_parse.dart';
 import 'expense_ratio_template_repository.dart';
+import 'plan_participant_dropdown_value.dart';
 import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 import 'expense_split_grid_logic.dart';
@@ -47,15 +48,12 @@ class ExpensePlanLineViewData {
         ExpenseRecurrenceSpec.fromLegacyDayOfMonth(line.recurrenceDayOfMonth);
 
     String paymentLabel = l10n.housingExpensePaymentResponsibleAll;
-    final payId = line.paymentResponsibleParticipantId;
-    if (payId != null && payId.isNotEmpty) {
-      var idx = participantIds.indexOf(payId);
-      if (idx < 0) {
-        final tail = payId.contains(':') ? payId.split(':').last : payId;
-        idx = participantIds.indexWhere(
-          (id) => id == tail || id.endsWith(':$tail'),
-        );
-      }
+    final payId = resolvePlanParticipantDropdownValue(
+      line.paymentResponsibleParticipantId,
+      participantIds,
+    );
+    if (payId != null) {
+      final idx = participantIds.indexOf(payId);
       if (idx >= 0) {
         paymentLabel = participantNames[idx];
       }

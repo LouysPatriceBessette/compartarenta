@@ -10,9 +10,8 @@ import 'package:go_router/go_router.dart';
 import '../app_root_navigator.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
-import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/housing_navigation_intent.dart';
-import '../screens/housing/housing_amendment_detail_screen.dart';
+import '../screens/housing/housing_amendment_journal_screen.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
@@ -168,7 +167,7 @@ class PushNotificationService {
     if (payload.startsWith(_housingAmendmentPrefix)) {
       final planId = payload.substring(_housingAmendmentPrefix.length);
       if (planId.isNotEmpty) {
-        _navigateToHousingAmendmentDetail(planId);
+        _navigateToHousingAmendmentJournal(planId);
       } else {
         _navigateToHousing();
       }
@@ -302,14 +301,18 @@ class PushNotificationService {
   static Future<void> showLocalHousingProposalNotification({
     String? senderDisplayName,
     String? planId,
+    bool isInForceAmendment = false,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingProposalNotification(prefs)) return;
 
     var payload = _housingTapPayload;
+    var openAsAmendment = isInForceAmendment;
     if (planId != null && planId.isNotEmpty) {
       final db = AppDatabase.processScope;
-      if (await pendingRevisionIsAmendment(db, planId)) {
+      openAsAmendment = openAsAmendment ||
+          await pendingRevisionIsAmendment(db, planId);
+      if (openAsAmendment) {
         payload = '$_housingAmendmentPrefix$planId';
       }
     }
@@ -317,6 +320,16 @@ class PushNotificationService {
     final l10n = _l10nForUiLocale();
     final title = l10n.pushNotificationHousingProposalTitle;
     final body = l10n.pushNotificationHousingProposalBody;
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: title,
+        body: body,
+        openAmendmentPlanId: openAsAmendment ? planId : null,
+      );
+      return;
+    }
+
     await _ensureLocalNotificationsInitialized(_plugin);
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
@@ -500,6 +513,7 @@ class PushNotificationService {
 
   static Future<void> showLocalHousingDecisionNotification({
     required String senderDisplayName,
+    String? planId,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
@@ -511,6 +525,10 @@ class PushNotificationService {
         : l10n.pushNotificationHousingDecisionBodyFrom(
             senderDisplayName.trim(),
           );
+
+    final tapPayload = planId != null && planId.isNotEmpty
+        ? '$_housingAmendmentPrefix$planId'
+        : _housingTapPayload;
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
@@ -539,7 +557,7 @@ class PushNotificationService {
         ),
         iOS: DarwinNotificationDetails(presentSound: playSound),
       ),
-      payload: _housingTapPayload,
+      payload: tapPayload,
     );
   }
 
@@ -606,8 +624,8 @@ class PushNotificationService {
     attempt();
   }
 
-  /// Notification tap: open housing hub, then amendment detail above it.
-  static void _navigateToHousingAmendmentDetail(String planId) {
+  /// Notification tap: open housing hub, then amendment journal above it.
+  static void _navigateToHousingAmendmentJournal(String planId) {
     void attempt([int tries = 0]) {
       final ctx = appRootNavigatorKey.currentContext;
       if (ctx != null && ctx.mounted) {
@@ -616,29 +634,23 @@ class PushNotificationService {
         );
         final router = GoRouter.of(ctx);
         router.go('/housing');
-        void pushDetail([int pushTries = 0]) {
+        void pushJournal([int pushTries = 0]) {
           final navCtx = appRootNavigatorKey.currentContext;
           if (navCtx == null || !navCtx.mounted) {
             if (pushTries >= 40) return;
             WidgetsBinding.instance.addPostFrameCallback(
-              (_) => pushDetail(pushTries + 1),
+              (_) => pushJournal(pushTries + 1),
             );
             return;
           }
           unawaited(
             AppPreferences.load().then((prefs) async {
               if (!navCtx.mounted) return;
-              final pendingId = await HousingProposalTransportService(
-                AppDatabase.processScope,
-              ).pendingRevisionIdForPlan(planId);
-              if (!navCtx.mounted) return;
               await Navigator.of(navCtx).push<void>(
                 MaterialPageRoute<void>(
-                  builder: (_) => HousingAmendmentDetailScreen(
-                    db: AppDatabase.processScope,
+                  builder: (_) => HousingAmendmentJournalScreen(
                     planId: planId,
                     prefs: prefs,
-                    revisionId: pendingId,
                   ),
                 ),
               );
@@ -646,7 +658,7 @@ class PushNotificationService {
           );
         }
 
-        WidgetsBinding.instance.addPostFrameCallback((_) => pushDetail());
+        WidgetsBinding.instance.addPostFrameCallback((_) => pushJournal());
         return;
       }
       if (tries >= 30) return;

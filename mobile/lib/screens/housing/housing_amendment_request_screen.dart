@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
-import '../../housing/amendment/housing_amendment_proposal_flow.dart';
+import '../../housing/realized_expense/realized_expense_participants.dart';
+import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart'
     show removeLineFromRevisionPayload;
 import '../../housing/amendment/housing_amendment_type.dart';
@@ -12,24 +15,28 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_agreement_renewal_screen.dart';
+import 'housing_amendment_journal_screen.dart';
+import 'housing_amendment_submit_preview_screen.dart';
 import 'housing_plan_screen.dart';
 
-class _AmendmentOption {
-  const _AmendmentOption({
+class _AmendmentMenuOption {
+  const _AmendmentMenuOption({
     this.type,
     required this.title,
     required this.subtitle,
     this.isRosterRedirect = false,
+    this.isJournal = false,
   });
 
   final HousingAmendmentType? type;
   final String title;
   final String subtitle;
   final bool isRosterRedirect;
+  final bool isJournal;
 }
 
 /// Picker for a single in-force plan modification (pass 4).
-class HousingAmendmentRequestScreen extends StatelessWidget {
+class HousingAmendmentRequestScreen extends StatefulWidget {
   const HousingAmendmentRequestScreen({
     super.key,
     required this.planId,
@@ -39,46 +46,77 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
   final String planId;
   final AppPreferences prefs;
 
-  List<_AmendmentOption> _options(AppLocalizations l10n) => [
-        _AmendmentOption(
-          type: HousingAmendmentType.lineAmount,
-          title: l10n.housingAmendmentTypeLineAmount,
-          subtitle: l10n.housingAmendmentTypeLineAmountHint,
+  @override
+  State<HousingAmendmentRequestScreen> createState() =>
+      _HousingAmendmentRequestScreenState();
+}
+
+class _HousingAmendmentRequestScreenState
+    extends State<HousingAmendmentRequestScreen> {
+  bool _redirectedToPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_openPendingAmendmentIfAwaitingLocal());
+    });
+  }
+
+  Future<void> _openPendingAmendmentIfAwaitingLocal() async {
+    if (_redirectedToPending || !mounted) return;
+    final transport = HousingProposalTransportService(AppDatabase.processScope);
+    if (!await transport.hasOpenPendingAmendmentAwaitingLocalResponse(
+      widget.planId,
+    )) {
+      return;
+    }
+    _redirectedToPending = true;
+    if (!mounted) return;
+    await openHousingPendingProposalOrAmendment(
+      context,
+      db: AppDatabase.processScope,
+      planId: widget.planId,
+      prefs: widget.prefs,
+      isAmendment: true,
+    );
+  }
+
+  List<_AmendmentMenuOption> _options(AppLocalizations l10n) => [
+        _AmendmentMenuOption(
+          type: HousingAmendmentType.lineEdit,
+          title: l10n.housingAmendmentTypeLineEdit,
+          subtitle: l10n.housingAmendmentTypeLineEditHint,
         ),
-        _AmendmentOption(
-          type: HousingAmendmentType.lineRecurrence,
-          title: l10n.housingAmendmentTypeLineRecurrence,
-          subtitle: l10n.housingAmendmentTypeLineRecurrenceHint,
-        ),
-        _AmendmentOption(
-          type: HousingAmendmentType.linePayer,
-          title: l10n.housingAmendmentTypeLinePayer,
-          subtitle: l10n.housingAmendmentTypeLinePayerHint,
-        ),
-        _AmendmentOption(
+        _AmendmentMenuOption(
           type: HousingAmendmentType.lineAdd,
           title: l10n.housingAmendmentTypeLineAdd,
           subtitle: l10n.housingAmendmentTypeLineAddHint,
         ),
-        _AmendmentOption(
+        _AmendmentMenuOption(
           type: HousingAmendmentType.lineRemove,
           title: l10n.housingAmendmentTypeLineRemove,
           subtitle: l10n.housingAmendmentTypeLineRemoveHint,
         ),
-        _AmendmentOption(
+        _AmendmentMenuOption(
           type: HousingAmendmentType.agreementEnd,
           title: l10n.housingAmendmentTypeAgreementEnd,
           subtitle: l10n.housingAmendmentTypeAgreementEndHint,
         ),
-        _AmendmentOption(
+        _AmendmentMenuOption(
           type: HousingAmendmentType.ruleChange,
           title: l10n.housingAmendmentTypeRuleChange,
           subtitle: l10n.housingAmendmentTypeRuleChangeHint,
         ),
-        _AmendmentOption(
+        _AmendmentMenuOption(
           isRosterRedirect: true,
           title: l10n.housingAmendmentRosterChangeTitle,
           subtitle: l10n.housingAmendmentRosterChangeHint,
+        ),
+        _AmendmentMenuOption(
+          isJournal: true,
+          title: l10n.housingAmendmentJournalTitle,
+          subtitle: l10n.housingAmendmentJournalSubtitle,
         ),
       ];
 
@@ -91,11 +129,16 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentRequestTitle)),
       body: FutureBuilder<bool>(
-        future: HousingProposalTransportService(db).hasOpenPendingAmendment(planId),
+        future: HousingProposalTransportService(db).hasPendingAmendmentForUi(
+          widget.planId,
+        ),
         builder: (context, pendingSnap) {
+          if (pendingSnap.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final hasPending = pendingSnap.data ?? false;
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: housingAmendmentScreenPadding(context),
             children: [
               if (hasPending) ...[
                 Card(
@@ -109,8 +152,8 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
                       await openHousingPendingProposalOrAmendment(
                         context,
                         db: db,
-                        planId: planId,
-                        prefs: prefs,
+                        planId: widget.planId,
+                        prefs: widget.prefs,
                         isAmendment: true,
                       );
                     },
@@ -136,7 +179,7 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
                       title: Text(opt.title),
                       subtitle: Text(opt.subtitle),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _onOptionTap(context, opt),
+                      onTap: () => _onOptionTap(context, opt, widget.planId, widget.prefs),
                     ),
                   ),
               ],
@@ -147,9 +190,16 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _onOptionTap(BuildContext context, _AmendmentOption opt) async {
+  Future<void> _onOptionTap(
+    BuildContext context,
+    _AmendmentMenuOption opt,
+    String planId,
+    AppPreferences prefs,
+  ) async {
     final db = AppDatabase.processScope;
-    if (await HousingProposalTransportService(db).hasOpenPendingAmendment(planId)) {
+    if (await HousingProposalTransportService(db).hasPendingAmendmentForUi(
+      planId,
+    )) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).housingAmendmentPendingBlocks)),
@@ -157,8 +207,20 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
       return;
     }
     if (!context.mounted) return;
+
+    if (opt.isJournal) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => HousingAmendmentJournalScreen(
+            planId: planId,
+            prefs: prefs,
+          ),
+        ),
+      );
+      return;
+    }
+
     if (opt.isRosterRedirect) {
-      if (!context.mounted) return;
       await Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
           builder: (_) => HousingAgreementRenewalScreen(
@@ -170,10 +232,10 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
       );
       return;
     }
+
     final type = opt.type;
     if (type == null) return;
 
-    if (!context.mounted) return;
     if (type == HousingAmendmentType.agreementEnd) {
       await _amendAgreementEnd(context);
       return;
@@ -196,17 +258,18 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
 
   Future<_LinePickerContext?> _lineContext() async {
     final db = AppDatabase.processScope;
-    final agreement = await db.getAgreementForPlan(planId);
+    final agreement = await db.getAgreementForPlan(widget.planId);
     if (agreement == null) return null;
-    final lines = await db.listPlanLines(planId);
-    final participants = (await db.listParticipants())
-        .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
-        .toList(growable: false);
+    final lines = await db.listPlanLines(widget.planId);
+    final participants = sortParticipantsForPlan(
+      widget.planId,
+      await participantsForPlan(db, widget.planId),
+    );
     final plan = await (db.select(db.plans)
-          ..where((t) => t.id.equals(planId)))
+          ..where((t) => t.id.equals(widget.planId)))
         .getSingleOrNull();
     final currency = plan?.currency.trim().isEmpty ?? true
-        ? prefs.currency
+        ? widget.prefs.currency
         : plan!.currency.trim();
     return _LinePickerContext(
       agreement: agreement,
@@ -215,7 +278,29 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
       participantNames:
           participants.map((p) => p.displayName).toList(growable: false),
       currency: currency,
-      dateFormat: effectiveDateFormat(prefs),
+      dateFormat: effectiveDateFormat(widget.prefs),
+    );
+  }
+
+  Future<void> _openPreview(
+    BuildContext context, {
+    required HousingAmendmentType type,
+    String? targetLineId,
+    DateTime? proposedPeriodEnd,
+    void Function(Map<String, dynamic> payload)? patchRevisionPayload,
+  }) async {
+    if (!context.mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingAmendmentSubmitPreviewScreen(
+          planId: widget.planId,
+          prefs: widget.prefs,
+          type: type,
+          targetLineId: targetLineId,
+          proposedPeriodEnd: proposedPeriodEnd,
+          patchRevisionPayload: patchRevisionPayload,
+        ),
+      ),
     );
   }
 
@@ -269,40 +354,38 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
         ),
       );
       if (ok != true || !context.mounted) return;
-      await HousingAmendmentProposalFlow(AppDatabase.processScope).submitAmendment(
-        context: context,
-        planId: planId,
-        prefs: prefs,
-        amendmentType: type,
+      await _openPreview(
+        context,
+        type: type,
         targetLineId: lineId,
         patchRevisionPayload: (payload) {
-          removeLineFromRevisionPayload(payload, lineId, planId);
+          removeLineFromRevisionPayload(payload, lineId, widget.planId);
         },
       );
       return;
     }
 
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => ExpensePlanLineFormScreen(
-          planId: planId,
+          planId: widget.planId,
           participantIds: ctx.participantIds,
           participantNames: ctx.participantNames,
           periodStart: ctx.agreement.periodStart,
           periodEnd: ctx.agreement.periodEnd,
           defaultCurrency: ctx.currency,
           dateFormat: ctx.dateFormat,
-          prefs: prefs,
+          prefs: widget.prefs,
           existingLineId: lineId,
+          amendmentSubmitToGroup: true,
+          lockRecurrenceAndSplit: type == HousingAmendmentType.lineEdit,
         ),
       ),
     );
-    if (!context.mounted) return;
-    await HousingAmendmentProposalFlow(AppDatabase.processScope).submitAmendment(
-      context: context,
-      planId: planId,
-      prefs: prefs,
-      amendmentType: type,
+    if (saved != true || !context.mounted) return;
+    await _openPreview(
+      context,
+      type: type,
       targetLineId: lineId,
     );
   }
@@ -314,90 +397,86 @@ class HousingAmendmentRequestScreen extends StatelessWidget {
         ? 0
         : ctx.lines.map((l) => l.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => ExpensePlanLineFormScreen(
-          planId: planId,
+          planId: widget.planId,
           participantIds: ctx.participantIds,
           participantNames: ctx.participantNames,
           periodStart: ctx.agreement.periodStart,
           periodEnd: ctx.agreement.periodEnd,
           defaultCurrency: ctx.currency,
           dateFormat: ctx.dateFormat,
-          prefs: prefs,
+          prefs: widget.prefs,
           initialSortOrder: sortOrder,
+          amendmentSubmitToGroup: true,
         ),
       ),
     );
-    if (!context.mounted) return;
-    await HousingAmendmentProposalFlow(AppDatabase.processScope).submitAmendment(
-      context: context,
-      planId: planId,
-      prefs: prefs,
-      amendmentType: HousingAmendmentType.lineAdd,
+    if (saved != true || !context.mounted) return;
+    final lines = await AppDatabase.processScope.listPlanLines(widget.planId);
+    PlanLine? newest;
+    for (final line in lines) {
+      if (newest == null || line.sortOrder > newest.sortOrder) {
+        newest = line;
+      }
+    }
+    final newLineId = newest?.id;
+    await _openPreview(
+      context,
+      type: HousingAmendmentType.lineAdd,
+      targetLineId: newLineId,
     );
   }
 
   Future<void> _amendAgreementEnd(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
     final db = AppDatabase.processScope;
-    final agreement = await db.getAgreementForPlan(planId);
+    final agreement = await db.getAgreementForPlan(widget.planId);
     if (agreement == null || !context.mounted) return;
-    final dateFmt = effectiveDateFormat(prefs);
-    DateTime selected = agreement.periodEnd;
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final firstDate = agreement.periodStart.isAfter(todayDate)
+        ? agreement.periodStart
+        : todayDate;
 
     final picked = await showDatePicker(
       context: context,
-      initialDate: selected,
-      firstDate: agreement.periodStart,
+      initialDate: agreement.periodEnd.isBefore(firstDate)
+          ? firstDate
+          : agreement.periodEnd,
+      firstDate: firstDate,
       lastDate: DateTime(2100),
     );
     if (picked == null || !context.mounted) return;
-    final pickedEnd = picked;
 
-    final sent = await HousingAmendmentProposalFlow(db).submitAmendment(
-      context: context,
-      planId: planId,
-      prefs: prefs,
-      amendmentType: HousingAmendmentType.agreementEnd,
-      patchRevisionPayload: (payload) {
-        final agr = payload['agreement'];
-        if (agr is Map) {
-          agr['periodEnd'] = pickedEnd.toIso8601String();
-        }
-      },
-    );
-    if (!context.mounted || !sent) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          l10n.housingAmendmentEndDateSet(formatPreferenceDate(pickedEnd, dateFmt)),
-        ),
-      ),
+    await _openPreview(
+      context,
+      type: HousingAmendmentType.agreementEnd,
+      proposedPeriodEnd: picked,
     );
   }
 
   Future<void> _amendRules(BuildContext context) async {
-    if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => HousingPlanScreen(
-          prefs: prefs,
-          planId: planId,
+          prefs: widget.prefs,
+          planId: widget.planId,
           openEditorInitially: true,
           amendmentRulesOnly: true,
+          amendmentSubmitToGroup: true,
         ),
       ),
     );
-    if (!context.mounted) return;
-    await HousingAmendmentProposalFlow(AppDatabase.processScope).submitAmendment(
-      context: context,
-      planId: planId,
-      prefs: prefs,
-      amendmentType: HousingAmendmentType.ruleChange,
+    if (saved != true || !context.mounted) return;
+    await _openPreview(
+      context,
+      type: HousingAmendmentType.ruleChange,
     );
   }
 }
+
 
 class _LinePickerContext {
   const _LinePickerContext({

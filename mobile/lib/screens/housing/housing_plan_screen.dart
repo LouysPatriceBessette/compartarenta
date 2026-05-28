@@ -46,6 +46,7 @@ class HousingPlanScreen extends StatefulWidget {
     this.planId = 'housing:default',
     this.openEditorInitially = false,
     this.amendmentRulesOnly = false,
+    this.amendmentSubmitToGroup = false,
   });
 
   final AppPreferences prefs;
@@ -56,6 +57,7 @@ class HousingPlanScreen extends StatefulWidget {
 
   /// When true, opens only the agreement-rules step for a single rule amendment.
   final bool amendmentRulesOnly;
+  final bool amendmentSubmitToGroup;
 
   @override
   State<HousingPlanScreen> createState() => _HousingPlanScreenState();
@@ -1320,7 +1322,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                               await _persistAgreementRules();
                                               if (!context.mounted) return;
                                               if (widget.amendmentRulesOnly) {
-                                                Navigator.of(context).pop();
+                                                Navigator.of(context).pop(
+                                                  widget.amendmentSubmitToGroup,
+                                                );
                                                 return;
                                               }
                                               await widget.prefs
@@ -1361,7 +1365,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                       : null),
                             child: Text(
                               _stepIndex == 3
-                                  ? l10n.housingPlanFinish
+                                  ? (widget.amendmentSubmitToGroup
+                                      ? l10n.housingAmendmentSubmitToGroup
+                                      : l10n.housingPlanFinish)
                                   : l10n.housingPlanNext,
                             ),
                           ),

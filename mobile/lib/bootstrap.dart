@@ -7,6 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
 import 'config/app_config.dart';
 import 'debug/local_storage_startup_log.dart';
+import 'relay/relay_diagnostics.dart';
 import 'debug/web_storage_flush.dart';
 import 'contacts/contact_invitations_repository.dart';
 import 'db/app_database.dart';
@@ -79,6 +80,9 @@ Future<void> bootstrap() async {
             invitations: ContactInvitationsRepository(appDb),
           );
           HandshakeOrchestrator.install(orchestrator);
+          if (kDebugMode) {
+            RelayDiagnostics.steadyInboxPollLogging = true;
+          }
           unawaited(
             orchestrator.processAllPendingHandshakes().catchError((
               Object error,

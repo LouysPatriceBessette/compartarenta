@@ -26,8 +26,7 @@ Future<void> openHousingPendingProposalOrAmendment(
         db,
         planId,
         revisionId: revisionId,
-      ) ||
-      (hasActive && pendingId != null);
+      );
   if (!context.mounted) return;
   await Navigator.of(context).push<void>(
     MaterialPageRoute<void>(

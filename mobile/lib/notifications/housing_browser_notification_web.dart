@@ -9,6 +9,7 @@ Future<void> showHousingBrowserNotification({
   required String title,
   required String body,
   String? expenseId,
+  String? openAmendmentPlanId,
 }) async {
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
@@ -16,6 +17,8 @@ Future<void> showHousingBrowserNotification({
   notification.onClick.listen((_) {
     if (expenseId != null && expenseId.isNotEmpty) {
       HousingNavigationIntent.requestReview(expenseId);
+    } else if (openAmendmentPlanId != null && openAmendmentPlanId.isNotEmpty) {
+      HousingNavigationIntent.requestOpenPendingAmendment(openAmendmentPlanId);
     }
     html.window.location.hash = '/housing';
     notification.close();

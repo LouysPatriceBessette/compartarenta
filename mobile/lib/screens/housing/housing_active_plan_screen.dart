@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -43,20 +44,26 @@ class HousingActivePlanScreen extends StatefulWidget {
 class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     with WidgetsBindingObserver {
   Future<_HubHeader?>? _headerFuture;
+  _HubHeader? _cachedHeader;
   Future<RealizedExpensePendingSummary>? _pendingExpenseFuture;
   Future<bool>? _pendingAmendmentFuture;
-  Timer? _pendingAmendmentPollTimer;
+  /// Stays true across banner refreshes so the card does not blink off.
+  bool _hubShowsPendingAmendment = false;
+  bool _hubInboxPollingStarted = false;
+  Timer? _hubInboxPollTimer;
   Timer? _pendingExpensePollTimer;
   bool _openingPendingReview = false;
+  bool _openingPendingAmendment = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _reload();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _openPendingReviewIfAny(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openPendingReviewIfAny();
+      _openPendingAmendmentFromNotificationIfAny();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
         _onSteadyInboxTick,
@@ -64,7 +71,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       HousingNavigationIntent.reviewRequestTick.addListener(
         _onPendingReviewIntent,
       );
-      unawaited(_syncPendingAmendmentPoll());
+      HousingNavigationIntent.openAmendmentTick.addListener(
+        _onOpenAmendmentIntent,
+      );
+      unawaited(_startHubInboxPolling());
       unawaited(_syncPendingExpensePoll());
     });
   }
@@ -72,13 +82,16 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _pendingAmendmentPollTimer?.cancel();
+    _hubInboxPollTimer?.cancel();
     _pendingExpensePollTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
     HousingNavigationIntent.reviewRequestTick.removeListener(
       _onPendingReviewIntent,
+    );
+    HousingNavigationIntent.openAmendmentTick.removeListener(
+      _onOpenAmendmentIntent,
     );
     super.dispose();
   }
@@ -90,40 +103,29 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _openPendingReviewIfAny();
+      _openPendingAmendmentFromNotificationIfAny();
     });
   }
 
-  /// While an amendment is open, poll the relay frequently. Browsers throttle the
-  /// global 10s orchestrator timer when the tab is idle; this keeps the proposer
-  /// hub in sync when a co-participant responds.
-  Future<void> _syncPendingAmendmentPoll() async {
-    final transport = HousingProposalTransportService(AppDatabase.processScope);
-    final hasPending = await transport.hasOpenPendingAmendment(widget.planId);
-    if (!mounted) return;
-    if (!hasPending) {
-      _pendingAmendmentPollTimer?.cancel();
-      _pendingAmendmentPollTimer = null;
-      return;
+  /// Poll relay while the hub is visible so a just-imported amendment shows its
+  /// banner without leaving the screen (web throttling + missed notification).
+  Future<void> _startHubInboxPolling() async {
+    if (_hubInboxPollingStarted) return;
+    _hubInboxPollingStarted = true;
+
+    Future<void> pollOnce() async {
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+          debugPrint('housing hub inbox poll: $e\n$st');
+        });
+      }
+      if (mounted) _refreshPendingBanners();
     }
-    final orch = HandshakeOrchestrator.maybeInstance;
-    if (orch != null) {
-      unawaited(
-        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing hub pending poll: $e\n$st');
-        }),
-      );
-    }
-    if (_pendingAmendmentPollTimer != null) return;
-    _pendingAmendmentPollTimer = Timer.periodic(const Duration(seconds: 3), (
-      _,
-    ) {
-      final pollOrch = HandshakeOrchestrator.maybeInstance;
-      if (pollOrch == null) return;
-      unawaited(
-        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing hub pending poll: $e\n$st');
-        }),
-      );
+
+    await pollOnce();
+    _hubInboxPollTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+      unawaited(pollOnce());
     });
   }
 
@@ -164,31 +166,56 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _reload();
+      _refreshPendingBanners();
     });
   }
 
   void _onPendingReviewIntent() {
     if (!mounted) return;
-    _reload();
+    _refreshPendingBanners();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _openPendingReviewIfAny();
     });
   }
 
+  void _onOpenAmendmentIntent() {
+    if (!mounted) return;
+    _refreshPendingBanners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openPendingAmendmentFromNotificationIfAny();
+    });
+  }
+
   void _reload() {
     setState(() {
-      _headerFuture = _loadHeader();
+      _headerFuture = _loadHeader().then((header) {
+        _cachedHeader = header;
+        return header;
+      });
+    });
+    _refreshPendingBanners();
+    unawaited(_syncPendingExpensePoll());
+  }
+
+  /// Updates amendment / expense banners only — does not reset the hub header.
+  void _refreshPendingBanners() {
+    setState(() {
       _pendingExpenseFuture = RealizedExpenseLedgerService(
         AppDatabase.processScope,
       ).pendingSummary(packageId: widget.packageId, planId: widget.planId);
-      _pendingAmendmentFuture = HousingProposalTransportService(
+      final amendmentBannerFuture = HousingProposalTransportService(
         AppDatabase.processScope,
       ).shouldShowPendingAmendmentHubBanner(widget.planId);
+      _pendingAmendmentFuture = amendmentBannerFuture;
+      unawaited(
+        amendmentBannerFuture.then((show) {
+          if (!mounted || show == _hubShowsPendingAmendment) return;
+          setState(() => _hubShowsPendingAmendment = show);
+        }),
+      );
     });
-    unawaited(_syncPendingAmendmentPoll());
-    unawaited(_syncPendingExpensePoll());
   }
 
   /// Resolves pending amendment at tap time (not from a cached [FutureBuilder]).
@@ -196,7 +223,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     final db = AppDatabase.processScope;
     final transport = HousingProposalTransportService(db);
     final prefs = widget.prefs ?? await AppPreferences.load();
-    final hasPending = await transport.hasOpenPendingAmendment(widget.planId);
+    final hasPending =
+        await transport.hasPendingAmendmentForUi(widget.planId);
     if (!context.mounted) return;
 
     if (hasPending) {
@@ -240,6 +268,32 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       periodRange: range,
       currency: plan.currency.trim().isEmpty ? prefs.currency : plan.currency,
     );
+  }
+
+  Future<void> _openPendingAmendmentFromNotificationIfAny() async {
+    if (_openingPendingAmendment) return;
+    final planId = HousingNavigationIntent.takePendingOpenAmendmentPlanId();
+    if (planId == null || planId != widget.planId || !mounted) return;
+    _openingPendingAmendment = true;
+    try {
+      final db = AppDatabase.processScope;
+      final prefs = widget.prefs ?? await AppPreferences.load();
+      final transport = HousingProposalTransportService(db);
+      if (!await transport.hasPendingAmendmentForUi(widget.planId)) {
+        return;
+      }
+      if (!mounted) return;
+      await openHousingPendingProposalOrAmendment(
+        context,
+        db: db,
+        planId: widget.planId,
+        prefs: prefs,
+        isAmendment: true,
+      );
+    } finally {
+      _openingPendingAmendment = false;
+      if (mounted) _reload();
+    }
   }
 
   void _openPendingReviewIfAny() {
@@ -340,16 +394,25 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     if (mounted) _reload();
   }
 
+  void _handleHubBack(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop();
+        if (!didPop) _handleHubBack(context);
       },
       child: Scaffold(
         appBar: AppBar(
+          leading: BackButton(onPressed: () => _handleHubBack(context)),
           title: FutureBuilder<_HubHeader?>(
             future: _headerFuture,
             builder: (context, snap) {
@@ -364,10 +427,11 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         body: FutureBuilder<_HubHeader?>(
           future: _headerFuture,
           builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
+            if (snap.connectionState != ConnectionState.done &&
+                _cachedHeader == null) {
               return const Center(child: CircularProgressIndicator());
             }
-            final header = snap.data;
+            final header = snap.data ?? _cachedHeader;
             return FutureBuilder<RealizedExpensePendingSummary>(
               future: _pendingExpenseFuture,
               builder: (context, pendingSnap) {
@@ -380,7 +444,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                 return FutureBuilder<bool>(
                   future: _pendingAmendmentFuture,
                   builder: (context, amendmentSnap) {
-                    final hasPendingAmendment = amendmentSnap.data ?? false;
+                    final hasPendingAmendment =
+                        _hubShowsPendingAmendment ||
+                        amendmentSnap.data == true;
                     return ListView(
                       padding: const EdgeInsets.all(16),
                       children: [

@@ -349,7 +349,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorSomethingWentWrongBody =>
-      'Please try again. If this keeps happening, contact support.';
+      'Please take a screenshot now and send it with a short description of the steps that led to this error.';
+
+  @override
+  String get errorReportBugLink => 'Report this error';
 
   @override
   String get errorUnknownOnboardingStep => 'Unknown onboarding step.';
@@ -1025,6 +1028,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingAmendmentPickLine => 'Choose a plan line';
 
   @override
+  String get housingAmendmentTypeLineEdit => 'Edit an expense';
+
+  @override
+  String get housingAmendmentTypeLineEditHint =>
+      'Title, amount, description, or payer (not recurrence or split shares)';
+
+  @override
   String get housingAmendmentTypeLineAmount => 'Change a line amount';
 
   @override
@@ -1046,13 +1056,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Update payment responsibility for one line';
 
   @override
-  String get housingAmendmentTypeLineAdd => 'Add an expense line';
+  String get housingAmendmentTypeLineAdd => 'Add an expense';
 
   @override
-  String get housingAmendmentTypeLineAddHint => 'Add one new line to the plan';
+  String get housingAmendmentTypeLineAddHint => 'Add a new expense to the plan';
 
   @override
-  String get housingAmendmentTypeLineRemove => 'Remove an expense line';
+  String get housingAmendmentTypeLineRemove => 'Remove an expense';
 
   @override
   String get housingAmendmentTypeLineRemoveHint =>
@@ -1141,10 +1151,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingAmendmentDetailCurrent => 'Currently';
 
   @override
+  String get housingAmendmentDetailPrevious => 'Previously';
+
+  @override
+  String get housingAmendmentDetailAtRequestTime =>
+      'At the time of the request';
+
+  @override
   String get housingAmendmentDetailProposed => 'Proposed';
 
   @override
   String get housingAmendmentSubjectAgreementEnd => 'the agreement end date';
+
+  @override
+  String housingAmendmentSubjectLineEdit(String line) {
+    return 'the expense “$line”';
+  }
 
   @override
   String housingAmendmentSubjectLineAmount(String line) {
@@ -1197,6 +1219,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingAmendmentDetailLoading => 'Loading…';
+
+  @override
+  String get housingAmendmentAccept => 'Accept';
+
+  @override
+  String get housingAmendmentReject => 'Refuse';
+
+  @override
+  String get housingAmendmentSubmitToGroup => 'Submit to the group';
+
+  @override
+  String get housingAmendmentPreviewTitle => 'Request preview';
+
+  @override
+  String housingAmendmentPreviewIntro(String subject) {
+    return 'Review the proposed change to $subject before sending it to the group.';
+  }
+
+  @override
+  String get housingAmendmentNoMeaningfulChange =>
+      'There is no change compared to the current plan.';
+
+  @override
+  String get housingAmendmentRequestStatusAction => 'Request status';
+
+  @override
+  String get housingAmendmentJournalTitle => 'Plan change log';
+
+  @override
+  String get housingAmendmentJournalSubtitle => 'Accepted and refused requests';
+
+  @override
+  String get housingAmendmentJournalEmpty => 'No plan changes yet.';
+
+  @override
+  String get housingAmendmentJournalAccepted => 'Accepted';
+
+  @override
+  String get housingAmendmentJournalRefused => 'Refused';
+
+  @override
+  String housingAmendmentJournalCardTitle(String subject, String status) {
+    return '$subject — $status';
+  }
+
+  @override
+  String housingAmendmentJournalCardSubtitle(String name, String date) {
+    return 'By $name · $date';
+  }
+
+  @override
+  String get housingAmendmentRulesSummaryShort => 'Agreement rules updated';
 
   @override
   String get housingActiveHubViewPendingAmendment => 'Requested change';
@@ -1438,6 +1512,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingArchiveRejectedTitle => 'Rejected plan';
+
+  @override
+  String get housingArchiveAmendmentRejectedTitle => 'Change request refused';
 
   @override
   String get housingArchiveDraftTitle => 'Plan draft';

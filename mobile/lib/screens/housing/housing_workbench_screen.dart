@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -15,6 +17,7 @@ class _WorkbenchRow {
     required this.plan,
     required this.hasPending,
     required this.hasActive,
+    required this.hasOpenAmendment,
     required this.hasArchive,
     required this.sortDate,
     required this.pendingResponseCount,
@@ -26,6 +29,7 @@ class _WorkbenchRow {
   final Plan plan;
   final bool hasPending;
   final bool hasActive;
+  final bool hasOpenAmendment;
   final bool hasArchive;
   final DateTime sortDate;
   final int pendingResponseCount;
@@ -44,10 +48,28 @@ class HousingWorkbenchScreen extends StatefulWidget {
   State<HousingWorkbenchScreen> createState() => _HousingWorkbenchScreenState();
 }
 
-class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
+class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
+    with WidgetsBindingObserver {
   final AppDatabase _db = AppDatabase.processScope;
   late Future<List<_WorkbenchRow>> _load = _fetch();
   bool _creatingDerivedDraft = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _reload();
+  }
 
   void _reload() {
     setState(() {
@@ -67,14 +89,33 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
       if (self == null) continue;
       final transport = HousingProposalTransportService(_db);
       if (await transport.isHiddenDraftPlan(p.id)) continue;
+      await transport.reconcileStalePackagePending(p.id);
+      final activeEarly = await (_db.select(
+        _db.proposalPackages,
+      )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
+      final hasActiveEarly = activeEarly?.activeRevisionId != null;
+      if (!hasActiveEarly &&
+          await transport.anyOtherHousingPlanHasActiveRevision(
+            exceptPlanId: p.id,
+          )) {
+        continue;
+      }
       final pkg = await (_db.select(
         _db.proposalPackages,
       )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
-      final pending = pkg?.pendingRevisionId != null;
+      final hasOpenPending = pkg?.pendingRevisionId != null;
       final active = pkg?.activeRevisionId != null;
+      final hasOpenAmendment = active &&
+          await transport.hasPendingAmendmentForUi(
+            p.id,
+            reconcileFirst: false,
+          );
+      final amendmentPending = hasOpenPending && hasOpenAmendment;
+      final pending = hasOpenPending && !amendmentPending;
       final archiveRows = await transport.listArchivesForPlan(p.id);
       final archivedRows = archiveRows
           .where((a) => !a.isDraft && !a.isPending)
+          .where((a) => !(a.isAmendment && active))
           .toList();
       final archive = archivedRows.isNotEmpty;
       archivedRows.sort((a, b) => b.invalidatedAt.compareTo(a.invalidatedAt));
@@ -95,6 +136,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
           plan: p,
           hasPending: pending,
           hasActive: active,
+          hasOpenAmendment: hasOpenAmendment,
           hasArchive: archive,
           sortDate: pendingDate ?? latestArchive?.invalidatedAt ?? p.createdAt,
           pendingResponseCount: pendingResponseCount,
@@ -134,6 +176,10 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
     final archive = row.archive;
     if (archive == null) return _rowTitle(row.plan);
     if (archive.isExpired) return l10n.housingArchiveExpiredTitle;
+    if (archive.isAmendment &&
+        archive.status == ProposalResponseStatus.rejected) {
+      return l10n.housingArchiveAmendmentRejectedTitle;
+    }
     return switch (archive.status) {
       ProposalResponseStatus.negotiate => l10n.housingArchiveNegotiatingTitle,
       ProposalResponseStatus.rejected => l10n.housingArchiveRejectedTitle,
@@ -181,15 +227,28 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
   }
 
   void _openActivePlan(String planId, String packageId) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => HousingActivePlanScreen(
-          planId: planId,
-          packageId: packageId,
-          prefs: widget.prefs,
-        ),
-      ),
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => HousingActivePlanScreen(
+              planId: planId,
+              packageId: packageId,
+              prefs: widget.prefs,
+            ),
+          ),
+        )
+        .then((_) => _reload());
+  }
+
+  Future<void> _openPendingAmendment(String planId) async {
+    await openHousingPendingProposalOrAmendment(
+      context,
+      db: _db,
+      planId: planId,
+      prefs: widget.prefs,
+      isAmendment: true,
     );
+    if (mounted) _reload();
   }
 
   void _openArchiveEntry(String planId) {
@@ -276,6 +335,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go('/')),
         centerTitle: true,
         title: Text(l10n.housingWorkbenchTitle),
       ),
@@ -368,16 +428,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
                 ),
                 const SizedBox(height: 8),
                 for (final r in active)
-                  _planCard(
-                    context,
-                    title: _rowTitle(r.plan),
-                    date: r.sortDate,
-                    onTap: () {
-                      final pkgId = r.packageId;
-                      if (pkgId == null) return;
-                      _openActivePlan(r.plan.id, pkgId);
-                    },
-                  ),
+                  _activePlanCard(context, l10n, r),
                 const SizedBox(height: 24),
               ],
               FilledButton(
@@ -387,6 +438,77 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _activePlanCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    _WorkbenchRow row,
+  ) {
+    final pkgId = row.packageId;
+    if (pkgId == null) {
+      return _planCard(
+        context,
+        title: _rowTitle(row.plan),
+        date: row.sortDate,
+        onTap: () {},
+      );
+    }
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (row.hasOpenAmendment)
+            Material(
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.edit_notifications_outlined),
+                title: Text(l10n.housingActiveHubPendingAmendment),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _openPendingAmendment(row.plan.id),
+              ),
+            ),
+          InkWell(
+            onTap: () => _openActivePlan(row.plan.id, pkgId),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _rowTitle(row.plan),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _workbenchDate(row.sortDate),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

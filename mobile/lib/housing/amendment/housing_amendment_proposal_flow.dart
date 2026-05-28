@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../activity/relay_activity_log_service.dart';
-import '../../app_root_navigator.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
-import 'housing_amendment_navigation.dart';
 import '../housing_response_deadline_dialog.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import '../proposals/plan_agreement_proposal_service.dart';
@@ -25,6 +23,7 @@ class HousingAmendmentProposalFlow {
     required AppPreferences prefs,
     required HousingAmendmentType amendmentType,
     String? targetLineId,
+    DateTime? proposedPeriodEnd,
     void Function(Map<String, dynamic> payload)? patchRevisionPayload,
   }) async {
     final l10n = AppLocalizations.of(context);
@@ -83,6 +82,12 @@ class HousingAmendmentProposalFlow {
           payload['amendmentType'] = amendmentType.wireValue;
           if (targetLineId != null) {
             payload['amendmentTargetLineId'] = targetLineId;
+          }
+          if (proposedPeriodEnd != null) {
+            final agr = payload['agreement'];
+            if (agr is Map) {
+              agr['periodEnd'] = proposedPeriodEnd.toIso8601String();
+            }
           }
           patchRevisionPayload?.call(payload);
         },
@@ -144,21 +149,6 @@ class HousingAmendmentProposalFlow {
       return false;
     }
 
-    if (!context.mounted) return true;
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
-    }
-    final navContext = appRootNavigatorKey.currentContext;
-    if (navContext == null || !navContext.mounted) return true;
-    await openHousingPendingProposalOrAmendment(
-      navContext,
-      db: _db,
-      planId: planId,
-      prefs: prefs,
-      revisionId: revisionId,
-      isAmendment: true,
-    );
     return true;
   }
 }

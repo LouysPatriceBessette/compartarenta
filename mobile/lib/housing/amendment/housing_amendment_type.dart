@@ -1,5 +1,6 @@
 /// Single-change amendment kinds for an in-force housing agreement.
 enum HousingAmendmentType {
+  lineEdit,
   lineAmount,
   lineRecurrence,
   linePayer,
@@ -11,6 +12,7 @@ enum HousingAmendmentType {
 
 extension HousingAmendmentTypeWire on HousingAmendmentType {
   String get wireValue => switch (this) {
+        HousingAmendmentType.lineEdit => 'line_edit',
         HousingAmendmentType.lineAmount => 'line_amount',
         HousingAmendmentType.lineRecurrence => 'line_recurrence',
         HousingAmendmentType.linePayer => 'line_payer',
@@ -29,6 +31,7 @@ extension HousingAmendmentTypeWire on HousingAmendmentType {
   }
 
   bool get editsPlanLine =>
+      this == HousingAmendmentType.lineEdit ||
       this == HousingAmendmentType.lineAmount ||
       this == HousingAmendmentType.lineRecurrence ||
       this == HousingAmendmentType.linePayer ||
@@ -50,14 +53,26 @@ HousingAmendmentType? resolveAmendmentType({
   );
   if (explicit != null) return explicit;
 
+  final fork = pendingPayload['forkedFromRevisionId'] as String?;
+  if (fork != null && fork.isNotEmpty) {
+    return _inferAmendmentTypeFromForkPayload(pendingPayload);
+  }
+
   if (activeRevisionId == null || activeRevisionId == pendingRevisionId) {
     return null;
   }
-  final fork = pendingPayload['forkedFromRevisionId'] as String?;
-  if (fork == null || fork.isEmpty) return null;
+  return null;
+}
 
-  if (pendingPayload['amendmentTargetLineId'] != null) {
+HousingAmendmentType _inferAmendmentTypeFromForkPayload(
+  Map<String, dynamic> payload,
+) {
+  if (payload['amendmentTargetLineId'] != null) {
     return HousingAmendmentType.lineAmount;
+  }
+  final agr = payload['agreement'];
+  if (agr is Map && agr['periodEnd'] != null) {
+    return HousingAmendmentType.agreementEnd;
   }
   return HousingAmendmentType.ruleChange;
 }
