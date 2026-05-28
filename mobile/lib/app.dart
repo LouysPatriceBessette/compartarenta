@@ -35,6 +35,7 @@ import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
 import 'widgets/profile_label_conflict_host.dart';
 import 'theme/app_theme.dart';
+import 'util/native_plugin_link_error.dart';
 
 class CompartarentaApp extends StatefulWidget {
   const CompartarentaApp({super.key, required this.config});
@@ -188,14 +189,55 @@ class _CompartarentaAppState extends State<CompartarentaApp>
       builder: (context, snapshot) {
         final prefs = snapshot.data;
         if (snapshot.hasError) {
+          final error = snapshot.error!;
+          final stack = snapshot.stackTrace;
+          final lang = WidgetsBinding.instance.platformDispatcher.locale
+              .languageCode;
+          final pluginLink = isNativePluginLinkError(error);
+          final errorTheme = buildAppTheme();
           return MaterialApp(
-            theme: buildAppTheme(),
+            theme: errorTheme,
             home: Scaffold(
               body: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: SelectableText(
-                    'Startup failed:\n${snapshot.error}\n\n${snapshot.stackTrace}',
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          lang == 'fr'
+                              ? 'Démarrage impossible'
+                              : 'Startup failed',
+                          style: errorTheme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 16),
+                        SelectableText(
+                          pluginLink
+                              ? nativePluginLinkErrorRecoveryMessage(
+                                  languageCode: lang,
+                                )
+                              : '$error',
+                        ),
+                        if (pluginLink && stack != null) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            lang == 'fr'
+                                ? 'Détail technique'
+                                : 'Technical detail',
+                            style: errorTheme.textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            '$error\n\n$stack',
+                            style: errorTheme.textTheme.bodySmall,
+                          ),
+                        ] else if (!pluginLink && stack != null) ...[
+                          const SizedBox(height: 16),
+                          SelectableText('$stack'),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),

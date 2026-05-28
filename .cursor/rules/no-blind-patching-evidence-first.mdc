@@ -1,0 +1,25 @@
+---
+description: Evidence-first only (explicitly forbid blind patching)
+alwaysApply: true
+---
+
+# No blind patching (evidence-first)
+
+## Hard rule
+
+Do **not** change code as a speculative “maybe this fixes it” patch.
+
+## What to do instead (required)
+
+- **Reproduce**: restate the exact expected vs actual behavior and the shortest reproduction path.
+- **Observe**: collect evidence from current state (logs, screenshots, `git diff`, runtime output, relevant file reads).
+- **Hypothesis**: state a single falsifiable cause (“If X, then Y”).
+- **Validate**: add **instrumentation** (logs/counters) or a **test** to confirm the hypothesis before changing logic.
+- **Change minimally**: implement the smallest change that fixes the validated cause.
+- **Verify**: rerun the reproduction and/or tests. If it regresses, **revert** promptly.
+
+## Guardrails
+
+- If the evidence points to **corrupt / inconsistent data**, prefer fixing the data lifecycle (import/activation, persistence, routing) over adding UI workarounds.
+- When unsure, pause and gather missing evidence rather than “trying a quick fix”.
+

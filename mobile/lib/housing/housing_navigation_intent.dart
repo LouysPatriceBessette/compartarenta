@@ -11,6 +11,10 @@ class HousingNavigationIntent {
   static String? pendingOpenAmendmentPlanId;
   static final ValueNotifier<int> openAmendmentTick = ValueNotifier<int>(0);
 
+  /// After a housing-proposal notification tap: open proposal UI for [planId].
+  static String? pendingOpenProposalPlanId;
+  static final ValueNotifier<int> openProposalTick = ValueNotifier<int>(0);
+
   static void requestReview(String expenseId) {
     pendingRealizedExpenseReviewId = expenseId;
     reviewRequestTick.value = reviewRequestTick.value + 1;
@@ -19,6 +23,11 @@ class HousingNavigationIntent {
   static void requestOpenPendingAmendment(String planId) {
     pendingOpenAmendmentPlanId = planId;
     openAmendmentTick.value = openAmendmentTick.value + 1;
+  }
+
+  static void requestOpenPendingProposal(String planId) {
+    pendingOpenProposalPlanId = planId;
+    openProposalTick.value = openProposalTick.value + 1;
   }
 
   static String? takePendingReview() {
@@ -30,6 +39,12 @@ class HousingNavigationIntent {
   static String? takePendingOpenAmendmentPlanId() {
     final id = pendingOpenAmendmentPlanId;
     pendingOpenAmendmentPlanId = null;
+    return id;
+  }
+
+  static String? takePendingOpenProposalPlanId() {
+    final id = pendingOpenProposalPlanId;
+    pendingOpenProposalPlanId = null;
     return id;
   }
 }

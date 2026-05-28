@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
@@ -40,15 +41,9 @@ class PlanAgreementProposalService {
     return id;
   }
 
-  Future<String> createRevisionFromCurrentDraft({
-    required String planId,
-    required String proposerParticipantId,
-    DateTime? responseExpiresAt,
-    String? forkedFromPackageId,
-    String? forkedFromRevisionId,
-  }) async {
+  /// In-memory proposal payload mirroring live plan tables (no revision row).
+  Future<Map<String, Object?>> buildSnapshotPayloadForPlan(String planId) async {
     final packageId = await ensurePackageForPlan(planId);
-
     final plan = await (_db.select(
       _db.plans,
     )..where((t) => t.id.equals(planId))).getSingle();
@@ -67,18 +62,9 @@ class PlanAgreementProposalService {
         .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
         .toList(growable: false);
 
-    final revisionId = 'rev:${DateTime.now().toUtc().microsecondsSinceEpoch}';
-    final createdAt = DateTime.now().toUtc();
-
-    final payload = <String, Object?>{
+    return {
       'kind': kind,
       'packageId': packageId,
-      'revisionId': revisionId,
-      'sourcePackageId': packageId,
-      'sourceRevisionId': revisionId,
-      'contentHash': 'local:$revisionId',
-      'createdAt': createdAt.toIso8601String(),
-      'proposerParticipantId': proposerParticipantId,
       'participantSourceIds': {for (final p in participants) p.id: p.id},
       'plan': {
         'type': plan.type,
@@ -135,6 +121,33 @@ class PlanAgreementProposalService {
         'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
         'agreementRulesJson': agreement.agreementRulesJson,
       },
+    };
+  }
+
+  Future<String> createRevisionFromCurrentDraft({
+    required String planId,
+    required String proposerParticipantId,
+    DateTime? responseExpiresAt,
+    String? forkedFromPackageId,
+    String? forkedFromRevisionId,
+  }) async {
+    final packageId = await ensurePackageForPlan(planId);
+    final participants = (await _db.listParticipants())
+        .where((p) => p.id == '$planId:self' || p.id.startsWith('$planId:p'))
+        .toList(growable: false);
+
+    final revisionId = 'rev:${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final createdAt = DateTime.now().toUtc();
+
+    final payload = <String, Object?>{
+      ...await buildSnapshotPayloadForPlan(planId),
+      'packageId': packageId,
+      'revisionId': revisionId,
+      'sourcePackageId': packageId,
+      'sourceRevisionId': revisionId,
+      'contentHash': 'local:$revisionId',
+      'createdAt': createdAt.toIso8601String(),
+      'proposerParticipantId': proposerParticipantId,
       'responseExpiresAt': responseExpiresAt?.toIso8601String(),
       'lifecycleState': 'open',
       'responseMessages': <String, String>{},
@@ -308,8 +321,6 @@ class PlanAgreementProposalService {
     required String revisionId,
     required List<String> participantIds,
   }) async {
-    final packageId = await ensurePackageForPlan(planId);
-
     final responses = await (_db.select(
       _db.proposalResponses,
     )..where((t) => t.revisionId.equals(revisionId))).get();
@@ -325,6 +336,13 @@ class PlanAgreementProposalService {
         );
 
     if (!unanimous) return ProposalActivationOutcome.notUnanimous;
+
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) {
+      return ProposalActivationOutcome.notUnanimous;
+    }
 
     final payload = await loadRevisionPayload(revisionId);
     final period = _agreementPeriodFromRevisionPayload(payload);
@@ -344,35 +362,57 @@ class PlanAgreementProposalService {
       return ProposalActivationOutcome.blockedByOverlappingAgreementPeriod;
     }
 
+    final packageId = rev.packageId;
+
     await _db.transaction(() async {
-      final rev = await (_db.select(
-        _db.proposalRevisions,
-      )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
-      if (rev != null) {
-        final closedPayload =
-            jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-        closedPayload['lifecycleState'] = 'archived';
-        await (_db.update(
-          _db.proposalRevisions,
-        )..where((t) => t.id.equals(revisionId))).write(
-          ProposalRevisionsCompanion(
-            payloadJson: drift.Value(jsonEncode(closedPayload)),
-          ),
-        );
-      }
+      final closedPayload =
+          jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      closedPayload['lifecycleState'] = 'archived';
       await (_db.update(
-        _db.proposalPackages,
-      )..where((t) => t.id.equals(packageId))).write(
+        _db.proposalRevisions,
+      )..where((t) => t.id.equals(revisionId))).write(
+        ProposalRevisionsCompanion(
+          payloadJson: drift.Value(jsonEncode(closedPayload)),
+        ),
+      );
+      await (_db.update(_db.proposalPackages)
+            ..where((t) => t.id.equals(packageId)))
+          .write(
         ProposalPackagesCompanion(
           activeRevisionId: drift.Value(revisionId),
           pendingRevisionId: const drift.Value(null),
         ),
       );
+      // Keep every package row for this plan aligned (legacy import duplicates).
+      final siblingPackages = await (_db.select(_db.proposalPackages)
+            ..where((t) => t.planId.equals(planId)))
+          .get();
+      for (final sibling in siblingPackages) {
+        if (sibling.id == packageId) continue;
+        await (_db.update(_db.proposalPackages)
+              ..where((t) => t.id.equals(sibling.id)))
+            .write(
+          ProposalPackagesCompanion(
+            activeRevisionId: drift.Value(revisionId),
+            pendingRevisionId: const drift.Value(null),
+          ),
+        );
+      }
     });
     await HousingProposalTransportService(_db).applyActiveRevisionPayloadToPlan(
       planId: planId,
       revisionId: revisionId,
     );
+    assert(() {
+      () async {
+        final agr = await _db.getAgreementForPlan(planId);
+        debugPrint(
+          'housing: activated revision=$revisionId plan=$planId '
+          'agreementEnd=${agr?.periodEnd.toIso8601String()}',
+        );
+      }();
+      return true;
+    }());
     await HousingProposalTransportService(_db).reconcileStalePackagePending(
       planId,
     );

@@ -11,6 +11,7 @@ import '../app_root_navigator.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
 import '../housing/housing_navigation_intent.dart';
+import '../screens/housing/housing_amendment_detail_screen.dart';
 import '../screens/housing/housing_amendment_journal_screen.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
@@ -51,7 +52,9 @@ class PushNotificationService {
   );
 
   static const String _housingTapPayload = 'housing_proposal';
+  static const String _housingProposalPrefix = 'housing_proposal:';
   static const String _housingAmendmentPrefix = 'housing_amendment:';
+  static const String _housingDecisionPrefix = 'housing_decision:';
   static const String _housingRealizedExpenseReviewPrefix =
       'housing_realized_expense:';
 
@@ -164,9 +167,32 @@ class PushNotificationService {
       _navigateToHousing();
       return;
     }
+    if (payload.startsWith(_housingProposalPrefix)) {
+      final planId = payload.substring(_housingProposalPrefix.length);
+      if (planId.isNotEmpty) {
+        _navigateToHousingProposal(planId);
+      } else {
+        _navigateToHousing();
+      }
+      return;
+    }
     if (payload.startsWith(_housingAmendmentPrefix)) {
       final planId = payload.substring(_housingAmendmentPrefix.length);
       if (planId.isNotEmpty) {
+        _navigateToHousingAmendmentJournal(planId);
+      } else {
+        _navigateToHousing();
+      }
+      return;
+    }
+    if (payload.startsWith(_housingDecisionPrefix)) {
+      final raw = payload.substring(_housingDecisionPrefix.length);
+      final parts = raw.split('|');
+      final planId = parts.isEmpty ? '' : parts.first;
+      final revisionId = parts.length >= 2 ? parts[1] : '';
+      if (planId.isNotEmpty && revisionId.isNotEmpty) {
+        _navigateToHousingAmendmentDecision(planId, revisionId);
+      } else if (planId.isNotEmpty) {
         _navigateToHousingAmendmentJournal(planId);
       } else {
         _navigateToHousing();
@@ -314,6 +340,8 @@ class PushNotificationService {
           await pendingRevisionIsAmendment(db, planId);
       if (openAsAmendment) {
         payload = '$_housingAmendmentPrefix$planId';
+      } else {
+        payload = '$_housingProposalPrefix$planId';
       }
     }
 
@@ -325,6 +353,7 @@ class PushNotificationService {
       await housing_browser.showHousingBrowserNotification(
         title: title,
         body: body,
+        openProposalPlanId: !openAsAmendment ? planId : null,
         openAmendmentPlanId: openAsAmendment ? planId : null,
       );
       return;
@@ -514,6 +543,7 @@ class PushNotificationService {
   static Future<void> showLocalHousingDecisionNotification({
     required String senderDisplayName,
     String? planId,
+    String? revisionId,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
@@ -526,9 +556,14 @@ class PushNotificationService {
             senderDisplayName.trim(),
           );
 
-    final tapPayload = planId != null && planId.isNotEmpty
-        ? '$_housingAmendmentPrefix$planId'
-        : _housingTapPayload;
+    final tapPayload = planId != null &&
+            planId.isNotEmpty &&
+            revisionId != null &&
+            revisionId.isNotEmpty
+        ? '$_housingDecisionPrefix$planId|$revisionId'
+        : (planId != null && planId.isNotEmpty
+            ? '$_housingAmendmentPrefix$planId'
+            : _housingTapPayload);
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
@@ -618,6 +653,62 @@ class PushNotificationService {
         );
         return;
       }
+      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
+    }
+
+    attempt();
+  }
+
+  /// Notification tap: open housing module, then proposal screen above it.
+  static void _navigateToHousingProposal(String planId) {
+    HousingNavigationIntent.requestOpenPendingProposal(planId);
+    _navigateToHousing();
+  }
+
+  /// Notification tap: open amendment detail for a settled decision.
+  static void _navigateToHousingAmendmentDecision(
+    String planId,
+    String revisionId,
+  ) {
+    void attempt([int tries = 0]) {
+      final ctx = appRootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        unawaited(
+          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
+        );
+        final router = GoRouter.of(ctx);
+        router.go('/housing');
+        void pushDetail([int pushTries = 0]) {
+          final navCtx = appRootNavigatorKey.currentContext;
+          if (navCtx == null || !navCtx.mounted) {
+            if (pushTries >= 40) return;
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => pushDetail(pushTries + 1),
+            );
+            return;
+          }
+          unawaited(
+            AppPreferences.load().then((prefs) async {
+              if (!navCtx.mounted) return;
+              await Navigator.of(navCtx).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => HousingAmendmentDetailScreen(
+                    db: AppDatabase.processScope,
+                    planId: planId,
+                    prefs: prefs,
+                    revisionId: revisionId,
+                    readOnlySettled: true,
+                  ),
+                ),
+              );
+            }),
+          );
+        }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) => pushDetail());
+        return;
+      }
+      if (tries >= 30) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
     }
 

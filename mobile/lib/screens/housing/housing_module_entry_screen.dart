@@ -91,7 +91,11 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       HousingNavigationIntent.openAmendmentTick.addListener(
         _onOpenAmendmentIntent,
       );
+      HousingNavigationIntent.openProposalTick.addListener(
+        _onOpenProposalIntent,
+      );
       _openPendingAmendmentFromNotificationIfAny();
+      _openPendingProposalFromNotificationIfAny();
     });
   }
 
@@ -99,6 +103,9 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   void dispose() {
     HousingNavigationIntent.openAmendmentTick.removeListener(
       _onOpenAmendmentIntent,
+    );
+    HousingNavigationIntent.openProposalTick.removeListener(
+      _onOpenProposalIntent,
     );
     super.dispose();
   }
@@ -108,6 +115,14 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _openPendingAmendmentFromNotificationIfAny();
+    });
+  }
+
+  void _onOpenProposalIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openPendingProposalFromNotificationIfAny();
     });
   }
 
@@ -140,6 +155,54 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       prefs: widget.prefs,
       revisionId: pendingId,
       isAmendment: true,
+    );
+    if (mounted) _reloadEntry();
+  }
+
+  Future<void> _openPendingProposalFromNotificationIfAny() async {
+    var planId = HousingNavigationIntent.takePendingOpenProposalPlanId();
+    if (!mounted) return;
+    final db = AppDatabase.processScope;
+    final transport = HousingProposalTransportService(db);
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing proposal open poll: $e\n$st');
+      });
+    }
+    if (planId == null || planId.isEmpty) {
+      // Fallback: if any plan has a non-amendment pending revision, open it.
+      final plans = await housingPlansWithSelfParticipant(db);
+      for (final p in plans) {
+        final pendingId = await transport.resolvePendingRevisionIdForPlan(p.id);
+        if (pendingId == null) continue;
+        final isAmendment = await pendingRevisionIsAmendment(
+          db,
+          p.id,
+          revisionId: pendingId,
+          reconcileFirst: false,
+        );
+        if (!isAmendment) {
+          planId = p.id;
+          break;
+        }
+      }
+    }
+    if (planId == null || planId.isEmpty) return;
+
+    final pendingId = await transport.resolvePendingRevisionIdForPlan(planId);
+    if (pendingId == null) {
+      debugPrint('housing: no pendingRevisionId on plan $planId');
+      return;
+    }
+    if (!mounted) return;
+    await openHousingPendingProposalOrAmendment(
+      context,
+      db: db,
+      planId: planId,
+      prefs: widget.prefs,
+      revisionId: pendingId,
+      isAmendment: false,
     );
     if (mounted) _reloadEntry();
   }

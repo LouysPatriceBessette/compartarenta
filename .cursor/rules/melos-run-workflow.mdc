@@ -1,0 +1,50 @@
+---
+description: User runs Flutter via melos, not interactive flutter run (no q/r/R shortcuts)
+alwaysApply: true
+---
+
+# Melos run workflow (this developer)
+
+The user starts and stops the mobile/web app with **Melos**, not an attached
+interactive `flutter run` session.
+
+## Commands to use in chat and docs
+
+- **Dev mobile (default):** `dart run melos run run:dev` (optional device:
+  `dart run melos run run:dev -- -d <deviceId>`)
+- **Dev web:** `dart run melos run run:dev:web`
+- **Other scripts:** `dart run melos run <script>` (see root `pubspec.yaml`
+  under `melos.scripts`)
+- Prefer `./tool/flutterw` only when documenting what the shell scripts
+  invoke under `mobile/`; do not tell the user to run bare `flutter run`
+  unless they explicitly ask for it.
+
+## Do not assume interactive Flutter CLI keys
+
+When the app is launched via `dart run melos run …`, the terminal is **not**
+listening for Flutter’s single-key commands (`q`, `r`, `R`, `h`, `d`, etc.).
+
+- **Never** suggest `q`, `r`, or `R` as recovery steps.
+- **Never** infer that the user used hot reload or hot restart from those keys.
+- **Never** blame “you pressed R” unless the user explicitly says they did.
+
+## Stopping and restarting
+
+- **Stop:** interrupt the melos process (`Ctrl+C` in that terminal), and
+  force-quit the app on the device/emulator if needed.
+- **Cold restart:** run `dart run melos run run:dev` (or `run:dev:web`)
+  again after a full stop — not hot restart.
+
+## Native plugin errors (`MissingPluginException`)
+
+If `shared_preferences` or `path_provider` fail at startup, treat it as a
+**broken or stale native attach**, not as proof the user hot-restarted.
+
+Recovery wording (example):
+
+1. Stop the melos run (`Ctrl+C`).
+2. Force-quit the app on the device.
+3. `dart run melos run run:dev` again.
+4. If needed: `cd mobile && ./tool/flutterw clean`, then melos run again.
+
+Do not mention `flutter run` key commands in that flow.

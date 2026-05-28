@@ -89,29 +89,32 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
       if (self == null) continue;
       final transport = HousingProposalTransportService(_db);
       if (await transport.isHiddenDraftPlan(p.id)) continue;
-      await transport.reconcileStalePackagePending(p.id);
-      final activeEarly = await (_db.select(
-        _db.proposalPackages,
-      )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
-      final hasActiveEarly = activeEarly?.activeRevisionId != null;
+      try {
+        await transport.reconcileStalePackagePending(p.id);
+      } catch (e, st) {
+        debugPrint('housing workbench reconcile failed for ${p.id}: $e\n$st');
+      }
+      final activeRevisionId = await transport.resolveActiveRevisionIdForPlan(
+        p.id,
+      );
+      final hasActiveEarly = activeRevisionId != null;
       if (!hasActiveEarly &&
           await transport.anyOtherHousingPlanHasActiveRevision(
             exceptPlanId: p.id,
           )) {
         continue;
       }
-      final pkg = await (_db.select(
-        _db.proposalPackages,
-      )..where((t) => t.planId.equals(p.id))).getSingleOrNull();
-      final hasOpenPending = pkg?.pendingRevisionId != null;
-      final active = pkg?.activeRevisionId != null;
-      final hasOpenAmendment = active &&
-          await transport.hasPendingAmendmentForUi(
-            p.id,
-            reconcileFirst: false,
-          );
+      final pendingRevisionId =
+          await transport.resolvePendingRevisionIdForPlan(p.id);
+      final hasOpenPending = pendingRevisionId != null;
+      final active = hasActiveEarly;
+      final hasOpenAmendment = await transport.hasPendingAmendmentForUi(
+        p.id,
+        reconcileFirst: false,
+      );
       final amendmentPending = hasOpenPending && hasOpenAmendment;
-      final pending = hasOpenPending && !amendmentPending;
+      final pending = hasOpenPending && !amendmentPending && !active;
+      final packageId = await transport.primaryPackageIdForPlan(p.id);
       final archiveRows = await transport.listArchivesForPlan(p.id);
       final archivedRows = archiveRows
           .where((a) => !a.isDraft && !a.isPending)
@@ -141,7 +144,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
           sortDate: pendingDate ?? latestArchive?.invalidatedAt ?? p.createdAt,
           pendingResponseCount: pendingResponseCount,
           participantCount: await _participantCountForPlan(p.id),
-          packageId: pkg?.id,
+          packageId: packageId,
           archive: latestArchive,
         ),
       );

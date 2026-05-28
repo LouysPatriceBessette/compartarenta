@@ -42,8 +42,8 @@ Future<void> bootstrap() async {
         await logLocalStorageStartupDiagnostics(appDb);
       } catch (error, stack) {
         debugPrint(
-          'AppDatabase warmUpStorage failed (full stop the app, then '
-          '`flutter run` — hot restart breaks path_provider): $error\n$stack',
+          'AppDatabase warmUpStorage failed (stop melos, force-quit app, '
+          'then `dart run melos run run:dev`): $error\n$stack',
         );
       }
 

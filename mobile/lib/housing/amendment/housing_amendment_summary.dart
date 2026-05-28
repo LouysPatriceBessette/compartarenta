@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../db/app_database.dart';
 import '../proposals/housing_proposal_transport_service.dart';
+import '../proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_date.dart';
 import '../realized_expense/realized_expense_participants.dart';
@@ -65,13 +66,19 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
   required AppLocalizations l10n,
   required String dateFormat,
 }) async {
-  await HousingProposalTransportService(db).reconcileStalePackagePending(planId);
+  final transport = HousingProposalTransportService(db);
+  try {
+    await transport.reconcileStalePackagePending(planId);
+  } catch (_) {
+    // Best-effort only; duplicate legacy package rows can cause getSingleOrNull
+    // to throw — the summary loader below handles duplicates explicitly.
+  }
 
-  final pkg = await (db.select(db.proposalPackages)
-        ..where((t) => t.planId.equals(planId)))
-      .getSingleOrNull();
-  final pendingId = revisionId ?? pkg?.pendingRevisionId;
+  final packages = await transport.proposalPackagesForPlan(planId);
+  final pendingId =
+      revisionId ?? packages.map((p) => p.pendingRevisionId).whereType<String>().firstOrNull;
   if (pendingId == null) return null;
+  final activeRevisionId = await transport.resolveActiveRevisionIdForPlan(planId);
 
   final pendingRev = await (db.select(db.proposalRevisions)
         ..where((t) => t.id.equals(pendingId)))
@@ -86,7 +93,7 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
   }
   final amendmentType = resolveAmendmentType(
     pendingPayload: pendingPayload,
-    activeRevisionId: pkg?.activeRevisionId,
+    activeRevisionId: activeRevisionId,
     pendingRevisionId: pendingId,
   );
   if (amendmentType == null) return null;
@@ -97,7 +104,7 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
   final baselineId = amendmentBaselineRevisionId(
     revisionPayload: pendingPayload,
     revisionId: pendingId,
-    packageActiveRevisionId: pkg?.activeRevisionId,
+    packageActiveRevisionId: activeRevisionId,
     isArchived: isArchived,
   );
   Map<String, dynamic> baselinePayload = pendingPayload;
@@ -107,9 +114,9 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
           ..where((t) => t.id.equals(resolvedBaselineId!)))
         .getSingleOrNull();
     if (baselineRev == null &&
-        pkg?.activeRevisionId != null &&
-        pkg!.activeRevisionId != pendingId) {
-      resolvedBaselineId = pkg.activeRevisionId;
+        activeRevisionId != null &&
+        activeRevisionId != pendingId) {
+      resolvedBaselineId = activeRevisionId;
       baselineRev = await (db.select(db.proposalRevisions)
             ..where((t) => t.id.equals(resolvedBaselineId!)))
           .getSingleOrNull();
@@ -118,11 +125,11 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
       baselinePayload =
           jsonDecode(baselineRev.payloadJson) as Map<String, dynamic>;
     }
-  } else if (pkg?.activeRevisionId != null &&
-      pkg!.activeRevisionId != pendingId &&
+  } else if (activeRevisionId != null &&
+      activeRevisionId != pendingId &&
       !isArchivedDecision) {
     final baselineRev = await (db.select(db.proposalRevisions)
-          ..where((t) => t.id.equals(pkg.activeRevisionId!)))
+          ..where((t) => t.id.equals(activeRevisionId)))
         .getSingleOrNull();
     if (baselineRev != null) {
       baselinePayload =
@@ -141,7 +148,7 @@ Future<HousingAmendmentSummary?> loadHousingAmendmentSummary({
     dateFormat: dateFormat,
     db: db,
     proposerParticipantId: pendingRev.proposerParticipantId,
-    packageActiveRevisionId: pkg?.activeRevisionId,
+    packageActiveRevisionId: activeRevisionId,
     pendingRevisionId: pendingId,
     comparisonHistoricalOnly: isArchivedDecision,
   );
@@ -175,22 +182,29 @@ Future<HousingAmendmentSummary?> buildAmendmentPreviewSummary({
   required AppLocalizations l10n,
   required String dateFormat,
 }) async {
-  final pkg = await (db.select(db.proposalPackages)
-        ..where((t) => t.planId.equals(planId)))
-      .getSingleOrNull();
-  final baselineId = pkg?.activeRevisionId;
-  if (baselineId == null) return null;
-
-  final baselineRev = await (db.select(db.proposalRevisions)
-        ..where((t) => t.id.equals(baselineId)))
-      .getSingleOrNull();
-  if (baselineRev == null) return null;
+  final transport = HousingProposalTransportService(db);
+  final baselineId = await transport.resolveActiveRevisionIdForPlan(planId);
 
   Map<String, dynamic> baselinePayload;
-  try {
-    baselinePayload = jsonDecode(baselineRev.payloadJson) as Map<String, dynamic>;
-  } catch (_) {
-    return null;
+  if (baselineId != null) {
+    final baselineRev = await (db.select(db.proposalRevisions)
+          ..where((t) => t.id.equals(baselineId)))
+        .getSingleOrNull();
+    if (baselineRev == null) return null;
+    try {
+      baselinePayload =
+          jsonDecode(baselineRev.payloadJson) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  } else {
+    try {
+      final snapshot = await PlanAgreementProposalService(db)
+          .buildSnapshotPayloadForPlan(planId);
+      baselinePayload = jsonDecode(jsonEncode(snapshot)) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
   final proposedPayload = await _proposedPayloadFromCurrentPlan(
@@ -211,6 +225,8 @@ Future<HousingAmendmentSummary?> buildAmendmentPreviewSummary({
     dateFormat: dateFormat,
     db: db,
     proposerParticipantId: '$planId:self',
+    packageActiveRevisionId: baselineId,
+    pendingRevisionId: 'preview',
   );
 
   return HousingAmendmentSummary(
@@ -354,31 +370,16 @@ Future<_AmendmentComparisonTexts> _amendmentComparisonTexts({
   late final String proposedText;
   switch (amendmentType) {
     case HousingAmendmentType.agreementEnd:
-      DateTime? forkEnd;
-      final forkId = proposedPayload['forkedFromRevisionId'] as String?;
-      if (forkId != null && forkId.isNotEmpty) {
-        forkEnd = await _agreementPeriodEndForRevision(db, forkId);
-      }
-      final baseEnd = parseDate(agreementMap(baselinePayload)?['periodEnd']);
       final propEnd = parseDate(agreementMap(proposedPayload)?['periodEnd']);
-      final DateTime? currentEnd;
-      if (comparisonHistoricalOnly) {
-        // After acceptance the live agreement and active revision already carry
-        // the proposed end date; show the fork / baseline snapshot only.
-        currentEnd = forkEnd ?? baseEnd;
-      } else {
-        final liveEnd = (await db.getAgreementForPlan(planId))?.periodEnd;
-        DateTime? inForceEnd;
-        if (packageActiveRevisionId != null &&
-            pendingRevisionId != null &&
-            packageActiveRevisionId != pendingRevisionId) {
-          inForceEnd = await _agreementPeriodEndForRevision(
-            db,
-            packageActiveRevisionId,
-          );
-        }
-        currentEnd = liveEnd ?? inForceEnd ?? forkEnd ?? baseEnd;
-      }
+      final currentEnd = await _inForceAgreementPeriodEnd(
+        db: db,
+        proposedPayload: proposedPayload,
+        baselinePayload: baselinePayload,
+        propEnd: propEnd,
+        packageActiveRevisionId: packageActiveRevisionId,
+        pendingRevisionId: pendingRevisionId,
+        historicalOnly: comparisonHistoricalOnly,
+      );
       currentText = currentEnd == null
           ? l10n.housingAmendmentValueNotSet
           : formatPreferenceDate(currentEnd, dateFormat);
@@ -520,6 +521,55 @@ void removeLineFromRevisionPayload(
         ],
     ];
   }
+}
+
+Map<String, dynamic>? _agreementMapFromPayload(Map<String, dynamic>? payload) {
+  if (payload == null) return null;
+  final agr = payload['agreement'];
+  if (agr is Map) return agr.cast<String, dynamic>();
+  return null;
+}
+
+/// In-force agreement end for comparison while a change is still open.
+///
+/// Never uses live plan tables or the pending revision payload — those may
+/// already reflect the proposed date before unanimous acceptance.
+Future<DateTime?> _inForceAgreementPeriodEnd({
+  required AppDatabase db,
+  required Map<String, dynamic> proposedPayload,
+  required Map<String, dynamic> baselinePayload,
+  required DateTime? propEnd,
+  required String? packageActiveRevisionId,
+  required String? pendingRevisionId,
+  required bool historicalOnly,
+}) async {
+  DateTime? parseDate(dynamic raw) {
+    if (raw is! String || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  if (!historicalOnly &&
+      packageActiveRevisionId != null &&
+      pendingRevisionId != null &&
+      packageActiveRevisionId != pendingRevisionId) {
+    final inForceEnd = await _agreementPeriodEndForRevision(
+      db,
+      packageActiveRevisionId,
+    );
+    if (inForceEnd != null) return inForceEnd;
+  }
+
+  final forkId = proposedPayload['forkedFromRevisionId'] as String?;
+  if (forkId != null && forkId.isNotEmpty) {
+    final forkEnd = await _agreementPeriodEndForRevision(db, forkId);
+    if (forkEnd != null) return forkEnd;
+  }
+
+  final baseEnd =
+      parseDate(_agreementMapFromPayload(baselinePayload)?['periodEnd']);
+  // If baseline equals proposed (e.g. baselinePayload accidentally points at the
+  // pending revision), still return baseline rather than showing "Not set".
+  return baseEnd;
 }
 
 Future<DateTime?> _agreementPeriodEndForRevision(

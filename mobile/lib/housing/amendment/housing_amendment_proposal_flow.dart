@@ -54,14 +54,19 @@ class HousingAmendmentProposalFlow {
       return false;
     }
 
-    final pkg = await (_db.select(_db.proposalPackages)
-          ..where((t) => t.planId.equals(planId)))
-        .getSingleOrNull();
-    final activeRevisionId = pkg?.activeRevisionId;
-    final fork = activeRevisionId == null
+    final transport = HousingProposalTransportService(_db);
+    final activeRevisionId =
+        await transport.resolveActiveRevisionIdForPlan(planId);
+    final packageId = activeRevisionId == null
+        ? null
+        : await transport.packageIdHoldingActiveRevision(
+            planId,
+            activeRevisionId: activeRevisionId,
+          );
+    final fork = activeRevisionId == null || packageId == null
         ? null
         : (
-            packageId: pkg!.id,
+            packageId: packageId,
             revisionId: activeRevisionId,
           );
 

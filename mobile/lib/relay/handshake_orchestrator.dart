@@ -2499,6 +2499,7 @@ class HandshakeOrchestrator {
     await PushNotificationService.showLocalHousingDecisionNotification(
       senderDisplayName: senderDisplayName,
       planId: pkg?.planId,
+      revisionId: revision.id,
     );
   }
 
