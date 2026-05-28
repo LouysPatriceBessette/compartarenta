@@ -33,7 +33,6 @@ class _HousingMonthlyExpensesScreenState
     extends State<HousingMonthlyExpensesScreen> {
   late DateTime _month;
   late Future<_MonthWindow?> _windowFuture;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -44,12 +43,11 @@ class _HousingMonthlyExpensesScreenState
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
     );
-    _startRefreshPolling();
+    _pollInboxOnce();
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -64,7 +62,7 @@ class _HousingMonthlyExpensesScreenState
     });
   }
 
-  void _startRefreshPolling() {
+  void _pollInboxOnce() {
     final orch = HandshakeOrchestrator.maybeInstance;
     if (orch == null) return;
     unawaited(
@@ -72,15 +70,6 @@ class _HousingMonthlyExpensesScreenState
         debugPrint('housing monthly expenses poll: $e\n$st');
       }),
     );
-    _refreshTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
-      final pollOrch = HandshakeOrchestrator.maybeInstance;
-      if (pollOrch == null) return;
-      unawaited(
-        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing monthly expenses poll: $e\n$st');
-        }),
-      );
-    });
   }
 
   Future<_MonthWindow?> _loadWindow() async {

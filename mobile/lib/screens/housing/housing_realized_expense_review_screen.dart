@@ -78,14 +78,12 @@ class _HousingRealizedExpenseReviewScreenState
   final _repo = RealizedExpenseRepository(AppDatabase.processScope);
   Future<_ReviewContext?>? _loadFuture;
   bool _decisionSending = false;
-  Timer? _refreshTimer;
   bool _openingPendingReview = false;
 
   @override
   void initState() {
     super.initState();
     _loadFuture = _load();
-    _loadFuture!.then(_scheduleRefreshTimerIfNeeded);
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
     );
@@ -96,7 +94,6 @@ class _HousingRealizedExpenseReviewScreenState
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -110,7 +107,6 @@ class _HousingRealizedExpenseReviewScreenState
     setState(() {
       _loadFuture = _load();
     });
-    _loadFuture!.then(_scheduleRefreshTimerIfNeeded);
   }
 
   void _onSteadyInboxTick() {
@@ -154,25 +150,6 @@ class _HousingRealizedExpenseReviewScreenState
             _openingPendingReview = false;
           }),
     );
-  }
-
-  void _scheduleRefreshTimerIfNeeded(_ReviewContext? ctx) {
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    if (ctx == null) return;
-    final isPending =
-        ctx.visibility == RealizedExpenseReviewVisibility.waitingForYou ||
-        ctx.visibility == RealizedExpenseReviewVisibility.waitingForOthers;
-    if (!isPending) return;
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      final orch = HandshakeOrchestrator.maybeInstance;
-      if (orch == null) return;
-      unawaited(
-        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing review poll: $e\n$st');
-        }),
-      );
-    });
   }
 
   Future<_ReviewContext?> _load() async {

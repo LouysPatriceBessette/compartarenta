@@ -939,7 +939,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       rollbackPendingOnTotalFailure: true,
     );
     if (!mounted) return sent;
-    _summaryViewKey.currentState?.reloadSnapshot(schedulePendingPoll: false);
+    _summaryViewKey.currentState?.reloadSnapshot();
     return sent;
   }
 
@@ -959,7 +959,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     );
     if (!mounted) return;
     if (sent) {
-      _summaryViewKey.currentState?.reloadSnapshot(schedulePendingPoll: false);
+      _summaryViewKey.currentState?.reloadSnapshot();
     }
   }
 
@@ -3027,37 +3027,18 @@ class _SummaryViewState extends State<_SummaryView> {
   int _focusedParticipantIndex = 0;
   bool _hadPendingProposal = false;
   bool _settlementRedirectScheduled = false;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _snapshotFuture = _load();
-    _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
     );
   }
 
-  /// Polls relay + reloads only while a proposal is pending (responses may arrive).
-  /// Draft plan summary (not submitted) does not need periodic UI refresh.
-  void _scheduleRefreshTimerIfNeeded(_SummarySnapshot data) {
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    if (data.proposalPkg?.pendingRevisionId == null) return;
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
-      await HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes();
-      if (!mounted) return;
-      setState(() {
-        _snapshotFuture = _load();
-      });
-      _snapshotFuture!.then(_scheduleRefreshTimerIfNeeded);
-    });
-  }
-
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -3072,22 +3053,17 @@ class _SummaryViewState extends State<_SummaryView> {
     });
   }
 
-  /// Reloads summary data. When [schedulePendingPoll] is false, skips starting the
-  /// 3s relay poll (e.g. right after the proposer sends — avoids a visible refresh).
-  void reloadSnapshot({bool schedulePendingPoll = true}) {
-    unawaited(_reloadSnapshotAsync(schedulePendingPoll: schedulePendingPoll));
+  void reloadSnapshot() {
+    unawaited(_reloadSnapshotAsync());
   }
 
-  Future<void> _reloadSnapshotAsync({required bool schedulePendingPoll}) async {
+  Future<void> _reloadSnapshotAsync() async {
     try {
       final next = await _load();
       if (!mounted) return;
       setState(() {
         _snapshotFuture = Future.value(next);
       });
-      if (schedulePendingPoll) {
-        _scheduleRefreshTimerIfNeeded(next);
-      }
     } catch (e, st) {
       assert(() {
         debugPrint('Housing plan summary reload: $e\n$st');
@@ -3509,7 +3485,7 @@ class _SummaryViewState extends State<_SummaryView> {
                         prefs: widget.prefs,
                         onAfterResend: () {
                           if (!mounted) return;
-                          reloadSnapshot(schedulePendingPoll: false);
+                          reloadSnapshot();
                         },
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),

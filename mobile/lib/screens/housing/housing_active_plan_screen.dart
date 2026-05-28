@@ -49,9 +49,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<bool>? _pendingAmendmentFuture;
   /// Stays true across banner refreshes so the card does not blink off.
   bool _hubShowsPendingAmendment = false;
-  bool _hubInboxPollingStarted = false;
-  Timer? _hubInboxPollTimer;
-  Timer? _pendingExpensePollTimer;
   bool _openingPendingReview = false;
   bool _openingPendingAmendment = false;
 
@@ -74,16 +71,14 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       HousingNavigationIntent.openAmendmentTick.addListener(
         _onOpenAmendmentIntent,
       );
-      unawaited(_startHubInboxPolling());
-      unawaited(_syncPendingExpensePoll());
+      unawaited(_pollHubInboxOnce());
+      unawaited(_syncPendingExpenseInboxOnce());
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _hubInboxPollTimer?.cancel();
-    _pendingExpensePollTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -107,58 +102,30 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     });
   }
 
-  /// Poll relay while the hub is visible so a just-imported amendment shows its
-  /// banner without leaving the screen (web throttling + missed notification).
-  Future<void> _startHubInboxPolling() async {
-    if (_hubInboxPollingStarted) return;
-    _hubInboxPollingStarted = true;
-
-    Future<void> pollOnce() async {
-      final orch = HandshakeOrchestrator.maybeInstance;
-      if (orch != null) {
-        await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing hub inbox poll: $e\n$st');
-        });
-      }
-      if (mounted) _refreshPendingBanners();
+  /// One-shot relay poll when the hub opens (web may throttle background delivery).
+  Future<void> _pollHubInboxOnce() async {
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing hub inbox poll: $e\n$st');
+      });
     }
-
-    await pollOnce();
-    _hubInboxPollTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
-      unawaited(pollOnce());
-    });
+    if (mounted) _refreshPendingBanners();
   }
 
-  /// Polls while realized expenses are still awaiting a local or peer decision.
-  Future<void> _syncPendingExpensePoll() async {
+  /// One-shot inbox poll when there are pending realized expenses to settle.
+  Future<void> _syncPendingExpenseInboxOnce() async {
     final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
     final pending = await ledger.pendingSummary(
       packageId: widget.packageId,
       planId: widget.planId,
     );
     if (!mounted) return;
-    if (pending.totalPendingCount == 0) {
-      _pendingExpensePollTimer?.cancel();
-      _pendingExpensePollTimer = null;
-      return;
-    }
+    if (pending.totalPendingCount == 0) return;
     final orch = HandshakeOrchestrator.maybeInstance;
-    if (orch != null) {
-      unawaited(
-        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing hub realized-expense poll: $e\n$st');
-        }),
-      );
-    }
-    if (_pendingExpensePollTimer != null) return;
-    _pendingExpensePollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      final pollOrch = HandshakeOrchestrator.maybeInstance;
-      if (pollOrch == null) return;
-      unawaited(
-        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing hub realized-expense poll: $e\n$st');
-        }),
-      );
+    if (orch == null) return;
+    await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+      debugPrint('housing hub realized-expense poll: $e\n$st');
     });
   }
 
@@ -167,6 +134,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _refreshPendingBanners();
+      unawaited(_syncPendingExpenseInboxOnce());
     });
   }
 
@@ -196,7 +164,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       });
     });
     _refreshPendingBanners();
-    unawaited(_syncPendingExpensePoll());
+    unawaited(_pollHubInboxOnce());
+    unawaited(_syncPendingExpenseInboxOnce());
   }
 
   /// Updates amendment / expense banners only — does not reset the hub header.

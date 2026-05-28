@@ -25,7 +25,6 @@ class HousingBalancesScreen extends StatefulWidget {
 }
 
 class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
-  Timer? _refreshTimer;
   HousingBalanceMode _mode = HousingBalanceMode.real;
 
   @override
@@ -34,12 +33,11 @@ class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
     );
-    _startRefreshPolling();
+    _pollInboxOnce();
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -54,7 +52,7 @@ class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
     });
   }
 
-  void _startRefreshPolling() {
+  void _pollInboxOnce() {
     final orch = HandshakeOrchestrator.maybeInstance;
     if (orch == null) return;
     unawaited(
@@ -62,15 +60,6 @@ class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
         debugPrint('housing balances poll: $e\n$st');
       }),
     );
-    _refreshTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
-      final pollOrch = HandshakeOrchestrator.maybeInstance;
-      if (pollOrch == null) return;
-      unawaited(
-        pollOrch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing balances poll: $e\n$st');
-        }),
-      );
-    });
   }
 
   @override

@@ -87,7 +87,6 @@ class _HousingInviteProposalScreenState
   bool _sendingProposal = false;
   bool _redirectedToAmendment = false;
   String? _displayRevisionId;
-  Timer? _refreshTimer;
   final TextEditingController _negotiateController = TextEditingController();
 
   bool get _isAuthorPreview => widget.viewerParticipantIndex == null;
@@ -110,13 +109,20 @@ class _HousingInviteProposalScreenState
       _focusedParticipantIndex = widget.viewerParticipantIndex!.clamp(0, 100);
     }
     if (!_isDraftSendPreview) {
-      _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-        if (!mounted || _negotiateExpanded) return;
-        setState(() {
-          _proposalFuture = _loadProposalScreenData();
-        });
-      });
+      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+        _onSteadyInboxTick,
+      );
     }
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted || _negotiateExpanded || _isDraftSendPreview) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _negotiateExpanded) return;
+      setState(() {
+        _proposalFuture = _loadProposalScreenData();
+      });
+    });
   }
 
   Future<List<dynamic>> _loadProposalScreenData() {
@@ -132,7 +138,11 @@ class _HousingInviteProposalScreenState
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    if (!_isDraftSendPreview) {
+      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+        _onSteadyInboxTick,
+      );
+    }
     _negotiateController.dispose();
     super.dispose();
   }
@@ -504,8 +514,6 @@ class _HousingInviteProposalScreenState
                 (r) => r.status == ProposalResponseStatus.accepted.name,
               );
           if (hasActivePlan) {
-            _refreshTimer?.cancel();
-            _refreshTimer = null;
             return _HousingUnanimousActiveGate(
               db: widget.db,
               planId: widget.planId,

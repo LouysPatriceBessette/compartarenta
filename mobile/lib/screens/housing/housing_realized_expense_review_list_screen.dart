@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
@@ -30,7 +28,6 @@ class HousingRealizedExpenseReviewListScreen extends StatefulWidget {
 class _HousingRealizedExpenseReviewListScreenState
     extends State<HousingRealizedExpenseReviewListScreen> {
   late Future<List<RealizedExpenseReviewItem>> _itemsFuture;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _HousingRealizedExpenseReviewListScreenState
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
@@ -56,7 +52,6 @@ class _HousingRealizedExpenseReviewListScreenState
         AppDatabase.processScope,
       ).listReviewItems(packageId: widget.packageId, planId: widget.planId);
     });
-    _itemsFuture.then(_scheduleRefreshTimerIfNeeded);
   }
 
   void _onSteadyInboxTick() {
@@ -64,26 +59,6 @@ class _HousingRealizedExpenseReviewListScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _reload();
-    });
-  }
-
-  void _scheduleRefreshTimerIfNeeded(List<RealizedExpenseReviewItem> items) {
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    final hasPending = items.any(
-      (item) =>
-          item.visibility == RealizedExpenseReviewVisibility.waitingForYou ||
-          item.visibility == RealizedExpenseReviewVisibility.waitingForOthers,
-    );
-    if (!hasPending) return;
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      final orch = HandshakeOrchestrator.maybeInstance;
-      if (orch == null) return;
-      unawaited(
-        orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-          debugPrint('housing review list poll: $e\n$st');
-        }),
-      );
     });
   }
 
