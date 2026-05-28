@@ -669,7 +669,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingActiveHubMonthlyExpenses => 'Recorded expenses';
 
   @override
-  String get housingActiveHubBalances => 'Balances owed';
+  String get housingActiveHubBalances => 'Expenses owed by each';
 
   @override
   String get housingActiveHubViewPlan => 'View current plan';
@@ -1076,7 +1076,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingAmendmentLineRemoveConfirmAction => 'Remove line';
 
   @override
-  String get housingAmendmentTypeAgreementEnd => 'Change agreement end date';
+  String get housingAmendmentTypeAgreementEnd => 'Change end date';
 
   @override
   String get housingAmendmentTypeAgreementEndHint =>
@@ -1095,7 +1095,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Edit quiet hours, withdrawal, or other rules';
 
   @override
-  String get housingAmendmentRosterChangeTitle => 'Change participants';
+  String get housingAmendmentRosterChangeTitle => 'Major change';
 
   @override
   String get housingAmendmentRosterChangeHint =>
@@ -1245,7 +1245,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingAmendmentRequestStatusAction => 'Request status';
 
   @override
-  String get housingAmendmentJournalTitle => 'Plan change log';
+  String get housingAmendmentJournalTitle => 'Change log';
 
   @override
   String get housingAmendmentJournalSubtitle => 'Accepted and refused requests';

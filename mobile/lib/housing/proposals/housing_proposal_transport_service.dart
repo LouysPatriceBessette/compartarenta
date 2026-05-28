@@ -1022,7 +1022,6 @@ class HousingProposalTransportService {
     )..where((t) => t.id.equals(pendingId))).getSingleOrNull();
     if (rev == null) return null;
     final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-    final activeId = await resolveActiveRevisionIdForPlan(planId);
     final responses = await (_db.select(
       _db.proposalResponses,
     )..where((t) => t.revisionId.equals(rev.id))).get();

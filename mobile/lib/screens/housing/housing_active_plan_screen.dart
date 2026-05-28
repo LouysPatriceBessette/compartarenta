@@ -219,6 +219,20 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   }
 
   /// Resolves pending amendment at tap time (not from a cached [FutureBuilder]).
+  Future<void> _openMajorChange(BuildContext context) async {
+    final prefs = widget.prefs ?? await AppPreferences.load();
+    if (!context.mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingAgreementRenewalScreen(
+          planId: widget.planId,
+          prefs: prefs,
+          rosterChangeOnly: true,
+        ),
+      ),
+    );
+  }
+
   Future<void> _onAmendmentHubTap(BuildContext context) async {
     final db = AppDatabase.processScope;
     final transport = HousingProposalTransportService(db);
@@ -485,10 +499,29 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                             ),
                           ),
                         _HubTile(
+                          icon: Icons.description_outlined,
+                          label: l10n.housingActiveHubViewPlan,
+                          onTap: () async {
+                            final prefs =
+                                widget.prefs ?? await AppPreferences.load();
+                            if (!context.mounted) return;
+                            await Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (_) => HousingActivePlanReadOnlyScreen(
+                                  planId: widget.planId,
+                                  prefs: prefs,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const _HubSectionDivider(),
+                        _HubTile(
                           icon: Icons.add_card_outlined,
                           label: l10n.housingActiveHubEnterExpense,
                           onTap: () => _openEnterExpense(context),
                         ),
+                        const _HubSectionDivider(),
                         _HubTile(
                           icon: Icons.calendar_month_outlined,
                           label: l10n.housingActiveHubMonthlyExpenses,
@@ -519,23 +552,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                             );
                           },
                         ),
-                        _HubTile(
-                          icon: Icons.description_outlined,
-                          label: l10n.housingActiveHubViewPlan,
-                          onTap: () async {
-                            final prefs =
-                                widget.prefs ?? await AppPreferences.load();
-                            if (!context.mounted) return;
-                            await Navigator.of(context).push<void>(
-                              MaterialPageRoute<void>(
-                                builder: (_) => HousingActivePlanReadOnlyScreen(
-                                  planId: widget.planId,
-                                  prefs: prefs,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                        const _HubSectionDivider(),
                         _HubTile(
                           icon: Icons.edit_note_outlined,
                           label: hasPendingAmendment
@@ -543,6 +560,12 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               : l10n.housingActiveHubRequestAmendment,
                           onTap: () => _onAmendmentHubTap(context),
                         ),
+                        _HubTile(
+                          icon: Icons.groups_outlined,
+                          label: l10n.housingAmendmentRosterChangeTitle,
+                          onTap: () => _openMajorChange(context),
+                        ),
+                        const _HubSectionDivider(),
                         _HubTile(
                           icon: Icons.import_export_outlined,
                           label: l10n.housingActiveHubExportImport,
@@ -569,6 +592,18 @@ class _HubHeader {
 
   final String periodRange;
   final String currency;
+}
+
+class _HubSectionDivider extends StatelessWidget {
+  const _HubSectionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Divider(height: 1),
+    );
+  }
 }
 
 class _HubTile extends StatelessWidget {

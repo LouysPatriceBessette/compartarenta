@@ -14,24 +14,29 @@ import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
-import 'housing_agreement_renewal_screen.dart';
 import 'housing_amendment_journal_screen.dart';
 import 'housing_amendment_submit_preview_screen.dart';
 import 'housing_plan_screen.dart';
 
-class _AmendmentMenuOption {
+sealed class _AmendmentMenuEntry {
+  const _AmendmentMenuEntry();
+}
+
+class _AmendmentMenuSeparator extends _AmendmentMenuEntry {
+  const _AmendmentMenuSeparator();
+}
+
+class _AmendmentMenuOption extends _AmendmentMenuEntry {
   const _AmendmentMenuOption({
     this.type,
     required this.title,
     required this.subtitle,
-    this.isRosterRedirect = false,
     this.isJournal = false,
   });
 
   final HousingAmendmentType? type;
   final String title;
   final String subtitle;
-  final bool isRosterRedirect;
   final bool isJournal;
 }
 
@@ -82,22 +87,23 @@ class _HousingAmendmentRequestScreenState
     );
   }
 
-  List<_AmendmentMenuOption> _options(AppLocalizations l10n) => [
-        _AmendmentMenuOption(
-          type: HousingAmendmentType.lineEdit,
-          title: l10n.housingAmendmentTypeLineEdit,
-          subtitle: l10n.housingAmendmentTypeLineEditHint,
-        ),
+  List<_AmendmentMenuEntry> _menuEntries(AppLocalizations l10n) => [
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineAdd,
           title: l10n.housingAmendmentTypeLineAdd,
           subtitle: l10n.housingAmendmentTypeLineAddHint,
         ),
         _AmendmentMenuOption(
+          type: HousingAmendmentType.lineEdit,
+          title: l10n.housingAmendmentTypeLineEdit,
+          subtitle: l10n.housingAmendmentTypeLineEditHint,
+        ),
+        _AmendmentMenuOption(
           type: HousingAmendmentType.lineRemove,
           title: l10n.housingAmendmentTypeLineRemove,
           subtitle: l10n.housingAmendmentTypeLineRemoveHint,
         ),
+        const _AmendmentMenuSeparator(),
         _AmendmentMenuOption(
           type: HousingAmendmentType.agreementEnd,
           title: l10n.housingAmendmentTypeAgreementEnd,
@@ -108,11 +114,7 @@ class _HousingAmendmentRequestScreenState
           title: l10n.housingAmendmentTypeRuleChange,
           subtitle: l10n.housingAmendmentTypeRuleChangeHint,
         ),
-        _AmendmentMenuOption(
-          isRosterRedirect: true,
-          title: l10n.housingAmendmentRosterChangeTitle,
-          subtitle: l10n.housingAmendmentRosterChangeHint,
-        ),
+        const _AmendmentMenuSeparator(),
         _AmendmentMenuOption(
           isJournal: true,
           title: l10n.housingAmendmentJournalTitle,
@@ -123,7 +125,7 @@ class _HousingAmendmentRequestScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final options = _options(l10n);
+    final entries = _menuEntries(l10n);
     final db = AppDatabase.processScope;
 
     return Scaffold(
@@ -172,16 +174,27 @@ class _HousingAmendmentRequestScreenState
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
-                for (final opt in options)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(opt.title),
-                      subtitle: Text(opt.subtitle),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _onOptionTap(context, opt, widget.planId, widget.prefs),
-                    ),
-                  ),
+                for (final entry in entries)
+                  switch (entry) {
+                    _AmendmentMenuSeparator() => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1),
+                      ),
+                    final _AmendmentMenuOption opt => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(opt.title),
+                          subtitle: Text(opt.subtitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => _onOptionTap(
+                            context,
+                            opt,
+                            widget.planId,
+                            widget.prefs,
+                          ),
+                        ),
+                      ),
+                  },
               ],
             ],
           );
@@ -214,19 +227,6 @@ class _HousingAmendmentRequestScreenState
           builder: (_) => HousingAmendmentJournalScreen(
             planId: planId,
             prefs: prefs,
-          ),
-        ),
-      );
-      return;
-    }
-
-    if (opt.isRosterRedirect) {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (_) => HousingAgreementRenewalScreen(
-            planId: planId,
-            prefs: prefs,
-            rosterChangeOnly: true,
           ),
         ),
       );
@@ -422,6 +422,7 @@ class _HousingAmendmentRequestScreenState
       }
     }
     final newLineId = newest?.id;
+    if (!context.mounted) return;
     await _openPreview(
       context,
       type: HousingAmendmentType.lineAdd,

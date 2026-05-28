@@ -674,7 +674,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingActiveHubMonthlyExpenses => 'Gastos realizados';
 
   @override
-  String get housingActiveHubBalances => 'Saldos pendientes';
+  String get housingActiveHubBalances => 'Gastos debidos de cada uno';
 
   @override
   String get housingActiveHubViewPlan => 'Ver plan actual';
@@ -1090,7 +1090,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingAmendmentLineRemoveConfirmAction => 'Quitar línea';
 
   @override
-  String get housingAmendmentTypeAgreementEnd => 'Cambiar fin del acuerdo';
+  String get housingAmendmentTypeAgreementEnd => 'Modificar fecha de fin';
 
   @override
   String get housingAmendmentTypeAgreementEndHint =>
@@ -1109,7 +1109,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toque de queda, retirada, etc.';
 
   @override
-  String get housingAmendmentRosterChangeTitle => 'Cambiar participantes';
+  String get housingAmendmentRosterChangeTitle => 'Cambio importante';
 
   @override
   String get housingAmendmentRosterChangeHint =>
@@ -1261,7 +1261,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingAmendmentRequestStatusAction => 'Estado de la solicitud';
 
   @override
-  String get housingAmendmentJournalTitle => 'Registro de cambios del plan';
+  String get housingAmendmentJournalTitle => 'Registro de cambios';
 
   @override
   String get housingAmendmentJournalSubtitle =>

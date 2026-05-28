@@ -1303,7 +1303,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingActiveHubBalances.
   ///
   /// In en, this message translates to:
-  /// **'Balances owed'**
+  /// **'Expenses owed by each'**
   String get housingActiveHubBalances;
 
   /// No description provided for @housingActiveHubViewPlan.
@@ -1999,7 +1999,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentTypeAgreementEnd.
   ///
   /// In en, this message translates to:
-  /// **'Change agreement end date'**
+  /// **'Change end date'**
   String get housingAmendmentTypeAgreementEnd;
 
   /// No description provided for @housingAmendmentTypeAgreementEndHint.
@@ -2029,7 +2029,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentRosterChangeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Change participants'**
+  /// **'Major change'**
   String get housingAmendmentRosterChangeTitle;
 
   /// No description provided for @housingAmendmentRosterChangeHint.
@@ -2281,7 +2281,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentJournalTitle.
   ///
   /// In en, this message translates to:
-  /// **'Plan change log'**
+  /// **'Change log'**
   String get housingAmendmentJournalTitle;
 
   /// No description provided for @housingAmendmentJournalSubtitle.

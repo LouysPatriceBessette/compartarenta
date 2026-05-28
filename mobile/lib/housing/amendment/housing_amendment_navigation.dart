@@ -20,7 +20,6 @@ Future<void> openHousingPendingProposalOrAmendment(
   await transport.reconcileStalePackagePending(planId);
   final pendingId =
       revisionId ?? await transport.pendingRevisionIdForPlan(planId);
-  final hasActive = await transport.hasActiveRevision(planId);
   final openAmendment = isAmendment ||
       await pendingRevisionIsAmendment(
         db,
