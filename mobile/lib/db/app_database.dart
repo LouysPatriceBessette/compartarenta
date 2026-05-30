@@ -420,11 +420,29 @@ class RealizedExpenses extends Table {
   /// Prior proposal when this row is a resubmit (pass 3+).
   TextColumn get priorExpenseId => text().nullable()();
 
+  /// Frozen plan line title when the live line is removed from the plan.
+  TextColumn get planLineTitleSnapshot => text().nullable()();
+
+  /// JSON array of `{participantId, weight}` basis points at proposal time.
+  TextColumn get splitRatiosJson => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Split ratios and title preserved when a plan line is removed.
+class ArchivedPlanLineSnapshots extends Table {
+  TextColumn get planId => text()();
+  TextColumn get lineId => text()();
+  TextColumn get title => text()();
+  TextColumn get splitRatiosJson => text()();
+  DateTimeColumn get archivedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {planId, lineId};
 }
 
 class RealizedExpenseAttachments extends Table {
@@ -472,6 +490,7 @@ class RealizedExpenseAcceptances extends Table {
     RealizedExpenses,
     RealizedExpenseAttachments,
     RealizedExpenseAcceptances,
+    ArchivedPlanLineSnapshots,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -571,7 +590,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -749,6 +768,19 @@ class AppDatabase extends _$AppDatabase {
       if (from < 18) {
         await _migrateAddColumn(m, realizedExpenses, realizedExpenses.description);
       }
+      if (from < 19) {
+        await _migrateAddColumn(
+          m,
+          realizedExpenses,
+          realizedExpenses.planLineTitleSnapshot,
+        );
+        await _migrateAddColumn(
+          m,
+          realizedExpenses,
+          realizedExpenses.splitRatiosJson,
+        );
+        await m.createTable(archivedPlanLineSnapshots);
+      }
     },
     beforeOpen: (details) async {
       // Drift will run onCreate/onUpgrade automatically.
@@ -851,6 +883,20 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<PlanRatio>> listPlanRatios(String planId) =>
       (select(planRatios)..where((t) => t.planId.equals(planId))).get();
+
+  Future<void> upsertArchivedPlanLineSnapshot(
+    ArchivedPlanLineSnapshotsCompanion row,
+  ) =>
+      into(archivedPlanLineSnapshots).insertOnConflictUpdate(row);
+
+  Future<ArchivedPlanLineSnapshot?> getArchivedPlanLineSnapshot({
+    required String planId,
+    required String lineId,
+  }) =>
+      (select(archivedPlanLineSnapshots)
+            ..where((t) => t.planId.equals(planId))
+            ..where((t) => t.lineId.equals(lineId)))
+          .getSingleOrNull();
 
   Future<void> upsertPlanRatioTemplate(PlanRatioTemplatesCompanion row) =>
       into(planRatioTemplates).insertOnConflictUpdate(row);

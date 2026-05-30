@@ -1,5 +1,6 @@
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/realized_expense/realized_expense_balance.dart';
+import 'package:compartarenta/housing/realized_expense/realized_expense_line_snapshot.dart';
 import 'package:compartarenta/housing/realized_expense/realized_expense_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -153,6 +154,61 @@ void main() {
       expect(realNodes['p1']!.diameterPercent, 0);
     });
 
+    test('should include published expenses whose plan line was removed', () {
+      final expense = _expense(
+        id: 'orphan',
+        amountMinor: 2000,
+        payerParticipantId: 'p1',
+        kind: RealizedExpenseKind.normal,
+        planLineId: 'removed-line',
+        splitRatiosJson:
+            '[{"participantId":"p1","weight":5000},{"participantId":"p2","weight":5000}]',
+      );
+      final data = computeHousingBalanceData(
+        publishedExpenses: [expense],
+        planRatios: const [],
+        participants: participants.take(2).toList(growable: false),
+        ratiosByExpenseId: {
+          expense.id: planRatiosFromSplitJson(
+            splitRatiosJson: expense.splitRatiosJson,
+            planId: planId,
+            lineId: expense.planLineId,
+          ),
+        },
+      );
+
+      expect(data.realMode.edges, hasLength(1));
+      expect(data.realMode.edges.single.fromParticipantId, 'p2');
+      expect(data.realMode.edges.single.toParticipantId, 'p1');
+      expect(data.realMode.edges.single.amountMinor, 1000);
+    });
+
+    test('should prefer per-expense snapshot ratios over live plan ratios', () {
+      final expense = _expense(
+        id: 'renamed-line',
+        amountMinor: 10000,
+        payerParticipantId: 'p1',
+        kind: RealizedExpenseKind.normal,
+        planLineId: 'line-a',
+        splitRatiosJson:
+            '[{"participantId":"p1","weight":7000},{"participantId":"p2","weight":3000}]',
+      );
+      final data = computeHousingBalanceData(
+        publishedExpenses: [expense],
+        planRatios: _equalRatios(planId, 'line-a', ['p1', 'p2']),
+        participants: participants.take(2).toList(growable: false),
+        ratiosByExpenseId: {
+          expense.id: planRatiosFromSplitJson(
+            splitRatiosJson: expense.splitRatiosJson,
+            planId: planId,
+            lineId: expense.planLineId,
+          ),
+        },
+      );
+
+      expect(data.realMode.edges.single.amountMinor, 3000);
+    });
+
     test('should preserve legacy pairwise balances as optimized edges', () {
       final balances = computePairwiseBalances(
         publishedExpenses: [
@@ -187,6 +243,7 @@ RealizedExpense _expense({
   required String kind,
   String planLineId = 'line',
   String? beneficiaryParticipantId,
+  String? splitRatiosJson,
 }) {
   final timestamp = DateTime.utc(2026, 5, 1);
   return RealizedExpense(
@@ -202,6 +259,8 @@ RealizedExpense _expense({
     kind: kind,
     beneficiaryParticipantId: beneficiaryParticipantId,
     priorExpenseId: null,
+    planLineTitleSnapshot: null,
+    splitRatiosJson: splitRatiosJson,
     createdAt: timestamp,
     updatedAt: timestamp,
   );

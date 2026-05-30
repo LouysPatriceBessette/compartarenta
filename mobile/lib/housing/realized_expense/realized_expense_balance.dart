@@ -82,6 +82,7 @@ HousingBalanceData computeHousingBalanceData({
   required List<RealizedExpense> publishedExpenses,
   required List<PlanRatio> planRatios,
   required List<HousingBalanceParticipant> participants,
+  Map<String, List<PlanRatio>> ratiosByExpenseId = const {},
 }) {
   final participantIds = participants
       .map((participant) => participant.participantId)
@@ -106,9 +107,10 @@ HousingBalanceData computeHousingBalanceData({
       continue;
     }
 
-    final lineRatios = planRatios
-        .where((r) => r.lineId == expense.planLineId)
-        .toList(growable: false);
+    final lineRatios = ratiosByExpenseId[expense.id] ??
+        planRatios
+            .where((r) => r.lineId == expense.planLineId)
+            .toList(growable: false);
     if (lineRatios.isEmpty) continue;
 
     final weights = <int>[];
@@ -162,6 +164,7 @@ List<PairwiseBalanceEntry> computePairwiseBalances({
   required List<RealizedExpense> publishedExpenses,
   required List<PlanRatio> planRatios,
   required List<String> participantIds,
+  Map<String, List<PlanRatio>> ratiosByExpenseId = const {},
 }) {
   final participants = [
     for (var i = 0; i < participantIds.length; i++)
@@ -176,6 +179,7 @@ List<PairwiseBalanceEntry> computePairwiseBalances({
     publishedExpenses: publishedExpenses,
     planRatios: planRatios,
     participants: participants,
+    ratiosByExpenseId: ratiosByExpenseId,
   ).optimizedMode.edges;
 }
 

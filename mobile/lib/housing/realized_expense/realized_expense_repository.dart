@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
+import 'realized_expense_line_snapshot.dart';
 import 'realized_expense_participants.dart';
 import 'realized_expense_status.dart';
 
@@ -196,6 +197,8 @@ class RealizedExpenseRepository {
     }
 
     await _recomputeExpenseStatus(expenseId, now: now);
+    final proposed = (await getById(expenseId))!;
+    await captureLineSnapshotForExpense(_db, proposed);
     return (await getById(expenseId))!;
   }
 
@@ -371,6 +374,13 @@ class RealizedExpenseRepository {
         updatedAt: drift.Value(now),
       ),
     );
+
+    if (nextStatus == RealizedExpenseStatus.published) {
+      final published = await getById(expenseId);
+      if (published != null) {
+        await captureLineSnapshotForExpense(_db, published);
+      }
+    }
   }
 }
 

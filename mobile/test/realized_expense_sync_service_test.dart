@@ -64,6 +64,8 @@ void main() {
         kind: RealizedExpenseKind.normal,
         beneficiaryParticipantId: null,
         priorExpenseId: null,
+        planLineTitleSnapshot: null,
+        splitRatiosJson: null,
         createdAt: DateTime.utc(2026, 5, 23),
         updatedAt: DateTime.utc(2026, 5, 23),
       ),

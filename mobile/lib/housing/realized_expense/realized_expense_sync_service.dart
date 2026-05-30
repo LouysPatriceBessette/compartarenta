@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import '../../db/app_database.dart';
 import 'proof_transport_payload.dart';
+import 'realized_expense_line_snapshot.dart';
 import 'realized_expense_participants.dart';
 import 'realized_expense_repository.dart';
 import 'realized_expense_status.dart';
@@ -29,15 +30,50 @@ class RealizedExpenseSyncService {
     required List<RealizedExpenseAttachment> attachments,
   }) async {
     final roster = await participantsForPlan(_db, expense.planId);
-    String? lineTitle;
+    String? lineTitle = expense.planLineTitleSnapshot?.trim();
+    List<Map<String, dynamic>>? splitRatiosPayload;
     if (RealizedExpenseKind.usesPlanLine(expense.kind)) {
-      final lines = await _db.listPlanLines(expense.planId);
-      for (final line in lines) {
-        if (line.id != expense.planLineId) continue;
-        final t = line.title.trim();
-        if (t.isNotEmpty) {
-          lineTitle = t;
-          break;
+      final snapshotJson = expense.splitRatiosJson;
+      if (snapshotJson != null && snapshotJson.trim().isNotEmpty) {
+        try {
+          final decoded = jsonDecode(snapshotJson);
+          if (decoded is List) {
+            splitRatiosPayload = [
+              for (final entry in decoded)
+                if (entry is Map)
+                  {
+                    'participantId': entry['participantId'],
+                    'weight': entry['weight'],
+                  },
+            ];
+          }
+        } catch (_) {}
+      }
+      if (lineTitle == null || lineTitle.isEmpty) {
+        final lines = await _db.listPlanLines(expense.planId);
+        for (final line in lines) {
+          if (line.id != expense.planLineId) continue;
+          final t = line.title.trim();
+          if (t.isNotEmpty) {
+            lineTitle = t;
+            break;
+          }
+        }
+      }
+      if (splitRatiosPayload == null || splitRatiosPayload.isEmpty) {
+        final ratios = await currentRatiosForPlanLine(
+          _db,
+          expense.planId,
+          expense.planLineId,
+        );
+        if (ratios.isNotEmpty) {
+          splitRatiosPayload = [
+            for (final ratio in ratios)
+              {
+                'participantId': ratio.participantId,
+                'weight': ratio.weight,
+              },
+          ];
         }
       }
     }
@@ -48,6 +84,8 @@ class RealizedExpenseSyncService {
       'plan_id': expense.planId,
       'plan_line_id': expense.planLineId,
       'plan_line_title': ?lineTitle,
+      if (splitRatiosPayload != null && splitRatiosPayload.isNotEmpty)
+        'split_ratios': splitRatiosPayload,
       'amount_minor': expense.amountMinor,
       'currency': expense.currency,
       'payment_date': expense.paymentDate.toUtc().toIso8601String(),
@@ -152,6 +190,16 @@ class RealizedExpenseSyncService {
     }
 
     final now = DateTime.now().toUtc();
+    final roster = await participantsForPlan(_db, target.planId);
+    final importedPlanLineTitle =
+        (payload['plan_line_title'] as String?)?.trim();
+    final importedSplitRatiosJson = remapSplitRatiosJsonForLocalPlan(
+      planId: target.planId,
+      lineId: planLineId,
+      splitRatiosJson: _splitRatiosJsonFromPayload(payload['split_ratios']),
+      roster: roster,
+      sourceToLocal: sourceToLocal,
+    );
     await _db.into(_db.realizedExpenses).insert(
           RealizedExpensesCompanion.insert(
             id: expenseId,
@@ -166,6 +214,13 @@ class RealizedExpenseSyncService {
             kind: kind,
             beneficiaryParticipantId: drift.Value(beneficiaryLocal),
             description: drift.Value((payload['description'] as String?)?.trim()),
+            planLineTitleSnapshot: importedPlanLineTitle == null ||
+                    importedPlanLineTitle.isEmpty
+                ? const drift.Value.absent()
+                : drift.Value(importedPlanLineTitle),
+            splitRatiosJson: importedSplitRatiosJson == null
+                ? const drift.Value.absent()
+                : drift.Value(importedSplitRatiosJson),
             createdAt: now,
             updatedAt: now,
           ),
@@ -191,7 +246,6 @@ class RealizedExpenseSyncService {
       }
     }
 
-    final roster = await participantsForPlan(_db, target.planId);
     final importedExpense = await repo.getById(expenseId);
     if (importedExpense == null) {
       _log('import skip: stored expense missing after insert');
@@ -212,6 +266,8 @@ class RealizedExpenseSyncService {
             mode: drift.InsertMode.insertOrIgnore,
           );
     }
+
+    await captureLineSnapshotForExpense(_db, importedExpense);
 
     _log('import ok: $expenseId -> plan ${target.planId}');
     return true;
@@ -414,5 +470,22 @@ class RealizedExpenseSyncService {
       }
     }
     return out;
+  }
+
+  String? _splitRatiosJsonFromPayload(Object? raw) {
+    if (raw is! List || raw.isEmpty) return null;
+    final entries = <Map<String, dynamic>>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final participantId = item['participantId']?.toString() ?? '';
+      final weight = item['weight'];
+      if (participantId.isEmpty || weight is! num) continue;
+      entries.add({
+        'participantId': participantId,
+        'weight': weight.toInt(),
+      });
+    }
+    if (entries.isEmpty) return null;
+    return jsonEncode(entries);
   }
 }

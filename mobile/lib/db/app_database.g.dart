@@ -8030,6 +8030,28 @@ class $RealizedExpensesTable extends RealizedExpenses
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _planLineTitleSnapshotMeta =
+      const VerificationMeta('planLineTitleSnapshot');
+  @override
+  late final GeneratedColumn<String> planLineTitleSnapshot =
+      GeneratedColumn<String>(
+        'plan_line_title_snapshot',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _splitRatiosJsonMeta = const VerificationMeta(
+    'splitRatiosJson',
+  );
+  @override
+  late final GeneratedColumn<String> splitRatiosJson = GeneratedColumn<String>(
+    'split_ratios_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -8067,6 +8089,8 @@ class $RealizedExpensesTable extends RealizedExpenses
     beneficiaryParticipantId,
     description,
     priorExpenseId,
+    planLineTitleSnapshot,
+    splitRatiosJson,
     createdAt,
     updatedAt,
   ];
@@ -8198,6 +8222,24 @@ class $RealizedExpensesTable extends RealizedExpenses
         ),
       );
     }
+    if (data.containsKey('plan_line_title_snapshot')) {
+      context.handle(
+        _planLineTitleSnapshotMeta,
+        planLineTitleSnapshot.isAcceptableOrUnknown(
+          data['plan_line_title_snapshot']!,
+          _planLineTitleSnapshotMeta,
+        ),
+      );
+    }
+    if (data.containsKey('split_ratios_json')) {
+      context.handle(
+        _splitRatiosJsonMeta,
+        splitRatiosJson.isAcceptableOrUnknown(
+          data['split_ratios_json']!,
+          _splitRatiosJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -8275,6 +8317,14 @@ class $RealizedExpensesTable extends RealizedExpenses
         DriftSqlType.string,
         data['${effectivePrefix}prior_expense_id'],
       ),
+      planLineTitleSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_line_title_snapshot'],
+      ),
+      splitRatiosJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_ratios_json'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -8312,6 +8362,12 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
 
   /// Prior proposal when this row is a resubmit (pass 3+).
   final String? priorExpenseId;
+
+  /// Frozen plan line title when the live line is removed from the plan.
+  final String? planLineTitleSnapshot;
+
+  /// JSON array of `{participantId, weight}` basis points at proposal time.
+  final String? splitRatiosJson;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RealizedExpense({
@@ -8328,6 +8384,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     this.beneficiaryParticipantId,
     this.description,
     this.priorExpenseId,
+    this.planLineTitleSnapshot,
+    this.splitRatiosJson,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -8355,6 +8413,12 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     if (!nullToAbsent || priorExpenseId != null) {
       map['prior_expense_id'] = Variable<String>(priorExpenseId);
     }
+    if (!nullToAbsent || planLineTitleSnapshot != null) {
+      map['plan_line_title_snapshot'] = Variable<String>(planLineTitleSnapshot);
+    }
+    if (!nullToAbsent || splitRatiosJson != null) {
+      map['split_ratios_json'] = Variable<String>(splitRatiosJson);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -8381,6 +8445,12 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       priorExpenseId: priorExpenseId == null && nullToAbsent
           ? const Value.absent()
           : Value(priorExpenseId),
+      planLineTitleSnapshot: planLineTitleSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(planLineTitleSnapshot),
+      splitRatiosJson: splitRatiosJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitRatiosJson),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -8409,6 +8479,10 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       ),
       description: serializer.fromJson<String?>(json['description']),
       priorExpenseId: serializer.fromJson<String?>(json['priorExpenseId']),
+      planLineTitleSnapshot: serializer.fromJson<String?>(
+        json['planLineTitleSnapshot'],
+      ),
+      splitRatiosJson: serializer.fromJson<String?>(json['splitRatiosJson']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -8432,6 +8506,10 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       ),
       'description': serializer.toJson<String?>(description),
       'priorExpenseId': serializer.toJson<String?>(priorExpenseId),
+      'planLineTitleSnapshot': serializer.toJson<String?>(
+        planLineTitleSnapshot,
+      ),
+      'splitRatiosJson': serializer.toJson<String?>(splitRatiosJson),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -8451,6 +8529,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     Value<String?> beneficiaryParticipantId = const Value.absent(),
     Value<String?> description = const Value.absent(),
     Value<String?> priorExpenseId = const Value.absent(),
+    Value<String?> planLineTitleSnapshot = const Value.absent(),
+    Value<String?> splitRatiosJson = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RealizedExpense(
@@ -8471,6 +8551,12 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     priorExpenseId: priorExpenseId.present
         ? priorExpenseId.value
         : this.priorExpenseId,
+    planLineTitleSnapshot: planLineTitleSnapshot.present
+        ? planLineTitleSnapshot.value
+        : this.planLineTitleSnapshot,
+    splitRatiosJson: splitRatiosJson.present
+        ? splitRatiosJson.value
+        : this.splitRatiosJson,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -8503,6 +8589,12 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       priorExpenseId: data.priorExpenseId.present
           ? data.priorExpenseId.value
           : this.priorExpenseId,
+      planLineTitleSnapshot: data.planLineTitleSnapshot.present
+          ? data.planLineTitleSnapshot.value
+          : this.planLineTitleSnapshot,
+      splitRatiosJson: data.splitRatiosJson.present
+          ? data.splitRatiosJson.value
+          : this.splitRatiosJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -8524,6 +8616,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
           ..write('description: $description, ')
           ..write('priorExpenseId: $priorExpenseId, ')
+          ..write('planLineTitleSnapshot: $planLineTitleSnapshot, ')
+          ..write('splitRatiosJson: $splitRatiosJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -8545,6 +8639,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     beneficiaryParticipantId,
     description,
     priorExpenseId,
+    planLineTitleSnapshot,
+    splitRatiosJson,
     createdAt,
     updatedAt,
   );
@@ -8565,6 +8661,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           other.beneficiaryParticipantId == this.beneficiaryParticipantId &&
           other.description == this.description &&
           other.priorExpenseId == this.priorExpenseId &&
+          other.planLineTitleSnapshot == this.planLineTitleSnapshot &&
+          other.splitRatiosJson == this.splitRatiosJson &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -8583,6 +8681,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
   final Value<String?> beneficiaryParticipantId;
   final Value<String?> description;
   final Value<String?> priorExpenseId;
+  final Value<String?> planLineTitleSnapshot;
+  final Value<String?> splitRatiosJson;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -8600,6 +8700,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     this.beneficiaryParticipantId = const Value.absent(),
     this.description = const Value.absent(),
     this.priorExpenseId = const Value.absent(),
+    this.planLineTitleSnapshot = const Value.absent(),
+    this.splitRatiosJson = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -8618,6 +8720,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     this.beneficiaryParticipantId = const Value.absent(),
     this.description = const Value.absent(),
     this.priorExpenseId = const Value.absent(),
+    this.planLineTitleSnapshot = const Value.absent(),
+    this.splitRatiosJson = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -8647,6 +8751,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Expression<String>? beneficiaryParticipantId,
     Expression<String>? description,
     Expression<String>? priorExpenseId,
+    Expression<String>? planLineTitleSnapshot,
+    Expression<String>? splitRatiosJson,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -8667,6 +8773,9 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
         'beneficiary_participant_id': beneficiaryParticipantId,
       if (description != null) 'description': description,
       if (priorExpenseId != null) 'prior_expense_id': priorExpenseId,
+      if (planLineTitleSnapshot != null)
+        'plan_line_title_snapshot': planLineTitleSnapshot,
+      if (splitRatiosJson != null) 'split_ratios_json': splitRatiosJson,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -8687,6 +8796,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Value<String?>? beneficiaryParticipantId,
     Value<String?>? description,
     Value<String?>? priorExpenseId,
+    Value<String?>? planLineTitleSnapshot,
+    Value<String?>? splitRatiosJson,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -8706,6 +8817,9 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
           beneficiaryParticipantId ?? this.beneficiaryParticipantId,
       description: description ?? this.description,
       priorExpenseId: priorExpenseId ?? this.priorExpenseId,
+      planLineTitleSnapshot:
+          planLineTitleSnapshot ?? this.planLineTitleSnapshot,
+      splitRatiosJson: splitRatiosJson ?? this.splitRatiosJson,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -8756,6 +8870,14 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     if (priorExpenseId.present) {
       map['prior_expense_id'] = Variable<String>(priorExpenseId.value);
     }
+    if (planLineTitleSnapshot.present) {
+      map['plan_line_title_snapshot'] = Variable<String>(
+        planLineTitleSnapshot.value,
+      );
+    }
+    if (splitRatiosJson.present) {
+      map['split_ratios_json'] = Variable<String>(splitRatiosJson.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8784,6 +8906,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
           ..write('beneficiaryParticipantId: $beneficiaryParticipantId, ')
           ..write('description: $description, ')
           ..write('priorExpenseId: $priorExpenseId, ')
+          ..write('planLineTitleSnapshot: $planLineTitleSnapshot, ')
+          ..write('splitRatiosJson: $splitRatiosJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -9632,6 +9756,382 @@ class RealizedExpenseAcceptancesCompanion
   }
 }
 
+class $ArchivedPlanLineSnapshotsTable extends ArchivedPlanLineSnapshots
+    with TableInfo<$ArchivedPlanLineSnapshotsTable, ArchivedPlanLineSnapshot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ArchivedPlanLineSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lineIdMeta = const VerificationMeta('lineId');
+  @override
+  late final GeneratedColumn<String> lineId = GeneratedColumn<String>(
+    'line_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _splitRatiosJsonMeta = const VerificationMeta(
+    'splitRatiosJson',
+  );
+  @override
+  late final GeneratedColumn<String> splitRatiosJson = GeneratedColumn<String>(
+    'split_ratios_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> archivedAt = GeneratedColumn<DateTime>(
+    'archived_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    planId,
+    lineId,
+    title,
+    splitRatiosJson,
+    archivedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'archived_plan_line_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ArchivedPlanLineSnapshot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('line_id')) {
+      context.handle(
+        _lineIdMeta,
+        lineId.isAcceptableOrUnknown(data['line_id']!, _lineIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lineIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('split_ratios_json')) {
+      context.handle(
+        _splitRatiosJsonMeta,
+        splitRatiosJson.isAcceptableOrUnknown(
+          data['split_ratios_json']!,
+          _splitRatiosJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_splitRatiosJsonMeta);
+    }
+    if (data.containsKey('archived_at')) {
+      context.handle(
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_archivedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {planId, lineId};
+  @override
+  ArchivedPlanLineSnapshot map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ArchivedPlanLineSnapshot(
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      lineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}line_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      splitRatiosJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_ratios_json'],
+      )!,
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}archived_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ArchivedPlanLineSnapshotsTable createAlias(String alias) {
+    return $ArchivedPlanLineSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class ArchivedPlanLineSnapshot extends DataClass
+    implements Insertable<ArchivedPlanLineSnapshot> {
+  final String planId;
+  final String lineId;
+  final String title;
+  final String splitRatiosJson;
+  final DateTime archivedAt;
+  const ArchivedPlanLineSnapshot({
+    required this.planId,
+    required this.lineId,
+    required this.title,
+    required this.splitRatiosJson,
+    required this.archivedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['plan_id'] = Variable<String>(planId);
+    map['line_id'] = Variable<String>(lineId);
+    map['title'] = Variable<String>(title);
+    map['split_ratios_json'] = Variable<String>(splitRatiosJson);
+    map['archived_at'] = Variable<DateTime>(archivedAt);
+    return map;
+  }
+
+  ArchivedPlanLineSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return ArchivedPlanLineSnapshotsCompanion(
+      planId: Value(planId),
+      lineId: Value(lineId),
+      title: Value(title),
+      splitRatiosJson: Value(splitRatiosJson),
+      archivedAt: Value(archivedAt),
+    );
+  }
+
+  factory ArchivedPlanLineSnapshot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ArchivedPlanLineSnapshot(
+      planId: serializer.fromJson<String>(json['planId']),
+      lineId: serializer.fromJson<String>(json['lineId']),
+      title: serializer.fromJson<String>(json['title']),
+      splitRatiosJson: serializer.fromJson<String>(json['splitRatiosJson']),
+      archivedAt: serializer.fromJson<DateTime>(json['archivedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'planId': serializer.toJson<String>(planId),
+      'lineId': serializer.toJson<String>(lineId),
+      'title': serializer.toJson<String>(title),
+      'splitRatiosJson': serializer.toJson<String>(splitRatiosJson),
+      'archivedAt': serializer.toJson<DateTime>(archivedAt),
+    };
+  }
+
+  ArchivedPlanLineSnapshot copyWith({
+    String? planId,
+    String? lineId,
+    String? title,
+    String? splitRatiosJson,
+    DateTime? archivedAt,
+  }) => ArchivedPlanLineSnapshot(
+    planId: planId ?? this.planId,
+    lineId: lineId ?? this.lineId,
+    title: title ?? this.title,
+    splitRatiosJson: splitRatiosJson ?? this.splitRatiosJson,
+    archivedAt: archivedAt ?? this.archivedAt,
+  );
+  ArchivedPlanLineSnapshot copyWithCompanion(
+    ArchivedPlanLineSnapshotsCompanion data,
+  ) {
+    return ArchivedPlanLineSnapshot(
+      planId: data.planId.present ? data.planId.value : this.planId,
+      lineId: data.lineId.present ? data.lineId.value : this.lineId,
+      title: data.title.present ? data.title.value : this.title,
+      splitRatiosJson: data.splitRatiosJson.present
+          ? data.splitRatiosJson.value
+          : this.splitRatiosJson,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ArchivedPlanLineSnapshot(')
+          ..write('planId: $planId, ')
+          ..write('lineId: $lineId, ')
+          ..write('title: $title, ')
+          ..write('splitRatiosJson: $splitRatiosJson, ')
+          ..write('archivedAt: $archivedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(planId, lineId, title, splitRatiosJson, archivedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ArchivedPlanLineSnapshot &&
+          other.planId == this.planId &&
+          other.lineId == this.lineId &&
+          other.title == this.title &&
+          other.splitRatiosJson == this.splitRatiosJson &&
+          other.archivedAt == this.archivedAt);
+}
+
+class ArchivedPlanLineSnapshotsCompanion
+    extends UpdateCompanion<ArchivedPlanLineSnapshot> {
+  final Value<String> planId;
+  final Value<String> lineId;
+  final Value<String> title;
+  final Value<String> splitRatiosJson;
+  final Value<DateTime> archivedAt;
+  final Value<int> rowid;
+  const ArchivedPlanLineSnapshotsCompanion({
+    this.planId = const Value.absent(),
+    this.lineId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.splitRatiosJson = const Value.absent(),
+    this.archivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ArchivedPlanLineSnapshotsCompanion.insert({
+    required String planId,
+    required String lineId,
+    required String title,
+    required String splitRatiosJson,
+    required DateTime archivedAt,
+    this.rowid = const Value.absent(),
+  }) : planId = Value(planId),
+       lineId = Value(lineId),
+       title = Value(title),
+       splitRatiosJson = Value(splitRatiosJson),
+       archivedAt = Value(archivedAt);
+  static Insertable<ArchivedPlanLineSnapshot> custom({
+    Expression<String>? planId,
+    Expression<String>? lineId,
+    Expression<String>? title,
+    Expression<String>? splitRatiosJson,
+    Expression<DateTime>? archivedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (planId != null) 'plan_id': planId,
+      if (lineId != null) 'line_id': lineId,
+      if (title != null) 'title': title,
+      if (splitRatiosJson != null) 'split_ratios_json': splitRatiosJson,
+      if (archivedAt != null) 'archived_at': archivedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ArchivedPlanLineSnapshotsCompanion copyWith({
+    Value<String>? planId,
+    Value<String>? lineId,
+    Value<String>? title,
+    Value<String>? splitRatiosJson,
+    Value<DateTime>? archivedAt,
+    Value<int>? rowid,
+  }) {
+    return ArchivedPlanLineSnapshotsCompanion(
+      planId: planId ?? this.planId,
+      lineId: lineId ?? this.lineId,
+      title: title ?? this.title,
+      splitRatiosJson: splitRatiosJson ?? this.splitRatiosJson,
+      archivedAt: archivedAt ?? this.archivedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (lineId.present) {
+      map['line_id'] = Variable<String>(lineId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (splitRatiosJson.present) {
+      map['split_ratios_json'] = Variable<String>(splitRatiosJson.value);
+    }
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<DateTime>(archivedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ArchivedPlanLineSnapshotsCompanion(')
+          ..write('planId: $planId, ')
+          ..write('lineId: $lineId, ')
+          ..write('title: $title, ')
+          ..write('splitRatiosJson: $splitRatiosJson, ')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9664,6 +10164,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RealizedExpenseAttachmentsTable(this);
   late final $RealizedExpenseAcceptancesTable realizedExpenseAcceptances =
       $RealizedExpenseAcceptancesTable(this);
+  late final $ArchivedPlanLineSnapshotsTable archivedPlanLineSnapshots =
+      $ArchivedPlanLineSnapshotsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9686,6 +10188,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     realizedExpenses,
     realizedExpenseAttachments,
     realizedExpenseAcceptances,
+    archivedPlanLineSnapshots,
   ];
 }
 
@@ -13612,6 +14115,8 @@ typedef $$RealizedExpensesTableCreateCompanionBuilder =
       Value<String?> beneficiaryParticipantId,
       Value<String?> description,
       Value<String?> priorExpenseId,
+      Value<String?> planLineTitleSnapshot,
+      Value<String?> splitRatiosJson,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -13631,6 +14136,8 @@ typedef $$RealizedExpensesTableUpdateCompanionBuilder =
       Value<String?> beneficiaryParticipantId,
       Value<String?> description,
       Value<String?> priorExpenseId,
+      Value<String?> planLineTitleSnapshot,
+      Value<String?> splitRatiosJson,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -13707,6 +14214,16 @@ class $$RealizedExpensesTableFilterComposer
 
   ColumnFilters<String> get priorExpenseId => $composableBuilder(
     column: $table.priorExpenseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planLineTitleSnapshot => $composableBuilder(
+    column: $table.planLineTitleSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13795,6 +14312,16 @@ class $$RealizedExpensesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get planLineTitleSnapshot => $composableBuilder(
+    column: $table.planLineTitleSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -13868,6 +14395,16 @@ class $$RealizedExpensesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get planLineTitleSnapshot => $composableBuilder(
+    column: $table.planLineTitleSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -13925,6 +14462,8 @@ class $$RealizedExpensesTableTableManager
                 Value<String?> beneficiaryParticipantId = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> priorExpenseId = const Value.absent(),
+                Value<String?> planLineTitleSnapshot = const Value.absent(),
+                Value<String?> splitRatiosJson = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -13942,6 +14481,8 @@ class $$RealizedExpensesTableTableManager
                 beneficiaryParticipantId: beneficiaryParticipantId,
                 description: description,
                 priorExpenseId: priorExpenseId,
+                planLineTitleSnapshot: planLineTitleSnapshot,
+                splitRatiosJson: splitRatiosJson,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -13961,6 +14502,8 @@ class $$RealizedExpensesTableTableManager
                 Value<String?> beneficiaryParticipantId = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> priorExpenseId = const Value.absent(),
+                Value<String?> planLineTitleSnapshot = const Value.absent(),
+                Value<String?> splitRatiosJson = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -13978,6 +14521,8 @@ class $$RealizedExpensesTableTableManager
                 beneficiaryParticipantId: beneficiaryParticipantId,
                 description: description,
                 priorExpenseId: priorExpenseId,
+                planLineTitleSnapshot: planLineTitleSnapshot,
+                splitRatiosJson: splitRatiosJson,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -14472,6 +15017,229 @@ typedef $$RealizedExpenseAcceptancesTableProcessedTableManager =
       RealizedExpenseAcceptance,
       PrefetchHooks Function()
     >;
+typedef $$ArchivedPlanLineSnapshotsTableCreateCompanionBuilder =
+    ArchivedPlanLineSnapshotsCompanion Function({
+      required String planId,
+      required String lineId,
+      required String title,
+      required String splitRatiosJson,
+      required DateTime archivedAt,
+      Value<int> rowid,
+    });
+typedef $$ArchivedPlanLineSnapshotsTableUpdateCompanionBuilder =
+    ArchivedPlanLineSnapshotsCompanion Function({
+      Value<String> planId,
+      Value<String> lineId,
+      Value<String> title,
+      Value<String> splitRatiosJson,
+      Value<DateTime> archivedAt,
+      Value<int> rowid,
+    });
+
+class $$ArchivedPlanLineSnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $ArchivedPlanLineSnapshotsTable> {
+  $$ArchivedPlanLineSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lineId => $composableBuilder(
+    column: $table.lineId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ArchivedPlanLineSnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ArchivedPlanLineSnapshotsTable> {
+  $$ArchivedPlanLineSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lineId => $composableBuilder(
+    column: $table.lineId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ArchivedPlanLineSnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ArchivedPlanLineSnapshotsTable> {
+  $$ArchivedPlanLineSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get lineId =>
+      $composableBuilder(column: $table.lineId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get splitRatiosJson => $composableBuilder(
+    column: $table.splitRatiosJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$ArchivedPlanLineSnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ArchivedPlanLineSnapshotsTable,
+          ArchivedPlanLineSnapshot,
+          $$ArchivedPlanLineSnapshotsTableFilterComposer,
+          $$ArchivedPlanLineSnapshotsTableOrderingComposer,
+          $$ArchivedPlanLineSnapshotsTableAnnotationComposer,
+          $$ArchivedPlanLineSnapshotsTableCreateCompanionBuilder,
+          $$ArchivedPlanLineSnapshotsTableUpdateCompanionBuilder,
+          (
+            ArchivedPlanLineSnapshot,
+            BaseReferences<
+              _$AppDatabase,
+              $ArchivedPlanLineSnapshotsTable,
+              ArchivedPlanLineSnapshot
+            >,
+          ),
+          ArchivedPlanLineSnapshot,
+          PrefetchHooks Function()
+        > {
+  $$ArchivedPlanLineSnapshotsTableTableManager(
+    _$AppDatabase db,
+    $ArchivedPlanLineSnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ArchivedPlanLineSnapshotsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ArchivedPlanLineSnapshotsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ArchivedPlanLineSnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> planId = const Value.absent(),
+                Value<String> lineId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> splitRatiosJson = const Value.absent(),
+                Value<DateTime> archivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ArchivedPlanLineSnapshotsCompanion(
+                planId: planId,
+                lineId: lineId,
+                title: title,
+                splitRatiosJson: splitRatiosJson,
+                archivedAt: archivedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String planId,
+                required String lineId,
+                required String title,
+                required String splitRatiosJson,
+                required DateTime archivedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ArchivedPlanLineSnapshotsCompanion.insert(
+                planId: planId,
+                lineId: lineId,
+                title: title,
+                splitRatiosJson: splitRatiosJson,
+                archivedAt: archivedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ArchivedPlanLineSnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ArchivedPlanLineSnapshotsTable,
+      ArchivedPlanLineSnapshot,
+      $$ArchivedPlanLineSnapshotsTableFilterComposer,
+      $$ArchivedPlanLineSnapshotsTableOrderingComposer,
+      $$ArchivedPlanLineSnapshotsTableAnnotationComposer,
+      $$ArchivedPlanLineSnapshotsTableCreateCompanionBuilder,
+      $$ArchivedPlanLineSnapshotsTableUpdateCompanionBuilder,
+      (
+        ArchivedPlanLineSnapshot,
+        BaseReferences<
+          _$AppDatabase,
+          $ArchivedPlanLineSnapshotsTable,
+          ArchivedPlanLineSnapshot
+        >,
+      ),
+      ArchivedPlanLineSnapshot,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14520,5 +15288,10 @@ class $AppDatabaseManager {
       $$RealizedExpenseAcceptancesTableTableManager(
         _db,
         _db.realizedExpenseAcceptances,
+      );
+  $$ArchivedPlanLineSnapshotsTableTableManager get archivedPlanLineSnapshots =>
+      $$ArchivedPlanLineSnapshotsTableTableManager(
+        _db,
+        _db.archivedPlanLineSnapshots,
       );
 }

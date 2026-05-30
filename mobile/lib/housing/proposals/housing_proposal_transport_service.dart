@@ -7,6 +7,7 @@ import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
 import '../amendment/housing_amendment_type.dart';
 import '../expense_form/expense_ratio_template_repository.dart';
+import '../realized_expense/realized_expense_line_snapshot.dart';
 import 'housing_proposal_revision_state.dart';
 import 'plan_agreement_proposal_service.dart';
 
@@ -1215,6 +1216,11 @@ class HousingProposalTransportService {
     final existingLines = await _db.listPlanLines(planId);
     for (final line in existingLines) {
       if (payloadLineIds.contains(line.id)) continue;
+      await archivePlanLineBeforeRemoval(
+        _db,
+        planId: planId,
+        line: line,
+      );
       await (_db.delete(_db.planRatios)
             ..where((t) => t.lineId.equals(line.id)))
           .go();

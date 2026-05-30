@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show OrderingTerm;
 import '../../db/app_database.dart';
 import '../../prefs/app_preferences.dart';
 import 'realized_expense_balance.dart';
+import 'realized_expense_line_snapshot.dart';
 import 'realized_expense_participants.dart';
 import 'realized_expense_repository.dart';
 import 'realized_expense_status.dart';
@@ -296,6 +297,12 @@ class RealizedExpenseLedgerService {
               ..where((t) => t.status.equals(RealizedExpenseStatus.published)))
             .get();
     final ratios = await _db.listPlanRatios(planId);
+    final ratiosByExpenseId = await resolveRatiosByExpenseId(
+      db: _db,
+      planId: planId,
+      expenses: published,
+      currentRatios: ratios,
+    );
     final participants = [
       for (var i = 0; i < roster.length; i++)
         HousingBalanceParticipant(
@@ -309,6 +316,7 @@ class RealizedExpenseLedgerService {
       publishedExpenses: published,
       planRatios: ratios,
       participants: participants,
+      ratiosByExpenseId: ratiosByExpenseId,
     );
   }
 

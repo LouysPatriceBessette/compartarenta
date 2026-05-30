@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/realized_expense/proof_attachment_export.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
+import '../../housing/realized_expense/realized_expense_line_snapshot.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/realized_expense/realized_expense_repository.dart';
 import '../../housing/realized_expense/realized_expense_status.dart';
@@ -159,15 +160,9 @@ class _HousingRealizedExpenseReviewScreenState
 
     var lineTitle = '';
     if (RealizedExpenseKind.usesPlanLine(expense.kind)) {
-      final lines = await db.listPlanLines(widget.planId);
-      lineTitle = expense.planLineId;
-      for (final line in lines) {
-        if (line.id == expense.planLineId) {
-          final t = line.title.trim();
-          if (t.isNotEmpty) lineTitle = t;
-          break;
-        }
-      }
+      lineTitle =
+          (await resolvePlanLineTitleForExpense(db: db, expense: expense)) ??
+          expense.planLineId;
     }
 
     final roster = await participantsForPlan(db, widget.planId);
