@@ -56,7 +56,7 @@ melos:
         --dart-define values without --flavor. Default API_BASE_URL is
         the real relay; override via env or extra args. The web server
         defaults to http://localhost:5001 (relay CORS / Apache allow-list).
-        Uses a persistent Chrome profile (~/.cache/compartarenta/flutter-web-chrome)
+        Uses Flutter's Chrome profile cache (mobile/.dart_tool/chrome-device)
         so Drift/local drafts survive melos restarts. Override with WEB_PORT=5002
         or dart run melos run run:dev:web -- --web-port=...
           API_BASE_URL=http://localhost:8080 dart run melos run run:dev:web
@@ -69,6 +69,12 @@ melos:
         under mobile/web/ using the versions pinned in pubspec.lock. Run
         after a `drift` or `sqlite3` version bump.
       run: cd mobile && ./tool/install_web_assets.sh
+
+    backup:web-chrome-profile:
+      description: |
+        Copy mobile/.dart_tool/chrome-device to ~/.cache/compartarenta/chrome-device-backup.
+        Run after stopping run:dev:web and before refresh.sh (flutter clean wipes .dart_tool).
+      run: cd mobile && chmod +x ./tool/backup_web_chrome_profile.sh && ./tool/backup_web_chrome_profile.sh
 
     build:apk:prod:
       description: |

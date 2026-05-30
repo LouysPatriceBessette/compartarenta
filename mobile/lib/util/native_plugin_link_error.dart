@@ -14,14 +14,25 @@ String nativePluginLinkErrorRecoveryMessage({String? languageCode}) {
   if (fr) {
     return 'Les plugins natifs (stockage local) ne sont pas chargés.\n\n'
         '1. Arrêtez la commande melos en cours (Ctrl+C dans le terminal)\n'
-        '2. Quittez complètement l\'application sur l\'appareil\n'
-        '3. Relancez : dart run melos run run:dev\n\n'
-        'Si le problème persiste : cd mobile && ./tool/flutterw clean, '
-        'puis relancez melos.';
+        '2. Désinstallez « Compartarenta (Dev) » sur l\'appareil '
+        '(réglages Android → Applications), pas seulement la fermer\n'
+        '3. Dans le dépôt : dart run melos run run:dev '
+        '(réinstalle l\'APK ; ne rouvrez pas l\'app avant la fin de « Installing… »)\n'
+        '4. Si l\'erreur persiste seulement alors : flutter clean + codegen '
+        '(évitez d\'ouvrir le web sans run:dev:web — voir ci-dessous)\n\n'
+        'Web : stockage séparé d\'Android ; utilisez run:dev:web (port 5001).\n\n'
+        'Vérifiez que vous lancez bien Compartarenta (Dev) (flavor dev), '
+        'pas une autre variante installée à part.';
   }
   return 'Native plugins (local storage) are not loaded.\n\n'
       '1. Stop the running melos command (Ctrl+C in the terminal)\n'
-      '2. Force-quit the app on the device\n'
-      '3. Start again: dart run melos run run:dev\n\n'
-      'If it persists: cd mobile && ./tool/flutterw clean, then run melos again.';
+      '2. Uninstall “Compartarenta (Dev)” on the device '
+      '(Android Settings → Apps), do not only force-quit\n'
+      '3. In the repo: dart run melos run run:dev '
+      '(reinstalls the APK; do not open the app until “Installing…” finishes)\n'
+      '4. Only if it still fails: flutter clean + codegen '
+      '(do not open web without run:dev:web — see below)\n\n'
+      'Web: storage is separate from Android; use run:dev:web (port 5001).\n\n'
+      'Make sure you open Compartarenta (Dev) (dev flavor), not another '
+      'installed variant.';
 }

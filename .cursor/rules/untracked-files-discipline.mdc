@@ -1,0 +1,38 @@
+---
+description: Never edit or create git-untracked paths without explicit user permission.
+alwaysApply: true
+---
+
+# Untracked files discipline
+
+## Hard rule
+
+Do **not** create, edit, delete, or rename any path that is **not tracked by git** in this repository unless the user has **explicitly asked** for that change in the **current** message (or a clearly scoped follow-up they approved).
+
+This includes in particular:
+
+- `dev-ideas/**` (gitignored personal notes and home-made scripts)
+- Local logs, screenshots, and terminal captures the user maintains
+- Any file or directory listed in `.gitignore` or absent from `git ls-files`
+
+## Allowed without prior permission
+
+- **Read** untracked files when the user points to them (`@path`, open files, logs) for diagnosis or Q&A.
+- **Suggest** edits or full file contents in chat for the user to apply themselves.
+- **Write** under tracked paths (e.g. `mobile/`, `docs/`, `.cursor/rules/`) when the task requires implementation and fits the request.
+
+## When the user wants a change in an untracked path
+
+1. **Ask first** if they did not explicitly name the file and ask you to change it (e.g. “modifie mon `refresh.sh`”, “mets à jour ce script dans dev-ideas”).
+2. After permission, change **only** what they scoped; do not “improve” adjacent untracked tooling unless they agree.
+3. If you already changed an untracked file without permission, **revert** it when they say so, without debating.
+
+## Verification
+
+Before editing a path, when in doubt:
+
+```bash
+git check-ignore -v <path> 2>/dev/null; git ls-files --error-unmatch <path> 2>/dev/null
+```
+
+If the path is ignored or not in the index, treat it as **untracked** for this rule unless the user has explicitly authorized the edit.

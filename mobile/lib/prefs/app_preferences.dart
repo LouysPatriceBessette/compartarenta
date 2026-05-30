@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../db/app_database.dart';
+import '../debug/local_storage_startup_log.dart';
 import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
@@ -384,6 +387,26 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kOnboardingLanguageDone);
     await _prefs.remove(_kOnboardingWelcomeDone);
     notifyListeners();
+    await _syncWebStorageAfterPrefsWrite();
+    if (kDebugMode) {
+      try {
+        await logLocalStorageCheckpoint(
+          AppDatabase.processScope,
+          'onboarding-complete',
+        );
+      } on StateError {
+        // Tests / bootstrap ordering.
+      }
+    }
+  }
+
+  Future<void> _syncWebStorageAfterPrefsWrite() async {
+    if (!kIsWeb) return;
+    try {
+      await AppDatabase.processScope.syncWebStorageToDisk();
+    } on StateError {
+      // Tests / bootstrap ordering.
+    }
   }
 
   /// Development convenience: clears onboarding and user preferences.

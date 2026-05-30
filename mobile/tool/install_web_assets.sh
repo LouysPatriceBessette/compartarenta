@@ -47,10 +47,11 @@ SQLITE_URL="https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-$
 DRIFT_URL="https://github.com/simolus3/drift/releases/download/drift-${DRIFT_VERSION}/drift_worker.js"
 
 echo "Fetching sqlite3.wasm from ${SQLITE_URL}"
-curl -fSL -o "${WEB_DIR}/sqlite3.wasm" "${SQLITE_URL}"
+# -sS: no progress meter on stderr (melos prints stderr lines as "ERROR:")
+curl -fsSL -o "${WEB_DIR}/sqlite3.wasm" "${SQLITE_URL}"
 
 echo "Fetching drift_worker.dart.js from ${DRIFT_URL}"
-curl -fSL -o "${WEB_DIR}/drift_worker.dart.js" "${DRIFT_URL}"
+curl -fsSL -o "${WEB_DIR}/drift_worker.dart.js" "${DRIFT_URL}"
 
 ls -lh "${WEB_DIR}/sqlite3.wasm" "${WEB_DIR}/drift_worker.dart.js"
 echo "Done."

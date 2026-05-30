@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 
 import '../../contacts/contact_display.dart';
+import '../../debug/local_storage_startup_log.dart';
 import '../app_database.dart';
 
 /// Public, on-device-only repository for Contacts.
@@ -209,6 +211,10 @@ class ContactsRepository {
         updatedAt: drift.Value(now),
       ),
     );
+    await _db.syncWebStorageToDisk();
+    if (kDebugMode) {
+      await logLocalStorageCheckpoint(_db, 'contact-promoted');
+    }
   }
 
   /// Demotes a `connected` Contact back to `local-only` after a peer
