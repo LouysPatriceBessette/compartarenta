@@ -9,6 +9,10 @@ import 'db_paths.dart';
 
 part 'app_database.g.dart';
 
+/// Debug web: called after [syncWebStorageToDisk] to push host session backup.
+typedef DebugWebDbFlushHook = void Function(AppDatabase db);
+DebugWebDbFlushHook? debugWebDbFlushHook;
+
 class PlanLines extends Table {
   TextColumn get id => text()(); // stable id
   TextColumn get planId => text()();
@@ -520,6 +524,9 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
     } catch (_) {
       // WAL is not available on all web sqlite builds.
+    }
+    if (kDebugMode && kIsWeb) {
+      debugWebDbFlushHook?.call(this);
     }
   }
 

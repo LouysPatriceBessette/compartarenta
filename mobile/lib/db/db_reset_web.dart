@@ -4,6 +4,7 @@ import 'package:drift/wasm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
 
+import '../debug/web_dev_host_session.dart';
 import '../prefs/app_preferences.dart';
 
 const _legacyMirrorKey = 'housing.default.planDraftBackupJson';
@@ -33,6 +34,8 @@ Future<void> deleteLocalDbFiles({AppPreferences? prefs}) async {
   } catch (e, st) {
     debugPrint('DbReset web Wasm probe/delete failed: $e\n$st');
   }
+
+  await clearDevHostSessionAfterWipe();
 }
 
 void _clearHousingMirrorsInLocalStorage() {

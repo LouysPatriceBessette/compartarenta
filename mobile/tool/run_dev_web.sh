@@ -1,125 +1,232 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Dev-flavor equivalent for Flutter web.
+# Dev-flavor Flutter web. Invoked by: dart run melos run run:dev:web
 #
-# Flutter web does NOT support --flavor (flavors are an Android/iOS
-# concept tied to native build variants). To keep the dev experience as
-# close as possible to `tool/run_dev.sh`, we forward the same
-# --dart-define values but skip --flavor and target the Chrome device
-# explicitly.
+# Persists Drift/prefs/identity to ~/.cache/compartarenta/web-dev-session.json
+# via a local HTTP server (survives Ctrl+C and flutter clean). No manual backup.
 #
-# Default relay base URL points at the real relay (same default as
-# tool/run_dev.sh). Override via env or by appending dart-defines:
-#
-#   API_BASE_URL=http://localhost:8080 dart run melos run run:dev:web
-#
-# Browser CORS on the relay / Apache allow-list commonly expects
-# http://localhost:5001 or :5002. This script defaults to port 5001
-# unless you pass --web-port=... or set WEB_PORT (e.g. WEB_PORT=5002).
-#
+# Melos prefixes stderr as "ERROR:" — use stdout for expected notes (port skip, etc.).
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "${DIR}"
 
 API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
+# Use localhost (not 127.0.0.1): Flutter web is served at http://localhost:WEB_PORT
+# and the browser blocks cross-origin calls to 127.0.0.1.
+WEB_DEV_SESSION_HOST="${WEB_DEV_SESSION_HOST:-localhost}"
+WEB_DEV_SESSION_PORT_BASE="${WEB_DEV_SESSION_PORT_BASE:-18765}"
+WEB_DEV_SESSION_PORT_MAX="${WEB_DEV_SESSION_PORT_MAX:-18799}"
+WEB_DEV_SESSION_PID_FILE="${DIR}/.dart_tool/web-dev-session-server.pid"
+WEB_DEV_SESSION_PORT_FILE="${DIR}/.dart_tool/web-dev-session-port"
+WEB_DEV_SESSION_URL_FILE="${DIR}/.dart_tool/web-dev-session-url"
+HOST_SESSION_FILE="${HOME}/.cache/compartarenta/web-dev-session.json"
+
+# Set WEB_DEV_SESSION_PORT yourself to pin a port; otherwise a free port is chosen.
+WEB_DEV_SESSION_PORT="${WEB_DEV_SESSION_PORT:-}"
+WEB_DEV_SESSION_URL=""
 
 web_port_args=()
 if [[ "$*" != *--web-port* ]]; then
   web_port_args=(--web-port="${WEB_PORT:-5001}")
 fi
 
-# Flutter `flutter run -d chrome` always seeds/caches the live Chrome profile
-# under mobile/.dart_tool/chrome-device (see flutter_tools web_device.dart).
-# Do NOT pass a separate --user-data-dir: on exit Flutter copies the session
-# into chrome-device and deletes that custom directory, which made backups to
-# ~/.cache/compartarenta/flutter-web-chrome look empty after Ctrl+C.
-#
-# `flutter clean` deletes all of mobile/.dart_tool/, so the backup must live
-# outside .dart_tool/ (default: ~/.cache/compartarenta/chrome-device-backup).
-# Before refresh.sh: dart run melos run backup:web-chrome-profile
-CHROME_PROFILE_DIR="${COMPARTARENTA_WEB_CHROME_PROFILE_DIR:-${DIR}/.dart_tool/chrome-device}"
-CHROME_PROFILE_BACKUP_DIR="${COMPARTARENTA_WEB_PROFILE_BACKUP_DIR:-${HOME}/.cache/compartarenta/chrome-device-backup}"
-DART_TOOL_CHROME_PROFILE_BACKUP_DIR="${DIR}/.dart_tool/chrome-device-backup"
-LEGACY_CHROME_USER_DATA_DIR="${HOME}/.cache/compartarenta/flutter-web-chrome"
-LEGACY_CHROME_PROFILE_BACKUP_DIR="${LEGACY_CHROME_USER_DATA_DIR}-backup"
+# curl alone is not enough: a zombie listener may answer 404 without CORS headers
+# while the browser still gets "Failed to fetch".
+_is_our_session_server() {
+  local port="$1"
+  local headers
+  headers=$(curl -s -D - -o /dev/null --connect-timeout 1 \
+    -X OPTIONS "http://${WEB_DEV_SESSION_HOST}:${port}/session" \
+    -H 'Origin: http://localhost:5001' \
+    -H 'Access-Control-Request-Method: PUT' 2>/dev/null || true)
+  echo "${headers}" | grep -qi 'access-control-allow-origin' \
+    && echo "${headers}" | grep -qi 'cross-origin-resource-policy'
+}
 
-_profile_has_onboarding_complete() {
-  find "${CHROME_PROFILE_DIR}/Default/Local Storage" -type f 2>/dev/null \
-    | xargs strings 2>/dev/null \
-    | grep -q 'flutter.onboarding.complete' || return 1
+_port_in_use() {
+  local port="$1"
+  ss -tln 2>/dev/null | grep -q ":${port} "
+}
+
+_session_server_pid_on_port() {
+  local port="$1"
+  ss -tlnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1
+}
+
+_same_user_namespace_as_self() {
+  local pid="$1"
+  local self_ns target_ns
+  self_ns="$(readlink /proc/self/ns/user 2>/dev/null || echo)"
+  target_ns="$(readlink "/proc/${pid}/ns/user" 2>/dev/null || echo)"
+  [[ -n "${self_ns}" && -n "${target_ns}" && "${self_ns}" == "${target_ns}" ]]
+}
+
+_is_cursor_sandbox_pid() {
+  local pid="$1"
+  local attr
+  attr="$(cat "/proc/${pid}/attr/current" 2>/dev/null || true)"
+  [[ "${attr}" == *cursor_sandbox* ]] \
+    || ! _same_user_namespace_as_self "${pid}"
+}
+
+_port_managed_by_this_shell() {
+  local port="$1"
+  local pid
+  pid="$(_session_server_pid_on_port "${port}")"
+  if [[ -z "${pid}" ]]; then
+    return 1
+  fi
+  if [[ "$(ps -o user= -p "${pid}" 2>/dev/null | tr -d ' ')" != "$(id -un)" ]]; then
+    return 1
+  fi
+  if _is_cursor_sandbox_pid "${pid}"; then
+    return 1
+  fi
   return 0
 }
 
-_migrate_legacy_backup_if_needed() {
-  if [[ -d "${CHROME_PROFILE_BACKUP_DIR}/Default" ]]; then
+# Informational only (stdout — not a Melos ERROR).
+_note_port_skip() {
+  local port="$1"
+  local pid
+  pid="$(_session_server_pid_on_port "${port}")"
+  if [[ -n "${pid}" ]] && _is_cursor_sandbox_pid "${pid}"; then
+    echo "Note: port ${port} is used by a Cursor agent sandbox (pid ${pid}); using the next free port."
+    echo "  Optional cleanup: sudo fuser -k ${port}/tcp"
     return 0
   fi
-  if [[ -d "${DART_TOOL_CHROME_PROFILE_BACKUP_DIR}/Default" ]]; then
-    echo "Migrating web profile backup from ${DART_TOOL_CHROME_PROFILE_BACKUP_DIR} (inside .dart_tool)"
-    mkdir -p "${CHROME_PROFILE_BACKUP_DIR}"
-    rsync -a "${DART_TOOL_CHROME_PROFILE_BACKUP_DIR}/" "${CHROME_PROFILE_BACKUP_DIR}/"
-    return 0
+  if [[ -n "${pid}" ]]; then
+    echo "Note: port ${port} is in use (pid ${pid}); trying the next port."
+  else
+    echo "Note: port ${port} is in use; trying the next port."
   fi
-  if [[ ! -d "${LEGACY_CHROME_PROFILE_BACKUP_DIR}/Default" ]]; then
-    return 0
-  fi
-  echo "Migrating legacy web profile backup from ${LEGACY_CHROME_PROFILE_BACKUP_DIR}"
-  mkdir -p "${CHROME_PROFILE_BACKUP_DIR}"
-  rsync -a "${LEGACY_CHROME_PROFILE_BACKUP_DIR}/" "${CHROME_PROFILE_BACKUP_DIR}/"
 }
 
-_restore_chrome_profile_from_backup() {
-  if [[ "${COMPARTARENTA_WEB_SKIP_PROFILE_RESTORE:-}" == "1" ]]; then
-    return 0
+# Unexpected blocker — stderr only when we cannot continue.
+_print_port_conflict_diagnostics() {
+  local port="$1"
+  echo "Port ${port} is busy and is not a session server we can use from this shell:" >&2
+  ss -tlnp 2>/dev/null | grep ":${port} " >&2 || true
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -v "${port}/tcp" 2>&1 >&2 || true
   fi
-  _migrate_legacy_backup_if_needed
-  if [[ ! -d "${CHROME_PROFILE_BACKUP_DIR}/Default" ]]; then
-    echo "No web Chrome profile backup at ${CHROME_PROFILE_BACKUP_DIR} (skip restore)"
-    return 0
-  fi
-  if _profile_has_onboarding_complete; then
-    echo "Live web Chrome profile already has onboarding data; skip restore from backup"
-    return 0
-  fi
-  echo "Restoring web Chrome profile from ${CHROME_PROFILE_BACKUP_DIR}"
-  mkdir -p "${CHROME_PROFILE_DIR}"
-  rsync -a "${CHROME_PROFILE_RSYNC_EXCLUDES[@]}" \
-    "${CHROME_PROFILE_BACKUP_DIR}/" "${CHROME_PROFILE_DIR}/"
 }
 
-# Match flutter_tools chrome.dart (_isNotCacheDirectory); "Code Cache" has a space.
-CHROME_PROFILE_RSYNC_EXCLUDES=(
-  --exclude='Default/Cache/'
-  --exclude='Default/Code Cache/'
-  --exclude='Default/GPUCache/'
-  --exclude='GrShaderCache/'
-  --exclude='ShaderCache/'
-)
-
-_backup_chrome_profile() {
-  if [[ ! -d "${CHROME_PROFILE_DIR}/Default" ]]; then
-    return 0
+_print_host_backup_hint() {
+  if [[ -f "${HOST_SESSION_FILE}" ]]; then
+    local bytes
+    bytes=$(wc -c <"${HOST_SESSION_FILE}" | tr -d ' ')
+    echo "Web dev session backup on disk: ${HOST_SESSION_FILE} (${bytes} bytes)"
+    echo "  Survives flutter clean / refresh.sh; restored on next run:dev:web when the server is reachable."
+  else
+    echo "Web dev session backup: none yet at ${HOST_SESSION_FILE}"
+    echo "  Created after onboarding completes (look for web_dev_host_session: saved to host in logs)."
   fi
-  mkdir -p "${CHROME_PROFILE_BACKUP_DIR}"
-  # Allow Chrome to finish Flutter's cache copy after SIGINT (Melos Ctrl+C).
-  sleep 3
-  echo "Backing up web Chrome profile to ${CHROME_PROFILE_BACKUP_DIR}"
-  rsync -a --delete "${CHROME_PROFILE_RSYNC_EXCLUDES[@]}" \
-    "${CHROME_PROFILE_DIR}/" "${CHROME_PROFILE_BACKUP_DIR}/"
-  du -sh "${CHROME_PROFILE_BACKUP_DIR}" || true
 }
 
-_restore_chrome_profile_from_backup
-trap _backup_chrome_profile EXIT INT TERM
+_pick_session_port() {
+  if [[ -n "${WEB_DEV_SESSION_PORT}" ]]; then
+    if _is_our_session_server "${WEB_DEV_SESSION_PORT}" \
+      && _port_managed_by_this_shell "${WEB_DEV_SESSION_PORT}"; then
+      return 0
+    fi
+    if _port_in_use "${WEB_DEV_SESSION_PORT}"; then
+      echo "WEB_DEV_SESSION_PORT=${WEB_DEV_SESSION_PORT} is busy and not our session server." >&2
+      _print_port_conflict_diagnostics "${WEB_DEV_SESSION_PORT}"
+      echo "Unset WEB_DEV_SESSION_PORT to auto-pick a free port, or choose another." >&2
+      return 1
+    fi
+    return 0
+  fi
 
-echo "Web Chrome profile (Flutter cache): ${CHROME_PROFILE_DIR}"
-echo "Web Chrome profile backup: ${CHROME_PROFILE_BACKUP_DIR}"
+  local p
+  for ((p = WEB_DEV_SESSION_PORT_BASE; p <= WEB_DEV_SESSION_PORT_MAX; p++)); do
+    if _is_our_session_server "${p}" && _port_managed_by_this_shell "${p}"; then
+      WEB_DEV_SESSION_PORT="${p}"
+      return 0
+    fi
+    if _port_in_use "${p}"; then
+      _note_port_skip "${p}"
+      continue
+    fi
+    WEB_DEV_SESSION_PORT="${p}"
+    if [[ "${p}" != "${WEB_DEV_SESSION_PORT_BASE}" ]]; then
+      echo "Note: using port ${p} (${WEB_DEV_SESSION_PORT_BASE} unavailable)."
+    fi
+    return 0
+  done
 
-# COOP/COEP enable Drift's more reliable OPFS-backed web storage (see
-# docs/development-roadmap.md). Without them, IndexedDB fallback may lose
-# very recent writes when this process stops Chrome on restart.
+  echo "No free port in range ${WEB_DEV_SESSION_PORT_BASE}-${WEB_DEV_SESSION_PORT_MAX}." >&2
+  return 1
+}
+
+_start_web_dev_session_server() {
+  if ! _pick_session_port; then
+    return 1
+  fi
+
+  WEB_DEV_SESSION_URL="http://${WEB_DEV_SESSION_HOST}:${WEB_DEV_SESSION_PORT}"
+  echo "${WEB_DEV_SESSION_PORT}" >"${WEB_DEV_SESSION_PORT_FILE}"
+  echo "${WEB_DEV_SESSION_URL}" >"${WEB_DEV_SESSION_URL_FILE}"
+
+  if _is_our_session_server "${WEB_DEV_SESSION_PORT}" \
+    && _port_managed_by_this_shell "${WEB_DEV_SESSION_PORT}"; then
+    echo "Web dev session server already listening (${WEB_DEV_SESSION_URL})"
+    return 0
+  fi
+
+  if [[ -f "${WEB_DEV_SESSION_PID_FILE}" ]]; then
+    local old_pid
+    old_pid="$(cat "${WEB_DEV_SESSION_PID_FILE}")"
+    if kill -0 "${old_pid}" 2>/dev/null; then
+      kill "${old_pid}" 2>/dev/null || true
+      sleep 0.3
+    fi
+    rm -f "${WEB_DEV_SESSION_PID_FILE}"
+  fi
+
+  if _port_in_use "${WEB_DEV_SESSION_PORT}"; then
+    echo "Cannot bind ${WEB_DEV_SESSION_URL}: port still in use after port selection." >&2
+    _print_port_conflict_diagnostics "${WEB_DEV_SESSION_PORT}"
+    return 1
+  fi
+
+  mkdir -p "${HOME}/.cache/compartarenta"
+  WEB_DEV_SESSION_PORT="${WEB_DEV_SESSION_PORT}" \
+    dart run tool/web_dev_session_server.dart &
+  local pid=$!
+  echo "${pid}" >"${WEB_DEV_SESSION_PID_FILE}"
+
+  local i
+  for i in $(seq 1 40); do
+    if _is_our_session_server "${WEB_DEV_SESSION_PORT}"; then
+      echo "Web dev session server listening (pid ${pid}, ${WEB_DEV_SESSION_URL})"
+      echo "Stop server: dart run melos run stop:web-dev-session"
+      echo "Delete session: dart run melos run delete:web-dev-session"
+      return 0
+    fi
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      echo "Web dev session server process exited before binding to port ${WEB_DEV_SESSION_PORT}" >&2
+      rm -f "${WEB_DEV_SESSION_PID_FILE}"
+      return 1
+    fi
+    sleep 0.25
+  done
+
+  echo "Web dev session server did not become ready on ${WEB_DEV_SESSION_URL} within 10s" >&2
+  return 1
+}
+
+_print_host_backup_hint
+
+if ! _start_web_dev_session_server; then
+  exit 1
+fi
+
+echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
+
 ./tool/flutterw run \
   -d chrome \
   "${web_port_args[@]}" \
@@ -127,5 +234,5 @@ echo "Web Chrome profile backup: ${CHROME_PROFILE_BACKUP_DIR}"
   --web-header=Cross-Origin-Embedder-Policy=require-corp \
   --dart-define=ENV=dev \
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
+  --dart-define="WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL}" \
   "$@"
-_backup_chrome_profile

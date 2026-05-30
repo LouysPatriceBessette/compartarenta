@@ -4,7 +4,7 @@ import '../db/app_database.dart';
 import '../prefs/app_preferences.dart';
 import '../screens/housing/housing_module_entry_screen.dart';
 import 'local_storage_startup_log_platform.dart' as platform_hints;
-import 'web_dev_session_mirror.dart' as session_mirror;
+import 'web_dev_host_session.dart' as host_session;
 
 /// Debug-only snapshot of local persistence (Drift + prefs).
 ///
@@ -47,8 +47,8 @@ Future<void> logLocalStorageCheckpoint(AppDatabase db, String reason) async {
     );
     if (kIsWeb) {
       await platform_hints.logWebLocalStorageKeyCount(reason: reason);
-      if (reason == 'onboarding-complete' || reason == 'contact-promoted') {
-        await session_mirror.snapshotDevSessionMirror(db, prefs);
+      if (reason == 'onboarding-complete') {
+        await host_session.saveDevHostSessionNow(db);
       }
     }
     if (kIsWeb && reason == 'startup') {

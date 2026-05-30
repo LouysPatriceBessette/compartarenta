@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../config/app_config.dart';
 import '../db/db_reset.dart';
+import '../debug/web_dev_host_session.dart';
 import '../l10n/app_localizations.dart';
 import '../notifications/developer_test_notification.dart';
 import '../notifications/developer_test_notification_result.dart';
@@ -156,10 +157,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 if (confirmed != true) return;
                 await widget.prefs.resetOnboardingAndPreferences();
+                if (kDebugMode && kIsWeb) {
+                  await clearDevHostSessionAfterWipe();
+                }
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Onboarding and preferences reset.'),
+                  SnackBar(
+                    content: Text(
+                      kIsWeb
+                          ? 'Onboarding, preferences, and web host session backup cleared.'
+                          : 'Onboarding and preferences reset.',
+                    ),
                   ),
                 );
               },
@@ -168,9 +176,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Reset local database'),
               subtitle: Text(
                 kIsWeb
-                    ? 'Deletes browser Drift storage (OPFS) and housing draft '
-                        'mirrors in localStorage. Clears relay test identity '
-                        'when a relay URL is configured.'
+                    ? 'Deletes browser Drift storage (OPFS), housing draft '
+                        'mirrors, and ~/.cache/compartarenta/web-dev-session.json '
+                        'via the dev server. Clears relay test identity when configured.'
                     : 'Deletes on-device SQLite (plans, agreements, contacts, '
                         'invitations, handshakes). Clears relay test identity '
                         'when a relay URL is configured.',
@@ -183,10 +191,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     content: Text(
                       kIsWeb
                           ? 'This will delete the local Drift database in '
-                              'browser storage (OPFS) and housing draft mirrors '
-                              'in localStorage, including contacts and housing '
-                              'data. If this build targets a relay, the local '
-                              'X25519 test identity is cleared as well.\n\n'
+                              'browser storage (OPFS), housing draft mirrors '
+                              'in localStorage, and the host web-dev-session '
+                              'backup file, including contacts and housing data. '
+                              'If this build targets a relay, the local X25519 '
+                              'test identity is cleared as well.\n\n'
                               'Hard-reload this page afterward (not hot '
                               'restart) so the database and relay stack are '
                               'recreated cleanly. Use only during development.'
@@ -229,8 +238,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SnackBar(
                     content: Text(
                       kIsWeb
-                          ? 'Browser database and mirrors cleared. '
-                              'Hard-reload this tab (F5).'
+                          ? 'Browser database, mirrors, and host session backup '
+                              'cleared. Hard-reload this tab (F5).'
                           : 'Local database and contact-related storage cleared. '
                               'Restart the app.',
                     ),

@@ -409,6 +409,42 @@ class AppPreferences extends ChangeNotifier {
     }
   }
 
+  /// All [SharedPreferences] keys for web dev host session backup.
+  Map<String, dynamic> exportDevHostSnapshot() {
+    final out = <String, dynamic>{};
+    for (final key in _prefs.getKeys()) {
+      final value = _prefs.get(key);
+      if (value != null) {
+        out[key] = value;
+      }
+    }
+    return out;
+  }
+
+  /// Restores prefs from [exportDevHostSnapshot] JSON (debug web host session).
+  Future<void> importDevHostSnapshot(Map<String, dynamic> snapshot) async {
+    for (final entry in snapshot.entries) {
+      final key = entry.key;
+      final value = entry.value;
+      if (value is bool) {
+        await _prefs.setBool(key, value);
+      } else if (value is int) {
+        await _prefs.setInt(key, value);
+      } else if (value is double) {
+        await _prefs.setDouble(key, value);
+      } else if (value is String) {
+        await _prefs.setString(key, value);
+      } else if (value is List) {
+        await _prefs.setStringList(
+          key,
+          value.map((e) => e.toString()).toList(),
+        );
+      }
+    }
+    notifyListeners();
+    await _syncWebStorageAfterPrefsWrite();
+  }
+
   /// Development convenience: clears onboarding and user preferences.
   ///
   /// When the housing plan first participated in realized-expense sync (trial clock).

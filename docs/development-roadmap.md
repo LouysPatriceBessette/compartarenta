@@ -58,7 +58,7 @@ When this step is started, it will:
 #### Step 1 follow-ups (developer workflow)
 
 - **Drift web runtime assets.** When the app is run in a desktop browser, Drift loads `sqlite3` as a WebAssembly module and offloads queries to a background worker. Both assets — `mobile/web/sqlite3.wasm` and `mobile/web/drift_worker.dart.js` — must match the `sqlite3` and `drift` versions pinned in `pubspec.lock`. The helper `mobile/tool/install_web_assets.sh` (also exposed as `melos run web:assets`) fetches the matching files from GitHub releases. Refresh after any bump of those two packages.
-- **Persistent Chrome profile for `melos run:dev:web`.** By default, `flutter run -d chrome` caches the profile under `mobile/.dart_tool/chrome-device` across melos restarts. `flutter clean` removes `.dart_tool/`; back up to `~/.cache/compartarenta/chrome-device-backup` via `melos run backup:web-chrome-profile` before a clean/codegen cycle. Override paths with `COMPARTARENTA_WEB_CHROME_PROFILE_DIR` / `COMPARTARENTA_WEB_PROFILE_BACKUP_DIR` if needed.
+- **Web dev session persistence for `melos run:dev:web`.** A loopback HTTP server (started by `run_dev_web.sh`) writes Drift, prefs, and identity to `~/.cache/compartarenta/web-dev-session.json` after onboarding and on each DB flush. `flutter clean` does not remove that file. Reset with `melos run delete:web-dev-session`.
 
 #### Step 4 follow-ups (deferred until before the first public mobile release)
 

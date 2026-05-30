@@ -21,8 +21,7 @@ void installWebStorageFlushOnPageHide() {
   }
 
   html.window.onPageHide.listen((_) => flush());
-  // Melos Ctrl+C often kills Chrome without pagehide; beforeunload is the
-  // last chance to checkpoint Drift OPFS.
+  // Last chance to flush Drift and push the host dev session before the tab closes.
   html.window.onBeforeUnload.listen((_) => flush());
   html.document.onVisibilityChange.listen((_) {
     final hidden = html.document.hidden ?? false;

@@ -30,7 +30,7 @@ melos:
       run: cd mobile && dart run build_runner build
 
     clean:
-      description: Flutter clean in mobile
+      description: Flutter clean in mobile (web dev session JSON is outside .dart_tool)
       run: cd mobile && flutter clean
 
     refresh:
@@ -56,12 +56,24 @@ melos:
         --dart-define values without --flavor. Default API_BASE_URL is
         the real relay; override via env or extra args. The web server
         defaults to http://localhost:5001 (relay CORS / Apache allow-list).
-        Uses Flutter's Chrome profile cache (mobile/.dart_tool/chrome-device)
-        so Drift/local drafts survive melos restarts. Override with WEB_PORT=5002
-        or dart run melos run run:dev:web -- --web-port=...
-          API_BASE_URL=http://localhost:8080 dart run melos run run:dev:web
-          WEB_PORT=5002 dart run melos run run:dev:web
-      run: cd mobile && ./tool/run_dev_web.sh
+        Drift/prefs/identity persist via a host JSON file updated after
+        onboarding and on each DB flush (Ctrl+C safe). Session server port
+        auto-picks 18765-18799 if 18765 is busy (sandbox zombies). Override
+        WEB_PORT=5002 or dart run melos run run:dev:web -- --web-port=...
+        Reset web dev data: dart run melos run delete:web-dev-session
+      run: cd mobile && chmod +x ./tool/run_dev_web.sh && ./tool/run_dev_web.sh
+
+    stop:web-dev-session:
+      description: |
+        Stop the loopback web dev session server (default port 18765) and free the port.
+        Use when run:dev:web reports "Address already in use".
+      run: cd mobile && chmod +x ./tool/stop_web_dev_session.sh && ./tool/stop_web_dev_session.sh
+
+    delete:web-dev-session:
+      description: |
+        Delete ~/.cache/compartarenta/web-dev-session.json (web dev persistence).
+        Use before a fresh onboarding / handshake on web.
+      run: cd mobile && chmod +x ./tool/delete_web_dev_session.sh && ./tool/delete_web_dev_session.sh
 
     web:assets:
       description: |
@@ -69,12 +81,6 @@ melos:
         under mobile/web/ using the versions pinned in pubspec.lock. Run
         after a `drift` or `sqlite3` version bump.
       run: cd mobile && ./tool/install_web_assets.sh
-
-    backup:web-chrome-profile:
-      description: |
-        Copy mobile/.dart_tool/chrome-device to ~/.cache/compartarenta/chrome-device-backup.
-        Run after stopping run:dev:web and before refresh.sh (flutter clean wipes .dart_tool).
-      run: cd mobile && chmod +x ./tool/backup_web_chrome_profile.sh && ./tool/backup_web_chrome_profile.sh
 
     build:apk:prod:
       description: |

@@ -18,7 +18,8 @@ function has_useful_keyword(line) {
          line ~ /steady inbox kinds/ ||
          line ~ /local_storage_startup/ ||
          line ~ /local_storage_checkpoint/ ||
-         line ~ /Web Chrome profile/ ||
+         line ~ /web_dev_host_session/ ||
+         line ~ /web_dev_session_server/ ||
          line ~ /Drift web storage/ ||
          line ~ /ClosedAppPushRegistrationService/ ||
          line ~ /Browser notification permission/ ||

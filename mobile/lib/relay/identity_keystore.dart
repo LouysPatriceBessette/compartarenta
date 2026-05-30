@@ -26,6 +26,10 @@ abstract class IdentityKeystore {
   Future<String> publicKeyB64();
   Future<void> deleteForTesting();
 
+  /// Debug web host session: export/import the persisted private key.
+  Future<String?> exportPrivateKeyB64ForDev();
+  Future<void> restorePrivateKeyB64ForDev(String b64);
+
   /// Default platform-backed implementation. Override in tests with
   /// [InMemoryIdentityKeystore].
   factory IdentityKeystore.secureStorage({String slot = defaultSlot}) {
@@ -102,6 +106,28 @@ class _SecureStorageIdentityKeystore implements IdentityKeystore {
     _cachedPublic = null;
     await _storage.delete(key: slot);
   }
+
+  @override
+  Future<String?> exportPrivateKeyB64ForDev() async {
+    if (!kDebugMode) return null;
+    final priv = await loadOrCreatePrivateKey();
+    return base64Url.encode(priv).replaceAll('=', '');
+  }
+
+  @override
+  Future<void> restorePrivateKeyB64ForDev(String b64) async {
+    if (!kDebugMode) return;
+    final bytes = Uint8List.fromList(base64Url.decode(_pad(b64)));
+    if (bytes.length != 32) {
+      throw FormatException('identity key must be 32 bytes');
+    }
+    await _storage.write(
+      key: slot,
+      value: base64Url.encode(bytes).replaceAll('=', ''),
+    );
+    _cachedPrivate = bytes;
+    _cachedPublic = null;
+  }
 }
 
 String _pad(String b64) {
@@ -158,6 +184,20 @@ class InMemoryIdentityKeystore implements IdentityKeystore {
   @override
   Future<void> deleteForTesting() async {
     _privateKey = null;
+    _publicKey = null;
+  }
+
+  @override
+  Future<String?> exportPrivateKeyB64ForDev() async {
+    if (!kDebugMode) return null;
+    final priv = await loadOrCreatePrivateKey();
+    return base64Url.encode(priv).replaceAll('=', '');
+  }
+
+  @override
+  Future<void> restorePrivateKeyB64ForDev(String b64) async {
+    if (!kDebugMode) return;
+    _privateKey = Uint8List.fromList(base64Url.decode(_pad(b64)));
     _publicKey = null;
   }
 }
