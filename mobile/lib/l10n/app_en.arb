@@ -507,6 +507,28 @@
   "housingAmendmentRequestStatusAction": "Request status",
   "housingAmendmentJournalTitle": "Change log",
   "housingAmendmentJournalSubtitle": "Accepted and refused requests",
+  "housingAmendmentJournalSubjectAgreementEnd": "Agreement end date",
+  "housingAmendmentJournalLineAdd": "Expense added - {title} - {amount}",
+  "@housingAmendmentJournalLineAdd": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineEdit": "Expense modified - {title} - {amount}",
+  "@housingAmendmentJournalLineEdit": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineRemove": "Expense removed - {title} - {amount}",
+  "@housingAmendmentJournalLineRemove": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "housingAmendmentJournalEmpty": "No plan changes yet.",
   "housingAmendmentJournalAccepted": "Accepted",
   "housingAmendmentJournalRefused": "Refused",

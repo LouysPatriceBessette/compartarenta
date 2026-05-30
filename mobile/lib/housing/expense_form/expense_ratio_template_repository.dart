@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../db/app_database.dart';
+import '../split_minor_by_weights.dart';
 
 /// Plan-scoped ratio templates for the "Like" selector.
 class ExpenseRatioTemplateRepository {
@@ -12,6 +13,28 @@ class ExpenseRatioTemplateRepository {
 
   Future<List<PlanRatioTemplate>> listForPlan(String planId) =>
       _db.listPlanRatioTemplates(planId);
+
+  /// Templates for the "Like" selector: deduped by weight signature, excluding
+  /// equal-parts splits (those are the default grid, not a saved preset).
+  Future<List<PlanRatioTemplate>> listSelectableForPlan(String planId) async {
+    final raw = await listForPlan(planId);
+    final seen = <String>{};
+    final out = <PlanRatioTemplate>[];
+    for (final t in raw) {
+      final weights = decodeWeights(t.weightsJson);
+      if (weights.isEmpty) continue;
+      final ordered = [
+        for (final w in weights.values) w,
+      ];
+      if (weightsAreMaximallyBalanced(ordered, weightScale: weightScale)) {
+        continue;
+      }
+      final sig = weightsSignature(weights);
+      if (!seen.add(sig)) continue;
+      out.add(t);
+    }
+    return out;
+  }
 
   /// Maps participant id -> weight bps (sum must be [weightScale]).
   static Map<String, int> decodeWeights(String weightsJson) {

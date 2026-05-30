@@ -83,7 +83,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   Future<void> _boot() async {
     _templates = await ExpenseRatioTemplateRepository(
       _db,
-    ).listForPlan(widget.planId);
+    ).listSelectableForPlan(widget.planId);
     if (widget.existingLineId != null) {
       final lines = await _db.listPlanLines(widget.planId);
       PlanLine? line;
@@ -335,7 +335,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
                 onPressed: _canSave && !_saving ? _save : null,
                 child: Text(
                   widget.amendmentSubmitToGroup
-                      ? l10n.housingAmendmentSubmitToGroup
+                      ? l10n.commonContinue
                       : l10n.housingPlanSave,
                 ),
               ),

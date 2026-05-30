@@ -27,3 +27,17 @@ String formatMinorAsMoney(BuildContext context, int minor, String currencyCode) 
 String formatMajorDoubleAsMoney(BuildContext context, double major, String currencyCode) {
   return formatMinorAsMoney(context, (major * 100).round(), currencyCode);
 }
+
+/// Locale-aware money label without a [BuildContext] (e.g. journal list subjects).
+String formatMinorAsMoneyForLocale(
+  String localeName,
+  int minor,
+  String currencyCode,
+) {
+  final code = currencyCode.trim();
+  if (code.isEmpty) {
+    return NumberFormat('#,##0.00', localeName).format(minor / 100.0);
+  }
+  return NumberFormat.simpleCurrency(locale: localeName, name: code)
+      .format(minor / 100.0);
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_expense_preview.dart';
 import '../../housing/amendment/housing_amendment_proposal_flow.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
@@ -142,15 +143,13 @@ class _HousingAmendmentSubmitPreviewScreenState
                             ),
                           ),
                           const SizedBox(height: 24),
-                          _ValueCard(
-                            label: l10n.housingAmendmentDetailCurrent,
-                            value: _summary!.currentText,
-                          ),
-                          const SizedBox(height: 12),
-                          _ValueCard(
-                            label: l10n.housingAmendmentDetailProposed,
-                            value: _summary!.proposedText,
-                            emphasized: true,
+                          HousingAmendmentComparisonSection(
+                            db: AppDatabase.processScope,
+                            planId: widget.planId,
+                            prefs: widget.prefs,
+                            summary: _summary!,
+                            currentLabel: l10n.housingAmendmentDetailCurrent,
+                            proposedLabel: l10n.housingAmendmentDetailProposed,
                           ),
                         ],
                       ),
@@ -175,48 +174,6 @@ class _HousingAmendmentSubmitPreviewScreenState
                     ),
                   ],
                 ),
-    );
-  }
-}
-
-class _ValueCard extends StatelessWidget {
-  const _ValueCard({
-    required this.label,
-    required this.value,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: emphasized
-                  ? theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    )
-                  : theme.textTheme.bodyLarge,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

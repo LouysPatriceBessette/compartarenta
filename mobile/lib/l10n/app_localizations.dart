@@ -2290,6 +2290,30 @@ abstract class AppLocalizations {
   /// **'Accepted and refused requests'**
   String get housingAmendmentJournalSubtitle;
 
+  /// No description provided for @housingAmendmentJournalSubjectAgreementEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement end date'**
+  String get housingAmendmentJournalSubjectAgreementEnd;
+
+  /// No description provided for @housingAmendmentJournalLineAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense added - {title} - {amount}'**
+  String housingAmendmentJournalLineAdd(String title, String amount);
+
+  /// No description provided for @housingAmendmentJournalLineEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense modified - {title} - {amount}'**
+  String housingAmendmentJournalLineEdit(String title, String amount);
+
+  /// No description provided for @housingAmendmentJournalLineRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense removed - {title} - {amount}'**
+  String housingAmendmentJournalLineRemove(String title, String amount);
+
   /// No description provided for @housingAmendmentJournalEmpty.
   ///
   /// In en, this message translates to:

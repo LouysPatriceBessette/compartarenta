@@ -448,6 +448,28 @@
   "housingAmendmentRequestStatusAction": "Estado de la solicitud",
   "housingAmendmentJournalTitle": "Registro de cambios",
   "housingAmendmentJournalSubtitle": "Solicitudes aceptadas y rechazadas",
+  "housingAmendmentJournalSubjectAgreementEnd": "Fecha de fin del acuerdo",
+  "housingAmendmentJournalLineAdd": "Alta de gasto - {title} - {amount}",
+  "@housingAmendmentJournalLineAdd": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineEdit": "Modificación de gasto - {title} - {amount}",
+  "@housingAmendmentJournalLineEdit": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineRemove": "Retiro de gasto - {title} - {amount}",
+  "@housingAmendmentJournalLineRemove": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "housingAmendmentJournalEmpty": "Aún no hay cambios al plan.",
   "housingAmendmentJournalAccepted": "Aceptada",
   "housingAmendmentJournalRefused": "Rechazada",

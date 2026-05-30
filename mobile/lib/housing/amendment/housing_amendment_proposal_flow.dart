@@ -136,6 +136,10 @@ class HousingAmendmentProposalFlow {
         revisionId: revisionId,
       );
       if (send.sentCount == 0) {
+        debugPrint(
+          'housing_amendment: relay send failed for $planId revision=$revisionId '
+          '(failedParticipants=${send.failedParticipantIds.length})',
+        );
         await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -144,6 +148,10 @@ class HousingAmendmentProposalFlow {
         }
         return false;
       }
+      debugPrint(
+        'housing_amendment: relay sent to ${send.sentCount} target(s) '
+        'for $planId revision=$revisionId',
+      );
     } catch (e) {
       await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
       if (context.mounted) {

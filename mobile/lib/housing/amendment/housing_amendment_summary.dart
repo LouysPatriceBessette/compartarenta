@@ -5,6 +5,7 @@ import '../proposals/housing_proposal_transport_service.dart';
 import '../proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_date.dart';
+import '../../util/format_money.dart';
 import '../realized_expense/realized_expense_participants.dart';
 import 'housing_amendment_settlement.dart';
 import 'housing_amendment_type.dart';
@@ -56,6 +57,86 @@ class HousingAmendmentSummary {
           l10n.housingAmendmentSubjectAgreementEnd,
         HousingAmendmentType.ruleChange => l10n.housingAmendmentSubjectRuleChange,
       };
+
+  /// Short list label for the change journal (type-specific title formats).
+  String journalListSubject(AppLocalizations l10n) {
+    switch (type) {
+      case HousingAmendmentType.agreementEnd:
+        return l10n.housingAmendmentJournalSubjectAgreementEnd;
+      case HousingAmendmentType.lineAdd:
+        return _journalLineExpenseSubject(
+          l10n,
+          formatTitleAmount: l10n.housingAmendmentJournalLineAdd,
+          sourceText: proposedText,
+          fallbackTitle: targetLineTitle,
+        );
+      case HousingAmendmentType.lineEdit:
+        return _journalLineExpenseSubject(
+          l10n,
+          formatTitleAmount: l10n.housingAmendmentJournalLineEdit,
+          sourceText: currentText,
+          fallbackTitle: targetLineTitle,
+        );
+      case HousingAmendmentType.lineRemove:
+        return _journalLineExpenseSubject(
+          l10n,
+          formatTitleAmount: l10n.housingAmendmentJournalLineRemove,
+          sourceText: currentText,
+          fallbackTitle: targetLineTitle,
+        );
+      default:
+        return subjectLabel(l10n);
+    }
+  }
+
+  String _journalLineExpenseSubject(
+    AppLocalizations l10n, {
+    required String Function(String title, String amount) formatTitleAmount,
+    required String sourceText,
+    required String? fallbackTitle,
+  }) {
+    final parsed = _parseTitleAmountFromComparisonText(
+      sourceText,
+      localeName: l10n.localeName,
+    );
+    final title = (parsed?.title ?? fallbackTitle ?? '').trim();
+    if (title.isEmpty) {
+      return sourceText.trim().isEmpty ? subjectLabel(l10n) : sourceText;
+    }
+    final amount = parsed?.formattedAmount ?? l10n.housingAmendmentValueNotSet;
+    return formatTitleAmount(title, amount);
+  }
+
+  ({String title, String formattedAmount})? _parseTitleAmountFromComparisonText(
+    String text, {
+    required String localeName,
+  }) {
+    const sep = ' · ';
+    final trimmed = text.trim();
+    if (!trimmed.contains(sep)) return null;
+    final parts = trimmed.split(sep);
+    if (parts.length < 2) return null;
+    final title = parts.first.trim();
+    final amountPart = parts[1].trim();
+    if (title.isEmpty || amountPart.isEmpty) return null;
+
+    final amountMatch = RegExp(r'^([\d.,]+)\s*([A-Za-z]{3})?$').firstMatch(amountPart);
+    if (amountMatch == null) {
+      return (title: title, formattedAmount: amountPart);
+    }
+    final majorRaw = amountMatch.group(1)!.replaceAll(',', '.');
+    final major = double.tryParse(majorRaw);
+    final currencyCode = amountMatch.group(2) ?? '';
+    if (major == null) {
+      return (title: title, formattedAmount: amountPart);
+    }
+    final formatted = formatMinorAsMoneyForLocale(
+      localeName,
+      (major * 100).round(),
+      currencyCode,
+    );
+    return (title: title, formattedAmount: formatted);
+  }
 }
 
 /// Returns null when [revisionId] is not an amendment revision.

@@ -1888,8 +1888,12 @@ class HandshakeOrchestrator {
     final transport = HousingProposalTransportService(_db);
     final selfPriv = await _identity.loadOrCreatePrivateKey();
     final selfPub = await _identity.publicKey();
-    final allConnectedContacts = (await _contacts.list())
-        .where((c) => c.kind == 'connected')
+    final relayReachableContacts = (await _contacts.list())
+        .where((c) => !c.id.startsWith('contact:local:'))
+        .where((c) {
+          final peer = c.peerPublicMaterial;
+          return peer != null && peer.isNotEmpty;
+        })
         .toList(growable: false);
     var sent = 0;
     final failed = <String>[];
@@ -1901,12 +1905,14 @@ class HandshakeOrchestrator {
       final targets = _housingProposalTargetContacts(
         participant: participant,
         selectedContact: contact,
-        connectedContacts: allConnectedContacts,
+        relayReachableContacts: relayReachableContacts,
         planParticipantCount: participants.length,
       );
       if (targets.isEmpty) {
         debugPrint(
-          'housing_proposal no connected target for ${participant.id}',
+          'housing_proposal no relay target for ${participant.id} '
+          '(contactId=${contactId ?? '-'}, '
+          'relayPeers=${relayReachableContacts.length})',
         );
         failed.add(participant.id);
         relayStatusByParticipantId[participant.id] = 'failed';
@@ -1987,43 +1993,40 @@ class HandshakeOrchestrator {
   List<Contact> _housingProposalTargetContacts({
     required Participant participant,
     required Contact? selectedContact,
-    required List<Contact> connectedContacts,
+    required List<Contact> relayReachableContacts,
     required int planParticipantCount,
-    bool allowNonConnectedCandidates = false,
   }) {
     final targets = <Contact>[];
     final seenPeerMaterial = <String>{};
 
-    void add(Contact? contact, {bool allowNonConnected = false}) {
+    void add(Contact? contact) {
       if (contact == null) return;
-      if (!allowNonConnected && contact.kind != 'connected') return;
+      if (contact.id.startsWith('contact:local:')) return;
       final peer = contact.peerPublicMaterial;
       if (peer == null || peer.isEmpty || !seenPeerMaterial.add(peer)) return;
       targets.add(contact);
     }
 
-    add(selectedContact, allowNonConnected: true);
+    add(selectedContact);
 
     final participantName = participant.displayName.trim().toLowerCase();
     final participantAvatar = participant.avatarId.trim();
-    for (final contact in connectedContacts) {
+    for (final contact in relayReachableContacts) {
       final nameMatches =
           participantName.isNotEmpty &&
           contact.effectiveDisplayName.trim().toLowerCase() == participantName;
       final avatarMatches =
           participantAvatar.isNotEmpty && contact.avatarId == participantAvatar;
       if (nameMatches || avatarMatches) {
-        add(contact, allowNonConnected: allowNonConnectedCandidates);
+        add(contact);
       }
     }
 
-    if (planParticipantCount == 1 && connectedContacts.isNotEmpty) {
-      // A rare reinstall/reconnect can leave stale connected rows that still
-      // accept relay POSTs but are no longer polled by the peer. For a single
-      // invitee plan, fan out to the local connected candidates so the current
-      // reinstall identity can receive the proposal.
-      for (final contact in connectedContacts) {
-        add(contact, allowNonConnected: allowNonConnectedCandidates);
+    if (targets.isEmpty && planParticipantCount <= 2) {
+      // Fresh installs can keep a handshake/redeemed stub while peer keys are
+      // already valid for steady-state relay. Deliver to every reachable peer.
+      for (final contact in relayReachableContacts) {
+        add(contact);
       }
     }
 
@@ -2089,20 +2092,19 @@ class HandshakeOrchestrator {
       revisionId: selectedRevisionId,
       details: {'status': status.name},
     );
-    if (sendResult.sentCount > 0) {
-      if (status == ProposalResponseStatus.accepted) {
-        await transport.tryActivatePlanIfUnanimous(
-          planId: planId,
-          revisionId: selectedRevisionId,
-        );
-      } else {
-        await transport.archiveInvalidatedProposal(
-          planId: planId,
-          revisionId: selectedRevisionId,
-          status: status,
-          responderParticipantId: selfParticipantId,
-        );
-      }
+    if (status == ProposalResponseStatus.accepted) {
+      await transport.tryActivatePlanIfUnanimous(
+        planId: planId,
+        revisionId: selectedRevisionId,
+      );
+      await transport.reconcileStalePackagePending(planId);
+    } else if (sendResult.sentCount > 0) {
+      await transport.archiveInvalidatedProposal(
+        planId: planId,
+        revisionId: selectedRevisionId,
+        status: status,
+        responderParticipantId: selfParticipantId,
+      );
     }
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     return sendResult;
@@ -2223,9 +2225,8 @@ class HandshakeOrchestrator {
       final targets = _housingProposalTargetContacts(
         participant: participant,
         selectedContact: contact,
-        connectedContacts: decisionCandidateContacts,
+        relayReachableContacts: decisionCandidateContacts,
         planParticipantCount: participants.length,
-        allowNonConnectedCandidates: true,
       );
       if (targets.isEmpty) {
         debugPrint(
@@ -2378,9 +2379,8 @@ class HandshakeOrchestrator {
       final targets = _housingProposalTargetContacts(
         participant: participant,
         selectedContact: contact,
-        connectedContacts: decisionCandidateContacts,
+        relayReachableContacts: decisionCandidateContacts,
         planParticipantCount: participants.length,
-        allowNonConnectedCandidates: true,
       );
       if (targets.isEmpty) {
         debugPrint(
@@ -2495,6 +2495,7 @@ class HandshakeOrchestrator {
           responderParticipantId: participantId,
         );
       }
+      await transport.reconcileStalePackagePending(pkg.planId);
     }
     await PushNotificationService.showLocalHousingDecisionNotification(
       senderDisplayName: senderDisplayName,

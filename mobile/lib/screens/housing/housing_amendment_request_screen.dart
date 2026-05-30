@@ -10,11 +10,11 @@ import '../../housing/amendment/housing_amendment_summary.dart'
     show removeLineFromRevisionPayload;
 import '../../housing/amendment/housing_amendment_type.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
+import '../../relay/handshake_orchestrator.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
-import 'housing_amendment_journal_screen.dart';
 import 'housing_amendment_submit_preview_screen.dart';
 import 'housing_plan_screen.dart';
 
@@ -31,13 +31,11 @@ class _AmendmentMenuOption extends _AmendmentMenuEntry {
     this.type,
     required this.title,
     required this.subtitle,
-    this.isJournal = false,
   });
 
   final HousingAmendmentType? type;
   final String title;
   final String subtitle;
-  final bool isJournal;
 }
 
 /// Picker for a single in-force plan modification (pass 4).
@@ -56,16 +54,60 @@ class HousingAmendmentRequestScreen extends StatefulWidget {
       _HousingAmendmentRequestScreenState();
 }
 
-class _HousingAmendmentRequestScreenState
-    extends State<HousingAmendmentRequestScreen> {
+class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestScreen>
+    with WidgetsBindingObserver {
   bool _redirectedToPending = false;
+  bool _openingPendingFromBanner = false;
+  Future<bool>? _pendingFuture;
+  int _pendingGeneration = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshPendingBanner();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+        _onSteadyInboxTick,
+      );
       unawaited(_openPendingAmendmentIfAwaitingLocal());
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _refreshPendingBanner();
+    }
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    _refreshPendingBanner();
+  }
+
+  void _refreshPendingBanner() {
+    final generation = ++_pendingGeneration;
+    final future = HousingProposalTransportService(AppDatabase.processScope)
+        .hasPendingAmendmentForUi(widget.planId);
+    setState(() {
+      _pendingFuture = future;
+    });
+    unawaited(
+      future.then((_) {
+        if (!mounted || generation != _pendingGeneration) return;
+        setState(() {});
+      }),
+    );
   }
 
   Future<void> _openPendingAmendmentIfAwaitingLocal() async {
@@ -114,12 +156,6 @@ class _HousingAmendmentRequestScreenState
           title: l10n.housingAmendmentTypeRuleChange,
           subtitle: l10n.housingAmendmentTypeRuleChangeHint,
         ),
-        const _AmendmentMenuSeparator(),
-        _AmendmentMenuOption(
-          isJournal: true,
-          title: l10n.housingAmendmentJournalTitle,
-          subtitle: l10n.housingAmendmentJournalSubtitle,
-        ),
       ];
 
   @override
@@ -131,9 +167,7 @@ class _HousingAmendmentRequestScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentRequestTitle)),
       body: FutureBuilder<bool>(
-        future: HousingProposalTransportService(db).hasPendingAmendmentForUi(
-          widget.planId,
-        ),
+        future: _pendingFuture,
         builder: (context, pendingSnap) {
           if (pendingSnap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
@@ -151,13 +185,25 @@ class _HousingAmendmentRequestScreenState
                     title: Text(l10n.housingActiveHubPendingAmendment),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
-                      await openHousingPendingProposalOrAmendment(
-                        context,
-                        db: db,
-                        planId: widget.planId,
-                        prefs: widget.prefs,
-                        isAmendment: true,
-                      );
+                      if (_openingPendingFromBanner) return;
+                      _openingPendingFromBanner = true;
+                      try {
+                        final pendingId =
+                            await HousingProposalTransportService(db)
+                                .pendingRevisionIdForPlan(widget.planId);
+                        if (!context.mounted || pendingId == null) return;
+                        await openHousingPendingProposalOrAmendment(
+                          context,
+                          db: db,
+                          planId: widget.planId,
+                          prefs: widget.prefs,
+                          revisionId: pendingId,
+                          isAmendment: true,
+                        );
+                      } finally {
+                        _openingPendingFromBanner = false;
+                        if (mounted) _refreshPendingBanner();
+                      }
                     },
                   ),
                 ),
@@ -220,18 +266,6 @@ class _HousingAmendmentRequestScreenState
       return;
     }
     if (!context.mounted) return;
-
-    if (opt.isJournal) {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (_) => HousingAmendmentJournalScreen(
-            planId: planId,
-            prefs: prefs,
-          ),
-        ),
-      );
-      return;
-    }
 
     final type = opt.type;
     if (type == null) return;
@@ -302,6 +336,8 @@ class _HousingAmendmentRequestScreenState
         ),
       ),
     );
+    if (!mounted) return;
+    _refreshPendingBanner();
   }
 
   Future<void> _amendExistingLine(

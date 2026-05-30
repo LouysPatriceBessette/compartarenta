@@ -1268,6 +1268,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Solicitudes aceptadas y rechazadas';
 
   @override
+  String get housingAmendmentJournalSubjectAgreementEnd =>
+      'Fecha de fin del acuerdo';
+
+  @override
+  String housingAmendmentJournalLineAdd(String title, String amount) {
+    return 'Alta de gasto - $title - $amount';
+  }
+
+  @override
+  String housingAmendmentJournalLineEdit(String title, String amount) {
+    return 'Modificación de gasto - $title - $amount';
+  }
+
+  @override
+  String housingAmendmentJournalLineRemove(String title, String amount) {
+    return 'Retiro de gasto - $title - $amount';
+  }
+
+  @override
   String get housingAmendmentJournalEmpty => 'Aún no hay cambios al plan.';
 
   @override

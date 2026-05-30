@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_expense_preview.dart';
 import '../../housing/amendment/housing_amendment_settlement.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
@@ -103,11 +104,15 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           settledAccepted = archivedAmendmentWasAccepted(payload);
           final roster =
               await participantsForPlan(widget.db, widget.planId);
-          final responderId =
-              payload['invalidatedByParticipantId']?.toString() ?? '';
-          settledActorName = responderId.isEmpty
+          final actorId = await settledAmendmentActorParticipantId(
+            db: widget.db,
+            revisionId: rev.id,
+            proposerParticipantId: summary.proposerParticipantId,
+            archivedPayload: payload,
+          );
+          settledActorName = actorId == null || actorId.isEmpty
               ? summary.proposerDisplayName
-              : displayNameForParticipant(responderId, roster);
+              : displayNameForParticipant(actorId, roster);
           var settledWhen = rev.createdAt;
           if (settledAccepted) {
             final responses = await (widget.db.select(
@@ -121,11 +126,11 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
               if (at != null && at.isAfter(settledWhen)) settledWhen = at;
             }
           } else {
-            final response = responderId.isEmpty
+            final response = actorId == null || actorId.isEmpty
                 ? null
                 : await (widget.db.select(widget.db.proposalResponses)
                       ..where((t) => t.revisionId.equals(rev.id))
-                      ..where((t) => t.participantId.equals(responderId)))
+                      ..where((t) => t.participantId.equals(actorId)))
                     .getSingleOrNull();
             settledWhen = response?.respondedAt ?? rev.createdAt;
           }
@@ -353,15 +358,13 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                     ),
                   ],
                   const SizedBox(height: 24),
-                  _ValueCard(
-                    label: _beforeValueLabel(l10n, data),
-                    value: summary.currentText,
-                  ),
-                  const SizedBox(height: 12),
-                  _ValueCard(
-                    label: l10n.housingAmendmentDetailProposed,
-                    value: summary.proposedText,
-                    emphasized: true,
+                  HousingAmendmentComparisonSection(
+                    db: widget.db,
+                    planId: widget.planId,
+                    prefs: widget.prefs,
+                    summary: summary,
+                    currentLabel: _beforeValueLabel(l10n, data),
+                    proposedLabel: l10n.housingAmendmentDetailProposed,
                   ),
                   if (widget.readOnlySettled &&
                       data.settledAccepted != null &&
@@ -496,46 +499,4 @@ class _AmendmentDetailPayload {
   final bool? settledAccepted;
   final String? settledActorName;
   final DateTime? settledAt;
-}
-
-class _ValueCard extends StatelessWidget {
-  const _ValueCard({
-    required this.label,
-    required this.value,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: emphasized
-                  ? theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    )
-                  : theme.textTheme.bodyLarge,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

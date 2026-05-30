@@ -5,14 +5,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:go_router/go_router.dart';
-
 import '../app_root_navigator.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
 import '../housing/housing_navigation_intent.dart';
-import '../screens/housing/housing_amendment_detail_screen.dart';
-import '../screens/housing/housing_amendment_journal_screen.dart';
 import '../firebase_options.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
@@ -179,7 +175,8 @@ class PushNotificationService {
     if (payload.startsWith(_housingAmendmentPrefix)) {
       final planId = payload.substring(_housingAmendmentPrefix.length);
       if (planId.isNotEmpty) {
-        _navigateToHousingAmendmentJournal(planId);
+        HousingNavigationIntent.requestOpenPendingAmendment(planId);
+        _navigateToHousing();
       } else {
         _navigateToHousing();
       }
@@ -193,7 +190,8 @@ class PushNotificationService {
       if (planId.isNotEmpty && revisionId.isNotEmpty) {
         _navigateToHousingAmendmentDecision(planId, revisionId);
       } else if (planId.isNotEmpty) {
-        _navigateToHousingAmendmentJournal(planId);
+        HousingNavigationIntent.requestOpenPendingAmendment(planId);
+        _navigateToHousing();
       } else {
         _navigateToHousing();
       }
@@ -664,98 +662,16 @@ class PushNotificationService {
     _navigateToHousing();
   }
 
-  /// Notification tap: open amendment detail for a settled decision.
+  /// Notification tap: open settled amendment detail (journal card) above housing.
   static void _navigateToHousingAmendmentDecision(
     String planId,
     String revisionId,
   ) {
-    void attempt([int tries = 0]) {
-      final ctx = appRootNavigatorKey.currentContext;
-      if (ctx != null && ctx.mounted) {
-        unawaited(
-          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
-        );
-        final router = GoRouter.of(ctx);
-        router.go('/housing');
-        void pushDetail([int pushTries = 0]) {
-          final navCtx = appRootNavigatorKey.currentContext;
-          if (navCtx == null || !navCtx.mounted) {
-            if (pushTries >= 40) return;
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => pushDetail(pushTries + 1),
-            );
-            return;
-          }
-          unawaited(
-            AppPreferences.load().then((prefs) async {
-              if (!navCtx.mounted) return;
-              await Navigator.of(navCtx).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => HousingAmendmentDetailScreen(
-                    db: AppDatabase.processScope,
-                    planId: planId,
-                    prefs: prefs,
-                    revisionId: revisionId,
-                    readOnlySettled: true,
-                  ),
-                ),
-              );
-            }),
-          );
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback((_) => pushDetail());
-        return;
-      }
-      if (tries >= 30) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
-    }
-
-    attempt();
-  }
-
-  /// Notification tap: open housing hub, then amendment journal above it.
-  static void _navigateToHousingAmendmentJournal(String planId) {
-    void attempt([int tries = 0]) {
-      final ctx = appRootNavigatorKey.currentContext;
-      if (ctx != null && ctx.mounted) {
-        unawaited(
-          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
-        );
-        final router = GoRouter.of(ctx);
-        router.go('/housing');
-        void pushJournal([int pushTries = 0]) {
-          final navCtx = appRootNavigatorKey.currentContext;
-          if (navCtx == null || !navCtx.mounted) {
-            if (pushTries >= 40) return;
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => pushJournal(pushTries + 1),
-            );
-            return;
-          }
-          unawaited(
-            AppPreferences.load().then((prefs) async {
-              if (!navCtx.mounted) return;
-              await Navigator.of(navCtx).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => HousingAmendmentJournalScreen(
-                    planId: planId,
-                    prefs: prefs,
-                  ),
-                ),
-              );
-            }),
-          );
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback((_) => pushJournal());
-        return;
-      }
-      if (tries >= 30) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
-    }
-
-    attempt();
+    HousingNavigationIntent.requestOpenSettledAmendmentDetail(
+      planId: planId,
+      revisionId: revisionId,
+    );
+    _navigateToHousing();
   }
 
   static void _handleOpenData(Map<String, dynamic> data) {

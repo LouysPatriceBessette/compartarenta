@@ -70,11 +70,15 @@ Future<List<HousingAmendmentJournalEntry>> loadHousingAmendmentJournal({
     if (summary == null) continue;
 
     final accepted = archivedAmendmentWasAccepted(payload);
-    final responderId =
-        payload['invalidatedByParticipantId']?.toString() ?? '';
-    final actorName = responderId.isEmpty
+    final actorId = await settledAmendmentActorParticipantId(
+      db: db,
+      revisionId: rev.id,
+      proposerParticipantId: summary.proposerParticipantId,
+      archivedPayload: payload,
+    );
+    final actorName = actorId == null || actorId.isEmpty
         ? summary.proposerDisplayName
-        : nameFor(responderId);
+        : nameFor(actorId);
 
     DateTime settledAt = rev.createdAt;
     if (accepted) {
@@ -87,11 +91,11 @@ Future<List<HousingAmendmentJournalEntry>> loadHousingAmendmentJournal({
         if (at != null && at.isAfter(settledAt)) settledAt = at;
       }
     } else {
-      final response = responderId.isEmpty
+      final response = actorId == null || actorId.isEmpty
           ? null
           : await (db.select(db.proposalResponses)
                 ..where((t) => t.revisionId.equals(rev.id))
-                ..where((t) => t.participantId.equals(responderId)))
+                ..where((t) => t.participantId.equals(actorId)))
               .getSingleOrNull();
       settledAt = response?.respondedAt ?? rev.createdAt;
     }

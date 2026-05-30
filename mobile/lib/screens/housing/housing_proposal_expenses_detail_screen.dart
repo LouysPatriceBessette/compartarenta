@@ -2,8 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
-import '../../housing/expense_form/expense_plan_line_form_body.dart';
 import '../../housing/expense_form/expense_plan_line_view_data.dart';
+import '../../housing/expense_form/housing_expense_line_presentation_card.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Swipeable read-only expense cards for a housing proposal preview.
@@ -177,21 +177,7 @@ class _HousingProposalExpensesDetailScreenState
                       final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
                       return SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + bottomInset),
-                        child: Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                              color: theme.colorScheme.outlineVariant,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: ExpensePlanLineFormBody.presentation(
-                              viewData: view,
-                            ),
-                          ),
-                        ),
+                        child: HousingExpenseLinePresentationCard(viewData: view),
                       );
                     },
                   ),

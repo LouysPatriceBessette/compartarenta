@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../prefs/app_preferences.dart';
 import '../../screens/housing/housing_amendment_detail_screen.dart';
+import '../../screens/housing/housing_amendment_journal_screen.dart';
 import '../../screens/housing/housing_invite_proposal_screen.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import 'housing_amendment_summary.dart';
@@ -42,6 +43,43 @@ Future<void> openHousingPendingProposalOrAmendment(
               prefs: prefs,
               revisionId: revisionId,
             ),
+    ),
+  );
+}
+
+/// Opens a settled (archived) amendment in read-only detail.
+Future<void> openHousingSettledAmendmentDetail(
+  BuildContext context, {
+  required AppDatabase db,
+  required String planId,
+  required AppPreferences prefs,
+  required String revisionId,
+}) {
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute<void>(
+      builder: (_) => HousingAmendmentDetailScreen(
+        db: db,
+        planId: planId,
+        prefs: prefs,
+        revisionId: revisionId,
+        readOnlySettled: true,
+      ),
+    ),
+  );
+}
+
+/// Opens the settled-amendment journal (no pending-request banner).
+Future<void> openHousingAmendmentJournal(
+  BuildContext context, {
+  required String planId,
+  required AppPreferences prefs,
+}) {
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute<void>(
+      builder: (_) => HousingAmendmentJournalScreen(
+        planId: planId,
+        prefs: prefs,
+      ),
     ),
   );
 }

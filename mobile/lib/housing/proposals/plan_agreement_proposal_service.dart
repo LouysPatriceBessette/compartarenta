@@ -52,6 +52,7 @@ class PlanAgreementProposalService {
       throw StateError('No agreement found for plan $planId');
     }
     final lines = await _db.listPlanLines(planId);
+    final ratioTemplates = await _db.listPlanRatioTemplates(planId);
     final ratios = await (_db.select(
       _db.planRatios,
     )..where((t) => t.planId.equals(planId))).get();
@@ -104,6 +105,14 @@ class PlanAgreementProposalService {
               if (r.lineId != null) 'lineId': r.lineId,
               if (r.groupId != null) 'groupId': r.groupId,
               'weight': r.weight,
+            },
+        ],
+        'ratioTemplates': [
+          for (final t in ratioTemplates)
+            {
+              'id': t.id,
+              'displayTitle': t.displayTitle,
+              'weightsJson': t.weightsJson,
             },
         ],
       },

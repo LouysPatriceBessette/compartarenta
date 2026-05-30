@@ -1177,7 +1177,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingAmendmentDetailProposed => 'Proposé';
 
   @override
-  String get housingAmendmentSubjectAgreementEnd => 'la date de fin d\'entente';
+  String get housingAmendmentSubjectAgreementEnd => 'Date de fin d\'entente';
 
   @override
   String housingAmendmentSubjectLineEdit(String line) {
@@ -1268,6 +1268,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get housingAmendmentJournalSubtitle =>
       'Demandes acceptées et refusées';
+
+  @override
+  String get housingAmendmentJournalSubjectAgreementEnd =>
+      'Date de fin d\'entente';
+
+  @override
+  String housingAmendmentJournalLineAdd(String title, String amount) {
+    return 'Ajout d\'une dépense - $title - $amount';
+  }
+
+  @override
+  String housingAmendmentJournalLineEdit(String title, String amount) {
+    return 'Modification d\'une dépense - $title - $amount';
+  }
+
+  @override
+  String housingAmendmentJournalLineRemove(String title, String amount) {
+    return 'Retrait d\'une dépense - $title - $amount';
+  }
 
   @override
   String get housingAmendmentJournalEmpty =>

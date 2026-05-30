@@ -423,7 +423,7 @@
   "housingAmendmentDetailPrevious": "Auparavant",
   "housingAmendmentDetailAtRequestTime": "Au moment de la demande",
   "housingAmendmentDetailProposed": "Proposé",
-  "housingAmendmentSubjectAgreementEnd": "la date de fin d'entente",
+  "housingAmendmentSubjectAgreementEnd": "Date de fin d'entente",
   "housingAmendmentSubjectLineEdit": "la dépense « {line} »",
   "housingAmendmentSubjectLineAmount": "le montant de « {line} »",
   "housingAmendmentSubjectLineRecurrence": "la récurrence de « {line} »",
@@ -453,6 +453,28 @@
   "housingAmendmentRequestStatusAction": "Statut de la demande",
   "housingAmendmentJournalTitle": "Journal des changements",
   "housingAmendmentJournalSubtitle": "Demandes acceptées et refusées",
+  "housingAmendmentJournalSubjectAgreementEnd": "Date de fin d'entente",
+  "housingAmendmentJournalLineAdd": "Ajout d'une dépense - {title} - {amount}",
+  "@housingAmendmentJournalLineAdd": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineEdit": "Modification d'une dépense - {title} - {amount}",
+  "@housingAmendmentJournalLineEdit": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "housingAmendmentJournalLineRemove": "Retrait d'une dépense - {title} - {amount}",
+  "@housingAmendmentJournalLineRemove": {
+    "placeholders": {
+      "title": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "housingAmendmentJournalEmpty": "Aucun changement au plan pour le moment.",
   "housingAmendmentJournalAccepted": "Acceptée",
   "housingAmendmentJournalRefused": "Refusée",

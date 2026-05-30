@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
 import '../amendment/housing_amendment_type.dart';
+import '../expense_form/expense_ratio_template_repository.dart';
 import 'housing_proposal_revision_state.dart';
 import 'plan_agreement_proposal_service.dart';
 
@@ -283,6 +284,8 @@ class HousingProposalTransportService {
     if (sourcePayload['amendmentType'] != null) {
       importedPayload['amendmentType'] ??= sourcePayload['amendmentType'];
     }
+    importedPayload['amendmentTargetLineId'] ??=
+        sourcePayload['amendmentTargetLineId'];
     importedPayload['lifecycleState'] ??= 'open';
 
     await _db
@@ -343,6 +346,7 @@ class HousingProposalTransportService {
   /// When an agreement is already active, clears a stale [pendingRevisionId] left
   /// from the initial proposal (not an open amendment awaiting responses).
   Future<void> reconcileStalePackagePending(String planId) async {
+    await repairPendingAmendmentActivationIfUnanimous(planId);
     await repairPendingAmendmentForkMetadata(planId);
     final activeId = await resolveActiveRevisionIdForPlan(planId);
     if (activeId == null || activeId.isEmpty) return;
@@ -416,6 +420,53 @@ class HousingProposalTransportService {
       if (await hasActiveRevision(plan.id)) return true;
     }
     return false;
+  }
+
+  /// Activates a pending amendment when every response is already accepted locally
+  /// (e.g. peer acceptance arrived but [tryActivatePlanIfUnanimous] did not run).
+  Future<void> repairPendingAmendmentActivationIfUnanimous(String planId) async {
+    final packages = await proposalPackagesForPlan(planId);
+    for (final pkg in packages) {
+      final pendingId = pkg.pendingRevisionId;
+      if (pendingId == null || pendingId.isEmpty) continue;
+
+      final rev = await (_db.select(_db.proposalRevisions)
+            ..where((t) => t.id.equals(pendingId)))
+          .getSingleOrNull();
+      if (rev == null) continue;
+
+      Map<String, dynamic> payload;
+      try {
+        payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      } catch (_) {
+        continue;
+      }
+      if ((payload['lifecycleState'] as String?) == 'archived') continue;
+
+      final activeId = await resolveActiveRevisionIdForPlan(planId);
+      final isAmendment =
+          HousingAmendmentTypeWire.parse(payload['amendmentType'] as String?) !=
+              null ||
+          (activeId != null &&
+              resolveAmendmentType(
+                    pendingPayload: payload,
+                    activeRevisionId: activeId,
+                    pendingRevisionId: pendingId,
+                  ) !=
+                  null);
+      if (!isAmendment) continue;
+
+      final outcome = await tryActivatePlanIfUnanimous(
+        planId: planId,
+        revisionId: pendingId,
+      );
+      if (outcome == ProposalActivationOutcome.activated) {
+        debugPrint(
+          'housing: repaired unanimous activation for pending $pendingId '
+          'on $planId',
+        );
+      }
+    }
   }
 
   /// Persists missing fork metadata on imported amendment revisions (legacy imports).
@@ -1199,7 +1250,93 @@ class HousingProposalTransportService {
       );
     }
 
+    await _upsertRatioTemplatesFromPayload(planId, payload, now);
+    await _ensureRatioTemplatesFromAppliedLines(planId, now);
     await _upsertAgreement(planId, payload, now);
+  }
+
+  Future<void> _upsertRatioTemplatesFromPayload(
+    String planId,
+    Map<String, dynamic> payload,
+    DateTime now,
+  ) async {
+    final templates = _list(_map(payload['plan'])['ratioTemplates']);
+    for (final entry in templates.whereType<Map>()) {
+      final id = _string(entry['id']);
+      if (id.isEmpty) continue;
+      await _db.upsertPlanRatioTemplate(
+        PlanRatioTemplatesCompanion.insert(
+          id: id,
+          planId: planId,
+          displayTitle: _string(entry['displayTitle'], fallback: '—'),
+          weightsJson: _string(entry['weightsJson']),
+          createdAt: now,
+        ),
+      );
+    }
+  }
+
+  /// Rebuilds missing "Like" templates from applied line ratios (legacy payloads).
+  Future<void> _ensureRatioTemplatesFromAppliedLines(
+    String planId,
+    DateTime now,
+  ) async {
+    final repo = ExpenseRatioTemplateRepository(_db);
+    final lines = await _db.listPlanLines(planId);
+    final allRatios = await (_db.select(_db.planRatios)
+          ..where((t) => t.planId.equals(planId)))
+        .get();
+
+    for (final line in lines) {
+      final weights = {
+        for (final r in allRatios.where((r) => r.lineId == line.id))
+          r.participantId: r.weight,
+      };
+      if (weights.isEmpty) continue;
+      final sum = weights.values.fold<int>(0, (a, b) => a + b);
+      if (sum != ExpenseRatioTemplateRepository.weightScale) continue;
+
+      final existingId = line.ratioTemplateId;
+      if (existingId != null && existingId.isNotEmpty) {
+        final known = await (_db.select(_db.planRatioTemplates)
+              ..where((t) => t.id.equals(existingId)))
+            .getSingleOrNull();
+        if (known != null) continue;
+      }
+
+      final registeredId = await repo.registerIfNew(
+        planId: planId,
+        displayTitle: line.title,
+        weights: weights,
+        createdAt: now,
+      );
+      if (line.ratioTemplateId != registeredId) {
+        await _db.upsertPlanLine(
+          PlanLinesCompanion.insert(
+            id: line.id,
+            planId: line.planId,
+            isRecurring: line.isRecurring,
+            title: line.title,
+            currency: line.currency,
+            amountUsesRange: drift.Value(line.amountUsesRange),
+            amountMinor: drift.Value(line.amountMinor),
+            minAmountMinor: drift.Value(line.minAmountMinor),
+            maxAmountMinor: drift.Value(line.maxAmountMinor),
+            description: drift.Value(line.description),
+            cadence: drift.Value(line.cadence),
+            recurrenceDayOfMonth: drift.Value(line.recurrenceDayOfMonth),
+            sortOrder: drift.Value(line.sortOrder),
+            groupId: drift.Value(line.groupId),
+            amountIsBudgetCap: drift.Value(line.amountIsBudgetCap),
+            paymentResponsibleParticipantId:
+                drift.Value(line.paymentResponsibleParticipantId),
+            recurrenceSpecJson: drift.Value(line.recurrenceSpecJson),
+            ratioTemplateId: drift.Value(registeredId),
+            createdAt: line.createdAt,
+          ),
+        );
+      }
+    }
   }
 
   String _resolveLineId(String planId, String sourceId) {
@@ -1501,6 +1638,30 @@ class HousingProposalTransportService {
     }
   }
 
+  String _remapWeightsJson(
+    String weightsJson,
+    Map<String, String> sourceToLocalParticipant,
+    String receivedPlanId,
+  ) {
+    try {
+      final decoded = jsonDecode(weightsJson);
+      if (decoded is! Map) return weightsJson;
+      final remapped = <String, int>{};
+      for (final entry in decoded.entries) {
+        if (entry.value is! num) continue;
+        final sourceId = entry.key.toString();
+        final tail = _localParticipantTail(sourceId, sourceToLocalParticipant);
+        final localId = tail == null
+            ? sourceId
+            : '$receivedPlanId:$tail';
+        remapped[localId] = (entry.value as num).toInt();
+      }
+      return jsonEncode(remapped);
+    } catch (_) {
+      return weightsJson;
+    }
+  }
+
   /// Maps a source participant id from the proposal payload to a local tail (`self`, `p0`, …).
   String? _localParticipantTail(
     String sourceId,
@@ -1676,6 +1837,22 @@ class HousingProposalTransportService {
     }
     final plan = copy['plan'];
     if (plan is Map) {
+      final lines = plan['lines'];
+      if (lines is List) {
+        for (final item in lines) {
+          if (item is Map) {
+            final paySource = _string(item['paymentResponsibleParticipantId']);
+            if (paySource.isNotEmpty) {
+              final payLocal =
+                  _localParticipantTail(paySource, sourceToLocalParticipant);
+              if (payLocal != null) {
+                item['paymentResponsibleParticipantId'] =
+                    '$receivedPlanId:$payLocal';
+              }
+            }
+          }
+        }
+      }
       final ratios = plan['ratios'];
       if (ratios is List) {
         for (final item in ratios) {
@@ -1685,6 +1862,21 @@ class HousingProposalTransportService {
             item['participantId'] = localTail == null
                 ? id
                 : '$receivedPlanId:$localTail';
+          }
+        }
+      }
+      final templates = plan['ratioTemplates'];
+      if (templates is List) {
+        for (final item in templates) {
+          if (item is Map) {
+            final raw = _string(item['weightsJson']);
+            if (raw.isNotEmpty) {
+              item['weightsJson'] = _remapWeightsJson(
+                raw,
+                sourceToLocalParticipant,
+                receivedPlanId,
+              );
+            }
           }
         }
       }

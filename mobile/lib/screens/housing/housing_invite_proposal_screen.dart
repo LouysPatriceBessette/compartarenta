@@ -437,14 +437,15 @@ class _HousingInviteProposalScreenState
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
-      body: FutureBuilder<List<dynamic>>(
-        future: _proposalFuture,
-        builder: (context, snap) {
-          if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return FutureBuilder<List<dynamic>>(
+      future: _proposalFuture,
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
           final roster = _sortedRoster(snap.data![0] as List<Participant>);
           final lines = snap.data![1] as List<PlanLine>;
           final agr = snap.data![2] as Agreement?;
@@ -544,7 +545,9 @@ class _HousingInviteProposalScreenState
             displayCurrency: displayCurrencyCodeForPlan(widget.prefs, lines),
           );
 
-          return Column(
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            body: Column(
             children: [
               Expanded(
                 child: ListView(
@@ -825,9 +828,9 @@ class _HousingInviteProposalScreenState
                 ),
               ),
             ],
+            ),
           );
-        },
-      ),
+      },
     );
   }
 }

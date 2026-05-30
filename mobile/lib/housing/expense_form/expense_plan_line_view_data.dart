@@ -42,6 +42,7 @@ class ExpensePlanLineViewData {
     required AppLocalizations l10n,
     required String dateFormat,
     required String defaultCurrency,
+    Map<String, int>? splitWeightsByParticipant,
   }) async {
     final recurrence =
         ExpenseRecurrenceSpec.parseStored(line.recurrenceSpecJson) ??
@@ -72,11 +73,12 @@ class ExpensePlanLineViewData {
       }
     }
 
-    final ratios = await db.listPlanRatios(planId);
-    final weights = {
-      for (final r in ratios.where((r) => r.lineId == line.id))
-        r.participantId: r.weight,
-    };
+    final weights = splitWeightsByParticipant ??
+        {
+          for (final r
+              in (await db.listPlanRatios(planId)).where((r) => r.lineId == line.id))
+            r.participantId: r.weight,
+        };
     final total = line.amountMinor ?? 0;
     ExpenseSplitGridState? split;
     if (total > 0 && weights.length == participantIds.length) {

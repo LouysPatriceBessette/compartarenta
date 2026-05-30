@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_journal.dart';
-import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
-import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
@@ -26,7 +24,8 @@ class HousingAmendmentJournalScreen extends StatefulWidget {
       _HousingAmendmentJournalScreenState();
 }
 
-class _HousingAmendmentJournalScreenState extends State<HousingAmendmentJournalScreen> {
+class _HousingAmendmentJournalScreenState
+    extends State<HousingAmendmentJournalScreen> {
   late Future<List<HousingAmendmentJournalEntry>> _entriesFuture;
 
   @override
@@ -44,10 +43,10 @@ class _HousingAmendmentJournalScreenState extends State<HousingAmendmentJournalS
     };
     setState(() {
       _entriesFuture = loadHousingAmendmentJournal(
-      db: AppDatabase.processScope,
-      planId: widget.planId,
-      l10n: l10n,
-      dateFormat: effectiveDateFormat(widget.prefs),
+        db: AppDatabase.processScope,
+        planId: widget.planId,
+        l10n: l10n,
+        dateFormat: effectiveDateFormat(widget.prefs),
       );
     });
   }
@@ -59,66 +58,45 @@ class _HousingAmendmentJournalScreenState extends State<HousingAmendmentJournalS
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentJournalTitle)),
-      body: FutureBuilder<bool>(
-        future: HousingProposalTransportService(AppDatabase.processScope)
-            .hasOpenPendingAmendment(widget.planId),
-        builder: (context, pendingSnap) {
-          final hasPending = pendingSnap.data ?? false;
-          return FutureBuilder<List<HousingAmendmentJournalEntry>>(
-            future: _entriesFuture,
-            builder: (context, snap) {
+      body: FutureBuilder<List<HousingAmendmentJournalEntry>>(
+        future: _entriesFuture,
+        builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           final entries = snap.data ?? const [];
-          if (entries.isEmpty && !hasPending) {
+          if (entries.isEmpty) {
             return Center(child: Text(l10n.housingAmendmentJournalEmpty));
           }
           return ListView.separated(
             padding: housingAmendmentScreenPadding(context),
-            itemCount: entries.length + (hasPending ? 1 : 0),
+            itemCount: entries.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              if (hasPending && index == 0) {
-                return Card(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  child: ListTile(
-                    leading: const Icon(Icons.edit_notifications_outlined),
-                    title: Text(l10n.housingActiveHubPendingAmendment),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => openHousingPendingProposalOrAmendment(
-                      context,
-                      db: AppDatabase.processScope,
-                      planId: widget.planId,
-                      prefs: widget.prefs,
-                      isAmendment: true,
-                    ),
-                  ),
-                );
-              }
-              final entryIndex = hasPending ? index - 1 : index;
-              final entry = entries[entryIndex];
+              final entry = entries[index];
               final summary = entry.summary;
               final statusLabel = entry.accepted
                   ? l10n.housingAmendmentJournalAccepted
                   : l10n.housingAmendmentJournalRefused;
               return Card(
                 child: ListTile(
-                  title: Text(
-                    l10n.housingAmendmentJournalCardTitle(
-                      summary.subjectLabel(l10n),
-                      statusLabel,
-                    ),
+                  title: Text(summary.journalListSubject(l10n)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(statusLabel),
+                      Text(
+                        l10n.housingAmendmentJournalCardSubtitle(
+                          entry.actorDisplayName,
+                          formatPreferenceDate(entry.settledAt, dateFmt),
+                        ),
+                      ),
+                    ],
                   ),
-                  subtitle: Text(
-                    l10n.housingAmendmentJournalCardSubtitle(
-                      entry.actorDisplayName,
-                      formatPreferenceDate(entry.settledAt, dateFmt),
-                    ),
-                  ),
+                  isThreeLine: true,
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).push<void>(
+                  onTap: () async {
+                    await Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
                         builder: (_) => HousingAmendmentDetailScreen(
                           db: AppDatabase.processScope,
@@ -129,11 +107,11 @@ class _HousingAmendmentJournalScreenState extends State<HousingAmendmentJournalS
                         ),
                       ),
                     );
+                    if (!mounted) return;
+                    _reload();
                   },
                 ),
               );
-            },
-          );
             },
           );
         },
