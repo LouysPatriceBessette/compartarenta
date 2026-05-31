@@ -218,6 +218,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           budgetLabel: l10n.housingExpenseAmountBudgetMax,
           onChanged: onAmountTypeChanged!,
         ),
+      if (!readOnly) const SizedBox(height: 24),
       if (readOnly)
         _readOnlyField(
           context,
@@ -226,6 +227,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         )
       else
         _PaymentResponsibleField(
+          theme: theme,
           value: paymentResponsibleId,
           label: l10n.housingExpensePaymentResponsibleLabel,
           allLabel: l10n.housingExpensePaymentResponsibleAll,
@@ -408,6 +410,7 @@ class _AmendmentLockedSection extends StatelessWidget {
 
 class _PaymentResponsibleField extends StatelessWidget {
   const _PaymentResponsibleField({
+    required this.theme,
     required this.value,
     required this.label,
     required this.allLabel,
@@ -416,6 +419,7 @@ class _PaymentResponsibleField extends StatelessWidget {
     required this.onChanged,
   });
 
+  final ThemeData theme;
   final String? value;
   final String label;
   final String allLabel;
@@ -426,18 +430,29 @@ class _PaymentResponsibleField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolved = resolvePlanParticipantDropdownValue(value, participantIds);
-    return DropdownButtonFormField<String?>(
-      initialValue: resolved,
-      decoration: InputDecoration(labelText: label),
-      items: [
-        DropdownMenuItem(value: null, child: Text(allLabel)),
-        for (var i = 0; i < participantIds.length; i++)
-          DropdownMenuItem(
-            value: participantIds[i],
-            child: Text(participantNames[i]),
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(label, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        DropdownMenu<String?>(
+          key: ValueKey<String?>(resolved),
+          initialSelection: resolved,
+          width: double.infinity,
+          menuHeight: 240,
+          requestFocusOnTap: true,
+          enableFilter: false,
+          dropdownMenuEntries: [
+            DropdownMenuEntry<String?>(value: null, label: allLabel),
+            for (var i = 0; i < participantIds.length; i++)
+              DropdownMenuEntry<String?>(
+                value: participantIds[i],
+                label: participantNames[i],
+              ),
+          ],
+          onSelected: onChanged,
+        ),
       ],
-      onChanged: onChanged,
     );
   }
 }

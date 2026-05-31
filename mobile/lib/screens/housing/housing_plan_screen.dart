@@ -333,7 +333,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   }
 
   String _ratioParticipantLabel(AppLocalizations l10n, int index) {
-    if (index == 0) return l10n.housingPlanYou;
+    if (index == 0) {
+      final selfName = widget.prefs.displayName.trim();
+      return selfName.isEmpty ? l10n.housingPlanYou : selfName;
+    }
     final nm = _nameControllers[index - 1].text.trim();
     return nm.isEmpty ? l10n.housingPlanCoParticipantUnnamed(index) : nm;
   }

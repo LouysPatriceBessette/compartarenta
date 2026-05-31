@@ -9,6 +9,7 @@ import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart'
     show removeLineFromRevisionPayload;
 import '../../housing/amendment/housing_amendment_type.dart';
+import '../../housing/amendment/housing_amendment_ui_gates.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
@@ -31,11 +32,13 @@ class _AmendmentMenuOption extends _AmendmentMenuEntry {
     this.type,
     required this.title,
     required this.subtitle,
+    this.enabled = true,
   });
 
   final HousingAmendmentType? type;
   final String title;
   final String subtitle;
+  final bool enabled;
 }
 
 /// Picker for a single in-force plan modification (pass 4).
@@ -139,6 +142,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
           type: HousingAmendmentType.lineEdit,
           title: l10n.housingAmendmentTypeLineEdit,
           subtitle: l10n.housingAmendmentTypeLineEditHint,
+          enabled: HousingAmendmentUiGates.lineEditEnabled,
         ),
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineRemove,
@@ -232,12 +236,15 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
                           title: Text(opt.title),
                           subtitle: Text(opt.subtitle),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _onOptionTap(
-                            context,
-                            opt,
-                            widget.planId,
-                            widget.prefs,
-                          ),
+                          enabled: opt.enabled,
+                          onTap: !opt.enabled
+                              ? null
+                              : () => _onOptionTap(
+                                    context,
+                                    opt,
+                                    widget.planId,
+                                    widget.prefs,
+                                  ),
                         ),
                       ),
                   },

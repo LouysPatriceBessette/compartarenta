@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../housing/amendment/housing_amendment_ui_gates.dart';
 import '../../housing/amendment/housing_active_agreement_service.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
@@ -579,6 +580,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                         _HubTile(
                           icon: Icons.groups_outlined,
                           label: l10n.housingAmendmentRosterChangeTitle,
+                          enabled: HousingAmendmentUiGates.rosterChangeEnabled,
                           onTap: () => _openMajorChange(context),
                         ),
                         _HubTile(
@@ -632,11 +634,13 @@ class _HubTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.enabled = true,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -646,7 +650,8 @@ class _HubTile extends StatelessWidget {
         leading: Icon(icon),
         title: Text(label),
         trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        enabled: enabled,
+        onTap: enabled ? onTap : null,
       ),
     );
   }
