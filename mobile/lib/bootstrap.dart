@@ -7,6 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
 import 'config/app_config.dart';
 import 'debug/local_storage_startup_log.dart';
+import 'debug/web_dev_db_write_observer.dart';
 import 'debug/web_dev_host_session.dart';
 import 'relay/relay_diagnostics.dart';
 import 'debug/web_storage_flush.dart';
@@ -39,6 +40,7 @@ Future<void> bootstrap() async {
       AppDatabase.bindProcessScope(appDb);
       if (kDebugMode && kIsWeb) {
         debugWebDbFlushHook = scheduleDevHostSessionSave;
+        debugWebDbWriteHook = () => scheduleDevHostSessionSave(appDb);
       }
       installWebStorageFlushOnPageHide();
       try {

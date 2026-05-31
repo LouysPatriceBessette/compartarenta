@@ -3,63 +3,145 @@ import 'package:flutter/foundation.dart';
 
 import '../db/app_database.dart';
 
-/// Debug-only full Drift export/import for web dev host session persistence.
-const int kWebDevHostSessionVersion = 2;
+export 'web_dev_host_session_format.dart';
+
+/// Storage keys for every Drift table in [AppDatabase] (keep in sync with
+/// `@DriftDatabase.tables` in `app_database.dart`).
+const List<String> kWebDevHostDriftTableKeys = [
+  'plans',
+  'participants',
+  'planLines',
+  'planGroups',
+  'planRatios',
+  'planRatioTemplates',
+  'agreements',
+  'proposalPackages',
+  'proposalRevisions',
+  'proposalResponses',
+  'contacts',
+  'contactInvitations',
+  'pendingHandshakes',
+  'relayActivityLogEntries',
+  'realizedExpenses',
+  'realizedExpenseAttachments',
+  'realizedExpenseAcceptances',
+  'archivedPlanLineSnapshots',
+];
+
+/// Row counts per table key (debug logging / tests).
+Future<Map<String, int>> countDevHostDriftTables(AppDatabase db) async {
+  return {
+    'plans': (await db.select(db.plans).get()).length,
+    'participants': (await db.select(db.participants).get()).length,
+    'planLines': (await db.select(db.planLines).get()).length,
+    'planGroups': (await db.select(db.planGroups).get()).length,
+    'planRatios': (await db.select(db.planRatios).get()).length,
+    'planRatioTemplates': (await db.select(db.planRatioTemplates).get()).length,
+    'agreements': (await db.select(db.agreements).get()).length,
+    'proposalPackages': (await db.select(db.proposalPackages).get()).length,
+    'proposalRevisions': (await db.select(db.proposalRevisions).get()).length,
+    'proposalResponses': (await db.select(db.proposalResponses).get()).length,
+    'contacts': (await db.select(db.contacts).get()).length,
+    'contactInvitations': (await db.select(db.contactInvitations).get()).length,
+    'pendingHandshakes': (await db.select(db.pendingHandshakes).get()).length,
+    'relayActivityLogEntries':
+        (await db.select(db.relayActivityLogEntries).get()).length,
+    'realizedExpenses': (await db.select(db.realizedExpenses).get()).length,
+    'realizedExpenseAttachments':
+        (await db.select(db.realizedExpenseAttachments).get()).length,
+    'realizedExpenseAcceptances':
+        (await db.select(db.realizedExpenseAcceptances).get()).length,
+    'archivedPlanLineSnapshots':
+        (await db.select(db.archivedPlanLineSnapshots).get()).length,
+  };
+}
 
 Future<Map<String, dynamic>> exportDriftTablesSnapshot(AppDatabase db) async {
-  return {
-    'plans': (await db.select(db.plans).get()).map((r) => r.toJson()).toList(),
-    'participants': (await db.select(db.participants).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'planLines': (await db.select(db.planLines).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'planGroups': (await db.select(db.planGroups).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'planRatios': (await db.select(db.planRatios).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'planRatioTemplates': (await db.select(db.planRatioTemplates).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'agreements': (await db.select(db.agreements).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'proposalPackages': (await db.select(db.proposalPackages).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'proposalRevisions': (await db.select(db.proposalRevisions).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'proposalResponses': (await db.select(db.proposalResponses).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'contacts': (await db.select(db.contacts).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'contactInvitations': (await db.select(db.contactInvitations).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'pendingHandshakes': (await db.select(db.pendingHandshakes).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'relayActivityLogEntries': (await db.select(db.relayActivityLogEntries).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'realizedExpenses': (await db.select(db.realizedExpenses).get())
-        .map((r) => r.toJson())
-        .toList(),
-    'realizedExpenseAttachments':
-        (await db.select(db.realizedExpenseAttachments).get())
-            .map((r) => r.toJson())
-            .toList(),
-    'realizedExpenseAcceptances':
-        (await db.select(db.realizedExpenseAcceptances).get())
-            .map((r) => r.toJson())
-            .toList(),
-  };
+  final tables = <String, dynamic>{};
+  for (final key in kWebDevHostDriftTableKeys) {
+    tables[key] = await _exportTable(db, key);
+  }
+  return tables;
+}
+
+Future<List<Map<String, dynamic>>> _exportTable(
+  AppDatabase db,
+  String key,
+) async {
+  switch (key) {
+    case 'plans':
+      return (await db.select(db.plans).get()).map((r) => r.toJson()).toList();
+    case 'participants':
+      return (await db.select(db.participants).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'planLines':
+      return (await db.select(db.planLines).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'planGroups':
+      return (await db.select(db.planGroups).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'planRatios':
+      return (await db.select(db.planRatios).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'planRatioTemplates':
+      return (await db.select(db.planRatioTemplates).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'agreements':
+      return (await db.select(db.agreements).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'proposalPackages':
+      return (await db.select(db.proposalPackages).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'proposalRevisions':
+      return (await db.select(db.proposalRevisions).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'proposalResponses':
+      return (await db.select(db.proposalResponses).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'contacts':
+      return (await db.select(db.contacts).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'contactInvitations':
+      return (await db.select(db.contactInvitations).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'pendingHandshakes':
+      return (await db.select(db.pendingHandshakes).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'relayActivityLogEntries':
+      return (await db.select(db.relayActivityLogEntries).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'realizedExpenses':
+      return (await db.select(db.realizedExpenses).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'realizedExpenseAttachments':
+      return (await db.select(db.realizedExpenseAttachments).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'realizedExpenseAcceptances':
+      return (await db.select(db.realizedExpenseAcceptances).get())
+          .map((r) => r.toJson())
+          .toList();
+    case 'archivedPlanLineSnapshots':
+      return (await db.select(db.archivedPlanLineSnapshots).get())
+          .map((r) => r.toJson())
+          .toList();
+    default:
+      throw StateError('Unknown dev host table key: $key');
+  }
 }
 
 Future<void> importDriftTablesSnapshot(
@@ -79,6 +161,7 @@ Future<void> _clearAllDevTables(AppDatabase db) async {
   await db.delete(db.realizedExpenseAcceptances).go();
   await db.delete(db.realizedExpenseAttachments).go();
   await db.delete(db.realizedExpenses).go();
+  await db.delete(db.archivedPlanLineSnapshots).go();
   await db.delete(db.relayActivityLogEntries).go();
   await db.delete(db.proposalResponses).go();
   await db.delete(db.proposalRevisions).go();
@@ -96,93 +179,111 @@ Future<void> _clearAllDevTables(AppDatabase db) async {
 }
 
 Future<void> _importRows(AppDatabase db, Map<String, dynamic> tables) async {
-  await _importTable(db, db.plans, tables['plans'], Plan.fromJson);
-  await _importTable(
-    db,
-    db.participants,
-    tables['participants'],
-    Participant.fromJson,
-  );
-  await _importTable(db, db.planLines, tables['planLines'], PlanLine.fromJson);
-  await _importTable(
-    db,
-    db.planGroups,
-    tables['planGroups'],
-    PlanGroup.fromJson,
-  );
-  await _importTable(
-    db,
-    db.planRatios,
-    tables['planRatios'],
-    PlanRatio.fromJson,
-  );
-  await _importTable(
-    db,
-    db.planRatioTemplates,
-    tables['planRatioTemplates'],
-    PlanRatioTemplate.fromJson,
-  );
-  await _importTable(
-    db,
-    db.agreements,
-    tables['agreements'],
-    Agreement.fromJson,
-  );
-  await _importTable(
-    db,
-    db.proposalPackages,
-    tables['proposalPackages'],
-    ProposalPackage.fromJson,
-  );
-  await _importTable(
-    db,
-    db.proposalRevisions,
-    tables['proposalRevisions'],
-    ProposalRevision.fromJson,
-  );
-  await _importTable(
-    db,
-    db.proposalResponses,
-    tables['proposalResponses'],
-    ProposalResponse.fromJson,
-  );
-  await _importTable(db, db.contacts, tables['contacts'], Contact.fromJson);
-  await _importTable(
-    db,
-    db.contactInvitations,
-    tables['contactInvitations'],
-    ContactInvitation.fromJson,
-  );
-  await _importTable(
-    db,
-    db.pendingHandshakes,
-    tables['pendingHandshakes'],
-    PendingHandshake.fromJson,
-  );
-  await _importTable(
-    db,
-    db.relayActivityLogEntries,
-    tables['relayActivityLogEntries'],
-    RelayActivityLogEntry.fromJson,
-  );
-  await _importTable(
-    db,
-    db.realizedExpenses,
-    tables['realizedExpenses'],
-    RealizedExpense.fromJson,
-  );
-  await _importTable(
-    db,
-    db.realizedExpenseAttachments,
-    tables['realizedExpenseAttachments'],
-    RealizedExpenseAttachment.fromJson,
-  );
-  await _importTable(
-    db,
-    db.realizedExpenseAcceptances,
-    tables['realizedExpenseAcceptances'],
-    RealizedExpenseAcceptance.fromJson,
-  );
+  for (final key in kWebDevHostDriftTableKeys) {
+    await _importTableKey(db, key, tables[key]);
+  }
+}
+
+Future<void> _importTableKey(
+  AppDatabase db,
+  String key,
+  Object? rawList,
+) async {
+  switch (key) {
+    case 'plans':
+      return _importTable(db, db.plans, rawList, Plan.fromJson);
+    case 'participants':
+      return _importTable(db, db.participants, rawList, Participant.fromJson);
+    case 'planLines':
+      return _importTable(db, db.planLines, rawList, PlanLine.fromJson);
+    case 'planGroups':
+      return _importTable(db, db.planGroups, rawList, PlanGroup.fromJson);
+    case 'planRatios':
+      return _importTable(db, db.planRatios, rawList, PlanRatio.fromJson);
+    case 'planRatioTemplates':
+      return _importTable(
+        db,
+        db.planRatioTemplates,
+        rawList,
+        PlanRatioTemplate.fromJson,
+      );
+    case 'agreements':
+      return _importTable(db, db.agreements, rawList, Agreement.fromJson);
+    case 'proposalPackages':
+      return _importTable(
+        db,
+        db.proposalPackages,
+        rawList,
+        ProposalPackage.fromJson,
+      );
+    case 'proposalRevisions':
+      return _importTable(
+        db,
+        db.proposalRevisions,
+        rawList,
+        ProposalRevision.fromJson,
+      );
+    case 'proposalResponses':
+      return _importTable(
+        db,
+        db.proposalResponses,
+        rawList,
+        ProposalResponse.fromJson,
+      );
+    case 'contacts':
+      return _importTable(db, db.contacts, rawList, Contact.fromJson);
+    case 'contactInvitations':
+      return _importTable(
+        db,
+        db.contactInvitations,
+        rawList,
+        ContactInvitation.fromJson,
+      );
+    case 'pendingHandshakes':
+      return _importTable(
+        db,
+        db.pendingHandshakes,
+        rawList,
+        PendingHandshake.fromJson,
+      );
+    case 'relayActivityLogEntries':
+      return _importTable(
+        db,
+        db.relayActivityLogEntries,
+        rawList,
+        RelayActivityLogEntry.fromJson,
+      );
+    case 'realizedExpenses':
+      return _importTable(
+        db,
+        db.realizedExpenses,
+        rawList,
+        RealizedExpense.fromJson,
+      );
+    case 'realizedExpenseAttachments':
+      return _importTable(
+        db,
+        db.realizedExpenseAttachments,
+        rawList,
+        RealizedExpenseAttachment.fromJson,
+      );
+    case 'realizedExpenseAcceptances':
+      return _importTable(
+        db,
+        db.realizedExpenseAcceptances,
+        rawList,
+        RealizedExpenseAcceptance.fromJson,
+      );
+    case 'archivedPlanLineSnapshots':
+      return _importTable(
+        db,
+        db.archivedPlanLineSnapshots,
+        rawList,
+        ArchivedPlanLineSnapshot.fromJson,
+      );
+    default:
+      throw StateError('Unknown dev host table key: $key');
+  }
 }
 
 Future<void> _importTable(

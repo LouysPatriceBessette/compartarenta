@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../debug/local_storage_startup_log.dart';
+import '../debug/web_dev_host_session.dart';
 import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
@@ -403,9 +404,21 @@ class AppPreferences extends ChangeNotifier {
   Future<void> _syncWebStorageAfterPrefsWrite() async {
     if (!kIsWeb) return;
     try {
-      await AppDatabase.processScope.syncWebStorageToDisk();
+      final db = AppDatabase.processScope;
+      await db.syncWebStorageToDisk();
+      if (kDebugMode) {
+        scheduleDevHostSessionSave(db);
+      }
     } on StateError {
       // Tests / bootstrap ordering.
+    }
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    if (kDebugMode && kIsWeb) {
+      unawaited(_syncWebStorageAfterPrefsWrite());
     }
   }
 

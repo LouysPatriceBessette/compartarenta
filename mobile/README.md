@@ -59,11 +59,15 @@ Reset web dev data: `dart run melos run delete:web-dev-session`
 Port busy: `run:dev:web` auto-picks the next free port (18766, 18767, …) when
 18765 is held by an unkillable sandbox process (`sudo fuser` may still fail —
 that is normal). Pin a port: `WEB_DEV_SESSION_PORT=18770 dart run melos run run:dev:web`.
-Stop your server: `dart run melos run stop:web-dev-session`.
+Stop your server: `dart run melos run stop:web-dev-session`. Each `run:dev:web`
+restarts the session server so it matches the app (stale servers reject new
+session versions — look for `PUT failed … FormatException: version` in logs).
 
-Check logs for `web_dev_host_session: saved to host` after onboarding and
-`web_dev_host_session: restored from host` on the next `local_storage_checkpoint:
-reason=startup`. A stable identity avoids duplicate handshake contacts on Android.
+Check logs for `web_dev_host_session: saved to host tables={...}` after any Drift
+write (debounced) or tab hide, and `web_dev_host_session: restored from host`
+on the next `local_storage_checkpoint: reason=startup`. Every Drift table is
+included (realized expenses, proposal revisions, relay log, archived line
+snapshots, etc.). A stable identity avoids duplicate handshake contacts on Android.
 
 `flutter clean` / `refresh` do not delete the host JSON (it lives under
 `~/.cache/compartarenta/`). `melos run web:assets` only refreshes `sqlite3.wasm`

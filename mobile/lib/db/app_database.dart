@@ -6,6 +6,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'db_paths.dart';
+import '../debug/web_dev_db_write_observer.dart';
 
 part 'app_database.g.dart';
 
@@ -1073,7 +1074,7 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(
+  final base = driftDatabase(
     name: 'compartarenta.sqlite',
     native: DriftNativeOptions(
       // Avoid drift_flutter's default getTemporaryDirectory() call during lazy
@@ -1103,4 +1104,8 @@ QueryExecutor _openConnection() {
           : null,
     ),
   );
+  if (kDebugMode && kIsWeb) {
+    return devHostSessionWriteObserver(base);
+  }
+  return base;
 }

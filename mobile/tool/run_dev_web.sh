@@ -162,21 +162,8 @@ _pick_session_port() {
   return 1
 }
 
-_start_web_dev_session_server() {
-  if ! _pick_session_port; then
-    return 1
-  fi
-
-  WEB_DEV_SESSION_URL="http://${WEB_DEV_SESSION_HOST}:${WEB_DEV_SESSION_PORT}"
-  echo "${WEB_DEV_SESSION_PORT}" >"${WEB_DEV_SESSION_PORT_FILE}"
-  echo "${WEB_DEV_SESSION_URL}" >"${WEB_DEV_SESSION_URL_FILE}"
-
-  if _is_our_session_server "${WEB_DEV_SESSION_PORT}" \
-    && _port_managed_by_this_shell "${WEB_DEV_SESSION_PORT}"; then
-    echo "Web dev session server already listening (${WEB_DEV_SESSION_URL})"
-    return 0
-  fi
-
+_stop_session_server_on_port() {
+  local port="$1"
   if [[ -f "${WEB_DEV_SESSION_PID_FILE}" ]]; then
     local old_pid
     old_pid="$(cat "${WEB_DEV_SESSION_PID_FILE}")"
@@ -187,8 +174,39 @@ _start_web_dev_session_server() {
     rm -f "${WEB_DEV_SESSION_PID_FILE}"
   fi
 
+  local pid
+  pid="$(_session_server_pid_on_port "${port}")"
+  if [[ -n "${pid}" ]] \
+    && [[ "$(ps -o user= -p "${pid}" 2>/dev/null | tr -d ' ')" == "$(id -un)" ]] \
+    && ! _is_cursor_sandbox_pid "${pid}"; then
+    kill "${pid}" 2>/dev/null || true
+    sleep 0.2
+  fi
+}
+
+_start_web_dev_session_server() {
+  if ! _pick_session_port; then
+    return 1
+  fi
+
+  WEB_DEV_SESSION_URL="http://${WEB_DEV_SESSION_HOST}:${WEB_DEV_SESSION_PORT}"
+  echo "${WEB_DEV_SESSION_PORT}" >"${WEB_DEV_SESSION_PORT_FILE}"
+  echo "${WEB_DEV_SESSION_URL}" >"${WEB_DEV_SESSION_URL_FILE}"
+
+  # Always restart so server code matches the Flutter app (stale listeners reject new session versions).
+  if _is_our_session_server "${WEB_DEV_SESSION_PORT}" \
+    && _port_managed_by_this_shell "${WEB_DEV_SESSION_PORT}"; then
+    echo "Restarting web dev session server on ${WEB_DEV_SESSION_URL} (pick up latest session format)…"
+    _stop_session_server_on_port "${WEB_DEV_SESSION_PORT}"
+  fi
+
+  if _is_our_session_server "${WEB_DEV_SESSION_PORT}"; then
+    echo "Web dev session server already listening (${WEB_DEV_SESSION_URL})"
+    return 0
+  fi
+
   if _port_in_use "${WEB_DEV_SESSION_PORT}"; then
-    echo "Cannot bind ${WEB_DEV_SESSION_URL}: port still in use after port selection." >&2
+    echo "Cannot bind ${WEB_DEV_SESSION_URL}: port still in use after stop." >&2
     _print_port_conflict_diagnostics "${WEB_DEV_SESSION_PORT}"
     return 1
   fi

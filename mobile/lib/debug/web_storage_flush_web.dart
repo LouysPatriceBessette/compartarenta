@@ -9,24 +9,30 @@ import 'dart:html' as html;
 
 import '../db/app_database.dart';
 import '../relay/handshake_orchestrator.dart';
+import 'web_dev_host_session.dart';
 
 /// Flushes Drift OPFS when the browser tab or window is hidden.
 void installWebStorageFlushOnPageHide() {
-  void flush() {
+  Future<void> flush() async {
     try {
-      unawaited(AppDatabase.processScope.syncWebStorageToDisk());
+      final db = AppDatabase.processScope;
+      await db.syncWebStorageToDisk();
+      await flushDevHostSessionSave(db);
     } on StateError {
       // [AppDatabase.processScope] not bound yet (tests).
     }
   }
 
-  html.window.onPageHide.listen((_) => flush());
-  // Last chance to flush Drift and push the host dev session before the tab closes.
-  html.window.onBeforeUnload.listen((_) => flush());
+  html.window.onPageHide.listen((_) {
+    unawaited(flush());
+  });
+  html.window.onBeforeUnload.listen((_) {
+    unawaited(flush());
+  });
   html.document.onVisibilityChange.listen((_) {
     final hidden = html.document.hidden ?? false;
     if (hidden) {
-      flush();
+      unawaited(flush());
       return;
     }
     final orch = HandshakeOrchestrator.maybeInstance;

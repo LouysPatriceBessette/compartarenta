@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PORT_FILE="${DIR}/.dart_tool/web-dev-session-port"
+
 HOST="${WEB_DEV_SESSION_HOST:-localhost}"
-PORT="${WEB_DEV_SESSION_PORT:-18765}"
+PORT="${WEB_DEV_SESSION_PORT:-}"
+if [[ -z "${PORT}" && -f "${PORT_FILE}" ]]; then
+  PORT="$(cat "${PORT_FILE}")"
+fi
+PORT="${PORT:-18765}"
 URL="http://${HOST}:${PORT}/session"
 FILE="${HOME}/.cache/compartarenta/web-dev-session.json"
 

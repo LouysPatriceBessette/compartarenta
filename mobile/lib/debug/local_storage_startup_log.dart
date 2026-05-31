@@ -4,6 +4,7 @@ import '../db/app_database.dart';
 import '../prefs/app_preferences.dart';
 import '../screens/housing/housing_module_entry_screen.dart';
 import 'local_storage_startup_log_platform.dart' as platform_hints;
+import 'web_dev_db_snapshot.dart';
 import 'web_dev_host_session.dart' as host_session;
 
 /// Debug-only snapshot of local persistence (Drift + prefs).
@@ -31,6 +32,7 @@ Future<void> logLocalStorageCheckpoint(AppDatabase db, String reason) async {
         .where((p) => p.pendingRevisionId != null)
         .length;
     final handshakes = await db.select(db.pendingHandshakes).get();
+    final tableCounts = await countDevHostDriftTables(db);
 
     debugPrint(
       'local_storage_checkpoint: reason=$reason '
@@ -43,7 +45,8 @@ Future<void> logLocalStorageCheckpoint(AppDatabase db, String reason) async {
       'proposalPackages=${packages.length} '
       'activePackages=$activePackages '
       'pendingPackages=$pendingPackages '
-      'pendingHandshakes=${handshakes.length}',
+      'pendingHandshakes=${handshakes.length} '
+      'tables=$tableCounts',
     );
     if (kIsWeb) {
       await platform_hints.logWebLocalStorageKeyCount(reason: reason);

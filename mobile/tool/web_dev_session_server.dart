@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:compartarenta/debug/web_dev_host_session_format.dart';
+
 /// Local dev session store for Flutter web (survives Ctrl+C / flutter clean).
 ///
 /// Started by [run_dev_web.sh]. The web app PUTs JSON after onboarding and on
@@ -29,7 +31,8 @@ Future<void> main() async {
 
   print(
     'web_dev_session_server: listening on http://127.0.0.1:$port '
-    '(use WEB_DEV_SESSION_URL=http://127.0.0.1:$port if localhost resolves to ::1) '
+    '(session format v2..$kWebDevHostSessionVersion; '
+    'use WEB_DEV_SESSION_URL=http://127.0.0.1:$port if localhost resolves to ::1) '
     'file=${sessionFile.path}',
   );
   await for (final request in server) {
@@ -104,7 +107,16 @@ Future<void> _handlePut(HttpRequest request, File sessionFile) async {
   try {
     final decoded = jsonDecode(body);
     if (decoded is! Map<String, dynamic>) throw const FormatException('map');
-    if (decoded['version'] != 2) throw const FormatException('version');
+    final version = decoded['version'];
+    if (!isAcceptedDevHostSessionVersion(version)) {
+      throw FormatException('version $version (need int >= 2)');
+    }
+    if (version > kWebDevHostSessionVersion) {
+      print(
+        'web_dev_session_server: warning: client version $version > '
+        'server kWebDevHostSessionVersion=$kWebDevHostSessionVersion (saving anyway)',
+      );
+    }
   } on FormatException catch (e) {
     request.response.statusCode = HttpStatus.badRequest;
     _writeCors(request.response);
