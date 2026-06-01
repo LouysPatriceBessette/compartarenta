@@ -135,6 +135,7 @@
   "housingPlanStepSplit": "Répartition",
   "housingPlanStepAgreementRules": "Règles de l'accord",
   "housingAgreementRulesIntro": "Activez ou désactivez chaque règle. Les règles fixes restent visibles même désactivées pour montrer ce qui a été négocié. Vous pouvez ajouter des règles et les retirer tant qu'aucune proposition n'a été acceptée.",
+  "housingAgreementRulesAmendmentIntro": "Activez ou désactivez les règles optionnelles, modifiez-les, ajoutez-en ou retirez-les. Les règles fixes (couvre-feu, retrait anticipé, immeuble) restent visibles même désactivées. Les nouvelles règles doivent être activées pour figurer dans la proposition.",
   "housingAgreementRuleCurfewTitle": "Calendrier de couvre-feu",
   "housingAgreementRuleCurfewPlaceholder": "Semaine indicative (sans dates) : choisissez un jour, puis la grille. En édition, touchez une case de 30 minutes pour faire défiler aucune règle → calme absolu (rouge) → calme modéré (jaune).",
   "housingQuietHoursAbsolute": "Calme absolu",
@@ -442,6 +443,9 @@
   "housingAmendmentAccept": "Accepter",
   "housingAmendmentReject": "Refuser",
   "housingAmendmentSubmitToGroup": "Soumettre au groupe",
+  "housingAmendmentRulesContinue": "Continuer",
+  "housingAgreementRuleStatusEnabled": "Activé",
+  "housingAgreementRuleStatusDisabled": "Désactivé",
   "housingAmendmentPreviewTitle": "Aperçu de la demande",
   "housingAmendmentPreviewIntro": "Vérifiez le changement proposé pour {subject} avant l'envoi au groupe.",
   "@housingAmendmentPreviewIntro": {
@@ -493,6 +497,37 @@
     }
   },
   "housingAmendmentRulesSummaryShort": "Règles d'entente mises à jour",
+  "housingAmendmentRulesGroupAdded": "{count, plural, one{Règle ajoutée ({count})} other{Règles ajoutées ({count})}}",
+  "@housingAmendmentRulesGroupAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupModified": "{count, plural, one{Règle modifiée ({count})} other{Règles modifiées ({count})}}",
+  "@housingAmendmentRulesGroupModified": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupRemoved": "{count, plural, one{Règle retirée ({count})} other{Règles retirées ({count})}}",
+  "@housingAmendmentRulesGroupRemoved": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupUnchanged": "{count, plural, one{Règle inchangée ({count})} other{Règles inchangées ({count})}}",
+  "@housingAmendmentRulesGroupUnchanged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesBeforeSubtitle": "Auparavant",
+  "housingAmendmentRulesProposedSubtitle": "Proposé",
+  "housingAmendmentRulesUnchangedDetailHint": "Cette règle est inchangée dans la proposition.",
+  "housingAmendmentRejectTitle": "Refuser la demande",
+  "housingAmendmentRejectMessageLabel": "Message (facultatif)",
+  "housingAmendmentRejectConfirm": "Refuser",
+  "housingAmendmentRefusalMessageLabel": "Message de refus",
   "housingActiveHubViewPendingAmendment": "Changement demandé",
   "housingInviteResponseWindowTitle": "Délai de réponse",
   "housingInviteResponseWindowBody": "Les participants ont jusqu'à cette date et heure pour répondre (UTC).",

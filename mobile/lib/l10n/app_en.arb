@@ -135,6 +135,7 @@
   "housingPlanStepSplit": "Split",
   "housingPlanStepAgreementRules": "Agreement rules",
   "housingAgreementRulesIntro": "Turn rules on or off. Fixed rules stay listed even when off so everyone sees what was negotiated. You can add your own rules and remove them until a proposal has been accepted.",
+  "housingAgreementRulesAmendmentIntro": "Turn optional rules on or off, edit them, add new ones, or remove them. Fixed rules (curfew, early withdrawal, building) stay listed even when off. New rules must be enabled to be included in the proposal.",
   "housingAgreementRuleCurfewTitle": "Quiet hours calendar",
   "housingAgreementRuleCurfewPlaceholder": "Indicative week (no dates): tap a day letter, then use the grid. In edit mode, tap a 30-minute cell to cycle no rule → absolute quiet (red) → moderate quiet (yellow).",
   "housingQuietHoursAbsolute": "Absolute quiet",
@@ -496,6 +497,9 @@
   "housingAmendmentAccept": "Accept",
   "housingAmendmentReject": "Refuse",
   "housingAmendmentSubmitToGroup": "Submit to the group",
+  "housingAmendmentRulesContinue": "Continue",
+  "housingAgreementRuleStatusEnabled": "Enabled",
+  "housingAgreementRuleStatusDisabled": "Disabled",
   "housingAmendmentPreviewTitle": "Request preview",
   "housingAmendmentPreviewIntro": "Review the proposed change to {subject} before sending it to the group.",
   "@housingAmendmentPreviewIntro": {
@@ -547,6 +551,37 @@
     }
   },
   "housingAmendmentRulesSummaryShort": "Agreement rules updated",
+  "housingAmendmentRulesGroupAdded": "{count, plural, one{Added rule ({count})} other{Added rules ({count})}}",
+  "@housingAmendmentRulesGroupAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupModified": "{count, plural, one{Modified rule ({count})} other{Modified rules ({count})}}",
+  "@housingAmendmentRulesGroupModified": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupRemoved": "{count, plural, one{Removed rule ({count})} other{Removed rules ({count})}}",
+  "@housingAmendmentRulesGroupRemoved": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupUnchanged": "{count, plural, one{Unchanged rule ({count})} other{Unchanged rules ({count})}}",
+  "@housingAmendmentRulesGroupUnchanged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesBeforeSubtitle": "Previously",
+  "housingAmendmentRulesProposedSubtitle": "Proposed",
+  "housingAmendmentRulesUnchangedDetailHint": "This rule is unchanged in the proposed revision.",
+  "housingAmendmentRejectTitle": "Refuse change request",
+  "housingAmendmentRejectMessageLabel": "Message (optional)",
+  "housingAmendmentRejectConfirm": "Refuse",
+  "housingAmendmentRefusalMessageLabel": "Refusal message",
   "housingActiveHubViewPendingAmendment": "Requested change",
   "housingInviteResponseWindowTitle": "Response window",
   "housingInviteResponseWindowBody": "Participants have until this date and time to respond (UTC).",

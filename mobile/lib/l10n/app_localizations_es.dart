@@ -408,6 +408,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Activa o desactiva cada regla. Las reglas fijas siguen listadas aunque estén desactivadas para dejar claro qué se negoció. Puedes añadir reglas y quitarlas mientras no haya una propuesta aceptada.';
 
   @override
+  String get housingAgreementRulesAmendmentIntro =>
+      'Activa o desactiva las reglas opcionales, edítalas, añade nuevas o retíralas. Las reglas fijas (toque de queda, retiro anticipado, edificio) siguen listadas aunque estén desactivadas. Las reglas nuevas deben estar activadas para incluirse en la propuesta.';
+
+  @override
   String get housingAgreementRuleCurfewTitle =>
       'Calendario de horas de silencio';
 
@@ -1246,6 +1250,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingAmendmentSubmitToGroup => 'Enviar al grupo';
 
   @override
+  String get housingAmendmentRulesContinue => 'Continuar';
+
+  @override
+  String get housingAgreementRuleStatusEnabled => 'Activada';
+
+  @override
+  String get housingAgreementRuleStatusDisabled => 'Desactivada';
+
+  @override
   String get housingAmendmentPreviewTitle => 'Vista previa de la solicitud';
 
   @override
@@ -1308,6 +1321,72 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get housingAmendmentRulesSummaryShort =>
       'Reglas del acuerdo actualizadas';
+
+  @override
+  String housingAmendmentRulesGroupAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reglas añadidas ($count)',
+      one: 'Regla añadida ($count)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String housingAmendmentRulesGroupModified(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reglas modificadas ($count)',
+      one: 'Regla modificada ($count)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String housingAmendmentRulesGroupRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reglas retiradas ($count)',
+      one: 'Regla retirada ($count)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String housingAmendmentRulesGroupUnchanged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reglas sin cambios ($count)',
+      one: 'Regla sin cambios ($count)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get housingAmendmentRulesBeforeSubtitle => 'Antes';
+
+  @override
+  String get housingAmendmentRulesProposedSubtitle => 'Propuesto';
+
+  @override
+  String get housingAmendmentRulesUnchangedDetailHint =>
+      'Esta regla no cambia en la propuesta.';
+
+  @override
+  String get housingAmendmentRejectTitle => 'Rechazar solicitud';
+
+  @override
+  String get housingAmendmentRejectMessageLabel => 'Mensaje (opcional)';
+
+  @override
+  String get housingAmendmentRejectConfirm => 'Rechazar';
+
+  @override
+  String get housingAmendmentRefusalMessageLabel => 'Mensaje de rechazo';
 
   @override
   String get housingActiveHubViewPendingAmendment => 'Cambio solicitado';

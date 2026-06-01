@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
+import '../../housing/agreement_rules_diff.dart';
+import '../../housing/amendment/housing_rules_amendment_pending.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart'
@@ -517,6 +519,14 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
     await _openPreview(
       context,
       type: HousingAmendmentType.ruleChange,
+      patchRevisionPayload: (payload) {
+        final l10n = AppLocalizations.of(context);
+        HousingRulesAmendmentPendingStore.applyToPayload(
+          widget.planId,
+          payload,
+          suggestionDefaults: agreementSuggestionDefaultsFromL10n(l10n),
+        );
+      },
     );
   }
 }

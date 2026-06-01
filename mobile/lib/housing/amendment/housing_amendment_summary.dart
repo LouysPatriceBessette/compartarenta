@@ -1,14 +1,17 @@
 import 'dart:convert';
 
 import '../../db/app_database.dart';
+import '../agreement_rules_diff.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import '../proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../realized_expense/realized_expense_participants.dart';
+import 'agreement_rules_amendment_loader.dart';
 import 'housing_amendment_settlement.dart';
 import 'housing_amendment_type.dart';
+import 'housing_rules_amendment_pending.dart';
 
 /// Loaded comparison between the in-force revision and a pending amendment.
 class HousingAmendmentSummary {
@@ -288,13 +291,25 @@ Future<HousingAmendmentSummary?> buildAmendmentPreviewSummary({
     }
   }
 
-  final proposedPayload = await _proposedPayloadFromCurrentPlan(
+  var proposedPayload = await _proposedPayloadFromCurrentPlan(
     db: db,
     planId: planId,
     baselinePayload: baselinePayload,
     proposedPeriodEnd: proposedPeriodEnd,
     removeLineId: type == HousingAmendmentType.lineRemove ? targetLineId : null,
   );
+  if (type == HousingAmendmentType.ruleChange) {
+    final pending = HousingRulesAmendmentPendingStore.get(planId);
+    if (pending != null) {
+      final agr = proposedPayload['agreement'];
+      if (agr is Map) {
+        pending.applyToAgreementMap(
+          agr.cast<String, dynamic>(),
+          suggestionDefaults: agreementSuggestionDefaultsFromL10n(l10n),
+        );
+      }
+    }
+  }
 
   final texts = await _amendmentComparisonTexts(
     planId: planId,
@@ -331,6 +346,27 @@ bool amendmentSummaryHasMeaningfulChange(HousingAmendmentSummary summary) {
     return summary.currentText != summary.proposedText;
   }
   return summary.currentText.trim() != summary.proposedText.trim();
+}
+
+/// Rules amendments: meaningful when at least one rule was added, removed, or modified.
+Future<bool> amendmentRulesHasMeaningfulChange({
+  required AppDatabase db,
+  required String planId,
+  required HousingAmendmentSummary summary,
+  required AppLocalizations l10n,
+}) async {
+  if (summary.type != HousingAmendmentType.ruleChange) {
+    return amendmentSummaryHasMeaningfulChange(summary);
+  }
+  final comparison = await loadAgreementRulesAmendmentComparison(
+    db: db,
+    planId: planId,
+    l10n: l10n,
+    revisionId: summary.revisionId == 'preview' ? null : summary.revisionId,
+    previewSummary: summary.revisionId == 'preview' ? summary : null,
+  );
+  return comparison?.buckets.hasMeaningfulChange ??
+      amendmentSummaryHasMeaningfulChange(summary);
 }
 
 class _AmendmentComparisonTexts {

@@ -135,6 +135,7 @@
   "housingPlanStepSplit": "Reparto",
   "housingPlanStepAgreementRules": "Reglas del acuerdo",
   "housingAgreementRulesIntro": "Activa o desactiva cada regla. Las reglas fijas siguen listadas aunque estén desactivadas para dejar claro qué se negoció. Puedes añadir reglas y quitarlas mientras no haya una propuesta aceptada.",
+  "housingAgreementRulesAmendmentIntro": "Activa o desactiva las reglas opcionales, edítalas, añade nuevas o retíralas. Las reglas fijas (toque de queda, retiro anticipado, edificio) siguen listadas aunque estén desactivadas. Las reglas nuevas deben estar activadas para incluirse en la propuesta.",
   "housingAgreementRuleCurfewTitle": "Calendario de horas de silencio",
   "housingAgreementRuleCurfewPlaceholder": "Semana orientativa (sin fechas): elige la letra del día y usa la cuadrícula. En edición, toca una celda de 30 minutos para alternar sin regla → silencio absoluto (rojo) → silencio moderado (amarillo).",
   "housingQuietHoursAbsolute": "Silencio absoluto",
@@ -442,6 +443,9 @@
   "housingAmendmentAccept": "Aceptar",
   "housingAmendmentReject": "Rechazar",
   "housingAmendmentSubmitToGroup": "Enviar al grupo",
+  "housingAmendmentRulesContinue": "Continuar",
+  "housingAgreementRuleStatusEnabled": "Activada",
+  "housingAgreementRuleStatusDisabled": "Desactivada",
   "housingAmendmentPreviewTitle": "Vista previa de la solicitud",
   "housingAmendmentPreviewIntro": "Revise el cambio propuesto en {subject} antes de enviarlo al grupo.",
   "housingAmendmentNoMeaningfulChange": "No hay cambio respecto al plan actual.",
@@ -476,6 +480,37 @@
   "housingAmendmentJournalCardTitle": "{subject} — {status}",
   "housingAmendmentJournalCardSubtitle": "Por {name} · {date}",
   "housingAmendmentRulesSummaryShort": "Reglas del acuerdo actualizadas",
+  "housingAmendmentRulesGroupAdded": "{count, plural, one{Regla añadida ({count})} other{Reglas añadidas ({count})}}",
+  "@housingAmendmentRulesGroupAdded": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupModified": "{count, plural, one{Regla modificada ({count})} other{Reglas modificadas ({count})}}",
+  "@housingAmendmentRulesGroupModified": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupRemoved": "{count, plural, one{Regla retirada ({count})} other{Reglas retiradas ({count})}}",
+  "@housingAmendmentRulesGroupRemoved": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesGroupUnchanged": "{count, plural, one{Regla sin cambios ({count})} other{Reglas sin cambios ({count})}}",
+  "@housingAmendmentRulesGroupUnchanged": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "housingAmendmentRulesBeforeSubtitle": "Antes",
+  "housingAmendmentRulesProposedSubtitle": "Propuesto",
+  "housingAmendmentRulesUnchangedDetailHint": "Esta regla no cambia en la propuesta.",
+  "housingAmendmentRejectTitle": "Rechazar solicitud",
+  "housingAmendmentRejectMessageLabel": "Mensaje (opcional)",
+  "housingAmendmentRejectConfirm": "Rechazar",
+  "housingAmendmentRefusalMessageLabel": "Mensaje de rechazo",
   "housingActiveHubViewPendingAmendment": "Cambio solicitado",
   "housingInviteResponseWindowTitle": "Plazo de respuesta",
   "housingInviteResponseWindowBody": "Los participantes tienen hasta esta fecha y hora para responder (UTC).",

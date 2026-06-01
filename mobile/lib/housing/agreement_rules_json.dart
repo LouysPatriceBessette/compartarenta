@@ -6,6 +6,35 @@ import 'quiet_hours_week_grid.dart';
 const String kAgreementSuggestionCommonCleanliness = 'suggestion:common_cleanliness';
 const String kAgreementSuggestionFridgeManagement = 'suggestion:fridge_management';
 
+const List<String> kBuiltInAgreementSuggestionIds = [
+  kAgreementSuggestionCommonCleanliness,
+  kAgreementSuggestionFridgeManagement,
+];
+
+/// Stable custom-rule id for a rule that originated as a built-in suggestion.
+String agreementCustomRuleIdForSuggestion(String suggestionId) =>
+    'rule:$suggestionId';
+
+/// Default copy for built-in suggestions (draft wizard and materialization).
+typedef AgreementSuggestionDefaults = Map<String, ({String title, String body})>;
+
+AgreementSuggestionDefaults agreementSuggestionDefaultsFromLabels({
+  required String cleanlinessTitle,
+  required String cleanlinessBody,
+  required String fridgeTitle,
+  required String fridgeBody,
+}) =>
+    {
+      kAgreementSuggestionCommonCleanliness: (
+        title: cleanlinessTitle,
+        body: cleanlinessBody,
+      ),
+      kAgreementSuggestionFridgeManagement: (
+        title: fridgeTitle,
+        body: fridgeBody,
+      ),
+    };
+
 /// True when the author saved custom copy that differs from the built-in default.
 bool agreementSuggestionWasEdited(
   AgreementRulesDraft draft,
@@ -25,6 +54,14 @@ bool agreementSuggestionIsEnabled(
   String suggestionId,
 ) =>
     draft.enabledSuggestionIds.contains(suggestionId);
+
+/// Suggestion that is part of an in-force / accepted plan (enabled, not dismissed).
+bool agreementSuggestionIsInForce(
+  AgreementRulesDraft draft,
+  String suggestionId,
+) =>
+    !draft.dismissedSuggestionIds.contains(suggestionId) &&
+    agreementSuggestionIsEnabled(draft, suggestionId);
 
 /// User-edited copy of a built-in suggestion (stored in [AgreementRulesDraft] JSON).
 class AgreementSuggestionEdit {
@@ -129,6 +166,108 @@ class AgreementRulesDraft {
 
   String encode() => jsonEncode(toJson());
 
+  /// Converts in-force built-in suggestions into [customRules] and clears all
+  /// suggestion state. Draft-only suggestions are dropped.
+  AgreementRulesDraft materializeInForceSuggestions({
+    required AgreementSuggestionDefaults defaults,
+  }) {
+    final custom = [
+      for (final r in customRules)
+        AgreementCustomRule(
+          id: r.id,
+          title: r.title,
+          body: r.body,
+          enabled: r.enabled,
+        ),
+    ];
+    final customIds = custom.map((r) => r.id).toSet();
+
+    for (final suggestionId in kBuiltInAgreementSuggestionIds) {
+      if (!agreementSuggestionIsInForce(this, suggestionId)) continue;
+      final customId = agreementCustomRuleIdForSuggestion(suggestionId);
+      if (customIds.contains(customId)) continue;
+      final def = defaults[suggestionId];
+      final edit = suggestionEdits[suggestionId];
+      final title = edit?.title.trim().isNotEmpty == true
+          ? edit!.title.trim()
+          : (def?.title ?? suggestionId);
+      final body = edit?.body.trim().isNotEmpty == true
+          ? edit!.body.trim()
+          : (def?.body ?? '');
+      custom.add(
+        AgreementCustomRule(
+          id: customId,
+          title: title,
+          body: body,
+          enabled: true,
+        ),
+      );
+      customIds.add(customId);
+    }
+
+    return AgreementRulesDraft(
+      curfewEnabled: curfewEnabled,
+      curfewNotes: curfewNotes,
+      earlyWithdrawalEnabled: earlyWithdrawalEnabled,
+      buildingRulesEnabled: buildingRulesEnabled,
+      buildingRulesText: buildingRulesText,
+      quietHalfHours: quietHoursDeepCopy(quietHalfHours),
+      customRules: custom,
+    );
+  }
+
+  /// Custom rule ids in this draft, including legacy in-force suggestions.
+  Set<String> optionalRuleIdsInForce() {
+    final ids = customRules.map((r) => r.id).toSet();
+    for (final suggestionId in kBuiltInAgreementSuggestionIds) {
+      if (agreementSuggestionIsInForce(this, suggestionId)) {
+        ids.add(agreementCustomRuleIdForSuggestion(suggestionId));
+      }
+    }
+    return ids;
+  }
+
+  /// Optional rules (custom + suggestions) not activated are omitted; built-in
+  /// slots (curfew, early withdrawal, building) are always kept.
+  ///
+  /// When [retainOptionalRuleIds] is set (rules amendment), disabled rules whose
+  /// id was in the baseline are kept; newly added disabled rules are dropped.
+  AgreementRulesDraft forBindingSubmission({Set<String>? retainOptionalRuleIds}) {
+    final retain = retainOptionalRuleIds ?? const <String>{};
+    final enabledIds = Set<String>.from(enabledSuggestionIds);
+    return AgreementRulesDraft(
+      curfewEnabled: curfewEnabled,
+      curfewNotes: curfewNotes,
+      earlyWithdrawalEnabled: earlyWithdrawalEnabled,
+      buildingRulesEnabled: buildingRulesEnabled,
+      buildingRulesText: buildingRulesText,
+      quietHalfHours: quietHoursDeepCopy(quietHalfHours),
+      enabledSuggestionIds: enabledIds,
+      customRules: [
+        for (final r in customRules)
+          if (r.enabled || retain.contains(r.id))
+            AgreementCustomRule(
+              id: r.id,
+              title: r.title,
+              body: r.body,
+              enabled: r.enabled,
+            ),
+      ],
+      suggestionEdits: {
+        for (final e in suggestionEdits.entries)
+          if (enabledIds.contains(e.key)) e.key: e.value,
+      },
+    );
+  }
+
+  /// Materializes suggestions then applies [forBindingSubmission].
+  AgreementRulesDraft prepareForBindingSubmission({
+    required AgreementSuggestionDefaults suggestionDefaults,
+    Set<String>? retainOptionalRuleIds,
+  }) =>
+      materializeInForceSuggestions(defaults: suggestionDefaults)
+          .forBindingSubmission(retainOptionalRuleIds: retainOptionalRuleIds);
+
   factory AgreementRulesDraft.fromJson(Map<String, dynamic> m) {
     final dismissed = (m['dismissedSuggestionIds'] as List<dynamic>?)
             ?.map((e) => e.toString())
@@ -212,4 +351,49 @@ class AgreementRulesDraft {
       );
     }
   }
+}
+
+/// Parses stored rules JSON and drops optional inactive rules for binding payloads.
+String sanitizeAgreementRulesJsonForBindingSubmission(
+  String agreementRulesJson, {
+  String clausesFallback = '',
+  String? baselineAgreementRulesJson,
+  AgreementSuggestionDefaults suggestionDefaults = const {},
+}) {
+  final draft = AgreementRulesDraft.parseStored(
+    agreementRulesJson: agreementRulesJson,
+    clausesFallback: clausesFallback,
+  );
+  Set<String>? retainIds;
+  if (baselineAgreementRulesJson != null) {
+    final baseline = AgreementRulesDraft.parseStored(
+      agreementRulesJson: baselineAgreementRulesJson,
+      clausesFallback: clausesFallback,
+    );
+    retainIds = baseline
+        .materializeInForceSuggestions(defaults: suggestionDefaults)
+        .customRules
+        .map((r) => r.id)
+        .toSet();
+  }
+  return draft
+      .prepareForBindingSubmission(
+        suggestionDefaults: suggestionDefaults,
+        retainOptionalRuleIds: retainIds,
+      )
+      .encode();
+}
+
+/// Sanitizes [agreementRulesJson] on a revision/agreement map in place.
+void sanitizeAgreementRulesMapForBindingSubmission(
+  Map<String, dynamic> agr, {
+  String? baselineAgreementRulesJson,
+  AgreementSuggestionDefaults suggestionDefaults = const {},
+}) {
+  agr['agreementRulesJson'] = sanitizeAgreementRulesJsonForBindingSubmission(
+    agr['agreementRulesJson']?.toString() ?? '',
+    clausesFallback: agr['clauses']?.toString() ?? '',
+    baselineAgreementRulesJson: baselineAgreementRulesJson,
+    suggestionDefaults: suggestionDefaults,
+  );
 }

@@ -11,6 +11,8 @@ import '../expense_form/housing_expense_line_presentation_card.dart';
 import '../expense_form/plan_participant_dropdown_value.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import '../realized_expense/realized_expense_participants.dart';
+import '../../screens/housing/housing_amendment_rules_change_ui.dart';
+import 'agreement_rules_amendment_loader.dart';
 import 'housing_amendment_settlement.dart';
 import 'housing_amendment_summary.dart';
 import 'housing_amendment_type.dart';
@@ -378,6 +380,44 @@ class HousingAmendmentComparisonSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (summary.type == HousingAmendmentType.ruleChange) {
+      final l10n = AppLocalizations.of(context);
+      return FutureBuilder<AgreementRulesAmendmentComparison?>(
+        future: loadAgreementRulesAmendmentComparison(
+          db: db,
+          planId: planId,
+          l10n: l10n,
+          revisionId:
+              summary.revisionId == 'preview' ? null : summary.revisionId,
+          previewSummary:
+              summary.revisionId == 'preview' ? summary : null,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final comparison = snapshot.data;
+          if (comparison == null) {
+            return _TextComparison(
+              currentLabel: currentLabel,
+              currentValue: summary.currentText,
+              proposedLabel: proposedLabel,
+              proposedValue: summary.proposedText,
+            );
+          }
+          return HousingAmendmentRulesChangeSection(
+            db: db,
+            planId: planId,
+            prefs: prefs,
+            comparison: comparison,
+          );
+        },
+      );
+    }
+
     if (!housingAmendmentUsesExpenseLinePreview(summary.type)) {
       return _TextComparison(
         currentLabel: currentLabel,

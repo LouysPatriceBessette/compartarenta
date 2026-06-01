@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
+import '../agreement_rules_json.dart';
 import '../amendment/housing_amendment_type.dart';
 import '../expense_form/expense_ratio_template_repository.dart';
 import '../realized_expense/realized_expense_line_snapshot.dart';
@@ -2046,6 +2047,7 @@ class HousingProposalTransportService {
     DateTime createdAt,
   ) async {
     final agreement = _map(payload['agreement']);
+    sanitizeAgreementRulesMapForBindingSubmission(agreement);
     await _db.upsertAgreement(
       AgreementsCompanion.insert(
         id: 'agreement:$receivedPlanId',

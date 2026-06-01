@@ -832,6 +832,12 @@ abstract class AppLocalizations {
   /// **'Turn rules on or off. Fixed rules stay listed even when off so everyone sees what was negotiated. You can add your own rules and remove them until a proposal has been accepted.'**
   String get housingAgreementRulesIntro;
 
+  /// No description provided for @housingAgreementRulesAmendmentIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn optional rules on or off, edit them, add new ones, or remove them. Fixed rules (curfew, early withdrawal, building) stay listed even when off. New rules must be enabled to be included in the proposal.'**
+  String get housingAgreementRulesAmendmentIntro;
+
   /// No description provided for @housingAgreementRuleCurfewTitle.
   ///
   /// In en, this message translates to:
@@ -2254,6 +2260,24 @@ abstract class AppLocalizations {
   /// **'Submit to the group'**
   String get housingAmendmentSubmitToGroup;
 
+  /// No description provided for @housingAmendmentRulesContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get housingAmendmentRulesContinue;
+
+  /// No description provided for @housingAgreementRuleStatusEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get housingAgreementRuleStatusEnabled;
+
+  /// No description provided for @housingAgreementRuleStatusDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get housingAgreementRuleStatusDisabled;
+
   /// No description provided for @housingAmendmentPreviewTitle.
   ///
   /// In en, this message translates to:
@@ -2349,6 +2373,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agreement rules updated'**
   String get housingAmendmentRulesSummaryShort;
+
+  /// No description provided for @housingAmendmentRulesGroupAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Added rule ({count})} other{Added rules ({count})}}'**
+  String housingAmendmentRulesGroupAdded(int count);
+
+  /// No description provided for @housingAmendmentRulesGroupModified.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Modified rule ({count})} other{Modified rules ({count})}}'**
+  String housingAmendmentRulesGroupModified(int count);
+
+  /// No description provided for @housingAmendmentRulesGroupRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Removed rule ({count})} other{Removed rules ({count})}}'**
+  String housingAmendmentRulesGroupRemoved(int count);
+
+  /// No description provided for @housingAmendmentRulesGroupUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Unchanged rule ({count})} other{Unchanged rules ({count})}}'**
+  String housingAmendmentRulesGroupUnchanged(int count);
+
+  /// No description provided for @housingAmendmentRulesBeforeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously'**
+  String get housingAmendmentRulesBeforeSubtitle;
+
+  /// No description provided for @housingAmendmentRulesProposedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed'**
+  String get housingAmendmentRulesProposedSubtitle;
+
+  /// No description provided for @housingAmendmentRulesUnchangedDetailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This rule is unchanged in the proposed revision.'**
+  String get housingAmendmentRulesUnchangedDetailHint;
+
+  /// No description provided for @housingAmendmentRejectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse change request'**
+  String get housingAmendmentRejectTitle;
+
+  /// No description provided for @housingAmendmentRejectMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message (optional)'**
+  String get housingAmendmentRejectMessageLabel;
+
+  /// No description provided for @housingAmendmentRejectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get housingAmendmentRejectConfirm;
+
+  /// No description provided for @housingAmendmentRefusalMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Refusal message'**
+  String get housingAmendmentRefusalMessageLabel;
 
   /// No description provided for @housingActiveHubViewPendingAmendment.
   ///

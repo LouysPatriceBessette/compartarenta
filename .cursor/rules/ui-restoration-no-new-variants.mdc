@@ -1,0 +1,36 @@
+---
+description: When restoring confirmed UI, revert to last good behavior — never ship a new layout variant
+alwaysApply: true
+---
+
+# UI restoration: no new variants
+
+## When this applies
+
+- The user says something **used to work**, **was correct before**, **restore**, **you broke it**, or references a **screenshot as the target** after a regression.
+- You already shipped a layout the user **confirmed** (e.g. “c’est bon”, “correct”, “comme prévu”) in the same thread.
+
+## Hard rules
+
+1. **Restore, do not redesign.** The goal is the **last user-confirmed** behavior, not a “better” or “more consistent” alternative.
+2. **No new variants on restoration.** Do not combine patterns from other screens, unify navigation “for consistency”, or invent nested accordions / extra pages unless the user explicitly asks for that change **now**.
+3. **Per-surface layout.** Different groups or screens may legitimately differ (e.g. modified rules with Auparavant/Proposé labels + accordion cards vs list groups with one accordion per rule). **Do not merge** them because they look similar.
+4. **Before editing**, identify what was confirmed:
+   - Re-read the thread for the last “OK” state and which file/screen it was.
+   - Prefer `git diff` / reading the code path that produced the good screenshot over guessing from one phrase (“deux accordéons”, “comme l’autre groupe”).
+5. If the user’s words are ambiguous, **ask one short question** before changing structure — especially when screenshot numbers or attachments may not match the text (error screen vs UI mock).
+
+## Screenshots
+
+- **Missing screenshot** referenced by number or “voir capture” → ask which attachment or what to match; do not infer.
+- **Present but unrelated** (e.g. plugin error, wrong screen, old vs new numbering) → say what you see vs what they asked; confirm which image is the target **before** restructuring UI.
+- Map **screenshot #N** to the **actual attachment** in the turn; do not assume order across messages.
+
+## After a partial fix
+
+- If the user confirms **one** group or screen (e.g. unchanged rules), **lock** that implementation and do not refactor it when fixing another group.
+- Touch only files and branches required for the still-broken part.
+
+## Failure mode to avoid
+
+Shipping almost every wrong variant (extra navigation, triple accordion, flat page, wrong accordion headers, status outside the card) instead of reverting one known-good layout. A slightly imperfect restoration is acceptable; a **new** layout is not.

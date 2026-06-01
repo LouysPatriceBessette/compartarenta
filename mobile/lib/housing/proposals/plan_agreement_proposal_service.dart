@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
+import '../agreement_rules_json.dart';
 import 'agreement_period_day_overlap.dart';
 import 'housing_plan_period_gate.dart';
 import 'housing_proposal_revision_state.dart';
@@ -128,7 +129,10 @@ class PlanAgreementProposalService {
         'clauses': agreement.clauses,
         'withdrawalSameForAll': agreement.withdrawalSameForAll,
         'withdrawalPerParticipantJson': agreement.withdrawalPerParticipantJson,
-        'agreementRulesJson': agreement.agreementRulesJson,
+        'agreementRulesJson': sanitizeAgreementRulesJsonForBindingSubmission(
+          agreement.agreementRulesJson,
+          clausesFallback: agreement.clauses,
+        ),
       },
     };
   }

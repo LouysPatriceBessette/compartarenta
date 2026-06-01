@@ -6,6 +6,7 @@ import '../../housing/amendment/housing_amendment_proposal_flow.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
 import '../../housing/amendment/housing_amendment_type.dart';
+import '../../housing/amendment/housing_rules_amendment_pending.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -41,6 +42,7 @@ class _HousingAmendmentSubmitPreviewScreenState
   HousingAmendmentSummary? _summary;
   bool _loading = true;
   bool _submitting = false;
+  bool _submitEnabled = false;
 
   @override
   void initState() {
@@ -71,7 +73,17 @@ class _HousingAmendmentSubmitPreviewScreenState
         dateFormat: dateFmt,
       );
       if (!mounted) return;
-      setState(() => _summary = summary);
+      final submitEnabled = summary != null &&
+          await _amendmentAllowsSubmit(
+            db: AppDatabase.processScope,
+            summary: summary,
+            l10n: l10n,
+          );
+      if (!mounted) return;
+      setState(() {
+        _summary = summary;
+        _submitEnabled = submitEnabled;
+      });
     } catch (e, st) {
       debugPrint('housing amendment preview load failed: $e\n$st');
     } finally {
@@ -79,17 +91,42 @@ class _HousingAmendmentSubmitPreviewScreenState
     }
   }
 
+  Future<bool> _amendmentAllowsSubmit({
+    required AppDatabase db,
+    required HousingAmendmentSummary summary,
+    required AppLocalizations l10n,
+  }) async {
+    if (summary.type == HousingAmendmentType.ruleChange) {
+      return amendmentRulesHasMeaningfulChange(
+        db: db,
+        planId: widget.planId,
+        summary: summary,
+        l10n: l10n,
+      );
+    }
+    return amendmentSummaryHasMeaningfulChange(summary);
+  }
+
   Future<void> _submit() async {
     if (_submitting || _summary == null) return;
     final l10n = AppLocalizations.of(context);
-    if (!amendmentSummaryHasMeaningfulChange(_summary!)) {
+    final db = AppDatabase.processScope;
+    final meaningful = _summary!.type == HousingAmendmentType.ruleChange
+        ? await amendmentRulesHasMeaningfulChange(
+            db: db,
+            planId: widget.planId,
+            summary: _summary!,
+            l10n: l10n,
+          )
+        : amendmentSummaryHasMeaningfulChange(_summary!);
+    if (!mounted) return;
+    if (!meaningful) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.housingAmendmentNoMeaningfulChange)),
       );
       return;
     }
     setState(() => _submitting = true);
-    final db = AppDatabase.processScope;
     final sent = await HousingAmendmentProposalFlow(db).submitAmendment(
       context: context,
       planId: widget.planId,
@@ -102,6 +139,9 @@ class _HousingAmendmentSubmitPreviewScreenState
     if (!mounted) return;
     setState(() => _submitting = false);
     if (!sent) return;
+    if (widget.type == HousingAmendmentType.ruleChange) {
+      HousingRulesAmendmentPendingStore.clear(widget.planId);
+    }
     final pendingId = await HousingProposalTransportService(db)
         .pendingRevisionIdForPlan(widget.planId);
     if (!mounted) return;
@@ -159,7 +199,8 @@ class _HousingAmendmentSubmitPreviewScreenState
                         padding: housingAmendmentScreenPadding(context)
                             .copyWith(top: 8),
                         child: FilledButton(
-                          onPressed: _submitting ? null : _submit,
+                          onPressed:
+                              _submitting || !_submitEnabled ? null : _submit,
                           child: _submitting
                               ? const SizedBox(
                                   width: 22,

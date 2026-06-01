@@ -8,8 +8,11 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 
 import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
+import '../../housing/agreement_rules_diff.dart';
 import '../../housing/agreement_rules_display.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/amendment/housing_amendment_screen_padding.dart';
+import '../../housing/amendment/housing_rules_amendment_pending.dart';
 import '../../housing/quiet_hours_week_grid.dart';
 import 'housing_invitation_status_dialog.dart';
 import '../../housing/projection/plan_projection.dart';
@@ -177,6 +180,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   final Set<String> _expandedCustomRuleIds = {};
   final Set<String> _expandedSuggestionIds = {};
 
+  /// Baseline for [amendmentRulesOnly] submit enablement.
+  String? _amendmentBaselineRulesJson;
+  AgreementRulesAgreementSlice? _amendmentBaselineAgreement;
+  VoidCallback? _amendmentDirtyListener;
+
   late final Future<void> _boot;
   bool _draftLoadedFromDb = false;
   Future<void>? _autosaveChain;
@@ -273,6 +281,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
     _globalNotice.dispose();
     _globalPenalty.dispose();
+    _detachAmendmentChangeListeners();
     _buildingRulesBody.dispose();
     _customRuleEditTitle?.dispose();
     _customRuleEditBody?.dispose();
@@ -538,6 +547,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _showSummary = false;
       _stepIndex = 3;
       _draftLoadedFromDb = true;
+      await _loadAmendmentRulesBaselineFromActiveRevision();
+      final pending = HousingRulesAmendmentPendingStore.get(_planId);
+      if (pending != null) {
+        _applyPendingRulesToForm(pending);
+      }
+      _materializeRulesDraftForAmendment(_lookupAppLocalizationsSync());
+      _attachAmendmentChangeListeners();
       return;
     }
 
@@ -688,9 +704,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       }());
     }
     try {
-      final agr = await _db.getAgreementForPlan(_planId);
-      if (agr != null) {
-        await _persistAgreementRules();
+      if (!widget.amendmentRulesOnly) {
+        final agr = await _db.getAgreementForPlan(_planId);
+        if (agr != null) {
+          await _persistAgreementRules();
+        }
       }
     } catch (e, st) {
       assert(() {
@@ -770,6 +788,224 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   /// Monthly basis for presentation (budget cap uses high estimate).
   int _splitBasisMinor(PlanLine line) => PlanProjection.unitMinor(line);
+
+  Future<void> _loadAmendmentRulesBaselineFromActiveRevision() async {
+    Map<String, dynamic>? agrMap;
+    final transport = HousingProposalTransportService(_db);
+    final activeId = await transport.resolveActiveRevisionIdForPlan(_planId);
+    if (activeId != null) {
+      final rev = await (_db.select(_db.proposalRevisions)
+            ..where((t) => t.id.equals(activeId)))
+          .getSingleOrNull();
+      if (rev != null) {
+        try {
+          final payload =
+              jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+          final agr = payload['agreement'];
+          if (agr is Map) agrMap = agr.cast<String, dynamic>();
+        } catch (_) {}
+      }
+    }
+    agrMap ??= await _agreementMapFromLivePlanRow();
+    if (agrMap == null) return;
+    _amendmentBaselineRulesJson =
+        agrMap['agreementRulesJson']?.toString() ?? '{}';
+    _amendmentBaselineAgreement = agreementSliceFromPayloadMap(agrMap);
+  }
+
+  Future<Map<String, dynamic>?> _agreementMapFromLivePlanRow() async {
+    final agr = await _db.getAgreementForPlan(_planId);
+    if (agr == null) return null;
+    return {
+      'agreementRulesJson': agr.agreementRulesJson,
+      'clauses': agr.clauses,
+      'minNoticeDays': agr.minNoticeDays,
+      'penalty': {'amountMinor': agr.penaltyMinor},
+      'withdrawalSameForAll': agr.withdrawalSameForAll,
+      'withdrawalPerParticipantJson': agr.withdrawalPerParticipantJson,
+    };
+  }
+
+  void _materializeRulesDraftForAmendment(AppLocalizations l10n) {
+    _rulesDraft = normalizeAgreementRulesForComparison(_rulesDraft, l10n);
+  }
+
+  HousingRulesAmendmentPending _pendingRulesFromForm() {
+    _rulesDraft.buildingRulesText = _buildingRulesBody.text;
+
+    var notice = 0;
+    var penalty = 0;
+    var per = <String, dynamic>{};
+    if (_rulesDraft.earlyWithdrawalEnabled) {
+      notice = int.tryParse(_globalNotice.text.trim()) ?? 0;
+      penalty = _parseMinor(_globalPenalty.text) ?? 0;
+      if (!_withdrawalSameForAll) {
+        final total = 1 + _otherParticipantCount;
+        for (var i = 0; i < total; i++) {
+          final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
+          per[pid] = {
+            'minNoticeDays':
+                int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
+            'penaltyMinor': _parseMinor(_perParticipantPenalty[i].text) ?? 0,
+          };
+        }
+      }
+    }
+
+    return HousingRulesAmendmentPending(
+      agreementRulesJson: _rulesDraft.encode(),
+      baselineAgreementRulesJson: _amendmentBaselineRulesJson,
+      clauses: _buildingRulesBody.text,
+      minNoticeDays: _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+          ? notice
+          : 0,
+      penaltyMinor: _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+          ? penalty
+          : 0,
+      withdrawalSameForAll: _withdrawalSameForAll ? 'true' : 'false',
+      withdrawalPerParticipantJson: jsonEncode(per),
+    );
+  }
+
+  void _applyPendingRulesToForm(HousingRulesAmendmentPending pending) {
+    _rulesDraft = AgreementRulesDraft.parseStored(
+      agreementRulesJson: pending.agreementRulesJson,
+      clausesFallback: pending.clauses,
+    );
+    final buildingText = pending.clauses.trim().isNotEmpty
+        ? pending.clauses
+        : _rulesDraft.buildingRulesText;
+    _buildingRulesBody.text = buildingText.trim().isEmpty
+        ? _lookupAppLocalizationsSync().housingAgreementRuleBuildingHint
+        : buildingText;
+    _withdrawalSameForAll = pending.withdrawalSameForAll != 'false';
+    if (_rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll) {
+      _globalNotice.text = pending.minNoticeDays.toString();
+      _globalPenalty.text = (pending.penaltyMinor / 100).toStringAsFixed(2);
+    }
+    if (_rulesDraft.earlyWithdrawalEnabled && !_withdrawalSameForAll) {
+      try {
+        final map = jsonDecode(pending.withdrawalPerParticipantJson)
+            as Map<String, dynamic>?;
+        if (map != null) {
+          final total = 1 + _otherParticipantCount;
+          for (var i = 0; i < total && i < _perParticipantNotice.length; i++) {
+            final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
+            final row = map[pid] as Map<String, dynamic>?;
+            if (row != null) {
+              _perParticipantNotice[i].text =
+                  (row['minNoticeDays'] as num?)?.toInt().toString() ?? '30';
+              final pen = (row['penaltyMinor'] as num?)?.toInt() ?? 0;
+              _perParticipantPenalty[i].text = (pen / 100).toStringAsFixed(2);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  AgreementRulesAgreementSlice _agreementSliceFromWithdrawalForm() {
+    var notice = 0;
+    var penalty = 0;
+    var per = <String, dynamic>{};
+    if (_rulesDraft.earlyWithdrawalEnabled) {
+      notice = int.tryParse(_globalNotice.text.trim()) ?? 0;
+      penalty = _parseMinor(_globalPenalty.text) ?? 0;
+      if (!_withdrawalSameForAll) {
+        final total = 1 + _otherParticipantCount;
+        for (var i = 0; i < total; i++) {
+          final pid = i == 0 ? _selfParticipantId : _coParticipantId(i - 1);
+          per[pid] = {
+            'minNoticeDays':
+                int.tryParse(_perParticipantNotice[i].text.trim()) ?? 0,
+            'penaltyMinor': _parseMinor(_perParticipantPenalty[i].text) ?? 0,
+          };
+        }
+      }
+    }
+    return AgreementRulesAgreementSlice(
+      clauses: _buildingRulesBody.text,
+      minNoticeDays: _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+          ? notice
+          : 0,
+      penaltyMinor: _rulesDraft.earlyWithdrawalEnabled && _withdrawalSameForAll
+          ? penalty
+          : 0,
+      withdrawalSameForAll: _withdrawalSameForAll ? 'true' : 'false',
+      withdrawalPerParticipantJson: jsonEncode(per),
+    );
+  }
+
+  bool get _amendmentRulesHasMeaningfulChange {
+    if (!widget.amendmentRulesOnly || _amendmentBaselineRulesJson == null) {
+      return false;
+    }
+    final l10n = _lookupAppLocalizationsSync();
+    final proposed = normalizeAgreementRulesForComparison(
+      AgreementRulesDraft.fromJson(
+        jsonDecode(_rulesDraft.encode()) as Map<String, dynamic>,
+      ),
+      l10n,
+    );
+    proposed.buildingRulesText = _buildingRulesBody.text;
+    final baseline = normalizeAgreementRulesForComparison(
+      AgreementRulesDraft.parseStored(
+        agreementRulesJson: _amendmentBaselineRulesJson!,
+        clausesFallback: '',
+      ),
+      l10n,
+    );
+    final buckets = computeAgreementRulesChangeBuckets(
+      baselineRules: baseline,
+      baselineAgreement: _amendmentBaselineAgreement!,
+      proposedRules: proposed,
+      proposedAgreement: _agreementSliceFromWithdrawalForm(),
+      l10n: l10n,
+    );
+    return buckets.hasMeaningfulChange;
+  }
+
+  Future<void> _sanitizeAndPersistAgreementRulesForBindingSubmission(
+    AppLocalizations l10n,
+  ) async {
+    _rulesDraft.buildingRulesText = _buildingRulesBody.text;
+    _rulesDraft = _rulesDraft.prepareForBindingSubmission(
+      suggestionDefaults: agreementSuggestionDefaultsFromL10n(l10n),
+    );
+    await _persistAgreementRules();
+  }
+
+  void _attachAmendmentChangeListeners() {
+    if (_amendmentDirtyListener != null) return;
+    _amendmentDirtyListener = () {
+      if (mounted) setState(() {});
+    };
+    final bump = _amendmentDirtyListener!;
+    _buildingRulesBody.addListener(bump);
+    _globalNotice.addListener(bump);
+    _globalPenalty.addListener(bump);
+    for (final c in _perParticipantNotice) {
+      c.addListener(bump);
+    }
+    for (final c in _perParticipantPenalty) {
+      c.addListener(bump);
+    }
+  }
+
+  void _detachAmendmentChangeListeners() {
+    final bump = _amendmentDirtyListener;
+    if (bump == null) return;
+    _buildingRulesBody.removeListener(bump);
+    _globalNotice.removeListener(bump);
+    _globalPenalty.removeListener(bump);
+    for (final c in _perParticipantNotice) {
+      c.removeListener(bump);
+    }
+    for (final c in _perParticipantPenalty) {
+      c.removeListener(bump);
+    }
+    _amendmentDirtyListener = null;
+  }
 
   Future<void> _persistAgreementRules() async {
     final cur = await _db.getAgreementForPlan(_planId);
@@ -902,6 +1138,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final proposerId = '$_planId:self';
     late final String revisionId;
     try {
+      await _sanitizeAndPersistAgreementRulesForBindingSubmission(l10n);
+      if (!mounted || !flowContext.mounted) return false;
       final fork = await HousingProposalTransportService(
         _db,
       ).preparedForkLineage(_planId);
@@ -1143,8 +1381,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(centerTitle: true, title: Text(l10n.homeHousingPlan)),
+    final scaffold = Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          widget.amendmentRulesOnly
+              ? l10n.housingAmendmentTypeRuleChange
+              : l10n.homeHousingPlan,
+        ),
+      ),
       body: FutureBuilder<void>(
         future: _boot,
         builder: (context, snap) {
@@ -1176,16 +1421,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
               onDestroy: _onDestroyPlan,
             );
           }
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _stepperRail(),
-              Expanded(
-                child: Column(
+          final wizardColumn = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+                      padding: EdgeInsets.fromLTRB(
+                        widget.amendmentRulesOnly ? 16 : 8,
+                        16,
+                        16,
+                        8,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -1249,25 +1494,82 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       ),
                     ),
                     Expanded(child: _buildStepBody()),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        16,
-                        16,
-                        16 + MediaQuery.viewPaddingOf(context).bottom,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: widget.amendmentRulesOnly
+                            ? housingAmendmentSafeAreaContentPadding
+                            : EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                16 +
+                                    MediaQuery.viewPaddingOf(context).bottom,
+                              ),
+                        child: widget.amendmentRulesOnly
+                            ? SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                onPressed: _agreementRulesStepFooterLocked ||
+                                        !_amendmentRulesHasMeaningfulChange
+                                    ? null
+                                    : (_validateStep(_stepIndex)
+                                          ? () async {
+                                              final messenger =
+                                                  ScaffoldMessenger.of(
+                                                context,
+                                              );
+                                              try {
+                                                HousingRulesAmendmentPendingStore
+                                                    .set(
+                                                  _planId,
+                                                  _pendingRulesFromForm(),
+                                                );
+                                                if (!context.mounted) {
+                                                  return;
+                                                }
+                                                Navigator.of(context).pop(
+                                                  widget
+                                                      .amendmentSubmitToGroup,
+                                                );
+                                              } catch (e, st) {
+                                                assert(() {
+                                                  debugPrint(
+                                                    'Housing plan rules amend: $e\n$st',
+                                                  );
+                                                  return true;
+                                                }());
+                                                if (mounted) {
+                                                  messenger.showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        l10n.housingPlanCouldNotContinue(
+                                                          '$e',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          : null),
+                                  child: Text(
+                                    l10n.housingAmendmentRulesContinue,
+                                  ),
+                                ),
+                              )
+                            : Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
-                          if (_stepIndex > 0) ...[
+                          if (_stepIndex > 0)
                             OutlinedButton(
                               onPressed: _agreementRulesStepFooterLocked
                                   ? null
                                   : () => setState(() => _stepIndex--),
                               child: Text(l10n.housingPlanBack),
                             ),
-                            const SizedBox(width: 12),
-                          ],
                           FilledButton(
                             onPressed: _agreementRulesStepFooterLocked
                                 ? null
@@ -1377,15 +1679,34 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                           ),
                         ],
                       ),
+                      ),
                     ),
                   ],
-                ),
-              ),
+                );
+          if (widget.amendmentRulesOnly) {
+            return wizardColumn;
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _stepperRail(),
+              Expanded(child: wizardColumn),
             ],
           );
         },
       ),
     );
+    if (widget.amendmentRulesOnly) {
+      return PopScope(
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop && result != true) {
+            HousingRulesAmendmentPendingStore.clear(_planId);
+          }
+        },
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 
   Widget _buildStepBody() {
@@ -2685,6 +3006,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
             : (v) => setState(() {
                 if (v ?? false) {
                   _rulesDraft.enabledSuggestionIds.add(suggestionId);
+                  _rulesDraft.suggestionEdits.putIfAbsent(
+                    suggestionId,
+                    () => AgreementSuggestionEdit(
+                      title: defaultTitle,
+                      body: defaultBody,
+                    ),
+                  );
                 } else {
                   _rulesDraft.enabledSuggestionIds.remove(suggestionId);
                 }
@@ -2856,11 +3184,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   Widget _stepAgreementRules() {
     final l10n = AppLocalizations.of(context);
+    final listBottom = widget.amendmentRulesOnly
+        ? housingAmendmentStickyFooterScrollInset(context)
+        : 16.0;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, listBottom),
       children: [
         Text(
-          l10n.housingAgreementRulesIntro,
+          widget.amendmentRulesOnly
+              ? l10n.housingAgreementRulesAmendmentIntro
+              : l10n.housingAgreementRulesIntro,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         if (_rulesRemovalLocked) ...[
@@ -2876,24 +3209,26 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         _agreementBuildingRulesCard(l10n),
         for (var i = 0; i < _rulesDraft.customRules.length; i++)
           _customAgreementRuleTile(l10n, i),
-        if (!_rulesDraft.dismissedSuggestionIds.contains(
-          kAgreementSuggestionCommonCleanliness,
-        ))
-          _suggestionAgreementRuleTile(
-            l10n,
-            suggestionId: kAgreementSuggestionCommonCleanliness,
-            defaultTitle: l10n.housingAgreementSuggestionCleanlinessTitle,
-            defaultBody: l10n.housingAgreementSuggestionCleanlinessBody,
-          ),
-        if (!_rulesDraft.dismissedSuggestionIds.contains(
-          kAgreementSuggestionFridgeManagement,
-        ))
-          _suggestionAgreementRuleTile(
-            l10n,
-            suggestionId: kAgreementSuggestionFridgeManagement,
-            defaultTitle: l10n.housingAgreementSuggestionFridgeTitle,
-            defaultBody: l10n.housingAgreementSuggestionFridgeBody,
-          ),
+        if (!widget.amendmentRulesOnly) ...[
+          if (!_rulesDraft.dismissedSuggestionIds.contains(
+            kAgreementSuggestionCommonCleanliness,
+          ))
+            _suggestionAgreementRuleTile(
+              l10n,
+              suggestionId: kAgreementSuggestionCommonCleanliness,
+              defaultTitle: l10n.housingAgreementSuggestionCleanlinessTitle,
+              defaultBody: l10n.housingAgreementSuggestionCleanlinessBody,
+            ),
+          if (!_rulesDraft.dismissedSuggestionIds.contains(
+            kAgreementSuggestionFridgeManagement,
+          ))
+            _suggestionAgreementRuleTile(
+              l10n,
+              suggestionId: kAgreementSuggestionFridgeManagement,
+              defaultTitle: l10n.housingAgreementSuggestionFridgeTitle,
+              defaultBody: l10n.housingAgreementSuggestionFridgeBody,
+            ),
+        ],
         const SizedBox(height: 8),
         Align(
           alignment: AlignmentDirectional.centerStart,

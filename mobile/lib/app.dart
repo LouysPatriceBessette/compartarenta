@@ -48,12 +48,20 @@ class CompartarentaApp extends StatefulWidget {
 
 class _CompartarentaAppState extends State<CompartarentaApp>
     with WidgetsBindingObserver {
-  late final Future<AppPreferences> _prefs = _loadPrefs();
+  late Future<AppPreferences> _prefs = _loadPrefs();
+  int _prefsLoadGeneration = 0;
 
   /// Reused across [ListenableBuilder] rebuilds so navigation state is kept.
   GoRouter? _router;
 
   String _lastRoutingPushPrefsSig = '';
+
+  void _retryPrefsLoad() {
+    setState(() {
+      _prefsLoadGeneration++;
+      _prefs = _loadPrefs();
+    });
+  }
 
   @override
   void initState() {
@@ -185,6 +193,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
+      key: ValueKey(_prefsLoadGeneration),
       future: _prefs,
       builder: (context, snapshot) {
         final prefs = snapshot.data;
@@ -236,6 +245,13 @@ class _CompartarentaAppState extends State<CompartarentaApp>
                           const SizedBox(height: 16),
                           SelectableText('$stack'),
                         ],
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: _retryPrefsLoad,
+                          child: Text(
+                            lang == 'fr' ? 'Réessayer' : 'Retry',
+                          ),
+                        ),
                       ],
                     ),
                   ),

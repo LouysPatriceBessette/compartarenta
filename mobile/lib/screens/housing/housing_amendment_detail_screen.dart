@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_expense_preview.dart';
+import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_settlement.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
@@ -94,6 +95,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
       bool? settledAccepted;
       String? settledActorName;
       DateTime? settledAt;
+      String? settledRefusalMessage;
       if (widget.readOnlySettled) {
         final rev = await (widget.db.select(widget.db.proposalRevisions)
               ..where((t) => t.id.equals(summary.revisionId)))
@@ -135,6 +137,15 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
             settledWhen = response?.respondedAt ?? rev.createdAt;
           }
           settledAt = settledWhen;
+          if (settledAccepted == false &&
+              actorId != null &&
+              actorId.isNotEmpty) {
+            final messages = Map<String, dynamic>.from(
+              (payload['responseMessages'] as Map?) ??
+                  const <String, dynamic>{},
+            );
+            settledRefusalMessage = messages[actorId]?.toString();
+          }
         }
       }
 
@@ -147,6 +158,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           settledAccepted: settledAccepted,
           settledActorName: settledActorName,
           settledAt: settledAt,
+          settledRefusalMessage: settledRefusalMessage,
         );
         _loading = false;
         _loadFailed = false;
@@ -330,12 +342,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           children: [
             Expanded(
               child: ListView(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  16 + MediaQuery.viewPaddingOf(context).bottom,
-                ),
+                padding: housingAmendmentScreenPadding(context),
                 children: [
                   Text(
                     l10n.housingAmendmentDetailIntro(
@@ -413,6 +420,22 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                                   : theme.colorScheme.error,
                             ),
                           ),
+                          if (!data.settledAccepted! &&
+                              data.settledRefusalMessage != null &&
+                              data.settledRefusalMessage!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.housingAmendmentRefusalMessageLabel,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              data.settledRefusalMessage!.trim(),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -430,9 +453,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                       style: OutlinedButton.styleFrom(
                         foregroundColor: theme.colorScheme.error,
                       ),
-                      onPressed: () => _submitResponse(
-                        ProposalResponseStatus.rejected,
-                      ),
+                      onPressed: _confirmReject,
                       child: Text(l10n.housingAmendmentReject),
                     ),
                   ],
@@ -472,6 +493,43 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
     );
   }
 
+  Future<void> _confirmReject() async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController();
+    final message = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.housingAmendmentRejectTitle),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: l10n.housingAmendmentRejectMessageLabel,
+            ),
+            maxLines: 4,
+            maxLength: 500,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
+              child: Text(l10n.housingAmendmentRejectConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted || message == null) return;
+    await _submitResponse(
+      ProposalResponseStatus.rejected,
+      message: message,
+    );
+  }
+
   /// Label for the "before" value on archived decision screens (never "Currently").
   String _beforeValueLabel(AppLocalizations l10n, _AmendmentDetailPayload data) {
     if (widget.readOnlySettled && data.settledAccepted != null) {
@@ -491,6 +549,7 @@ class _AmendmentDetailPayload {
     this.settledAccepted,
     this.settledActorName,
     this.settledAt,
+    this.settledRefusalMessage,
   });
 
   final HousingAmendmentSummary summary;
@@ -499,4 +558,5 @@ class _AmendmentDetailPayload {
   final bool? settledAccepted;
   final String? settledActorName;
   final DateTime? settledAt;
+  final String? settledRefusalMessage;
 }
