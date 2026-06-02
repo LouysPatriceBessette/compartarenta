@@ -387,7 +387,7 @@
   "housingAmendmentPendingBlocks": "Ya hay una modificación pendiente de respuesta.",
   "housingAmendmentPickLine": "Elegir una línea",
   "housingAmendmentTypeLineEdit": "Modificar un gasto",
-  "housingAmendmentTypeLineEditHint": "Título, importe, descripción o pagador (no recurrencia ni reparto)",
+  "housingAmendmentTypeLineEditHint": "Título, importe, descripción, pagador, recurrencia o reparto",
   "housingAmendmentTypeLineAmount": "Cambiar un importe",
   "housingAmendmentTypeLineAmountHint": "Actualizar el precio de una línea",
   "housingAmendmentTypeLineRecurrence": "Cambiar recurrencia",

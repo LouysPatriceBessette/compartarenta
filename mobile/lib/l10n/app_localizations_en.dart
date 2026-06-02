@@ -1036,7 +1036,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingAmendmentTypeLineEditHint =>
-      'Title, amount, description, or payer (not recurrence or split shares)';
+      'Title, amount, description, payer, recurrence, or split shares';
 
   @override
   String get housingAmendmentTypeLineAmount => 'Change a line amount';

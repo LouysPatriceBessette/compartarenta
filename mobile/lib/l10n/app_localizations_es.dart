@@ -1050,7 +1050,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingAmendmentTypeLineEditHint =>
-      'Título, importe, descripción o pagador (no recurrencia ni reparto)';
+      'Título, importe, descripción, pagador, recurrencia o reparto';
 
   @override
   String get housingAmendmentTypeLineAmount => 'Cambiar un importe';

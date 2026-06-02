@@ -39,11 +39,15 @@ class ExpensePlanLineFormBody extends StatelessWidget {
     required this.splitRevision,
     this.lockRecurrenceAndSplit = false,
   }) : readOnly = false,
-       viewData = null;
+       viewData = null,
+       highlightPredicate = null,
+       highlightColor = null;
 
   const ExpensePlanLineFormBody.presentation({
     super.key,
     required ExpensePlanLineViewData this.viewData,
+    this.highlightPredicate,
+    this.highlightColor,
   }) : readOnly = true,
        titleController = null,
        descriptionController = null,
@@ -71,6 +75,10 @@ class ExpensePlanLineFormBody extends StatelessWidget {
        onRowPercentChanged = null,
        splitRevision = null,
        lockRecurrenceAndSplit = false;
+
+  /// When set, wraps read-only fields whose [fieldKey] returns true.
+  final bool Function(String fieldKey)? highlightPredicate;
+  final Color? highlightColor;
 
   final bool readOnly;
   final ExpensePlanLineViewData? viewData;
@@ -120,10 +128,13 @@ class ExpensePlanLineFormBody extends StatelessWidget {
 
     final children = <Widget>[
       if (readOnly)
-        _readOnlyField(
-          context,
-          label: l10n.housingExpenseNameLabel,
-          value: title!,
+        _highlightWrap(
+          'title',
+          _readOnlyField(
+            context,
+            label: l10n.housingExpenseNameLabel,
+            value: title!,
+          ),
         )
       else
         TextField(
@@ -135,11 +146,14 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         ),
       const SizedBox(height: 8),
       if (readOnly)
-        _readOnlyField(
-          context,
-          label: l10n.housingPlanExpenseDescriptionLabel,
-          value: description!.isEmpty ? '—' : description,
-          maxLines: 4,
+        _highlightWrap(
+          'description',
+          _readOnlyField(
+            context,
+            label: l10n.housingPlanExpenseDescriptionLabel,
+            value: description!.isEmpty ? '—' : description,
+            maxLines: 4,
+          ),
         )
       else
         TextField(
@@ -151,11 +165,16 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           minLines: 2,
         ),
       if (readOnly)
-        _readOnlySwitchRow(
-          context,
-          title: l10n.housingPlanRecurringSwitch,
-          value: recurring,
-          subtitle: recurring ? recurSummary : null,
+        _highlightWrap(
+          'recurring',
+          _readOnlySwitchRow(
+            context,
+            title: l10n.housingPlanRecurringSwitch,
+            value: recurring,
+            subtitle: recurring ? recurSummary : null,
+            highlightRecurrence: highlightPredicate?.call('recurrence') ?? false,
+            highlightColor: highlightColor,
+          ),
         )
       else
         _AmendmentLockedSection(
@@ -182,10 +201,13 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         ),
       const SizedBox(height: 8),
       if (readOnly)
-        _readOnlyField(
-          context,
-          label: l10n.housingPlanAmountLabel,
-          value: amountText!.isEmpty ? '—' : amountText,
+        _highlightWrap(
+          'amount',
+          _readOnlyField(
+            context,
+            label: l10n.housingPlanAmountLabel,
+            value: amountText!.isEmpty ? '—' : amountText,
+          ),
         )
       else
         TextField(
@@ -202,13 +224,16 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         style: theme.textTheme.titleSmall,
       ),
       if (readOnly)
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 8),
-          child: Text(
-            budgetCap
-                ? l10n.housingExpenseAmountBudgetMax
-                : l10n.housingExpenseAmountDetermined,
-            style: theme.textTheme.bodyLarge,
+        _highlightWrap(
+          'amountType',
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 8),
+            child: Text(
+              budgetCap
+                  ? l10n.housingExpenseAmountBudgetMax
+                  : l10n.housingExpenseAmountDetermined,
+              style: theme.textTheme.bodyLarge,
+            ),
           ),
         )
       else
@@ -220,10 +245,13 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         ),
       if (!readOnly) const SizedBox(height: 24),
       if (readOnly)
-        _readOnlyField(
-          context,
-          label: l10n.housingExpensePaymentResponsibleLabel,
-          value: paymentLabel!,
+        _highlightWrap(
+          'payment',
+          _readOnlyField(
+            context,
+            label: l10n.housingExpensePaymentResponsibleLabel,
+            value: paymentLabel!,
+          ),
         )
       else
         _PaymentResponsibleField(
@@ -237,28 +265,31 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         ),
       _AmendmentLockedSection(
         locked: lockRecurrenceAndSplit,
-        child: splitRevision != null
-            ? ListenableBuilder(
-                listenable: splitRevision!,
-                builder: (context, _) => _buildSplitSection(
+        child: _highlightWrap(
+          'split',
+          splitRevision != null
+              ? ListenableBuilder(
+                  listenable: splitRevision!,
+                  builder: (context, _) => _buildSplitSection(
+                    context,
+                    l10n,
+                    theme,
+                    splitState: currentSplitState?.call(),
+                    currency: currency,
+                    selectedTemplateId: selectedTemplateId,
+                    interactionsEnabled: !lockRecurrenceAndSplit,
+                  ),
+                )
+              : _buildSplitSection(
                   context,
                   l10n,
                   theme,
-                  splitState: currentSplitState?.call(),
+                  splitState: readOnly ? data!.split : currentSplitState?.call(),
                   currency: currency,
                   selectedTemplateId: selectedTemplateId,
                   interactionsEnabled: !lockRecurrenceAndSplit,
                 ),
-              )
-            : _buildSplitSection(
-                context,
-                l10n,
-                theme,
-                splitState: readOnly ? data!.split : currentSplitState?.call(),
-                currency: currency,
-                selectedTemplateId: selectedTemplateId,
-                interactionsEnabled: !lockRecurrenceAndSplit,
-              ),
+        ),
       ),
     ];
 
@@ -338,6 +369,24 @@ class ExpensePlanLineFormBody extends StatelessWidget {
     );
   }
 
+  Widget _highlightWrap(String fieldKey, Widget child) {
+    final predicate = highlightPredicate;
+    final color = highlightColor;
+    if (predicate == null || color == null || !predicate(fieldKey)) {
+      return child;
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: child,
+      ),
+    );
+  }
+
   static Widget _readOnlyField(
     BuildContext context, {
     required String label,
@@ -366,11 +415,29 @@ class ExpensePlanLineFormBody extends StatelessWidget {
     required String title,
     required bool value,
     required String? subtitle,
+    bool highlightRecurrence = false,
+    Color? highlightColor,
   }) {
+    Widget? subtitleWidget;
+    if (subtitle != null) {
+      final text = Text(subtitle);
+      subtitleWidget = highlightRecurrence && highlightColor != null
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                color: highlightColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: text,
+              ),
+            )
+          : text;
+    }
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(title),
-      subtitle: subtitle == null ? null : Text(subtitle),
+      subtitle: subtitleWidget,
       trailing: Icon(
         value ? Icons.check_circle_outline : Icons.remove_circle_outline,
         color: Theme.of(context).colorScheme.primary,

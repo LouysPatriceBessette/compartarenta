@@ -16,6 +16,8 @@ import 'agreement_rules_amendment_loader.dart';
 import 'housing_amendment_settlement.dart';
 import 'housing_amendment_summary.dart';
 import 'housing_amendment_type.dart';
+import 'housing_line_add_amendment_pending.dart';
+import 'housing_amendment_line_edit_preview.dart';
 
 bool housingAmendmentUsesExpenseLinePreview(HousingAmendmentType type) =>
     type == HousingAmendmentType.lineAdd;
@@ -231,6 +233,61 @@ Future<Map<String, dynamic>?> _resolveLineMapForAmendment({
   );
 }
 
+/// Builds [ExpensePlanLineViewData] from a revision payload line map + ratios.
+Future<ExpensePlanLineViewData?> buildExpenseLineViewDataFromPayloadLine({
+  required AppDatabase db,
+  required String planId,
+  required Map<String, dynamic> lineMap,
+  required List<Map<String, dynamic>> ratioMaps,
+  required List<String> participantIds,
+  required List<String> participantNames,
+  required AppLocalizations l10n,
+  required String dateFormat,
+  required String defaultCurrency,
+  Map<String, dynamic>? revisionPayload,
+}) async {
+  final lineId = lineMap['id']?.toString() ?? '';
+  if (lineId.isEmpty) return null;
+  final planLine = _planLineFromPayloadMap(
+    planId,
+    lineMap,
+    revisionPayload: revisionPayload,
+    participantIds: participantIds,
+  );
+  final splitWeights = _splitWeightsForPayloadLine(lineId, planId, ratioMaps);
+  return ExpensePlanLineViewData.load(
+    db: db,
+    planId: planId,
+    line: planLine,
+    participantIds: participantIds,
+    participantNames: participantNames,
+    l10n: l10n,
+    dateFormat: dateFormat,
+    defaultCurrency: defaultCurrency,
+    splitWeightsByParticipant: splitWeights.isEmpty ? null : splitWeights,
+  );
+}
+
+List<Map<String, dynamic>> ratioMapsForLineInPayload(
+  Map<String, dynamic> payload,
+  String planId,
+  String lineId,
+) {
+  return [
+    for (final ratio in _payloadRatios(payload))
+      if (_lineIdMatches(lineId, planId, ratio['lineId']?.toString() ?? ''))
+        ratio,
+  ];
+}
+
+Map<String, dynamic>? lineMapInPayload(
+  Map<String, dynamic> payload,
+  String planId,
+  String? lineId,
+) {
+  return _lineById(_payloadLines(payload), lineId, planId);
+}
+
 /// Loads expense card data from live tables, then from the amendment revision JSON.
 Future<ExpensePlanLineViewData?> resolveAmendmentExpenseLinePreview({
   required AppDatabase db,
@@ -259,6 +316,36 @@ Future<ExpensePlanLineViewData?> resolveAmendmentExpenseLinePreview({
         dateFormat: dateFormat,
         defaultCurrency: defaultCurrency,
       );
+    }
+
+    if (summary.revisionId == 'preview' &&
+        summary.type == HousingAmendmentType.lineAdd) {
+      final pending = HousingLineAddAmendmentPendingStore.get(planId);
+      if (pending != null &&
+          planLineIdsMatch(summary.targetLineId!, planId, pending.lineId)) {
+        final planLine = _planLineFromPayloadMap(
+          planId,
+          pending.lineMap,
+          revisionPayload: null,
+          participantIds: participantIds,
+        );
+        final splitWeights = _splitWeightsForPayloadLine(
+          planLine.id,
+          planId,
+          pending.ratioMaps,
+        );
+        return ExpensePlanLineViewData.load(
+          db: db,
+          planId: planId,
+          line: planLine,
+          participantIds: participantIds,
+          participantNames: participantNames,
+          l10n: l10n,
+          dateFormat: dateFormat,
+          defaultCurrency: defaultCurrency,
+          splitWeightsByParticipant: splitWeights.isEmpty ? null : splitWeights,
+        );
+      }
     }
   }
 
@@ -415,6 +502,17 @@ class HousingAmendmentComparisonSection extends StatelessWidget {
             comparison: comparison,
           );
         },
+      );
+    }
+
+    if (summary.type == HousingAmendmentType.lineEdit) {
+      return HousingAmendmentLineEditComparisonSection(
+        db: db,
+        planId: planId,
+        prefs: prefs,
+        summary: summary,
+        currentLabel: currentLabel,
+        proposedLabel: proposedLabel,
       );
     }
 

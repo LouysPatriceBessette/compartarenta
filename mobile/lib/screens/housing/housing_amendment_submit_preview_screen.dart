@@ -6,6 +6,8 @@ import '../../housing/amendment/housing_amendment_proposal_flow.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
 import '../../housing/amendment/housing_amendment_type.dart';
+import '../../housing/amendment/housing_line_add_amendment_pending.dart';
+import '../../housing/amendment/housing_line_edit_amendment_pending.dart';
 import '../../housing/amendment/housing_rules_amendment_pending.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -133,7 +135,20 @@ class _HousingAmendmentSubmitPreviewScreenState
       prefs: widget.prefs,
       amendmentType: widget.type,
       targetLineId: widget.targetLineId,
-      patchRevisionPayload: widget.patchRevisionPayload,
+      patchRevisionPayload: (payload) {
+        if (widget.type == HousingAmendmentType.lineEdit) {
+          HousingLineEditAmendmentPendingStore.applyToPayload(
+            widget.planId,
+            payload,
+          );
+        } else if (widget.type == HousingAmendmentType.lineAdd) {
+          HousingLineAddAmendmentPendingStore.applyToPayload(
+            widget.planId,
+            payload,
+          );
+        }
+        widget.patchRevisionPayload?.call(payload);
+      },
       proposedPeriodEnd: widget.proposedPeriodEnd,
     );
     if (!mounted) return;
@@ -142,19 +157,30 @@ class _HousingAmendmentSubmitPreviewScreenState
     if (widget.type == HousingAmendmentType.ruleChange) {
       HousingRulesAmendmentPendingStore.clear(widget.planId);
     }
+    if (widget.type == HousingAmendmentType.lineEdit) {
+      HousingLineEditAmendmentPendingStore.clear(widget.planId);
+    } else if (widget.type == HousingAmendmentType.lineAdd) {
+      HousingLineAddAmendmentPendingStore.clear(widget.planId);
+    }
     final pendingId = await HousingProposalTransportService(db)
         .pendingRevisionIdForPlan(widget.planId);
     if (!mounted) return;
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => HousingAmendmentDetailScreen(
-          db: db,
-          planId: widget.planId,
-          prefs: widget.prefs,
-          revisionId: pendingId,
-        ),
+    final detailRoute = MaterialPageRoute<void>(
+      builder: (_) => HousingAmendmentDetailScreen(
+        db: db,
+        planId: widget.planId,
+        prefs: widget.prefs,
+        revisionId: pendingId,
       ),
     );
+    if (widget.type == HousingAmendmentType.lineEdit) {
+      await Navigator.of(context).pushAndRemoveUntil(
+        detailRoute,
+        (route) => route.isFirst,
+      );
+    } else {
+      await Navigator.of(context).pushReplacement(detailRoute);
+    }
   }
 
   @override

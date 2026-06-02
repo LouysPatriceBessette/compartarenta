@@ -1052,7 +1052,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAmendmentTypeLineEditHint =>
-      'Titre, montant, description ou responsable du paiement (pas la récurrence ni les parts)';
+      'Titre, montant, description, responsable, récurrence ou parts';
 
   @override
   String get housingAmendmentTypeLineAmount => 'Modifier un montant';

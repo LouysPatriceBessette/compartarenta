@@ -20,9 +20,9 @@ import 'realized_expense_status.dart';
 /// [ArchivedPlanLineSnapshots] is a fallback when the line was **removed** from
 /// the live plan and legacy rows have no per-expense snapshot yet.
 ///
-/// Future `lineEdit` amendments may change line title and cap/amount on the plan,
-/// but not recurrence or ratios; new expenses capture the then-current title and
-/// ratios, while older published expenses keep their own snapshots.
+/// `lineEdit` amendments may change line fields on the plan (including recurrence
+/// and ratios); new expenses capture the then-current title and ratios, while
+/// older published expenses keep their own snapshots.
 typedef SplitRatiosJson = String;
 
 /// Ledger rows whose plan-line context must not track live plan tables.

@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/amendment/housing_amendment_type.dart';
+import '../../housing/amendment/housing_line_add_amendment_pending.dart';
+import '../../housing/amendment/housing_line_edit_amendment_pending.dart';
+import '../../housing/housing_plan_draft_backup.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../screens/housing/housing_amendment_submit_preview_screen.dart';
 import 'expense_amount_parse.dart';
 import 'expense_line_persistence.dart';
 import 'expense_plan_line_form_body.dart';
@@ -10,6 +17,7 @@ import 'expense_recurrence_flow.dart';
 import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 import 'expense_ratio_template_repository.dart';
+import 'expense_plan_line_form_snapshot.dart';
 import 'expense_split_grid_logic.dart';
 import 'plan_participant_dropdown_value.dart';
 
@@ -71,6 +79,8 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   DateTime? _createdAt;
   bool _loading = true;
   bool _saving = false;
+  ExpensePlanLineFormSnapshot? _loadedBaseline;
+  String? _draftLineId;
 
   final ValueNotifier<int> _splitRevision = ValueNotifier(0);
 
@@ -84,6 +94,21 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
     _templates = await ExpenseRatioTemplateRepository(
       _db,
     ).listSelectableForPlan(widget.planId);
+    if (_amendmentLineAddFlow) {
+      HousingLineAddAmendmentPendingStore.clear(widget.planId);
+      await purgeNonInForcePlanLines(_db, widget.planId);
+      final now = DateTime.now().toUtc();
+      _createdAt = now;
+      _draftLineId = HousingPlanDraftBackup.newLineId(now);
+    }
+    if (_amendmentEditRequiresChange && widget.existingLineId != null) {
+      HousingLineEditAmendmentPendingStore.clear(widget.planId);
+      await restoreInForcePlanLineFromActiveRevision(
+        _db,
+        widget.planId,
+        widget.existingLineId!,
+      );
+    }
     if (widget.existingLineId != null) {
       final lines = await _db.listPlanLines(widget.planId);
       PlanLine? line;
@@ -141,7 +166,28 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
       }
     }
     _syncSplitFromAmount();
+    if (widget.existingLineId != null) {
+      _loadedBaseline = _snapshotFromCurrentForm();
+    }
     if (mounted) setState(() => _loading = false);
+  }
+
+  void _notifyFormChanged() {
+    if (mounted) setState(() {});
+  }
+
+  ExpensePlanLineFormSnapshot _snapshotFromCurrentForm() {
+    return ExpensePlanLineFormSnapshot.fromFormState(
+      title: _titleCtrl.text,
+      description: _descCtrl.text,
+      amountMinor: parseAmountMinorFromText(_amountCtrl.text),
+      isRecurring: _isRecurring,
+      amountIsBudgetCap: _amountIsBudgetCap,
+      paymentResponsibleId: _paymentResponsibleId,
+      recurrence: _recurrence,
+      split: _split,
+      selectedTemplateId: _selectedTemplateId,
+    );
   }
 
   @override
@@ -156,6 +202,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   void _refreshAmountDependentUi() {
     _syncSplitFromAmount();
     _splitRevision.value++;
+    _notifyFormChanged();
   }
 
   void _syncSplitFromAmount() {
@@ -184,8 +231,159 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
     return true;
   }
 
+  bool get _amendmentLineAddFlow =>
+      widget.amendmentSubmitToGroup && widget.existingLineId == null;
+
+  bool get _amendmentEditRequiresChange =>
+      widget.amendmentSubmitToGroup && widget.existingLineId != null;
+
+  bool get _hasChangeFromLoadedLine {
+    final baseline = _loadedBaseline;
+    if (baseline == null) return false;
+    return _snapshotFromCurrentForm() != baseline;
+  }
+
+  bool get _canContinue =>
+      _canSave && (!_amendmentEditRequiresChange || _hasChangeFromLoadedLine);
+
+  Future<void> _discardAmendmentLineEditDraft() async {
+    if (!_amendmentEditRequiresChange || widget.existingLineId == null) return;
+    HousingLineEditAmendmentPendingStore.clear(widget.planId);
+    try {
+      await restoreInForcePlanLineFromActiveRevision(
+        _db,
+        widget.planId,
+        widget.existingLineId!,
+      );
+    } catch (e, st) {
+      assert(() {
+        debugPrint('ExpensePlanLineFormScreen discard draft failed: $e\n$st');
+        return true;
+      }());
+    }
+  }
+
+  Future<void> _discardAmendmentLineAddDraft() async {
+    if (!_amendmentLineAddFlow) return;
+    HousingLineAddAmendmentPendingStore.clear(widget.planId);
+    try {
+      await purgeNonInForcePlanLines(_db, widget.planId);
+    } catch (e, st) {
+      assert(() {
+        debugPrint('ExpensePlanLineFormScreen discard add draft failed: $e\n$st');
+        return true;
+      }());
+    }
+    _draftLineId = null;
+  }
+
+  Future<void> _discardAmendmentDrafts() async {
+    await _discardAmendmentLineEditDraft();
+    await _discardAmendmentLineAddDraft();
+  }
+
+  Future<void> _continueLineAddAmendment() async {
+    final split = _split;
+    final lineId = _draftLineId;
+    if (split == null || lineId == null) return;
+
+    final minor = parseAmountMinorFromText(_amountCtrl.text)!;
+    HousingLineAddAmendmentPendingStore.set(
+      widget.planId,
+      HousingLineEditAmendmentPendingStore.buildFromForm(
+        planId: widget.planId,
+        lineId: lineId,
+        title: _titleCtrl.text,
+        description: _descCtrl.text,
+        currency: widget.defaultCurrency,
+        isRecurring: _isRecurring,
+        recurrenceSpec: _isRecurring ? _recurrence : null,
+        amountMinor: minor,
+        amountIsBudgetCap: _amountIsBudgetCap,
+        paymentResponsibleParticipantId: _paymentResponsibleId,
+        sortOrder: _sortOrder,
+        ratioTemplateId: _selectedTemplateId,
+        split: split,
+      ),
+    );
+
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingAmendmentSubmitPreviewScreen(
+          planId: widget.planId,
+          prefs: widget.prefs,
+          type: HousingAmendmentType.lineAdd,
+          targetLineId: lineId,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _continueLineEditAmendment() async {
+    final lineId = widget.existingLineId;
+    final split = _split;
+    if (lineId == null || split == null) return;
+
+    final minor = parseAmountMinorFromText(_amountCtrl.text)!;
+    HousingLineEditAmendmentPendingStore.set(
+      widget.planId,
+      HousingLineEditAmendmentPendingStore.buildFromForm(
+        planId: widget.planId,
+        lineId: lineId,
+        title: _titleCtrl.text,
+        description: _descCtrl.text,
+        currency: widget.defaultCurrency,
+        isRecurring: _isRecurring,
+        recurrenceSpec: _isRecurring ? _recurrence : null,
+        amountMinor: minor,
+        amountIsBudgetCap: _amountIsBudgetCap,
+        paymentResponsibleParticipantId: _paymentResponsibleId,
+        sortOrder: _sortOrder,
+        ratioTemplateId: _selectedTemplateId,
+        split: split,
+      ),
+    );
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingAmendmentSubmitPreviewScreen(
+          planId: widget.planId,
+          prefs: widget.prefs,
+          type: HousingAmendmentType.lineEdit,
+          targetLineId: lineId,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
   Future<void> _save() async {
-    if (_saving || !_canSave) return;
+    if (_saving || !_canContinue) return;
+    if (_amendmentLineAddFlow) {
+      _saving = true;
+      if (mounted) setState(() {});
+      try {
+        await _continueLineAddAmendment();
+      } finally {
+        _saving = false;
+        if (mounted) setState(() {});
+      }
+      return;
+    }
+    if (_amendmentEditRequiresChange) {
+      _saving = true;
+      if (mounted) setState(() {});
+      try {
+        await _continueLineEditAmendment();
+      } finally {
+        _saving = false;
+        if (mounted) setState(() {});
+      }
+      return;
+    }
+
     _saving = true;
     if (mounted) setState(() {});
     final now = DateTime.now().toUtc();
@@ -253,7 +451,14 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          unawaited(_discardAmendmentDrafts());
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(
           widget.existingLineId == null
@@ -275,7 +480,10 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             descriptionController: _descCtrl,
             amountController: _amountCtrl,
             isRecurring: _isRecurring,
-            onRecurringChanged: (v) => setState(() => _isRecurring = v),
+            onRecurringChanged: (v) => setState(() {
+              _isRecurring = v;
+              if (!v) _recurrence = null;
+            }),
             recurrenceSummary: _recurrence == null
                 ? null
                 : formatRecurrenceSpecSummary(
@@ -292,47 +500,69 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
                 initial: _recurrence,
                 dateFormat: widget.dateFormat,
               );
-              if (spec != null) setState(() => _recurrence = spec);
+              if (spec != null) {
+                setState(() => _recurrence = spec);
+                _notifyFormChanged();
+              }
             },
-            onTitleChanged: () => setState(() {}),
+            onTitleChanged: _notifyFormChanged,
             onAmountChanged: _refreshAmountDependentUi,
             amountIsBudgetCap: _amountIsBudgetCap,
-            onAmountTypeChanged: (v) => setState(() => _amountIsBudgetCap = v),
+            onAmountTypeChanged: (v) {
+              _amountIsBudgetCap = v;
+              _notifyFormChanged();
+            },
             paymentResponsibleId: _paymentResponsibleId,
             participantIds: widget.participantIds,
             participantNames: widget.participantNames,
-            onPaymentResponsibleChanged: (v) =>
-                setState(() => _paymentResponsibleId = v),
+            onPaymentResponsibleChanged: (v) {
+              _paymentResponsibleId = v;
+              _notifyFormChanged();
+            },
             currentSplitState: () => _split,
             currencyCode: widget.defaultCurrency,
             onEqualParts: () {
               _split!.resetEqualParts();
               _splitRevision.value++;
+              _notifyFormChanged();
             },
             templates: _templates,
             selectedTemplateId: _selectedTemplateId,
-            onLikeSelected: _onLikeSelected,
-            onSplitChanged: _onGridEdited,
+            onLikeSelected: (id) {
+              _onLikeSelected(id);
+              _notifyFormChanged();
+            },
+            onSplitChanged: () {
+              _onGridEdited();
+              _notifyFormChanged();
+            },
             onRowAmountChanged: (i, minor) {
               _split!.onAmountEdited(i, minor);
               _onGridEdited();
+              _notifyFormChanged();
             },
             onRowPercentChanged: (i, tenths) {
               _split!.onPercentTenthsEdited(i, tenths);
               _onGridEdited();
+              _notifyFormChanged();
             },
             splitRevision: _splitRevision,
           ),
         ],
       ),
       bottomNavigationBar: ListenableBuilder(
-        listenable: _splitRevision,
+        listenable: Listenable.merge([
+          _splitRevision,
+          _titleCtrl,
+          _descCtrl,
+          _amountCtrl,
+        ]),
         builder: (context, _) {
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: FilledButton(
-                onPressed: _canSave && !_saving ? _save : null,
+                onPressed: _canContinue && !_saving ? _save : null,
                 child: Text(
                   widget.amendmentSubmitToGroup
                       ? l10n.commonContinue
@@ -343,6 +573,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
           );
         },
       ),
+    ),
     );
   }
 }

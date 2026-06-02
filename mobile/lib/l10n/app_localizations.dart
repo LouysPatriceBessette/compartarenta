@@ -1927,7 +1927,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentTypeLineEditHint.
   ///
   /// In en, this message translates to:
-  /// **'Title, amount, description, or payer (not recurrence or split shares)'**
+  /// **'Title, amount, description, payer, recurrence, or split shares'**
   String get housingAmendmentTypeLineEditHint;
 
   /// No description provided for @housingAmendmentTypeLineAmount.

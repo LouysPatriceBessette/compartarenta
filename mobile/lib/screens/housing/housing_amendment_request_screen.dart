@@ -11,7 +11,7 @@ import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_summary.dart'
     show removeLineFromRevisionPayload;
 import '../../housing/amendment/housing_amendment_type.dart';
-import '../../housing/amendment/housing_amendment_ui_gates.dart';
+import '../../housing/amendment/housing_line_add_amendment_pending.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
@@ -34,13 +34,11 @@ class _AmendmentMenuOption extends _AmendmentMenuEntry {
     this.type,
     required this.title,
     required this.subtitle,
-    this.enabled = true,
   });
 
   final HousingAmendmentType? type;
   final String title;
   final String subtitle;
-  final bool enabled;
 }
 
 /// Picker for a single in-force plan modification (pass 4).
@@ -144,7 +142,6 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
           type: HousingAmendmentType.lineEdit,
           title: l10n.housingAmendmentTypeLineEdit,
           subtitle: l10n.housingAmendmentTypeLineEditHint,
-          enabled: HousingAmendmentUiGates.lineEditEnabled,
         ),
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineRemove,
@@ -238,15 +235,12 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
                           title: Text(opt.title),
                           subtitle: Text(opt.subtitle),
                           trailing: const Icon(Icons.chevron_right),
-                          enabled: opt.enabled,
-                          onTap: !opt.enabled
-                              ? null
-                              : () => _onOptionTap(
-                                    context,
-                                    opt,
-                                    widget.planId,
-                                    widget.prefs,
-                                  ),
+                          onTap: () => _onOptionTap(
+                            context,
+                            opt,
+                            widget.planId,
+                            widget.prefs,
+                          ),
                         ),
                       ),
                   },
@@ -303,7 +297,8 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
     final db = AppDatabase.processScope;
     final agreement = await db.getAgreementForPlan(widget.planId);
     if (agreement == null) return null;
-    final lines = await db.listPlanLines(widget.planId);
+    await purgeNonInForcePlanLines(db, widget.planId);
+    final lines = await listInForcePlanLines(db, widget.planId);
     final participants = sortParticipantsForPlan(
       widget.planId,
       await participantsForPlan(db, widget.planId),
@@ -410,7 +405,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
       return;
     }
 
-    final saved = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => ExpensePlanLineFormScreen(
           planId: widget.planId,
@@ -423,15 +418,8 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
           prefs: widget.prefs,
           existingLineId: lineId,
           amendmentSubmitToGroup: true,
-          lockRecurrenceAndSplit: type == HousingAmendmentType.lineEdit,
         ),
       ),
-    );
-    if (saved != true || !context.mounted) return;
-    await _openPreview(
-      context,
-      type: type,
-      targetLineId: lineId,
     );
   }
 
@@ -442,7 +430,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
         ? 0
         : ctx.lines.map((l) => l.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
-    final saved = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => ExpensePlanLineFormScreen(
           planId: widget.planId,
@@ -457,21 +445,6 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
           amendmentSubmitToGroup: true,
         ),
       ),
-    );
-    if (saved != true || !context.mounted) return;
-    final lines = await AppDatabase.processScope.listPlanLines(widget.planId);
-    PlanLine? newest;
-    for (final line in lines) {
-      if (newest == null || line.sortOrder > newest.sortOrder) {
-        newest = line;
-      }
-    }
-    final newLineId = newest?.id;
-    if (!context.mounted) return;
-    await _openPreview(
-      context,
-      type: HousingAmendmentType.lineAdd,
-      targetLineId: newLineId,
     );
   }
 

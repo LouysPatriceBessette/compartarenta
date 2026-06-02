@@ -415,7 +415,7 @@
   "housingAmendmentPendingBlocks": "A plan modification is already waiting for responses.",
   "housingAmendmentPickLine": "Choose a plan line",
   "housingAmendmentTypeLineEdit": "Edit an expense",
-  "housingAmendmentTypeLineEditHint": "Title, amount, description, or payer (not recurrence or split shares)",
+  "housingAmendmentTypeLineEditHint": "Title, amount, description, payer, recurrence, or split shares",
   "housingAmendmentTypeLineAmount": "Change a line amount",
   "housingAmendmentTypeLineAmountHint": "Update the price for one expense line",
   "housingAmendmentTypeLineRecurrence": "Change recurrence",

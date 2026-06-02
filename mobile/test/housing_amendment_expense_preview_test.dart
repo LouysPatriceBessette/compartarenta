@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/amendment/housing_amendment_expense_preview.dart';
+import 'package:compartarenta/housing/amendment/housing_line_add_amendment_pending.dart';
+import 'package:compartarenta/housing/amendment/housing_line_edit_amendment_pending.dart';
 import 'package:compartarenta/housing/amendment/housing_amendment_summary.dart';
 import 'package:compartarenta/housing/amendment/housing_amendment_type.dart';
 import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.dart';
@@ -239,6 +241,70 @@ void main() {
 
     expect(view, isNotNull);
     expect(view!.paymentResponsibleLabel, 'Peer');
+    await db.close();
+  });
+
+  test('resolveAmendmentExpenseLinePreview loads line_add draft before submit',
+      () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    const planId = 'p-preview-draft';
+    await _seedPlan(db, planId);
+
+    const newLineId = 'line:draft-expense';
+    HousingLineAddAmendmentPendingStore.set(
+      planId,
+      HousingLineEditAmendmentPending(
+        lineId: newLineId,
+        lineMap: {
+          'id': newLineId,
+          'title': 'Insurance',
+          'description': 'Monthly',
+          'currency': 'CAD',
+          'isRecurring': true,
+          'amountMinor': 12000,
+          'amountUsesRange': false,
+          'amountIsBudgetCap': false,
+          'cadence': 'monthly',
+          'recurrenceSpecJson': '{"kind":"monthlyDay","day":1}',
+        },
+        ratioMaps: [
+          {
+            'lineId': newLineId,
+            'participantId': '$planId:self',
+            'weight': 5000,
+          },
+          {
+            'lineId': newLineId,
+            'participantId': '$planId:p0',
+            'weight': 5000,
+          },
+        ],
+      ),
+    );
+
+    final l10n = lookupAppLocalizations(const Locale('fr'));
+    final view = await resolveAmendmentExpenseLinePreview(
+      db: db,
+      planId: planId,
+      summary: HousingAmendmentSummary(
+        revisionId: 'preview',
+        type: HousingAmendmentType.lineAdd,
+        proposerParticipantId: '$planId:self',
+        proposerDisplayName: 'Self',
+        targetLineId: newLineId,
+        targetLineTitle: 'Insurance',
+        currentText: 'None',
+        proposedText: 'Insurance · 120.00',
+      ),
+      l10n: l10n,
+      dateFormat: 'YYYY-MM-DD',
+      defaultCurrency: 'CAD',
+    );
+
+    HousingLineAddAmendmentPendingStore.clear(planId);
+    expect(view, isNotNull);
+    expect(view!.title, 'Insurance');
+    expect(view.amountText, '120.00');
     await db.close();
   });
 

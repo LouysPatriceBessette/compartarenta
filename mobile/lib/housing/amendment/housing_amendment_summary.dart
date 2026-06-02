@@ -11,6 +11,7 @@ import '../realized_expense/realized_expense_participants.dart';
 import 'agreement_rules_amendment_loader.dart';
 import 'housing_amendment_settlement.dart';
 import 'housing_amendment_type.dart';
+import 'housing_line_edit_amendment_pending.dart';
 import 'housing_rules_amendment_pending.dart';
 
 /// Loaded comparison between the in-force revision and a pending amendment.
@@ -310,6 +311,9 @@ Future<HousingAmendmentSummary?> buildAmendmentPreviewSummary({
       }
     }
   }
+  if (type == HousingAmendmentType.lineEdit) {
+    HousingLineEditAmendmentPendingStore.applyToPayload(planId, proposedPayload);
+  }
 
   final texts = await _amendmentComparisonTexts(
     planId: planId,
@@ -474,7 +478,7 @@ Future<_AmendmentComparisonTexts> _amendmentComparisonTexts({
   String formatLineEditSummary(Map<String, dynamic>? line) {
     if (line == null) return l10n.housingAmendmentValueNotSet;
     final title = lineTitle(line, null);
-    return '$title · ${formatAmount(line)} · ${formatPayer(line)}';
+    return '$title · ${formatAmount(line)}';
   }
 
   final baselineLines = linesList(baselinePayload);
