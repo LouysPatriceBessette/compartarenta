@@ -124,3 +124,5 @@ work.
   - **Hypothesis:** Relay feedback window or initial HTTP error handling is too aggressive (`HandshakeOrchestrator.redeemInvitation` → `relay_unavailable`; `RedeemInvitationScreen` outcome polling / error mapping). The inviter may consume the nonce while the invitee still shows failure; late `ack` may not promote the invitee contact row.
   - **Likely area:** `mobile/lib/relay/handshake_orchestrator.dart`, `mobile/lib/screens/contacts/redeem_invitation_screen.dart`, pending-handshake rows and `processAllPendingHandshakes` / steady inbox poll timing.
   - **Related:** task **4.4** (nonce consumption on `hello`), task **4.7** (promotion to connected on both sides).
+
+- [ ] 9.2 **Bug (high / likely — housing cross-cut):** In-flight housing proposal not re-sent when a co-participant renames before all peer contacts exist — recipients stay blocked on stale participant identity. **Track implementation in** [`housing-plan-proposal-offer-and-responses` task **1.24**](../housing-plan-proposal-offer-and-responses/tasks.md).

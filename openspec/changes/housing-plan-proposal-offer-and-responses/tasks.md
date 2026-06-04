@@ -71,3 +71,15 @@
   - **Mitigations already in app (do not close 1.22):** `establishRouting` before proposal POST; abandon pending revision on total send failure + resend; poll all contacts with `peerPublicMaterial`; sender-key reconciliation on import; housing entry poll on resume / inbox tick.
   - **Expected behavior:** Current Android identity receives, imports, and displays the proposal; local notification when prefs allow.
 
+- [ ] 1.24 **Bug (high / likely):** Open housing proposal not refreshed after a co-participant renames while peer contacts are still missing — plan stays blocked on stale participant identity.
+  - **Severity:** high / likely (not yet reproduced in QA, reported Jun 2026).
+  - **Repro (when fixing):**
+    1. **A** is connected to **B** and **C**; **B** and **C** are **not** yet connected to each other.
+    2. **A** sends a housing plan proposal to **B** and **C** (missing peer-contact state on at least one device).
+    3. **B** changes display name; **A** receives the `profile_update` and shows the new name locally.
+    4. **C** sends a contact request to **B**; **B** accepts — **B** and **C** are now connected.
+    5. The open proposal on **A** / **C** is **not** unblocked: it still waits for a contact matching **B** under the **old** name (or stale roster / missing-contact gate keyed on outdated participant identity).
+  - **Actual:** Profile change propagates to **A** only; the in-flight proposal payload and missing-contact checks are not reconciled with **B**'s current identity, so **C** can complete the **B** handshake without the plan recognizing that all peer contacts are now satisfied.
+  - **Expected:** When **A** (proposal author) applies an inbound `profile_update` for a roster participant on an **open** proposal revision, the app MUST **automatically** refresh the proposal package and **re-send** it to **all** participants — **no manual action** from **A**. After re-send, missing-contact gates and accept flows MUST key off current contact identity (display name / `contactId` / peer key), not the pre-rename snapshot.
+  - **Likely area:** `mobile/lib/relay/handshake_orchestrator.dart` (`profile_update` / `_handleInboundProfileUpdate`), `mobile/lib/housing/housing_plan_peer_contacts.dart`, `sendHousingProposalToPlanParticipants`, proposal import and participant matching on recipients.
+  - **Related:** **1.22** (identity drift), **1.21** (stale contacts), contacts-module missing-contacts flow, `user-profile-and-contact-display-labels`.
