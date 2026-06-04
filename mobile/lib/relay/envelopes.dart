@@ -20,6 +20,9 @@ class EnvelopeKind {
   static const int housingRealizedExpensePropose = 7;
   static const int housingRealizedExpenseAccept = 8;
   static const int housingRealizedExpenseReject = 9;
+  static const int housingParticipationChangePropose = 10;
+  static const int housingParticipationChangeDecision = 11;
+  static const int housingParticipationChangeNotify = 12;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -181,6 +184,28 @@ class HousingRealizedExpenseDecisionEnvelope {
   final String decisionJson;
 }
 
+/// Steady-state participation change proposal or notify payload.
+class HousingParticipationChangeEnvelope {
+  HousingParticipationChangeEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.changeJson,
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String changeJson;
+}
+
+/// Accept or reject decision for a participation change.
+class HousingParticipationChangeDecisionEnvelope {
+  HousingParticipationChangeDecisionEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.decisionJson,
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String decisionJson;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -198,6 +223,12 @@ const String _housingRealizedExpenseAcceptAeadInfo =
     'compartarenta/steady-v1/housing-realized-expense-accept-aead';
 const String _housingRealizedExpenseRejectAeadInfo =
     'compartarenta/steady-v1/housing-realized-expense-reject-aead';
+const String _housingParticipationChangeProposeAeadInfo =
+    'compartarenta/steady-v1/housing-participation-change-propose-aead';
+const String _housingParticipationChangeDecisionAeadInfo =
+    'compartarenta/steady-v1/housing-participation-change-decision-aead';
+const String _housingParticipationChangeNotifyAeadInfo =
+    'compartarenta/steady-v1/housing-participation-change-notify-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -858,6 +889,210 @@ class EnvelopeCodec {
     return HousingRealizedExpenseDecisionEnvelope(
       senderLongTermPublicKey: senderPub,
       decisionJson: (json['decision_json'] as String?) ?? '{}',
+    );
+  }
+
+  static Future<Uint8List> encryptHousingParticipationChangePropose({
+    required HousingParticipationChangeEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    return _encryptParticipationChangePayload(
+      kind: EnvelopeKind.housingParticipationChangePropose,
+      aeadInfo: _housingParticipationChangeProposeAeadInfo,
+      envelope: envelope,
+      senderLongTermPrivateKey: senderLongTermPrivateKey,
+      peerLongTermPublicKey: peerLongTermPublicKey,
+      jsonKey: 'change_json',
+    );
+  }
+
+  static Future<HousingParticipationChangeEnvelope>
+  decryptHousingParticipationChangePropose({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    return _decryptParticipationChangePayload(
+      expectedKind: EnvelopeKind.housingParticipationChangePropose,
+      aeadInfo: _housingParticipationChangeProposeAeadInfo,
+      frame: frame,
+      receiverLongTermPrivateKey: receiverLongTermPrivateKey,
+      jsonKey: 'change_json',
+    );
+  }
+
+  static Future<Uint8List> encryptHousingParticipationChangeDecision({
+    required HousingParticipationChangeDecisionEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    return _encryptParticipationChangeDecisionPayload(
+      envelope: envelope,
+      senderLongTermPrivateKey: senderLongTermPrivateKey,
+      peerLongTermPublicKey: peerLongTermPublicKey,
+    );
+  }
+
+  static Future<HousingParticipationChangeDecisionEnvelope>
+  decryptHousingParticipationChangeDecision({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.housingParticipationChangeDecision);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingParticipationChangeDecisionAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingParticipationChangeDecisionEnvelope(
+      senderLongTermPublicKey: senderPub,
+      decisionJson: (json['decision_json'] as String?) ?? '{}',
+    );
+  }
+
+  static Future<Uint8List> encryptHousingParticipationChangeNotify({
+    required HousingParticipationChangeEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    return _encryptParticipationChangePayload(
+      kind: EnvelopeKind.housingParticipationChangeNotify,
+      aeadInfo: _housingParticipationChangeNotifyAeadInfo,
+      envelope: envelope,
+      senderLongTermPrivateKey: senderLongTermPrivateKey,
+      peerLongTermPublicKey: peerLongTermPublicKey,
+      jsonKey: 'change_json',
+    );
+  }
+
+  static Future<HousingParticipationChangeEnvelope>
+  decryptHousingParticipationChangeNotify({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    return _decryptParticipationChangePayload(
+      expectedKind: EnvelopeKind.housingParticipationChangeNotify,
+      aeadInfo: _housingParticipationChangeNotifyAeadInfo,
+      frame: frame,
+      receiverLongTermPrivateKey: receiverLongTermPrivateKey,
+      jsonKey: 'change_json',
+    );
+  }
+
+  static Future<Uint8List> _encryptParticipationChangePayload({
+    required int kind,
+    required String aeadInfo,
+    required HousingParticipationChangeEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+    required String jsonKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: aeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: kind,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(jsonEncode({jsonKey: envelope.changeJson}));
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  static Future<Uint8List> _encryptParticipationChangeDecisionPayload({
+    required HousingParticipationChangeDecisionEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _housingParticipationChangeDecisionAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.housingParticipationChangeDecision,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(
+      jsonEncode({'decision_json': envelope.decisionJson}),
+    );
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  static Future<HousingParticipationChangeEnvelope>
+  _decryptParticipationChangePayload({
+    required int expectedKind,
+    required String aeadInfo,
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+    required String jsonKey,
+  }) async {
+    _expectKind(frame, expectedKind);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: aeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return HousingParticipationChangeEnvelope(
+      senderLongTermPublicKey: senderPub,
+      changeJson: (json[jsonKey] as String?) ?? '{}',
     );
   }
 }

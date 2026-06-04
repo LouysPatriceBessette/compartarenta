@@ -23,12 +23,16 @@ final class HousingBalanceParticipant {
     required this.displayName,
     required this.letter,
     required this.orderIndex,
+    this.isInactive = false,
   });
 
   final String participantId;
   final String displayName;
   final String letter;
   final int orderIndex;
+
+  /// Ledger-only ghost participant after a departure.
+  final bool isInactive;
 }
 
 final class HousingBalanceNodeEntry {
@@ -83,15 +87,20 @@ HousingBalanceData computeHousingBalanceData({
   required List<PlanRatio> planRatios,
   required List<HousingBalanceParticipant> participants,
   Map<String, List<PlanRatio>> ratiosByExpenseId = const {},
+  Map<String, String> departedSourceToInactiveId = const {},
 }) {
   final participantIds = participants
       .map((participant) => participant.participantId)
       .toList(growable: false);
   final ledger = <String, int>{};
 
+  String mapParticipantId(String id) => departedSourceToInactiveId[id] ?? id;
+
   String key(String from, String to) => '$from→$to';
 
   void addOwed(String from, String to, int minor) {
+    from = mapParticipantId(from);
+    to = mapParticipantId(to);
     if (minor <= 0 || from == to) return;
     ledger[key(from, to)] = (ledger[key(from, to)] ?? 0) + minor;
   }
@@ -102,7 +111,11 @@ HousingBalanceData computeHousingBalanceData({
     if (expense.kind == RealizedExpenseKind.transfer) {
       final beneficiary = expense.beneficiaryParticipantId;
       if (beneficiary != null) {
-        addOwed(beneficiary, expense.payerParticipantId, expense.amountMinor);
+        addOwed(
+          beneficiary,
+          expense.payerParticipantId,
+          expense.amountMinor,
+        );
       }
       continue;
     }

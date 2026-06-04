@@ -998,6 +998,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get housingBalancesInactiveMarker => '(former participant)';
+
+  @override
   String get housingRealizedExpenseBudgetCapTitle => 'Monthly budget exceeded';
 
   @override
@@ -2731,4 +2734,219 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get peerNameConflictKeepMine => 'Keep my label';
+
+  @override
+  String get housingPastHubTitle => 'Past agreement';
+
+  @override
+  String get housingParticipationChangeIntroLine1 =>
+      'A participant change is not a simple in-force amendment.';
+
+  @override
+  String get housingParticipationChangeIntroLine2 =>
+      'All options end the current plan for those who leave.';
+
+  @override
+  String get housingParticipationChangeTerminationAction =>
+      'End the agreement immediately';
+
+  @override
+  String get housingParticipationChangeWithdrawalAction =>
+      'I want to withdraw from the agreement';
+
+  @override
+  String get housingParticipationChangeEjectionAction =>
+      'I want to eject a participant';
+
+  @override
+  String get housingParticipationChangeConfirmAction => 'Yes';
+
+  @override
+  String get housingParticipationChangeTerminationConfirmTitle =>
+      'End the agreement immediately?';
+
+  @override
+  String get housingParticipationChangeTerminationConfirmBody =>
+      'All participants must accept. The agreement closes for everyone if accepted unanimously.';
+
+  @override
+  String get housingParticipationChangeWithdrawalConfirmTitle =>
+      'Confirm your withdrawal?';
+
+  @override
+  String housingParticipationChangeWithdrawalConfirmBody(String date) {
+    return 'Planned departure date: $date. Other participants will be notified.';
+  }
+
+  @override
+  String housingParticipationChangeWithdrawalPenaltyHint(String amount) {
+    return 'An early withdrawal penalty of $amount may apply.';
+  }
+
+  @override
+  String get housingParticipationChangeEjectionConfirmTitle =>
+      'Eject a participant?';
+
+  @override
+  String get housingParticipationChangeEjectionConfirmBody =>
+      'Other participants must accept. The candidate is removed if accepted unanimously.';
+
+  @override
+  String get housingParticipationChangeDetailTitle => 'Major change';
+
+  @override
+  String housingParticipationChangeDetailTerminationBody(String name) {
+    return '$name requests to end the agreement immediately.';
+  }
+
+  @override
+  String housingParticipationChangeDetailWithdrawalBody(
+    String name,
+    String date,
+  ) {
+    return '$name will leave the agreement on $date.';
+  }
+
+  @override
+  String housingParticipationChangeDetailEjectionBody(
+    String initiator,
+    String target,
+  ) {
+    return '$initiator requests to eject $target.';
+  }
+
+  @override
+  String get housingParticipationChangeAccept => 'Accept';
+
+  @override
+  String get housingParticipationChangeReject => 'Reject';
+
+  @override
+  String get housingParticipationChangePenaltyApplies =>
+      'An early withdrawal penalty will apply.';
+
+  @override
+  String get housingParticipationChangePenaltyDoesNotApply =>
+      'No early withdrawal penalty will apply.';
+
+  @override
+  String housingParticipationChangeBannerTermination(String name) {
+    return '$name requests to end the agreement immediately.';
+  }
+
+  @override
+  String housingParticipationChangeBannerWithdrawal(String date) {
+    return 'Agreement ends: $date';
+  }
+
+  @override
+  String housingParticipationChangeBannerEjection(
+    String initiator,
+    String target,
+  ) {
+    return '$initiator requests to eject $target.';
+  }
+
+  @override
+  String get housingParticipationChangeEjectionHubSubtitle =>
+      'Ejection request in progress...';
+
+  @override
+  String get pushNotificationHousingParticipationChangeTitle => 'Major change';
+
+  @override
+  String get pushNotificationHousingParticipationChangeBody =>
+      'A co-participant requested a major change.';
+
+  @override
+  String pushNotificationHousingParticipationChangeBodyFrom(String name) {
+    return '$name requested a major change.';
+  }
+
+  @override
+  String get housingParticipationJournalSubjectTermination =>
+      'Immediate termination';
+
+  @override
+  String get housingParticipationJournalSubjectWithdrawal =>
+      'Voluntary withdrawal';
+
+  @override
+  String get housingParticipationJournalSubjectEjection =>
+      'Participant ejection';
+
+  @override
+  String get housingParticipationJournalProposed => 'Proposed';
+
+  @override
+  String get housingParticipationJournalDecisionAccepted => 'Accepted';
+
+  @override
+  String get housingParticipationJournalDecisionRejected => 'Rejected';
+
+  @override
+  String get housingParticipationJournalEffective => 'Effective';
+
+  @override
+  String get housingParticipationJournalAborted => 'Aborted';
+
+  @override
+  String housingParticipationJournalSubjectLine(String kind, String event) {
+    return '$kind — $event';
+  }
+
+  @override
+  String get housingInactiveSettlementTitle =>
+      'Settle with inactive participant';
+
+  @override
+  String get housingInactiveSettlementTileSubtitle =>
+      'Record a transfer to close the balance';
+
+  @override
+  String housingInactiveSettlementParticipantLabel(String name) {
+    return 'Former participant: $name';
+  }
+
+  @override
+  String housingInactiveSettlementCurrentBalance(String amount) {
+    return 'Current balance: $amount';
+  }
+
+  @override
+  String get housingInactiveSettlementAmountLabel => 'Transfer amount';
+
+  @override
+  String get housingInactiveSettlementAmountHint =>
+      'Positive: you pay them. Negative: they pay you.';
+
+  @override
+  String get housingInactiveSettlementSubmit => 'Publish settlement transfer';
+
+  @override
+  String get housingInactiveSettlementSuccess =>
+      'Settlement transfer recorded.';
+
+  @override
+  String get housingInactiveSettlementTransferDescription =>
+      'Settlement with former participant';
+
+  @override
+  String get housingInactiveSettlementErrorZero => 'Enter a non-zero amount.';
+
+  @override
+  String get housingInactiveSettlementErrorCannotCreateCredit =>
+      'This transfer would create a new balance in their favor.';
+
+  @override
+  String get housingInactiveSettlementErrorExceedsDebt =>
+      'Amount exceeds what they owe.';
+
+  @override
+  String get housingInactiveSettlementErrorCannotIncreaseDebt =>
+      'This transfer would increase what they owe.';
+
+  @override
+  String get housingInactiveSettlementErrorExceedsCredit =>
+      'Amount exceeds what is owed to them.';
 }

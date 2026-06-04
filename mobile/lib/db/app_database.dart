@@ -472,6 +472,68 @@ class RealizedExpenseAcceptances extends Table {
   Set<Column> get primaryKey => {expenseId, participantId};
 }
 
+/// Participation change request (immediate termination, withdrawal, ejection).
+class HousingParticipationChanges extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text()();
+  TextColumn get packageId => text()();
+
+  /// `immediate_termination` | `voluntary_withdrawal` | `ejection`
+  TextColumn get kind => text()();
+  TextColumn get initiatorParticipantId => text()();
+  TextColumn get targetParticipantId => text().nullable()();
+  DateTimeColumn get departureDate => dateTime().nullable()();
+
+  /// `pending` | `effective` | `aborted`
+  TextColumn get status => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get settledAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Per-decider vote on a participation change (#1 and #3).
+class HousingParticipationDecisions extends Table {
+  TextColumn get changeId => text()();
+  TextColumn get participantId => text()();
+
+  /// `accepted` | `rejected`
+  TextColumn get status => text()();
+  DateTimeColumn get decidedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {changeId, participantId};
+}
+
+/// Per-participant membership state for an active housing plan.
+class HousingPlanMemberships extends Table {
+  TextColumn get planId => text()();
+  TextColumn get participantId => text()();
+
+  /// `active` | `departed`
+  TextColumn get status => text()();
+  DateTimeColumn get departedAt => dateTime().nullable()();
+  TextColumn get departureKind => text().nullable()();
+  TextColumn get changeId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {planId, participantId};
+}
+
+/// Ledger-only ghost participant after a departure (#2/#3).
+class HousingInactiveParticipants extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text()();
+  TextColumn get sourceParticipantId => text()();
+  TextColumn get displayNameSnapshot => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get clearedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Plans,
@@ -492,6 +554,10 @@ class RealizedExpenseAcceptances extends Table {
     RealizedExpenseAttachments,
     RealizedExpenseAcceptances,
     ArchivedPlanLineSnapshots,
+    HousingParticipationChanges,
+    HousingParticipationDecisions,
+    HousingPlanMemberships,
+    HousingInactiveParticipants,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -591,7 +657,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -781,6 +847,12 @@ class AppDatabase extends _$AppDatabase {
           realizedExpenses.splitRatiosJson,
         );
         await m.createTable(archivedPlanLineSnapshots);
+      }
+      if (from < 20) {
+        await m.createTable(housingParticipationChanges);
+        await m.createTable(housingParticipationDecisions);
+        await m.createTable(housingPlanMemberships);
+        await m.createTable(housingInactiveParticipants);
       }
     },
     beforeOpen: (details) async {

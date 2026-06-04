@@ -386,6 +386,7 @@
   "housingBalancesLegendTitle": "Legend",
   "housingBalancesOwesNobody": "Owes nobody.",
   "housingBalancesOwesAmountTo": "{amount} to {to}",
+  "housingBalancesInactiveMarker": "(former participant)",
   "@housingBalancesOwes": {
     "placeholders": {
       "from": { "type": "String" },
@@ -1179,6 +1180,94 @@
     }
   },
   "peerNameConflictUseTheirs": "Use their name",
-  "peerNameConflictKeepMine": "Keep my label"
+  "peerNameConflictKeepMine": "Keep my label",
+  "housingPastHubTitle": "Past agreement",
+  "housingParticipationChangeIntroLine1": "A participant change is not a simple in-force amendment.",
+  "housingParticipationChangeIntroLine2": "All options end the current plan for those who leave.",
+  "housingParticipationChangeTerminationAction": "End the agreement immediately",
+  "housingParticipationChangeWithdrawalAction": "I want to withdraw from the agreement",
+  "housingParticipationChangeEjectionAction": "I want to eject a participant",
+  "housingParticipationChangeConfirmAction": "Yes",
+  "housingParticipationChangeTerminationConfirmTitle": "End the agreement immediately?",
+  "housingParticipationChangeTerminationConfirmBody": "All participants must accept. The agreement closes for everyone if accepted unanimously.",
+  "housingParticipationChangeWithdrawalConfirmTitle": "Confirm your withdrawal?",
+  "housingParticipationChangeWithdrawalConfirmBody": "Planned departure date: {date}. Other participants will be notified.",
+  "@housingParticipationChangeWithdrawalConfirmBody": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "housingParticipationChangeWithdrawalPenaltyHint": "An early withdrawal penalty of {amount} may apply.",
+  "@housingParticipationChangeWithdrawalPenaltyHint": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingParticipationChangeEjectionConfirmTitle": "Eject a participant?",
+  "housingParticipationChangeEjectionConfirmBody": "Other participants must accept. The candidate is removed if accepted unanimously.",
+  "housingParticipationChangeDetailTitle": "Major change",
+  "housingParticipationChangeDetailTerminationBody": "{name} requests to end the agreement immediately.",
+  "@housingParticipationChangeDetailTerminationBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeDetailWithdrawalBody": "{name} will leave the agreement on {date}.",
+  "@housingParticipationChangeDetailWithdrawalBody": {
+    "placeholders": { "name": { "type": "String" }, "date": { "type": "String" } }
+  },
+  "housingParticipationChangeDetailEjectionBody": "{initiator} requests to eject {target}.",
+  "@housingParticipationChangeDetailEjectionBody": {
+    "placeholders": { "initiator": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "housingParticipationChangeAccept": "Accept",
+  "housingParticipationChangeReject": "Reject",
+  "housingParticipationChangePenaltyApplies": "An early withdrawal penalty will apply.",
+  "housingParticipationChangePenaltyDoesNotApply": "No early withdrawal penalty will apply.",
+  "housingParticipationChangeBannerTermination": "{name} requests to end the agreement immediately.",
+  "@housingParticipationChangeBannerTermination": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeBannerWithdrawal": "Agreement ends: {date}",
+  "@housingParticipationChangeBannerWithdrawal": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "housingParticipationChangeBannerEjection": "{initiator} requests to eject {target}.",
+  "@housingParticipationChangeBannerEjection": {
+    "placeholders": { "initiator": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "housingParticipationChangeEjectionHubSubtitle": "Ejection request in progress...",
+  "pushNotificationHousingParticipationChangeTitle": "Major change",
+  "pushNotificationHousingParticipationChangeBody": "A co-participant requested a major change.",
+  "pushNotificationHousingParticipationChangeBodyFrom": "{name} requested a major change.",
+  "@pushNotificationHousingParticipationChangeBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationJournalSubjectTermination": "Immediate termination",
+  "housingParticipationJournalSubjectWithdrawal": "Voluntary withdrawal",
+  "housingParticipationJournalSubjectEjection": "Participant ejection",
+  "housingParticipationJournalProposed": "Proposed",
+  "housingParticipationJournalDecisionAccepted": "Accepted",
+  "housingParticipationJournalDecisionRejected": "Rejected",
+  "housingParticipationJournalEffective": "Effective",
+  "housingParticipationJournalAborted": "Aborted",
+  "housingParticipationJournalSubjectLine": "{kind} — {event}",
+  "@housingParticipationJournalSubjectLine": {
+    "placeholders": { "kind": { "type": "String" }, "event": { "type": "String" } }
+  },
+  "housingInactiveSettlementTitle": "Settle with inactive participant",
+  "housingInactiveSettlementTileSubtitle": "Record a transfer to close the balance",
+  "housingInactiveSettlementParticipantLabel": "Former participant: {name}",
+  "@housingInactiveSettlementParticipantLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingInactiveSettlementCurrentBalance": "Current balance: {amount}",
+  "@housingInactiveSettlementCurrentBalance": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingInactiveSettlementAmountLabel": "Transfer amount",
+  "housingInactiveSettlementAmountHint": "Positive: you pay them. Negative: they pay you.",
+  "housingInactiveSettlementSubmit": "Publish settlement transfer",
+  "housingInactiveSettlementSuccess": "Settlement transfer recorded.",
+  "housingInactiveSettlementTransferDescription": "Settlement with former participant",
+  "housingInactiveSettlementErrorZero": "Enter a non-zero amount.",
+  "housingInactiveSettlementErrorCannotCreateCredit": "This transfer would create a new balance in their favor.",
+  "housingInactiveSettlementErrorExceedsDebt": "Amount exceeds what they owe.",
+  "housingInactiveSettlementErrorCannotIncreaseDebt": "This transfer would increase what they owe.",
+  "housingInactiveSettlementErrorExceedsCredit": "Amount exceeds what is owed to them."
 }
 

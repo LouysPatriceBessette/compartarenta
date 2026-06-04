@@ -53,6 +53,8 @@ class PushNotificationService {
   static const String _housingDecisionPrefix = 'housing_decision:';
   static const String _housingRealizedExpenseReviewPrefix =
       'housing_realized_expense:';
+  static const String _housingParticipationChangePrefix =
+      'housing_participation_change:';
 
   static const List<String> _housingKinds = <String>[
     'housing_proposal',
@@ -203,6 +205,20 @@ class PushNotificationService {
       );
       if (expenseId.isNotEmpty) {
         _navigateToRealizedExpenseReview(expenseId);
+      }
+      return;
+    }
+    if (payload.startsWith(_housingParticipationChangePrefix)) {
+      final raw = payload.substring(_housingParticipationChangePrefix.length);
+      final parts = raw.split('|');
+      final changeId = parts.isEmpty ? '' : parts.first;
+      final planId = parts.length >= 2 ? parts[1] : '';
+      if (changeId.isNotEmpty && planId.isNotEmpty) {
+        HousingNavigationIntent.requestOpenParticipationChangeDetail(
+          planId: planId,
+          changeId: changeId,
+        );
+        _navigateToHousing();
       }
     }
   }
@@ -536,6 +552,62 @@ class PushNotificationService {
   static void _navigateToRealizedExpenseReview(String expenseId) {
     HousingNavigationIntent.requestReview(expenseId);
     _navigateToHousing();
+  }
+
+  static Future<void> showLocalHousingParticipationChangeNotification({
+    required String senderDisplayName,
+    String? changeId,
+    String? planId,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingDecisionNotification(prefs)) return;
+
+    final l10n = _l10nForUiLocale();
+    final title = l10n.pushNotificationHousingParticipationChangeTitle;
+    final body =
+        senderDisplayName.trim().isEmpty
+            ? l10n.pushNotificationHousingParticipationChangeBody
+            : l10n.pushNotificationHousingParticipationChangeBodyFrom(
+              senderDisplayName.trim(),
+            );
+
+    final tapPayload =
+        changeId != null &&
+                changeId.isNotEmpty &&
+                planId != null &&
+                planId.isNotEmpty
+            ? '$_housingParticipationChangePrefix$changeId|$planId'
+            : _housingTapPayload;
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: title,
+        body: body,
+      );
+      return;
+    }
+
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: tapPayload,
+    );
   }
 
   static Future<void> showLocalHousingDecisionNotification({

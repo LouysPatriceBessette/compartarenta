@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
-import '../../housing/amendment/housing_amendment_journal.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
+import '../../housing/amendment/housing_amendment_journal.dart';
+import '../../housing/amendment/housing_change_journal.dart';
+import '../../housing/participation/housing_participation_change_journal.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_amendment_detail_screen.dart';
+import 'housing_participation_change_detail_screen.dart';
 
-/// Chronological log of accepted and refused in-force plan changes.
+/// Chronological log of accepted and refused in-force plan changes and
+/// participation changes.
 class HousingAmendmentJournalScreen extends StatefulWidget {
   const HousingAmendmentJournalScreen({
     super.key,
@@ -26,7 +30,7 @@ class HousingAmendmentJournalScreen extends StatefulWidget {
 
 class _HousingAmendmentJournalScreenState
     extends State<HousingAmendmentJournalScreen> {
-  late Future<List<HousingAmendmentJournalEntry>> _entriesFuture;
+  late Future<List<HousingChangeJournalEntry>> _entriesFuture;
 
   @override
   void initState() {
@@ -42,7 +46,7 @@ class _HousingAmendmentJournalScreenState
       _ => lookupAppLocalizations(const Locale('en')),
     };
     setState(() {
-      _entriesFuture = loadHousingAmendmentJournal(
+      _entriesFuture = loadHousingChangeJournal(
         db: AppDatabase.processScope,
         planId: widget.planId,
         l10n: l10n,
@@ -58,7 +62,7 @@ class _HousingAmendmentJournalScreenState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentJournalTitle)),
-      body: FutureBuilder<List<HousingAmendmentJournalEntry>>(
+      body: FutureBuilder<List<HousingChangeJournalEntry>>(
         future: _entriesFuture,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
@@ -74,46 +78,135 @@ class _HousingAmendmentJournalScreenState
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final entry = entries[index];
-              final summary = entry.summary;
-              final statusLabel = entry.accepted
-                  ? l10n.housingAmendmentJournalAccepted
-                  : l10n.housingAmendmentJournalRefused;
-              return Card(
-                child: ListTile(
-                  title: Text(summary.journalListSubject(l10n)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(statusLabel),
-                      Text(
-                        l10n.housingAmendmentJournalCardSubtitle(
-                          entry.actorDisplayName,
-                          formatPreferenceDate(entry.settledAt, dateFmt),
-                        ),
-                      ),
-                    ],
+              return switch (entry) {
+                HousingChangeJournalAmendmentEntry(:final entry) =>
+                  _AmendmentCard(
+                    entry: entry,
+                    l10n: l10n,
+                    dateFmt: dateFmt,
+                    planId: widget.planId,
+                    prefs: widget.prefs,
+                    onReturn: _reload,
                   ),
-                  isThreeLine: true,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (_) => HousingAmendmentDetailScreen(
-                          db: AppDatabase.processScope,
-                          planId: widget.planId,
-                          prefs: widget.prefs,
-                          revisionId: entry.revisionId,
-                          readOnlySettled: true,
-                        ),
-                      ),
-                    );
-                    if (!mounted) return;
-                    _reload();
-                  },
-                ),
-              );
+                HousingChangeJournalParticipationEntry(:final entry) =>
+                  _ParticipationCard(
+                    entry: entry,
+                    l10n: l10n,
+                    dateFmt: dateFmt,
+                    planId: widget.planId,
+                    prefs: widget.prefs,
+                    onReturn: _reload,
+                  ),
+              };
             },
           );
+        },
+      ),
+    );
+  }
+}
+
+class _AmendmentCard extends StatelessWidget {
+  const _AmendmentCard({
+    required this.entry,
+    required this.l10n,
+    required this.dateFmt,
+    required this.planId,
+    required this.prefs,
+    required this.onReturn,
+  });
+
+  final HousingAmendmentJournalEntry entry;
+  final AppLocalizations l10n;
+  final String dateFmt;
+  final String planId;
+  final AppPreferences prefs;
+  final VoidCallback onReturn;
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = entry.summary;
+    final statusLabel = entry.accepted
+        ? l10n.housingAmendmentJournalAccepted
+        : l10n.housingAmendmentJournalRefused;
+    return Card(
+      child: ListTile(
+        title: Text(summary.journalListSubject(l10n)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(statusLabel),
+            Text(
+              l10n.housingAmendmentJournalCardSubtitle(
+                entry.actorDisplayName,
+                formatPreferenceDate(entry.settledAt, dateFmt),
+              ),
+            ),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => HousingAmendmentDetailScreen(
+                db: AppDatabase.processScope,
+                planId: planId,
+                prefs: prefs,
+                revisionId: entry.revisionId,
+                readOnlySettled: true,
+              ),
+            ),
+          );
+          onReturn();
+        },
+      ),
+    );
+  }
+}
+
+class _ParticipationCard extends StatelessWidget {
+  const _ParticipationCard({
+    required this.entry,
+    required this.l10n,
+    required this.dateFmt,
+    required this.planId,
+    required this.prefs,
+    required this.onReturn,
+  });
+
+  final HousingParticipationChangeJournalEntry entry;
+  final AppLocalizations l10n;
+  final String dateFmt;
+  final String planId;
+  final AppPreferences prefs;
+  final VoidCallback onReturn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        title: Text(entry.subject(l10n)),
+        subtitle: Text(
+          l10n.housingAmendmentJournalCardSubtitle(
+            entry.actorDisplayName,
+            formatPreferenceDate(entry.occurredAt, dateFmt),
+          ),
+        ),
+        isThreeLine: true,
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => HousingParticipationChangeDetailScreen(
+                changeId: entry.changeId,
+                planId: planId,
+                packageId: entry.packageId,
+                prefs: prefs,
+              ),
+            ),
+          );
+          onReturn();
         },
       ),
     );

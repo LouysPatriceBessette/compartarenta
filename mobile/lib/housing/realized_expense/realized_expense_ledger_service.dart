@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
+import '../../housing/participation/housing_inactive_participant_service.dart';
 import '../../prefs/app_preferences.dart';
 import 'realized_expense_balance.dart';
 import 'realized_expense_line_snapshot.dart';
@@ -291,6 +292,11 @@ class RealizedExpenseLedgerService {
       planId,
       await participantsForPlan(_db, planId),
     );
+    final inactiveRows =
+        await HousingInactiveParticipantService(_db).listUncleared(planId);
+    final departedSourceToInactiveId = {
+      for (final row in inactiveRows) row.sourceParticipantId: row.id,
+    };
     final published =
         await (_db.select(_db.realizedExpenses)
               ..where((t) => t.planId.equals(planId))
@@ -303,7 +309,7 @@ class RealizedExpenseLedgerService {
       expenses: published,
       currentRatios: ratios,
     );
-    final participants = [
+    final participants = <HousingBalanceParticipant>[
       for (var i = 0; i < roster.length; i++)
         HousingBalanceParticipant(
           participantId: roster[i].id,
@@ -311,13 +317,44 @@ class RealizedExpenseLedgerService {
           letter: String.fromCharCode(65 + i),
           orderIndex: i,
         ),
+      for (var j = 0; j < inactiveRows.length; j++)
+        HousingBalanceParticipant(
+          participantId: inactiveRows[j].id,
+          displayName: inactiveRows[j].displayNameSnapshot,
+          letter: String.fromCharCode(65 + roster.length + j),
+          orderIndex: roster.length + j,
+          isInactive: true,
+        ),
     ];
     return computeHousingBalanceData(
       publishedExpenses: published,
       planRatios: ratios,
       participants: participants,
       ratiosByExpenseId: ratiosByExpenseId,
+      departedSourceToInactiveId: departedSourceToInactiveId,
     );
+  }
+
+  /// Net balance for [inactiveParticipantId] in optimized mode.
+  ///
+  /// Positive: inactive is a net creditor. Negative: inactive is a net debtor.
+  Future<int> netBalanceMinorForInactive({
+    required String planId,
+    required String inactiveParticipantId,
+  }) async {
+    final data = await balanceDataForPlan(planId);
+    final optimized = data.optimizedMode;
+    var incoming = 0;
+    var outgoing = 0;
+    for (final edge in optimized.edges) {
+      if (edge.fromParticipantId == inactiveParticipantId) {
+        outgoing += edge.amountMinor;
+      }
+      if (edge.toParticipantId == inactiveParticipantId) {
+        incoming += edge.amountMinor;
+      }
+    }
+    return incoming - outgoing;
   }
 
   Future<void> markPlanActiveUseIfNeeded(String planId) async {

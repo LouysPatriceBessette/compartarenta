@@ -14,6 +14,9 @@ import '../db/repositories/contacts_repository.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/proposals/plan_agreement_proposal_service.dart';
+import '../housing/participation/housing_participation_change_kind.dart';
+import '../housing/participation/housing_participation_change_service.dart';
+import '../housing/participation/housing_participation_change_sync_service.dart';
 import '../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
 import '../housing/realized_expense/realized_expense_status.dart';
@@ -919,6 +922,30 @@ class HandshakeOrchestrator {
               peerPub: peerPub,
               kind: env.kind,
             );
+          } else if (env.kind == EnvelopeKind.housingParticipationChangePropose) {
+            await _handleInboundHousingParticipationChangePropose(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
+          } else if (env.kind == EnvelopeKind.housingParticipationChangeDecision) {
+            await _handleInboundHousingParticipationChangeDecision(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
+          } else if (env.kind == EnvelopeKind.housingParticipationChangeNotify) {
+            await _handleInboundHousingParticipationChangeNotify(
+              contact: contact,
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+            );
           } else {
             await _relay.ackEnvelope(
               envelopeId: env.envelopeId,
@@ -1457,6 +1484,195 @@ class HandshakeOrchestrator {
           expenseId: expenseId,
         );
       }
+    }
+  }
+
+  Future<void> _handleInboundHousingParticipationChangePropose({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    await _handleInboundParticipationChangePayload(
+      contact: contact,
+      envelope: envelope,
+      myListenAddr: myListenAddr,
+      selfPriv: selfPriv,
+      peerPub: peerPub,
+      decrypt:
+          (frame) => EnvelopeCodec.decryptHousingParticipationChangePropose(
+            frame: frame,
+            receiverLongTermPrivateKey: selfPriv,
+          ),
+      import:
+          (json) => HousingParticipationChangeSyncService(
+            _db,
+          ).importProposeFromPeer(
+            changeJson: json,
+            senderContactId: contact.id,
+          ),
+    );
+  }
+
+  Future<void> _handleInboundHousingParticipationChangeNotify({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    await _handleInboundParticipationChangePayload(
+      contact: contact,
+      envelope: envelope,
+      myListenAddr: myListenAddr,
+      selfPriv: selfPriv,
+      peerPub: peerPub,
+      decrypt:
+          (frame) => EnvelopeCodec.decryptHousingParticipationChangeNotify(
+            frame: frame,
+            receiverLongTermPrivateKey: selfPriv,
+          ),
+      import:
+          (json) => HousingParticipationChangeSyncService(
+            _db,
+          ).importNotifyFromPeer(
+            notifyJson: json,
+            senderContactId: contact.id,
+          ),
+    );
+  }
+
+  Future<void> _handleInboundParticipationChangePayload({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+    required Future<HousingParticipationChangeEnvelope> Function(Uint8List frame)
+    decrypt,
+    required Future<bool> Function(String json) import,
+  }) async {
+    final HousingParticipationChangeEnvelope decrypted;
+    try {
+      decrypted = await decrypt(envelope.ciphertext);
+    } on EnvelopeDecryptionError catch (e, st) {
+      debugPrint(
+        'housing_participation_change decrypt failed for ${contact.id}: '
+        '$e\n$st',
+      );
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    var senderContact = contact;
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      final matched = await _contactForPeerPublicKey(
+        decrypted.senderLongTermPublicKey,
+      );
+      if (matched == null) {
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
+      senderContact = matched;
+    }
+
+    final imported = await import(decrypted.changeJson);
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+    if (!imported) return;
+
+    final changeId = _changeIdFromJson(decrypted.changeJson);
+    if (changeId != null) {
+      final planId = _planIdFromChangeJson(decrypted.changeJson);
+      await PushNotificationService
+          .showLocalHousingParticipationChangeNotification(
+        senderDisplayName: senderContact.displayName,
+        changeId: changeId,
+        planId: planId,
+      );
+    }
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  Future<void> _handleInboundHousingParticipationChangeDecision({
+    required Contact contact,
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+  }) async {
+    final HousingParticipationChangeDecisionEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptHousingParticipationChangeDecision(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError catch (e, st) {
+      debugPrint(
+        'housing_participation_change decision decrypt failed for '
+        '${contact.id}: $e\n$st',
+      );
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    var senderContact = contact;
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      final matched = await _contactForPeerPublicKey(
+        decrypted.senderLongTermPublicKey,
+      );
+      if (matched == null) {
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
+      senderContact = matched;
+    }
+
+    final applied = await HousingParticipationChangeSyncService(_db)
+        .importDecisionFromPeer(
+          decisionJson: decrypted.decisionJson,
+          senderContactId: senderContact.id,
+        );
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+    if (!applied) return;
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  String? _changeIdFromJson(String changeJson) {
+    try {
+      final map = jsonDecode(changeJson) as Map<String, dynamic>;
+      final id = map['change_id'] as String?;
+      if (id == null || id.isEmpty) return null;
+      return id;
+    } on Object {
+      return null;
+    }
+  }
+
+  String? _planIdFromChangeJson(String changeJson) {
+    try {
+      final map = jsonDecode(changeJson) as Map<String, dynamic>;
+      final id = map['plan_id'] as String?;
+      if (id == null || id.isEmpty) return null;
+      return id;
+    } on Object {
+      return null;
     }
   }
 
@@ -2492,6 +2708,190 @@ class HandshakeOrchestrator {
       }
     }
     debugPrint('housing_realized_expense decision send done for $expenseId');
+  }
+
+  /// Broadcasts a participation change proposal to connected co-participants.
+  Future<void> sendParticipationChangePropose({required String changeId}) async {
+    await _broadcastParticipationChange(
+      changeId: changeId,
+      kind: EnvelopeKind.housingParticipationChangePropose,
+      encrypt:
+          (json, selfPub, selfPriv, peerPub) =>
+              EnvelopeCodec.encryptHousingParticipationChangePropose(
+                envelope: HousingParticipationChangeEnvelope(
+                  senderLongTermPublicKey: selfPub,
+                  changeJson: json,
+                ),
+                senderLongTermPrivateKey: selfPriv,
+                peerLongTermPublicKey: peerPub,
+              ),
+    );
+  }
+
+  /// Broadcasts an informational voluntary-withdrawal notify (kind 12).
+  Future<void> sendParticipationChangeNotify({required String changeId}) async {
+    await _broadcastParticipationChange(
+      changeId: changeId,
+      kind: EnvelopeKind.housingParticipationChangeNotify,
+      encrypt:
+          (json, selfPub, selfPriv, peerPub) =>
+              EnvelopeCodec.encryptHousingParticipationChangeNotify(
+                envelope: HousingParticipationChangeEnvelope(
+                  senderLongTermPublicKey: selfPub,
+                  changeJson: json,
+                ),
+                senderLongTermPrivateKey: selfPriv,
+                peerLongTermPublicKey: peerPub,
+              ),
+    );
+  }
+
+  Future<void> sendParticipationChangeDecision({
+    required String changeId,
+    required String participantId,
+    required bool accepted,
+  }) async {
+    final changeSvc = HousingParticipationChangeService(_db);
+    await changeSvc.recordDecision(
+      changeId: changeId,
+      participantId: participantId,
+      accepted: accepted,
+    );
+    final change = await changeSvc.getById(changeId);
+    if (change == null) return;
+
+    final status =
+        accepted
+            ? HousingParticipationDecisionStatus.accepted.wireValue
+            : HousingParticipationDecisionStatus.rejected.wireValue;
+    final decisionJson = await HousingParticipationChangeSyncService(
+      _db,
+    ).buildDecisionJson(
+      changeId: changeId,
+      participantId: participantId,
+      status: status,
+    );
+
+    await _broadcastParticipationChangeDecision(
+      planId: change.planId,
+      decisionJson: decisionJson,
+    );
+  }
+
+  Future<void> _broadcastParticipationChange({
+    required String changeId,
+    required int kind,
+    required Future<Uint8List> Function(
+      String changeJson,
+      Uint8List selfPub,
+      Uint8List selfPriv,
+      Uint8List peerPub,
+    )
+    encrypt,
+  }) async {
+    final change = await HousingParticipationChangeService(_db).getById(
+      changeId,
+    );
+    if (change == null) return;
+
+    final changeJson = await HousingParticipationChangeSyncService(
+      _db,
+    ).buildProposeJson(change);
+    await _postParticipationChangeToPeers(
+      planId: change.planId,
+      kind: kind,
+      buildFrame:
+          (selfPub, selfPriv, peerPub) =>
+              encrypt(changeJson, selfPub, selfPriv, peerPub),
+    );
+  }
+
+  Future<void> _broadcastParticipationChangeDecision({
+    required String planId,
+    required String decisionJson,
+  }) async {
+    await _postParticipationChangeToPeers(
+      planId: planId,
+      kind: EnvelopeKind.housingParticipationChangeDecision,
+      buildFrame: (selfPub, selfPriv, peerPub) async {
+        return EnvelopeCodec.encryptHousingParticipationChangeDecision(
+          envelope: HousingParticipationChangeDecisionEnvelope(
+            senderLongTermPublicKey: selfPub,
+            decisionJson: decisionJson,
+          ),
+          senderLongTermPrivateKey: selfPriv,
+          peerLongTermPublicKey: peerPub,
+        );
+      },
+    );
+  }
+
+  Future<void> _postParticipationChangeToPeers({
+    required String planId,
+    required int kind,
+    required Future<Uint8List> Function(
+      Uint8List selfPub,
+      Uint8List selfPriv,
+      Uint8List peerPub,
+    )
+    buildFrame,
+  }) async {
+    final participants = (await _db.listParticipants())
+        .where((p) => p.id.startsWith('$planId:p'))
+        .toList(growable: false);
+    if (participants.isEmpty) return;
+
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final decisionCandidateContacts = (await _contacts.list())
+        .where((c) {
+          final peer = c.peerPublicMaterial;
+          return !c.id.startsWith('contact:local:') &&
+              peer != null &&
+              peer.isNotEmpty;
+        })
+        .toList(growable: false);
+
+    for (final participant in participants) {
+      final contactId = participant.contactId;
+      final contact = contactId == null ? null : await _contacts.get(contactId);
+      final targets = _housingProposalTargetContacts(
+        participant: participant,
+        selectedContact: contact,
+        relayReachableContacts: decisionCandidateContacts,
+        planParticipantCount: participants.length,
+      );
+      for (final target in targets) {
+        final peerPubB64 = target.peerPublicMaterial;
+        if (peerPubB64 == null || peerPubB64.isEmpty) continue;
+        try {
+          final peerPub = RelayRouting.unb64(peerPubB64);
+          final frame = await buildFrame(selfPub, selfPriv, peerPub);
+          final selfAddr = await RelayRouting.steadyStateAddress(
+            firstPub: selfPub,
+            secondPub: peerPub,
+          );
+          final peerAddr = await RelayRouting.steadyStateAddress(
+            firstPub: peerPub,
+            secondPub: selfPub,
+          );
+          await _ensureSteadyRoutingRegistered(
+            selfListenAddr: selfAddr,
+            peerListenAddr: peerAddr,
+          );
+          await _relay.postEnvelope(
+            senderIdentity: selfAddr,
+            recipientIdentity: peerAddr,
+            idempotencyKey: _randomBytes(16),
+            ciphertext: frame,
+            kind: kind,
+            ttl: _steadyTtl,
+          );
+        } on Object catch (e) {
+          debugPrint('housing_participation_change post failed: $e');
+        }
+      }
+    }
   }
 
   Future<void> _applyHousingProposalResponse(

@@ -370,6 +370,7 @@
   "housingBalancesLegendTitle": "Légende",
   "housingBalancesOwesNobody": "Ne doit rien à personne.",
   "housingBalancesOwesAmountTo": "{amount} à {to}",
+  "housingBalancesInactiveMarker": "(ancien participant)",
   "@housingBalancesOwesAmountTo": {
     "placeholders": {
       "amount": { "type": "String" },
@@ -1086,6 +1087,94 @@
     }
   },
   "peerNameConflictUseTheirs": "Utiliser son nom",
-  "peerNameConflictKeepMine": "Garder mon libellé"
+  "peerNameConflictKeepMine": "Garder mon libellé",
+  "housingPastHubTitle": "Entente passée",
+  "housingParticipationChangeIntroLine1": "Un changement de participant n'est pas une simple modification de l'entente en vigueur.",
+  "housingParticipationChangeIntroLine2": "Toutes ces options mènent à la terminaison du plan actuel pour celui ou ceux qui quittent.",
+  "housingParticipationChangeTerminationAction": "Mettre un terme à l'entente immédiatement",
+  "housingParticipationChangeWithdrawalAction": "Je veux me retirer de l'entente",
+  "housingParticipationChangeEjectionAction": "Je veux éjecter un participant",
+  "housingParticipationChangeConfirmAction": "Oui",
+  "housingParticipationChangeTerminationConfirmTitle": "Terminer l'entente immédiatement ?",
+  "housingParticipationChangeTerminationConfirmBody": "Tous les participants devront accepter. L'entente sera close pour tous si la demande est acceptée à l'unanimité.",
+  "housingParticipationChangeWithdrawalConfirmTitle": "Confirmer votre retrait ?",
+  "housingParticipationChangeWithdrawalConfirmBody": "Date de départ prévue : {date}. Les autres participants seront informés.",
+  "@housingParticipationChangeWithdrawalConfirmBody": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "housingParticipationChangeWithdrawalPenaltyHint": "Une pénalité de retrait anticipé de {amount} pourrait s'appliquer.",
+  "@housingParticipationChangeWithdrawalPenaltyHint": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingParticipationChangeEjectionConfirmTitle": "Éjecter un participant ?",
+  "housingParticipationChangeEjectionConfirmBody": "Les autres participants devront accepter. Le candidat sera retiré du groupe si la demande est acceptée à l'unanimité.",
+  "housingParticipationChangeDetailTitle": "Changement majeur",
+  "housingParticipationChangeDetailTerminationBody": "{name} demande la fin immédiate de l'entente.",
+  "@housingParticipationChangeDetailTerminationBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeDetailWithdrawalBody": "{name} se retire de l'entente le {date}.",
+  "@housingParticipationChangeDetailWithdrawalBody": {
+    "placeholders": { "name": { "type": "String" }, "date": { "type": "String" } }
+  },
+  "housingParticipationChangeDetailEjectionBody": "{initiator} demande d'éjecter {target}.",
+  "@housingParticipationChangeDetailEjectionBody": {
+    "placeholders": { "initiator": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "housingParticipationChangeAccept": "Accepter",
+  "housingParticipationChangeReject": "Refuser",
+  "housingParticipationChangePenaltyApplies": "Une pénalité de retrait anticipé s'appliquera.",
+  "housingParticipationChangePenaltyDoesNotApply": "Aucune pénalité de retrait anticipé ne s'appliquera.",
+  "housingParticipationChangeBannerTermination": "{name} demande la fin immédiate de l'entente.",
+  "@housingParticipationChangeBannerTermination": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeBannerWithdrawal": "Fin d'entente : {date}",
+  "@housingParticipationChangeBannerWithdrawal": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "housingParticipationChangeBannerEjection": "{initiator} demande d'éjecter {target}.",
+  "@housingParticipationChangeBannerEjection": {
+    "placeholders": { "initiator": { "type": "String" }, "target": { "type": "String" } }
+  },
+  "housingParticipationChangeEjectionHubSubtitle": "Demande d'éjection en cours...",
+  "pushNotificationHousingParticipationChangeTitle": "Changement majeur",
+  "pushNotificationHousingParticipationChangeBody": "Un co-participant a demandé un changement majeur.",
+  "pushNotificationHousingParticipationChangeBodyFrom": "{name} a demandé un changement majeur.",
+  "@pushNotificationHousingParticipationChangeBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationJournalSubjectTermination": "Fin immédiate de l'entente",
+  "housingParticipationJournalSubjectWithdrawal": "Retrait volontaire",
+  "housingParticipationJournalSubjectEjection": "Éjection d'un participant",
+  "housingParticipationJournalProposed": "Proposé",
+  "housingParticipationJournalDecisionAccepted": "Accepté",
+  "housingParticipationJournalDecisionRejected": "Refusé",
+  "housingParticipationJournalEffective": "Effectif",
+  "housingParticipationJournalAborted": "Abandonné",
+  "housingParticipationJournalSubjectLine": "{kind} — {event}",
+  "@housingParticipationJournalSubjectLine": {
+    "placeholders": { "kind": { "type": "String" }, "event": { "type": "String" } }
+  },
+  "housingInactiveSettlementTitle": "Régler avec un ancien participant",
+  "housingInactiveSettlementTileSubtitle": "Enregistrer un transfert pour solder le solde",
+  "housingInactiveSettlementParticipantLabel": "Ancien participant : {name}",
+  "@housingInactiveSettlementParticipantLabel": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingInactiveSettlementCurrentBalance": "Solde actuel : {amount}",
+  "@housingInactiveSettlementCurrentBalance": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingInactiveSettlementAmountLabel": "Montant du transfert",
+  "housingInactiveSettlementAmountHint": "Positif : vous leur payez. Négatif : ils vous paient.",
+  "housingInactiveSettlementSubmit": "Publier le transfert de clôture",
+  "housingInactiveSettlementSuccess": "Transfert de clôture enregistré.",
+  "housingInactiveSettlementTransferDescription": "Règlement avec un ancien participant",
+  "housingInactiveSettlementErrorZero": "Entrez un montant non nul.",
+  "housingInactiveSettlementErrorCannotCreateCredit": "Ce transfert créerait un nouveau solde en leur faveur.",
+  "housingInactiveSettlementErrorExceedsDebt": "Le montant dépasse ce qu'ils doivent.",
+  "housingInactiveSettlementErrorCannotIncreaseDebt": "Ce transfert augmenterait ce qu'ils doivent.",
+  "housingInactiveSettlementErrorExceedsCredit": "Le montant dépasse ce qui leur est dû."
 }
 

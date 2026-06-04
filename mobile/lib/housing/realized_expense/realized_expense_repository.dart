@@ -351,6 +351,46 @@ class RealizedExpenseRepository {
     return (await getById(newId))!;
   }
 
+  /// Inserts a published transfer without peer review (system ledger entry).
+  Future<RealizedExpense> publishSystemTransfer({
+    required String packageId,
+    required String planId,
+    required int amountMinor,
+    required String currency,
+    required DateTime paymentDate,
+    required String payerParticipantId,
+    required String beneficiaryParticipantId,
+    String? description,
+    String? expenseId,
+  }) async {
+    if (amountMinor <= 0) {
+      throw ArgumentError.value(amountMinor, 'amountMinor', 'must be positive');
+    }
+    final now = DateTime.now().toUtc();
+    final id = expenseId ?? newExpenseId();
+    await _db.into(_db.realizedExpenses).insertOnConflictUpdate(
+          RealizedExpensesCompanion.insert(
+            id: id,
+            packageId: packageId,
+            planId: planId,
+            planLineId: '',
+            status: RealizedExpenseStatus.published,
+            amountMinor: amountMinor,
+            currency: currency,
+            paymentDate: paymentDate,
+            payerParticipantId: payerParticipantId,
+            kind: RealizedExpenseKind.transfer,
+            beneficiaryParticipantId: drift.Value(beneficiaryParticipantId),
+            description: drift.Value(description?.trim()),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    final published = (await getById(id))!;
+    await captureLineSnapshotForExpense(_db, published);
+    return published;
+  }
+
   Future<void> _recomputeExpenseStatus(
     String expenseId, {
     required DateTime now,

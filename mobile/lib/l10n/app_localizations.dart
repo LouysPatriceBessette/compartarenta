@@ -1858,6 +1858,12 @@ abstract class AppLocalizations {
   /// **'{amount} to {to}'**
   String housingBalancesOwesAmountTo(String amount, String to);
 
+  /// No description provided for @housingBalancesInactiveMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'(former participant)'**
+  String get housingBalancesInactiveMarker;
+
   /// No description provided for @housingRealizedExpenseBudgetCapTitle.
   ///
   /// In en, this message translates to:
@@ -4720,6 +4726,327 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep my label'**
   String get peerNameConflictKeepMine;
+
+  /// No description provided for @housingPastHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Past agreement'**
+  String get housingPastHubTitle;
+
+  /// No description provided for @housingParticipationChangeIntroLine1.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant change is not a simple in-force amendment.'**
+  String get housingParticipationChangeIntroLine1;
+
+  /// No description provided for @housingParticipationChangeIntroLine2.
+  ///
+  /// In en, this message translates to:
+  /// **'All options end the current plan for those who leave.'**
+  String get housingParticipationChangeIntroLine2;
+
+  /// No description provided for @housingParticipationChangeTerminationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'End the agreement immediately'**
+  String get housingParticipationChangeTerminationAction;
+
+  /// No description provided for @housingParticipationChangeWithdrawalAction.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to withdraw from the agreement'**
+  String get housingParticipationChangeWithdrawalAction;
+
+  /// No description provided for @housingParticipationChangeEjectionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to eject a participant'**
+  String get housingParticipationChangeEjectionAction;
+
+  /// No description provided for @housingParticipationChangeConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get housingParticipationChangeConfirmAction;
+
+  /// No description provided for @housingParticipationChangeTerminationConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End the agreement immediately?'**
+  String get housingParticipationChangeTerminationConfirmTitle;
+
+  /// No description provided for @housingParticipationChangeTerminationConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All participants must accept. The agreement closes for everyone if accepted unanimously.'**
+  String get housingParticipationChangeTerminationConfirmBody;
+
+  /// No description provided for @housingParticipationChangeWithdrawalConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your withdrawal?'**
+  String get housingParticipationChangeWithdrawalConfirmTitle;
+
+  /// No description provided for @housingParticipationChangeWithdrawalConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned departure date: {date}. Other participants will be notified.'**
+  String housingParticipationChangeWithdrawalConfirmBody(String date);
+
+  /// No description provided for @housingParticipationChangeWithdrawalPenaltyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An early withdrawal penalty of {amount} may apply.'**
+  String housingParticipationChangeWithdrawalPenaltyHint(String amount);
+
+  /// No description provided for @housingParticipationChangeEjectionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eject a participant?'**
+  String get housingParticipationChangeEjectionConfirmTitle;
+
+  /// No description provided for @housingParticipationChangeEjectionConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Other participants must accept. The candidate is removed if accepted unanimously.'**
+  String get housingParticipationChangeEjectionConfirmBody;
+
+  /// No description provided for @housingParticipationChangeDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Major change'**
+  String get housingParticipationChangeDetailTitle;
+
+  /// No description provided for @housingParticipationChangeDetailTerminationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} requests to end the agreement immediately.'**
+  String housingParticipationChangeDetailTerminationBody(String name);
+
+  /// No description provided for @housingParticipationChangeDetailWithdrawalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will leave the agreement on {date}.'**
+  String housingParticipationChangeDetailWithdrawalBody(
+    String name,
+    String date,
+  );
+
+  /// No description provided for @housingParticipationChangeDetailEjectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{initiator} requests to eject {target}.'**
+  String housingParticipationChangeDetailEjectionBody(
+    String initiator,
+    String target,
+  );
+
+  /// No description provided for @housingParticipationChangeAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get housingParticipationChangeAccept;
+
+  /// No description provided for @housingParticipationChangeReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get housingParticipationChangeReject;
+
+  /// No description provided for @housingParticipationChangePenaltyApplies.
+  ///
+  /// In en, this message translates to:
+  /// **'An early withdrawal penalty will apply.'**
+  String get housingParticipationChangePenaltyApplies;
+
+  /// No description provided for @housingParticipationChangePenaltyDoesNotApply.
+  ///
+  /// In en, this message translates to:
+  /// **'No early withdrawal penalty will apply.'**
+  String get housingParticipationChangePenaltyDoesNotApply;
+
+  /// No description provided for @housingParticipationChangeBannerTermination.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} requests to end the agreement immediately.'**
+  String housingParticipationChangeBannerTermination(String name);
+
+  /// No description provided for @housingParticipationChangeBannerWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement ends: {date}'**
+  String housingParticipationChangeBannerWithdrawal(String date);
+
+  /// No description provided for @housingParticipationChangeBannerEjection.
+  ///
+  /// In en, this message translates to:
+  /// **'{initiator} requests to eject {target}.'**
+  String housingParticipationChangeBannerEjection(
+    String initiator,
+    String target,
+  );
+
+  /// No description provided for @housingParticipationChangeEjectionHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ejection request in progress...'**
+  String get housingParticipationChangeEjectionHubSubtitle;
+
+  /// No description provided for @pushNotificationHousingParticipationChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Major change'**
+  String get pushNotificationHousingParticipationChangeTitle;
+
+  /// No description provided for @pushNotificationHousingParticipationChangeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A co-participant requested a major change.'**
+  String get pushNotificationHousingParticipationChangeBody;
+
+  /// No description provided for @pushNotificationHousingParticipationChangeBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} requested a major change.'**
+  String pushNotificationHousingParticipationChangeBodyFrom(String name);
+
+  /// No description provided for @housingParticipationJournalSubjectTermination.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate termination'**
+  String get housingParticipationJournalSubjectTermination;
+
+  /// No description provided for @housingParticipationJournalSubjectWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Voluntary withdrawal'**
+  String get housingParticipationJournalSubjectWithdrawal;
+
+  /// No description provided for @housingParticipationJournalSubjectEjection.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant ejection'**
+  String get housingParticipationJournalSubjectEjection;
+
+  /// No description provided for @housingParticipationJournalProposed.
+  ///
+  /// In en, this message translates to:
+  /// **'Proposed'**
+  String get housingParticipationJournalProposed;
+
+  /// No description provided for @housingParticipationJournalDecisionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get housingParticipationJournalDecisionAccepted;
+
+  /// No description provided for @housingParticipationJournalDecisionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get housingParticipationJournalDecisionRejected;
+
+  /// No description provided for @housingParticipationJournalEffective.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective'**
+  String get housingParticipationJournalEffective;
+
+  /// No description provided for @housingParticipationJournalAborted.
+  ///
+  /// In en, this message translates to:
+  /// **'Aborted'**
+  String get housingParticipationJournalAborted;
+
+  /// No description provided for @housingParticipationJournalSubjectLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} — {event}'**
+  String housingParticipationJournalSubjectLine(String kind, String event);
+
+  /// No description provided for @housingInactiveSettlementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle with inactive participant'**
+  String get housingInactiveSettlementTitle;
+
+  /// No description provided for @housingInactiveSettlementTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a transfer to close the balance'**
+  String get housingInactiveSettlementTileSubtitle;
+
+  /// No description provided for @housingInactiveSettlementParticipantLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Former participant: {name}'**
+  String housingInactiveSettlementParticipantLabel(String name);
+
+  /// No description provided for @housingInactiveSettlementCurrentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance: {amount}'**
+  String housingInactiveSettlementCurrentBalance(String amount);
+
+  /// No description provided for @housingInactiveSettlementAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer amount'**
+  String get housingInactiveSettlementAmountLabel;
+
+  /// No description provided for @housingInactiveSettlementAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive: you pay them. Negative: they pay you.'**
+  String get housingInactiveSettlementAmountHint;
+
+  /// No description provided for @housingInactiveSettlementSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish settlement transfer'**
+  String get housingInactiveSettlementSubmit;
+
+  /// No description provided for @housingInactiveSettlementSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement transfer recorded.'**
+  String get housingInactiveSettlementSuccess;
+
+  /// No description provided for @housingInactiveSettlementTransferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement with former participant'**
+  String get housingInactiveSettlementTransferDescription;
+
+  /// No description provided for @housingInactiveSettlementErrorZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a non-zero amount.'**
+  String get housingInactiveSettlementErrorZero;
+
+  /// No description provided for @housingInactiveSettlementErrorCannotCreateCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'This transfer would create a new balance in their favor.'**
+  String get housingInactiveSettlementErrorCannotCreateCredit;
+
+  /// No description provided for @housingInactiveSettlementErrorExceedsDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount exceeds what they owe.'**
+  String get housingInactiveSettlementErrorExceedsDebt;
+
+  /// No description provided for @housingInactiveSettlementErrorCannotIncreaseDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'This transfer would increase what they owe.'**
+  String get housingInactiveSettlementErrorCannotIncreaseDebt;
+
+  /// No description provided for @housingInactiveSettlementErrorExceedsCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount exceeds what is owed to them.'**
+  String get housingInactiveSettlementErrorExceedsCredit;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,15 @@
+# Tasks — housing participation change
+
+- [x] Drift schema v20 + build_runner
+- [x] Domain services under `housing/participation/`
+- [x] Envelope kinds 10–12 + orchestrator handlers
+- [x] Major change screen (3 buttons + dialogs)
+- [x] Detail screen + red banner
+- [x] Hub gates + past title
+- [x] Navigation intent + push notifications
+- [x] l10n fr/en/es
+- [x] Unit tests (ratio redistribution, hub gates)
+- [ ] Journal merge with amendments
+- [ ] Inactive settlement transfer UI + balance graph extension
+- [ ] Integration harness (3-participant happy paths)
+- [ ] Penalty ledger system expense publishing

@@ -23,6 +23,11 @@ class HousingNavigationIntent {
   static String? pendingOpenSettledAmendmentRevisionId;
   static final ValueNotifier<int> openSettledAmendmentTick = ValueNotifier<int>(0);
 
+  /// After a participation-change notification tap: open detail screen.
+  static String? pendingOpenParticipationChangeId;
+  static String? pendingOpenParticipationChangePlanId;
+  static final ValueNotifier<int> openParticipationChangeTick = ValueNotifier<int>(0);
+
   /// Bumps when [HousingModuleEntryScreen] should re-resolve hub / archive / plan.
   static final ValueNotifier<int> entryReloadTick = ValueNotifier<int>(0);
 
@@ -121,6 +126,15 @@ class HousingNavigationIntent {
     openSettledAmendmentTick.value = openSettledAmendmentTick.value + 1;
   }
 
+  static void requestOpenParticipationChangeDetail({
+    required String planId,
+    required String changeId,
+  }) {
+    pendingOpenParticipationChangePlanId = planId;
+    pendingOpenParticipationChangeId = changeId;
+    openParticipationChangeTick.value = openParticipationChangeTick.value + 1;
+  }
+
   static String? takePendingReview() {
     final id = pendingRealizedExpenseReviewId;
     pendingRealizedExpenseReviewId = null;
@@ -151,5 +165,19 @@ class HousingNavigationIntent {
       return null;
     }
     return (planId: planId, revisionId: revisionId);
+  }
+
+  static ({String planId, String changeId})? takePendingOpenParticipationChange() {
+    final planId = pendingOpenParticipationChangePlanId;
+    final changeId = pendingOpenParticipationChangeId;
+    pendingOpenParticipationChangePlanId = null;
+    pendingOpenParticipationChangeId = null;
+    if (planId == null ||
+        planId.isEmpty ||
+        changeId == null ||
+        changeId.isEmpty) {
+      return null;
+    }
+    return (planId: planId, changeId: changeId);
   }
 }

@@ -10132,6 +10132,1883 @@ class ArchivedPlanLineSnapshotsCompanion
   }
 }
 
+class $HousingParticipationChangesTable extends HousingParticipationChanges
+    with
+        TableInfo<
+          $HousingParticipationChangesTable,
+          HousingParticipationChange
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousingParticipationChangesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _packageIdMeta = const VerificationMeta(
+    'packageId',
+  );
+  @override
+  late final GeneratedColumn<String> packageId = GeneratedColumn<String>(
+    'package_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _initiatorParticipantIdMeta =
+      const VerificationMeta('initiatorParticipantId');
+  @override
+  late final GeneratedColumn<String> initiatorParticipantId =
+      GeneratedColumn<String>(
+        'initiator_participant_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _targetParticipantIdMeta =
+      const VerificationMeta('targetParticipantId');
+  @override
+  late final GeneratedColumn<String> targetParticipantId =
+      GeneratedColumn<String>(
+        'target_participant_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _departureDateMeta = const VerificationMeta(
+    'departureDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> departureDate =
+      GeneratedColumn<DateTime>(
+        'departure_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _settledAtMeta = const VerificationMeta(
+    'settledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> settledAt = GeneratedColumn<DateTime>(
+    'settled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    packageId,
+    kind,
+    initiatorParticipantId,
+    targetParticipantId,
+    departureDate,
+    status,
+    createdAt,
+    settledAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housing_participation_changes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousingParticipationChange> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('package_id')) {
+      context.handle(
+        _packageIdMeta,
+        packageId.isAcceptableOrUnknown(data['package_id']!, _packageIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_packageIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('initiator_participant_id')) {
+      context.handle(
+        _initiatorParticipantIdMeta,
+        initiatorParticipantId.isAcceptableOrUnknown(
+          data['initiator_participant_id']!,
+          _initiatorParticipantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_initiatorParticipantIdMeta);
+    }
+    if (data.containsKey('target_participant_id')) {
+      context.handle(
+        _targetParticipantIdMeta,
+        targetParticipantId.isAcceptableOrUnknown(
+          data['target_participant_id']!,
+          _targetParticipantIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('departure_date')) {
+      context.handle(
+        _departureDateMeta,
+        departureDate.isAcceptableOrUnknown(
+          data['departure_date']!,
+          _departureDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('settled_at')) {
+      context.handle(
+        _settledAtMeta,
+        settledAt.isAcceptableOrUnknown(data['settled_at']!, _settledAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HousingParticipationChange map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousingParticipationChange(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      packageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}package_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      initiatorParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}initiator_participant_id'],
+      )!,
+      targetParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_participant_id'],
+      ),
+      departureDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}departure_date'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      settledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}settled_at'],
+      ),
+    );
+  }
+
+  @override
+  $HousingParticipationChangesTable createAlias(String alias) {
+    return $HousingParticipationChangesTable(attachedDatabase, alias);
+  }
+}
+
+class HousingParticipationChange extends DataClass
+    implements Insertable<HousingParticipationChange> {
+  final String id;
+  final String planId;
+  final String packageId;
+
+  /// `immediate_termination` | `voluntary_withdrawal` | `ejection`
+  final String kind;
+  final String initiatorParticipantId;
+  final String? targetParticipantId;
+  final DateTime? departureDate;
+
+  /// `pending` | `effective` | `aborted`
+  final String status;
+  final DateTime createdAt;
+  final DateTime? settledAt;
+  const HousingParticipationChange({
+    required this.id,
+    required this.planId,
+    required this.packageId,
+    required this.kind,
+    required this.initiatorParticipantId,
+    this.targetParticipantId,
+    this.departureDate,
+    required this.status,
+    required this.createdAt,
+    this.settledAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['package_id'] = Variable<String>(packageId);
+    map['kind'] = Variable<String>(kind);
+    map['initiator_participant_id'] = Variable<String>(initiatorParticipantId);
+    if (!nullToAbsent || targetParticipantId != null) {
+      map['target_participant_id'] = Variable<String>(targetParticipantId);
+    }
+    if (!nullToAbsent || departureDate != null) {
+      map['departure_date'] = Variable<DateTime>(departureDate);
+    }
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || settledAt != null) {
+      map['settled_at'] = Variable<DateTime>(settledAt);
+    }
+    return map;
+  }
+
+  HousingParticipationChangesCompanion toCompanion(bool nullToAbsent) {
+    return HousingParticipationChangesCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      packageId: Value(packageId),
+      kind: Value(kind),
+      initiatorParticipantId: Value(initiatorParticipantId),
+      targetParticipantId: targetParticipantId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetParticipantId),
+      departureDate: departureDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(departureDate),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      settledAt: settledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(settledAt),
+    );
+  }
+
+  factory HousingParticipationChange.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousingParticipationChange(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      packageId: serializer.fromJson<String>(json['packageId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      initiatorParticipantId: serializer.fromJson<String>(
+        json['initiatorParticipantId'],
+      ),
+      targetParticipantId: serializer.fromJson<String?>(
+        json['targetParticipantId'],
+      ),
+      departureDate: serializer.fromJson<DateTime?>(json['departureDate']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      settledAt: serializer.fromJson<DateTime?>(json['settledAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'packageId': serializer.toJson<String>(packageId),
+      'kind': serializer.toJson<String>(kind),
+      'initiatorParticipantId': serializer.toJson<String>(
+        initiatorParticipantId,
+      ),
+      'targetParticipantId': serializer.toJson<String?>(targetParticipantId),
+      'departureDate': serializer.toJson<DateTime?>(departureDate),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'settledAt': serializer.toJson<DateTime?>(settledAt),
+    };
+  }
+
+  HousingParticipationChange copyWith({
+    String? id,
+    String? planId,
+    String? packageId,
+    String? kind,
+    String? initiatorParticipantId,
+    Value<String?> targetParticipantId = const Value.absent(),
+    Value<DateTime?> departureDate = const Value.absent(),
+    String? status,
+    DateTime? createdAt,
+    Value<DateTime?> settledAt = const Value.absent(),
+  }) => HousingParticipationChange(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    packageId: packageId ?? this.packageId,
+    kind: kind ?? this.kind,
+    initiatorParticipantId:
+        initiatorParticipantId ?? this.initiatorParticipantId,
+    targetParticipantId: targetParticipantId.present
+        ? targetParticipantId.value
+        : this.targetParticipantId,
+    departureDate: departureDate.present
+        ? departureDate.value
+        : this.departureDate,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    settledAt: settledAt.present ? settledAt.value : this.settledAt,
+  );
+  HousingParticipationChange copyWithCompanion(
+    HousingParticipationChangesCompanion data,
+  ) {
+    return HousingParticipationChange(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      packageId: data.packageId.present ? data.packageId.value : this.packageId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      initiatorParticipantId: data.initiatorParticipantId.present
+          ? data.initiatorParticipantId.value
+          : this.initiatorParticipantId,
+      targetParticipantId: data.targetParticipantId.present
+          ? data.targetParticipantId.value
+          : this.targetParticipantId,
+      departureDate: data.departureDate.present
+          ? data.departureDate.value
+          : this.departureDate,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      settledAt: data.settledAt.present ? data.settledAt.value : this.settledAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingParticipationChange(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('packageId: $packageId, ')
+          ..write('kind: $kind, ')
+          ..write('initiatorParticipantId: $initiatorParticipantId, ')
+          ..write('targetParticipantId: $targetParticipantId, ')
+          ..write('departureDate: $departureDate, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('settledAt: $settledAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    planId,
+    packageId,
+    kind,
+    initiatorParticipantId,
+    targetParticipantId,
+    departureDate,
+    status,
+    createdAt,
+    settledAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousingParticipationChange &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.packageId == this.packageId &&
+          other.kind == this.kind &&
+          other.initiatorParticipantId == this.initiatorParticipantId &&
+          other.targetParticipantId == this.targetParticipantId &&
+          other.departureDate == this.departureDate &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.settledAt == this.settledAt);
+}
+
+class HousingParticipationChangesCompanion
+    extends UpdateCompanion<HousingParticipationChange> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> packageId;
+  final Value<String> kind;
+  final Value<String> initiatorParticipantId;
+  final Value<String?> targetParticipantId;
+  final Value<DateTime?> departureDate;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> settledAt;
+  final Value<int> rowid;
+  const HousingParticipationChangesCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.packageId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.initiatorParticipantId = const Value.absent(),
+    this.targetParticipantId = const Value.absent(),
+    this.departureDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.settledAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousingParticipationChangesCompanion.insert({
+    required String id,
+    required String planId,
+    required String packageId,
+    required String kind,
+    required String initiatorParticipantId,
+    this.targetParticipantId = const Value.absent(),
+    this.departureDate = const Value.absent(),
+    required String status,
+    required DateTime createdAt,
+    this.settledAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       packageId = Value(packageId),
+       kind = Value(kind),
+       initiatorParticipantId = Value(initiatorParticipantId),
+       status = Value(status),
+       createdAt = Value(createdAt);
+  static Insertable<HousingParticipationChange> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? packageId,
+    Expression<String>? kind,
+    Expression<String>? initiatorParticipantId,
+    Expression<String>? targetParticipantId,
+    Expression<DateTime>? departureDate,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? settledAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (packageId != null) 'package_id': packageId,
+      if (kind != null) 'kind': kind,
+      if (initiatorParticipantId != null)
+        'initiator_participant_id': initiatorParticipantId,
+      if (targetParticipantId != null)
+        'target_participant_id': targetParticipantId,
+      if (departureDate != null) 'departure_date': departureDate,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (settledAt != null) 'settled_at': settledAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousingParticipationChangesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String>? packageId,
+    Value<String>? kind,
+    Value<String>? initiatorParticipantId,
+    Value<String?>? targetParticipantId,
+    Value<DateTime?>? departureDate,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? settledAt,
+    Value<int>? rowid,
+  }) {
+    return HousingParticipationChangesCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      packageId: packageId ?? this.packageId,
+      kind: kind ?? this.kind,
+      initiatorParticipantId:
+          initiatorParticipantId ?? this.initiatorParticipantId,
+      targetParticipantId: targetParticipantId ?? this.targetParticipantId,
+      departureDate: departureDate ?? this.departureDate,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      settledAt: settledAt ?? this.settledAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (packageId.present) {
+      map['package_id'] = Variable<String>(packageId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (initiatorParticipantId.present) {
+      map['initiator_participant_id'] = Variable<String>(
+        initiatorParticipantId.value,
+      );
+    }
+    if (targetParticipantId.present) {
+      map['target_participant_id'] = Variable<String>(
+        targetParticipantId.value,
+      );
+    }
+    if (departureDate.present) {
+      map['departure_date'] = Variable<DateTime>(departureDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (settledAt.present) {
+      map['settled_at'] = Variable<DateTime>(settledAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingParticipationChangesCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('packageId: $packageId, ')
+          ..write('kind: $kind, ')
+          ..write('initiatorParticipantId: $initiatorParticipantId, ')
+          ..write('targetParticipantId: $targetParticipantId, ')
+          ..write('departureDate: $departureDate, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('settledAt: $settledAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HousingParticipationDecisionsTable extends HousingParticipationDecisions
+    with
+        TableInfo<
+          $HousingParticipationDecisionsTable,
+          HousingParticipationDecision
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousingParticipationDecisionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _changeIdMeta = const VerificationMeta(
+    'changeId',
+  );
+  @override
+  late final GeneratedColumn<String> changeId = GeneratedColumn<String>(
+    'change_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta(
+    'participantId',
+  );
+  @override
+  late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
+    'participant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _decidedAtMeta = const VerificationMeta(
+    'decidedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> decidedAt = GeneratedColumn<DateTime>(
+    'decided_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    changeId,
+    participantId,
+    status,
+    decidedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housing_participation_decisions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousingParticipationDecision> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('change_id')) {
+      context.handle(
+        _changeIdMeta,
+        changeId.isAcceptableOrUnknown(data['change_id']!, _changeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_changeIdMeta);
+    }
+    if (data.containsKey('participant_id')) {
+      context.handle(
+        _participantIdMeta,
+        participantId.isAcceptableOrUnknown(
+          data['participant_id']!,
+          _participantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_participantIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('decided_at')) {
+      context.handle(
+        _decidedAtMeta,
+        decidedAt.isAcceptableOrUnknown(data['decided_at']!, _decidedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {changeId, participantId};
+  @override
+  HousingParticipationDecision map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousingParticipationDecision(
+      changeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}change_id'],
+      )!,
+      participantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}participant_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      decidedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}decided_at'],
+      ),
+    );
+  }
+
+  @override
+  $HousingParticipationDecisionsTable createAlias(String alias) {
+    return $HousingParticipationDecisionsTable(attachedDatabase, alias);
+  }
+}
+
+class HousingParticipationDecision extends DataClass
+    implements Insertable<HousingParticipationDecision> {
+  final String changeId;
+  final String participantId;
+
+  /// `accepted` | `rejected`
+  final String status;
+  final DateTime? decidedAt;
+  const HousingParticipationDecision({
+    required this.changeId,
+    required this.participantId,
+    required this.status,
+    this.decidedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['change_id'] = Variable<String>(changeId);
+    map['participant_id'] = Variable<String>(participantId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || decidedAt != null) {
+      map['decided_at'] = Variable<DateTime>(decidedAt);
+    }
+    return map;
+  }
+
+  HousingParticipationDecisionsCompanion toCompanion(bool nullToAbsent) {
+    return HousingParticipationDecisionsCompanion(
+      changeId: Value(changeId),
+      participantId: Value(participantId),
+      status: Value(status),
+      decidedAt: decidedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decidedAt),
+    );
+  }
+
+  factory HousingParticipationDecision.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousingParticipationDecision(
+      changeId: serializer.fromJson<String>(json['changeId']),
+      participantId: serializer.fromJson<String>(json['participantId']),
+      status: serializer.fromJson<String>(json['status']),
+      decidedAt: serializer.fromJson<DateTime?>(json['decidedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'changeId': serializer.toJson<String>(changeId),
+      'participantId': serializer.toJson<String>(participantId),
+      'status': serializer.toJson<String>(status),
+      'decidedAt': serializer.toJson<DateTime?>(decidedAt),
+    };
+  }
+
+  HousingParticipationDecision copyWith({
+    String? changeId,
+    String? participantId,
+    String? status,
+    Value<DateTime?> decidedAt = const Value.absent(),
+  }) => HousingParticipationDecision(
+    changeId: changeId ?? this.changeId,
+    participantId: participantId ?? this.participantId,
+    status: status ?? this.status,
+    decidedAt: decidedAt.present ? decidedAt.value : this.decidedAt,
+  );
+  HousingParticipationDecision copyWithCompanion(
+    HousingParticipationDecisionsCompanion data,
+  ) {
+    return HousingParticipationDecision(
+      changeId: data.changeId.present ? data.changeId.value : this.changeId,
+      participantId: data.participantId.present
+          ? data.participantId.value
+          : this.participantId,
+      status: data.status.present ? data.status.value : this.status,
+      decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingParticipationDecision(')
+          ..write('changeId: $changeId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('decidedAt: $decidedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(changeId, participantId, status, decidedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousingParticipationDecision &&
+          other.changeId == this.changeId &&
+          other.participantId == this.participantId &&
+          other.status == this.status &&
+          other.decidedAt == this.decidedAt);
+}
+
+class HousingParticipationDecisionsCompanion
+    extends UpdateCompanion<HousingParticipationDecision> {
+  final Value<String> changeId;
+  final Value<String> participantId;
+  final Value<String> status;
+  final Value<DateTime?> decidedAt;
+  final Value<int> rowid;
+  const HousingParticipationDecisionsCompanion({
+    this.changeId = const Value.absent(),
+    this.participantId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousingParticipationDecisionsCompanion.insert({
+    required String changeId,
+    required String participantId,
+    required String status,
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : changeId = Value(changeId),
+       participantId = Value(participantId),
+       status = Value(status);
+  static Insertable<HousingParticipationDecision> custom({
+    Expression<String>? changeId,
+    Expression<String>? participantId,
+    Expression<String>? status,
+    Expression<DateTime>? decidedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (changeId != null) 'change_id': changeId,
+      if (participantId != null) 'participant_id': participantId,
+      if (status != null) 'status': status,
+      if (decidedAt != null) 'decided_at': decidedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousingParticipationDecisionsCompanion copyWith({
+    Value<String>? changeId,
+    Value<String>? participantId,
+    Value<String>? status,
+    Value<DateTime?>? decidedAt,
+    Value<int>? rowid,
+  }) {
+    return HousingParticipationDecisionsCompanion(
+      changeId: changeId ?? this.changeId,
+      participantId: participantId ?? this.participantId,
+      status: status ?? this.status,
+      decidedAt: decidedAt ?? this.decidedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (changeId.present) {
+      map['change_id'] = Variable<String>(changeId.value);
+    }
+    if (participantId.present) {
+      map['participant_id'] = Variable<String>(participantId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (decidedAt.present) {
+      map['decided_at'] = Variable<DateTime>(decidedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingParticipationDecisionsCompanion(')
+          ..write('changeId: $changeId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HousingPlanMembershipsTable extends HousingPlanMemberships
+    with TableInfo<$HousingPlanMembershipsTable, HousingPlanMembership> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousingPlanMembershipsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta(
+    'participantId',
+  );
+  @override
+  late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
+    'participant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _departedAtMeta = const VerificationMeta(
+    'departedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> departedAt = GeneratedColumn<DateTime>(
+    'departed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _departureKindMeta = const VerificationMeta(
+    'departureKind',
+  );
+  @override
+  late final GeneratedColumn<String> departureKind = GeneratedColumn<String>(
+    'departure_kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _changeIdMeta = const VerificationMeta(
+    'changeId',
+  );
+  @override
+  late final GeneratedColumn<String> changeId = GeneratedColumn<String>(
+    'change_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    planId,
+    participantId,
+    status,
+    departedAt,
+    departureKind,
+    changeId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housing_plan_memberships';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousingPlanMembership> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('participant_id')) {
+      context.handle(
+        _participantIdMeta,
+        participantId.isAcceptableOrUnknown(
+          data['participant_id']!,
+          _participantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_participantIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('departed_at')) {
+      context.handle(
+        _departedAtMeta,
+        departedAt.isAcceptableOrUnknown(data['departed_at']!, _departedAtMeta),
+      );
+    }
+    if (data.containsKey('departure_kind')) {
+      context.handle(
+        _departureKindMeta,
+        departureKind.isAcceptableOrUnknown(
+          data['departure_kind']!,
+          _departureKindMeta,
+        ),
+      );
+    }
+    if (data.containsKey('change_id')) {
+      context.handle(
+        _changeIdMeta,
+        changeId.isAcceptableOrUnknown(data['change_id']!, _changeIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {planId, participantId};
+  @override
+  HousingPlanMembership map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousingPlanMembership(
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      participantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}participant_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      departedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}departed_at'],
+      ),
+      departureKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}departure_kind'],
+      ),
+      changeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}change_id'],
+      ),
+    );
+  }
+
+  @override
+  $HousingPlanMembershipsTable createAlias(String alias) {
+    return $HousingPlanMembershipsTable(attachedDatabase, alias);
+  }
+}
+
+class HousingPlanMembership extends DataClass
+    implements Insertable<HousingPlanMembership> {
+  final String planId;
+  final String participantId;
+
+  /// `active` | `departed`
+  final String status;
+  final DateTime? departedAt;
+  final String? departureKind;
+  final String? changeId;
+  const HousingPlanMembership({
+    required this.planId,
+    required this.participantId,
+    required this.status,
+    this.departedAt,
+    this.departureKind,
+    this.changeId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['plan_id'] = Variable<String>(planId);
+    map['participant_id'] = Variable<String>(participantId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || departedAt != null) {
+      map['departed_at'] = Variable<DateTime>(departedAt);
+    }
+    if (!nullToAbsent || departureKind != null) {
+      map['departure_kind'] = Variable<String>(departureKind);
+    }
+    if (!nullToAbsent || changeId != null) {
+      map['change_id'] = Variable<String>(changeId);
+    }
+    return map;
+  }
+
+  HousingPlanMembershipsCompanion toCompanion(bool nullToAbsent) {
+    return HousingPlanMembershipsCompanion(
+      planId: Value(planId),
+      participantId: Value(participantId),
+      status: Value(status),
+      departedAt: departedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(departedAt),
+      departureKind: departureKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(departureKind),
+      changeId: changeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(changeId),
+    );
+  }
+
+  factory HousingPlanMembership.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousingPlanMembership(
+      planId: serializer.fromJson<String>(json['planId']),
+      participantId: serializer.fromJson<String>(json['participantId']),
+      status: serializer.fromJson<String>(json['status']),
+      departedAt: serializer.fromJson<DateTime?>(json['departedAt']),
+      departureKind: serializer.fromJson<String?>(json['departureKind']),
+      changeId: serializer.fromJson<String?>(json['changeId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'planId': serializer.toJson<String>(planId),
+      'participantId': serializer.toJson<String>(participantId),
+      'status': serializer.toJson<String>(status),
+      'departedAt': serializer.toJson<DateTime?>(departedAt),
+      'departureKind': serializer.toJson<String?>(departureKind),
+      'changeId': serializer.toJson<String?>(changeId),
+    };
+  }
+
+  HousingPlanMembership copyWith({
+    String? planId,
+    String? participantId,
+    String? status,
+    Value<DateTime?> departedAt = const Value.absent(),
+    Value<String?> departureKind = const Value.absent(),
+    Value<String?> changeId = const Value.absent(),
+  }) => HousingPlanMembership(
+    planId: planId ?? this.planId,
+    participantId: participantId ?? this.participantId,
+    status: status ?? this.status,
+    departedAt: departedAt.present ? departedAt.value : this.departedAt,
+    departureKind: departureKind.present
+        ? departureKind.value
+        : this.departureKind,
+    changeId: changeId.present ? changeId.value : this.changeId,
+  );
+  HousingPlanMembership copyWithCompanion(
+    HousingPlanMembershipsCompanion data,
+  ) {
+    return HousingPlanMembership(
+      planId: data.planId.present ? data.planId.value : this.planId,
+      participantId: data.participantId.present
+          ? data.participantId.value
+          : this.participantId,
+      status: data.status.present ? data.status.value : this.status,
+      departedAt: data.departedAt.present
+          ? data.departedAt.value
+          : this.departedAt,
+      departureKind: data.departureKind.present
+          ? data.departureKind.value
+          : this.departureKind,
+      changeId: data.changeId.present ? data.changeId.value : this.changeId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingPlanMembership(')
+          ..write('planId: $planId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('departedAt: $departedAt, ')
+          ..write('departureKind: $departureKind, ')
+          ..write('changeId: $changeId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    planId,
+    participantId,
+    status,
+    departedAt,
+    departureKind,
+    changeId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousingPlanMembership &&
+          other.planId == this.planId &&
+          other.participantId == this.participantId &&
+          other.status == this.status &&
+          other.departedAt == this.departedAt &&
+          other.departureKind == this.departureKind &&
+          other.changeId == this.changeId);
+}
+
+class HousingPlanMembershipsCompanion
+    extends UpdateCompanion<HousingPlanMembership> {
+  final Value<String> planId;
+  final Value<String> participantId;
+  final Value<String> status;
+  final Value<DateTime?> departedAt;
+  final Value<String?> departureKind;
+  final Value<String?> changeId;
+  final Value<int> rowid;
+  const HousingPlanMembershipsCompanion({
+    this.planId = const Value.absent(),
+    this.participantId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.departedAt = const Value.absent(),
+    this.departureKind = const Value.absent(),
+    this.changeId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousingPlanMembershipsCompanion.insert({
+    required String planId,
+    required String participantId,
+    required String status,
+    this.departedAt = const Value.absent(),
+    this.departureKind = const Value.absent(),
+    this.changeId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : planId = Value(planId),
+       participantId = Value(participantId),
+       status = Value(status);
+  static Insertable<HousingPlanMembership> custom({
+    Expression<String>? planId,
+    Expression<String>? participantId,
+    Expression<String>? status,
+    Expression<DateTime>? departedAt,
+    Expression<String>? departureKind,
+    Expression<String>? changeId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (planId != null) 'plan_id': planId,
+      if (participantId != null) 'participant_id': participantId,
+      if (status != null) 'status': status,
+      if (departedAt != null) 'departed_at': departedAt,
+      if (departureKind != null) 'departure_kind': departureKind,
+      if (changeId != null) 'change_id': changeId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousingPlanMembershipsCompanion copyWith({
+    Value<String>? planId,
+    Value<String>? participantId,
+    Value<String>? status,
+    Value<DateTime?>? departedAt,
+    Value<String?>? departureKind,
+    Value<String?>? changeId,
+    Value<int>? rowid,
+  }) {
+    return HousingPlanMembershipsCompanion(
+      planId: planId ?? this.planId,
+      participantId: participantId ?? this.participantId,
+      status: status ?? this.status,
+      departedAt: departedAt ?? this.departedAt,
+      departureKind: departureKind ?? this.departureKind,
+      changeId: changeId ?? this.changeId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (participantId.present) {
+      map['participant_id'] = Variable<String>(participantId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (departedAt.present) {
+      map['departed_at'] = Variable<DateTime>(departedAt.value);
+    }
+    if (departureKind.present) {
+      map['departure_kind'] = Variable<String>(departureKind.value);
+    }
+    if (changeId.present) {
+      map['change_id'] = Variable<String>(changeId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingPlanMembershipsCompanion(')
+          ..write('planId: $planId, ')
+          ..write('participantId: $participantId, ')
+          ..write('status: $status, ')
+          ..write('departedAt: $departedAt, ')
+          ..write('departureKind: $departureKind, ')
+          ..write('changeId: $changeId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HousingInactiveParticipantsTable extends HousingInactiveParticipants
+    with
+        TableInfo<
+          $HousingInactiveParticipantsTable,
+          HousingInactiveParticipant
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousingInactiveParticipantsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceParticipantIdMeta =
+      const VerificationMeta('sourceParticipantId');
+  @override
+  late final GeneratedColumn<String> sourceParticipantId =
+      GeneratedColumn<String>(
+        'source_participant_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _displayNameSnapshotMeta =
+      const VerificationMeta('displayNameSnapshot');
+  @override
+  late final GeneratedColumn<String> displayNameSnapshot =
+      GeneratedColumn<String>(
+        'display_name_snapshot',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _clearedAtMeta = const VerificationMeta(
+    'clearedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> clearedAt = GeneratedColumn<DateTime>(
+    'cleared_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    sourceParticipantId,
+    displayNameSnapshot,
+    createdAt,
+    clearedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housing_inactive_participants';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousingInactiveParticipant> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('source_participant_id')) {
+      context.handle(
+        _sourceParticipantIdMeta,
+        sourceParticipantId.isAcceptableOrUnknown(
+          data['source_participant_id']!,
+          _sourceParticipantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceParticipantIdMeta);
+    }
+    if (data.containsKey('display_name_snapshot')) {
+      context.handle(
+        _displayNameSnapshotMeta,
+        displayNameSnapshot.isAcceptableOrUnknown(
+          data['display_name_snapshot']!,
+          _displayNameSnapshotMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameSnapshotMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('cleared_at')) {
+      context.handle(
+        _clearedAtMeta,
+        clearedAt.isAcceptableOrUnknown(data['cleared_at']!, _clearedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HousingInactiveParticipant map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousingInactiveParticipant(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      sourceParticipantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_participant_id'],
+      )!,
+      displayNameSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name_snapshot'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      clearedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cleared_at'],
+      ),
+    );
+  }
+
+  @override
+  $HousingInactiveParticipantsTable createAlias(String alias) {
+    return $HousingInactiveParticipantsTable(attachedDatabase, alias);
+  }
+}
+
+class HousingInactiveParticipant extends DataClass
+    implements Insertable<HousingInactiveParticipant> {
+  final String id;
+  final String planId;
+  final String sourceParticipantId;
+  final String displayNameSnapshot;
+  final DateTime createdAt;
+  final DateTime? clearedAt;
+  const HousingInactiveParticipant({
+    required this.id,
+    required this.planId,
+    required this.sourceParticipantId,
+    required this.displayNameSnapshot,
+    required this.createdAt,
+    this.clearedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['source_participant_id'] = Variable<String>(sourceParticipantId);
+    map['display_name_snapshot'] = Variable<String>(displayNameSnapshot);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || clearedAt != null) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt);
+    }
+    return map;
+  }
+
+  HousingInactiveParticipantsCompanion toCompanion(bool nullToAbsent) {
+    return HousingInactiveParticipantsCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      sourceParticipantId: Value(sourceParticipantId),
+      displayNameSnapshot: Value(displayNameSnapshot),
+      createdAt: Value(createdAt),
+      clearedAt: clearedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clearedAt),
+    );
+  }
+
+  factory HousingInactiveParticipant.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousingInactiveParticipant(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      sourceParticipantId: serializer.fromJson<String>(
+        json['sourceParticipantId'],
+      ),
+      displayNameSnapshot: serializer.fromJson<String>(
+        json['displayNameSnapshot'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'sourceParticipantId': serializer.toJson<String>(sourceParticipantId),
+      'displayNameSnapshot': serializer.toJson<String>(displayNameSnapshot),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'clearedAt': serializer.toJson<DateTime?>(clearedAt),
+    };
+  }
+
+  HousingInactiveParticipant copyWith({
+    String? id,
+    String? planId,
+    String? sourceParticipantId,
+    String? displayNameSnapshot,
+    DateTime? createdAt,
+    Value<DateTime?> clearedAt = const Value.absent(),
+  }) => HousingInactiveParticipant(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    sourceParticipantId: sourceParticipantId ?? this.sourceParticipantId,
+    displayNameSnapshot: displayNameSnapshot ?? this.displayNameSnapshot,
+    createdAt: createdAt ?? this.createdAt,
+    clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
+  );
+  HousingInactiveParticipant copyWithCompanion(
+    HousingInactiveParticipantsCompanion data,
+  ) {
+    return HousingInactiveParticipant(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      sourceParticipantId: data.sourceParticipantId.present
+          ? data.sourceParticipantId.value
+          : this.sourceParticipantId,
+      displayNameSnapshot: data.displayNameSnapshot.present
+          ? data.displayNameSnapshot.value
+          : this.displayNameSnapshot,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingInactiveParticipant(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('sourceParticipantId: $sourceParticipantId, ')
+          ..write('displayNameSnapshot: $displayNameSnapshot, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    planId,
+    sourceParticipantId,
+    displayNameSnapshot,
+    createdAt,
+    clearedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousingInactiveParticipant &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.sourceParticipantId == this.sourceParticipantId &&
+          other.displayNameSnapshot == this.displayNameSnapshot &&
+          other.createdAt == this.createdAt &&
+          other.clearedAt == this.clearedAt);
+}
+
+class HousingInactiveParticipantsCompanion
+    extends UpdateCompanion<HousingInactiveParticipant> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> sourceParticipantId;
+  final Value<String> displayNameSnapshot;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> clearedAt;
+  final Value<int> rowid;
+  const HousingInactiveParticipantsCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.sourceParticipantId = const Value.absent(),
+    this.displayNameSnapshot = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.clearedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousingInactiveParticipantsCompanion.insert({
+    required String id,
+    required String planId,
+    required String sourceParticipantId,
+    required String displayNameSnapshot,
+    required DateTime createdAt,
+    this.clearedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       sourceParticipantId = Value(sourceParticipantId),
+       displayNameSnapshot = Value(displayNameSnapshot),
+       createdAt = Value(createdAt);
+  static Insertable<HousingInactiveParticipant> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? sourceParticipantId,
+    Expression<String>? displayNameSnapshot,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? clearedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (sourceParticipantId != null)
+        'source_participant_id': sourceParticipantId,
+      if (displayNameSnapshot != null)
+        'display_name_snapshot': displayNameSnapshot,
+      if (createdAt != null) 'created_at': createdAt,
+      if (clearedAt != null) 'cleared_at': clearedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousingInactiveParticipantsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String>? sourceParticipantId,
+    Value<String>? displayNameSnapshot,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? clearedAt,
+    Value<int>? rowid,
+  }) {
+    return HousingInactiveParticipantsCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      sourceParticipantId: sourceParticipantId ?? this.sourceParticipantId,
+      displayNameSnapshot: displayNameSnapshot ?? this.displayNameSnapshot,
+      createdAt: createdAt ?? this.createdAt,
+      clearedAt: clearedAt ?? this.clearedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (sourceParticipantId.present) {
+      map['source_participant_id'] = Variable<String>(
+        sourceParticipantId.value,
+      );
+    }
+    if (displayNameSnapshot.present) {
+      map['display_name_snapshot'] = Variable<String>(
+        displayNameSnapshot.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (clearedAt.present) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingInactiveParticipantsCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('sourceParticipantId: $sourceParticipantId, ')
+          ..write('displayNameSnapshot: $displayNameSnapshot, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('clearedAt: $clearedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -10166,6 +12043,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RealizedExpenseAcceptancesTable(this);
   late final $ArchivedPlanLineSnapshotsTable archivedPlanLineSnapshots =
       $ArchivedPlanLineSnapshotsTable(this);
+  late final $HousingParticipationChangesTable housingParticipationChanges =
+      $HousingParticipationChangesTable(this);
+  late final $HousingParticipationDecisionsTable housingParticipationDecisions =
+      $HousingParticipationDecisionsTable(this);
+  late final $HousingPlanMembershipsTable housingPlanMemberships =
+      $HousingPlanMembershipsTable(this);
+  late final $HousingInactiveParticipantsTable housingInactiveParticipants =
+      $HousingInactiveParticipantsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10189,6 +12074,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     realizedExpenseAttachments,
     realizedExpenseAcceptances,
     archivedPlanLineSnapshots,
+    housingParticipationChanges,
+    housingParticipationDecisions,
+    housingPlanMemberships,
+    housingInactiveParticipants,
   ];
 }
 
@@ -15240,6 +17129,1014 @@ typedef $$ArchivedPlanLineSnapshotsTableProcessedTableManager =
       ArchivedPlanLineSnapshot,
       PrefetchHooks Function()
     >;
+typedef $$HousingParticipationChangesTableCreateCompanionBuilder =
+    HousingParticipationChangesCompanion Function({
+      required String id,
+      required String planId,
+      required String packageId,
+      required String kind,
+      required String initiatorParticipantId,
+      Value<String?> targetParticipantId,
+      Value<DateTime?> departureDate,
+      required String status,
+      required DateTime createdAt,
+      Value<DateTime?> settledAt,
+      Value<int> rowid,
+    });
+typedef $$HousingParticipationChangesTableUpdateCompanionBuilder =
+    HousingParticipationChangesCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String> packageId,
+      Value<String> kind,
+      Value<String> initiatorParticipantId,
+      Value<String?> targetParticipantId,
+      Value<DateTime?> departureDate,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<DateTime?> settledAt,
+      Value<int> rowid,
+    });
+
+class $$HousingParticipationChangesTableFilterComposer
+    extends Composer<_$AppDatabase, $HousingParticipationChangesTable> {
+  $$HousingParticipationChangesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get initiatorParticipantId => $composableBuilder(
+    column: $table.initiatorParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetParticipantId => $composableBuilder(
+    column: $table.targetParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get departureDate => $composableBuilder(
+    column: $table.departureDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousingParticipationChangesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousingParticipationChangesTable> {
+  $$HousingParticipationChangesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get packageId => $composableBuilder(
+    column: $table.packageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get initiatorParticipantId => $composableBuilder(
+    column: $table.initiatorParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetParticipantId => $composableBuilder(
+    column: $table.targetParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get departureDate => $composableBuilder(
+    column: $table.departureDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousingParticipationChangesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousingParticipationChangesTable> {
+  $$HousingParticipationChangesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get packageId =>
+      $composableBuilder(column: $table.packageId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get initiatorParticipantId => $composableBuilder(
+    column: $table.initiatorParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get targetParticipantId => $composableBuilder(
+    column: $table.targetParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get departureDate => $composableBuilder(
+    column: $table.departureDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get settledAt =>
+      $composableBuilder(column: $table.settledAt, builder: (column) => column);
+}
+
+class $$HousingParticipationChangesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousingParticipationChangesTable,
+          HousingParticipationChange,
+          $$HousingParticipationChangesTableFilterComposer,
+          $$HousingParticipationChangesTableOrderingComposer,
+          $$HousingParticipationChangesTableAnnotationComposer,
+          $$HousingParticipationChangesTableCreateCompanionBuilder,
+          $$HousingParticipationChangesTableUpdateCompanionBuilder,
+          (
+            HousingParticipationChange,
+            BaseReferences<
+              _$AppDatabase,
+              $HousingParticipationChangesTable,
+              HousingParticipationChange
+            >,
+          ),
+          HousingParticipationChange,
+          PrefetchHooks Function()
+        > {
+  $$HousingParticipationChangesTableTableManager(
+    _$AppDatabase db,
+    $HousingParticipationChangesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousingParticipationChangesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousingParticipationChangesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousingParticipationChangesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> packageId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> initiatorParticipantId = const Value.absent(),
+                Value<String?> targetParticipantId = const Value.absent(),
+                Value<DateTime?> departureDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> settledAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingParticipationChangesCompanion(
+                id: id,
+                planId: planId,
+                packageId: packageId,
+                kind: kind,
+                initiatorParticipantId: initiatorParticipantId,
+                targetParticipantId: targetParticipantId,
+                departureDate: departureDate,
+                status: status,
+                createdAt: createdAt,
+                settledAt: settledAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                required String packageId,
+                required String kind,
+                required String initiatorParticipantId,
+                Value<String?> targetParticipantId = const Value.absent(),
+                Value<DateTime?> departureDate = const Value.absent(),
+                required String status,
+                required DateTime createdAt,
+                Value<DateTime?> settledAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingParticipationChangesCompanion.insert(
+                id: id,
+                planId: planId,
+                packageId: packageId,
+                kind: kind,
+                initiatorParticipantId: initiatorParticipantId,
+                targetParticipantId: targetParticipantId,
+                departureDate: departureDate,
+                status: status,
+                createdAt: createdAt,
+                settledAt: settledAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousingParticipationChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousingParticipationChangesTable,
+      HousingParticipationChange,
+      $$HousingParticipationChangesTableFilterComposer,
+      $$HousingParticipationChangesTableOrderingComposer,
+      $$HousingParticipationChangesTableAnnotationComposer,
+      $$HousingParticipationChangesTableCreateCompanionBuilder,
+      $$HousingParticipationChangesTableUpdateCompanionBuilder,
+      (
+        HousingParticipationChange,
+        BaseReferences<
+          _$AppDatabase,
+          $HousingParticipationChangesTable,
+          HousingParticipationChange
+        >,
+      ),
+      HousingParticipationChange,
+      PrefetchHooks Function()
+    >;
+typedef $$HousingParticipationDecisionsTableCreateCompanionBuilder =
+    HousingParticipationDecisionsCompanion Function({
+      required String changeId,
+      required String participantId,
+      required String status,
+      Value<DateTime?> decidedAt,
+      Value<int> rowid,
+    });
+typedef $$HousingParticipationDecisionsTableUpdateCompanionBuilder =
+    HousingParticipationDecisionsCompanion Function({
+      Value<String> changeId,
+      Value<String> participantId,
+      Value<String> status,
+      Value<DateTime?> decidedAt,
+      Value<int> rowid,
+    });
+
+class $$HousingParticipationDecisionsTableFilterComposer
+    extends Composer<_$AppDatabase, $HousingParticipationDecisionsTable> {
+  $$HousingParticipationDecisionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get changeId => $composableBuilder(
+    column: $table.changeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousingParticipationDecisionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousingParticipationDecisionsTable> {
+  $$HousingParticipationDecisionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get changeId => $composableBuilder(
+    column: $table.changeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousingParticipationDecisionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousingParticipationDecisionsTable> {
+  $$HousingParticipationDecisionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get changeId =>
+      $composableBuilder(column: $table.changeId, builder: (column) => column);
+
+  GeneratedColumn<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get decidedAt =>
+      $composableBuilder(column: $table.decidedAt, builder: (column) => column);
+}
+
+class $$HousingParticipationDecisionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousingParticipationDecisionsTable,
+          HousingParticipationDecision,
+          $$HousingParticipationDecisionsTableFilterComposer,
+          $$HousingParticipationDecisionsTableOrderingComposer,
+          $$HousingParticipationDecisionsTableAnnotationComposer,
+          $$HousingParticipationDecisionsTableCreateCompanionBuilder,
+          $$HousingParticipationDecisionsTableUpdateCompanionBuilder,
+          (
+            HousingParticipationDecision,
+            BaseReferences<
+              _$AppDatabase,
+              $HousingParticipationDecisionsTable,
+              HousingParticipationDecision
+            >,
+          ),
+          HousingParticipationDecision,
+          PrefetchHooks Function()
+        > {
+  $$HousingParticipationDecisionsTableTableManager(
+    _$AppDatabase db,
+    $HousingParticipationDecisionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousingParticipationDecisionsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousingParticipationDecisionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousingParticipationDecisionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> changeId = const Value.absent(),
+                Value<String> participantId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingParticipationDecisionsCompanion(
+                changeId: changeId,
+                participantId: participantId,
+                status: status,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String changeId,
+                required String participantId,
+                required String status,
+                Value<DateTime?> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingParticipationDecisionsCompanion.insert(
+                changeId: changeId,
+                participantId: participantId,
+                status: status,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousingParticipationDecisionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousingParticipationDecisionsTable,
+      HousingParticipationDecision,
+      $$HousingParticipationDecisionsTableFilterComposer,
+      $$HousingParticipationDecisionsTableOrderingComposer,
+      $$HousingParticipationDecisionsTableAnnotationComposer,
+      $$HousingParticipationDecisionsTableCreateCompanionBuilder,
+      $$HousingParticipationDecisionsTableUpdateCompanionBuilder,
+      (
+        HousingParticipationDecision,
+        BaseReferences<
+          _$AppDatabase,
+          $HousingParticipationDecisionsTable,
+          HousingParticipationDecision
+        >,
+      ),
+      HousingParticipationDecision,
+      PrefetchHooks Function()
+    >;
+typedef $$HousingPlanMembershipsTableCreateCompanionBuilder =
+    HousingPlanMembershipsCompanion Function({
+      required String planId,
+      required String participantId,
+      required String status,
+      Value<DateTime?> departedAt,
+      Value<String?> departureKind,
+      Value<String?> changeId,
+      Value<int> rowid,
+    });
+typedef $$HousingPlanMembershipsTableUpdateCompanionBuilder =
+    HousingPlanMembershipsCompanion Function({
+      Value<String> planId,
+      Value<String> participantId,
+      Value<String> status,
+      Value<DateTime?> departedAt,
+      Value<String?> departureKind,
+      Value<String?> changeId,
+      Value<int> rowid,
+    });
+
+class $$HousingPlanMembershipsTableFilterComposer
+    extends Composer<_$AppDatabase, $HousingPlanMembershipsTable> {
+  $$HousingPlanMembershipsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get departedAt => $composableBuilder(
+    column: $table.departedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get departureKind => $composableBuilder(
+    column: $table.departureKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get changeId => $composableBuilder(
+    column: $table.changeId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousingPlanMembershipsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousingPlanMembershipsTable> {
+  $$HousingPlanMembershipsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get departedAt => $composableBuilder(
+    column: $table.departedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get departureKind => $composableBuilder(
+    column: $table.departureKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get changeId => $composableBuilder(
+    column: $table.changeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousingPlanMembershipsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousingPlanMembershipsTable> {
+  $$HousingPlanMembershipsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get departedAt => $composableBuilder(
+    column: $table.departedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get departureKind => $composableBuilder(
+    column: $table.departureKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get changeId =>
+      $composableBuilder(column: $table.changeId, builder: (column) => column);
+}
+
+class $$HousingPlanMembershipsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousingPlanMembershipsTable,
+          HousingPlanMembership,
+          $$HousingPlanMembershipsTableFilterComposer,
+          $$HousingPlanMembershipsTableOrderingComposer,
+          $$HousingPlanMembershipsTableAnnotationComposer,
+          $$HousingPlanMembershipsTableCreateCompanionBuilder,
+          $$HousingPlanMembershipsTableUpdateCompanionBuilder,
+          (
+            HousingPlanMembership,
+            BaseReferences<
+              _$AppDatabase,
+              $HousingPlanMembershipsTable,
+              HousingPlanMembership
+            >,
+          ),
+          HousingPlanMembership,
+          PrefetchHooks Function()
+        > {
+  $$HousingPlanMembershipsTableTableManager(
+    _$AppDatabase db,
+    $HousingPlanMembershipsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousingPlanMembershipsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousingPlanMembershipsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousingPlanMembershipsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> planId = const Value.absent(),
+                Value<String> participantId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> departedAt = const Value.absent(),
+                Value<String?> departureKind = const Value.absent(),
+                Value<String?> changeId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingPlanMembershipsCompanion(
+                planId: planId,
+                participantId: participantId,
+                status: status,
+                departedAt: departedAt,
+                departureKind: departureKind,
+                changeId: changeId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String planId,
+                required String participantId,
+                required String status,
+                Value<DateTime?> departedAt = const Value.absent(),
+                Value<String?> departureKind = const Value.absent(),
+                Value<String?> changeId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingPlanMembershipsCompanion.insert(
+                planId: planId,
+                participantId: participantId,
+                status: status,
+                departedAt: departedAt,
+                departureKind: departureKind,
+                changeId: changeId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousingPlanMembershipsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousingPlanMembershipsTable,
+      HousingPlanMembership,
+      $$HousingPlanMembershipsTableFilterComposer,
+      $$HousingPlanMembershipsTableOrderingComposer,
+      $$HousingPlanMembershipsTableAnnotationComposer,
+      $$HousingPlanMembershipsTableCreateCompanionBuilder,
+      $$HousingPlanMembershipsTableUpdateCompanionBuilder,
+      (
+        HousingPlanMembership,
+        BaseReferences<
+          _$AppDatabase,
+          $HousingPlanMembershipsTable,
+          HousingPlanMembership
+        >,
+      ),
+      HousingPlanMembership,
+      PrefetchHooks Function()
+    >;
+typedef $$HousingInactiveParticipantsTableCreateCompanionBuilder =
+    HousingInactiveParticipantsCompanion Function({
+      required String id,
+      required String planId,
+      required String sourceParticipantId,
+      required String displayNameSnapshot,
+      required DateTime createdAt,
+      Value<DateTime?> clearedAt,
+      Value<int> rowid,
+    });
+typedef $$HousingInactiveParticipantsTableUpdateCompanionBuilder =
+    HousingInactiveParticipantsCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String> sourceParticipantId,
+      Value<String> displayNameSnapshot,
+      Value<DateTime> createdAt,
+      Value<DateTime?> clearedAt,
+      Value<int> rowid,
+    });
+
+class $$HousingInactiveParticipantsTableFilterComposer
+    extends Composer<_$AppDatabase, $HousingInactiveParticipantsTable> {
+  $$HousingInactiveParticipantsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceParticipantId => $composableBuilder(
+    column: $table.sourceParticipantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayNameSnapshot => $composableBuilder(
+    column: $table.displayNameSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousingInactiveParticipantsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousingInactiveParticipantsTable> {
+  $$HousingInactiveParticipantsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceParticipantId => $composableBuilder(
+    column: $table.sourceParticipantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayNameSnapshot => $composableBuilder(
+    column: $table.displayNameSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousingInactiveParticipantsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousingInactiveParticipantsTable> {
+  $$HousingInactiveParticipantsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceParticipantId => $composableBuilder(
+    column: $table.sourceParticipantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get displayNameSnapshot => $composableBuilder(
+    column: $table.displayNameSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get clearedAt =>
+      $composableBuilder(column: $table.clearedAt, builder: (column) => column);
+}
+
+class $$HousingInactiveParticipantsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousingInactiveParticipantsTable,
+          HousingInactiveParticipant,
+          $$HousingInactiveParticipantsTableFilterComposer,
+          $$HousingInactiveParticipantsTableOrderingComposer,
+          $$HousingInactiveParticipantsTableAnnotationComposer,
+          $$HousingInactiveParticipantsTableCreateCompanionBuilder,
+          $$HousingInactiveParticipantsTableUpdateCompanionBuilder,
+          (
+            HousingInactiveParticipant,
+            BaseReferences<
+              _$AppDatabase,
+              $HousingInactiveParticipantsTable,
+              HousingInactiveParticipant
+            >,
+          ),
+          HousingInactiveParticipant,
+          PrefetchHooks Function()
+        > {
+  $$HousingInactiveParticipantsTableTableManager(
+    _$AppDatabase db,
+    $HousingInactiveParticipantsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousingInactiveParticipantsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousingInactiveParticipantsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousingInactiveParticipantsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> sourceParticipantId = const Value.absent(),
+                Value<String> displayNameSnapshot = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingInactiveParticipantsCompanion(
+                id: id,
+                planId: planId,
+                sourceParticipantId: sourceParticipantId,
+                displayNameSnapshot: displayNameSnapshot,
+                createdAt: createdAt,
+                clearedAt: clearedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                required String sourceParticipantId,
+                required String displayNameSnapshot,
+                required DateTime createdAt,
+                Value<DateTime?> clearedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingInactiveParticipantsCompanion.insert(
+                id: id,
+                planId: planId,
+                sourceParticipantId: sourceParticipantId,
+                displayNameSnapshot: displayNameSnapshot,
+                createdAt: createdAt,
+                clearedAt: clearedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousingInactiveParticipantsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousingInactiveParticipantsTable,
+      HousingInactiveParticipant,
+      $$HousingInactiveParticipantsTableFilterComposer,
+      $$HousingInactiveParticipantsTableOrderingComposer,
+      $$HousingInactiveParticipantsTableAnnotationComposer,
+      $$HousingInactiveParticipantsTableCreateCompanionBuilder,
+      $$HousingInactiveParticipantsTableUpdateCompanionBuilder,
+      (
+        HousingInactiveParticipant,
+        BaseReferences<
+          _$AppDatabase,
+          $HousingInactiveParticipantsTable,
+          HousingInactiveParticipant
+        >,
+      ),
+      HousingInactiveParticipant,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -15293,5 +18190,28 @@ class $AppDatabaseManager {
       $$ArchivedPlanLineSnapshotsTableTableManager(
         _db,
         _db.archivedPlanLineSnapshots,
+      );
+  $$HousingParticipationChangesTableTableManager
+  get housingParticipationChanges =>
+      $$HousingParticipationChangesTableTableManager(
+        _db,
+        _db.housingParticipationChanges,
+      );
+  $$HousingParticipationDecisionsTableTableManager
+  get housingParticipationDecisions =>
+      $$HousingParticipationDecisionsTableTableManager(
+        _db,
+        _db.housingParticipationDecisions,
+      );
+  $$HousingPlanMembershipsTableTableManager get housingPlanMemberships =>
+      $$HousingPlanMembershipsTableTableManager(
+        _db,
+        _db.housingPlanMemberships,
+      );
+  $$HousingInactiveParticipantsTableTableManager
+  get housingInactiveParticipants =>
+      $$HousingInactiveParticipantsTableTableManager(
+        _db,
+        _db.housingInactiveParticipants,
       );
 }

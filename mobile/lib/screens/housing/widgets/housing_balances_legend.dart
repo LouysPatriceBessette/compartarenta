@@ -86,6 +86,7 @@ final class _LegendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     return Material(
       color: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -104,7 +105,7 @@ final class _LegendRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${participant.letter} - ${participant.displayName}',
+                  '${participant.letter} - ${participant.displayName}${participant.isInactive ? ' ${l10n.housingBalancesInactiveMarker}' : ''}',
                   style: textTheme.titleSmall,
                 ),
               ],
