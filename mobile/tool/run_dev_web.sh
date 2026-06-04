@@ -248,6 +248,7 @@ echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Fl
 ./tool/flutterw run \
   -d chrome \
   "${web_port_args[@]}" \
+  --no-web-resources-cdn \
   --web-header=Cross-Origin-Opener-Policy=same-origin \
   --web-header=Cross-Origin-Embedder-Policy=require-corp \
   --dart-define=ENV=dev \

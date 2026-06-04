@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -5,11 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_expense_preview.dart';
+import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../housing/amendment/housing_amendment_settlement.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
+import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../housing/housing_response_deadline_display.dart';
+import '../../housing/housing_plan_peer_contacts.dart';
 import '../../housing/proposals/housing_proposal_revision_state.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -19,6 +23,8 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import 'housing_invitation_status_dialog.dart';
+import 'housing_invite_proposal_screen.dart';
+import 'housing_plan_missing_contacts_screen.dart';
 
 /// Focused view of a single in-force plan change awaiting unanimous response.
 class HousingAmendmentDetailScreen extends StatefulWidget {
@@ -49,7 +55,81 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
   @override
   void initState() {
     super.initState();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
+  }
+
+  @override
+  void dispose() {
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_reload());
+    });
+  }
+
+  void _openMissingContactsHub() {
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => HousingPlanMissingContactsScreen(
+              db: widget.db,
+              planId: widget.planId,
+            ),
+          ),
+        )
+        .then((_) {
+          if (!mounted) return;
+          unawaited(_reload());
+        });
+  }
+
+  /// When the pending revision closed (e.g. unanimous activation), leave this
+  /// screen instead of showing a dead-end error.
+  Future<bool> _routeAwayIfPendingClosed() async {
+    final transport = HousingProposalTransportService(widget.db);
+    await transport.reconcileStalePackagePending(widget.planId);
+    if (!mounted) return true;
+
+    if (await openHousingActivePlanHubIfActive(
+      context,
+      db: widget.db,
+      planId: widget.planId,
+      prefs: widget.prefs,
+    )) {
+      return true;
+    }
+
+    final pendingId = await transport.pendingRevisionIdForPlan(widget.planId);
+    if (pendingId != null &&
+        !await pendingRevisionIsAmendment(
+          widget.db,
+          widget.planId,
+          revisionId: pendingId,
+        )) {
+      if (!mounted) return true;
+      await Navigator.of(context).pushReplacement<void, void>(
+        MaterialPageRoute<void>(
+          builder: (_) => HousingInviteProposalScreen(
+            db: widget.db,
+            planId: widget.planId,
+            prefs: widget.prefs,
+            revisionId: pendingId,
+          ),
+        ),
+      );
+      return true;
+    }
+    return false;
   }
 
   Future<void> _reload() async {
@@ -75,9 +155,11 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
       if (!mounted) return;
 
       if (summary == null) {
+        if (await _routeAwayIfPendingClosed()) return;
         setState(() {
           _loading = false;
-          _loadFailed = _payload == null;
+          _loadFailed = true;
+          _payload = null;
         });
         return;
       }
@@ -149,12 +231,18 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
         }
       }
 
+      final missingPeerContacts = await listMissingPlanPeerContacts(
+        db: widget.db,
+        planId: widget.planId,
+      );
+
       if (!mounted) return;
       setState(() {
         _payload = _AmendmentDetailPayload(
           summary: summary,
           selfParticipantId: selfId,
           selfStatus: selfStatus,
+          missingPeerContacts: missingPeerContacts,
           settledAccepted: settledAccepted,
           settledActorName: settledActorName,
           settledAt: settledAt,
@@ -166,9 +254,11 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
     } catch (e, st) {
       debugPrint('housing amendment detail load failed: $e\n$st');
       if (!mounted) return;
+      if (await _routeAwayIfPendingClosed()) return;
       setState(() {
         _loading = false;
-        _loadFailed = _payload == null;
+        _loadFailed = true;
+        _payload = null;
       });
     }
   }
@@ -180,6 +270,20 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
     final l10n = AppLocalizations.of(context);
     final revisionId = _payload?.summary.revisionId;
     if (revisionId == null) return;
+
+    if (status == ProposalResponseStatus.accepted) {
+      final missing = await listMissingPlanPeerContacts(
+        db: widget.db,
+        planId: widget.planId,
+      );
+      if (!mounted) return;
+      if (missing.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.housingInviteMissingContactsBlocked)),
+        );
+        return;
+      }
+    }
 
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator == null) {
@@ -247,9 +351,11 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
         return;
       }
       if (status == ProposalResponseStatus.negotiate) {
-        context.go('/');
+        if (mounted) context.go('/');
         return;
       }
+      if (await _routeAwayIfPendingClosed()) return;
+      if (!mounted) return;
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
@@ -260,8 +366,11 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
         );
       }
       if (!mounted) return;
+      final message = e.code == 'plan_missing_peer_contacts'
+          ? l10n.housingInviteMissingContactsBlocked
+          : l10n.housingPlanCouldNotContinue(e.code);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.housingPlanCouldNotContinue(e.code))),
+        SnackBar(content: Text(message)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -443,10 +552,20 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                   if (!isProposer && canRespond) ...[
                     const SizedBox(height: 32),
                     FilledButton(
-                      onPressed: () => _submitResponse(
-                        ProposalResponseStatus.accepted,
+                      onPressed: () {
+                        if (data.missingPeerContacts.isNotEmpty) {
+                          _openMissingContactsHub();
+                          return;
+                        }
+                        unawaited(
+                          _submitResponse(ProposalResponseStatus.accepted),
+                        );
+                      },
+                      child: Text(
+                        data.missingPeerContacts.isEmpty
+                            ? l10n.housingAmendmentAccept
+                            : l10n.housingInviteMissingContactsAction,
                       ),
-                      child: Text(l10n.housingAmendmentAccept),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
@@ -546,6 +665,7 @@ class _AmendmentDetailPayload {
     required this.summary,
     required this.selfParticipantId,
     required this.selfStatus,
+    required this.missingPeerContacts,
     this.settledAccepted,
     this.settledActorName,
     this.settledAt,
@@ -555,6 +675,7 @@ class _AmendmentDetailPayload {
   final HousingAmendmentSummary summary;
   final String selfParticipantId;
   final String selfStatus;
+  final List<Participant> missingPeerContacts;
   final bool? settledAccepted;
   final String? settledActorName;
   final DateTime? settledAt;

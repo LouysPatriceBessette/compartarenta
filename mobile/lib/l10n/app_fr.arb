@@ -614,6 +614,20 @@
   "housingInviteStatusNegotiating": "En négociation",
   "housingInviteStatusRejected": "Rejeté",
   "housingInviteAcceptFull": "J'accepte en totalité",
+  "housingInviteMissingContactsAction": "Contacts manquants",
+  "housingInviteMissingContactsRedeemBanner": "Pour accepter ce plan, connectez-vous d'abord avec {name}. Saisissez son code d'invitation ci-dessous.",
+  "@housingInviteMissingContactsRedeemBanner": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingInviteMissingContactsBlocked": "Connectez-vous avec chaque co-participant avant de pouvoir accepter.",
+  "housingPlanMissingContactsTitle": "Contacts du plan",
+  "housingPlanMissingContactsIntro": "Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Utilisez un code d'invitation dans un sens ou l'autre.",
+  "housingPlanMissingContactsEmpty": "Ce plan n'a pas d'autre participant sur cet appareil.",
+  "housingPlanMissingContactsAllReady": "Tous les co-participants sont connectés. Vous pouvez revenir en arrière et accepter le plan.",
+  "housingPlanMissingContactsCreateInvitation": "Créer une invitation",
+  "housingPlanMissingContactsEnterCode": "Saisir le code d'invitation",
   "housingInviteNegotiate": "J'aimerais négocier",
   "housingInviteRejectBlock": "Je refuse en bloc",
   "housingInviteNegotiateMessageLabel": "Message à envoyer avec la demande de négociation",

@@ -473,6 +473,47 @@ void main() {
     expect(incoming.length, 1);
     expect(incoming.single.peerDisplayName, 'Invitee Name');
   });
+
+  test(
+    'redeem survives post timeout when hello was stored on relay',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final parsed = parseInvitationCode(invite.shortCode);
+      expect(parsed, isA<InvitationCodeOk>());
+      final code = (parsed as InvitationCodeOk).code;
+
+      relay.timeoutAfterPostOnce = true;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      expect(relay.envelopeCount, 1);
+      expect(invitee.notifications.addRequestFailures, isEmpty);
+
+      await inviter.orchestrator.processAllPendingHandshakes();
+      final incoming = inviter.orchestrator.incomingHandshakes.value.single;
+      await inviter.orchestrator.acceptIncoming(
+        incoming.handshakeId,
+        selfDisplayName: 'Inviter Self-Name',
+        selfAvatarId: 'mdi:inviter-avatar',
+      );
+
+      await invitee.orchestrator.processAllPendingHandshakes();
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.completed,
+      );
+      expect(
+        invitee.notifications.addRequestResolutions,
+        [(displayName: 'Inviter Self-Name', accepted: true)],
+      );
+    },
+  );
 }
 
 List<int> _hexDecode(String hex) {

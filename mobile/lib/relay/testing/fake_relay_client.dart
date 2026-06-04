@@ -30,6 +30,10 @@ class FakeRelayClient implements RelayClient {
   /// One-shot timeout to inject on the next call to any endpoint.
   bool timeoutOnce = false;
 
+  /// One-shot: store the envelope, then throw [TimeoutException] (simulates
+  /// the relay accepting POST while the HTTP client times out).
+  bool timeoutAfterPostOnce = false;
+
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
   List<FakeRelayStoredEnvelope> get storedEnvelopes =>
@@ -98,6 +102,10 @@ class FakeRelayClient implements RelayClient {
       createdAt: now,
       ttlExpiresAt: now.add(ttl),
     ));
+    if (timeoutAfterPostOnce) {
+      timeoutAfterPostOnce = false;
+      throw TimeoutException('injected after post');
+    }
     return EnvelopeReceipt(
       envelopeId: id,
       ttlExpiresAt: now.add(ttl),

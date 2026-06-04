@@ -23,3 +23,27 @@ Do **not** change code as a speculative “maybe this fixes it” patch.
 - If the evidence points to **corrupt / inconsistent data**, prefer fixing the data lifecycle (import/activation, persistence, routing) over adding UI workarounds.
 - When unsure, pause and gather missing evidence rather than “trying a quick fix”.
 
+## Manual test and recovery steps (verify in code first)
+
+Do **not** tell the user to repeat a UI action, use a workaround, or “re-trigger” sync unless you have **read the current code path** and confirmed all of the following:
+
+1. **Availability** — The control exists in their state (e.g. `housingParticipantMayRespond` requires `pending`; accept is not offered after `accepted`; resend requires `canResendPendingProposal` / author + open revision; active plan gates hide response buttons).
+2. **Effect** — The action would actually produce the outcome you claim (e.g. `sendHousingProposalResponse` only runs when the user can respond; it does not silently replay an already-recorded acceptance; resend re-posts the **proposal**, not past **responses**).
+
+Use `grep` / `Read` on the relevant screen, orchestrator, and proposal service **before** writing retest steps—not from habit or other products.
+
+### Forward-only fixes
+
+When a bug was **missing relay delivery** or **one-way sync**, the fix often applies only to **new** envelopes after deploy:
+
+- State **already recorded locally** (e.g. Ròberr `accepted` on his device) may stay **unseen** on peers who never received the old message.
+- Do **not** suggest “accept again” or “resend the proposal” as a generic repair unless code shows that path is open **in that situation**.
+
+Say explicitly: **no in-app replay for that past event; continue the scenario or use fresh DBs to validate forward behavior.**
+
+Valid continuations without inventing UI: another participant still **pending** can accept (delivering new responses); user **resets test data**; a **dev-only** path documented in repo—never a guessed button.
+
+### When you were wrong
+
+If the user reports a suggested step is impossible, accept it, drop the step, and cite the gate you should have read (briefly). Do not rephrase the same bad advice.
+

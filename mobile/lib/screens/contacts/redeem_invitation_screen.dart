@@ -21,11 +21,19 @@ import '../../util/display_date.dart';
 /// [HandshakeOrchestrator]. The accepted/rejected outcome is surfaced
 /// later by the orchestrator's poller (see `ContactsListScreen`).
 class RedeemInvitationScreen extends StatefulWidget {
-  const RedeemInvitationScreen({super.key, this.initialInvitationUri});
+  const RedeemInvitationScreen({
+    super.key,
+    this.initialInvitationUri,
+    this.housingMissingParticipantName,
+  });
 
   /// Full `compartarenta://contact/invite?...` URI from an app link
   /// ([GoRouterState.extra]) or tests.
   final String? initialInvitationUri;
+
+  /// When opened from a housing proposal, names the co-participant to connect
+  /// with (invitation code still required from that person).
+  final String? housingMissingParticipantName;
 
   @override
   State<RedeemInvitationScreen> createState() => _RedeemInvitationScreenState();
@@ -329,6 +337,21 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.housingMissingParticipantName != null &&
+                  widget.housingMissingParticipantName!.trim().isNotEmpty) ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      l10n.housingInviteMissingContactsRedeemBanner(
+                        widget.housingMissingParticipantName!.trim(),
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Text(
                 l10n.contactsEnterInviteCodeIntro,
                 style: Theme.of(context).textTheme.bodyMedium,

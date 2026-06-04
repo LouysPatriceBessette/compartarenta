@@ -679,6 +679,20 @@
   "housingInviteStatusNegotiating": "In negotiation",
   "housingInviteStatusRejected": "Rejected",
   "housingInviteAcceptFull": "I accept in full",
+  "housingInviteMissingContactsAction": "Missing contacts",
+  "housingInviteMissingContactsRedeemBanner": "To accept this plan, connect with {name} first. Enter their invitation code below.",
+  "@housingInviteMissingContactsRedeemBanner": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "housingInviteMissingContactsBlocked": "Connect with every co-participant before you can accept.",
+  "housingPlanMissingContactsTitle": "Plan contacts",
+  "housingPlanMissingContactsIntro": "Each co-participant must be a connected contact on this device before you can accept the plan. Use an invitation code in either direction.",
+  "housingPlanMissingContactsEmpty": "This plan has no other participants on this device.",
+  "housingPlanMissingContactsAllReady": "Every co-participant is connected. You can go back and accept the plan.",
+  "housingPlanMissingContactsCreateInvitation": "Create invitation",
+  "housingPlanMissingContactsEnterCode": "Enter invitation code",
   "housingInviteNegotiate": "I would like to negotiate",
   "housingInviteRejectBlock": "I reject outright",
   "housingInviteNegotiateMessageLabel": "Message to send with your negotiation request",

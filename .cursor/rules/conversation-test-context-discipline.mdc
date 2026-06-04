@@ -45,6 +45,25 @@ Treat symptoms as **regressions or gaps in the current build and flow**, and inv
 - Do not thank the user for “precision” on facts they already gave earlier in the same arc.
 - When wrong, acknowledge briefly and continue from the **corrected** model.
 
+## Do not improvise operational steps
+
+Thread facts are binding for what you suggest next:
+
+| User already said | Do not suggest (without code proof) |
+| --- | --- |
+| Participant **already accepted** | That they accept again |
+| Plan **active** for some roles | Resending the same open proposal as a sync fix |
+| **No change** after restart alone | That restart replays missed relay traffic |
+
+Before any multi-device retest checklist, **grep/read** gates (`housingParticipantMayRespond`, `canResendPendingProposal`, `lifecycleState`, `hasActivePlan`, broadcast/send helpers). If you have not read them this turn, do not list UI steps—say what you need to verify or recommend **fresh DB** / **next pending actor** only.
+
+After shipping a transport fix, default guidance: **forward behavior** is what the change proves; **stale partial state** from the pre-fix run may need fresh data—not fictional replays.
+
+## Delivery wording
+
+- Prefer: “With the fix, the next acceptance/response should reach all connected co-participants; your current DB may still lack R’s earlier accept on L’s device—fresh DBs confirm end-to-end.”
+- Avoid: numbered steps that assume buttons exist when the user already closed that branch.
+
 ## Practical default (Compartarenta housing QA)
 
 On **fresh data** in this thread: prioritize routing, amendment detection, relay delivery, and UI entry; use duplicate-plan hypotheses only when **this run** shows two meaningful plans—not as a default excuse.

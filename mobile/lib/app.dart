@@ -27,6 +27,7 @@ import 'screens/contacts/contacts_list_screen.dart';
 import 'screens/contacts/generate_invitation_screen.dart';
 import 'screens/contacts/incoming_handshakes_screen.dart';
 import 'screens/contacts/outstanding_invitations_screen.dart';
+import 'housing/housing_plan_peer_contacts.dart';
 import 'screens/contacts/redeem_invitation_screen.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'notifications/closed_app_push_registration_service.dart';
@@ -400,6 +401,11 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
             path: 'redeem',
             builder: (context, state) {
               final extra = state.extra;
+              if (extra is HousingMissingContactRedeemArgs) {
+                return RedeemInvitationScreen(
+                  housingMissingParticipantName: extra.displayName,
+                );
+              }
               final initial = extra is String ? extra : null;
               return RedeemInvitationScreen(initialInvitationUri: initial);
             },

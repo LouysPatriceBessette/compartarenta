@@ -2788,6 +2788,60 @@ abstract class AppLocalizations {
   /// **'I accept in full'**
   String get housingInviteAcceptFull;
 
+  /// No description provided for @housingInviteMissingContactsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing contacts'**
+  String get housingInviteMissingContactsAction;
+
+  /// No description provided for @housingInviteMissingContactsRedeemBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'To accept this plan, connect with {name} first. Enter their invitation code below.'**
+  String housingInviteMissingContactsRedeemBanner(String name);
+
+  /// No description provided for @housingInviteMissingContactsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with every co-participant before you can accept.'**
+  String get housingInviteMissingContactsBlocked;
+
+  /// No description provided for @housingPlanMissingContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan contacts'**
+  String get housingPlanMissingContactsTitle;
+
+  /// No description provided for @housingPlanMissingContactsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Each co-participant must be a connected contact on this device before you can accept the plan. Use an invitation code in either direction.'**
+  String get housingPlanMissingContactsIntro;
+
+  /// No description provided for @housingPlanMissingContactsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This plan has no other participants on this device.'**
+  String get housingPlanMissingContactsEmpty;
+
+  /// No description provided for @housingPlanMissingContactsAllReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Every co-participant is connected. You can go back and accept the plan.'**
+  String get housingPlanMissingContactsAllReady;
+
+  /// No description provided for @housingPlanMissingContactsCreateInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create invitation'**
+  String get housingPlanMissingContactsCreateInvitation;
+
+  /// No description provided for @housingPlanMissingContactsEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter invitation code'**
+  String get housingPlanMissingContactsEnterCode;
+
   /// No description provided for @housingInviteNegotiate.
   ///
   /// In en, this message translates to:

@@ -1604,6 +1604,41 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingInviteAcceptFull => 'J\'accepte en totalité';
 
   @override
+  String get housingInviteMissingContactsAction => 'Contacts manquants';
+
+  @override
+  String housingInviteMissingContactsRedeemBanner(String name) {
+    return 'Pour accepter ce plan, connectez-vous d\'abord avec $name. Saisissez son code d\'invitation ci-dessous.';
+  }
+
+  @override
+  String get housingInviteMissingContactsBlocked =>
+      'Connectez-vous avec chaque co-participant avant de pouvoir accepter.';
+
+  @override
+  String get housingPlanMissingContactsTitle => 'Contacts du plan';
+
+  @override
+  String get housingPlanMissingContactsIntro =>
+      'Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Utilisez un code d\'invitation dans un sens ou l\'autre.';
+
+  @override
+  String get housingPlanMissingContactsEmpty =>
+      'Ce plan n\'a pas d\'autre participant sur cet appareil.';
+
+  @override
+  String get housingPlanMissingContactsAllReady =>
+      'Tous les co-participants sont connectés. Vous pouvez revenir en arrière et accepter le plan.';
+
+  @override
+  String get housingPlanMissingContactsCreateInvitation =>
+      'Créer une invitation';
+
+  @override
+  String get housingPlanMissingContactsEnterCode =>
+      'Saisir le code d\'invitation';
+
+  @override
   String get housingInviteNegotiate => 'J\'aimerais négocier';
 
   @override

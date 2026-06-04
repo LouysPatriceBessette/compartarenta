@@ -54,6 +54,10 @@ is written to `~/.cache/compartarenta/web-dev-session.json` by a loopback HTTP
 server started with the script. You can stop with Ctrl+C anytime and relaunch;
 the next run restores prefs, identity, and the full Drift snapshot from that file.
 
+The dev web script passes `--no-web-resources-cdn` so CanvasKit is served from
+the local Flutter dev server instead of `gstatic.com` (avoids startup failures
+on slow or flaky networks).
+
 Reset web dev data: `dart run melos run delete:web-dev-session`
 
 Port busy: `run:dev:web` auto-picks the next free port (18766, 18767, …) when

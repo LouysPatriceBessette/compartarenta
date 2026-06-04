@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
-import '../../housing/amendment/housing_amendment_type.dart';
 import '../../housing/housing_response_deadline_display.dart';
 import 'housing_amendment_detail_screen.dart';
+import 'housing_plan_missing_contacts_screen.dart';
+import '../../housing/amendment/housing_amendment_summary.dart';
+import '../../housing/housing_plan_peer_contacts.dart';
 import '../../housing/proposals/housing_proposal_revision_state.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
@@ -125,15 +127,43 @@ class _HousingInviteProposalScreenState
     });
   }
 
-  Future<List<dynamic>> _loadProposalScreenData() {
-    return Future.wait([
+  Future<List<dynamic>> _loadProposalScreenData() async {
+    final proposal = await _loadProposalUiState();
+    final routeAsAmendment =
+        proposal.revisionId != null &&
+        await pendingRevisionIsAmendment(
+          widget.db,
+          widget.planId,
+          revisionId: proposal.revisionId,
+        );
+    final rest = await Future.wait<dynamic>([
       widget.db.listParticipants(),
       widget.db.listPlanLines(widget.planId),
       widget.db.getAgreementForPlan(widget.planId),
       widget.db.listPlanRatios(widget.planId),
       widget.db.listPlanGroups(widget.planId),
-      _loadProposalUiState(),
+      Future<_ProposalUiState>.value(proposal),
+      listMissingPlanPeerContacts(db: widget.db, planId: widget.planId),
     ]);
+    return [...rest, routeAsAmendment];
+  }
+
+  void _openMissingContactsHub() {
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => HousingPlanMissingContactsScreen(
+              db: widget.db,
+              planId: widget.planId,
+            ),
+          ),
+        )
+        .then((_) {
+          if (!mounted) return;
+          setState(() {
+            _proposalFuture = _loadProposalScreenData();
+          });
+        });
   }
 
   @override
@@ -228,6 +258,19 @@ class _HousingInviteProposalScreenState
     String? revisionId,
   }) async {
     final l10n = AppLocalizations.of(context);
+    if (status == ProposalResponseStatus.accepted) {
+      final missing = await listMissingPlanPeerContacts(
+        db: widget.db,
+        planId: widget.planId,
+      );
+      if (!mounted) return;
+      if (missing.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.housingInviteMissingContactsBlocked)),
+        );
+        return;
+      }
+    }
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator == null) {
       if (status == ProposalResponseStatus.negotiate) {
@@ -301,8 +344,11 @@ class _HousingInviteProposalScreenState
         );
       }
       if (!mounted) return;
+      final message = e.code == 'plan_missing_peer_contacts'
+          ? l10n.housingInviteMissingContactsBlocked
+          : l10n.housingPlanCouldNotContinue(e.code);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.housingPlanCouldNotContinue(e.code))),
+        SnackBar(content: Text(message)),
       );
     } catch (e) {
       if (status == ProposalResponseStatus.negotiate) {
@@ -452,13 +498,14 @@ class _HousingInviteProposalScreenState
           final ratios = snap.data![3] as List<PlanRatio>;
           final groups = snap.data![4] as List<PlanGroup>;
           final proposal = snap.data![5] as _ProposalUiState;
+          final missingPeerContacts = snap.data![6] as List<Participant>;
+          final routeAsAmendment = snap.data![7] as bool;
+          final hasMissingPeerContacts = missingPeerContacts.isNotEmpty;
           if (agr == null || roster.isEmpty) {
             return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
           }
-          final amendmentType = HousingAmendmentTypeWire.parse(
-            proposal.payload['amendmentType'] as String?,
-          );
-          if (amendmentType != null && !_redirectedToAmendment) {
+          final revisionForRoute = proposal.revisionId;
+          if (routeAsAmendment && !_redirectedToAmendment) {
             _redirectedToAmendment = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
@@ -468,7 +515,7 @@ class _HousingInviteProposalScreenState
                     db: widget.db,
                     planId: widget.planId,
                     prefs: widget.prefs,
-                    revisionId: proposal.revisionId,
+                    revisionId: revisionForRoute,
                   ),
                 ),
               );
@@ -709,12 +756,18 @@ class _HousingInviteProposalScreenState
                       if (!_negotiateExpanded) ...[
                         FilledButton(
                           onPressed: canRespond
-                              ? () => _submitResponse(
-                                  ProposalResponseStatus.accepted,
-                                  revisionId: proposal.revisionId,
-                                )
+                              ? (hasMissingPeerContacts
+                                    ? _openMissingContactsHub
+                                    : () => _submitResponse(
+                                        ProposalResponseStatus.accepted,
+                                        revisionId: proposal.revisionId,
+                                      ))
                               : null,
-                          child: Text(l10n.housingInviteAcceptFull),
+                          child: Text(
+                            hasMissingPeerContacts
+                                ? l10n.housingInviteMissingContactsAction
+                                : l10n.housingInviteAcceptFull,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(

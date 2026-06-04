@@ -2,11 +2,37 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../prefs/app_preferences.dart';
+import '../../screens/housing/housing_active_plan_screen.dart';
 import '../../screens/housing/housing_amendment_detail_screen.dart';
 import '../../screens/housing/housing_amendment_journal_screen.dart';
 import '../../screens/housing/housing_invite_proposal_screen.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import 'housing_amendment_summary.dart';
+
+/// Replaces the current route with the active-plan hub when [planId] is in force.
+///
+/// Returns true when navigation ran.
+Future<bool> openHousingActivePlanHubIfActive(
+  BuildContext context, {
+  required AppDatabase db,
+  required String planId,
+  required AppPreferences prefs,
+}) async {
+  final transport = HousingProposalTransportService(db);
+  if (!await transport.hasActiveRevision(planId)) return false;
+  final packageId = await transport.primaryPackageIdForPlan(planId);
+  if (packageId == null || !context.mounted) return false;
+  await Navigator.of(context).pushReplacement<void, void>(
+    MaterialPageRoute<void>(
+      builder: (_) => HousingActivePlanScreen(
+        planId: planId,
+        packageId: packageId,
+        prefs: prefs,
+      ),
+    ),
+  );
+  return true;
+}
 
 /// Opens the amendment detail screen or the full-plan proposal screen.
 Future<void> openHousingPendingProposalOrAmendment(
@@ -21,11 +47,22 @@ Future<void> openHousingPendingProposalOrAmendment(
   await transport.reconcileStalePackagePending(planId);
   final pendingId =
       revisionId ?? await transport.pendingRevisionIdForPlan(planId);
-  final openAmendment = isAmendment ||
+  if (pendingId == null) {
+    if (!context.mounted) return;
+    await openHousingActivePlanHubIfActive(
+      context,
+      db: db,
+      planId: planId,
+      prefs: prefs,
+    );
+    return;
+  }
+  final openAmendment =
+      isAmendment ||
       await pendingRevisionIsAmendment(
         db,
         planId,
-        revisionId: revisionId,
+        revisionId: pendingId,
       );
   if (!context.mounted) return;
   await Navigator.of(context).push<void>(
@@ -41,7 +78,7 @@ Future<void> openHousingPendingProposalOrAmendment(
               db: db,
               planId: planId,
               prefs: prefs,
-              revisionId: revisionId,
+              revisionId: pendingId,
             ),
     ),
   );

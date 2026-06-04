@@ -58,7 +58,9 @@ melos:
         defaults to http://localhost:5001 (relay CORS / Apache allow-list).
         Drift/prefs/identity persist via a host JSON file updated after
         onboarding and on each DB flush (Ctrl+C safe). Session server port
-        auto-picks 18765-18799 if 18765 is busy (sandbox zombies). Override
+        auto-picks 18765-18799 if 18765 is busy (sandbox zombies). CanvasKit
+        is served locally (--no-web-resources-cdn) to avoid gstatic CDN fetch
+        failures on slow networks. Override
         WEB_PORT=5002 or dart run melos run run:dev:web -- --web-port=...
         Reset web dev data: dart run melos run delete:web-dev-session
       run: cd mobile && chmod +x ./tool/run_dev_web.sh && ./tool/run_dev_web.sh
