@@ -583,6 +583,8 @@ class PushNotificationService {
       await housing_browser.showHousingBrowserNotification(
         title: title,
         body: body,
+        openParticipationChangePlanId: planId,
+        openParticipationChangeId: changeId,
       );
       return;
     }

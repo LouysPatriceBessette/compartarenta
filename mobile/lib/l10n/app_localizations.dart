@@ -1696,6 +1696,30 @@ abstract class AppLocalizations {
   /// **'Rejected'**
   String get housingRealizedExpenseReviewRejectedWord;
 
+  /// No description provided for @housingRealizedExpenseReviewDecisionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review status'**
+  String get housingRealizedExpenseReviewDecisionsTitle;
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: pending'**
+  String housingRealizedExpenseReviewDecisionPending(String name);
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: accepted'**
+  String housingRealizedExpenseReviewDecisionAccepted(String name);
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: rejected'**
+  String housingRealizedExpenseReviewDecisionRejected(String name);
+
   /// No description provided for @housingRealizedExpenseReviewByName.
   ///
   /// In en, this message translates to:
@@ -4852,6 +4876,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reject'**
   String get housingParticipationChangeReject;
+
+  /// No description provided for @housingParticipationChangeEjectionCandidateNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the participant named in this ejection request. The remaining participants must vote; you cannot accept or reject here.'**
+  String get housingParticipationChangeEjectionCandidateNotice;
+
+  /// No description provided for @housingParticipationChangeDecisionStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Votes'**
+  String get housingParticipationChangeDecisionStatusTitle;
+
+  /// No description provided for @housingParticipationChangeDecisionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: pending'**
+  String housingParticipationChangeDecisionPending(String name);
+
+  /// No description provided for @housingParticipationChangeDecisionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: accepted'**
+  String housingParticipationChangeDecisionAccepted(String name);
+
+  /// No description provided for @housingParticipationChangeDecisionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: rejected'**
+  String housingParticipationChangeDecisionRejected(String name);
 
   /// No description provided for @housingParticipationChangePenaltyApplies.
   ///

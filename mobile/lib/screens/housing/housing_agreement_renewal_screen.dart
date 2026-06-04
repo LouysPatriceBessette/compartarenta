@@ -241,16 +241,31 @@ class _HousingAgreementRenewalScreenState
     );
     if (ok != true || selectedId == null || !mounted) return;
 
-    await _proposeAndBroadcast(
-      () => HousingParticipationChangeService(
+    if (_working) return;
+    setState(() => _working = true);
+    try {
+      final change = await HousingParticipationChangeService(
         AppDatabase.processScope,
       ).proposeEjection(
         planId: widget.planId,
         initiatorParticipantId: _selfId,
         targetParticipantId: selectedId!,
-      ),
-      useNotifyKind: false,
-    );
+      );
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        await orch.sendParticipationChangePropose(changeId: change.id);
+        await orch.sendParticipationChangeNotify(changeId: change.id);
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
   }
 
   @override

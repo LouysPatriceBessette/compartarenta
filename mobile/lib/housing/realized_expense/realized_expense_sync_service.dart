@@ -124,8 +124,8 @@ class RealizedExpenseSyncService {
           ..where((t) => t.id.equals(expenseId)))
         .getSingleOrNull();
     if (existing != null) {
-      _log('import skip: duplicate $expenseId');
-      return false;
+      _log('import ok: duplicate $expenseId (idempotent)');
+      return true;
     }
 
     final target = await _resolveLocalAgreementTarget(

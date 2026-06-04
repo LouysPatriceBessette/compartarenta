@@ -4,4 +4,6 @@ Future<void> showHousingBrowserNotification({
   String? expenseId,
   String? openProposalPlanId,
   String? openAmendmentPlanId,
+  String? openParticipationChangePlanId,
+  String? openParticipationChangeId,
 }) async {}

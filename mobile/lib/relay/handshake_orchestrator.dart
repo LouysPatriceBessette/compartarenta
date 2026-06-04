@@ -2255,9 +2255,9 @@ class HandshakeOrchestrator {
       }
     }
 
-    if (targets.isEmpty && planParticipantCount <= 2) {
-      // Fresh installs can keep a handshake/redeemed stub while peer keys are
-      // already valid for steady-state relay. Deliver to every reachable peer.
+    if (targets.isEmpty && relayReachableContacts.isNotEmpty) {
+      // Participant row may lack contactId or name drift across devices;
+      // deliver to every relay-connected peer (deduped by peer material).
       for (final contact in relayReachableContacts) {
         add(contact);
       }
@@ -2728,7 +2728,7 @@ class HandshakeOrchestrator {
     );
   }
 
-  /// Broadcasts an informational voluntary-withdrawal notify (kind 12).
+  /// Broadcasts an informational participation notify (kind 12).
   Future<void> sendParticipationChangeNotify({required String changeId}) async {
     await _broadcastParticipationChange(
       changeId: changeId,
@@ -2836,14 +2836,7 @@ class HandshakeOrchestrator {
     )
     buildFrame,
   }) async {
-    final participants = (await _db.listParticipants())
-        .where((p) => p.id.startsWith('$planId:p'))
-        .toList(growable: false);
-    if (participants.isEmpty) return;
-
-    final selfPriv = await _identity.loadOrCreatePrivateKey();
-    final selfPub = await _identity.publicKey();
-    final decisionCandidateContacts = (await _contacts.list())
+    final relayReachableContacts = (await _contacts.list())
         .where((c) {
           final peer = c.peerPublicMaterial;
           return !c.id.startsWith('contact:local:') &&
@@ -2851,45 +2844,41 @@ class HandshakeOrchestrator {
               peer.isNotEmpty;
         })
         .toList(growable: false);
+    if (relayReachableContacts.isEmpty) return;
 
-    for (final participant in participants) {
-      final contactId = participant.contactId;
-      final contact = contactId == null ? null : await _contacts.get(contactId);
-      final targets = _housingProposalTargetContacts(
-        participant: participant,
-        selectedContact: contact,
-        relayReachableContacts: decisionCandidateContacts,
-        planParticipantCount: participants.length,
-      );
-      for (final target in targets) {
-        final peerPubB64 = target.peerPublicMaterial;
-        if (peerPubB64 == null || peerPubB64.isEmpty) continue;
-        try {
-          final peerPub = RelayRouting.unb64(peerPubB64);
-          final frame = await buildFrame(selfPub, selfPriv, peerPub);
-          final selfAddr = await RelayRouting.steadyStateAddress(
-            firstPub: selfPub,
-            secondPub: peerPub,
-          );
-          final peerAddr = await RelayRouting.steadyStateAddress(
-            firstPub: peerPub,
-            secondPub: selfPub,
-          );
-          await _ensureSteadyRoutingRegistered(
-            selfListenAddr: selfAddr,
-            peerListenAddr: peerAddr,
-          );
-          await _relay.postEnvelope(
-            senderIdentity: selfAddr,
-            recipientIdentity: peerAddr,
-            idempotencyKey: _randomBytes(16),
-            ciphertext: frame,
-            kind: kind,
-            ttl: _steadyTtl,
-          );
-        } on Object catch (e) {
-          debugPrint('housing_participation_change post failed: $e');
-        }
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final seenPeerMaterial = <String>{};
+
+    for (final target in relayReachableContacts) {
+      final peerPubB64 = target.peerPublicMaterial;
+      if (peerPubB64 == null || peerPubB64.isEmpty) continue;
+      if (!seenPeerMaterial.add(peerPubB64)) continue;
+      try {
+        final peerPub = RelayRouting.unb64(peerPubB64);
+        final frame = await buildFrame(selfPub, selfPriv, peerPub);
+        final selfAddr = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        final peerAddr = await RelayRouting.steadyStateAddress(
+          firstPub: peerPub,
+          secondPub: selfPub,
+        );
+        await _ensureSteadyRoutingRegistered(
+          selfListenAddr: selfAddr,
+          peerListenAddr: peerAddr,
+        );
+        await _relay.postEnvelope(
+          senderIdentity: selfAddr,
+          recipientIdentity: peerAddr,
+          idempotencyKey: _randomBytes(16),
+          ciphertext: frame,
+          kind: kind,
+          ttl: _steadyTtl,
+        );
+      } on Object catch (e) {
+        debugPrint('housing_participation_change post failed: $e');
       }
     }
   }

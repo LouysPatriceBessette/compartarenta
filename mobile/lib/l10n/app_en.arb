@@ -331,6 +331,19 @@
   "housingRealizedExpenseReviewDescriptionNone": "None",
   "housingRealizedExpenseReviewAcceptedWord": "Accepted",
   "housingRealizedExpenseReviewRejectedWord": "Rejected",
+  "housingRealizedExpenseReviewDecisionsTitle": "Review status",
+  "housingRealizedExpenseReviewDecisionPending": "{name}: pending",
+  "@housingRealizedExpenseReviewDecisionPending": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingRealizedExpenseReviewDecisionAccepted": "{name}: accepted",
+  "@housingRealizedExpenseReviewDecisionAccepted": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingRealizedExpenseReviewDecisionRejected": "{name}: rejected",
+  "@housingRealizedExpenseReviewDecisionRejected": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "housingRealizedExpenseReviewByName": "by {name}",
   "@housingRealizedExpenseReviewByName": {
     "placeholders": {
@@ -1216,6 +1229,20 @@
   },
   "housingParticipationChangeAccept": "Accept",
   "housingParticipationChangeReject": "Reject",
+  "housingParticipationChangeEjectionCandidateNotice": "You are the participant named in this ejection request. The remaining participants must vote; you cannot accept or reject here.",
+  "housingParticipationChangeDecisionStatusTitle": "Votes",
+  "housingParticipationChangeDecisionPending": "{name}: pending",
+  "@housingParticipationChangeDecisionPending": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeDecisionAccepted": "{name}: accepted",
+  "@housingParticipationChangeDecisionAccepted": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "housingParticipationChangeDecisionRejected": "{name}: rejected",
+  "@housingParticipationChangeDecisionRejected": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "housingParticipationChangePenaltyApplies": "An early withdrawal penalty will apply.",
   "housingParticipationChangePenaltyDoesNotApply": "No early withdrawal penalty will apply.",
   "housingParticipationChangeBannerTermination": "{name} requests to end the agreement immediately.",

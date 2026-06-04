@@ -915,6 +915,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseReviewRejectedWord => 'Refusé';
 
   @override
+  String get housingRealizedExpenseReviewDecisionsTitle => 'État des révisions';
+
+  @override
+  String housingRealizedExpenseReviewDecisionPending(String name) {
+    return '$name : en attente';
+  }
+
+  @override
+  String housingRealizedExpenseReviewDecisionAccepted(String name) {
+    return '$name : accepté';
+  }
+
+  @override
+  String housingRealizedExpenseReviewDecisionRejected(String name) {
+    return '$name : refusé';
+  }
+
+  @override
   String housingRealizedExpenseReviewByName(String name) {
     return 'par $name';
   }
@@ -2856,6 +2874,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingParticipationChangeReject => 'Refuser';
+
+  @override
+  String get housingParticipationChangeEjectionCandidateNotice =>
+      'Vous êtes la personne visée par cette demande d\'éjection. Les autres participants doivent voter ; vous ne pouvez pas accepter ni refuser ici.';
+
+  @override
+  String get housingParticipationChangeDecisionStatusTitle => 'Votes';
+
+  @override
+  String housingParticipationChangeDecisionPending(String name) {
+    return '$name : en attente';
+  }
+
+  @override
+  String housingParticipationChangeDecisionAccepted(String name) {
+    return '$name : accepté';
+  }
+
+  @override
+  String housingParticipationChangeDecisionRejected(String name) {
+    return '$name : refusé';
+  }
 
   @override
   String get housingParticipationChangePenaltyApplies =>

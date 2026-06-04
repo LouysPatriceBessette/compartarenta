@@ -11,6 +11,8 @@ Future<void> showHousingBrowserNotification({
   String? expenseId,
   String? openProposalPlanId,
   String? openAmendmentPlanId,
+  String? openParticipationChangePlanId,
+  String? openParticipationChangeId,
 }) async {
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
@@ -22,6 +24,14 @@ Future<void> showHousingBrowserNotification({
       HousingNavigationIntent.requestOpenPendingProposal(openProposalPlanId);
     } else if (openAmendmentPlanId != null && openAmendmentPlanId.isNotEmpty) {
       HousingNavigationIntent.requestOpenPendingAmendment(openAmendmentPlanId);
+    } else if (openParticipationChangePlanId != null &&
+        openParticipationChangePlanId.isNotEmpty &&
+        openParticipationChangeId != null &&
+        openParticipationChangeId.isNotEmpty) {
+      HousingNavigationIntent.requestOpenParticipationChangeDetail(
+        planId: openParticipationChangePlanId,
+        changeId: openParticipationChangeId,
+      );
     }
     html.window.location.hash = '/housing';
     notification.close();

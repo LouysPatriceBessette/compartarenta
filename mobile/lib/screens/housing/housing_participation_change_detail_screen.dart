@@ -74,11 +74,60 @@ class _HousingParticipationChangeDetailScreenState
     final change = _change;
     if (change == null) return true;
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    return kind == HousingParticipationChangeKind.voluntaryWithdrawal;
+    return kind == HousingParticipationChangeKind.voluntaryWithdrawal ||
+        _isEjectionCandidate;
+  }
+
+  bool get _isEjectionCandidate {
+    final change = _change;
+    if (change == null) return false;
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    return kind == HousingParticipationChangeKind.ejection &&
+        change.targetParticipantId == _selfId;
   }
 
   bool get _selfAlreadyDecided {
     return _decisions.any((d) => d.participantId == _selfId);
+  }
+
+  bool get _canVote =>
+      !_isReadOnly && !_selfAlreadyDecided && _change != null;
+
+  List<Participant> get _deciders {
+    final change = _change;
+    if (change == null) return const [];
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    return switch (kind) {
+      HousingParticipationChangeKind.immediateTermination => _roster,
+      HousingParticipationChangeKind.ejection =>
+        _roster
+            .where((p) => p.id != change.targetParticipantId)
+            .toList(growable: false),
+      HousingParticipationChangeKind.voluntaryWithdrawal => const [],
+      null => const [],
+    };
+  }
+
+  String _decisionStatusLabel(AppLocalizations l10n, Participant participant) {
+    HousingParticipationDecision? row;
+    for (final d in _decisions) {
+      if (d.participantId == participant.id) {
+        row = d;
+        break;
+      }
+    }
+    final name = participant.displayName;
+    if (row == null) {
+      return l10n.housingParticipationChangeDecisionPending(name);
+    }
+    final status = HousingParticipationDecisionStatus.fromWire(row.status);
+    return switch (status) {
+      HousingParticipationDecisionStatus.accepted =>
+        l10n.housingParticipationChangeDecisionAccepted(name),
+      HousingParticipationDecisionStatus.rejected =>
+        l10n.housingParticipationChangeDecisionRejected(name),
+      null => l10n.housingParticipationChangeDecisionPending(name),
+    };
   }
 
   Future<void> _respond(bool accepted) async {
@@ -175,7 +224,31 @@ class _HousingParticipationChangeDetailScreenState
               },
             ),
           ],
-          if (!_isReadOnly && !_selfAlreadyDecided) ...[
+          if (_isEjectionCandidate) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.housingParticipationChangeEjectionCandidateNotice,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+          if (_deciders.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              l10n.housingParticipationChangeDecisionStatusTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            for (final p in _deciders)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  _decisionStatusLabel(l10n, p),
+                ),
+              ),
+          ],
+          if (_canVote) ...[
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _working ? null : () => _respond(true),

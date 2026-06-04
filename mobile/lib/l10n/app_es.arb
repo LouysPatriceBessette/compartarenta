@@ -326,6 +326,10 @@
   "housingRealizedExpenseReviewDescriptionNone": "Ninguno",
   "housingRealizedExpenseReviewAcceptedWord": "Aceptado",
   "housingRealizedExpenseReviewRejectedWord": "Rechazado",
+  "housingRealizedExpenseReviewDecisionsTitle": "Estado de revisión",
+  "housingRealizedExpenseReviewDecisionPending": "{name}: pendiente",
+  "housingRealizedExpenseReviewDecisionAccepted": "{name}: aceptado",
+  "housingRealizedExpenseReviewDecisionRejected": "{name}: rechazado",
   "housingRealizedExpenseReviewByName": "por {name}",
   "@housingRealizedExpenseReviewByName": {
     "placeholders": {
@@ -1106,6 +1110,11 @@
   },
   "housingParticipationChangeAccept": "Aceptar",
   "housingParticipationChangeReject": "Rechazar",
+  "housingParticipationChangeEjectionCandidateNotice": "Usted es la persona objetivo de esta solicitud de expulsión. Los demás participantes deben votar; no puede aceptar ni rechazar aquí.",
+  "housingParticipationChangeDecisionStatusTitle": "Votos",
+  "housingParticipationChangeDecisionPending": "{name}: pendiente",
+  "housingParticipationChangeDecisionAccepted": "{name}: aceptado",
+  "housingParticipationChangeDecisionRejected": "{name}: rechazado",
   "housingParticipationChangePenaltyApplies": "Se aplicará una penalización por retiro anticipado.",
   "housingParticipationChangePenaltyDoesNotApply": "No se aplicará penalización por retiro anticipado.",
   "housingParticipationChangeBannerTermination": "{name} solicita terminar el acuerdo de inmediato.",

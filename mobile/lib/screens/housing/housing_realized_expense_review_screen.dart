@@ -30,6 +30,7 @@ class _ReviewContext {
     required this.prefs,
     required this.rejections,
     required this.finalDecisionStatus,
+    required this.participantReviewStatuses,
   });
 
   final RealizedExpense expense;
@@ -41,6 +42,17 @@ class _ReviewContext {
   final AppPreferences prefs;
   final List<RealizedExpenseAcceptance> rejections;
   final _FinalDecisionStatus? finalDecisionStatus;
+  final List<_ParticipantReviewStatus> participantReviewStatuses;
+}
+
+class _ParticipantReviewStatus {
+  const _ParticipantReviewStatus({
+    required this.participantName,
+    required this.decision,
+  });
+
+  final String participantName;
+  final String decision;
 }
 
 class _FinalDecisionStatus {
@@ -190,6 +202,12 @@ class _HousingRealizedExpenseReviewScreenState
     );
     final attachments = await _repo.attachmentsFor(expense.id);
 
+    final participantReviewStatuses = _participantReviewStatuses(
+      expense: expense,
+      acceptances: acceptances,
+      roster: roster,
+    );
+
     return _ReviewContext(
       expense: expense,
       lineTitle: lineTitle,
@@ -200,7 +218,46 @@ class _HousingRealizedExpenseReviewScreenState
       prefs: prefs,
       rejections: rejections,
       finalDecisionStatus: finalDecisionStatus,
+      participantReviewStatuses: participantReviewStatuses,
     );
+  }
+
+  List<_ParticipantReviewStatus> _participantReviewStatuses({
+    required RealizedExpense expense,
+    required List<RealizedExpenseAcceptance> acceptances,
+    required List<Participant> roster,
+  }) {
+    if (expense.status != RealizedExpenseStatus.proposed) {
+      return const [];
+    }
+    final out = <_ParticipantReviewStatus>[];
+    for (final p in roster) {
+      if (!_repo.isTransferReviewParticipant(expense, p.id)) continue;
+      RealizedExpenseAcceptance? row;
+      for (final a in acceptances) {
+        if (a.participantId == p.id) {
+          row = a;
+          break;
+        }
+      }
+      out.add(
+        _ParticipantReviewStatus(
+          participantName: p.displayName,
+          decision: row?.decision ?? RealizedExpenseDecision.pending,
+        ),
+      );
+    }
+    return out;
+  }
+
+  String _participantReviewLine(AppLocalizations l10n, _ParticipantReviewStatus row) {
+    return switch (row.decision) {
+      RealizedExpenseDecision.accepted =>
+        l10n.housingRealizedExpenseReviewDecisionAccepted(row.participantName),
+      RealizedExpenseDecision.rejected =>
+        l10n.housingRealizedExpenseReviewDecisionRejected(row.participantName),
+      _ => l10n.housingRealizedExpenseReviewDecisionPending(row.participantName),
+    };
   }
 
   _FinalDecisionStatus? _resolveFinalDecisionStatus({
@@ -661,6 +718,27 @@ class _HousingRealizedExpenseReviewScreenState
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              ],
+              if (ctx.participantReviewStatuses.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.only(left: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.housingRealizedExpenseReviewDecisionsTitle,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      for (final row in ctx.participantReviewStatuses)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(_participantReviewLine(l10n, row)),
+                        ),
                     ],
                   ),
                 ),

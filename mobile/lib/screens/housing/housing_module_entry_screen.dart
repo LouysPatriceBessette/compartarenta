@@ -15,7 +15,9 @@ import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
+import 'housing_participation_change_detail_screen.dart';
 import 'housing_workbench_screen.dart';
+import '../../housing/participation/housing_participation_change_service.dart';
 
 /// Housing [Plan] rows where this device has a `planId:self` participant.
 Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
@@ -90,9 +92,16 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       HousingNavigationIntent.openProposalTick.addListener(
         _onOpenProposalIntent,
       );
+      HousingNavigationIntent.openParticipationChangeTick.addListener(
+        _onOpenParticipationChangeIntent,
+      );
       HousingNavigationIntent.entryReloadTick.addListener(_onEntryReloadIntent);
+      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+        _onSteadyInboxTick,
+      );
       _openPendingAmendmentFromNotificationIfAny();
       _openPendingProposalFromNotificationIfAny();
+      _openParticipationChangeFromNotificationIfAny();
     });
   }
 
@@ -104,15 +113,37 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     HousingNavigationIntent.openProposalTick.removeListener(
       _onOpenProposalIntent,
     );
+    HousingNavigationIntent.openParticipationChangeTick.removeListener(
+      _onOpenParticipationChangeIntent,
+    );
     HousingNavigationIntent.entryReloadTick.removeListener(
       _onEntryReloadIntent,
     );
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
     super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _reloadEntry();
+    });
   }
 
   void _onEntryReloadIntent() {
     if (!mounted) return;
     _reloadEntry();
+  }
+
+  void _onOpenParticipationChangeIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openParticipationChangeFromNotificationIfAny();
+    });
   }
 
   void _onOpenAmendmentIntent() {
@@ -208,6 +239,34 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       prefs: widget.prefs,
       revisionId: pendingId,
       isAmendment: false,
+    );
+    if (mounted) _reloadEntry();
+  }
+
+  Future<void> _openParticipationChangeFromNotificationIfAny() async {
+    final pending = HousingNavigationIntent.takePendingOpenParticipationChange();
+    if (pending == null || !mounted) return;
+    final db = AppDatabase.processScope;
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing participation change open poll: $e\n$st');
+      });
+    }
+    final change = await HousingParticipationChangeService(db).getById(
+      pending.changeId,
+    );
+    if (change == null || !mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder:
+            (_) => HousingParticipationChangeDetailScreen(
+              changeId: pending.changeId,
+              planId: pending.planId,
+              packageId: change.packageId,
+              prefs: widget.prefs,
+            ),
+      ),
     );
     if (mounted) _reloadEntry();
   }

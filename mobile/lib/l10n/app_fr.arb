@@ -326,6 +326,10 @@
   "housingRealizedExpenseReviewDescriptionNone": "Aucun",
   "housingRealizedExpenseReviewAcceptedWord": "Accepté",
   "housingRealizedExpenseReviewRejectedWord": "Refusé",
+  "housingRealizedExpenseReviewDecisionsTitle": "État des révisions",
+  "housingRealizedExpenseReviewDecisionPending": "{name} : en attente",
+  "housingRealizedExpenseReviewDecisionAccepted": "{name} : accepté",
+  "housingRealizedExpenseReviewDecisionRejected": "{name} : refusé",
   "housingRealizedExpenseReviewByName": "par {name}",
   "@housingRealizedExpenseReviewByName": {
     "placeholders": {
@@ -1123,6 +1127,11 @@
   },
   "housingParticipationChangeAccept": "Accepter",
   "housingParticipationChangeReject": "Refuser",
+  "housingParticipationChangeEjectionCandidateNotice": "Vous êtes la personne visée par cette demande d'éjection. Les autres participants doivent voter ; vous ne pouvez pas accepter ni refuser ici.",
+  "housingParticipationChangeDecisionStatusTitle": "Votes",
+  "housingParticipationChangeDecisionPending": "{name} : en attente",
+  "housingParticipationChangeDecisionAccepted": "{name} : accepté",
+  "housingParticipationChangeDecisionRejected": "{name} : refusé",
   "housingParticipationChangePenaltyApplies": "Une pénalité de retrait anticipé s'appliquera.",
   "housingParticipationChangePenaltyDoesNotApply": "Aucune pénalité de retrait anticipé ne s'appliquera.",
   "housingParticipationChangeBannerTermination": "{name} demande la fin immédiate de l'entente.",
