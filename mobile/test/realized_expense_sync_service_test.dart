@@ -184,4 +184,96 @@ void main() {
     expect(row.packageId, localPackageId);
     expect(row.planLineId, 'line:ute-local');
   });
+
+  test('import maps payer by display name when roster lacks contactId link', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    const planId = 'housing:roberr';
+    const packageId = 'pkg:1';
+    const louysContact = 'contact:louys';
+
+    await db.into(db.plans).insert(
+      PlansCompanion.insert(
+        id: planId,
+        type: 'housing',
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await db.into(db.participants).insert(
+      ParticipantsCompanion.insert(
+        id: '$planId:self',
+        displayName: 'Roberr',
+        avatarId: '0',
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await db.into(db.participants).insert(
+      ParticipantsCompanion.insert(
+        id: '$planId:p1',
+        displayName: 'Louys',
+        avatarId: '1',
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await db.upsertContact(
+      ContactsCompanion.insert(
+        id: louysContact,
+        kind: 'connected',
+        displayName: 'Louys',
+        avatarId: '1',
+        peerPublicMaterial: const Value('peer-louys'),
+        createdAt: DateTime.utc(2026, 1, 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await db.into(db.proposalPackages).insert(
+      ProposalPackagesCompanion.insert(
+        id: packageId,
+        planId: planId,
+        activeRevisionId: const Value('rev:active'),
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+    await db.into(db.planLines).insert(
+      PlanLinesCompanion.insert(
+        id: 'line:rent',
+        planId: planId,
+        isRecurring: true,
+        title: 'Loyer',
+        currency: 'CAD',
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+
+    final payload = '''
+{
+  "expense_id": "realized:louys-from-roberr",
+  "package_id": "$packageId",
+  "plan_id": "$planId",
+  "plan_line_id": "line:rent",
+  "plan_line_title": "Loyer",
+  "amount_minor": 5000,
+  "currency": "CAD",
+  "payment_date": "2026-05-23T00:00:00.000Z",
+  "kind": "normal",
+  "payer_participant_id": "$planId:self",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Louys", "contactId": "$louysContact"}
+  ],
+  "attachments": []
+}
+''';
+
+    final imported = await RealizedExpenseSyncService(db).importProposedFromPeer(
+      expenseJson: payload,
+      senderContactId: louysContact,
+    );
+    expect(imported, isTrue);
+
+    final row = await (db.select(db.realizedExpenses)
+          ..where((t) => t.id.equals('realized:louys-from-roberr')))
+        .getSingle();
+    expect(row.payerParticipantId, '$planId:p1');
+  });
 }

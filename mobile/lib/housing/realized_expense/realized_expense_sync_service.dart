@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import '../../db/app_database.dart';
+import '../housing_participant_snapshot_map.dart';
+import '../housing_plan_peer_contacts.dart';
 import 'proof_transport_payload.dart';
 import 'realized_expense_line_snapshot.dart';
 import 'realized_expense_participants.dart';
@@ -93,6 +95,7 @@ class RealizedExpenseSyncService {
       'beneficiary_participant_id': expense.beneficiaryParticipantId,
       if ((expense.description ?? '').trim().isNotEmpty)
         'description': expense.description!.trim(),
+      'payer_participant_id': expense.payerParticipantId,
       'participant_snapshots': [
         for (final p in roster)
           {
@@ -140,14 +143,31 @@ class RealizedExpenseSyncService {
       return false;
     }
 
-    final payerId = await _localParticipantIdForContact(
+    final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
+      db: _db,
       planId: target.planId,
-      contactId: senderContactId,
+      snapshots: payload['participant_snapshots'],
+    );
+
+    final sourcePayer = payload['payer_participant_id'] as String? ?? '';
+    var payerId = sourcePayer.isEmpty
+        ? null
+        : await resolveImportedParticipantId(
+          db: _db,
+          planId: target.planId,
+          sourceParticipantId: sourcePayer,
+          sourceToLocal: sourceToLocal,
+          senderContactId: senderContactId,
+        );
+    payerId ??= await localParticipantIdForSenderContact(
+      db: _db,
+      planId: target.planId,
+      senderContactId: senderContactId,
     );
     if (payerId == null) {
       _log(
         'import skip: payer not in roster for plan ${target.planId} '
-        '(sender contact $senderContactId)',
+        '(sender contact $senderContactId, source payer $sourcePayer)',
       );
       return false;
     }
@@ -166,15 +186,17 @@ class RealizedExpenseSyncService {
       planLineId = resolvedPlanLineId;
     }
 
-    final sourceToLocal = await _mapSourceParticipantIds(
-      planId: target.planId,
-      snapshots: payload['participant_snapshots'],
-    );
     final beneficiarySource =
         payload['beneficiary_participant_id'] as String?;
-    final beneficiaryLocal = beneficiarySource == null
-        ? null
-        : sourceToLocal[beneficiarySource];
+    final beneficiaryLocal =
+        beneficiarySource == null || beneficiarySource.isEmpty
+            ? null
+            : await resolveImportedParticipantId(
+              db: _db,
+              planId: target.planId,
+              sourceParticipantId: beneficiarySource,
+              sourceToLocal: sourceToLocal,
+            );
     if (kind == RealizedExpenseKind.transfer &&
         (beneficiaryLocal == null || beneficiaryLocal.isEmpty)) {
       _log('import skip: transfer beneficiary not found on ${target.planId}');
@@ -319,17 +341,24 @@ class RealizedExpenseSyncService {
       return false;
     }
 
-    var localParticipantId = await _localParticipantIdForContact(
+    var localParticipantId = await localParticipantIdForSenderContact(
+      db: _db,
       planId: expense.planId,
-      contactId: senderContactId,
+      senderContactId: senderContactId,
     );
     if (localParticipantId == null) {
       final sourceParticipantId = payload['participant_id'] as String? ?? '';
-      final sourceToLocal = await _mapSourceParticipantIds(
+      localParticipantId = await resolveImportedParticipantId(
+        db: _db,
         planId: expense.planId,
-        snapshots: payload['participant_snapshots'],
+        sourceParticipantId: sourceParticipantId,
+        sourceToLocal: await mapSourceParticipantIdsFromSnapshots(
+          db: _db,
+          planId: expense.planId,
+          snapshots: payload['participant_snapshots'],
+        ),
+        senderContactId: senderContactId,
       );
-      localParticipantId = sourceToLocal[sourceParticipantId];
     }
     if (localParticipantId == null) {
       _log('decision skip: participant not mapped for $expenseId');
@@ -423,53 +452,6 @@ class RealizedExpenseSyncService {
     }
 
     return lines.first.id;
-  }
-
-  Future<String?> _localParticipantIdForContact({
-    required String planId,
-    required String contactId,
-  }) async {
-    final roster = await participantsForPlan(_db, planId);
-    for (final p in roster) {
-      if (p.contactId == contactId) return p.id;
-    }
-    return null;
-  }
-
-  Future<Map<String, String>> _mapSourceParticipantIds({
-    required String planId,
-    required Object? snapshots,
-  }) async {
-    final out = <String, String>{};
-    if (snapshots is! List) return out;
-
-    final roster = await participantsForPlan(_db, planId);
-    for (final raw in snapshots) {
-      if (raw is! Map) continue;
-      final sourceId = raw['id'] as String? ?? '';
-      if (sourceId.isEmpty) continue;
-
-      final contactId = raw['contactId'] as String?;
-      if (contactId != null) {
-        for (final p in roster) {
-          if (p.contactId == contactId) {
-            out[sourceId] = p.id;
-            break;
-          }
-        }
-      }
-
-      if (out.containsKey(sourceId)) continue;
-      final name = (raw['displayName'] as String? ?? '').trim().toLowerCase();
-      if (name.isEmpty) continue;
-      for (final p in roster) {
-        if (p.displayName.trim().toLowerCase() == name) {
-          out[sourceId] = p.id;
-          break;
-        }
-      }
-    }
-    return out;
   }
 
   String? _splitRatiosJsonFromPayload(Object? raw) {

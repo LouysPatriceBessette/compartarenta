@@ -1,6 +1,7 @@
 import '../contacts/contact_display.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import 'realized_expense/realized_expense_participants.dart';
 
 /// Route extra for [/contacts/redeem] when housing sends the user to add a
 /// co-participant who is not yet a relay-reachable contact.
@@ -41,6 +42,40 @@ Contact? relayReachableContactForParticipant(
         c.effectiveDisplayName.trim().toLowerCase() == name;
     final avatarMatches = avatar.isNotEmpty && c.avatarId == avatar;
     if (nameMatches || avatarMatches) return c;
+  }
+  return null;
+}
+
+/// Maps a relay [senderContactId] to a housing roster participant on this device.
+///
+/// Uses the same rules as [relayReachableContactForParticipant]: participant
+/// [Participant.contactId], then display name / avatar match.
+Future<String?> localParticipantIdForSenderContact({
+  required AppDatabase db,
+  required String planId,
+  required String senderContactId,
+}) async {
+  if (senderContactId.isEmpty) return null;
+
+  final roster = await participantsForPlan(db, planId);
+  for (final p in roster) {
+    if (p.contactId == senderContactId) return p.id;
+  }
+
+  final contacts = await db.listContacts();
+  Contact? sender;
+  for (final c in contacts) {
+    if (c.id == senderContactId) {
+      sender = c;
+      break;
+    }
+  }
+  if (sender == null) return null;
+
+  for (final p in roster) {
+    if (relayReachableContactForParticipant(p, [sender]) != null) {
+      return p.id;
+    }
   }
   return null;
 }
