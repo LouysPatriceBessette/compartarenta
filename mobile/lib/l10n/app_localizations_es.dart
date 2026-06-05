@@ -1489,18 +1489,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingArchiveExpiredTitle => 'Propuesta caducada';
 
   @override
-  String get housingInviteStatusTableRelay => 'Relé';
-
-  @override
-  String get housingInviteStatusRelayQueued => 'En cola';
-
-  @override
-  String get housingInviteStatusRelayFailed => 'Error';
-
-  @override
-  String get housingInviteStatusRelayUnknown => '—';
-
-  @override
   String get settingsActivityLogTitle => 'Diario de eventos';
 
   @override
@@ -2498,10 +2486,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Conectar';
-
-  @override
-  String get contactsEnterInviteCodeWaveBNote =>
-      'El intercambio cifrado con el relevo se habilitará cuando la infraestructura del relevo esté desplegada.';
 
   @override
   String get contactsEnterInviteCodeValid => 'El formato del código es válido';

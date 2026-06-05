@@ -652,10 +652,6 @@
     }
   },
   "housingArchiveExpiredTitle": "Expired proposal",
-  "housingInviteStatusTableRelay": "Relay",
-  "housingInviteStatusRelayQueued": "Queued",
-  "housingInviteStatusRelayFailed": "Failed",
-  "housingInviteStatusRelayUnknown": "—",
   "settingsActivityLogTitle": "Event journal",
   "settingsActivityLogSubtitle": "Relay events on this device",
   "activityLogEmpty": "No events match your filters.",
@@ -1083,7 +1079,6 @@
   "contactsEnterInviteCodeScanQr": "Scan QR code",
   "contactsEnterInviteCodeScanQrHint": "Point the camera at a Compartarenta invitation QR code.",
   "contactsEnterInviteCodeSubmit": "Connect",
-  "contactsEnterInviteCodeWaveBNote": "After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.",
   "contactsEnterInviteCodeValid": "Code format is valid",
   "contactsEnterInviteCodeInvitationId": "Invitation id: {id}",
   "@contactsEnterInviteCodeInvitationId": {

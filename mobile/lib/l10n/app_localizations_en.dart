@@ -1469,18 +1469,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingArchiveExpiredTitle => 'Expired proposal';
 
   @override
-  String get housingInviteStatusTableRelay => 'Relay';
-
-  @override
-  String get housingInviteStatusRelayQueued => 'Queued';
-
-  @override
-  String get housingInviteStatusRelayFailed => 'Failed';
-
-  @override
-  String get housingInviteStatusRelayUnknown => '—';
-
-  @override
   String get settingsActivityLogTitle => 'Event journal';
 
   @override
@@ -2471,10 +2459,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Connect';
-
-  @override
-  String get contactsEnterInviteCodeWaveBNote =>
-      'After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.';
 
   @override
   String get contactsEnterInviteCodeValid => 'Code format is valid';

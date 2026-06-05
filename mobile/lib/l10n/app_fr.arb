@@ -578,10 +578,6 @@
   "housingInviteOfferClosedHint": "Cette offre n'accepte plus de réponses.",
   "housingInviteForkedFromLabel": "Version dérivée d'une proposition antérieure ({revisionId}).",
   "housingArchiveExpiredTitle": "Proposition expirée",
-  "housingInviteStatusTableRelay": "Relais",
-  "housingInviteStatusRelayQueued": "En file",
-  "housingInviteStatusRelayFailed": "Échec",
-  "housingInviteStatusRelayUnknown": "—",
   "settingsActivityLogTitle": "Journal d'évènements",
   "settingsActivityLogSubtitle": "Événements relais sur cet appareil",
   "activityLogEmpty": "Aucun événement ne correspond aux filtres.",
@@ -981,7 +977,6 @@
   "contactsEnterInviteCodeScanQr": "Scanner le code QR",
   "contactsEnterInviteCodeScanQrHint": "Pointez la caméra vers un code QR d’invitation Compartarenta.",
   "contactsEnterInviteCodeSubmit": "Se connecter",
-  "contactsEnterInviteCodeWaveBNote": "La poignée de main chiffrée avec le relais sera activée une fois l’infrastructure du relais déployée.",
   "contactsEnterInviteCodeValid": "Le format du code est valide",
   "contactsEnterInviteCodeInvitationId": "Identifiant d’invitation : {id}",
   "@contactsEnterInviteCodeInvitationId": {

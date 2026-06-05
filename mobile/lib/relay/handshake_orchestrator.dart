@@ -2470,18 +2470,7 @@ class HandshakeOrchestrator {
       _db,
     ).buildProposeJson(expense: expense, attachments: attachments);
 
-    final planId = expense.planId;
-    final participants = (await _db.listParticipants())
-        .where((p) => p.id.startsWith('$planId:p'))
-        .toList(growable: false);
-    if (participants.isEmpty) {
-      RelayDiagnostics.logHousingRealizedExpense('no peers for $planId');
-      return;
-    }
-
-    final selfPriv = await _identity.loadOrCreatePrivateKey();
-    final selfPub = await _identity.publicKey();
-    final decisionCandidateContacts = (await _contacts.list())
+    final relayReachableContacts = (await _contacts.list())
         .where((c) {
           final peer = c.peerPublicMaterial;
           return !c.id.startsWith('contact:local:') &&
@@ -2489,68 +2478,64 @@ class HandshakeOrchestrator {
               peer.isNotEmpty;
         })
         .toList(growable: false);
-
-    for (final participant in participants) {
-      final contactId = participant.contactId;
-      final contact = contactId == null ? null : await _contacts.get(contactId);
-      final targets = _housingProposalTargetContacts(
-        participant: participant,
-        selectedContact: contact,
-        relayReachableContacts: decisionCandidateContacts,
-        planParticipantCount: participants.length,
+    if (relayReachableContacts.isEmpty) {
+      RelayDiagnostics.logHousingRealizedExpense(
+        'no relay contacts for ${expense.planId}',
       );
-      if (targets.isEmpty) {
-        debugPrint(
-          'housing_realized_expense decision no targets for ${participant.id}'
-          ' (contactId=${contactId ?? '-'}, '
-          'candidateContacts=${decisionCandidateContacts.length})',
+      return;
+    }
+
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final seenPeerMaterial = <String>{};
+
+    for (final target in relayReachableContacts) {
+      final peerPubB64 = target.peerPublicMaterial;
+      if (peerPubB64 == null || peerPubB64.isEmpty) continue;
+      if (!seenPeerMaterial.add(peerPubB64)) continue;
+      try {
+        final peerPub = RelayRouting.unb64(peerPubB64);
+        final frame =
+            await EnvelopeCodec.encryptHousingRealizedExpensePropose(
+              envelope: HousingRealizedExpenseEnvelope(
+                senderLongTermPublicKey: selfPub,
+                expenseJson: expenseJson,
+              ),
+              senderLongTermPrivateKey: selfPriv,
+              peerLongTermPublicKey: peerPub,
+            );
+        final selfAddr = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
         );
-      }
-      for (final target in targets) {
-        final peerPubB64 = target.peerPublicMaterial;
-        if (peerPubB64 == null || peerPubB64.isEmpty) continue;
-        try {
-          final peerPub = RelayRouting.unb64(peerPubB64);
-          final frame =
-              await EnvelopeCodec.encryptHousingRealizedExpensePropose(
-                envelope: HousingRealizedExpenseEnvelope(
-                  senderLongTermPublicKey: selfPub,
-                  expenseJson: expenseJson,
-                ),
-                senderLongTermPrivateKey: selfPriv,
-                peerLongTermPublicKey: peerPub,
-              );
-          final selfAddr = await RelayRouting.steadyStateAddress(
-            firstPub: selfPub,
-            secondPub: peerPub,
-          );
-          final peerAddr = await RelayRouting.steadyStateAddress(
-            firstPub: peerPub,
-            secondPub: selfPub,
-          );
-          await _ensureSteadyRoutingRegistered(
-            selfListenAddr: selfAddr,
-            peerListenAddr: peerAddr,
-          );
-          await _relay.postEnvelope(
-            senderIdentity: selfAddr,
-            recipientIdentity: peerAddr,
-            idempotencyKey: _randomBytes(16),
-            ciphertext: frame,
+        final peerAddr = await RelayRouting.steadyStateAddress(
+          firstPub: peerPub,
+          secondPub: selfPub,
+        );
+        await _ensureSteadyRoutingRegistered(
+          selfListenAddr: selfAddr,
+          peerListenAddr: peerAddr,
+        );
+        await _relay.postEnvelope(
+          senderIdentity: selfAddr,
+          recipientIdentity: peerAddr,
+          idempotencyKey: _randomBytes(16),
+          ciphertext: frame,
             kind: EnvelopeKind.housingRealizedExpensePropose,
             ttl: _steadyTtl,
           );
           RelayDiagnostics.logHousingRealizedExpense(
-            'posted for $planId to ${target.id}',
+            'posted for ${expense.planId} to ${target.id}',
           );
         } on Object catch (e) {
           debugPrint(
-            'housing_realized_expense to ${participant.id}/${target.id} failed: $e',
+            'housing_realized_expense propose to ${target.id} failed: $e',
           );
         }
-      }
     }
-    await RealizedExpenseLedgerService(_db).markPlanActiveUseIfNeeded(planId);
+    await RealizedExpenseLedgerService(
+      _db,
+    ).markPlanActiveUseIfNeeded(expense.planId);
   }
 
   Future<void> sendRealizedExpenseAccept({

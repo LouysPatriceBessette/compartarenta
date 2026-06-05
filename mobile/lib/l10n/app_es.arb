@@ -561,10 +561,6 @@
   "housingInviteOfferClosedHint": "Esta oferta ya no admite respuestas.",
   "housingInviteForkedFromLabel": "Versión derivada de una propuesta anterior ({revisionId}).",
   "housingArchiveExpiredTitle": "Propuesta caducada",
-  "housingInviteStatusTableRelay": "Relé",
-  "housingInviteStatusRelayQueued": "En cola",
-  "housingInviteStatusRelayFailed": "Error",
-  "housingInviteStatusRelayUnknown": "—",
   "settingsActivityLogTitle": "Diario de eventos",
   "settingsActivityLogSubtitle": "Eventos del relé en este dispositivo",
   "activityLogEmpty": "Ningún evento coincide con los filtros.",
@@ -964,7 +960,6 @@
   "contactsEnterInviteCodeScanQr": "Escanear código QR",
   "contactsEnterInviteCodeScanQrHint": "Apunta la cámara a un código QR de invitación de Compartarenta.",
   "contactsEnterInviteCodeSubmit": "Conectar",
-  "contactsEnterInviteCodeWaveBNote": "El intercambio cifrado con el relevo se habilitará cuando la infraestructura del relevo esté desplegada.",
   "contactsEnterInviteCodeValid": "El formato del código es válido",
   "contactsEnterInviteCodeInvitationId": "ID de invitación: {id}",
   "@contactsEnterInviteCodeInvitationId": {

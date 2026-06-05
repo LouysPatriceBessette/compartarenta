@@ -465,11 +465,6 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                     ? () => _connect(result.code)
                     : null,
               ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.contactsEnterInviteCodeWaveBNote,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
             ],
           ),
         ),

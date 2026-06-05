@@ -2572,30 +2572,6 @@ abstract class AppLocalizations {
   /// **'Expired proposal'**
   String get housingArchiveExpiredTitle;
 
-  /// No description provided for @housingInviteStatusTableRelay.
-  ///
-  /// In en, this message translates to:
-  /// **'Relay'**
-  String get housingInviteStatusTableRelay;
-
-  /// No description provided for @housingInviteStatusRelayQueued.
-  ///
-  /// In en, this message translates to:
-  /// **'Queued'**
-  String get housingInviteStatusRelayQueued;
-
-  /// No description provided for @housingInviteStatusRelayFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get housingInviteStatusRelayFailed;
-
-  /// No description provided for @housingInviteStatusRelayUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'—'**
-  String get housingInviteStatusRelayUnknown;
-
   /// No description provided for @settingsActivityLogTitle.
   ///
   /// In en, this message translates to:
@@ -4296,12 +4272,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect'**
   String get contactsEnterInviteCodeSubmit;
-
-  /// No description provided for @contactsEnterInviteCodeWaveBNote.
-  ///
-  /// In en, this message translates to:
-  /// **'After tapping Connect, the encrypted request travels to the relay and waits for the inviter to approve it.'**
-  String get contactsEnterInviteCodeWaveBNote;
 
   /// No description provided for @contactsEnterInviteCodeValid.
   ///

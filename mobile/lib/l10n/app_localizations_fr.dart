@@ -1491,18 +1491,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingArchiveExpiredTitle => 'Proposition expirée';
 
   @override
-  String get housingInviteStatusTableRelay => 'Relais';
-
-  @override
-  String get housingInviteStatusRelayQueued => 'En file';
-
-  @override
-  String get housingInviteStatusRelayFailed => 'Échec';
-
-  @override
-  String get housingInviteStatusRelayUnknown => '—';
-
-  @override
   String get settingsActivityLogTitle => 'Journal d\'évènements';
 
   @override
@@ -2504,10 +2492,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Se connecter';
-
-  @override
-  String get contactsEnterInviteCodeWaveBNote =>
-      'La poignée de main chiffrée avec le relais sera activée une fois l’infrastructure du relais déployée.';
 
   @override
   String get contactsEnterInviteCodeValid => 'Le format du code est valide';

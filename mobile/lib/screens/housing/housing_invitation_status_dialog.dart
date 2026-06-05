@@ -63,10 +63,6 @@ Future<void> showHousingInvitationStatusDialog(
   final responseMessages = Map<String, dynamic>.from(
     (payload['responseMessages'] as Map?) ?? const <String, dynamic>{},
   );
-  final relayStatus = Map<String, dynamic>.from(
-    (payload['relaySendStatusByParticipantId'] as Map?) ??
-        const <String, dynamic>{},
-  );
   final expiresStr = payload['responseExpiresAt'] as String?;
   DateTime? expiresUtc;
   if (expiresStr != null) {
@@ -109,15 +105,6 @@ Future<void> showHousingInvitationStatusDialog(
           ? formatPreferenceDateTime(expiresUtc.toUtc(), dateFmt)
           : l10n.housingInviteStatusDeadlineNotSet;
 
-      String relayLabel(String participantId) {
-        final raw = relayStatus[participantId]?.toString();
-        return switch (raw) {
-          'queued' => l10n.housingInviteStatusRelayQueued,
-          'failed' => l10n.housingInviteStatusRelayFailed,
-          _ => l10n.housingInviteStatusRelayUnknown,
-        };
-      }
-
       return AlertDialog(
         title: Text(l10n.housingInviteStatusDialogTitle),
         content: SingleChildScrollView(
@@ -150,9 +137,6 @@ Future<void> showHousingInvitationStatusDialog(
                     DataColumn(
                       label: Text(l10n.housingInviteStatusTableStatus),
                     ),
-                    DataColumn(
-                      label: Text(l10n.housingInviteStatusTableRelay),
-                    ),
                   ],
                   rows: [
                     for (final p in roster)
@@ -165,7 +149,6 @@ Future<void> showHousingInvitationStatusDialog(
                                 _responseStatusLabel(l10n, byParticipant[p.id]),
                               ),
                             ),
-                            DataCell(Text(relayLabel(p.id))),
                           ],
                         ),
                   ],
