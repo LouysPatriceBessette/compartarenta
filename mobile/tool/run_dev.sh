@@ -2,10 +2,13 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "${DIR}/.." && pwd)"
 
 cd "${DIR}"
 
-./tool/flutterw pub get
+# shellcheck source=../../tool/ensure_pub_get.sh
+source "${ROOT}/tool/ensure_pub_get.sh"
+ensure_workspace_pub_get "${ROOT}"
 
 # Extra args (e.g. -d linux) come from the command line, or from FLUTTER_DEVICE when unset.
 # Example: dart run melos run run:dev -- -d chrome
@@ -35,6 +38,7 @@ done
 
 run_args=(
   run
+  --no-pub
   --flavor dev
   --dart-define=ENV=dev
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"

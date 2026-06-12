@@ -10,11 +10,16 @@ interactive `flutter run` session.
 
 ## Commands to use in chat and docs
 
-- **Dev mobile (default):** `dart run melos run run:dev` (optional device:
-  `dart run melos run run:dev -- -d <deviceId>`)
-- **Dev web:** `dart run melos run run:dev:web`
-- **Other scripts:** `dart run melos run <script>` (see root `pubspec.yaml`
+- **Dev mobile (default):** `./tool/melosw run run:dev` (optional device:
+  `./tool/melosw run run:dev -- -d <deviceId>`)
+- **Dev web:** `./tool/melosw run run:dev:web`
+- **Other scripts:** `./tool/melosw run <script>` (see root `pubspec.yaml`
   under `melos.scripts`)
+- `./tool/melosw` avoids the duplicate `dart pub get` that `dart run melos`
+  triggers on every launch; deps refresh only when pubspec inputs change
+  (or set `COMPARTARENTA_FORCE_PUB_GET=1`).
+- Legacy equivalent: `dart run melos run …` still works but re-downloads more
+  often.
 - Prefer `./tool/flutterw` only when documenting what the shell scripts
   invoke under `mobile/`; do not tell the user to run bare `flutter run`
   unless they explicitly ask for it.
@@ -32,7 +37,7 @@ listening for Flutter’s single-key commands (`q`, `r`, `R`, `h`, `d`, etc.).
 
 - **Stop:** interrupt the melos process (`Ctrl+C` in that terminal), and
   force-quit the app on the device/emulator if needed.
-- **Cold restart:** run `dart run melos run run:dev` (or `run:dev:web`)
+- **Cold restart:** run `./tool/melosw run run:dev` (or `run:dev:web`)
   again after a full stop — not hot restart.
 
 ## Native plugin errors (`MissingPluginException`)

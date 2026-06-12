@@ -22,8 +22,13 @@ melos:
       run: cd mobile && flutter analyze .
 
     get:
-      description: Resolve dependencies (flutter pub get) in mobile
-      run: cd mobile && flutter pub get
+      description: |
+        Resolve workspace dependencies (skips pub get when pubspec inputs
+        are unchanged). Set COMPARTARENTA_FORCE_PUB_GET=1 to always refresh.
+      run: |
+        set -e
+        source ./tool/ensure_pub_get.sh
+        ensure_workspace_pub_get
 
     codegen:
       description: Run build_runner (Drift, etc.) in mobile

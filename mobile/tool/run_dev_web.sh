@@ -9,8 +9,13 @@ set -euo pipefail
 # Melos prefixes stderr as "ERROR:" — use stdout for expected notes (port skip, etc.).
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "${DIR}/.." && pwd)"
 
 cd "${DIR}"
+
+# shellcheck source=../../tool/ensure_pub_get.sh
+source "${ROOT}/tool/ensure_pub_get.sh"
+ensure_workspace_pub_get "${ROOT}"
 
 API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
 # Use localhost (not 127.0.0.1): Flutter web is served at http://localhost:WEB_PORT
@@ -213,7 +218,8 @@ _start_web_dev_session_server() {
 
   mkdir -p "${HOME}/.cache/compartarenta"
   WEB_DEV_SESSION_PORT="${WEB_DEV_SESSION_PORT}" \
-    dart run tool/web_dev_session_server.dart &
+    dart --packages="${ROOT}/.dart_tool/package_config.json" \
+    tool/web_dev_session_server.dart &
   local pid=$!
   echo "${pid}" >"${WEB_DEV_SESSION_PID_FILE}"
 
@@ -248,6 +254,7 @@ echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Fl
 ./tool/flutterw run \
   -d chrome \
   "${web_port_args[@]}" \
+  --no-pub \
   --no-web-resources-cdn \
   --web-header=Cross-Origin-Opener-Policy=same-origin \
   --web-header=Cross-Origin-Embedder-Policy=require-corp \

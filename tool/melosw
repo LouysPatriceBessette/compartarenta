@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run melos without `dart run melos` (which resolves/downloads twice per launch).
+# Usage: ./tool/melosw run run:dev:web
+# Force refresh: COMPARTARENTA_FORCE_PUB_GET=1 ./tool/melosw run run:dev:web
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT}"
+
+# shellcheck source=ensure_pub_get.sh
+source "${ROOT}/tool/ensure_pub_get.sh"
+ensure_workspace_pub_get "${ROOT}"
+
+melos_bin="$(_melos_snapshot_path "${ROOT}")" || {
+  echo "melos executable missing after pub get (expected under .dart_tool/pub/bin/melos/)" >&2
+  exit 1
+}
+
+exec dart "${melos_bin}" "$@"
