@@ -251,6 +251,14 @@ fi
 
 echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
 
+wipe_browser_args=()
+WIPE_MARKER="${DIR}/.dart_tool/web-dev-wipe-browser-on-next-launch"
+if [[ -f "${WIPE_MARKER}" ]]; then
+  echo "delete:web-dev-session requested a browser wipe on this launch."
+  wipe_browser_args=(--dart-define=WEB_DEV_WIPE_BROWSER=true)
+  rm -f "${WIPE_MARKER}"
+fi
+
 ./tool/flutterw run \
   -d chrome \
   "${web_port_args[@]}" \
@@ -261,4 +269,5 @@ echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Fl
   --dart-define=ENV=dev \
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
   --dart-define="WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL}" \
+  "${wipe_browser_args[@]}" \
   "$@"

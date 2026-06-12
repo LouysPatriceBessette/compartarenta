@@ -12,12 +12,23 @@ fi
 PORT="${PORT:-18765}"
 URL="http://${HOST}:${PORT}/session"
 FILE="${HOME}/.cache/compartarenta/web-dev-session.json"
+WIPE_MARKER="${DIR}/.dart_tool/web-dev-wipe-browser-on-next-launch"
+
+_schedule_browser_wipe_on_next_launch() {
+  mkdir -p "$(dirname "${WIPE_MARKER}")"
+  : >"${WIPE_MARKER}"
+  echo "Next run:dev:web will wipe browser storage (OPFS, localStorage mirrors, prefs)."
+}
 
 if curl -sf -X DELETE "${URL}" >/dev/null 2>&1; then
   echo "Deleted web dev session via ${URL}"
+  _schedule_browser_wipe_on_next_launch
 elif [[ -f "${FILE}" ]]; then
   rm -f "${FILE}"
   echo "Deleted web dev session file ${FILE} (server not running)"
+  _schedule_browser_wipe_on_next_launch
 else
   echo "No web dev session at ${URL} or ${FILE}"
+  echo "Scheduling browser wipe on next run:dev:web anyway."
+  _schedule_browser_wipe_on_next_launch
 fi

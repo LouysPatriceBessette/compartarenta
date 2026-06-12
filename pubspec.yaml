@@ -78,8 +78,9 @@ melos:
 
     delete:web-dev-session:
       description: |
-        Delete ~/.cache/compartarenta/web-dev-session.json (web dev persistence).
-        Use before a fresh onboarding / handshake on web.
+        Delete ~/.cache/compartarenta/web-dev-session.json and schedule a wipe of
+        browser storage (OPFS Drift DB, localStorage mirrors, prefs) on the next
+        run:dev:web launch. Use before a fresh onboarding / handshake on web.
       run: cd mobile && chmod +x ./tool/delete_web_dev_session.sh && ./tool/delete_web_dev_session.sh
 
     web:assets:

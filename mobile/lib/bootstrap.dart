@@ -36,6 +36,12 @@ Future<void> bootstrap() async {
       WidgetsFlutterBinding.ensureInitialized();
       registerPushBackgroundHandler();
 
+      if (kDebugMode && kIsWeb) {
+        await wipeWebDevBrowserStorageOnLaunchIfRequested(
+          clearRelayIdentity: config.apiBaseUrl.host != 'example.invalid',
+        );
+      }
+
       final appDb = AppDatabase();
       AppDatabase.bindProcessScope(appDb);
       if (kDebugMode && kIsWeb) {

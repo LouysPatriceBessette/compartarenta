@@ -9,3 +9,7 @@ void scheduleDevHostSessionSave(AppDatabase db) {}
 Future<void> flushDevHostSessionSave(AppDatabase db) async {}
 
 Future<void> clearDevHostSessionAfterWipe() async {}
+
+Future<void> wipeWebDevBrowserStorageOnLaunchIfRequested({
+  required bool clearRelayIdentity,
+}) async {}

@@ -5,11 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../db/app_database.dart';
+import '../db/db_reset.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/identity_keystore.dart';
 import 'web_dev_db_snapshot.dart';
 import 'web_dev_db_write_observer.dart';
 import 'web_dev_profile_recovery.dart';
+
+const _wipeBrowserOnLaunch = bool.fromEnvironment('WEB_DEV_WIPE_BROWSER');
 
 /// Must match the Flutter web origin host (localhost vs 127.0.0.1) or the
 /// browser blocks cross-origin fetches to the dev session server.
@@ -20,6 +23,26 @@ const _sessionUrlDefine = String.fromEnvironment(
 
 Timer? _saveDebounce;
 bool _saveInFlight = false;
+
+/// Wipes browser OPFS, housing mirrors, prefs, and relay test identity when
+/// [delete:web-dev-session] scheduled the next [run:dev:web] launch.
+Future<void> wipeWebDevBrowserStorageOnLaunchIfRequested({
+  required bool clearRelayIdentity,
+}) async {
+  if (!kDebugMode) return;
+  if (!_wipeBrowserOnLaunch) return;
+
+  debugPrint(
+    'web_dev_wipe: clearing browser storage after delete:web-dev-session',
+  );
+
+  final prefs = await AppPreferences.load();
+  await prefs.resetOnboardingAndPreferences();
+  if (clearRelayIdentity) {
+    await IdentityKeystore.secureStorage().deleteForTesting();
+  }
+  await DbReset.deleteLocalDbFiles(prefs: prefs);
+}
 
 /// Restores prefs, identity, and Drift tables from the host dev session file.
 Future<void> restoreDevSessionFromHostIfNeeded(AppDatabase db) async {
