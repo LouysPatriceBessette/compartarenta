@@ -217,7 +217,11 @@ _start_web_dev_session_server() {
   fi
 
   mkdir -p "${HOME}/.cache/compartarenta"
-  WEB_DEV_SESSION_PORT="${WEB_DEV_SESSION_PORT}" \
+  local session_server_env=(WEB_DEV_SESSION_PORT="${WEB_DEV_SESSION_PORT}")
+  if [[ "${WEB_DEV_WIPE_BROWSER_ON_START:-0}" == "1" ]]; then
+    session_server_env+=(WEB_DEV_WIPE_BROWSER_ON_START=1)
+  fi
+  env "${session_server_env[@]}" \
     dart --packages="${ROOT}/.dart_tool/package_config.json" \
     tool/web_dev_session_server.dart &
   local pid=$!
@@ -245,19 +249,26 @@ _start_web_dev_session_server() {
 
 _print_host_backup_hint
 
+WIPE_MARKER="${DIR}/.dart_tool/web-dev-wipe-browser-on-next-launch"
+WEB_DEV_WIPE_BROWSER_ON_START=0
+if [[ -f "${WIPE_MARKER}" ]]; then
+  echo "delete:web-dev-session requested a one-shot browser wipe on next app load."
+  WEB_DEV_WIPE_BROWSER_ON_START=1
+  rm -f "${WIPE_MARKER}"
+fi
+export WEB_DEV_WIPE_BROWSER_ON_START
+
 if ! _start_web_dev_session_server; then
   exit 1
 fi
 
-echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
-
-wipe_browser_args=()
-WIPE_MARKER="${DIR}/.dart_tool/web-dev-wipe-browser-on-next-launch"
-if [[ -f "${WIPE_MARKER}" ]]; then
-  echo "delete:web-dev-session requested a browser wipe on this launch."
-  wipe_browser_args=(--dart-define=WEB_DEV_WIPE_BROWSER=true)
-  rm -f "${WIPE_MARKER}"
+if [[ "${WEB_DEV_WIPE_BROWSER_ON_START}" == "1" ]]; then
+  if curl -sf -X POST "${WEB_DEV_SESSION_URL}/session/wipe-pending" >/dev/null 2>&1; then
+    echo "One-shot browser wipe armed on ${WEB_DEV_SESSION_URL} (page refresh will not repeat it)."
+  fi
 fi
+
+echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
 
 ./tool/flutterw run \
   -d chrome \
@@ -269,5 +280,4 @@ fi
   --dart-define=ENV=dev \
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
   --dart-define="WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL}" \
-  "${wipe_browser_args[@]}" \
   "$@"

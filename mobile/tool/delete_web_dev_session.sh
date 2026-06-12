@@ -11,13 +11,17 @@ if [[ -z "${PORT}" && -f "${PORT_FILE}" ]]; then
 fi
 PORT="${PORT:-18765}"
 URL="http://${HOST}:${PORT}/session"
+WIPE_URL="http://${HOST}:${PORT}/session/wipe-pending"
 FILE="${HOME}/.cache/compartarenta/web-dev-session.json"
 WIPE_MARKER="${DIR}/.dart_tool/web-dev-wipe-browser-on-next-launch"
 
 _schedule_browser_wipe_on_next_launch() {
   mkdir -p "$(dirname "${WIPE_MARKER}")"
   : >"${WIPE_MARKER}"
-  echo "Next run:dev:web will wipe browser storage (OPFS, localStorage mirrors, prefs)."
+  if curl -sf -X POST "${WIPE_URL}" >/dev/null 2>&1; then
+    echo "Scheduled one-shot browser wipe on the dev session server."
+  fi
+  echo "Next run:dev:web will wipe browser storage once (OPFS, localStorage mirrors, prefs)."
 }
 
 if curl -sf -X DELETE "${URL}" >/dev/null 2>&1; then

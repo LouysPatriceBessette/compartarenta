@@ -16,6 +16,8 @@ Future<void> main() async {
   final cacheDir = Directory('$home/.cache/compartarenta');
   cacheDir.createSync(recursive: true);
   final sessionFile = File('${cacheDir.path}/web-dev-session.json');
+  var wipeBrowserPending =
+      Platform.environment['WEB_DEV_WIPE_BROWSER_ON_START'] == '1';
 
   HttpServer server;
   try {
@@ -44,6 +46,29 @@ Future<void> main() async {
       }
 
       final path = request.uri.path;
+      if (path == '/session/wipe-pending' ||
+          path == '/session/wipe-pending/') {
+        switch (request.method) {
+          case 'GET':
+            await _handleWipePendingGet(request, () => wipeBrowserPending, (
+              value,
+            ) {
+              wipeBrowserPending = value;
+            });
+          case 'POST':
+            wipeBrowserPending = true;
+            _writeCors(request.response);
+            request.response.statusCode = HttpStatus.noContent;
+            await request.response.close();
+            print('web_dev_session_server: browser wipe scheduled (one-shot)');
+          default:
+            request.response.statusCode = HttpStatus.methodNotAllowed;
+            _writeCors(request.response);
+            await request.response.close();
+        }
+        continue;
+      }
+
       if (path == '/session' || path == '/session/') {
         switch (request.method) {
           case 'GET':
@@ -76,10 +101,27 @@ Future<void> main() async {
 void _writeCors(HttpResponse response) {
   response.headers
     ..set('Access-Control-Allow-Origin', '*')
-    ..set('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS')
+    ..set('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS')
     ..set('Access-Control-Allow-Headers', 'Content-Type')
     // Required when Flutter web runs with COEP require-corp (Drift OPFS).
     ..set('Cross-Origin-Resource-Policy', 'cross-origin');
+}
+
+Future<void> _handleWipePendingGet(
+  HttpRequest request,
+  bool Function() readPending,
+  void Function(bool value) writePending,
+) async {
+  final pending = readPending();
+  writePending(false);
+  _writeCors(request.response);
+  request.response.statusCode = HttpStatus.ok;
+  request.response.headers.contentType = ContentType.json;
+  request.response.write(jsonEncode({'pending': pending}));
+  await request.response.close();
+  if (pending) {
+    print('web_dev_session_server: browser wipe consumed (one-shot)');
+  }
 }
 
 Future<void> _handleGet(HttpRequest request, File sessionFile) async {

@@ -12,8 +12,6 @@ import 'web_dev_db_snapshot.dart';
 import 'web_dev_db_write_observer.dart';
 import 'web_dev_profile_recovery.dart';
 
-const _wipeBrowserOnLaunch = bool.fromEnvironment('WEB_DEV_WIPE_BROWSER');
-
 /// Must match the Flutter web origin host (localhost vs 127.0.0.1) or the
 /// browser blocks cross-origin fetches to the dev session server.
 const _sessionUrlDefine = String.fromEnvironment(
@@ -24,13 +22,14 @@ const _sessionUrlDefine = String.fromEnvironment(
 Timer? _saveDebounce;
 bool _saveInFlight = false;
 
-/// Wipes browser OPFS, housing mirrors, prefs, and relay test identity when
-/// [delete:web-dev-session] scheduled the next [run:dev:web] launch.
+/// Wipes browser OPFS, housing mirrors, prefs, and relay test identity once
+/// when [delete:web-dev-session] scheduled a one-shot wipe on the dev server.
 Future<void> wipeWebDevBrowserStorageOnLaunchIfRequested({
   required bool clearRelayIdentity,
 }) async {
   if (!kDebugMode) return;
-  if (!_wipeBrowserOnLaunch) return;
+  if (_sessionUrlDefine.isEmpty) return;
+  if (!await _consumeBrowserWipePending()) return;
 
   debugPrint(
     'web_dev_wipe: clearing browser storage after delete:web-dev-session',
@@ -256,6 +255,25 @@ Future<void> clearDevHostSessionAfterWipe() async {
       'web_dev_host_session: could not clear host file ($error). '
       'Run: dart run melos run delete:web-dev-session',
     );
+  }
+}
+
+Future<bool> _consumeBrowserWipePending() async {
+  try {
+    final response = await http
+        .get(
+          Uri.parse(_sessionUrlDefine).resolve('/session/wipe-pending'),
+        )
+        .timeout(const Duration(seconds: 5));
+    if (response.statusCode != 200) return false;
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) return false;
+    return decoded['pending'] == true;
+  } catch (error) {
+    debugPrint(
+      'web_dev_wipe: could not read wipe-pending from $_sessionUrlDefine ($error)',
+    );
+    return false;
   }
 }
 
