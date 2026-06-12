@@ -605,6 +605,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               pendingChangeId: null,
                               isEjectionCandidate: false,
                             );
+                        final ejectionCandidateSubtitle =
+                            gates.isEjectionCandidate
+                                ? gates.majorChangeSubtitle
+                                : null;
                         return ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
@@ -677,6 +681,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               icon: Icons.add_card_outlined,
                               label: l10n.housingActiveHubEnterExpense,
                               enabled: gates.enterExpenseEnabled,
+                              subtitle: ejectionCandidateSubtitle,
+                              subtitleColor: Colors.red.shade700,
                               onTap: () => _openEnterExpense(context),
                             ),
                             const _HubSectionDivider(),
@@ -720,6 +726,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                       ? l10n.housingActiveHubViewPendingAmendment
                                       : l10n.housingActiveHubRequestAmendment,
                               enabled: gates.requestAmendmentEnabled,
+                              subtitle: ejectionCandidateSubtitle,
+                              subtitleColor: Colors.red.shade700,
                               onTap: () => _onAmendmentHubTap(context),
                             ),
                             _HubTile(
@@ -728,7 +736,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               enabled:
                                   HousingAmendmentUiGates.rosterChangeEnabled &&
                                   gates.majorChangeEnabled,
-                              subtitle: gates.majorChangeSubtitle,
+                              subtitle: ejectionCandidateSubtitle,
                               subtitleColor: Colors.red.shade700,
                               onTap: () => _openMajorChange(context),
                             ),

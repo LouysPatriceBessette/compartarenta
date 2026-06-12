@@ -74,10 +74,11 @@ class HousingParticipationChangeSyncService {
       planId,
     );
 
+    final snapshots = payload['participant_snapshots'];
     final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
       db: _db,
       planId: planId,
-      snapshots: payload['participant_snapshots'],
+      snapshots: snapshots,
     );
 
     final sourceInitiator =
@@ -89,6 +90,7 @@ class HousingParticipationChangeSyncService {
       sourceParticipantId: sourceInitiator,
       sourceToLocal: sourceToLocal,
       senderContactId: senderContactId,
+      snapshots: snapshots,
     );
     if (localInitiator == null || localInitiator.isEmpty) {
       _log('propose skip: initiator not mapped for $changeId');
@@ -102,6 +104,7 @@ class HousingParticipationChangeSyncService {
               planId: planId,
               sourceParticipantId: sourceTarget,
               sourceToLocal: sourceToLocal,
+              snapshots: snapshots,
             );
     if (sourceTarget != null &&
         sourceTarget.isNotEmpty &&
@@ -249,6 +252,7 @@ class HousingParticipationChangeSyncService {
         {
           'id': p.id,
           'displayName': p.displayName,
+          if (p.avatarId.isNotEmpty) 'avatarId': p.avatarId,
           if (p.contactId != null) 'contactId': p.contactId,
         },
     ];

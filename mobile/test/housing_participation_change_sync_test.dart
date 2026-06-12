@@ -224,4 +224,83 @@ void main() {
     expect(row.initiatorParticipantId, '$planId:p1');
     expect(row.targetParticipantId, selfId);
   });
+
+  test(
+    'importProposeFromPeer maps ejection on decider device when target lacks contactId',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'plan-h3';
+      const selfId = '$planId:self';
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: selfId,
+          displayName: 'Monica',
+          avatarId: 'av-m',
+          contactId: const drift.Value('contact:monica'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$planId:p1',
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          contactId: const drift.Value('contact:louys'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$planId:p2',
+          displayName: 'Roberr',
+          avatarId: 'av-r',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+
+      const changeId = 'change-eject-monica';
+      final json = '''
+{
+  "change_id": "$changeId",
+  "package_id": "pkg-1",
+  "plan_id": "$planId",
+  "kind": "ejection",
+  "initiator_participant_id": "$planId:self",
+  "target_participant_id": "$planId:p2",
+  "status": "pending",
+  "created_at": "2026-06-04T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Louys", "contactId": "contact:louys", "avatarId": "av-l"},
+    {"id": "$planId:p1", "displayName": "Monica", "avatarId": "av-m"},
+    {"id": "$planId:p2", "displayName": "Roberr", "avatarId": "av-r"}
+  ]
+}
+''';
+
+      final svc = HousingParticipationChangeSyncService(db);
+      expect(
+        await svc.importProposeFromPeer(
+          changeJson: json,
+          senderContactId: 'contact:louys',
+        ),
+        isTrue,
+      );
+
+      final row = await (db.select(db.housingParticipationChanges)
+            ..where((t) => t.id.equals(changeId)))
+          .getSingle();
+      expect(row.initiatorParticipantId, '$planId:p1');
+      expect(row.targetParticipantId, '$planId:p2');
+      expect(row.kind, HousingParticipationChangeKind.ejection.wireValue);
+    },
+  );
 }

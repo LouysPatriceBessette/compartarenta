@@ -1583,11 +1583,17 @@ class HandshakeOrchestrator {
     }
 
     final imported = await import(decrypted.changeJson);
+    if (!imported) {
+      debugPrint(
+        'housing_participation_change import skipped for ${senderContact.id}; '
+        'envelope left unacked for retry',
+      );
+      return;
+    }
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: myListenAddr,
     );
-    if (!imported) return;
 
     final changeId = _changeIdFromJson(decrypted.changeJson);
     if (changeId != null) {

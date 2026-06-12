@@ -126,8 +126,8 @@ class HousingParticipationHubGates {
           isEjectionCandidate: false,
         ),
       HousingParticipationChangeKind.ejection => HousingParticipationHubGates(
-        showParticipationBanner: !isCandidate,
-        participationBannerText: isCandidate ? null : bannerText,
+        showParticipationBanner: true,
+        participationBannerText: bannerText,
         enterExpenseEnabled: !isCandidate,
         requestAmendmentEnabled: !isCandidate,
         majorChangeEnabled: !isCandidate,
