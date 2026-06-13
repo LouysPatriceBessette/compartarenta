@@ -48,6 +48,26 @@ void main() {
       expect(data.realMode.edges.single.amountMinor, 5000);
     });
 
+    test('should attribute equal-split rounding remainder to the payer', () {
+      final data = computeHousingBalanceData(
+        publishedExpenses: [
+          _expense(
+            id: 'e1',
+            amountMinor: 10000,
+            payerParticipantId: 'p1',
+            kind: RealizedExpenseKind.normal,
+          ),
+        ],
+        planRatios: _equalRatios(planId, 'line', ['p1', 'p2', 'p3']),
+        participants: participants,
+      );
+
+      expect(
+        _edgeAmounts(data.realMode.edges),
+        equals({'p2->p1': 3333, 'p3->p1': 3333}),
+      );
+    });
+
     test('should keep opposite directions distinct in real mode', () {
       final data = computeHousingBalanceData(
         publishedExpenses: [

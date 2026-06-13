@@ -3,6 +3,28 @@ import '../../db/app_database.dart';
 /// Local user's participant row for an active housing plan.
 String selfParticipantIdForPlan(String planId) => '$planId:self';
 
+/// Case-insensitive display-name order for cross-device balance views.
+int compareParticipantDisplayNames(String a, String b) {
+  final na = a.trim().toLowerCase();
+  final nb = b.trim().toLowerCase();
+  final order = na.compareTo(nb);
+  if (order != 0) return order;
+  return a.compareTo(b);
+}
+
+/// Returns [participants] sorted A→Z by [Participant.displayName].
+List<Participant> sortParticipantsByDisplayName(
+  Iterable<Participant> participants,
+) {
+  final out = participants.toList(growable: false);
+  out.sort((a, b) {
+    final order = compareParticipantDisplayNames(a.displayName, b.displayName);
+    if (order != 0) return order;
+    return a.id.compareTo(b.id);
+  });
+  return out;
+}
+
 /// Stable roster order for housing participants in [planId].
 int rosterOrderForPlanParticipantId(String planId, String participantId) {
   if (participantId == selfParticipantIdForPlan(planId)) {

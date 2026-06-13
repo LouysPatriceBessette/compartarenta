@@ -82,3 +82,36 @@ List<int> splitMinorByWeights(
   }
   return out;
 }
+
+/// Moves integer remainder cents from [splits] onto [recipientIndex].
+///
+/// Used when the payer fronted the expense: any +1 cent from Hamilton (or
+/// equal-part) rounding is attributed to them, not the last roster slot.
+void reassignSplitRemainderToParticipant(
+  List<int> splits,
+  List<int> weightsBps,
+  int basisMinor,
+  int recipientIndex, {
+  int weightScale = 10000,
+}) {
+  if (recipientIndex < 0 ||
+      recipientIndex >= splits.length ||
+      splits.isEmpty) {
+    return;
+  }
+
+  final floors = List<int>.generate(
+    splits.length,
+    (i) => weightsAreMaximallyBalanced(weightsBps, weightScale: weightScale)
+        ? basisMinor ~/ splits.length
+        : (basisMinor * weightsBps[i]) ~/ weightScale,
+  );
+
+  for (var i = 0; i < splits.length; i++) {
+    if (i == recipientIndex) continue;
+    final extra = splits[i] - floors[i];
+    if (extra <= 0) continue;
+    splits[i] -= extra;
+    splits[recipientIndex] += extra;
+  }
+}

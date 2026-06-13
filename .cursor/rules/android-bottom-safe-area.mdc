@@ -1,0 +1,41 @@
+---
+description: Always reserve bottom safe-area inset on scrollable Flutter screens
+globs: mobile/lib/**/*.dart
+alwaysApply: false
+---
+
+# Android / iOS bottom safe area on screens
+
+Scrollable pages must not let content sit under the system navigation bar or home indicator.
+
+## Required pattern
+
+For `ListView`, `SingleChildScrollView`, `CustomScrollView`, and similar full-height scroll bodies inside a `Scaffold`:
+
+```dart
+import '../widgets/screen_body_padding.dart';
+
+ListView(
+  padding: screenBodyScrollPadding(context),
+  children: [...],
+)
+```
+
+Use `screenBodyScrollPadding(context, content: …)` when the base padding is not uniform (e.g. `EdgeInsets.fromLTRB(16, 0, 16, 24)`).
+
+## Helpers (`mobile/lib/widgets/screen_body_padding.dart`)
+
+| Helper | Use |
+| --- | --- |
+| `screenBodyScrollPadding(context)` | Standard 16 px padding + bottom inset |
+| `screenBottomSafeInset(context)` | Raw `MediaQuery.viewPaddingOf(context).bottom` |
+| `kScreenBodyPadding` | Default `EdgeInsets.all(16)` before inset |
+
+## When `SafeArea` alone is enough
+
+`Scaffold(body: SafeArea(child: …))` is fine for non-scroll fixed layouts. For scroll views, prefer **padding on the scroll view** so the last item can scroll above the nav bar — not only the initial viewport.
+
+## Do not
+
+- Ship a new screen with only `const EdgeInsets.all(16)` on a `ListView` body.
+- Use `viewInsets.bottom` for this (keyboard inset); use `viewPadding.bottom` (system UI).

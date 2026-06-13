@@ -8,6 +8,7 @@ import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_balance.dart';
 import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_inactive_settlement_form_screen.dart';
 import 'widgets/housing_balances_graph.dart';
 import 'widgets/housing_balances_legend.dart';
@@ -102,7 +103,7 @@ class _HousingBalancesScreenState extends State<HousingBalancesScreen> {
           final inactiveRows = bundle.inactive;
           final modeData = data.modeData(_mode);
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: screenBodyScrollPadding(context),
             children: [
               if (inactiveRows.isNotEmpty) ...[
                 for (final inactive in inactiveRows)

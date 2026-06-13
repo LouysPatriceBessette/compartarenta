@@ -29,4 +29,13 @@ void main() {
     expect(parts, [64286, 64286, 64286, 64286, 64286, 64285, 64285]);
     expect(parts.fold<int>(0, (a, b) => a + b), basisMinor);
   });
+
+  test('reassignSplitRemainderToParticipant moves cent to payer index', () {
+    const weights = [3333, 3333, 3334];
+    const basis = 10000;
+    final splits = splitMinorByWeights(basis, weights);
+    expect(splits, [3333, 3333, 3334]);
+    reassignSplitRemainderToParticipant(splits, weights, basis, 0);
+    expect(splits, [3334, 3333, 3333]);
+  });
 }

@@ -128,7 +128,19 @@ HousingBalanceData computeHousingBalanceData({
 
     final weights = <int>[];
     final orderedIds = <String>[];
-    for (final ratio in lineRatios) {
+    final sortedRatios = [...lineRatios]
+      ..sort((a, b) {
+        final orderById = <String, int>{
+          for (var i = 0; i < participantIds.length; i++)
+            participantIds[i]: i,
+        };
+        final c = (orderById[a.participantId] ?? 1 << 20).compareTo(
+          orderById[b.participantId] ?? 1 << 20,
+        );
+        if (c != 0) return c;
+        return a.participantId.compareTo(b.participantId);
+      });
+    for (final ratio in sortedRatios) {
       final resolved = departedSourceToInactiveId[ratio.participantId] ??
           ratio.participantId;
       if (!participantIds.contains(resolved)) continue;
@@ -139,6 +151,15 @@ HousingBalanceData computeHousingBalanceData({
 
     final splits = splitMinorByWeights(expense.amountMinor, weights);
     final payer = mapParticipantId(expense.payerParticipantId);
+    final payerIdx = orderedIds.indexOf(payer);
+    if (payerIdx >= 0) {
+      reassignSplitRemainderToParticipant(
+        splits,
+        weights,
+        expense.amountMinor,
+        payerIdx,
+      );
+    }
 
     if (expense.kind == RealizedExpenseKind.reimbursement) {
       final beneficiary = expense.beneficiaryParticipantId;

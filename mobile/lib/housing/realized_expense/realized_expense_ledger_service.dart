@@ -293,12 +293,19 @@ class RealizedExpenseLedgerService {
       _db,
     ).ensureInactiveForDepartedMembers(planId);
     final membership = HousingParticipationMembershipService(_db);
-    final roster = sortParticipantsForPlan(
-      planId,
+    final roster = sortParticipantsByDisplayName(
       await membership.activeParticipantsForPlan(planId),
     );
     final inactiveRows =
         await HousingInactiveParticipantService(_db).listUncleared(planId);
+    inactiveRows.sort((a, b) {
+      final order = compareParticipantDisplayNames(
+        a.displayNameSnapshot,
+        b.displayNameSnapshot,
+      );
+      if (order != 0) return order;
+      return a.id.compareTo(b.id);
+    });
     final departedSourceToInactiveId = {
       for (final row in inactiveRows) row.sourceParticipantId: row.id,
     };
