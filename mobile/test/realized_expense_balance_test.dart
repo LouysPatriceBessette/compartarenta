@@ -183,6 +183,52 @@ void main() {
       expect(data.realMode.edges.single.amountMinor, 1000);
     });
 
+    test('should map departed source ratio ids to inactive participants', () {
+      const inactiveId = 'inactive:plan:p3';
+      final data = computeHousingBalanceData(
+        publishedExpenses: [
+          _expense(
+            id: 'e1',
+            amountMinor: 30000,
+            payerParticipantId: 'p1',
+            kind: RealizedExpenseKind.normal,
+            splitRatiosJson:
+                '[{"participantId":"p1","weight":3333},'
+                '{"participantId":"p2","weight":3333},'
+                '{"participantId":"p3","weight":3334}]',
+          ),
+        ],
+        planRatios: _equalRatios(planId, 'line', ['p1', 'p2']),
+        participants: [
+          participants[0],
+          participants[1],
+          const HousingBalanceParticipant(
+            participantId: inactiveId,
+            displayName: 'C departed',
+            letter: 'C',
+            orderIndex: 2,
+            isInactive: true,
+          ),
+        ],
+        ratiosByExpenseId: {
+          'e1': planRatiosFromSplitJson(
+            splitRatiosJson:
+                '[{"participantId":"p1","weight":3333},'
+                '{"participantId":"p2","weight":3333},'
+                '{"participantId":"p3","weight":3334}]',
+            planId: planId,
+            lineId: 'line',
+          ),
+        },
+        departedSourceToInactiveId: const {'p3': inactiveId},
+      );
+
+      expect(
+        _edgeAmounts(data.realMode.edges),
+        equals({'p2->p1': 10000, '$inactiveId->p1': 10000}),
+      );
+    });
+
     test('should prefer per-expense snapshot ratios over live plan ratios', () {
       final expense = _expense(
         id: 'renamed-line',

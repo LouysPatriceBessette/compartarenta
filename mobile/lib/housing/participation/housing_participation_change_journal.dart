@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:drift/drift.dart';
 
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
@@ -64,11 +64,26 @@ Future<List<HousingParticipationChangeJournalEntry>> loadHousingParticipationCha
   required AppDatabase db,
   required String planId,
 }) async {
+  final packageRow = await (db.select(db.proposalPackages)
+        ..where((t) => t.planId.equals(planId)))
+      .getSingleOrNull();
+  final packageId = packageRow?.id;
+
   final changes = await (db.select(db.housingParticipationChanges)
-        ..where((t) => t.planId.equals(planId))
+        ..where((t) {
+          if (packageId == null) {
+            return t.planId.equals(planId);
+          }
+          return t.planId.equals(planId) | t.packageId.equals(packageId);
+        })
         ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
       .get();
-  if (changes.isEmpty) return const [];
+
+  final byChangeId = <String, HousingParticipationChange>{};
+  for (final change in changes) {
+    byChangeId.putIfAbsent(change.id, () => change);
+  }
+  if (byChangeId.isEmpty) return const [];
 
   final roster = await participantsForPlan(db, planId);
   String nameFor(String participantId) =>
@@ -76,7 +91,7 @@ Future<List<HousingParticipationChangeJournalEntry>> loadHousingParticipationCha
 
   final entries = <HousingParticipationChangeJournalEntry>[];
 
-  for (final change in changes) {
+  for (final change in byChangeId.values) {
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
     if (kind == null) continue;
 

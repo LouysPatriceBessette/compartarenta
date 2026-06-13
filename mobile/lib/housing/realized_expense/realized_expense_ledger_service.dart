@@ -289,6 +289,9 @@ class RealizedExpenseLedgerService {
   }
 
   Future<HousingBalanceData> balanceDataForPlan(String planId) async {
+    await HousingInactiveParticipantService(
+      _db,
+    ).ensureInactiveForDepartedMembers(planId);
     final membership = HousingParticipationMembershipService(_db);
     final roster = sortParticipantsForPlan(
       planId,

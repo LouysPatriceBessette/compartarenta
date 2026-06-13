@@ -158,6 +158,7 @@ class HousingParticipationChangeSyncService {
       } else {
         _log('propose $changeId already present (idempotent ok)');
       }
+      await _applyEffectiveFromPayloadIfNeeded(payload, changeId);
       return true;
     }
 
@@ -197,6 +198,7 @@ class HousingParticipationChangeSyncService {
       '(initiator $sourceInitiator→$localInitiator, '
       'target $sourceTarget→$localTarget)',
     );
+    await _applyEffectiveFromPayloadIfNeeded(payload, changeId);
     return true;
   }
 
@@ -366,5 +368,18 @@ class HousingParticipationChangeSyncService {
 
   void _log(String message) {
     debugPrint('housing_participation_change $message');
+  }
+
+  Future<void> _applyEffectiveFromPayloadIfNeeded(
+    Map<String, dynamic> payload,
+    String changeId,
+  ) async {
+    final status = HousingParticipationChangeStatus.fromWire(
+      payload['status'] as String?,
+    );
+    if (status != HousingParticipationChangeStatus.effective) return;
+    await HousingParticipationChangeService(_db).applyEffectiveFromPeerNotify(
+      changeId,
+    );
   }
 }

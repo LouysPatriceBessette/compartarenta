@@ -1,4 +1,5 @@
 import 'package:compartarenta/db/app_database.dart';
+import 'package:compartarenta/housing/participation/housing_inactive_participant_service.dart';
 import 'package:compartarenta/housing/participation/housing_participation_change_kind.dart';
 import 'package:compartarenta/housing/participation/housing_participation_change_sync_service.dart';
 import 'package:drift/drift.dart' as drift;
@@ -393,6 +394,122 @@ void main() {
       expect(row.initiatorParticipantId, '$localPlanId:p0');
       expect(row.targetParticipantId, '$localPlanId:p1');
       expect(row.kind, HousingParticipationChangeKind.ejection.wireValue);
+    },
+  );
+
+  test(
+    'importProposeFromPeer applies effective side effects on notify replay',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'received:roberr';
+      const packageId = 'pkg:received:roberr';
+      const roberrSelf = '$planId:self';
+      const louysId = '$planId:p0';
+      const monicaId = '$planId:p1';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      for (final entry in [
+        (monicaId, 'Monica'),
+        (louysId, 'Louys'),
+        (roberrSelf, 'Roberr'),
+      ]) {
+        await db.upsertParticipant(
+          ParticipantsCompanion.insert(
+            id: entry.$1,
+            displayName: entry.$2,
+            avatarId: 'av',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+      }
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: packageId,
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+
+      const changeId = 'change-eject-notify';
+      const pendingJson = '''
+{
+  "change_id": "$changeId",
+  "package_id": "$packageId",
+  "plan_id": "$planId",
+  "kind": "ejection",
+  "initiator_participant_id": "$louysId",
+  "target_participant_id": "$roberrSelf",
+  "status": "pending",
+  "created_at": "2026-06-04T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$monicaId", "displayName": "Monica"},
+    {"id": "$louysId", "displayName": "Louys"},
+    {"id": "$roberrSelf", "displayName": "Roberr"}
+  ]
+}
+''';
+      const effectiveJson = '''
+{
+  "change_id": "$changeId",
+  "package_id": "$packageId",
+  "plan_id": "$planId",
+  "kind": "ejection",
+  "initiator_participant_id": "$louysId",
+  "target_participant_id": "$roberrSelf",
+  "status": "effective",
+  "created_at": "2026-06-04T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$monicaId", "displayName": "Monica"},
+    {"id": "$louysId", "displayName": "Louys"},
+    {"id": "$roberrSelf", "displayName": "Roberr"}
+  ]
+}
+''';
+
+      final svc = HousingParticipationChangeSyncService(db);
+      expect(
+        await svc.importProposeFromPeer(
+          changeJson: pendingJson,
+          senderContactId: 'contact:louys',
+        ),
+        isTrue,
+      );
+      expect(
+        await svc.importNotifyFromPeer(
+          notifyJson: effectiveJson,
+          senderContactId: 'contact:louys',
+        ),
+        isTrue,
+      );
+
+      final row = await (db.select(db.housingParticipationChanges)
+            ..where((t) => t.id.equals(changeId)))
+          .getSingle();
+      expect(row.status, HousingParticipationChangeStatus.effective.wireValue);
+
+      final membership = await (db.select(db.housingPlanMemberships)
+            ..where(
+              (t) =>
+                  t.planId.equals(planId) &
+                  t.participantId.equals(roberrSelf),
+            ))
+          .getSingle();
+      expect(membership.status, HousingPlanMembershipStatus.departed.wireValue);
+
+      final inactive = await HousingInactiveParticipantService(db).listUncleared(
+        planId,
+      );
+      expect(inactive, hasLength(1));
+      expect(inactive.single.sourceParticipantId, roberrSelf);
     },
   );
 }

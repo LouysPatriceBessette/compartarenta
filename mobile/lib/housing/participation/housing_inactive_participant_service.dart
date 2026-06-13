@@ -3,6 +3,8 @@ import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
 import '../realized_expense/realized_expense_participants.dart';
+import 'housing_participation_change_kind.dart';
+import 'housing_participation_membership_service.dart';
 
 /// Ledger-only ghost participant created when someone leaves (#2/#3).
 class HousingInactiveParticipantService {
@@ -64,6 +66,24 @@ class HousingInactiveParticipantService {
     return (_db.select(_db.housingInactiveParticipants)
           ..where((t) => t.id.equals(inactiveParticipantId)))
         .getSingleOrNull();
+  }
+
+  /// Ensures a ledger ghost exists for every departed roster member on this device.
+  Future<void> ensureInactiveForDepartedMembers(String planId) async {
+    final membership = HousingParticipationMembershipService(_db);
+    await membership.ensureMembershipsForPlan(planId);
+    final departed =
+        await (_db.select(_db.housingPlanMemberships)..where(
+          (t) =>
+              t.planId.equals(planId) &
+              t.status.equals(HousingPlanMembershipStatus.departed.wireValue),
+        )).get();
+    for (final row in departed) {
+      await createInactiveParticipant(
+        planId: planId,
+        sourceParticipantId: row.participantId,
+      );
+    }
   }
 
   Future<void> markCleared(String inactiveParticipantId) async {

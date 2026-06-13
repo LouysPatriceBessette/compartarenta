@@ -370,6 +370,13 @@ class HousingParticipationChangeService {
     await _setStatus(change.id, HousingParticipationChangeStatus.effective);
   }
 
+  /// Applies departure side effects after a peer notify with effective status.
+  Future<void> applyEffectiveFromPeerNotify(String changeId) async {
+    final change = await getById(changeId);
+    if (change == null) return;
+    await _applyEffective(change);
+  }
+
   Future<void> _setStatus(
     String changeId,
     HousingParticipationChangeStatus status,

@@ -128,16 +128,17 @@ HousingBalanceData computeHousingBalanceData({
 
     final weights = <int>[];
     final orderedIds = <String>[];
-    for (final id in participantIds) {
-      final match = lineRatios.where((r) => r.participantId == id);
-      if (match.isEmpty) continue;
-      orderedIds.add(id);
-      weights.add(match.first.weight);
+    for (final ratio in lineRatios) {
+      final resolved = departedSourceToInactiveId[ratio.participantId] ??
+          ratio.participantId;
+      if (!participantIds.contains(resolved)) continue;
+      orderedIds.add(resolved);
+      weights.add(ratio.weight);
     }
     if (orderedIds.isEmpty || weights.isEmpty) continue;
 
     final splits = splitMinorByWeights(expense.amountMinor, weights);
-    final payer = expense.payerParticipantId;
+    final payer = mapParticipantId(expense.payerParticipantId);
 
     if (expense.kind == RealizedExpenseKind.reimbursement) {
       final beneficiary = expense.beneficiaryParticipantId;
