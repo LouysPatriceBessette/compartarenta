@@ -14,15 +14,14 @@ class HousingParticipationMembershipService {
   Future<void> ensureMembershipsForPlan(String planId) async {
     final roster = await participantsForPlan(_db, planId);
     for (final p in roster) {
-      await _db
-          .into(_db.housingPlanMemberships)
-          .insertOnConflictUpdate(
-            HousingPlanMembershipsCompanion.insert(
-              planId: planId,
-              participantId: p.id,
-              status: HousingPlanMembershipStatus.active.wireValue,
-            ),
-          );
+      await _db.into(_db.housingPlanMemberships).insert(
+        HousingPlanMembershipsCompanion.insert(
+          planId: planId,
+          participantId: p.id,
+          status: HousingPlanMembershipStatus.active.wireValue,
+        ),
+        mode: drift.InsertMode.insertOrIgnore,
+      );
     }
   }
 

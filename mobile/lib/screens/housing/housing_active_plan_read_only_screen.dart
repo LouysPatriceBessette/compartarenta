@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_json.dart';
+import '../../housing/participation/housing_participation_membership_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
@@ -164,22 +165,8 @@ class _HousingActivePlanReadOnlyScreenState
     final agreement = await db.getAgreementForPlan(widget.planId);
     if (plan == null || agreement == null) return null;
 
-    final participants = (await db.listParticipants())
-        .where(
-          (p) =>
-              p.id == '${widget.planId}:self' ||
-              p.id.startsWith('${widget.planId}:p'),
-        )
-        .toList(growable: false)
-      ..sort((a, b) {
-        int order(String id) {
-          if (id.endsWith(':self')) return -1;
-          final tail = id.split(':p').last;
-          return int.tryParse(tail) ?? 999;
-        }
-
-        return order(a.id).compareTo(order(b.id));
-      });
+    final participants = await HousingParticipationMembershipService(db)
+        .activeParticipantsForPlan(widget.planId);
     final range =
         '${formatPreferenceDate(agreement.periodStart, dateFmt)}'
         ' – '
