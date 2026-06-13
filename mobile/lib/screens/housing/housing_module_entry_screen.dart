@@ -15,9 +15,11 @@ import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
+import 'housing_past_agreement_entry_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
 import 'housing_workbench_screen.dart';
 import '../../housing/participation/housing_participation_change_service.dart';
+import '../../housing/participation/housing_participation_membership_service.dart';
 
 /// Housing [Plan] rows where this device has a `planId:self` participant.
 Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
@@ -50,6 +52,7 @@ class _HousingEntrySnapshot {
     this.hasArchives = false,
     this.primaryActivePlan,
     this.primaryActivePackage,
+    this.primaryActivePlanIsPastForSelf = false,
   });
 
   final List<Plan> plans;
@@ -58,6 +61,7 @@ class _HousingEntrySnapshot {
   /// When exactly one housing plan has an in-force agreement, open its hub.
   final Plan? primaryActivePlan;
   final ProposalPackage? primaryActivePackage;
+  final bool primaryActivePlanIsPastForSelf;
 }
 
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
@@ -297,17 +301,25 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
 
     Plan? primaryActivePlan;
     ProposalPackage? primaryActivePackage;
+    var primaryActivePlanIsPastForSelf = false;
     for (final plan in plans) {
       if (!await transport.hasActiveRevision(plan.id)) continue;
       if (primaryActivePlan != null) {
         primaryActivePlan = null;
         primaryActivePackage = null;
+        primaryActivePlanIsPastForSelf = false;
         break;
       }
       primaryActivePlan = plan;
       primaryActivePackage = await (db.select(db.proposalPackages)
             ..where((t) => t.planId.equals(plan.id)))
           .getSingleOrNull();
+      final membership = HousingParticipationMembershipService(db);
+      await membership.ensureMembershipsForPlan(plan.id);
+      primaryActivePlanIsPastForSelf = !await membership.isActiveMember(
+        plan.id,
+        '${plan.id}:self',
+      );
     }
 
     if (plans.length != 1) {
@@ -315,6 +327,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
         plans: plans,
         primaryActivePlan: primaryActivePlan,
         primaryActivePackage: primaryActivePackage,
+        primaryActivePlanIsPastForSelf: primaryActivePlanIsPastForSelf,
       );
     }
     final planId = plans.single.id;
@@ -330,6 +343,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       hasArchives: hasArchives,
       primaryActivePlan: primaryActivePlan,
       primaryActivePackage: primaryActivePackage,
+      primaryActivePlanIsPastForSelf: primaryActivePlanIsPastForSelf,
     );
   }
 
@@ -380,6 +394,14 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
           final primary = entry.primaryActivePlan;
           final primaryPkg = entry.primaryActivePackage;
           if (primary != null && primaryPkg != null) {
+            if (entry.primaryActivePlanIsPastForSelf) {
+              return HousingPastAgreementEntryScreen(
+                key: ValueKey('past-entry-${primary.id}'),
+                planId: primary.id,
+                packageId: primaryPkg.id,
+                prefs: widget.prefs,
+              );
+            }
             return HousingActivePlanScreen(
               key: ValueKey('active-hub-${primary.id}'),
               planId: primary.id,

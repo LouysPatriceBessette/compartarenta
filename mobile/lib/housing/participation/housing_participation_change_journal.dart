@@ -80,54 +80,31 @@ Future<List<HousingParticipationChangeJournalEntry>> loadHousingParticipationCha
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
     if (kind == null) continue;
 
+    final status = HousingParticipationChangeStatus.fromWire(change.status);
+    final eventKind = switch (status) {
+      HousingParticipationChangeStatus.effective =>
+        HousingParticipationJournalEventKind.effective,
+      HousingParticipationChangeStatus.aborted =>
+        HousingParticipationJournalEventKind.aborted,
+      HousingParticipationChangeStatus.pending ||
+      null => HousingParticipationJournalEventKind.proposed,
+    };
+    final occurredAt =
+        status == HousingParticipationChangeStatus.effective ||
+            status == HousingParticipationChangeStatus.aborted
+        ? change.settledAt ?? change.createdAt
+        : change.createdAt;
+
     entries.add(
       HousingParticipationChangeJournalEntry(
         changeId: change.id,
         packageId: change.packageId,
         kind: kind,
-        eventKind: HousingParticipationJournalEventKind.proposed,
+        eventKind: eventKind,
         actorDisplayName: nameFor(change.initiatorParticipantId),
-        occurredAt: change.createdAt,
+        occurredAt: occurredAt,
       ),
     );
-
-    final decisions = await (db.select(db.housingParticipationDecisions)
-          ..where((t) => t.changeId.equals(change.id)))
-        .get();
-    for (final decision in decisions) {
-      final status = HousingParticipationDecisionStatus.fromWire(decision.status);
-      if (status == null) continue;
-      final decidedAt = decision.decidedAt ?? change.createdAt;
-      entries.add(
-        HousingParticipationChangeJournalEntry(
-          changeId: change.id,
-          packageId: change.packageId,
-          kind: kind,
-          eventKind: HousingParticipationJournalEventKind.decision,
-          actorDisplayName: nameFor(decision.participantId),
-          occurredAt: decidedAt,
-          decisionAccepted: status == HousingParticipationDecisionStatus.accepted,
-        ),
-      );
-    }
-
-    final status = HousingParticipationChangeStatus.fromWire(change.status);
-    if (status == HousingParticipationChangeStatus.effective ||
-        status == HousingParticipationChangeStatus.aborted) {
-      final settledAt = change.settledAt ?? change.createdAt;
-      entries.add(
-        HousingParticipationChangeJournalEntry(
-          changeId: change.id,
-          packageId: change.packageId,
-          kind: kind,
-          eventKind: status == HousingParticipationChangeStatus.effective
-              ? HousingParticipationJournalEventKind.effective
-              : HousingParticipationJournalEventKind.aborted,
-          actorDisplayName: nameFor(change.initiatorParticipantId),
-          occurredAt: settledAt,
-        ),
-      );
-    }
   }
 
   entries.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));

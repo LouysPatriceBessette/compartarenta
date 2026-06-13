@@ -14,6 +14,17 @@ class HousingInactiveParticipantService {
     required String planId,
     required String sourceParticipantId,
   }) async {
+    final existing =
+        await (_db.select(_db.housingInactiveParticipants)
+              ..where(
+                (t) =>
+                    t.planId.equals(planId) &
+                    t.sourceParticipantId.equals(sourceParticipantId) &
+                    t.clearedAt.isNull(),
+              ))
+            .getSingleOrNull();
+    if (existing != null) return existing.id;
+
     final roster = await participantsForPlan(_db, planId);
     final name = displayNameForParticipant(sourceParticipantId, roster);
     final id =
@@ -31,12 +42,22 @@ class HousingInactiveParticipantService {
   }
 
   Future<List<HousingInactiveParticipant>> listUncleared(String planId) async {
-    return (_db.select(_db.housingInactiveParticipants)
+    final rows = await (_db.select(_db.housingInactiveParticipants)
           ..where(
             (t) => t.planId.equals(planId) & t.clearedAt.isNull(),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .get();
+    final bySource = <String, HousingInactiveParticipant>{};
+    for (final row in rows) {
+      final existing = bySource[row.sourceParticipantId];
+      if (existing == null || row.createdAt.isBefore(existing.createdAt)) {
+        bySource[row.sourceParticipantId] = row;
+      }
+    }
+    final distinct = bySource.values.toList(growable: false)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return distinct;
   }
 
   Future<HousingInactiveParticipant?> getById(String inactiveParticipantId) {

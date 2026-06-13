@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
 import '../../housing/participation/housing_inactive_participant_service.dart';
+import '../../housing/participation/housing_participation_membership_service.dart';
 import '../../prefs/app_preferences.dart';
 import 'realized_expense_balance.dart';
 import 'realized_expense_line_snapshot.dart';
@@ -288,9 +289,10 @@ class RealizedExpenseLedgerService {
   }
 
   Future<HousingBalanceData> balanceDataForPlan(String planId) async {
+    final membership = HousingParticipationMembershipService(_db);
     final roster = sortParticipantsForPlan(
       planId,
-      await participantsForPlan(_db, planId),
+      await membership.activeParticipantsForPlan(planId),
     );
     final inactiveRows =
         await HousingInactiveParticipantService(_db).listUncleared(planId);

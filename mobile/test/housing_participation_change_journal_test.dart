@@ -6,8 +6,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('loadHousingParticipationChangeJournal lists proposed, decision, and effective events', () async {
+  test('loadHousingParticipationChangeJournal emits one entry per change', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
     const planId = 'housing:journal';
     const pkgId = 'pkg:journal';
 
@@ -62,32 +63,11 @@ void main() {
       planId: planId,
     );
 
-    expect(entries, isNotEmpty);
+    expect(entries, hasLength(1));
+    expect(entries.single.changeId, changeId);
     expect(
-      entries.any(
-        (e) =>
-            e.changeId == changeId &&
-            e.eventKind == HousingParticipationJournalEventKind.proposed,
-      ),
-      isTrue,
+      entries.single.eventKind,
+      HousingParticipationJournalEventKind.effective,
     );
-    expect(
-      entries.any(
-        (e) =>
-            e.changeId == changeId &&
-            e.eventKind == HousingParticipationJournalEventKind.decision &&
-            e.decisionAccepted == true,
-      ),
-      isTrue,
-    );
-    expect(
-      entries.any(
-        (e) =>
-            e.changeId == changeId &&
-            e.eventKind == HousingParticipationJournalEventKind.effective,
-      ),
-      isTrue,
-    );
-    expect(entries.first.occurredAt.isAfter(entries.last.occurredAt), isTrue);
   });
 }
