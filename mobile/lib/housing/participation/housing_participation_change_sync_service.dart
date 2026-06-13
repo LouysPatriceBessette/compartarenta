@@ -10,6 +10,13 @@ import 'housing_participation_change_kind.dart';
 import 'housing_participation_change_service.dart';
 import 'housing_participation_membership_service.dart';
 
+class _LocalPlanTarget {
+  const _LocalPlanTarget({required this.planId, required this.packageId});
+
+  final String planId;
+  final String packageId;
+}
+
 /// Steady-state JSON sync for participation change (client-only relay kinds).
 class HousingParticipationChangeSyncService {
   HousingParticipationChangeSyncService(this._db);
@@ -67,8 +74,24 @@ class HousingParticipationChangeSyncService {
     final changeId = payload['change_id'] as String? ?? '';
     if (changeId.isEmpty) return false;
 
-    final planId = payload['plan_id'] as String? ?? '';
-    if (planId.isEmpty) return false;
+    final payloadPackageId = payload['package_id'] as String? ?? '';
+    final payloadPlanId = payload['plan_id'] as String? ?? '';
+    final target = await _resolveLocalPlanTarget(
+      payloadPackageId: payloadPackageId,
+      payloadPlanId: payloadPlanId,
+    );
+    if (target == null) {
+      _log(
+        'propose skip: no local plan for package=$payloadPackageId '
+        'plan=$payloadPlanId',
+      );
+      return false;
+    }
+    final planId = target.planId;
+    final localPackageId = target.packageId;
+    if (payloadPlanId.isNotEmpty && payloadPlanId != planId) {
+      _log('propose resolved plan $payloadPlanId → $planId');
+    }
 
     await HousingParticipationMembershipService(_db).ensureMembershipsForPlan(
       planId,
@@ -142,7 +165,7 @@ class HousingParticipationChangeSyncService {
       HousingParticipationChangesCompanion.insert(
         id: changeId,
         planId: planId,
-        packageId: payload['package_id'] as String? ?? '',
+        packageId: localPackageId,
         kind: payload['kind'] as String? ?? '',
         initiatorParticipantId: localInitiator,
         targetParticipantId: drift.Value(localTarget),
@@ -265,6 +288,80 @@ class HousingParticipationChangeSyncService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Maps sender-local `received:*` plan ids to this device's active housing plan.
+  Future<_LocalPlanTarget?> _resolveLocalPlanTarget({
+    required String payloadPackageId,
+    required String payloadPlanId,
+  }) async {
+    if (payloadPackageId.isNotEmpty) {
+      final byPkg = await (_db.select(_db.proposalPackages)
+            ..where((t) => t.id.equals(payloadPackageId)))
+          .getSingleOrNull();
+      if (byPkg?.activeRevisionId != null && byPkg!.activeRevisionId!.isNotEmpty) {
+        return _LocalPlanTarget(planId: byPkg.planId, packageId: byPkg.id);
+      }
+    }
+
+    if (payloadPlanId.isNotEmpty) {
+      final byPlan = await (_db.select(_db.proposalPackages)
+            ..where((t) => t.planId.equals(payloadPlanId)))
+          .get();
+      for (final pkg in byPlan) {
+        if (pkg.activeRevisionId != null && pkg.activeRevisionId!.isNotEmpty) {
+          return _LocalPlanTarget(planId: pkg.planId, packageId: pkg.id);
+        }
+      }
+    }
+
+    final active = await (_db.select(_db.proposalPackages)
+          ..where((t) => t.activeRevisionId.isNotNull()))
+        .get();
+    if (active.length == 1) {
+      final pkg = active.single;
+      if (pkg.activeRevisionId != null && pkg.activeRevisionId!.isNotEmpty) {
+        return _LocalPlanTarget(planId: pkg.planId, packageId: pkg.id);
+      }
+    } else if (active.length > 1) {
+      for (final pkg in active) {
+        if (pkg.activeRevisionId == null || pkg.activeRevisionId!.isEmpty) {
+          continue;
+        }
+        final plan = await (_db.select(_db.plans)
+              ..where((t) => t.id.equals(pkg.planId)))
+            .getSingleOrNull();
+        if (plan?.type == 'housing') {
+          return _LocalPlanTarget(planId: pkg.planId, packageId: pkg.id);
+        }
+      }
+    }
+
+    if (payloadPlanId.isNotEmpty) {
+      final plan = await (_db.select(_db.plans)
+            ..where((t) => t.id.equals(payloadPlanId)))
+          .getSingleOrNull();
+      if (plan != null) {
+        var packageId = payloadPackageId;
+        if (packageId.isEmpty) {
+          final packages = await (_db.select(_db.proposalPackages)
+                ..where((t) => t.planId.equals(payloadPlanId)))
+              .get();
+          for (final pkg in packages) {
+            if (pkg.activeRevisionId != null &&
+                pkg.activeRevisionId!.isNotEmpty) {
+              packageId = pkg.id;
+              break;
+            }
+          }
+        }
+        if (packageId.isEmpty) {
+          packageId = 'pkg:$payloadPlanId';
+        }
+        return _LocalPlanTarget(planId: payloadPlanId, packageId: packageId);
+      }
+    }
+    return null;
   }
 
   void _log(String message) {

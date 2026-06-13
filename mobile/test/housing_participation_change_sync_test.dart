@@ -303,4 +303,96 @@ void main() {
       expect(row.kind, HousingParticipationChangeKind.ejection.wireValue);
     },
   );
+
+  test(
+    'importProposeFromPeer resolves received plan id on author device',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const localPlanId = 'housing:default';
+      const localPackageId = 'pkg:housing:default';
+      const remotePlanId = 'received:abc';
+      const remotePackageId = 'pkg:received:abc';
+      const louysContact = 'contact:handshake:louys';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: localPlanId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$localPlanId:self',
+          displayName: 'Monica',
+          avatarId: 'av-m',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$localPlanId:p0',
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          contactId: const drift.Value(louysContact),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: '$localPlanId:p1',
+          displayName: 'Roberr',
+          avatarId: 'av-r',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: localPackageId,
+          planId: localPlanId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+
+      const changeId = 'change-eject-author';
+      final json = '''
+{
+  "change_id": "$changeId",
+  "package_id": "$remotePackageId",
+  "plan_id": "$remotePlanId",
+  "kind": "ejection",
+  "initiator_participant_id": "$remotePlanId:self",
+  "target_participant_id": "$remotePlanId:p1",
+  "status": "pending",
+  "created_at": "2026-06-04T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$remotePlanId:self", "displayName": "Louys", "contactId": "$louysContact", "avatarId": "av-l"},
+    {"id": "$remotePlanId:p0", "displayName": "Monica", "avatarId": "av-m"},
+    {"id": "$remotePlanId:p1", "displayName": "Roberr", "avatarId": "av-r"}
+  ]
+}
+''';
+
+      final svc = HousingParticipationChangeSyncService(db);
+      expect(
+        await svc.importProposeFromPeer(
+          changeJson: json,
+          senderContactId: louysContact,
+        ),
+        isTrue,
+      );
+
+      final row = await (db.select(db.housingParticipationChanges)
+            ..where((t) => t.id.equals(changeId)))
+          .getSingle();
+      expect(row.planId, localPlanId);
+      expect(row.packageId, localPackageId);
+      expect(row.initiatorParticipantId, '$localPlanId:p0');
+      expect(row.targetParticipantId, '$localPlanId:p1');
+      expect(row.kind, HousingParticipationChangeKind.ejection.wireValue);
+    },
+  );
 }
