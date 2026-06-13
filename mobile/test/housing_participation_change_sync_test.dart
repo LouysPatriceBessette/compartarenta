@@ -1,7 +1,9 @@
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/participation/housing_inactive_participant_service.dart';
 import 'package:compartarenta/housing/participation/housing_participation_change_kind.dart';
+import 'package:compartarenta/housing/participation/housing_participation_change_service.dart';
 import 'package:compartarenta/housing/participation/housing_participation_change_sync_service.dart';
+import 'package:compartarenta/housing/participation/housing_participation_membership_service.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -510,6 +512,74 @@ void main() {
       );
       expect(inactive, hasLength(1));
       expect(inactive.single.sourceParticipantId, roberrSelf);
+    },
+  );
+
+  test(
+    'applyEffectiveFromPeerNotify applies side effects when row is already effective',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'housing:author';
+      const ejectedId = '$planId:p2';
+      const changeId = 'pc:effective-only';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      for (final entry in [
+        ('$planId:self', 'Monica'),
+        ('$planId:p1', 'Louys'),
+        (ejectedId, 'Roberr'),
+      ]) {
+        await db.upsertParticipant(
+          ParticipantsCompanion.insert(
+            id: entry.$1,
+            displayName: entry.$2,
+            avatarId: 'av',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+      }
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: 'pkg:$planId',
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+
+      await HousingParticipationMembershipService(db).ensureMembershipsForPlan(
+        planId,
+      );
+      await db.into(db.housingParticipationChanges).insert(
+        HousingParticipationChangesCompanion.insert(
+          id: changeId,
+          planId: planId,
+          packageId: 'pkg:$planId',
+          kind: HousingParticipationChangeKind.ejection.wireValue,
+          initiatorParticipantId: '$planId:p1',
+          targetParticipantId: drift.Value(ejectedId),
+          status: HousingParticipationChangeStatus.effective.wireValue,
+          createdAt: DateTime.utc(2026, 6, 4),
+        ),
+      );
+
+      final membership = HousingParticipationMembershipService(db);
+      expect(await membership.isActiveMember(planId, ejectedId), isTrue);
+
+      await HousingParticipationChangeService(db).applyEffectiveFromPeerNotify(
+        changeId,
+      );
+
+      expect(await membership.isActiveMember(planId, ejectedId), isFalse);
+      expect(await membership.activeParticipantCount(planId), 2);
     },
   );
 }

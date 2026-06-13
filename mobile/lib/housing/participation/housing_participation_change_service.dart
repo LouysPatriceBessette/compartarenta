@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' show DateUtils;
 import '../../db/app_database.dart';
 import '../agreement_rules_diff.dart';
 import '../amendment/housing_active_agreement_service.dart';
+import '../realized_expense/realized_expense_participants.dart';
 import 'housing_inactive_participant_service.dart';
 import 'housing_participation_change_kind.dart';
 import 'housing_participation_membership_service.dart';
@@ -319,11 +320,12 @@ class HousingParticipationChangeService {
                 .where((p) => p.id != leaverId)
                 .map((p) => p.id)
                 .toList();
-        await redistributeRatiosAfterDeparture(
-          db: _db,
+        await membership.markDeparted(
           planId: change.planId,
-          departingParticipantId: leaverId,
-          remainingParticipantIds: remaining,
+          participantId: leaverId,
+          departureKind: kind,
+          changeId: change.id,
+          departedAt: change.departureDate ?? DateTime.now(),
         );
         await inactiveSvc.createInactiveParticipant(
           planId: change.planId,
@@ -335,12 +337,11 @@ class HousingParticipationChangeService {
           departureDate: change.departureDate ?? DateTime.now(),
           remainingParticipantIds: remaining,
         );
-        await membership.markDeparted(
+        await redistributeRatiosAfterDeparture(
+          db: _db,
           planId: change.planId,
-          participantId: leaverId,
-          departureKind: kind,
-          changeId: change.id,
-          departedAt: change.departureDate ?? DateTime.now(),
+          departingParticipantId: leaverId,
+          remainingParticipantIds: remaining,
         );
       case HousingParticipationChangeKind.ejection:
         final target = change.targetParticipantId;
@@ -350,30 +351,69 @@ class HousingParticipationChangeService {
                 .where((p) => p.id != target)
                 .map((p) => p.id)
                 .toList();
-        await redistributeRatiosAfterDeparture(
-          db: _db,
-          planId: change.planId,
-          departingParticipantId: target,
-          remainingParticipantIds: remaining,
-        );
-        await inactiveSvc.createInactiveParticipant(
-          planId: change.planId,
-          sourceParticipantId: target,
-        );
         await membership.markDeparted(
           planId: change.planId,
           participantId: target,
           departureKind: kind,
           changeId: change.id,
         );
+        await inactiveSvc.createInactiveParticipant(
+          planId: change.planId,
+          sourceParticipantId: target,
+        );
+        await redistributeRatiosAfterDeparture(
+          db: _db,
+          planId: change.planId,
+          departingParticipantId: target,
+          remainingParticipantIds: remaining,
+        );
     }
     await _setStatus(change.id, HousingParticipationChangeStatus.effective);
+  }
+
+  /// Whether departure side effects already ran for [change].
+  Future<bool> departureSideEffectsApplied(
+    HousingParticipationChange change,
+  ) async {
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    if (kind == null) return true;
+
+    return switch (kind) {
+      HousingParticipationChangeKind.immediateTermination => () async {
+        final roster = await participantsForPlan(_db, change.planId);
+        for (final participant in roster) {
+          if (await membershipService.isActiveMember(
+            change.planId,
+            participant.id,
+          )) {
+            return false;
+          }
+        }
+        return true;
+      }(),
+      HousingParticipationChangeKind.voluntaryWithdrawal => () async {
+        final leaverId =
+            change.targetParticipantId ?? change.initiatorParticipantId;
+        return !(await membershipService.isActiveMember(
+          change.planId,
+          leaverId,
+        ));
+      }(),
+      HousingParticipationChangeKind.ejection => () async {
+        final target = change.targetParticipantId;
+        if (target == null || target.isEmpty) return true;
+        return !(await membershipService.isActiveMember(change.planId, target));
+      }(),
+    };
   }
 
   /// Applies departure side effects after a peer notify with effective status.
   Future<void> applyEffectiveFromPeerNotify(String changeId) async {
     final change = await getById(changeId);
     if (change == null) return;
+    if (await departureSideEffectsApplied(change)) {
+      return;
+    }
     await _applyEffective(change);
   }
 

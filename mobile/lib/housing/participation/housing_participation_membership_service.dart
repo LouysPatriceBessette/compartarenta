@@ -26,6 +26,17 @@ class HousingParticipationMembershipService {
   }
 
   Future<bool> isActiveMember(String planId, String participantId) async {
+    final inactiveGhost =
+        await (_db.select(_db.housingInactiveParticipants)
+              ..where(
+                (t) =>
+                    t.planId.equals(planId) &
+                    t.sourceParticipantId.equals(participantId) &
+                    t.clearedAt.isNull(),
+              ))
+            .getSingleOrNull();
+    if (inactiveGhost != null) return false;
+
     final row =
         await (_db.select(_db.housingPlanMemberships)
               ..where(
@@ -38,12 +49,45 @@ class HousingParticipationMembershipService {
     return row.status == HousingPlanMembershipStatus.active.wireValue;
   }
 
+  /// Repairs devices that recorded an effective participation change before
+  /// departure side effects ran (e.g. effective notify inserted first).
+  Future<void> reconcileEffectiveDepartures(String planId) async {
+    final changes = await (_db.select(_db.housingParticipationChanges)
+          ..where(
+            (t) =>
+                t.planId.equals(planId) &
+                t.status.equals(
+                  HousingParticipationChangeStatus.effective.wireValue,
+                ),
+          ))
+        .get();
+    for (final change in changes) {
+      final kind = HousingParticipationChangeKind.fromWire(change.kind);
+      if (kind == null || kind == HousingParticipationChangeKind.immediateTermination) {
+        continue;
+      }
+      final target = kind == HousingParticipationChangeKind.ejection
+          ? change.targetParticipantId
+          : change.targetParticipantId ?? change.initiatorParticipantId;
+      if (target == null || target.isEmpty) continue;
+      if (!await isActiveMember(planId, target)) continue;
+      await markDeparted(
+        planId: planId,
+        participantId: target,
+        departureKind: kind,
+        changeId: change.id,
+        departedAt: change.departureDate ?? change.settledAt ?? DateTime.now().toUtc(),
+      );
+    }
+  }
+
   Future<int> activeParticipantCount(String planId) async {
     final roster = await activeParticipantsForPlan(planId);
     return roster.length;
   }
 
   Future<List<Participant>> activeParticipantsForPlan(String planId) async {
+    await reconcileEffectiveDepartures(planId);
     await ensureMembershipsForPlan(planId);
     final roster = sortParticipantsForPlan(
       planId,

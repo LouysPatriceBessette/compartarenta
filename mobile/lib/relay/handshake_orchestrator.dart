@@ -2767,6 +2767,11 @@ class HandshakeOrchestrator {
       planId: change.planId,
       decisionJson: decisionJson,
     );
+
+    final settled = await changeSvc.getById(changeId);
+    if (settled?.status == HousingParticipationChangeStatus.effective.wireValue) {
+      await sendParticipationChangeNotify(changeId: changeId);
+    }
   }
 
   Future<void> _broadcastParticipationChange({
