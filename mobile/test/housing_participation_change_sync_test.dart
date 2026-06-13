@@ -582,4 +582,193 @@ void main() {
       expect(await membership.activeParticipantCount(planId), 2);
     },
   );
+
+  test(
+    'importDecisionFromPeer maps sender :self and settles pending termination',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'plan:term-decision';
+      const louysId = '$planId:self';
+      const monicaId = '$planId:p1';
+      const changeId = 'pc:term-decision';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: louysId,
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: monicaId,
+          displayName: 'Monica',
+          avatarId: 'av-m',
+          contactId: const drift.Value('contact:monica'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: 'pkg:$planId',
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await HousingParticipationMembershipService(db).ensureMembershipsForPlan(
+        planId,
+      );
+      await db.into(db.housingParticipationChanges).insert(
+        HousingParticipationChangesCompanion.insert(
+          id: changeId,
+          planId: planId,
+          packageId: 'pkg:$planId',
+          kind: HousingParticipationChangeKind.immediateTermination.wireValue,
+          initiatorParticipantId: louysId,
+          status: HousingParticipationChangeStatus.pending.wireValue,
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.into(db.housingParticipationDecisions).insertOnConflictUpdate(
+        HousingParticipationDecisionsCompanion.insert(
+          changeId: changeId,
+          participantId: louysId,
+          status: HousingParticipationDecisionStatus.accepted.wireValue,
+          decidedAt: drift.Value(DateTime.utc(2026, 6, 13)),
+        ),
+      );
+
+      final decisionJson = '''
+{
+  "change_id": "$changeId",
+  "participant_id": "$planId:self",
+  "status": "accepted",
+  "decided_at": "2026-06-13T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Monica", "contactId": "contact:monica"}
+  ]
+}
+''';
+
+      final imported = await HousingParticipationChangeSyncService(
+        db,
+      ).importDecisionFromPeer(
+        decisionJson: decisionJson,
+        senderContactId: 'contact:monica',
+      );
+      expect(imported, isTrue);
+
+      final decisions =
+          await HousingParticipationChangeService(db).decisionsFor(changeId);
+      expect(
+        decisions.map((d) => d.participantId).toSet(),
+        {louysId, monicaId},
+      );
+      final row = await HousingParticipationChangeService(db).getById(changeId);
+      expect(row?.status, HousingParticipationChangeStatus.effective.wireValue);
+    },
+  );
+
+  test(
+    'importDecisionFromPeer records vote after effective notify won the race',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'plan:term-race';
+      const louysId = '$planId:self';
+      const monicaId = '$planId:p1';
+      const changeId = 'pc:term-race';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: louysId,
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: monicaId,
+          displayName: 'Monica',
+          avatarId: 'av-m',
+          contactId: const drift.Value('contact:monica'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: 'pkg:$planId',
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      await HousingParticipationMembershipService(db).ensureMembershipsForPlan(
+        planId,
+      );
+      await db.into(db.housingParticipationChanges).insert(
+        HousingParticipationChangesCompanion.insert(
+          id: changeId,
+          planId: planId,
+          packageId: 'pkg:$planId',
+          kind: HousingParticipationChangeKind.immediateTermination.wireValue,
+          initiatorParticipantId: louysId,
+          status: HousingParticipationChangeStatus.effective.wireValue,
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.into(db.housingParticipationDecisions).insertOnConflictUpdate(
+        HousingParticipationDecisionsCompanion.insert(
+          changeId: changeId,
+          participantId: louysId,
+          status: HousingParticipationDecisionStatus.accepted.wireValue,
+          decidedAt: drift.Value(DateTime.utc(2026, 6, 13)),
+        ),
+      );
+
+      final decisionJson = '''
+{
+  "change_id": "$changeId",
+  "participant_id": "$planId:self",
+  "status": "accepted",
+  "decided_at": "2026-06-13T12:01:00.000Z",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Monica", "contactId": "contact:monica"}
+  ]
+}
+''';
+
+      expect(
+        await HousingParticipationChangeSyncService(db).importDecisionFromPeer(
+          decisionJson: decisionJson,
+          senderContactId: 'contact:monica',
+        ),
+        isTrue,
+      );
+
+      final decisions =
+          await HousingParticipationChangeService(db).decisionsFor(changeId);
+      expect(decisions.any((d) => d.participantId == monicaId), isTrue);
+    },
+  );
 }

@@ -18,6 +18,13 @@ enum HousingParticipationChangeKind {
 
   bool get requiresUnanimousVote =>
       this == immediateTermination || this == ejection;
+
+  /// Relay propose/decision/notify reaches every connected contact unless true.
+  ///
+  /// Only post-ejection major changes (e.g. immediate termination) exclude
+  /// departed members; ejection itself must still reach the target.
+  bool get relayBroadcastLimitedToActiveMembers =>
+      this == immediateTermination;
 }
 
 /// Lifecycle status of a participation change request.

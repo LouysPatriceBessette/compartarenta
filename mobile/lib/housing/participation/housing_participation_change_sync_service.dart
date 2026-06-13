@@ -23,7 +23,10 @@ class HousingParticipationChangeSyncService {
 
   final AppDatabase _db;
 
-  Future<String> buildProposeJson(HousingParticipationChange change) async {
+  Future<String> buildProposeJson(
+    HousingParticipationChange change, {
+    String? statusWireOverride,
+  }) async {
     final roster = await participantsForPlan(_db, change.planId);
     return jsonEncode({
       'change_id': change.id,
@@ -35,7 +38,7 @@ class HousingParticipationChangeSyncService {
         'target_participant_id': change.targetParticipantId,
       if (change.departureDate != null)
         'departure_date': change.departureDate!.toUtc().toIso8601String(),
-      'status': change.status,
+      'status': statusWireOverride ?? change.status,
       'created_at': change.createdAt.toUtc().toIso8601String(),
       'participant_snapshots': _snapshotsFromRoster(roster),
     });
@@ -55,6 +58,8 @@ class HousingParticipationChangeSyncService {
             : await participantsForPlan(_db, change.planId);
     return jsonEncode({
       'change_id': changeId,
+      if (change != null) 'plan_id': change.planId,
+      if (change != null) 'package_id': change.packageId,
       'participant_id': participantId,
       'status': status,
       'decided_at': DateTime.now().toUtc().toIso8601String(),
@@ -218,25 +223,42 @@ class HousingParticipationChangeSyncService {
           ..where((t) => t.id.equals(changeId)))
         .getSingleOrNull();
     if (change == null) return false;
-    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+
+    final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
+      db: _db,
+      planId: change.planId,
+      snapshots: payload['participant_snapshots'],
+    );
+    var localParticipantId = await resolveImportedParticipantId(
+      db: _db,
+      planId: change.planId,
+      sourceParticipantId: sourceParticipantId,
+      sourceToLocal: sourceToLocal,
+      senderContactId: senderContactId,
+      snapshots: payload['participant_snapshots'],
+    );
+    if (localParticipantId == null || localParticipantId.isEmpty) {
+      _log('decision skip: participant not mapped for $changeId');
       return false;
     }
 
-    var localParticipantId = await localParticipantIdForContact(
-      db: _db,
-      planId: change.planId,
-      contactId: senderContactId,
-    );
-    if (localParticipantId == null) {
-      final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
-        db: _db,
-        planId: change.planId,
-        snapshots: payload['participant_snapshots'],
-      );
-      localParticipantId = sourceToLocal[sourceParticipantId];
+    final existingDecision =
+        await (_db.select(_db.housingParticipationDecisions)
+              ..where(
+                (t) =>
+                    t.changeId.equals(changeId) &
+                    t.participantId.equals(localParticipantId),
+              ))
+            .getSingleOrNull();
+    if (existingDecision != null) {
+      _log('decision $changeId from $senderContactId already present');
+      return true;
     }
-    if (localParticipantId == null) {
-      _log('decision skip: participant not mapped for $changeId');
+
+    final wasPending =
+        change.status == HousingParticipationChangeStatus.pending.wireValue;
+    if (!wasPending &&
+        change.status != HousingParticipationChangeStatus.effective.wireValue) {
       return false;
     }
 
@@ -251,11 +273,11 @@ class HousingParticipationChangeSyncService {
       ),
     );
 
-    await HousingParticipationChangeService(_db).recordDecision(
-      changeId: changeId,
-      participantId: localParticipantId,
-      accepted: status == HousingParticipationDecisionStatus.accepted.wireValue,
-    );
+    if (wasPending) {
+      await HousingParticipationChangeService(
+        _db,
+      ).evaluatePendingSettlement(changeId);
+    }
 
     _log('imported decision on $changeId from $senderContactId');
     return true;

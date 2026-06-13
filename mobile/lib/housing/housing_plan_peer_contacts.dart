@@ -1,6 +1,7 @@
 import '../contacts/contact_display.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import 'participation/housing_participation_membership_service.dart';
 import 'realized_expense/realized_expense_participants.dart';
 
 /// Route extra for [/contacts/redeem] when housing sends the user to add a
@@ -44,6 +45,55 @@ Contact? relayReachableContactForParticipant(
     if (nameMatches || avatarMatches) return c;
   }
   return null;
+}
+
+/// Relay contacts for participation changes limited to active members.
+///
+/// Uses broadcast-to-all-reachable minus departed roster slots (reliable mesh
+/// delivery) instead of per-participant contact resolution, which can fail
+/// across devices when [Participant.contactId] is missing.
+List<Contact> relayContactsExcludingDepartedPlanMembers({
+  required List<Participant> roster,
+  required Set<String> departedParticipantIds,
+  required List<Contact> relayReachableContacts,
+}) {
+  final excludedPeerMaterial = <String>{};
+  for (final participant in roster) {
+    if (!departedParticipantIds.contains(participant.id)) continue;
+    final contact = relayReachableContactForParticipant(
+      participant,
+      relayReachableContacts,
+    );
+    final peer = contact?.peerPublicMaterial;
+    if (peer != null && peer.isNotEmpty) {
+      excludedPeerMaterial.add(peer);
+    }
+  }
+  return [
+    for (final contact in relayReachableContacts)
+      if (!excludedPeerMaterial.contains(contact.peerPublicMaterial)) contact,
+  ];
+}
+
+/// Resolves relay targets for [HousingParticipationChangeKind.immediateTermination].
+Future<List<Contact>> relayContactsForActivePlanMembers({
+  required AppDatabase db,
+  required String planId,
+  required List<Contact> relayReachableContacts,
+}) async {
+  final membership = HousingParticipationMembershipService(db);
+  final roster = await participantsForPlan(db, planId);
+  final departedIds = <String>{};
+  for (final participant in roster) {
+    if (!await membership.isActiveMember(planId, participant.id)) {
+      departedIds.add(participant.id);
+    }
+  }
+  return relayContactsExcludingDepartedPlanMembers(
+    roster: roster,
+    departedParticipantIds: departedIds,
+    relayReachableContacts: relayReachableContacts,
+  );
 }
 
 /// Maps a relay [senderContactId] to a housing roster participant on this device.

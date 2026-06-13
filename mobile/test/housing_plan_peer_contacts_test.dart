@@ -1,5 +1,7 @@
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/housing_plan_peer_contacts.dart';
+import 'package:compartarenta/housing/participation/housing_participation_change_kind.dart';
+import 'package:compartarenta/housing/participation/housing_participation_membership_service.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -129,4 +131,64 @@ void main() {
 
     expect(matched?.id, 'contact:c');
   });
+
+  test(
+    'relayContactsForActivePlanMembers excludes departed roster contacts only',
+    () async {
+      const planId = 'plan:term';
+      const ejectedId = '$planId:p2';
+      await seedContact(
+        id: 'contact:louys',
+        displayName: 'Louys',
+        peerPublicMaterial: 'peer-l',
+      );
+      await seedContact(
+        id: 'contact:roberr',
+        displayName: 'Roberr',
+        peerPublicMaterial: 'peer-r',
+      );
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      for (final entry in [
+        ('$planId:self', 'Monica', 'contact:monica'),
+        ('$planId:p1', 'Louys', 'contact:louys'),
+        (ejectedId, 'Roberr', 'contact:roberr'),
+      ]) {
+        await db.upsertParticipant(
+          ParticipantsCompanion.insert(
+            id: entry.$1,
+            displayName: entry.$2,
+            avatarId: 'a',
+            contactId: drift.Value(entry.$3),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+      }
+
+      final membership = HousingParticipationMembershipService(db);
+      await membership.ensureMembershipsForPlan(planId);
+      await membership.markDeparted(
+        planId: planId,
+        participantId: ejectedId,
+        departureKind: HousingParticipationChangeKind.ejection,
+        changeId: 'pc:1',
+      );
+
+      final reachable = (await db.listContacts())
+          .where(isRelayReachableContact)
+          .toList();
+      final targets = await relayContactsForActivePlanMembers(
+        db: db,
+        planId: planId,
+        relayReachableContacts: reachable,
+      );
+
+      expect(targets.map((c) => c.id), ['contact:louys']);
+    },
+  );
 }

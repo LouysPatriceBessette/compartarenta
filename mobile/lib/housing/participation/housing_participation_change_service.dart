@@ -214,18 +214,67 @@ class HousingParticipationChangeService {
     return (await getById(change.id))!;
   }
 
+  /// Active participants who must vote on [change] (empty for voluntary withdrawal).
+  Future<List<Participant>> deciderParticipantsFor(
+    HousingParticipationChange change,
+  ) async {
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    if (kind == null ||
+        kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+      return const [];
+    }
+    final activeRoster = await membershipService.activeParticipantsForPlan(
+      change.planId,
+    );
+    final deciderIdSet = _deciderIds(
+      kind: kind,
+      activeRoster: activeRoster,
+      targetParticipantId: change.targetParticipantId,
+    ).toSet();
+    return activeRoster
+        .where((p) => deciderIdSet.contains(p.id))
+        .toList(growable: false);
+  }
+
   Future<void> recordDecision({
     required String changeId,
     required String participantId,
     required bool accepted,
   }) async {
-    final change = await getById(changeId);
-    if (change == null) return;
-    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+    if (!await persistDecision(
+      changeId: changeId,
+      participantId: participantId,
+      accepted: accepted,
+    )) {
       return;
     }
+    await evaluatePendingSettlement(changeId);
+  }
+
+  /// Records a vote when [changeId] is still pending; does not settle.
+  Future<bool> persistDecision({
+    required String changeId,
+    required String participantId,
+    required bool accepted,
+  }) async {
+    final change = await getById(changeId);
+    if (change == null) return false;
+    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+      return false;
+    }
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    if (kind == null || !kind.requiresUnanimousVote) return;
+    if (kind == null || !kind.requiresUnanimousVote) return false;
+    if (!await membershipService.isActiveMember(change.planId, participantId)) {
+      return false;
+    }
+    final deciders = _deciderIds(
+      kind: kind,
+      activeRoster: await membershipService.activeParticipantsForPlan(
+        change.planId,
+      ),
+      targetParticipantId: change.targetParticipantId,
+    );
+    if (!deciders.contains(participantId)) return false;
 
     await _recordDecision(
       changeId: changeId,
@@ -235,7 +284,48 @@ class HousingParticipationChangeService {
               ? HousingParticipationDecisionStatus.accepted
               : HousingParticipationDecisionStatus.rejected,
     );
+    return true;
+  }
+
+  /// Applies settlement when all deciders have voted on a pending change.
+  Future<void> evaluatePendingSettlement(String changeId) async {
     await _evaluateSettlement(changeId);
+  }
+
+  /// Whether every decider has accepted while [changeId] is still pending.
+  Future<bool> allDecidersHaveAccepted(String changeId) async {
+    final change = await getById(changeId);
+    if (change == null) return false;
+    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+      return false;
+    }
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    if (kind == null || kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+      return false;
+    }
+
+    final roster = await membershipService.activeParticipantsForPlan(change.planId);
+    final deciders = _deciderIds(
+      kind: kind,
+      activeRoster: roster,
+      targetParticipantId: change.targetParticipantId,
+    );
+    final decisions = await decisionsFor(changeId);
+    if (decisions.any(
+      (d) => d.status == HousingParticipationDecisionStatus.rejected.wireValue,
+    )) {
+      return false;
+    }
+    final acceptedIds =
+        decisions
+            .where(
+              (d) =>
+                  d.status ==
+                  HousingParticipationDecisionStatus.accepted.wireValue,
+            )
+            .map((d) => d.participantId)
+            .toSet();
+    return deciders.every(acceptedIds.contains);
   }
 
   Future<void> _evaluateSettlement(String changeId) async {

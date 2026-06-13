@@ -17,6 +17,7 @@ import '../housing/proposals/plan_agreement_proposal_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
 import '../housing/participation/housing_participation_change_sync_service.dart';
+import '../housing/participation/housing_participation_membership_service.dart';
 import '../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
 import '../housing/realized_expense/realized_expense_status.dart';
@@ -1598,12 +1599,19 @@ class HandshakeOrchestrator {
     final changeId = _changeIdFromJson(decrypted.changeJson);
     if (changeId != null) {
       final planId = _planIdFromChangeJson(decrypted.changeJson);
-      await PushNotificationService
-          .showLocalHousingParticipationChangeNotification(
-        senderDisplayName: senderContact.displayName,
-        changeId: changeId,
+      final changeKind = _participationChangeKindFromJson(decrypted.changeJson);
+      final shouldNotify = await _shouldNotifySelfForParticipationChange(
         planId: planId,
+        kind: changeKind,
       );
+      if (shouldNotify) {
+        await PushNotificationService
+            .showLocalHousingParticipationChangeNotification(
+          senderDisplayName: senderContact.displayName,
+          changeId: changeId,
+          planId: planId,
+        );
+      }
     }
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
   }
@@ -1680,6 +1688,31 @@ class HandshakeOrchestrator {
     } on Object {
       return null;
     }
+  }
+
+  HousingParticipationChangeKind? _participationChangeKindFromJson(
+    String changeJson,
+  ) {
+    try {
+      final map = jsonDecode(changeJson) as Map<String, dynamic>;
+      return HousingParticipationChangeKind.fromWire(map['kind'] as String?);
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<bool> _shouldNotifySelfForParticipationChange({
+    required String? planId,
+    required HousingParticipationChangeKind? kind,
+  }) async {
+    if (planId == null || planId.isEmpty) return true;
+    if (kind?.relayBroadcastLimitedToActiveMembers == true) {
+      return HousingParticipationMembershipService(_db).isActiveMember(
+        planId,
+        '$planId:self',
+      );
+    }
+    return true;
   }
 
   String? _expenseIdFromDecisionJson(String decisionJson) {
@@ -2720,10 +2753,14 @@ class HandshakeOrchestrator {
   }
 
   /// Broadcasts an informational participation notify (kind 12).
-  Future<void> sendParticipationChangeNotify({required String changeId}) async {
+  Future<void> sendParticipationChangeNotify({
+    required String changeId,
+    String? statusWireOverride,
+  }) async {
     await _broadcastParticipationChange(
       changeId: changeId,
       kind: EnvelopeKind.housingParticipationChangeNotify,
+      statusWireOverride: statusWireOverride,
       encrypt:
           (json, selfPub, selfPriv, peerPub) =>
               EnvelopeCodec.encryptHousingParticipationChangeNotify(
@@ -2743,11 +2780,13 @@ class HandshakeOrchestrator {
     required bool accepted,
   }) async {
     final changeSvc = HousingParticipationChangeService(_db);
-    await changeSvc.recordDecision(
+    if (!await changeSvc.persistDecision(
       changeId: changeId,
       participantId: participantId,
       accepted: accepted,
-    );
+    )) {
+      return;
+    }
     final change = await changeSvc.getById(changeId);
     if (change == null) return;
 
@@ -2763,20 +2802,27 @@ class HandshakeOrchestrator {
       status: status,
     );
 
+    // Relay to peers while this device still treats them as active members.
     await _broadcastParticipationChangeDecision(
       planId: change.planId,
       decisionJson: decisionJson,
     );
 
-    final settled = await changeSvc.getById(changeId);
-    if (settled?.status == HousingParticipationChangeStatus.effective.wireValue) {
-      await sendParticipationChangeNotify(changeId: changeId);
+    if (await changeSvc.allDecidersHaveAccepted(changeId)) {
+      await sendParticipationChangeNotify(
+        changeId: changeId,
+        statusWireOverride:
+            HousingParticipationChangeStatus.effective.wireValue,
+      );
     }
+
+    await changeSvc.evaluatePendingSettlement(changeId);
   }
 
   Future<void> _broadcastParticipationChange({
     required String changeId,
     required int kind,
+    String? statusWireOverride,
     required Future<Uint8List> Function(
       String changeJson,
       Uint8List selfPub,
@@ -2792,10 +2838,13 @@ class HandshakeOrchestrator {
 
     final changeJson = await HousingParticipationChangeSyncService(
       _db,
-    ).buildProposeJson(change);
+    ).buildProposeJson(change, statusWireOverride: statusWireOverride);
     await _postParticipationChangeToPeers(
       planId: change.planId,
       kind: kind,
+      participationChangeKind: HousingParticipationChangeKind.fromWire(
+        change.kind,
+      ),
       buildFrame:
           (selfPub, selfPriv, peerPub) =>
               encrypt(changeJson, selfPub, selfPriv, peerPub),
@@ -2806,9 +2855,20 @@ class HandshakeOrchestrator {
     required String planId,
     required String decisionJson,
   }) async {
+    final changeId = _changeIdFromJson(decisionJson);
+    HousingParticipationChangeKind? participationChangeKind;
+    if (changeId != null) {
+      final change = await HousingParticipationChangeService(_db).getById(
+        changeId,
+      );
+      participationChangeKind = HousingParticipationChangeKind.fromWire(
+        change?.kind,
+      );
+    }
     await _postParticipationChangeToPeers(
       planId: planId,
       kind: EnvelopeKind.housingParticipationChangeDecision,
+      participationChangeKind: participationChangeKind,
       buildFrame: (selfPub, selfPriv, peerPub) async {
         return EnvelopeCodec.encryptHousingParticipationChangeDecision(
           envelope: HousingParticipationChangeDecisionEnvelope(
@@ -2825,6 +2885,7 @@ class HandshakeOrchestrator {
   Future<void> _postParticipationChangeToPeers({
     required String planId,
     required int kind,
+    HousingParticipationChangeKind? participationChangeKind,
     required Future<Uint8List> Function(
       Uint8List selfPub,
       Uint8List selfPriv,
@@ -2833,12 +2894,7 @@ class HandshakeOrchestrator {
     buildFrame,
   }) async {
     final relayReachableContacts = (await _contacts.list())
-        .where((c) {
-          final peer = c.peerPublicMaterial;
-          return !c.id.startsWith('contact:local:') &&
-              peer != null &&
-              peer.isNotEmpty;
-        })
+        .where(isRelayReachableContact)
         .toList(growable: false);
     if (relayReachableContacts.isEmpty) return;
 
@@ -2846,10 +2902,10 @@ class HandshakeOrchestrator {
     final selfPub = await _identity.publicKey();
     final seenPeerMaterial = <String>{};
 
-    for (final target in relayReachableContacts) {
+    Future<void> postToContact(Contact target) async {
       final peerPubB64 = target.peerPublicMaterial;
-      if (peerPubB64 == null || peerPubB64.isEmpty) continue;
-      if (!seenPeerMaterial.add(peerPubB64)) continue;
+      if (peerPubB64 == null || peerPubB64.isEmpty) return;
+      if (!seenPeerMaterial.add(peerPubB64)) return;
       try {
         final peerPub = RelayRouting.unb64(peerPubB64);
         final frame = await buildFrame(selfPub, selfPriv, peerPub);
@@ -2876,6 +2932,22 @@ class HandshakeOrchestrator {
       } on Object catch (e) {
         debugPrint('housing_participation_change post failed: $e');
       }
+    }
+
+    if (participationChangeKind?.relayBroadcastLimitedToActiveMembers == true) {
+      final targets = await relayContactsForActivePlanMembers(
+        db: _db,
+        planId: planId,
+        relayReachableContacts: relayReachableContacts,
+      );
+      for (final target in targets) {
+        await postToContact(target);
+      }
+      return;
+    }
+
+    for (final target in relayReachableContacts) {
+      await postToContact(target);
     }
   }
 

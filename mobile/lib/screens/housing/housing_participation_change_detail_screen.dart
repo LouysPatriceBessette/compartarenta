@@ -35,6 +35,7 @@ class _HousingParticipationChangeDetailScreenState
   HousingParticipationChange? _change;
   List<HousingParticipationDecision> _decisions = const [];
   List<Participant> _roster = const [];
+  List<Participant> _deciders = const [];
   String _selfId = '';
   AppPreferences? _prefs;
 
@@ -59,13 +60,15 @@ class _HousingParticipationChangeDetailScreenState
       Navigator.of(context).pop();
       return;
     }
-    final decisions =
-        await HousingParticipationChangeService(db).decisionsFor(change.id);
+    final changeSvc = HousingParticipationChangeService(db);
+    final decisions = await changeSvc.decisionsFor(change.id);
     final roster = await participantsForPlan(db, widget.planId);
+    final deciders = await changeSvc.deciderParticipantsFor(change);
     setState(() {
       _change = change;
       _decisions = decisions;
       _roster = roster;
+      _deciders = deciders;
       _selfId = selfParticipantIdForPlan(widget.planId);
     });
   }
@@ -90,22 +93,9 @@ class _HousingParticipationChangeDetailScreenState
     return _decisions.any((d) => d.participantId == _selfId);
   }
 
-  bool get _canVote =>
-      !_isReadOnly && !_selfAlreadyDecided && _change != null;
-
-  List<Participant> get _deciders {
-    final change = _change;
-    if (change == null) return const [];
-    final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    return switch (kind) {
-      HousingParticipationChangeKind.immediateTermination => _roster,
-      HousingParticipationChangeKind.ejection =>
-        _roster
-            .where((p) => p.id != change.targetParticipantId)
-            .toList(growable: false),
-      HousingParticipationChangeKind.voluntaryWithdrawal => const [],
-      null => const [],
-    };
+  bool get _canVote {
+    if (_isReadOnly || _selfAlreadyDecided || _change == null) return false;
+    return _deciders.any((p) => p.id == _selfId);
   }
 
   String _decisionStatusLabel(AppLocalizations l10n, Participant participant) {
