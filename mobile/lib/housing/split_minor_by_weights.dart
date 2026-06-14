@@ -83,6 +83,18 @@ List<int> splitMinorByWeights(
   return out;
 }
 
+/// Splits [basisMinor] equally across [participantCount], flooring each share.
+///
+/// Used for early-withdrawal penalties: leftover cents are not allocated.
+List<int> splitPenaltyMinorEquallyFloored(int basisMinor, int participantCount) {
+  if (participantCount <= 0) return const [];
+  if (basisMinor <= 0) {
+    return List<int>.filled(participantCount, 0);
+  }
+  final share = basisMinor ~/ participantCount;
+  return List<int>.filled(participantCount, share);
+}
+
 /// Moves integer remainder cents from [splits] onto [recipientIndex].
 ///
 /// Used when the payer fronted the expense: any +1 cent from Hamilton (or

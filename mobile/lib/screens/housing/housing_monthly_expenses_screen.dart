@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/realized_expense/realized_expense_description_display.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -269,11 +270,12 @@ class _HousingMonthlyExpensesScreenState
     required RealizedExpense expense,
     required String? dateFmt,
   }) {
+    final l10n = AppLocalizations.of(context);
     final subtitleParts = <String>[];
     if (dateFmt != null) {
       subtitleParts.add(formatPreferenceDate(expense.paymentDate, dateFmt));
     }
-    final description = (expense.description ?? '').trim();
+    final description = realizedExpenseDescriptionForList(l10n, expense);
     if (description.isNotEmpty) {
       subtitleParts.add(description);
     }

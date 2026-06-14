@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/realized_expense/realized_expense_description_display.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -70,7 +71,10 @@ class HousingRejectedExpensesScreen extends StatelessWidget {
                         formatPreferenceDate(expense.paymentDate, dateFmt),
                       );
                     }
-                    final description = (expense.description ?? '').trim();
+                    final description = realizedExpenseDescriptionForList(
+                      l10n,
+                      expense,
+                    );
                     if (description.isNotEmpty) {
                       subtitleParts.add(description);
                     }

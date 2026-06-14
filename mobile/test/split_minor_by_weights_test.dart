@@ -38,4 +38,13 @@ void main() {
     reassignSplitRemainderToParticipant(splits, weights, basis, 0);
     expect(splits, [3334, 3333, 3333]);
   });
+
+  test('splitPenaltyMinorEquallyFloored floors each share without remainder', () {
+    expect(splitPenaltyMinorEquallyFloored(100000, 3), [33333, 33333, 33333]);
+    expect(
+      splitPenaltyMinorEquallyFloored(100000, 3).fold<int>(0, (a, b) => a + b),
+      99999,
+    );
+    expect(splitPenaltyMinorEquallyFloored(100000, 2), [50000, 50000]);
+  });
 }

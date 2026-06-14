@@ -4790,8 +4790,20 @@ abstract class AppLocalizations {
   /// No description provided for @housingParticipationChangeWithdrawalPenaltyHint.
   ///
   /// In en, this message translates to:
-  /// **'An early withdrawal penalty of {amount} may apply.'**
+  /// **'An early withdrawal penalty of {amount} applies.'**
   String housingParticipationChangeWithdrawalPenaltyHint(String amount);
+
+  /// No description provided for @housingEarlyWithdrawalPenaltyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Early departure penalty'**
+  String get housingEarlyWithdrawalPenaltyDescription;
+
+  /// No description provided for @housingEarlyWithdrawalPenaltyOwedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'This amount is owed to {name}.'**
+  String housingEarlyWithdrawalPenaltyOwedTo(String name);
 
   /// No description provided for @housingParticipationChangeEjectionConfirmTitle.
   ///

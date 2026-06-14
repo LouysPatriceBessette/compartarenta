@@ -2818,7 +2818,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String housingParticipationChangeWithdrawalPenaltyHint(String amount) {
-    return 'Une pénalité de retrait anticipé de $amount pourrait s\'appliquer.';
+    return 'Une pénalité de retrait anticipé de $amount s\'applique.';
+  }
+
+  @override
+  String get housingEarlyWithdrawalPenaltyDescription =>
+      'Pénalité de départ anticipé';
+
+  @override
+  String housingEarlyWithdrawalPenaltyOwedTo(String name) {
+    return 'Ce montant est dû à $name.';
   }
 
   @override

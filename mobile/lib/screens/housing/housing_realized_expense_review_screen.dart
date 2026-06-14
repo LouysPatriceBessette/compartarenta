@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/realized_expense/proof_attachment_export.dart';
+import '../../housing/realized_expense/realized_expense_description_display.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_line_snapshot.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
@@ -585,7 +586,11 @@ class _HousingRealizedExpenseReviewScreenState
           final canResubmit =
               ctx.visibility == RealizedExpenseReviewVisibility.rejected &&
               expense.payerParticipantId == selfId;
-          final descriptionText = (expense.description ?? '').trim();
+          final descriptionText = realizedExpenseDescriptionForDetail(
+            l10n,
+            expense,
+            beneficiaryDisplayName: ctx.beneficiaryName ?? '',
+          );
           final finalDecisionStatus = ctx.finalDecisionStatus;
           final transferSummary =
               expense.kind == RealizedExpenseKind.transfer &&

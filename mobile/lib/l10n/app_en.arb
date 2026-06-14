@@ -1203,9 +1203,14 @@
   "@housingParticipationChangeWithdrawalConfirmBody": {
     "placeholders": { "date": { "type": "String" } }
   },
-  "housingParticipationChangeWithdrawalPenaltyHint": "An early withdrawal penalty of {amount} may apply.",
+  "housingParticipationChangeWithdrawalPenaltyHint": "An early withdrawal penalty of {amount} applies.",
   "@housingParticipationChangeWithdrawalPenaltyHint": {
     "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingEarlyWithdrawalPenaltyDescription": "Early departure penalty",
+  "housingEarlyWithdrawalPenaltyOwedTo": "This amount is owed to {name}.",
+  "@housingEarlyWithdrawalPenaltyOwedTo": {
+    "placeholders": { "name": { "type": "String" } }
   },
   "housingParticipationChangeEjectionConfirmTitle": "Eject a participant?",
   "housingParticipationChangeEjectionConfirmBody": "Other participants must accept. The candidate is removed if accepted unanimously.",

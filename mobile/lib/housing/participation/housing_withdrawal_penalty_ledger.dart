@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show DateUtils;
 
 import '../../db/app_database.dart';
 import '../agreement_rules_json.dart';
+import '../realized_expense/realized_expense_description_display.dart';
 import '../realized_expense/realized_expense_repository.dart';
 import '../split_minor_by_weights.dart';
 import 'housing_participation_change_service.dart';
@@ -76,13 +77,10 @@ class HousingWithdrawalPenaltyLedger {
 
     final lines = await _db.listPlanLines(planId);
     final currency = lines.isEmpty ? '' : lines.first.currency;
-    final weights = List<int>.generate(
+    final splits = splitPenaltyMinorEquallyFloored(
+      amount,
       remainingParticipantIds.length,
-      (i) =>
-          10000 ~/ remainingParticipantIds.length +
-          (i < 10000 % remainingParticipantIds.length ? 1 : 0),
     );
-    final splits = splitMinorByWeights(amount, weights);
     final repo = RealizedExpenseRepository(_db);
     final paymentDate = DateUtils.dateOnly(departureDate.toLocal()).toUtc();
 
@@ -100,7 +98,7 @@ class HousingWithdrawalPenaltyLedger {
         paymentDate: paymentDate,
         payerParticipantId: leaverParticipantId,
         beneficiaryParticipantId: beneficiaryId,
-        description: 'early_withdrawal_penalty',
+        description: kEarlyWithdrawalPenaltyDescriptionKey,
         expenseId: expenseId,
       );
     }

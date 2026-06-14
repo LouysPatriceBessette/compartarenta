@@ -1084,9 +1084,14 @@
   "@housingParticipationChangeWithdrawalConfirmBody": {
     "placeholders": { "date": { "type": "String" } }
   },
-  "housingParticipationChangeWithdrawalPenaltyHint": "Podría aplicarse una penalización por retiro anticipado de {amount}.",
+  "housingParticipationChangeWithdrawalPenaltyHint": "Se aplica una penalización por retiro anticipado de {amount}.",
   "@housingParticipationChangeWithdrawalPenaltyHint": {
     "placeholders": { "amount": { "type": "String" } }
+  },
+  "housingEarlyWithdrawalPenaltyDescription": "Penalización por salida anticipada",
+  "housingEarlyWithdrawalPenaltyOwedTo": "Este importe se debe a {name}.",
+  "@housingEarlyWithdrawalPenaltyOwedTo": {
+    "placeholders": { "name": { "type": "String" } }
   },
   "housingParticipationChangeEjectionConfirmTitle": "¿Expulsar a un participante?",
   "housingParticipationChangeEjectionConfirmBody": "Los demás participantes deben aceptar. El candidato se elimina si se acepta por unanimidad.",
