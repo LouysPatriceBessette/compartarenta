@@ -1865,6 +1865,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String pushNotificationContactAddedViaInvitationBody(String name) {
+    return '$name ya está en tus contactos.';
+  }
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Tu solicitud de conexión con $name fue aceptada.';
   }
@@ -2397,7 +2402,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactsInviteIntroBody =>
-      'Genera un código de un solo uso y compártelo fuera de la app (SMS, correo, en persona). Quien reciba el código podrá pedir conectarse contigo. Confirmarás antes de añadirlo.';
+      'Genera un código de un solo uso y compártelo fuera de la app (SMS, correo, en persona). Quien reciba el código podrá añadirse a tus contactos mientras el código sea válido.';
 
   @override
   String get contactsInviteValidityLabel => 'Código válido durante';
@@ -2504,7 +2509,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get contactsHandshakeDispatched =>
-      'Solicitud enviada. Esperando la confirmación del anfitrión.';
+      'Código aceptado. Estableciendo el contacto…';
 
   @override
   String get contactsHandshakeCompleted =>

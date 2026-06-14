@@ -44,6 +44,8 @@ Future<_Side> _spawnSide({
   required RelayClient relay,
   required Uint8List identitySeed,
   Duration pollInterval = const Duration(seconds: 60),
+  Future<({String displayName, String avatarId})> Function()?
+  ackProfileForAutoAccept,
 }) async {
   final id = _relayDbFileSeq++;
   final dbFile = File(
@@ -66,6 +68,7 @@ Future<_Side> _spawnSide({
     contactNotifications: notifications,
     pollInterval: pollInterval,
   );
+  orchestrator.ackProfileForAutoAccept = ackProfileForAutoAccept;
   return _Side(
     db: db,
     dbFile: dbFile,
@@ -78,6 +81,7 @@ Future<_Side> _spawnSide({
 
 final class _FakeContactNotificationSink implements ContactNotificationSink {
   final addRequests = <String>[];
+  final addedViaInvitation = <String>[];
   final addRequestResolutions = <({String displayName, bool accepted})>[];
   final addRequestFailures = <String>[];
   final disconnections = <String>[];
@@ -85,6 +89,11 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
   @override
   Future<void> contactAddRequestReceived({required String displayName}) async {
     addRequests.add(displayName);
+  }
+
+  @override
+  Future<void> contactAddedViaInvitation({required String displayName}) async {
+    addedViaInvitation.add(displayName);
   }
 
   @override
@@ -124,10 +133,18 @@ void main() {
     inviter = await _spawnSide(
       relay: relay,
       identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      ackProfileForAutoAccept: () async => (
+        displayName: 'Inviter Self-Name',
+        avatarId: 'mdi:inviter-avatar',
+      ),
     );
     invitee = await _spawnSide(
       relay: relay,
       identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => 100 + i)),
+      ackProfileForAutoAccept: () async => (
+        displayName: 'Invitee Self-Name',
+        avatarId: 'mdi:invitee-avatar',
+      ),
     );
   });
 
@@ -168,37 +185,26 @@ void main() {
     expect(relay.envelopeCount, 1);
     expect(relay.storedEnvelopes.single.kind, EnvelopeKind.hello);
 
-    // Step 3 — inviter polls, picks up hello, transitions to helloReceived.
+    // Step 3 — inviter polls, picks up hello, auto-accepts, posts ack.
     await inviter.orchestrator.processAllPendingHandshakes();
     expect(
       relay.envelopeCount,
-      0,
-      reason: 'hello envelope should be acknowledged after decryption',
+      1,
+      reason: 'ack envelope should be posted after auto-accept',
     );
-    expect(inviter.orchestrator.incomingHandshakes.value.length, 1);
-    final incoming = inviter.orchestrator.incomingHandshakes.value.single;
-    expect(incoming.peerDisplayName, 'Invitee Self-Name');
-    expect(incoming.peerAvatarId, 'mdi:invitee-avatar');
-    expect(inviter.notifications.addRequests, ['Invitee Self-Name']);
+    expect(relay.storedEnvelopes.single.kind, EnvelopeKind.ack);
+    expect(inviter.orchestrator.incomingHandshakes.value, isEmpty);
+    expect(inviter.notifications.addedViaInvitation, ['Invitee Self-Name']);
+    expect(inviter.notifications.addRequests, isEmpty);
     final fallbackIncoming = await inviter.orchestrator
         .incomingHandshakeForContact(invite.localContactId);
-    expect(fallbackIncoming?.handshakeId, incoming.handshakeId);
+    expect(fallbackIncoming, isNull);
 
     // Invitation nonce is consumed regardless of accept/reject outcome.
     final invitationRow = await (inviter.db.select(
       inviter.db.contactInvitations,
     )..where((t) => t.id.equals(invite.invitation.id))).getSingle();
     expect(invitationRow.status, InvitationStatus.used);
-
-    // Step 4 — inviter accepts. Relay should now hold an ack envelope
-    //          for the invitee, and a steady-state routing.
-    await inviter.orchestrator.acceptIncoming(
-      incoming.handshakeId,
-      selfDisplayName: 'Inviter Self-Name',
-      selfAvatarId: 'mdi:inviter-avatar',
-    );
-    expect(relay.envelopeCount, 1);
-    expect(relay.storedEnvelopes.single.kind, EnvelopeKind.ack);
 
     // Inviter's stub Contact is now connected.
     final inviterContact = await inviter.contacts.get(invite.localContactId);
@@ -207,7 +213,7 @@ void main() {
     expect(inviterContact.displayName, 'Invitee Self-Name');
     expect(inviterContact.peerPublicMaterial, isNotNull);
 
-    // Step 5 — invitee polls, decrypts ack, promotes its stub.
+    // Step 4 — invitee polls, decrypts ack, promotes its stub.
     await invitee.orchestrator.processAllPendingHandshakes();
     final inviteeContact = await invitee.contacts.get(redeem.localContactId);
     expect(inviteeContact, isNotNull);
@@ -257,9 +263,9 @@ void main() {
 
     await inviter.orchestrator.processAllPendingHandshakes();
 
-    final incoming = inviter.orchestrator.incomingHandshakes.value.single;
-    expect(incoming.handshakeId, handshakeId);
-    expect(incoming.peerDisplayName, 'Invitee Self-Name');
+    final inviterContact = await inviter.contacts.get(invite.localContactId);
+    expect(inviterContact?.kind, 'connected');
+    expect(inviterContact?.displayName, 'Invitee Self-Name');
   });
 
   test(
@@ -278,12 +284,6 @@ void main() {
         selfAvatarId: 'mdi:invitee-avatar',
       );
       await inviter.orchestrator.processAllPendingHandshakes();
-      final incoming = inviter.orchestrator.incomingHandshakes.value.single;
-      await inviter.orchestrator.acceptIncoming(
-        incoming.handshakeId,
-        selfDisplayName: 'Inviter Self-Name',
-        selfAvatarId: 'mdi:inviter-avatar',
-      );
       await invitee.orchestrator.processAllPendingHandshakes();
 
       await invitee.orchestrator.sendDisconnect(redeem.localContactId);
@@ -312,11 +312,6 @@ void main() {
         selfAvatarId: 'mdi:invitee-avatar',
       );
       await inviter.orchestrator.processAllPendingHandshakes();
-      await inviter.orchestrator.acceptIncoming(
-        inviter.orchestrator.incomingHandshakes.value.single.handshakeId,
-        selfDisplayName: 'Inviter Self-Name',
-        selfAvatarId: 'mdi:inviter-avatar',
-      );
       await invitee.orchestrator.processAllPendingHandshakes();
 
       await invitee.orchestrator.sendDisconnect(redeem.localContactId);
@@ -346,11 +341,6 @@ void main() {
         selfAvatarId: 'mdi:inviter-avatar',
       );
       await invitee.orchestrator.processAllPendingHandshakes();
-      await invitee.orchestrator.acceptIncoming(
-        invitee.orchestrator.incomingHandshakes.value.single.handshakeId,
-        selfDisplayName: 'Invitee Self-Name',
-        selfAvatarId: 'mdi:invitee-avatar',
-      );
       await inviter.orchestrator.processAllPendingHandshakes();
 
       final inviteeVisible = await invitee.contacts.list();
@@ -365,6 +355,7 @@ void main() {
   );
 
   test('rejection path drops both stubs and signals the invitee', () async {
+    inviter.orchestrator.autoAcceptIncomingHandshakes = false;
     final invite = await inviter.orchestrator.generateInvitation(
       validFor: const Duration(hours: 1),
       stubDisplayName: 'pending peer',
@@ -408,6 +399,7 @@ void main() {
   });
 
   test('replayed hello after nonce consumption is ignored', () async {
+    inviter.orchestrator.autoAcceptIncomingHandshakes = false;
     final invite = await inviter.orchestrator.generateInvitation(
       validFor: const Duration(hours: 1),
       stubDisplayName: 'pending peer',
@@ -496,12 +488,6 @@ void main() {
       expect(invitee.notifications.addRequestFailures, isEmpty);
 
       await inviter.orchestrator.processAllPendingHandshakes();
-      final incoming = inviter.orchestrator.incomingHandshakes.value.single;
-      await inviter.orchestrator.acceptIncoming(
-        incoming.handshakeId,
-        selfDisplayName: 'Inviter Self-Name',
-        selfAvatarId: 'mdi:inviter-avatar',
-      );
 
       await invitee.orchestrator.processAllPendingHandshakes();
       expect(

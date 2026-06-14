@@ -26,6 +26,9 @@ class _FakeContactNotificationSink implements ContactNotificationSink {
   Future<void> contactAddRequestReceived({required String displayName}) async {}
 
   @override
+  Future<void> contactAddedViaInvitation({required String displayName}) async {}
+
+  @override
   Future<void> contactAddRequestResolved({
     required String displayName,
     required bool accepted,
@@ -106,12 +109,11 @@ Future<({String inviterContactId, String inviteeContactId})> _completeHandshake(
     selfDisplayName: inviteeDisplayName,
     selfAvatarId: 'mdi:web',
   );
-  await inviter.orchestrator.processAllPendingHandshakes();
-  await inviter.orchestrator.acceptIncoming(
-    inviter.orchestrator.incomingHandshakes.value.single.handshakeId,
-    selfDisplayName: 'Android User',
-    selfAvatarId: 'mdi:android',
+  inviter.orchestrator.ackProfileForAutoAccept = () async => (
+    displayName: 'Android User',
+    avatarId: 'mdi:android',
   );
+  await inviter.orchestrator.processAllPendingHandshakes();
   await invitee.orchestrator.processAllPendingHandshakes();
   return (
     inviterContactId: invite.localContactId,

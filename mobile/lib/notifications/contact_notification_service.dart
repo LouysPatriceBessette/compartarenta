@@ -11,6 +11,10 @@ import 'contact_notification_service_stub.dart'
 abstract class ContactNotificationSink {
   Future<void> contactAddRequestReceived({required String displayName});
 
+  /// Inviter-side: someone redeemed a valid invitation code and is now
+  /// connected (no manual accept step).
+  Future<void> contactAddedViaInvitation({required String displayName});
+
   Future<void> contactAddRequestResolved({
     required String displayName,
     required bool accepted,
@@ -36,6 +40,22 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: l10n.pushNotificationContactAddRequestBody(displayName),
+      playSound: prefs.notificationSoundEnabled,
+    );
+  }
+
+  @override
+  Future<void> contactAddedViaInvitation({required String displayName}) async {
+    final prefs = await AppPreferences.load();
+    if (!prefs.notificationsEnabled || !prefs.notificationContactAddRequests) {
+      return;
+    }
+    if (!await _systemAllowsNotifications()) return;
+
+    final l10n = _l10nForUiLocale();
+    await impl.showContactNotification(
+      title: l10n.pushNotificationContactAddRequestTitle,
+      body: l10n.pushNotificationContactAddedViaInvitationBody(displayName),
       playSound: prefs.notificationSoundEnabled,
     );
   }

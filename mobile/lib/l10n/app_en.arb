@@ -812,6 +812,10 @@
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddedViaInvitationBody": "{name} is now in your contacts.",
+  "@pushNotificationContactAddedViaInvitationBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationContactAddRequestAcceptedBody": "Your connection request with {name} was accepted.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }
@@ -1040,7 +1044,7 @@
   "contactsInviteAction": "Invite a contact",
   "contactsInviteTitle": "Invite a contact",
   "contactsInviteIntroTitle": "Share a one-time code",
-  "contactsInviteIntroBody": "Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can request to connect with you. You will confirm before they are added.",
+  "contactsInviteIntroBody": "Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can add themselves to your contacts while the code is valid.",
   "contactsInviteValidityLabel": "Code valid for",
   "contactsInviteGenerateAction": "Generate code",
   "contactsInviteShareWarning": "Share this code with one person only. It expires automatically and stops working after being used or revoked.",
@@ -1086,7 +1090,7 @@
   },
   "contactsHandshakeNotAvailableYet": "The relay handshake is not available yet. The code is valid locally, but cannot be redeemed until the relay is live.",
   "contactsHandshakeDispatching": "Sending the request to the relay…",
-  "contactsHandshakeDispatched": "Request sent. Waiting for the inviter to confirm.",
+  "contactsHandshakeDispatched": "Code accepted. Establishing the contact…",
   "contactsHandshakeCompleted": "Connected. The contact has been added to your list.",
   "contactsHandshakeRejected": "The other person declined the connection. You can ask them for a new invitation if needed.",
   "contactsHandshakeFailed": "The connection attempt failed. You can try again with a fresh invitation.",

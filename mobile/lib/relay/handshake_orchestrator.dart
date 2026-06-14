@@ -35,6 +35,7 @@ import 'routing.dart';
 ///
 /// Inviter timeline:
 ///   awaitingHello -> helloReceived -> completed | rejected
+///   (helloReceived is transient when [autoAcceptIncomingHandshakes] is true)
 /// Invitee timeline:
 ///   awaitingAck   -> completed | rejected
 /// Either side can transition to `failed` on unrecoverable error.
@@ -152,13 +153,12 @@ class HandshakeOrchestratorError implements Exception {
 ///   `PendingHandshakes` so polling will pick up the ack.
 /// * **Polling** ([processAllPendingHandshakes]): for each non-terminal
 ///   row, fetches the relevant relay inbox, decrypts incoming envelopes,
-///   and either surfaces them via [incomingHandshakes] (inviter waiting
-///   on accept/reject) or finishes the flow (invitee receiving the ack).
-///   The periodic poll also runs [pollSteadyStateInboxes] so inbound
-///   steady-state envelopes reach connected contacts.
-/// * **Accept / Reject** ([acceptIncoming] / [rejectIncoming]): sends
-///   the ack envelope, promotes (or discards) the local stub, and
-///   establishes the steady-state routing on the relay.
+///   and finishes the flow (inviter auto-accepts valid hellos; invitee
+///   receives the ack). The periodic poll also runs [pollSteadyStateInboxes]
+///   so inbound steady-state envelopes reach connected contacts.
+/// * **Accept / Reject** ([acceptIncoming] / [rejectIncoming]): legacy
+///   manual inviter decision when [autoAcceptIncomingHandshakes] is false;
+///   otherwise valid hellos are accepted automatically after validation.
 /// * **Steady state** ([sendProfileUpdate], [sendDisconnect]): small
 ///   encrypted envelopes between connected contacts. Profile updates do
 ///   not transition any Contact kind; disconnect demotes both ends back
@@ -188,6 +188,17 @@ class HandshakeOrchestrator {
        _ackTtl = ackTtl,
        _steadyTtl = steadyTtl,
        _now = now;
+
+  /// When true (default), a validated inviter-side `hello` is accepted
+  /// immediately without surfacing a manual confirmation step.
+  @visibleForTesting
+  bool autoAcceptIncomingHandshakes = true;
+
+  /// Test hook supplying the inviter profile shipped inside the auto-accept
+  /// ack. When null, [AppPreferences] is read (same as the manual accept UI).
+  @visibleForTesting
+  Future<({String displayName, String avatarId})> Function()?
+  ackProfileForAutoAccept;
 
   final AppDatabase _db;
   final IdentityKeystore _identity;
@@ -756,6 +767,11 @@ class HandshakeOrchestrator {
   bool _shouldPollHandshakeRow(PendingHandshake row) {
     if (row.state == HandshakeState.awaitingHello ||
         row.state == HandshakeState.awaitingAck) {
+      return true;
+    }
+    if (row.state == HandshakeState.helloReceived &&
+        row.role == HandshakeRole.inviter &&
+        autoAcceptIncomingHandshakes) {
       return true;
     }
     if (row.state != HandshakeState.failed) return false;
@@ -1735,6 +1751,12 @@ class HandshakeOrchestrator {
       );
       return;
     }
+    if (row.role == HandshakeRole.inviter &&
+        row.state == HandshakeState.helloReceived &&
+        autoAcceptIncomingHandshakes) {
+      await _autoAcceptInviterHello(row);
+      return;
+    }
     final invitationIdBytes = _hexDecode(row.invitationIdHex);
     final nonceBytes = _hexDecode(row.nonceHex);
     final addrInviter = await RelayRouting.inviterHandshakeAddress(
@@ -1853,9 +1875,7 @@ class HandshakeOrchestrator {
     // Nonce consumed; further hellos are ignored.
     await _invitations.markUsed(row.invitationIdHex, now: _now().toUtc());
 
-    // Stash the peer identity + profile on the pending row so the
-    // confirmation UI can render it. The decision (accept/reject)
-    // happens later via [acceptIncoming] / [rejectIncoming].
+    // Stash the peer identity + profile on the pending row.
     await _markHandshake(
       row.id,
       state: HandshakeState.helloReceived,
@@ -1870,9 +1890,49 @@ class HandshakeOrchestrator {
       envelopeId: envelope.envelopeId,
       recipient: listenAddr,
     );
-    await _contactNotifications.contactAddRequestReceived(
-      displayName: hello.displayName,
-    );
+
+    final updatedRow = await _db.getPendingHandshake(row.id);
+    if (updatedRow == null) return;
+
+    if (autoAcceptIncomingHandshakes) {
+      await _autoAcceptInviterHello(updatedRow);
+    } else {
+      await _contactNotifications.contactAddRequestReceived(
+        displayName: hello.displayName,
+      );
+    }
+  }
+
+  Future<void> _autoAcceptInviterHello(PendingHandshake row) async {
+    if (row.role != HandshakeRole.inviter ||
+        row.state != HandshakeState.helloReceived) {
+      return;
+    }
+    final peerPubB64 = row.peerLongTermPublicMaterialB64;
+    if (peerPubB64 == null) return;
+
+    final profile = ackProfileForAutoAccept != null
+        ? await ackProfileForAutoAccept!()
+        : await _loadSelfProfileForAck();
+
+    try {
+      await _finalizeInviterAccept(
+        handshakeRow: row,
+        peerPubBytes: RelayRouting.unb64(peerPubB64),
+        peerDisplayName: row.peerDisplayName,
+        peerAvatarId: row.peerAvatarId,
+        selfDisplayName: profile.displayName,
+        selfAvatarId: profile.avatarId,
+      );
+      final notificationName = row.peerDisplayName.isEmpty
+          ? 'Unknown'
+          : row.peerDisplayName;
+      await _contactNotifications.contactAddedViaInvitation(
+        displayName: notificationName,
+      );
+    } on HandshakeOrchestratorError catch (e) {
+      await _markHandshake(row.id, lastErrorCode: e.code);
+    }
   }
 
   Future<void> _handleAckAsInvitee({
@@ -3285,5 +3345,13 @@ class HandshakeOrchestrator {
   ) async {
     final c = await _contacts.get(stubContactId);
     return (displayName: c?.displayName ?? '', avatarId: c?.avatarId ?? '');
+  }
+
+  Future<({String displayName, String avatarId})> _loadSelfProfileForAck() async {
+    final prefs = await AppPreferences.load();
+    return (
+      displayName: prefs.displayName.isEmpty ? 'Unknown' : prefs.displayName,
+      avatarId: prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId,
+    );
   }
 }

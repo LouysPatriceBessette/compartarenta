@@ -714,6 +714,10 @@
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddedViaInvitationBody": "{name} ya está en tus contactos.",
+  "@pushNotificationContactAddedViaInvitationBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationContactAddRequestAcceptedBody": "Tu solicitud de conexión con {name} fue aceptada.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }
@@ -921,7 +925,7 @@
   "contactsInviteAction": "Invitar a un contacto",
   "contactsInviteTitle": "Invitar a un contacto",
   "contactsInviteIntroTitle": "Compartir un código de un solo uso",
-  "contactsInviteIntroBody": "Genera un código de un solo uso y compártelo fuera de la app (SMS, correo, en persona). Quien reciba el código podrá pedir conectarse contigo. Confirmarás antes de añadirlo.",
+  "contactsInviteIntroBody": "Genera un código de un solo uso y compártelo fuera de la app (SMS, correo, en persona). Quien reciba el código podrá añadirse a tus contactos mientras el código sea válido.",
   "contactsInviteValidityLabel": "Código válido durante",
   "contactsInviteGenerateAction": "Generar código",
   "contactsInviteShareWarning": "Comparte este código solo con una persona. Expira automáticamente y deja de funcionar tras su uso o revocación.",
@@ -967,7 +971,7 @@
   },
   "contactsHandshakeNotAvailableYet": "El intercambio con el relevo aún no está disponible. El código es válido localmente, pero no se puede canjear hasta que el relevo esté en línea.",
   "contactsHandshakeDispatching": "Enviando la solicitud al relevo…",
-  "contactsHandshakeDispatched": "Solicitud enviada. Esperando la confirmación del anfitrión.",
+  "contactsHandshakeDispatched": "Código aceptado. Estableciendo el contacto…",
   "contactsHandshakeCompleted": "Conectado. El contacto se ha añadido a tu lista.",
   "contactsHandshakeRejected": "La otra persona rechazó la conexión. Pídele una nueva invitación si lo necesitas.",
   "contactsHandshakeFailed": "El intento de conexión falló. Puedes reintentar con una nueva invitación.",

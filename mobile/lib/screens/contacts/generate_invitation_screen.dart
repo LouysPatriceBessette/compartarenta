@@ -7,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
+import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
@@ -39,20 +40,19 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   late final ContactInvitationsRepository _repo = ContactInvitationsRepository(
     _db,
   );
+  late final ContactsRepository _contacts = ContactsRepository(_db);
 
   Duration _validFor = const Duration(hours: 24);
   _GeneratedInvitation? _generated;
-  HandshakeOrchestrator? _incomingListenerOrchestrator;
   Timer? _generatedPollTimer;
   bool _generating = false;
   bool _processingGeneratedPoll = false;
-  bool _routingToIncoming = false;
+  bool _completingRedeem = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _attachIncomingListener();
     final viewId = widget.viewInvitationId?.trim();
     if (viewId != null && viewId.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,36 +86,15 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     });
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator != null && row.status == InvitationStatus.pending) {
-      _attachIncomingListener();
       _startGeneratedPolling(orchestrator);
-      _routeToIncomingIfCurrentInvitationHasRequest();
+      unawaited(_completeIfInvitationRedeemed());
     }
   }
 
   @override
   void dispose() {
     _generatedPollTimer?.cancel();
-    _incomingListenerOrchestrator?.incomingHandshakes.removeListener(
-      _onIncomingHandshakesChanged,
-    );
     super.dispose();
-  }
-
-  void _attachIncomingListener() {
-    final orchestrator = HandshakeOrchestrator.maybeInstance;
-    if (orchestrator == null ||
-        identical(orchestrator, _incomingListenerOrchestrator)) {
-      return;
-    }
-    _incomingListenerOrchestrator?.incomingHandshakes.removeListener(
-      _onIncomingHandshakesChanged,
-    );
-    _incomingListenerOrchestrator = orchestrator;
-    orchestrator.incomingHandshakes.addListener(_onIncomingHandshakesChanged);
-  }
-
-  void _onIncomingHandshakesChanged() {
-    _routeToIncomingIfCurrentInvitationHasRequest();
   }
 
   void _startGeneratedPolling(HandshakeOrchestrator orchestrator) {
@@ -130,13 +109,13 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   Future<void> _pollGeneratedInvitation(
     HandshakeOrchestrator orchestrator,
   ) async {
-    if (_processingGeneratedPoll || _routingToIncoming || _generated == null) {
+    if (_processingGeneratedPoll || _completingRedeem || _generated == null) {
       return;
     }
     _processingGeneratedPoll = true;
     try {
       await orchestrator.processAllPendingHandshakes();
-      _routeToIncomingIfCurrentInvitationHasRequest();
+      await _completeIfInvitationRedeemed();
     } on HandshakeOrchestratorError catch (e) {
       debugPrint('Generated invitation polling failed: ${e.code}');
     } catch (error, stack) {
@@ -146,23 +125,22 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     }
   }
 
-  void _routeToIncomingIfCurrentInvitationHasRequest() {
-    if (!mounted || _routingToIncoming) return;
+  Future<void> _completeIfInvitationRedeemed() async {
+    if (!mounted || _completingRedeem) return;
     final generated = _generated;
     if (generated == null) return;
-    final orchestrator =
-        _incomingListenerOrchestrator ?? HandshakeOrchestrator.maybeInstance;
-    if (orchestrator == null) return;
-    final hasIncomingRequest = orchestrator.incomingHandshakes.value.any(
-      (view) => view.invitationIdHex == generated.row.id,
-    );
-    if (!hasIncomingRequest) return;
-    _routingToIncoming = true;
+    final stubId = generated.row.contactStubId;
+    if (stubId == null || stubId.isEmpty) return;
+    final contact = await _contacts.get(stubId);
+    if (contact?.kind != 'connected') return;
+    _completingRedeem = true;
     _generatedPollTimer?.cancel();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.go('/contacts/incoming');
-    });
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.contactsHandshakeCompleted)),
+    );
+    context.pop();
   }
 
   Future<void> _generate() async {
@@ -217,9 +195,8 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
         _generated = result;
         _generating = false;
       });
-      _attachIncomingListener();
       _startGeneratedPolling(orchestrator);
-      _routeToIncomingIfCurrentInvitationHasRequest();
+      unawaited(_completeIfInvitationRedeemed());
     } on HandshakeOrchestratorError catch (e) {
       if (!mounted) return;
       setState(() {

@@ -731,6 +731,10 @@
   "@pushNotificationContactAddRequestBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactAddedViaInvitationBody": "{name} fait maintenant partie de vos contacts.",
+  "@pushNotificationContactAddedViaInvitationBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationContactAddRequestAcceptedBody": "Votre demande de connexion avec {name} a été acceptée.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }
@@ -938,7 +942,7 @@
   "contactsInviteAction": "Inviter un contact",
   "contactsInviteTitle": "Inviter un contact",
   "contactsInviteIntroTitle": "Partager un code à usage unique",
-  "contactsInviteIntroBody": "Générez un code à usage unique et partagez-le en dehors de l’app (SMS, courriel, en personne). La personne qui reçoit le code peut demander à se connecter avec vous. Vous confirmerez avant qu’elle soit ajoutée.",
+  "contactsInviteIntroBody": "Générez un code à usage unique et partagez-le en dehors de l’app (SMS, courriel, en personne). La personne qui reçoit le code peut s’ajouter à vos contacts tant que le code est valide.",
   "contactsInviteValidityLabel": "Code valide pour",
   "contactsInviteGenerateAction": "Générer le code",
   "contactsInviteShareWarning": "Partagez ce code avec une seule personne. Il expire automatiquement et ne fonctionne plus après usage ou révocation.",
@@ -984,7 +988,7 @@
   },
   "contactsHandshakeNotAvailableYet": "La poignée de main du relais n’est pas encore disponible. Le code est valide localement, mais il ne peut pas être utilisé tant que le relais n’est pas en ligne.",
   "contactsHandshakeDispatching": "Envoi de la requête au relais…",
-  "contactsHandshakeDispatched": "Requête envoyée. En attente de la confirmation de l’hôte.",
+  "contactsHandshakeDispatched": "Code accepté. Établissement du contact…",
   "contactsHandshakeCompleted": "Connecté. Le contact a été ajouté à votre liste.",
   "contactsHandshakeRejected": "Votre interlocuteur a refusé la connexion. Demandez-lui une nouvelle invitation si besoin.",
   "contactsHandshakeFailed": "La tentative de connexion a échoué. Vous pouvez réessayer avec une nouvelle invitation.",

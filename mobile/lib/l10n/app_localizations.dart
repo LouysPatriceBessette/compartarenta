@@ -3202,6 +3202,12 @@ abstract class AppLocalizations {
   /// **'{name} wants to connect with you.'**
   String pushNotificationContactAddRequestBody(String name);
 
+  /// No description provided for @pushNotificationContactAddedViaInvitationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is now in your contacts.'**
+  String pushNotificationContactAddedViaInvitationBody(String name);
+
   /// No description provided for @pushNotificationContactAddRequestAcceptedBody.
   ///
   /// In en, this message translates to:
@@ -4114,7 +4120,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsInviteIntroBody.
   ///
   /// In en, this message translates to:
-  /// **'Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can request to connect with you. You will confirm before they are added.'**
+  /// **'Generate a single-use code and share it outside the app (SMS, email, in person). Anyone with the code can add themselves to your contacts while the code is valid.'**
   String get contactsInviteIntroBody;
 
   /// No description provided for @contactsInviteValidityLabel.
@@ -4300,7 +4306,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsHandshakeDispatched.
   ///
   /// In en, this message translates to:
-  /// **'Request sent. Waiting for the inviter to confirm.'**
+  /// **'Code accepted. Establishing the contact…'**
   String get contactsHandshakeDispatched;
 
   /// No description provided for @contactsHandshakeCompleted.
