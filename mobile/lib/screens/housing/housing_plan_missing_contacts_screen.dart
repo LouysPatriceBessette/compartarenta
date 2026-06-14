@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/housing_plan_peer_contacts.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
 import '../../relay/handshake_orchestrator.dart';
 
 /// Lists every co-participant on a housing proposal and whether this device
@@ -26,11 +28,16 @@ class HousingPlanMissingContactsScreen extends StatefulWidget {
 class _HousingPlanMissingContactsScreenState
     extends State<HousingPlanMissingContactsScreen> {
   late Future<List<PlanPeerContactRow>> _rowsFuture;
+  AppPreferences? _prefs;
 
   @override
   void initState() {
     super.initState();
     _rowsFuture = _loadRows();
+    AppPreferences.load().then((prefs) {
+      if (!mounted) return;
+      setState(() => _prefs = prefs);
+    });
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
     );
@@ -53,27 +60,42 @@ class _HousingPlanMissingContactsScreenState
     return listPlanPeerContactRows(db: widget.db, planId: widget.planId);
   }
 
-  void _reloadAfterContactsFlow() {
+  void _reloadRows() {
     setState(() => _rowsFuture = _loadRows());
   }
 
-  void _openGenerateInvitation() {
-    context.push<void>('/contacts/invite/new').then((_) {
+  Future<void> _establishContact(PlanPeerContactRow row) async {
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) return;
+    try {
+      await orch.sendPlanPeerEstablishmentRequest(
+        planId: widget.planId,
+        participantId: row.participant.id,
+      );
       if (!mounted) return;
-      _reloadAfterContactsFlow();
-    });
+      _reloadRows();
+    } on HandshakeOrchestratorError catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.code)),
+      );
+    }
   }
 
-  void _openRedeemInvitation(String displayName) {
-    context
-        .push<void>(
-          '/contacts/redeem',
-          extra: HousingMissingContactRedeemArgs(displayName: displayName),
-        )
-        .then((_) {
-          if (!mounted) return;
-          _reloadAfterContactsFlow();
-        });
+  Future<void> _respondInbound({
+    required PlanPeerContactRow row,
+    required bool accepted,
+  }) async {
+    final establishmentId = row.establishmentId;
+    if (establishmentId == null) return;
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch == null) return;
+    await orch.respondPlanPeerEstablishmentRequest(
+      establishmentId: establishmentId,
+      accepted: accepted,
+    );
+    if (!mounted) return;
+    _reloadRows();
   }
 
   @override
@@ -125,12 +147,18 @@ class _HousingPlanMissingContactsScreenState
               const SizedBox(height: 16),
               for (final row in rows) ...[
                 _PeerRow(
-                  displayName: row.participant.displayName,
-                  isConnected: row.isConnected,
-                  onCreateInvitation: _openGenerateInvitation,
-                  onEnterCode: () =>
-                      _openRedeemInvitation(row.participant.displayName),
+                  row: row,
                   l10n: l10n,
+                  refusedLabel: row.refusedAt == null
+                      ? null
+                      : l10n.housingPlanMissingContactsRefusedAt(
+                          _formatRefusedAt(row.refusedAt!),
+                        ),
+                  onEstablishContact: () => _establishContact(row),
+                  onAcceptInbound: () =>
+                      _respondInbound(row: row, accepted: true),
+                  onRefuseInbound: () =>
+                      _respondInbound(row: row, accepted: false),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -140,26 +168,40 @@ class _HousingPlanMissingContactsScreenState
       ),
     );
   }
+
+  String _formatRefusedAt(DateTime refusedAt) {
+    final prefs = _prefs;
+    if (prefs == null) {
+      return DateFormat.yMMMd().add_Hm().format(refusedAt.toLocal());
+    }
+    return DateFormat(
+      '${effectiveDateFormat(prefs)} HH:mm',
+    ).format(refusedAt.toLocal());
+  }
 }
 
 class _PeerRow extends StatelessWidget {
   const _PeerRow({
-    required this.displayName,
-    required this.isConnected,
-    required this.onCreateInvitation,
-    required this.onEnterCode,
+    required this.row,
     required this.l10n,
+    required this.refusedLabel,
+    required this.onEstablishContact,
+    required this.onAcceptInbound,
+    required this.onRefuseInbound,
   });
 
-  final String displayName;
-  final bool isConnected;
-  final VoidCallback onCreateInvitation;
-  final VoidCallback onEnterCode;
+  final PlanPeerContactRow row;
   final AppLocalizations l10n;
+  final String? refusedLabel;
+  final VoidCallback onEstablishContact;
+  final VoidCallback onAcceptInbound;
+  final VoidCallback onRefuseInbound;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final displayName = row.participant.displayName;
+    final isConnected = row.isConnected;
     final statusColor = isConnected
         ? theme.colorScheme.primary
         : theme.colorScheme.error;
@@ -174,21 +216,54 @@ class _PeerRow extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        if (!isConnected) ...[
+        if (!isConnected && row.outboundPending) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.housingPlanMissingContactsPendingOutbound,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
+          ),
+        ],
+        if (!isConnected && refusedLabel != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            refusedLabel!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+        if (!isConnected && row.inboundPending) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.housingPlanMissingContactsInboundPrompt(
+              row.inboundRequesterDisplayName ?? displayName,
+            ),
+            style: theme.textTheme.bodyMedium,
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton.tonal(
-                onPressed: onCreateInvitation,
-                child: Text(l10n.housingPlanMissingContactsCreateInvitation),
+              FilledButton(
+                onPressed: onAcceptInbound,
+                child: Text(l10n.housingPlanMissingContactsAccept),
               ),
               OutlinedButton(
-                onPressed: onEnterCode,
-                child: Text(l10n.housingPlanMissingContactsEnterCode),
+                onPressed: onRefuseInbound,
+                child: Text(l10n.housingPlanMissingContactsRefuse),
               ),
             ],
+          ),
+        ] else if (!isConnected &&
+            !row.outboundPending &&
+            row.establishmentId != null) ...[
+          const SizedBox(height: 8),
+          FilledButton.tonal(
+            onPressed: onEstablishContact,
+            child: Text(l10n.housingPlanMissingContactsEstablishContact),
           ),
         ],
       ],

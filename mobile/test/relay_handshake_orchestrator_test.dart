@@ -113,6 +113,12 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
   Future<void> contactDisconnected({required String displayName}) async {
     disconnections.add(displayName);
   }
+
+  @override
+  Future<void> planPeerEstablishmentRequestReceived({
+    required String requesterDisplayName,
+    required String proposerDisplayName,
+  }) async {}
 }
 
 void main() {

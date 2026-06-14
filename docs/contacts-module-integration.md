@@ -46,3 +46,11 @@ The housing participant step now uses the shared Contacts picker. Choosing a
 Contact fills the housing participant snapshot and persists the `contactId`
 reference. The previous inline temporary name/avatar authoring path is no
 longer exposed from the housing step.
+
+When a participant receives a housing proposal, co-participants who are not yet
+connected locally may be reached through **Establish contact** on the plan
+missing-contacts screen. That path uses encrypted steady-state envelopes
+(`contactEstablishmentRequest` / `contactEstablishmentResponse`) and public keys
+from `participantSnapshots` in the proposal payload — not invitation codes.
+The requester enters outbound-pending state until the target explicitly accepts;
+only then are both sides promoted to connected contacts.

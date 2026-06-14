@@ -1627,7 +1627,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingPlanMissingContactsIntro =>
-      'Cada co-participante debe ser un contacto conectado en este dispositivo antes de que puedas aceptar el plan. Usa un código de invitación en cualquier dirección.';
+      'Cada co-participante debe ser un contacto conectado en este dispositivo antes de que puedas aceptar el plan. Pulsa Establecer contacto para quien aún te falte.';
 
   @override
   String get housingPlanMissingContactsEmpty =>
@@ -1638,11 +1638,28 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todos los co-participantes están conectados. Puedes volver atrás y aceptar el plan.';
 
   @override
-  String get housingPlanMissingContactsCreateInvitation => 'Crear invitación';
+  String get housingPlanMissingContactsEstablishContact =>
+      'Establecer contacto';
 
   @override
-  String get housingPlanMissingContactsEnterCode =>
-      'Introducir código de invitación';
+  String get housingPlanMissingContactsPendingOutbound =>
+      'Solicitud enviada — esperando su respuesta.';
+
+  @override
+  String housingPlanMissingContactsRefusedAt(String when) {
+    return 'Rechazado $when';
+  }
+
+  @override
+  String housingPlanMissingContactsInboundPrompt(String requester) {
+    return '$requester desea establecer contacto contigo para este plan de vivienda.';
+  }
+
+  @override
+  String get housingPlanMissingContactsAccept => 'Aceptar';
+
+  @override
+  String get housingPlanMissingContactsRefuse => 'Rechazar';
 
   @override
   String get housingInviteNegotiate => 'Me gustaría negociar';
@@ -1898,6 +1915,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pushNotificationContactAddRequestUnknownFailureBody =>
       'Tu solicitud de conexión falló.';
+
+  @override
+  String pushNotificationPlanPeerEstablishmentRequestBody(
+    String requester,
+    String proposer,
+  ) {
+    return '$requester desea establecer contacto contigo, en el contexto de la propuesta de vivienda de $proposer.';
+  }
 
   @override
   String get pushNotificationContactDisconnectionTitle =>

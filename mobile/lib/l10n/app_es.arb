@@ -607,11 +607,25 @@
   },
   "housingInviteMissingContactsBlocked": "Conéctate con cada co-participante antes de poder aceptar.",
   "housingPlanMissingContactsTitle": "Contactos del plan",
-  "housingPlanMissingContactsIntro": "Cada co-participante debe ser un contacto conectado en este dispositivo antes de que puedas aceptar el plan. Usa un código de invitación en cualquier dirección.",
+  "housingPlanMissingContactsIntro": "Cada co-participante debe ser un contacto conectado en este dispositivo antes de que puedas aceptar el plan. Pulsa Establecer contacto para quien aún te falte.",
   "housingPlanMissingContactsEmpty": "Este plan no tiene otros participantes en este dispositivo.",
   "housingPlanMissingContactsAllReady": "Todos los co-participantes están conectados. Puedes volver atrás y aceptar el plan.",
-  "housingPlanMissingContactsCreateInvitation": "Crear invitación",
-  "housingPlanMissingContactsEnterCode": "Introducir código de invitación",
+  "housingPlanMissingContactsEstablishContact": "Establecer contacto",
+  "housingPlanMissingContactsPendingOutbound": "Solicitud enviada — esperando su respuesta.",
+  "housingPlanMissingContactsRefusedAt": "Rechazado {when}",
+  "@housingPlanMissingContactsRefusedAt": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsInboundPrompt": "{requester} desea establecer contacto contigo para este plan de vivienda.",
+  "@housingPlanMissingContactsInboundPrompt": {
+    "placeholders": {
+      "requester": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsAccept": "Aceptar",
+  "housingPlanMissingContactsRefuse": "Rechazar",
   "housingInviteNegotiate": "Me gustaría negociar",
   "housingInviteRejectBlock": "Rechazo por completo",
   "housingInviteNegotiateMessageLabel": "Mensaje a enviar con la solicitud de negociación",
@@ -731,6 +745,13 @@
   "pushNotificationContactAddRequestRelayErrorBody": "Se produjo un error en el servidor de relevo. Inténtalo de nuevo.",
   "pushNotificationContactAddRequestRelayUnavailableBody": "El servidor de relevo no está disponible temporalmente.",
   "pushNotificationContactAddRequestUnknownFailureBody": "Tu solicitud de conexión falló.",
+  "pushNotificationPlanPeerEstablishmentRequestBody": "{requester} desea establecer contacto contigo, en el contexto de la propuesta de vivienda de {proposer}.",
+  "@pushNotificationPlanPeerEstablishmentRequestBody": {
+    "placeholders": {
+      "requester": { "type": "String" },
+      "proposer": { "type": "String" }
+    }
+  },
   "pushNotificationContactDisconnectionTitle": "Contacto desconectado",
   "pushNotificationContactDisconnectionBody": "{name} se desconectó de ti.",
   "@pushNotificationContactDisconnectionBody": {

@@ -2821,7 +2821,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingPlanMissingContactsIntro.
   ///
   /// In en, this message translates to:
-  /// **'Each co-participant must be a connected contact on this device before you can accept the plan. Use an invitation code in either direction.'**
+  /// **'Each co-participant must be a connected contact on this device before you can accept the plan. Tap Establish contact for anyone you still need to reach.'**
   String get housingPlanMissingContactsIntro;
 
   /// No description provided for @housingPlanMissingContactsEmpty.
@@ -2836,17 +2836,41 @@ abstract class AppLocalizations {
   /// **'Every co-participant is connected. You can go back and accept the plan.'**
   String get housingPlanMissingContactsAllReady;
 
-  /// No description provided for @housingPlanMissingContactsCreateInvitation.
+  /// No description provided for @housingPlanMissingContactsEstablishContact.
   ///
   /// In en, this message translates to:
-  /// **'Create invitation'**
-  String get housingPlanMissingContactsCreateInvitation;
+  /// **'Establish contact'**
+  String get housingPlanMissingContactsEstablishContact;
 
-  /// No description provided for @housingPlanMissingContactsEnterCode.
+  /// No description provided for @housingPlanMissingContactsPendingOutbound.
   ///
   /// In en, this message translates to:
-  /// **'Enter invitation code'**
-  String get housingPlanMissingContactsEnterCode;
+  /// **'Request sent — waiting for their response.'**
+  String get housingPlanMissingContactsPendingOutbound;
+
+  /// No description provided for @housingPlanMissingContactsRefusedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused {when}'**
+  String housingPlanMissingContactsRefusedAt(String when);
+
+  /// No description provided for @housingPlanMissingContactsInboundPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'{requester} wishes to establish contact with you for this housing plan.'**
+  String housingPlanMissingContactsInboundPrompt(String requester);
+
+  /// No description provided for @housingPlanMissingContactsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get housingPlanMissingContactsAccept;
+
+  /// No description provided for @housingPlanMissingContactsRefuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get housingPlanMissingContactsRefuse;
 
   /// No description provided for @housingInviteNegotiate.
   ///
@@ -3249,6 +3273,15 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your connection request failed.'**
   String get pushNotificationContactAddRequestUnknownFailureBody;
+
+  /// No description provided for @pushNotificationPlanPeerEstablishmentRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{requester} wishes to establish contact with you, in the context of the housing plan proposal from {proposer}.'**
+  String pushNotificationPlanPeerEstablishmentRequestBody(
+    String requester,
+    String proposer,
+  );
 
   /// No description provided for @pushNotificationContactDisconnectionTitle.
   ///

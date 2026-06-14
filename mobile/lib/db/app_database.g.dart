@@ -12009,6 +12009,956 @@ class HousingInactiveParticipantsCompanion
   }
 }
 
+class $PlanPeerEstablishmentsTable extends PlanPeerEstablishments
+    with TableInfo<$PlanPeerEstablishmentsTable, PlanPeerEstablishment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlanPeerEstablishmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta(
+    'participantId',
+  );
+  @override
+  late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
+    'participant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _peerPublicMaterialB64Meta =
+      const VerificationMeta('peerPublicMaterialB64');
+  @override
+  late final GeneratedColumn<String> peerPublicMaterialB64 =
+      GeneratedColumn<String>(
+        'peer_public_material_b64',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _peerDisplayNameMeta = const VerificationMeta(
+    'peerDisplayName',
+  );
+  @override
+  late final GeneratedColumn<String> peerDisplayName = GeneratedColumn<String>(
+    'peer_display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _peerAvatarIdMeta = const VerificationMeta(
+    'peerAvatarId',
+  );
+  @override
+  late final GeneratedColumn<String> peerAvatarId = GeneratedColumn<String>(
+    'peer_avatar_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proposerDisplayNameMeta =
+      const VerificationMeta('proposerDisplayName');
+  @override
+  late final GeneratedColumn<String> proposerDisplayName =
+      GeneratedColumn<String>(
+        'proposer_display_name',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _revisionIdMeta = const VerificationMeta(
+    'revisionId',
+  );
+  @override
+  late final GeneratedColumn<String> revisionId = GeneratedColumn<String>(
+    'revision_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _outboundPendingAtMeta = const VerificationMeta(
+    'outboundPendingAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> outboundPendingAt =
+      GeneratedColumn<DateTime>(
+        'outbound_pending_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _refusedAtMeta = const VerificationMeta(
+    'refusedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> refusedAt = GeneratedColumn<DateTime>(
+    'refused_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inboundPendingAtMeta = const VerificationMeta(
+    'inboundPendingAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> inboundPendingAt =
+      GeneratedColumn<DateTime>(
+        'inbound_pending_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _inboundRequesterDisplayNameMeta =
+      const VerificationMeta('inboundRequesterDisplayName');
+  @override
+  late final GeneratedColumn<String> inboundRequesterDisplayName =
+      GeneratedColumn<String>(
+        'inbound_requester_display_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _inboundRequesterAvatarIdMeta =
+      const VerificationMeta('inboundRequesterAvatarId');
+  @override
+  late final GeneratedColumn<String> inboundRequesterAvatarId =
+      GeneratedColumn<String>(
+        'inbound_requester_avatar_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    participantId,
+    peerPublicMaterialB64,
+    peerDisplayName,
+    peerAvatarId,
+    proposerDisplayName,
+    revisionId,
+    outboundPendingAt,
+    refusedAt,
+    inboundPendingAt,
+    inboundRequesterDisplayName,
+    inboundRequesterAvatarId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plan_peer_establishments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlanPeerEstablishment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('participant_id')) {
+      context.handle(
+        _participantIdMeta,
+        participantId.isAcceptableOrUnknown(
+          data['participant_id']!,
+          _participantIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_participantIdMeta);
+    }
+    if (data.containsKey('peer_public_material_b64')) {
+      context.handle(
+        _peerPublicMaterialB64Meta,
+        peerPublicMaterialB64.isAcceptableOrUnknown(
+          data['peer_public_material_b64']!,
+          _peerPublicMaterialB64Meta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_peerPublicMaterialB64Meta);
+    }
+    if (data.containsKey('peer_display_name')) {
+      context.handle(
+        _peerDisplayNameMeta,
+        peerDisplayName.isAcceptableOrUnknown(
+          data['peer_display_name']!,
+          _peerDisplayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_peerDisplayNameMeta);
+    }
+    if (data.containsKey('peer_avatar_id')) {
+      context.handle(
+        _peerAvatarIdMeta,
+        peerAvatarId.isAcceptableOrUnknown(
+          data['peer_avatar_id']!,
+          _peerAvatarIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_peerAvatarIdMeta);
+    }
+    if (data.containsKey('proposer_display_name')) {
+      context.handle(
+        _proposerDisplayNameMeta,
+        proposerDisplayName.isAcceptableOrUnknown(
+          data['proposer_display_name']!,
+          _proposerDisplayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_proposerDisplayNameMeta);
+    }
+    if (data.containsKey('revision_id')) {
+      context.handle(
+        _revisionIdMeta,
+        revisionId.isAcceptableOrUnknown(data['revision_id']!, _revisionIdMeta),
+      );
+    }
+    if (data.containsKey('outbound_pending_at')) {
+      context.handle(
+        _outboundPendingAtMeta,
+        outboundPendingAt.isAcceptableOrUnknown(
+          data['outbound_pending_at']!,
+          _outboundPendingAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('refused_at')) {
+      context.handle(
+        _refusedAtMeta,
+        refusedAt.isAcceptableOrUnknown(data['refused_at']!, _refusedAtMeta),
+      );
+    }
+    if (data.containsKey('inbound_pending_at')) {
+      context.handle(
+        _inboundPendingAtMeta,
+        inboundPendingAt.isAcceptableOrUnknown(
+          data['inbound_pending_at']!,
+          _inboundPendingAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inbound_requester_display_name')) {
+      context.handle(
+        _inboundRequesterDisplayNameMeta,
+        inboundRequesterDisplayName.isAcceptableOrUnknown(
+          data['inbound_requester_display_name']!,
+          _inboundRequesterDisplayNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inbound_requester_avatar_id')) {
+      context.handle(
+        _inboundRequesterAvatarIdMeta,
+        inboundRequesterAvatarId.isAcceptableOrUnknown(
+          data['inbound_requester_avatar_id']!,
+          _inboundRequesterAvatarIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlanPeerEstablishment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlanPeerEstablishment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      participantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}participant_id'],
+      )!,
+      peerPublicMaterialB64: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_public_material_b64'],
+      )!,
+      peerDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_display_name'],
+      )!,
+      peerAvatarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_avatar_id'],
+      )!,
+      proposerDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}proposer_display_name'],
+      )!,
+      revisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revision_id'],
+      ),
+      outboundPendingAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}outbound_pending_at'],
+      ),
+      refusedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}refused_at'],
+      ),
+      inboundPendingAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}inbound_pending_at'],
+      ),
+      inboundRequesterDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inbound_requester_display_name'],
+      ),
+      inboundRequesterAvatarId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inbound_requester_avatar_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PlanPeerEstablishmentsTable createAlias(String alias) {
+    return $PlanPeerEstablishmentsTable(attachedDatabase, alias);
+  }
+}
+
+class PlanPeerEstablishment extends DataClass
+    implements Insertable<PlanPeerEstablishment> {
+  final String id;
+  final String planId;
+  final String participantId;
+  final String peerPublicMaterialB64;
+  final String peerDisplayName;
+  final String peerAvatarId;
+  final String proposerDisplayName;
+  final String? revisionId;
+  final DateTime? outboundPendingAt;
+  final DateTime? refusedAt;
+  final DateTime? inboundPendingAt;
+  final String? inboundRequesterDisplayName;
+  final String? inboundRequesterAvatarId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const PlanPeerEstablishment({
+    required this.id,
+    required this.planId,
+    required this.participantId,
+    required this.peerPublicMaterialB64,
+    required this.peerDisplayName,
+    required this.peerAvatarId,
+    required this.proposerDisplayName,
+    this.revisionId,
+    this.outboundPendingAt,
+    this.refusedAt,
+    this.inboundPendingAt,
+    this.inboundRequesterDisplayName,
+    this.inboundRequesterAvatarId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['participant_id'] = Variable<String>(participantId);
+    map['peer_public_material_b64'] = Variable<String>(peerPublicMaterialB64);
+    map['peer_display_name'] = Variable<String>(peerDisplayName);
+    map['peer_avatar_id'] = Variable<String>(peerAvatarId);
+    map['proposer_display_name'] = Variable<String>(proposerDisplayName);
+    if (!nullToAbsent || revisionId != null) {
+      map['revision_id'] = Variable<String>(revisionId);
+    }
+    if (!nullToAbsent || outboundPendingAt != null) {
+      map['outbound_pending_at'] = Variable<DateTime>(outboundPendingAt);
+    }
+    if (!nullToAbsent || refusedAt != null) {
+      map['refused_at'] = Variable<DateTime>(refusedAt);
+    }
+    if (!nullToAbsent || inboundPendingAt != null) {
+      map['inbound_pending_at'] = Variable<DateTime>(inboundPendingAt);
+    }
+    if (!nullToAbsent || inboundRequesterDisplayName != null) {
+      map['inbound_requester_display_name'] = Variable<String>(
+        inboundRequesterDisplayName,
+      );
+    }
+    if (!nullToAbsent || inboundRequesterAvatarId != null) {
+      map['inbound_requester_avatar_id'] = Variable<String>(
+        inboundRequesterAvatarId,
+      );
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PlanPeerEstablishmentsCompanion toCompanion(bool nullToAbsent) {
+    return PlanPeerEstablishmentsCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      participantId: Value(participantId),
+      peerPublicMaterialB64: Value(peerPublicMaterialB64),
+      peerDisplayName: Value(peerDisplayName),
+      peerAvatarId: Value(peerAvatarId),
+      proposerDisplayName: Value(proposerDisplayName),
+      revisionId: revisionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(revisionId),
+      outboundPendingAt: outboundPendingAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outboundPendingAt),
+      refusedAt: refusedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(refusedAt),
+      inboundPendingAt: inboundPendingAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inboundPendingAt),
+      inboundRequesterDisplayName:
+          inboundRequesterDisplayName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inboundRequesterDisplayName),
+      inboundRequesterAvatarId: inboundRequesterAvatarId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inboundRequesterAvatarId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PlanPeerEstablishment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlanPeerEstablishment(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      participantId: serializer.fromJson<String>(json['participantId']),
+      peerPublicMaterialB64: serializer.fromJson<String>(
+        json['peerPublicMaterialB64'],
+      ),
+      peerDisplayName: serializer.fromJson<String>(json['peerDisplayName']),
+      peerAvatarId: serializer.fromJson<String>(json['peerAvatarId']),
+      proposerDisplayName: serializer.fromJson<String>(
+        json['proposerDisplayName'],
+      ),
+      revisionId: serializer.fromJson<String?>(json['revisionId']),
+      outboundPendingAt: serializer.fromJson<DateTime?>(
+        json['outboundPendingAt'],
+      ),
+      refusedAt: serializer.fromJson<DateTime?>(json['refusedAt']),
+      inboundPendingAt: serializer.fromJson<DateTime?>(
+        json['inboundPendingAt'],
+      ),
+      inboundRequesterDisplayName: serializer.fromJson<String?>(
+        json['inboundRequesterDisplayName'],
+      ),
+      inboundRequesterAvatarId: serializer.fromJson<String?>(
+        json['inboundRequesterAvatarId'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'participantId': serializer.toJson<String>(participantId),
+      'peerPublicMaterialB64': serializer.toJson<String>(peerPublicMaterialB64),
+      'peerDisplayName': serializer.toJson<String>(peerDisplayName),
+      'peerAvatarId': serializer.toJson<String>(peerAvatarId),
+      'proposerDisplayName': serializer.toJson<String>(proposerDisplayName),
+      'revisionId': serializer.toJson<String?>(revisionId),
+      'outboundPendingAt': serializer.toJson<DateTime?>(outboundPendingAt),
+      'refusedAt': serializer.toJson<DateTime?>(refusedAt),
+      'inboundPendingAt': serializer.toJson<DateTime?>(inboundPendingAt),
+      'inboundRequesterDisplayName': serializer.toJson<String?>(
+        inboundRequesterDisplayName,
+      ),
+      'inboundRequesterAvatarId': serializer.toJson<String?>(
+        inboundRequesterAvatarId,
+      ),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  PlanPeerEstablishment copyWith({
+    String? id,
+    String? planId,
+    String? participantId,
+    String? peerPublicMaterialB64,
+    String? peerDisplayName,
+    String? peerAvatarId,
+    String? proposerDisplayName,
+    Value<String?> revisionId = const Value.absent(),
+    Value<DateTime?> outboundPendingAt = const Value.absent(),
+    Value<DateTime?> refusedAt = const Value.absent(),
+    Value<DateTime?> inboundPendingAt = const Value.absent(),
+    Value<String?> inboundRequesterDisplayName = const Value.absent(),
+    Value<String?> inboundRequesterAvatarId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => PlanPeerEstablishment(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    participantId: participantId ?? this.participantId,
+    peerPublicMaterialB64: peerPublicMaterialB64 ?? this.peerPublicMaterialB64,
+    peerDisplayName: peerDisplayName ?? this.peerDisplayName,
+    peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+    proposerDisplayName: proposerDisplayName ?? this.proposerDisplayName,
+    revisionId: revisionId.present ? revisionId.value : this.revisionId,
+    outboundPendingAt: outboundPendingAt.present
+        ? outboundPendingAt.value
+        : this.outboundPendingAt,
+    refusedAt: refusedAt.present ? refusedAt.value : this.refusedAt,
+    inboundPendingAt: inboundPendingAt.present
+        ? inboundPendingAt.value
+        : this.inboundPendingAt,
+    inboundRequesterDisplayName: inboundRequesterDisplayName.present
+        ? inboundRequesterDisplayName.value
+        : this.inboundRequesterDisplayName,
+    inboundRequesterAvatarId: inboundRequesterAvatarId.present
+        ? inboundRequesterAvatarId.value
+        : this.inboundRequesterAvatarId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PlanPeerEstablishment copyWithCompanion(
+    PlanPeerEstablishmentsCompanion data,
+  ) {
+    return PlanPeerEstablishment(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      participantId: data.participantId.present
+          ? data.participantId.value
+          : this.participantId,
+      peerPublicMaterialB64: data.peerPublicMaterialB64.present
+          ? data.peerPublicMaterialB64.value
+          : this.peerPublicMaterialB64,
+      peerDisplayName: data.peerDisplayName.present
+          ? data.peerDisplayName.value
+          : this.peerDisplayName,
+      peerAvatarId: data.peerAvatarId.present
+          ? data.peerAvatarId.value
+          : this.peerAvatarId,
+      proposerDisplayName: data.proposerDisplayName.present
+          ? data.proposerDisplayName.value
+          : this.proposerDisplayName,
+      revisionId: data.revisionId.present
+          ? data.revisionId.value
+          : this.revisionId,
+      outboundPendingAt: data.outboundPendingAt.present
+          ? data.outboundPendingAt.value
+          : this.outboundPendingAt,
+      refusedAt: data.refusedAt.present ? data.refusedAt.value : this.refusedAt,
+      inboundPendingAt: data.inboundPendingAt.present
+          ? data.inboundPendingAt.value
+          : this.inboundPendingAt,
+      inboundRequesterDisplayName: data.inboundRequesterDisplayName.present
+          ? data.inboundRequesterDisplayName.value
+          : this.inboundRequesterDisplayName,
+      inboundRequesterAvatarId: data.inboundRequesterAvatarId.present
+          ? data.inboundRequesterAvatarId.value
+          : this.inboundRequesterAvatarId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanPeerEstablishment(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('participantId: $participantId, ')
+          ..write('peerPublicMaterialB64: $peerPublicMaterialB64, ')
+          ..write('peerDisplayName: $peerDisplayName, ')
+          ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('proposerDisplayName: $proposerDisplayName, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('outboundPendingAt: $outboundPendingAt, ')
+          ..write('refusedAt: $refusedAt, ')
+          ..write('inboundPendingAt: $inboundPendingAt, ')
+          ..write('inboundRequesterDisplayName: $inboundRequesterDisplayName, ')
+          ..write('inboundRequesterAvatarId: $inboundRequesterAvatarId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    planId,
+    participantId,
+    peerPublicMaterialB64,
+    peerDisplayName,
+    peerAvatarId,
+    proposerDisplayName,
+    revisionId,
+    outboundPendingAt,
+    refusedAt,
+    inboundPendingAt,
+    inboundRequesterDisplayName,
+    inboundRequesterAvatarId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlanPeerEstablishment &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.participantId == this.participantId &&
+          other.peerPublicMaterialB64 == this.peerPublicMaterialB64 &&
+          other.peerDisplayName == this.peerDisplayName &&
+          other.peerAvatarId == this.peerAvatarId &&
+          other.proposerDisplayName == this.proposerDisplayName &&
+          other.revisionId == this.revisionId &&
+          other.outboundPendingAt == this.outboundPendingAt &&
+          other.refusedAt == this.refusedAt &&
+          other.inboundPendingAt == this.inboundPendingAt &&
+          other.inboundRequesterDisplayName ==
+              this.inboundRequesterDisplayName &&
+          other.inboundRequesterAvatarId == this.inboundRequesterAvatarId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PlanPeerEstablishmentsCompanion
+    extends UpdateCompanion<PlanPeerEstablishment> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> participantId;
+  final Value<String> peerPublicMaterialB64;
+  final Value<String> peerDisplayName;
+  final Value<String> peerAvatarId;
+  final Value<String> proposerDisplayName;
+  final Value<String?> revisionId;
+  final Value<DateTime?> outboundPendingAt;
+  final Value<DateTime?> refusedAt;
+  final Value<DateTime?> inboundPendingAt;
+  final Value<String?> inboundRequesterDisplayName;
+  final Value<String?> inboundRequesterAvatarId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const PlanPeerEstablishmentsCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.participantId = const Value.absent(),
+    this.peerPublicMaterialB64 = const Value.absent(),
+    this.peerDisplayName = const Value.absent(),
+    this.peerAvatarId = const Value.absent(),
+    this.proposerDisplayName = const Value.absent(),
+    this.revisionId = const Value.absent(),
+    this.outboundPendingAt = const Value.absent(),
+    this.refusedAt = const Value.absent(),
+    this.inboundPendingAt = const Value.absent(),
+    this.inboundRequesterDisplayName = const Value.absent(),
+    this.inboundRequesterAvatarId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlanPeerEstablishmentsCompanion.insert({
+    required String id,
+    required String planId,
+    required String participantId,
+    required String peerPublicMaterialB64,
+    required String peerDisplayName,
+    required String peerAvatarId,
+    required String proposerDisplayName,
+    this.revisionId = const Value.absent(),
+    this.outboundPendingAt = const Value.absent(),
+    this.refusedAt = const Value.absent(),
+    this.inboundPendingAt = const Value.absent(),
+    this.inboundRequesterDisplayName = const Value.absent(),
+    this.inboundRequesterAvatarId = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       participantId = Value(participantId),
+       peerPublicMaterialB64 = Value(peerPublicMaterialB64),
+       peerDisplayName = Value(peerDisplayName),
+       peerAvatarId = Value(peerAvatarId),
+       proposerDisplayName = Value(proposerDisplayName),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PlanPeerEstablishment> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? participantId,
+    Expression<String>? peerPublicMaterialB64,
+    Expression<String>? peerDisplayName,
+    Expression<String>? peerAvatarId,
+    Expression<String>? proposerDisplayName,
+    Expression<String>? revisionId,
+    Expression<DateTime>? outboundPendingAt,
+    Expression<DateTime>? refusedAt,
+    Expression<DateTime>? inboundPendingAt,
+    Expression<String>? inboundRequesterDisplayName,
+    Expression<String>? inboundRequesterAvatarId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (participantId != null) 'participant_id': participantId,
+      if (peerPublicMaterialB64 != null)
+        'peer_public_material_b64': peerPublicMaterialB64,
+      if (peerDisplayName != null) 'peer_display_name': peerDisplayName,
+      if (peerAvatarId != null) 'peer_avatar_id': peerAvatarId,
+      if (proposerDisplayName != null)
+        'proposer_display_name': proposerDisplayName,
+      if (revisionId != null) 'revision_id': revisionId,
+      if (outboundPendingAt != null) 'outbound_pending_at': outboundPendingAt,
+      if (refusedAt != null) 'refused_at': refusedAt,
+      if (inboundPendingAt != null) 'inbound_pending_at': inboundPendingAt,
+      if (inboundRequesterDisplayName != null)
+        'inbound_requester_display_name': inboundRequesterDisplayName,
+      if (inboundRequesterAvatarId != null)
+        'inbound_requester_avatar_id': inboundRequesterAvatarId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlanPeerEstablishmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String>? participantId,
+    Value<String>? peerPublicMaterialB64,
+    Value<String>? peerDisplayName,
+    Value<String>? peerAvatarId,
+    Value<String>? proposerDisplayName,
+    Value<String?>? revisionId,
+    Value<DateTime?>? outboundPendingAt,
+    Value<DateTime?>? refusedAt,
+    Value<DateTime?>? inboundPendingAt,
+    Value<String?>? inboundRequesterDisplayName,
+    Value<String?>? inboundRequesterAvatarId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PlanPeerEstablishmentsCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      participantId: participantId ?? this.participantId,
+      peerPublicMaterialB64:
+          peerPublicMaterialB64 ?? this.peerPublicMaterialB64,
+      peerDisplayName: peerDisplayName ?? this.peerDisplayName,
+      peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+      proposerDisplayName: proposerDisplayName ?? this.proposerDisplayName,
+      revisionId: revisionId ?? this.revisionId,
+      outboundPendingAt: outboundPendingAt ?? this.outboundPendingAt,
+      refusedAt: refusedAt ?? this.refusedAt,
+      inboundPendingAt: inboundPendingAt ?? this.inboundPendingAt,
+      inboundRequesterDisplayName:
+          inboundRequesterDisplayName ?? this.inboundRequesterDisplayName,
+      inboundRequesterAvatarId:
+          inboundRequesterAvatarId ?? this.inboundRequesterAvatarId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (participantId.present) {
+      map['participant_id'] = Variable<String>(participantId.value);
+    }
+    if (peerPublicMaterialB64.present) {
+      map['peer_public_material_b64'] = Variable<String>(
+        peerPublicMaterialB64.value,
+      );
+    }
+    if (peerDisplayName.present) {
+      map['peer_display_name'] = Variable<String>(peerDisplayName.value);
+    }
+    if (peerAvatarId.present) {
+      map['peer_avatar_id'] = Variable<String>(peerAvatarId.value);
+    }
+    if (proposerDisplayName.present) {
+      map['proposer_display_name'] = Variable<String>(
+        proposerDisplayName.value,
+      );
+    }
+    if (revisionId.present) {
+      map['revision_id'] = Variable<String>(revisionId.value);
+    }
+    if (outboundPendingAt.present) {
+      map['outbound_pending_at'] = Variable<DateTime>(outboundPendingAt.value);
+    }
+    if (refusedAt.present) {
+      map['refused_at'] = Variable<DateTime>(refusedAt.value);
+    }
+    if (inboundPendingAt.present) {
+      map['inbound_pending_at'] = Variable<DateTime>(inboundPendingAt.value);
+    }
+    if (inboundRequesterDisplayName.present) {
+      map['inbound_requester_display_name'] = Variable<String>(
+        inboundRequesterDisplayName.value,
+      );
+    }
+    if (inboundRequesterAvatarId.present) {
+      map['inbound_requester_avatar_id'] = Variable<String>(
+        inboundRequesterAvatarId.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanPeerEstablishmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('participantId: $participantId, ')
+          ..write('peerPublicMaterialB64: $peerPublicMaterialB64, ')
+          ..write('peerDisplayName: $peerDisplayName, ')
+          ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('proposerDisplayName: $proposerDisplayName, ')
+          ..write('revisionId: $revisionId, ')
+          ..write('outboundPendingAt: $outboundPendingAt, ')
+          ..write('refusedAt: $refusedAt, ')
+          ..write('inboundPendingAt: $inboundPendingAt, ')
+          ..write('inboundRequesterDisplayName: $inboundRequesterDisplayName, ')
+          ..write('inboundRequesterAvatarId: $inboundRequesterAvatarId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12051,6 +13001,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $HousingPlanMembershipsTable(this);
   late final $HousingInactiveParticipantsTable housingInactiveParticipants =
       $HousingInactiveParticipantsTable(this);
+  late final $PlanPeerEstablishmentsTable planPeerEstablishments =
+      $PlanPeerEstablishmentsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -12078,6 +13030,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     housingParticipationDecisions,
     housingPlanMemberships,
     housingInactiveParticipants,
+    planPeerEstablishments,
   ];
 }
 
@@ -18137,6 +19090,437 @@ typedef $$HousingInactiveParticipantsTableProcessedTableManager =
       HousingInactiveParticipant,
       PrefetchHooks Function()
     >;
+typedef $$PlanPeerEstablishmentsTableCreateCompanionBuilder =
+    PlanPeerEstablishmentsCompanion Function({
+      required String id,
+      required String planId,
+      required String participantId,
+      required String peerPublicMaterialB64,
+      required String peerDisplayName,
+      required String peerAvatarId,
+      required String proposerDisplayName,
+      Value<String?> revisionId,
+      Value<DateTime?> outboundPendingAt,
+      Value<DateTime?> refusedAt,
+      Value<DateTime?> inboundPendingAt,
+      Value<String?> inboundRequesterDisplayName,
+      Value<String?> inboundRequesterAvatarId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PlanPeerEstablishmentsTableUpdateCompanionBuilder =
+    PlanPeerEstablishmentsCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String> participantId,
+      Value<String> peerPublicMaterialB64,
+      Value<String> peerDisplayName,
+      Value<String> peerAvatarId,
+      Value<String> proposerDisplayName,
+      Value<String?> revisionId,
+      Value<DateTime?> outboundPendingAt,
+      Value<DateTime?> refusedAt,
+      Value<DateTime?> inboundPendingAt,
+      Value<String?> inboundRequesterDisplayName,
+      Value<String?> inboundRequesterAvatarId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PlanPeerEstablishmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlanPeerEstablishmentsTable> {
+  $$PlanPeerEstablishmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerPublicMaterialB64 => $composableBuilder(
+    column: $table.peerPublicMaterialB64,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get proposerDisplayName => $composableBuilder(
+    column: $table.proposerDisplayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get outboundPendingAt => $composableBuilder(
+    column: $table.outboundPendingAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get refusedAt => $composableBuilder(
+    column: $table.refusedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get inboundPendingAt => $composableBuilder(
+    column: $table.inboundPendingAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inboundRequesterDisplayName => $composableBuilder(
+    column: $table.inboundRequesterDisplayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inboundRequesterAvatarId => $composableBuilder(
+    column: $table.inboundRequesterAvatarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlanPeerEstablishmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlanPeerEstablishmentsTable> {
+  $$PlanPeerEstablishmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerPublicMaterialB64 => $composableBuilder(
+    column: $table.peerPublicMaterialB64,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get proposerDisplayName => $composableBuilder(
+    column: $table.proposerDisplayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get outboundPendingAt => $composableBuilder(
+    column: $table.outboundPendingAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get refusedAt => $composableBuilder(
+    column: $table.refusedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get inboundPendingAt => $composableBuilder(
+    column: $table.inboundPendingAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inboundRequesterDisplayName => $composableBuilder(
+    column: $table.inboundRequesterDisplayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inboundRequesterAvatarId => $composableBuilder(
+    column: $table.inboundRequesterAvatarId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlanPeerEstablishmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlanPeerEstablishmentsTable> {
+  $$PlanPeerEstablishmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get participantId => $composableBuilder(
+    column: $table.participantId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerPublicMaterialB64 => $composableBuilder(
+    column: $table.peerPublicMaterialB64,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerDisplayName => $composableBuilder(
+    column: $table.peerDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get peerAvatarId => $composableBuilder(
+    column: $table.peerAvatarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get proposerDisplayName => $composableBuilder(
+    column: $table.proposerDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get revisionId => $composableBuilder(
+    column: $table.revisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get outboundPendingAt => $composableBuilder(
+    column: $table.outboundPendingAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get refusedAt =>
+      $composableBuilder(column: $table.refusedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get inboundPendingAt => $composableBuilder(
+    column: $table.inboundPendingAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inboundRequesterDisplayName => $composableBuilder(
+    column: $table.inboundRequesterDisplayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inboundRequesterAvatarId => $composableBuilder(
+    column: $table.inboundRequesterAvatarId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PlanPeerEstablishmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlanPeerEstablishmentsTable,
+          PlanPeerEstablishment,
+          $$PlanPeerEstablishmentsTableFilterComposer,
+          $$PlanPeerEstablishmentsTableOrderingComposer,
+          $$PlanPeerEstablishmentsTableAnnotationComposer,
+          $$PlanPeerEstablishmentsTableCreateCompanionBuilder,
+          $$PlanPeerEstablishmentsTableUpdateCompanionBuilder,
+          (
+            PlanPeerEstablishment,
+            BaseReferences<
+              _$AppDatabase,
+              $PlanPeerEstablishmentsTable,
+              PlanPeerEstablishment
+            >,
+          ),
+          PlanPeerEstablishment,
+          PrefetchHooks Function()
+        > {
+  $$PlanPeerEstablishmentsTableTableManager(
+    _$AppDatabase db,
+    $PlanPeerEstablishmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlanPeerEstablishmentsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PlanPeerEstablishmentsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PlanPeerEstablishmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> participantId = const Value.absent(),
+                Value<String> peerPublicMaterialB64 = const Value.absent(),
+                Value<String> peerDisplayName = const Value.absent(),
+                Value<String> peerAvatarId = const Value.absent(),
+                Value<String> proposerDisplayName = const Value.absent(),
+                Value<String?> revisionId = const Value.absent(),
+                Value<DateTime?> outboundPendingAt = const Value.absent(),
+                Value<DateTime?> refusedAt = const Value.absent(),
+                Value<DateTime?> inboundPendingAt = const Value.absent(),
+                Value<String?> inboundRequesterDisplayName =
+                    const Value.absent(),
+                Value<String?> inboundRequesterAvatarId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlanPeerEstablishmentsCompanion(
+                id: id,
+                planId: planId,
+                participantId: participantId,
+                peerPublicMaterialB64: peerPublicMaterialB64,
+                peerDisplayName: peerDisplayName,
+                peerAvatarId: peerAvatarId,
+                proposerDisplayName: proposerDisplayName,
+                revisionId: revisionId,
+                outboundPendingAt: outboundPendingAt,
+                refusedAt: refusedAt,
+                inboundPendingAt: inboundPendingAt,
+                inboundRequesterDisplayName: inboundRequesterDisplayName,
+                inboundRequesterAvatarId: inboundRequesterAvatarId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                required String participantId,
+                required String peerPublicMaterialB64,
+                required String peerDisplayName,
+                required String peerAvatarId,
+                required String proposerDisplayName,
+                Value<String?> revisionId = const Value.absent(),
+                Value<DateTime?> outboundPendingAt = const Value.absent(),
+                Value<DateTime?> refusedAt = const Value.absent(),
+                Value<DateTime?> inboundPendingAt = const Value.absent(),
+                Value<String?> inboundRequesterDisplayName =
+                    const Value.absent(),
+                Value<String?> inboundRequesterAvatarId = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PlanPeerEstablishmentsCompanion.insert(
+                id: id,
+                planId: planId,
+                participantId: participantId,
+                peerPublicMaterialB64: peerPublicMaterialB64,
+                peerDisplayName: peerDisplayName,
+                peerAvatarId: peerAvatarId,
+                proposerDisplayName: proposerDisplayName,
+                revisionId: revisionId,
+                outboundPendingAt: outboundPendingAt,
+                refusedAt: refusedAt,
+                inboundPendingAt: inboundPendingAt,
+                inboundRequesterDisplayName: inboundRequesterDisplayName,
+                inboundRequesterAvatarId: inboundRequesterAvatarId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlanPeerEstablishmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlanPeerEstablishmentsTable,
+      PlanPeerEstablishment,
+      $$PlanPeerEstablishmentsTableFilterComposer,
+      $$PlanPeerEstablishmentsTableOrderingComposer,
+      $$PlanPeerEstablishmentsTableAnnotationComposer,
+      $$PlanPeerEstablishmentsTableCreateCompanionBuilder,
+      $$PlanPeerEstablishmentsTableUpdateCompanionBuilder,
+      (
+        PlanPeerEstablishment,
+        BaseReferences<
+          _$AppDatabase,
+          $PlanPeerEstablishmentsTable,
+          PlanPeerEstablishment
+        >,
+      ),
+      PlanPeerEstablishment,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -18213,5 +19597,10 @@ class $AppDatabaseManager {
       $$HousingInactiveParticipantsTableTableManager(
         _db,
         _db.housingInactiveParticipants,
+      );
+  $$PlanPeerEstablishmentsTableTableManager get planPeerEstablishments =>
+      $$PlanPeerEstablishmentsTableTableManager(
+        _db,
+        _db.planPeerEstablishments,
       );
 }

@@ -1,6 +1,7 @@
 import '../contacts/contact_display.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import 'plan_peer_establishment_service.dart';
 import 'participation/housing_participation_membership_service.dart';
 import 'realized_expense/realized_expense_participants.dart';
 
@@ -136,10 +137,20 @@ class PlanPeerContactRow {
   const PlanPeerContactRow({
     required this.participant,
     required this.isConnected,
+    this.outboundPending = false,
+    this.refusedAt,
+    this.inboundPending = false,
+    this.inboundRequesterDisplayName,
+    this.establishmentId,
   });
 
   final Participant participant;
   final bool isConnected;
+  final bool outboundPending;
+  final DateTime? refusedAt;
+  final bool inboundPending;
+  final String? inboundRequesterDisplayName;
+  final String? establishmentId;
 }
 
 /// All co-participants on [planId] except `:self`, with relay contact status.
@@ -151,6 +162,11 @@ Future<List<PlanPeerContactRow>> listPlanPeerContactRows({
 }) async {
   final contacts = await ContactsRepository(db).list();
   final reachable = contacts.where(isRelayReachableContact).toList();
+  final establishmentRows =
+      await PlanPeerEstablishmentService(db).listForPlan(planId);
+  final establishmentByParticipant = {
+    for (final row in establishmentRows) row.participantId: row,
+  };
   final roster =
       (await db.listParticipants())
           .where(
@@ -158,14 +174,23 @@ Future<List<PlanPeerContactRow>> listPlanPeerContactRows({
           )
           .toList()
         ..sort((a, b) => a.displayName.compareTo(b.displayName));
-  return [
-    for (final p in roster)
+  final rows = <PlanPeerContactRow>[];
+  for (final p in roster) {
+    final est = establishmentByParticipant[p.id];
+    rows.add(
       PlanPeerContactRow(
         participant: p,
         isConnected:
             relayReachableContactForParticipant(p, reachable) != null,
+        outboundPending: est?.outboundPendingAt != null,
+        refusedAt: est?.refusedAt,
+        inboundPending: est?.inboundPendingAt != null,
+        inboundRequesterDisplayName: est?.inboundRequesterDisplayName,
+        establishmentId: est?.id,
       ),
-  ];
+    );
+  }
+  return rows;
 }
 
 /// Co-participants on [planId] who are not yet relay-reachable contacts locally.

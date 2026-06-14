@@ -23,6 +23,12 @@ abstract class ContactNotificationSink {
   Future<void> contactAddRequestFailed({required String errorCode});
 
   Future<void> contactDisconnected({required String displayName});
+
+  /// Target-side notification for plan-mediated establishment.
+  Future<void> planPeerEstablishmentRequestReceived({
+    required String requesterDisplayName,
+    required String proposerDisplayName,
+  });
 }
 
 class DefaultContactNotificationSink implements ContactNotificationSink {
@@ -110,6 +116,28 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     await impl.showContactNotification(
       title: l10n.pushNotificationContactDisconnectionTitle,
       body: l10n.pushNotificationContactDisconnectionBody(displayName),
+      playSound: prefs.notificationSoundEnabled,
+    );
+  }
+
+  @override
+  Future<void> planPeerEstablishmentRequestReceived({
+    required String requesterDisplayName,
+    required String proposerDisplayName,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!prefs.notificationsEnabled || !prefs.notificationContactAddRequests) {
+      return;
+    }
+    if (!await _systemAllowsNotifications()) return;
+
+    final l10n = _l10nForUiLocale();
+    await impl.showContactNotification(
+      title: l10n.pushNotificationContactAddRequestTitle,
+      body: l10n.pushNotificationPlanPeerEstablishmentRequestBody(
+        requesterDisplayName,
+        proposerDisplayName,
+      ),
       playSound: prefs.notificationSoundEnabled,
     );
   }

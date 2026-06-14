@@ -23,6 +23,8 @@ class EnvelopeKind {
   static const int housingParticipationChangePropose = 10;
   static const int housingParticipationChangeDecision = 11;
   static const int housingParticipationChangeNotify = 12;
+  static const int contactEstablishmentRequest = 13;
+  static const int contactEstablishmentResponse = 14;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the
@@ -206,6 +208,40 @@ class HousingParticipationChangeDecisionEnvelope {
   final String decisionJson;
 }
 
+/// Plan-mediated contact establishment request (requester → target).
+class ContactEstablishmentRequestEnvelope {
+  ContactEstablishmentRequestEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.requesterDisplayName,
+    required this.requesterAvatarId,
+    required this.proposerDisplayName,
+    this.receivedPlanId = '',
+    this.revisionId = '',
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final String requesterDisplayName;
+  final String requesterAvatarId;
+  final String proposerDisplayName;
+  final String receivedPlanId;
+  final String revisionId;
+}
+
+/// Plan-mediated contact establishment response (target → requester).
+class ContactEstablishmentResponseEnvelope {
+  ContactEstablishmentResponseEnvelope({
+    required this.senderLongTermPublicKey,
+    required this.accepted,
+    this.responderDisplayName = '',
+    this.responderAvatarId = '',
+  });
+
+  final Uint8List senderLongTermPublicKey;
+  final bool accepted;
+  final String responderDisplayName;
+  final String responderAvatarId;
+}
+
 // ---------- HKDF info strings ----------
 
 const String _helloAeadInfo = 'compartarenta/handshake-v1/hello-aead';
@@ -229,6 +265,10 @@ const String _housingParticipationChangeDecisionAeadInfo =
     'compartarenta/steady-v1/housing-participation-change-decision-aead';
 const String _housingParticipationChangeNotifyAeadInfo =
     'compartarenta/steady-v1/housing-participation-change-notify-aead';
+const String _contactEstablishmentRequestAeadInfo =
+    'compartarenta/steady-v1/contact-establishment-request-aead';
+const String _contactEstablishmentResponseAeadInfo =
+    'compartarenta/steady-v1/contact-establishment-response-aead';
 
 // ---------- Public encode / decode API ----------
 
@@ -1093,6 +1133,154 @@ class EnvelopeCodec {
     return HousingParticipationChangeEnvelope(
       senderLongTermPublicKey: senderPub,
       changeJson: (json[jsonKey] as String?) ?? '{}',
+    );
+  }
+
+  static Future<Uint8List> encryptContactEstablishmentRequest({
+    required ContactEstablishmentRequestEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _contactEstablishmentRequestAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.contactEstablishmentRequest,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final body = utf8.encode(
+      jsonEncode({
+        'requester_display_name': envelope.requesterDisplayName,
+        'requester_avatar_id': envelope.requesterAvatarId,
+        'proposer_display_name': envelope.proposerDisplayName,
+        if (envelope.receivedPlanId.isNotEmpty)
+          'received_plan_id': envelope.receivedPlanId,
+        if (envelope.revisionId.isNotEmpty) 'revision_id': envelope.revisionId,
+      }),
+    );
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  static Future<ContactEstablishmentRequestEnvelope>
+  decryptContactEstablishmentRequest({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.contactEstablishmentRequest);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _contactEstablishmentRequestAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    return ContactEstablishmentRequestEnvelope(
+      senderLongTermPublicKey: senderPub,
+      requesterDisplayName:
+          (json['requester_display_name'] as String?) ?? '',
+      requesterAvatarId: (json['requester_avatar_id'] as String?) ?? '',
+      proposerDisplayName: (json['proposer_display_name'] as String?) ?? '',
+      receivedPlanId: (json['received_plan_id'] as String?) ?? '',
+      revisionId: (json['revision_id'] as String?) ?? '',
+    );
+  }
+
+  static Future<Uint8List> encryptContactEstablishmentResponse({
+    required ContactEstablishmentResponseEnvelope envelope,
+    required Uint8List senderLongTermPrivateKey,
+    required Uint8List peerLongTermPublicKey,
+  }) async {
+    final shared = await _x25519(
+      privateKey: senderLongTermPrivateKey,
+      peerPublicKey: peerLongTermPublicKey,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _contactEstablishmentResponseAeadInfo,
+      length: 32,
+    );
+    final header = _steadyHeader(
+      kind: EnvelopeKind.contactEstablishmentResponse,
+      senderPub: envelope.senderLongTermPublicKey,
+      aeadNonce: _defaultNonceSource(),
+    );
+    final payload = <String, dynamic>{'accepted': envelope.accepted};
+    if (envelope.accepted) {
+      payload['responder_display_name'] = envelope.responderDisplayName;
+      payload['responder_avatar_id'] = envelope.responderAvatarId;
+    }
+    final body = utf8.encode(jsonEncode(payload));
+    final aeadNonce = header.sublist(header.length - 12);
+    final encrypted = await _aeadEncrypt(
+      key: key,
+      nonce: aeadNonce,
+      plaintext: body,
+      aad: header,
+    );
+    return _concat(header, encrypted);
+  }
+
+  static Future<ContactEstablishmentResponseEnvelope>
+  decryptContactEstablishmentResponse({
+    required Uint8List frame,
+    required Uint8List receiverLongTermPrivateKey,
+  }) async {
+    _expectKind(frame, EnvelopeKind.contactEstablishmentResponse);
+    final senderPub = Uint8List.fromList(frame.sublist(2, 34));
+    final aeadNonce = Uint8List.fromList(frame.sublist(34, 46));
+    final body = frame.sublist(46);
+    final shared = await _x25519(
+      privateKey: receiverLongTermPrivateKey,
+      peerPublicKey: senderPub,
+    );
+    final key = await _hkdf(
+      ikm: shared,
+      salt: const <int>[],
+      info: _contactEstablishmentResponseAeadInfo,
+      length: 32,
+    );
+    final plain = await _aeadDecrypt(
+      key: key,
+      nonce: aeadNonce,
+      cipherWithTag: body,
+      aad: Uint8List.fromList(frame.sublist(0, 46)),
+    );
+    final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+    final accepted = json['accepted'] == true;
+    return ContactEstablishmentResponseEnvelope(
+      senderLongTermPublicKey: senderPub,
+      accepted: accepted,
+      responderDisplayName: (json['responder_display_name'] as String?) ?? '',
+      responderAvatarId: (json['responder_avatar_id'] as String?) ?? '',
     );
   }
 }

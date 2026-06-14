@@ -54,6 +54,12 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
 
   @override
   Future<void> contactDisconnected({required String displayName}) async {}
+
+  @override
+  Future<void> planPeerEstablishmentRequestReceived({
+    required String requesterDisplayName,
+    required String proposerDisplayName,
+  }) async {}
 }
 
 /// Seeds [planId] with two participants, one recurring expense (100% split),

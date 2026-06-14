@@ -12,6 +12,7 @@ import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
 import '../housing/housing_plan_peer_contacts.dart';
+import '../housing/plan_peer_establishment_service.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/proposals/plan_agreement_proposal_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
@@ -785,18 +786,55 @@ class HandshakeOrchestrator {
   /// Contacts with a stored peer long-term public key, deduped by that key.
   /// Includes `connected` rows and demoted / handshake rows so a reinstall on
   /// the peer device does not hide the inbox when an older row is still stored.
-  Future<List<({Contact contact, Uint8List peerPub})>>
+  ///
+  /// Also includes plan-mediated establishment watch-list peers who are not yet
+  /// connected contacts locally.
+  Future<
+    List<
+      ({
+        Contact? contact,
+        Uint8List peerPub,
+        PlanPeerEstablishment? establishment,
+      })
+    >
+  >
   _steadyInboxPollPeers() async {
     final all = await _contacts.list();
     final seenPeer = <String>{};
-    final out = <({Contact contact, Uint8List peerPub})>[];
+    final out =
+        <
+          ({
+            Contact? contact,
+            Uint8List peerPub,
+            PlanPeerEstablishment? establishment,
+          })
+        >[];
     for (final c in all) {
       if (c.id.startsWith('contact:local:')) continue;
       final peerB64 = c.peerPublicMaterial;
       if (peerB64 == null || peerB64.isEmpty) continue;
       if (!seenPeer.add(peerB64)) continue;
       try {
-        out.add((contact: c, peerPub: RelayRouting.unb64(peerB64)));
+        out.add((
+          contact: c,
+          peerPub: RelayRouting.unb64(peerB64),
+          establishment: null,
+        ));
+      } catch (_) {
+        // ignore invalid peer material
+      }
+    }
+
+    for (final row in await _db.listAllPlanPeerEstablishments()) {
+      if (seenPeer.contains(row.peerPublicMaterialB64)) continue;
+      final connected = await _contactForPeerPublicKey(
+        RelayRouting.unb64(row.peerPublicMaterialB64),
+      );
+      if (connected != null && connected.kind == 'connected') continue;
+      try {
+        final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+        if (!seenPeer.add(row.peerPublicMaterialB64)) continue;
+        out.add((contact: connected, peerPub: peerPub, establishment: row));
       } catch (_) {
         // ignore invalid peer material
       }
@@ -852,6 +890,7 @@ class HandshakeOrchestrator {
     for (final target in targets) {
       final contact = target.contact;
       final peerPub = target.peerPub;
+      final pollLabel = contact?.id ?? target.establishment?.id ?? 'peer';
 
       final Uint8List myListen = await RelayRouting.steadyStateAddress(
         firstPub: selfPub,
@@ -862,20 +901,20 @@ class HandshakeOrchestrator {
         envs = await _relay.fetchInbox(recipient: myListen);
       } on RelayClientError catch (e) {
         RelayDiagnostics.logSteadyInbox(
-          'steady inbox fetch failed for ${contact.id}: $e',
+          'steady inbox fetch failed for $pollLabel: $e',
         );
         continue;
       } on TimeoutException catch (e) {
         RelayDiagnostics.logSteadyInbox(
-          'steady inbox fetch timed out for ${contact.id}: $e',
+          'steady inbox fetch timed out for $pollLabel: $e',
         );
         continue;
       }
       if (envs.isEmpty) {
-        RelayDiagnostics.logSteadyInbox('steady inbox empty for ${contact.id}');
+        RelayDiagnostics.logSteadyInbox('steady inbox empty for $pollLabel');
       } else {
         RelayDiagnostics.logSteadyInbox(
-          'steady inbox fetched ${envs.length} envelope(s) for ${contact.id}',
+          'steady inbox fetched ${envs.length} envelope(s) for $pollLabel',
         );
         if (kDebugMode) {
           final kinds = <int, int>{};
@@ -883,13 +922,34 @@ class HandshakeOrchestrator {
             kinds[e.kind] = (kinds[e.kind] ?? 0) + 1;
           }
           debugPrint(
-            'steady inbox kinds for ${contact.id}: $kinds',
+            'steady inbox kinds for $pollLabel: $kinds',
           );
         }
       }
       for (final env in envs) {
         try {
-          if (env.kind == EnvelopeKind.disconnect) {
+          if (env.kind == EnvelopeKind.contactEstablishmentRequest) {
+            await _handleInboundContactEstablishmentRequest(
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+              establishment: target.establishment,
+            );
+          } else if (env.kind == EnvelopeKind.contactEstablishmentResponse) {
+            await _handleInboundContactEstablishmentResponse(
+              envelope: env,
+              myListenAddr: myListen,
+              selfPriv: selfPriv,
+              peerPub: peerPub,
+              establishment: target.establishment,
+            );
+          } else if (contact == null) {
+            await _relay.ackEnvelope(
+              envelopeId: env.envelopeId,
+              recipient: myListen,
+            );
+          } else if (env.kind == EnvelopeKind.disconnect) {
             await _handleInboundDisconnect(
               contact: contact,
               envelope: env,
@@ -1073,6 +1133,30 @@ class HandshakeOrchestrator {
         secondPub: peerPub,
       );
       addUnique(myListen);
+    }
+
+    for (final row in await _db.listAllPlanPeerEstablishments()) {
+      Contact? connectedContact;
+      try {
+        connectedContact = await _contactForPeerPublicKey(
+          RelayRouting.unb64(row.peerPublicMaterialB64),
+        );
+      } catch (_) {
+        continue;
+      }
+      if (connectedContact != null && connectedContact.kind == 'connected') {
+        continue;
+      }
+      try {
+        final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+        final myListen = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        addUnique(myListen);
+      } catch (_) {
+        // ignore invalid peer material
+      }
     }
 
     return out;
@@ -1292,6 +1376,8 @@ class HandshakeOrchestrator {
       planId: imported.planId,
       isInForceAmendment: imported.isInForceAmendment,
     );
+    startPolling();
+    requestClosedAppPushRegistrationSync();
   }
 
   Future<void> _handleInboundHousingProposalResponse({
@@ -3353,5 +3439,402 @@ class HandshakeOrchestrator {
       displayName: prefs.displayName.isEmpty ? 'Unknown' : prefs.displayName,
       avatarId: prefs.avatarId.isEmpty ? 'a01' : prefs.avatarId,
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Plan-mediated peer contact establishment
+  // ---------------------------------------------------------------------
+
+  /// Sends an encrypted establishment request to a missing plan co-participant
+  /// whose public key was learned from `participantSnapshots`.
+  Future<void> sendPlanPeerEstablishmentRequest({
+    required String planId,
+    required String participantId,
+  }) async {
+    final service = PlanPeerEstablishmentService(_db);
+    final row = await service.rowForParticipant(
+      planId: planId,
+      participantId: participantId,
+    );
+    if (row == null) {
+      throw HandshakeOrchestratorError(
+        'missing_peer_key',
+        StateError('No establishment row for $participantId'),
+      );
+    }
+    if (row.outboundPendingAt != null) return;
+
+    final selfProfile = await _loadSelfProfileForAck();
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+    final selfAddr = await RelayRouting.steadyStateAddress(
+      firstPub: selfPub,
+      secondPub: peerPub,
+    );
+    final peerAddr = await RelayRouting.steadyStateAddress(
+      firstPub: peerPub,
+      secondPub: selfPub,
+    );
+    await _ensureSteadyRoutingRegistered(
+      selfListenAddr: selfAddr,
+      peerListenAddr: peerAddr,
+    );
+
+    final frame = await EnvelopeCodec.encryptContactEstablishmentRequest(
+      envelope: ContactEstablishmentRequestEnvelope(
+        senderLongTermPublicKey: selfPub,
+        requesterDisplayName: selfProfile.displayName,
+        requesterAvatarId: selfProfile.avatarId,
+        proposerDisplayName: row.proposerDisplayName,
+        receivedPlanId: planId,
+        revisionId: row.revisionId ?? '',
+      ),
+      senderLongTermPrivateKey: selfPriv,
+      peerLongTermPublicKey: peerPub,
+    );
+
+    try {
+      await _relay.postEnvelope(
+        senderIdentity: selfAddr,
+        recipientIdentity: peerAddr,
+        idempotencyKey: _randomBytes(16),
+        ciphertext: frame,
+        kind: EnvelopeKind.contactEstablishmentRequest,
+        ttl: _steadyTtl,
+      );
+    } on RelayClientError catch (e) {
+      throw HandshakeOrchestratorError('relay_error', e);
+    }
+
+    await service.markOutboundPending(row.id);
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    startPolling();
+    requestClosedAppPushRegistrationSync();
+  }
+
+  /// Target accepts or refuses an inbound plan-mediated establishment request.
+  Future<void> respondPlanPeerEstablishmentRequest({
+    required String establishmentId,
+    required bool accepted,
+  }) async {
+    final row = await _db.getPlanPeerEstablishment(establishmentId);
+    if (row == null || row.inboundPendingAt == null) return;
+
+    final service = PlanPeerEstablishmentService(_db);
+    final selfProfile = await _loadSelfProfileForAck();
+    final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+    await _postContactEstablishmentResponse(
+      peerPub: peerPub,
+      accepted: accepted,
+      responderDisplayName: selfProfile.displayName,
+      responderAvatarId: selfProfile.avatarId,
+    );
+
+    await service.clearInboundPending(row.id);
+    if (accepted) {
+      await _promotePlanPeerContact(
+        planId: row.planId,
+        participantId: row.participantId,
+        peerPub: peerPub,
+        peerDisplayName: row.inboundRequesterDisplayName ?? row.peerDisplayName,
+        peerAvatarId: row.inboundRequesterAvatarId ?? row.peerAvatarId,
+      );
+      await _contactNotifications.contactAddRequestResolved(
+        displayName: row.inboundRequesterDisplayName ?? row.peerDisplayName,
+        accepted: true,
+      );
+    }
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    startPolling();
+    requestClosedAppPushRegistrationSync();
+  }
+
+  Future<void> _handleInboundContactEstablishmentRequest({
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+    required PlanPeerEstablishment? establishment,
+  }) async {
+    final ContactEstablishmentRequestEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptContactEstablishmentRequest(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+
+    final peerB64 = RelayRouting.b64(peerPub);
+    final service = PlanPeerEstablishmentService(_db);
+    var row =
+        establishment ??
+        await _db.getPlanPeerEstablishmentByPeer(peerB64) ??
+        await _findEstablishmentRowForPeer(planIdHint: decrypted.receivedPlanId, peerB64: peerB64);
+
+    if (row != null && row.outboundPendingAt != null) {
+      final selfProfile = await _loadSelfProfileForAck();
+      await _postContactEstablishmentResponse(
+        peerPub: peerPub,
+        accepted: true,
+        responderDisplayName: selfProfile.displayName,
+        responderAvatarId: selfProfile.avatarId,
+      );
+      await service.clearOutboundPending(row.id);
+      await _promotePlanPeerContact(
+        planId: row.planId,
+        participantId: row.participantId,
+        peerPub: peerPub,
+        peerDisplayName: decrypted.requesterDisplayName,
+        peerAvatarId: decrypted.requesterAvatarId,
+      );
+      steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+      return;
+    }
+
+    if (row == null) {
+      final planId = decrypted.receivedPlanId;
+      if (planId.isEmpty) return;
+      final participantId = await _participantIdForPeerOnPlan(planId, peerB64);
+      if (participantId == null) return;
+      final rowId = '$planId:${participantId.split(':').last}';
+      final now = DateTime.now().toUtc();
+      await _db.upsertPlanPeerEstablishment(
+        PlanPeerEstablishmentsCompanion.insert(
+          id: rowId,
+          planId: planId,
+          participantId: participantId,
+          peerPublicMaterialB64: peerB64,
+          peerDisplayName: decrypted.requesterDisplayName,
+          peerAvatarId: decrypted.requesterAvatarId,
+          proposerDisplayName: decrypted.proposerDisplayName,
+          revisionId: drift.Value(
+            decrypted.revisionId.isEmpty ? null : decrypted.revisionId,
+          ),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      row = await _db.getPlanPeerEstablishment(rowId);
+    }
+    if (row == null) return;
+
+    await service.markInboundPending(
+      establishmentId: row.id,
+      requesterDisplayName: decrypted.requesterDisplayName,
+      requesterAvatarId: decrypted.requesterAvatarId,
+    );
+    await _contactNotifications.planPeerEstablishmentRequestReceived(
+      requesterDisplayName: decrypted.requesterDisplayName,
+      proposerDisplayName: decrypted.proposerDisplayName,
+    );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  Future<void> _handleInboundContactEstablishmentResponse({
+    required RelayEnvelopeView envelope,
+    required Uint8List myListenAddr,
+    required Uint8List selfPriv,
+    required Uint8List peerPub,
+    required PlanPeerEstablishment? establishment,
+  }) async {
+    final ContactEstablishmentResponseEnvelope decrypted;
+    try {
+      decrypted = await EnvelopeCodec.decryptContactEstablishmentResponse(
+        frame: envelope.ciphertext,
+        receiverLongTermPrivateKey: selfPriv,
+      );
+    } on EnvelopeDecryptionError {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+    if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
+      await _relay.ackEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
+
+    await _relay.ackEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
+
+    final peerB64 = RelayRouting.b64(peerPub);
+    final service = PlanPeerEstablishmentService(_db);
+    final row =
+        establishment ??
+        await _db.getPlanPeerEstablishmentByPeer(peerB64);
+    if (row == null) return;
+
+    await service.clearOutboundPending(row.id);
+    if (decrypted.accepted) {
+      await _promotePlanPeerContact(
+        planId: row.planId,
+        participantId: row.participantId,
+        peerPub: peerPub,
+        peerDisplayName: decrypted.responderDisplayName.isEmpty
+            ? row.peerDisplayName
+            : decrypted.responderDisplayName,
+        peerAvatarId: decrypted.responderAvatarId.isEmpty
+            ? row.peerAvatarId
+            : decrypted.responderAvatarId,
+      );
+      await _contactNotifications.contactAddRequestResolved(
+        displayName: decrypted.responderDisplayName.isEmpty
+            ? row.peerDisplayName
+            : decrypted.responderDisplayName,
+        accepted: true,
+      );
+    } else {
+      await service.markRefused(row.id, DateTime.now().toUtc());
+      await _contactNotifications.contactAddRequestResolved(
+        displayName: row.peerDisplayName,
+        accepted: false,
+      );
+    }
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+  }
+
+  Future<void> _postContactEstablishmentResponse({
+    required Uint8List peerPub,
+    required bool accepted,
+    required String responderDisplayName,
+    required String responderAvatarId,
+  }) async {
+    final selfPriv = await _identity.loadOrCreatePrivateKey();
+    final selfPub = await _identity.publicKey();
+    final selfAddr = await RelayRouting.steadyStateAddress(
+      firstPub: selfPub,
+      secondPub: peerPub,
+    );
+    final peerAddr = await RelayRouting.steadyStateAddress(
+      firstPub: peerPub,
+      secondPub: selfPub,
+    );
+    await _ensureSteadyRoutingRegistered(
+      selfListenAddr: selfAddr,
+      peerListenAddr: peerAddr,
+    );
+    final frame = await EnvelopeCodec.encryptContactEstablishmentResponse(
+      envelope: ContactEstablishmentResponseEnvelope(
+        senderLongTermPublicKey: selfPub,
+        accepted: accepted,
+        responderDisplayName: responderDisplayName,
+        responderAvatarId: responderAvatarId,
+      ),
+      senderLongTermPrivateKey: selfPriv,
+      peerLongTermPublicKey: peerPub,
+    );
+    await _relay.postEnvelope(
+      senderIdentity: selfAddr,
+      recipientIdentity: peerAddr,
+      idempotencyKey: _randomBytes(16),
+      ciphertext: frame,
+      kind: EnvelopeKind.contactEstablishmentResponse,
+      ttl: _steadyTtl,
+    );
+  }
+
+  Future<void> _promotePlanPeerContact({
+    required String planId,
+    required String participantId,
+    required Uint8List peerPub,
+    required String peerDisplayName,
+    required String peerAvatarId,
+  }) async {
+    final peerB64 = RelayRouting.b64(peerPub);
+    final selfPub = await _identity.publicKey();
+    final peerListenAddr = await RelayRouting.steadyStateAddress(
+      firstPub: peerPub,
+      secondPub: selfPub,
+    );
+    final selfListenAddr = await RelayRouting.steadyStateAddress(
+      firstPub: selfPub,
+      secondPub: peerPub,
+    );
+    await _ensureSteadyRoutingRegistered(
+      selfListenAddr: selfListenAddr,
+      peerListenAddr: peerListenAddr,
+    );
+
+    final reconnect = await _contacts.disconnectedReconnectCandidate(
+      peerPublicMaterialB64: peerB64,
+      displayName: peerDisplayName,
+      avatarId: peerAvatarId,
+    );
+    final stubId =
+        reconnect?.id ??
+        'contact:plan-est:${participantId.replaceAll(':', '_')}';
+    if (reconnect == null) {
+      final existing = await _contacts.get(stubId);
+      if (existing == null) {
+        await _contacts.upsertLocalOnly(
+          id: stubId,
+          displayName: peerDisplayName,
+          avatarId: peerAvatarId,
+        );
+      }
+    }
+
+    await _contacts.promoteToConnected(
+      id: stubId,
+      relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
+      peerPublicMaterialB64: peerB64,
+      displayName: peerDisplayName,
+      avatarId: peerAvatarId,
+    );
+
+    await (_db.update(_db.participants)..where((t) => t.id.equals(participantId)))
+        .write(ParticipantsCompanion(contactId: drift.Value(stubId)));
+
+    final rowId = '$planId:${participantId.split(':').last}';
+    await PlanPeerEstablishmentService(_db).removeRow(rowId);
+  }
+
+  Future<PlanPeerEstablishment?> _findEstablishmentRowForPeer({
+    required String planIdHint,
+    required String peerB64,
+  }) async {
+    if (planIdHint.isNotEmpty) {
+      final rows = await _db.listPlanPeerEstablishmentsForPlan(planIdHint);
+      for (final row in rows) {
+        if (row.peerPublicMaterialB64 == peerB64) return row;
+      }
+    }
+    return _db.getPlanPeerEstablishmentByPeer(peerB64);
+  }
+
+  Future<String?> _participantIdForPeerOnPlan(
+    String planId,
+    String peerB64,
+  ) async {
+    final rows = await _db.listPlanPeerEstablishmentsForPlan(planId);
+    for (final row in rows) {
+      if (row.peerPublicMaterialB64 == peerB64) return row.participantId;
+    }
+    return null;
   }
 }

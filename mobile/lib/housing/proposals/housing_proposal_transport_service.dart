@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
+import '../../db/repositories/contacts_repository.dart';
+import '../housing_plan_peer_contacts.dart';
+import '../plan_peer_establishment_service.dart';
 import '../agreement_rules_json.dart';
 import '../amendment/housing_amendment_type.dart';
 import '../expense_form/expense_ratio_template_repository.dart';
@@ -70,6 +73,8 @@ class HousingProposalTransportService {
       _db,
     ).loadRevisionPayload(revisionId);
     final participants = await _participantsForPlan(planId);
+    final contacts = await ContactsRepository(_db).list();
+    final reachable = contacts.where(isRelayReachableContact).toList();
     final enriched = Map<String, Object?>.from(payload)
       ..['targetParticipantId'] = targetParticipantId
       ..['participantSnapshots'] = [
@@ -79,6 +84,17 @@ class HousingProposalTransportService {
             'displayName': p.displayName,
             'avatarId': p.avatarId,
             if (p.contactId != null) 'contactId': p.contactId,
+            ...() {
+              final connected = relayReachableContactForParticipant(
+                p,
+                reachable,
+              );
+              final peerB64 = connected?.peerPublicMaterial;
+              if (peerB64 != null && peerB64.isNotEmpty) {
+                return {'peerPublicMaterialB64': peerB64};
+              }
+              return <String, String>{};
+            }(),
           },
       ];
     return jsonEncode(enriched);
@@ -254,6 +270,10 @@ class HousingProposalTransportService {
       createdAt: createdAt,
     );
 
+    await PlanPeerEstablishmentService(_db).syncWatchListForPlan(
+      receivedPlanId,
+    );
+
     return ReceivedHousingProposalImport(
       planId: receivedPlanId,
       revisionId: receivedRevisionId,
@@ -333,6 +353,10 @@ class HousingProposalTransportService {
       payload: sourcePayload,
       sourceToLocalParticipant: sourceToLocalParticipant,
       createdAt: createdAt,
+    );
+
+    await PlanPeerEstablishmentService(_db).syncWatchListForPlan(
+      receivedPlanId,
     );
 
     return ReceivedHousingProposalImport(

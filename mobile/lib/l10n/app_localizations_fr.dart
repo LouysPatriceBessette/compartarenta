@@ -1629,7 +1629,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingPlanMissingContactsIntro =>
-      'Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Utilisez un code d\'invitation dans un sens ou l\'autre.';
+      'Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Appuyez sur Établir le contact pour chaque personne qu\'il vous manque encore.';
 
   @override
   String get housingPlanMissingContactsEmpty =>
@@ -1640,12 +1640,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tous les co-participants sont connectés. Vous pouvez revenir en arrière et accepter le plan.';
 
   @override
-  String get housingPlanMissingContactsCreateInvitation =>
-      'Créer une invitation';
+  String get housingPlanMissingContactsEstablishContact => 'Établir le contact';
 
   @override
-  String get housingPlanMissingContactsEnterCode =>
-      'Saisir le code d\'invitation';
+  String get housingPlanMissingContactsPendingOutbound =>
+      'Demande envoyée — en attente de leur réponse.';
+
+  @override
+  String housingPlanMissingContactsRefusedAt(String when) {
+    return 'Refusé $when';
+  }
+
+  @override
+  String housingPlanMissingContactsInboundPrompt(String requester) {
+    return '$requester souhaite établir le contact avec vous pour ce plan de logement.';
+  }
+
+  @override
+  String get housingPlanMissingContactsAccept => 'Accepter';
+
+  @override
+  String get housingPlanMissingContactsRefuse => 'Refuser';
 
   @override
   String get housingInviteNegotiate => 'J\'aimerais négocier';
@@ -1901,6 +1916,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get pushNotificationContactAddRequestUnknownFailureBody =>
       'Votre demande de connexion a échoué.';
+
+  @override
+  String pushNotificationPlanPeerEstablishmentRequestBody(
+    String requester,
+    String proposer,
+  ) {
+    return '$requester souhaite établir le contact avec vous, dans le cadre de la proposition de logement de $proposer.';
+  }
 
   @override
   String get pushNotificationContactDisconnectionTitle => 'Contact déconnecté';

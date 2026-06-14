@@ -1605,7 +1605,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingPlanMissingContactsIntro =>
-      'Each co-participant must be a connected contact on this device before you can accept the plan. Use an invitation code in either direction.';
+      'Each co-participant must be a connected contact on this device before you can accept the plan. Tap Establish contact for anyone you still need to reach.';
 
   @override
   String get housingPlanMissingContactsEmpty =>
@@ -1616,10 +1616,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every co-participant is connected. You can go back and accept the plan.';
 
   @override
-  String get housingPlanMissingContactsCreateInvitation => 'Create invitation';
+  String get housingPlanMissingContactsEstablishContact => 'Establish contact';
 
   @override
-  String get housingPlanMissingContactsEnterCode => 'Enter invitation code';
+  String get housingPlanMissingContactsPendingOutbound =>
+      'Request sent — waiting for their response.';
+
+  @override
+  String housingPlanMissingContactsRefusedAt(String when) {
+    return 'Refused $when';
+  }
+
+  @override
+  String housingPlanMissingContactsInboundPrompt(String requester) {
+    return '$requester wishes to establish contact with you for this housing plan.';
+  }
+
+  @override
+  String get housingPlanMissingContactsAccept => 'Accept';
+
+  @override
+  String get housingPlanMissingContactsRefuse => 'Refuse';
 
   @override
   String get housingInviteNegotiate => 'I would like to negotiate';
@@ -1874,6 +1891,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pushNotificationContactAddRequestUnknownFailureBody =>
       'Your connection request failed.';
+
+  @override
+  String pushNotificationPlanPeerEstablishmentRequestBody(
+    String requester,
+    String proposer,
+  ) {
+    return '$requester wishes to establish contact with you, in the context of the housing plan proposal from $proposer.';
+  }
 
   @override
   String get pushNotificationContactDisconnectionTitle =>

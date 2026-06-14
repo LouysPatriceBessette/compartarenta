@@ -624,11 +624,25 @@
   },
   "housingInviteMissingContactsBlocked": "Connectez-vous avec chaque co-participant avant de pouvoir accepter.",
   "housingPlanMissingContactsTitle": "Contacts du plan",
-  "housingPlanMissingContactsIntro": "Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Utilisez un code d'invitation dans un sens ou l'autre.",
+  "housingPlanMissingContactsIntro": "Chaque co-participant doit être un contact connecté sur cet appareil avant que vous puissiez accepter le plan. Appuyez sur Établir le contact pour chaque personne qu'il vous manque encore.",
   "housingPlanMissingContactsEmpty": "Ce plan n'a pas d'autre participant sur cet appareil.",
   "housingPlanMissingContactsAllReady": "Tous les co-participants sont connectés. Vous pouvez revenir en arrière et accepter le plan.",
-  "housingPlanMissingContactsCreateInvitation": "Créer une invitation",
-  "housingPlanMissingContactsEnterCode": "Saisir le code d'invitation",
+  "housingPlanMissingContactsEstablishContact": "Établir le contact",
+  "housingPlanMissingContactsPendingOutbound": "Demande envoyée — en attente de leur réponse.",
+  "housingPlanMissingContactsRefusedAt": "Refusé {when}",
+  "@housingPlanMissingContactsRefusedAt": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsInboundPrompt": "{requester} souhaite établir le contact avec vous pour ce plan de logement.",
+  "@housingPlanMissingContactsInboundPrompt": {
+    "placeholders": {
+      "requester": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsAccept": "Accepter",
+  "housingPlanMissingContactsRefuse": "Refuser",
   "housingInviteNegotiate": "J'aimerais négocier",
   "housingInviteRejectBlock": "Je refuse en bloc",
   "housingInviteNegotiateMessageLabel": "Message à envoyer avec la demande de négociation",
@@ -748,6 +762,13 @@
   "pushNotificationContactAddRequestRelayErrorBody": "Une erreur s'est produite au niveau du serveur de relai. Ré-essayez.",
   "pushNotificationContactAddRequestRelayUnavailableBody": "Le serveur de relai est temporairement indisponible.",
   "pushNotificationContactAddRequestUnknownFailureBody": "Votre demande de connexion a échoué.",
+  "pushNotificationPlanPeerEstablishmentRequestBody": "{requester} souhaite établir le contact avec vous, dans le cadre de la proposition de logement de {proposer}.",
+  "@pushNotificationPlanPeerEstablishmentRequestBody": {
+    "placeholders": {
+      "requester": { "type": "String" },
+      "proposer": { "type": "String" }
+    }
+  },
   "pushNotificationContactDisconnectionTitle": "Contact déconnecté",
   "pushNotificationContactDisconnectionBody": "{name} s’est déconnecté de vous.",
   "@pushNotificationContactDisconnectionBody": {

@@ -534,6 +534,29 @@ class HousingInactiveParticipants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Inbound watch list and outbound/inbound pending state for plan-mediated
+/// peer contact establishment (known public keys from proposal snapshots).
+class PlanPeerEstablishments extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text()();
+  TextColumn get participantId => text()();
+  TextColumn get peerPublicMaterialB64 => text()();
+  TextColumn get peerDisplayName => text()();
+  TextColumn get peerAvatarId => text()();
+  TextColumn get proposerDisplayName => text()();
+  TextColumn get revisionId => text().nullable()();
+  DateTimeColumn get outboundPendingAt => dateTime().nullable()();
+  DateTimeColumn get refusedAt => dateTime().nullable()();
+  DateTimeColumn get inboundPendingAt => dateTime().nullable()();
+  TextColumn get inboundRequesterDisplayName => text().nullable()();
+  TextColumn get inboundRequesterAvatarId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Plans,
@@ -558,6 +581,7 @@ class HousingInactiveParticipants extends Table {
     HousingParticipationDecisions,
     HousingPlanMemberships,
     HousingInactiveParticipants,
+    PlanPeerEstablishments,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -657,7 +681,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -853,6 +877,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(housingParticipationDecisions);
         await m.createTable(housingPlanMemberships);
         await m.createTable(housingInactiveParticipants);
+      }
+      if (from < 21) {
+        await m.createTable(planPeerEstablishments);
       }
     },
     beforeOpen: (details) async {
@@ -1107,6 +1134,44 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deletePendingHandshake(String id) async {
     await (delete(pendingHandshakes)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> upsertPlanPeerEstablishment(
+    PlanPeerEstablishmentsCompanion row,
+  ) => into(planPeerEstablishments).insertOnConflictUpdate(row);
+
+  Future<PlanPeerEstablishment?> getPlanPeerEstablishment(String id) =>
+      (select(planPeerEstablishments)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<PlanPeerEstablishment?> getPlanPeerEstablishmentByPeer(
+    String peerPublicMaterialB64,
+  ) =>
+      (select(planPeerEstablishments)
+            ..where((t) => t.peerPublicMaterialB64.equals(peerPublicMaterialB64)))
+          .getSingleOrNull();
+
+  Future<List<PlanPeerEstablishment>> listPlanPeerEstablishmentsForPlan(
+    String planId,
+  ) =>
+      (select(planPeerEstablishments)
+            ..where((t) => t.planId.equals(planId))
+            ..orderBy([(t) => OrderingTerm.asc(t.peerDisplayName)]))
+          .get();
+
+  Future<List<PlanPeerEstablishment>> listAllPlanPeerEstablishments() =>
+      (select(planPeerEstablishments)
+            ..orderBy([(t) => OrderingTerm.asc(t.planId)]))
+          .get();
+
+  Future<void> deletePlanPeerEstablishment(String id) async {
+    await (delete(planPeerEstablishments)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> deletePlanPeerEstablishmentsForPlan(String planId) async {
+    await (delete(planPeerEstablishments)
+          ..where((t) => t.planId.equals(planId)))
+        .go();
   }
 
   /// Mirrors every existing `participants` row into a `contacts` row and

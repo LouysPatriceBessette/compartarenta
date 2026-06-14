@@ -698,11 +698,25 @@
   },
   "housingInviteMissingContactsBlocked": "Connect with every co-participant before you can accept.",
   "housingPlanMissingContactsTitle": "Plan contacts",
-  "housingPlanMissingContactsIntro": "Each co-participant must be a connected contact on this device before you can accept the plan. Use an invitation code in either direction.",
+  "housingPlanMissingContactsIntro": "Each co-participant must be a connected contact on this device before you can accept the plan. Tap Establish contact for anyone you still need to reach.",
   "housingPlanMissingContactsEmpty": "This plan has no other participants on this device.",
   "housingPlanMissingContactsAllReady": "Every co-participant is connected. You can go back and accept the plan.",
-  "housingPlanMissingContactsCreateInvitation": "Create invitation",
-  "housingPlanMissingContactsEnterCode": "Enter invitation code",
+  "housingPlanMissingContactsEstablishContact": "Establish contact",
+  "housingPlanMissingContactsPendingOutbound": "Request sent — waiting for their response.",
+  "housingPlanMissingContactsRefusedAt": "Refused {when}",
+  "@housingPlanMissingContactsRefusedAt": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsInboundPrompt": "{requester} wishes to establish contact with you for this housing plan.",
+  "@housingPlanMissingContactsInboundPrompt": {
+    "placeholders": {
+      "requester": { "type": "String" }
+    }
+  },
+  "housingPlanMissingContactsAccept": "Accept",
+  "housingPlanMissingContactsRefuse": "Refuse",
   "housingInviteNegotiate": "I would like to negotiate",
   "housingInviteRejectBlock": "I reject outright",
   "housingInviteNegotiateMessageLabel": "Message to send with your negotiation request",
@@ -829,6 +843,13 @@
   "pushNotificationContactAddRequestRelayErrorBody": "An error occurred on the relay server. Try again.",
   "pushNotificationContactAddRequestRelayUnavailableBody": "The relay server is temporarily unavailable.",
   "pushNotificationContactAddRequestUnknownFailureBody": "Your connection request failed.",
+  "pushNotificationPlanPeerEstablishmentRequestBody": "{requester} wishes to establish contact with you, in the context of the housing plan proposal from {proposer}.",
+  "@pushNotificationPlanPeerEstablishmentRequestBody": {
+    "placeholders": {
+      "requester": { "type": "String" },
+      "proposer": { "type": "String" }
+    }
+  },
   "pushNotificationContactDisconnectionTitle": "Contact disconnected",
   "pushNotificationContactDisconnectionBody": "{name} disconnected from you.",
   "@pushNotificationContactDisconnectionBody": {
