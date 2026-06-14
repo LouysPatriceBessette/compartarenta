@@ -53,7 +53,9 @@ class _HousingPlanMissingContactsScreenState
 
   void _onSteadyInboxTick() {
     if (!mounted) return;
-    setState(() => _rowsFuture = _loadRows());
+    setState(() {
+      _rowsFuture = _loadRows();
+    });
   }
 
   Future<List<PlanPeerContactRow>> _loadRows() {
@@ -61,7 +63,9 @@ class _HousingPlanMissingContactsScreenState
   }
 
   void _reloadRows() {
-    setState(() => _rowsFuture = _loadRows());
+    setState(() {
+      _rowsFuture = _loadRows();
+    });
   }
 
   Future<void> _establishContact(PlanPeerContactRow row) async {

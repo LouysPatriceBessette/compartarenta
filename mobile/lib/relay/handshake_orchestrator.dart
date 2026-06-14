@@ -3645,6 +3645,7 @@ class HandshakeOrchestrator {
     await _contactNotifications.planPeerEstablishmentRequestReceived(
       requesterDisplayName: decrypted.requesterDisplayName,
       proposerDisplayName: decrypted.proposerDisplayName,
+      planId: row.planId,
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
   }

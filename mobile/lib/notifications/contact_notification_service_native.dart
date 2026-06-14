@@ -25,6 +25,7 @@ const AndroidNotificationChannel _androidSilentChannel =
     );
 
 const String _contactsPayload = 'contacts';
+const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
 
 bool _initialized = false;
 
@@ -32,6 +33,7 @@ Future<void> showContactNotification({
   required String title,
   required String body,
   required bool playSound,
+  String? payload,
 }) async {
   await _ensureInitialized();
   final channel = playSound ? _androidChannel : _androidSilentChannel;
@@ -53,7 +55,7 @@ Future<void> showContactNotification({
     title: title,
     body: body,
     notificationDetails: details,
-    payload: _contactsPayload,
+    payload: payload ?? _contactsPayload,
   );
 }
 
@@ -68,7 +70,11 @@ Future<void> _ensureInitialized() async {
     ),
     onDidReceiveNotificationResponse: (response) {
       PushNotificationService.dispatchLocalNotificationTap(response);
-      if (response.payload != _contactsPayload) return;
+      final payload = response.payload;
+      if (payload == null || payload.startsWith(_planPeerEstablishmentPrefix)) {
+        return;
+      }
+      if (payload != _contactsPayload) return;
       final ctx = appRootNavigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
       GoRouter.of(ctx).push('/contacts');

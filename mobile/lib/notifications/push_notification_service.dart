@@ -55,6 +55,7 @@ class PushNotificationService {
       'housing_realized_expense:';
   static const String _housingParticipationChangePrefix =
       'housing_participation_change:';
+  static const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
 
   static const List<String> _housingKinds = <String>[
     'housing_proposal',
@@ -218,6 +219,14 @@ class PushNotificationService {
           planId: planId,
           changeId: changeId,
         );
+        _navigateToHousing();
+      }
+      return;
+    }
+    if (payload.startsWith(_planPeerEstablishmentPrefix)) {
+      final planId = payload.substring(_planPeerEstablishmentPrefix.length);
+      if (planId.isNotEmpty) {
+        HousingNavigationIntent.requestOpenMissingContacts(planId);
         _navigateToHousing();
       }
     }

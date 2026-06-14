@@ -28,6 +28,7 @@ abstract class ContactNotificationSink {
   Future<void> planPeerEstablishmentRequestReceived({
     required String requesterDisplayName,
     required String proposerDisplayName,
+    required String planId,
   });
 }
 
@@ -124,6 +125,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
   Future<void> planPeerEstablishmentRequestReceived({
     required String requesterDisplayName,
     required String proposerDisplayName,
+    required String planId,
   }) async {
     final prefs = await AppPreferences.load();
     if (!prefs.notificationsEnabled || !prefs.notificationContactAddRequests) {
@@ -132,6 +134,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     if (!await _systemAllowsNotifications()) return;
 
     final l10n = _l10nForUiLocale();
+    final trimmedPlanId = planId.trim();
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: l10n.pushNotificationPlanPeerEstablishmentRequestBody(
@@ -139,6 +142,9 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
         proposerDisplayName,
       ),
       playSound: prefs.notificationSoundEnabled,
+      payload: trimmedPlanId.isEmpty
+          ? null
+          : 'plan_peer_establishment:$trimmedPlanId',
     );
   }
 

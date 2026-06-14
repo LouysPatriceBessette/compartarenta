@@ -42,6 +42,7 @@ class _FakeContactNotificationSink implements ContactNotificationSink {
   Future<void> planPeerEstablishmentRequestReceived({
     required String requesterDisplayName,
     required String proposerDisplayName,
+    required String planId,
   }) async {}
 }
 

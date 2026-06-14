@@ -14,6 +14,7 @@ import '../../relay/handshake_orchestrator.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
+import 'housing_plan_missing_contacts_screen.dart';
 import 'housing_plan_screen.dart';
 import 'housing_past_agreement_entry_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
@@ -99,6 +100,9 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       HousingNavigationIntent.openParticipationChangeTick.addListener(
         _onOpenParticipationChangeIntent,
       );
+      HousingNavigationIntent.openMissingContactsTick.addListener(
+        _onOpenMissingContactsIntent,
+      );
       HousingNavigationIntent.entryReloadTick.addListener(_onEntryReloadIntent);
       HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
         _onSteadyInboxTick,
@@ -106,6 +110,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       _openPendingAmendmentFromNotificationIfAny();
       _openPendingProposalFromNotificationIfAny();
       _openParticipationChangeFromNotificationIfAny();
+      _openMissingContactsFromNotificationIfAny();
     });
   }
 
@@ -119,6 +124,9 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     );
     HousingNavigationIntent.openParticipationChangeTick.removeListener(
       _onOpenParticipationChangeIntent,
+    );
+    HousingNavigationIntent.openMissingContactsTick.removeListener(
+      _onOpenMissingContactsIntent,
     );
     HousingNavigationIntent.entryReloadTick.removeListener(
       _onEntryReloadIntent,
@@ -164,6 +172,48 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       if (!mounted) return;
       _openPendingProposalFromNotificationIfAny();
     });
+  }
+
+  void _onOpenMissingContactsIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openMissingContactsFromNotificationIfAny();
+    });
+  }
+
+  Future<void> _openMissingContactsFromNotificationIfAny() async {
+    var planId = HousingNavigationIntent.takePendingOpenMissingContactsPlanId();
+    if (!mounted) return;
+    final db = AppDatabase.processScope;
+    final orch = HandshakeOrchestrator.maybeInstance;
+    if (orch != null) {
+      await orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
+        debugPrint('housing missing contacts open poll: $e\n$st');
+      });
+    }
+    if (planId == null || planId.isEmpty) {
+      for (final row in await db.listAllPlanPeerEstablishments()) {
+        if (row.inboundPendingAt != null) {
+          planId = row.planId;
+          break;
+        }
+      }
+    }
+    if (planId == null || planId.isEmpty) {
+      debugPrint('housing: notification tap but no pending missing-contacts plan');
+      return;
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingPlanMissingContactsScreen(
+          db: db,
+          planId: planId!,
+        ),
+      ),
+    );
+    if (mounted) _reloadEntry();
   }
 
   Future<void> _openPendingAmendmentFromNotificationIfAny() async {
