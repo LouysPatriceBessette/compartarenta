@@ -2895,8 +2895,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String housingParticipationChangeBannerWithdrawal(String date) {
-    return 'Fin d\'entente : $date';
+  String housingParticipationChangeBannerWithdrawal(String name) {
+    return '$name se retire de l\'entente';
   }
 
   @override

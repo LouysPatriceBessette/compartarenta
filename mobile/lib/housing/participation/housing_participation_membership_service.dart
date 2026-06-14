@@ -66,9 +66,11 @@ class HousingParticipationMembershipService {
       if (kind == null || kind == HousingParticipationChangeKind.immediateTermination) {
         continue;
       }
-      final target = kind == HousingParticipationChangeKind.ejection
-          ? change.targetParticipantId
-          : change.targetParticipantId ?? change.initiatorParticipantId;
+      final target = participationChangeDepartureParticipantId(
+        kind: kind,
+        initiatorParticipantId: change.initiatorParticipantId,
+        targetParticipantId: change.targetParticipantId,
+      );
       if (target == null || target.isEmpty) continue;
       if (!await isActiveMember(planId, target)) continue;
       await markDeparted(

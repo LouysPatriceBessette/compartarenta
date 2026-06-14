@@ -151,6 +151,35 @@ class HousingParticipationChangeService {
     return (await getById(change.id))!;
   }
 
+  /// Cancels a pending voluntary withdrawal when [participantId] is the initiator.
+  Future<bool> cancelVoluntaryWithdrawal({
+    required String changeId,
+    required String participantId,
+  }) async {
+    final change = await getById(changeId);
+    if (change == null) return false;
+    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+      return false;
+    }
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    if (kind != HousingParticipationChangeKind.voluntaryWithdrawal) {
+      return false;
+    }
+    if (change.initiatorParticipantId != participantId) return false;
+    await _setStatus(changeId, HousingParticipationChangeStatus.aborted);
+    return true;
+  }
+
+  /// Marks a pending change aborted from a peer notify (no side effects).
+  Future<void> abortFromPeerNotify(String changeId) async {
+    final change = await getById(changeId);
+    if (change == null) return;
+    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+      return;
+    }
+    await _setStatus(changeId, HousingParticipationChangeStatus.aborted);
+  }
+
   Future<HousingParticipationChange> proposeVoluntaryWithdrawal({
     required String planId,
     required String initiatorParticipantId,
@@ -372,18 +401,31 @@ class HousingParticipationChangeService {
   }
 
   Future<void> applyDueVoluntaryWithdrawals(String planId) async {
+    await applyDueVoluntaryWithdrawalsReturningId(planId);
+  }
+
+  /// Applies a due voluntary withdrawal once; returns [change.id] when applied.
+  Future<String?> applyDueVoluntaryWithdrawalsReturningId(String planId) async {
     final pending = await pendingForPlan(planId);
-    if (pending == null) return;
+    if (pending == null) return null;
     final kind = HousingParticipationChangeKind.fromWire(pending.kind);
-    if (kind != HousingParticipationChangeKind.voluntaryWithdrawal) return;
+    if (kind != HousingParticipationChangeKind.voluntaryWithdrawal) return null;
 
     final departure = pending.departureDate;
-    if (departure == null) return;
+    if (departure == null) return null;
     final today = DateUtils.dateOnly(DateTime.now());
     final depDay = DateUtils.dateOnly(departure.toLocal());
-    if (today.isBefore(depDay)) return;
+    if (today.isBefore(depDay)) return null;
+
+    if (await departureSideEffectsApplied(pending)) {
+      if (pending.status == HousingParticipationChangeStatus.pending.wireValue) {
+        await _setStatus(pending.id, HousingParticipationChangeStatus.effective);
+      }
+      return null;
+    }
 
     await _applyEffective(pending);
+    return pending.id;
   }
 
   Future<void> _applyEffective(HousingParticipationChange change) async {
@@ -403,8 +445,12 @@ class HousingParticipationChangeService {
           changeId: change.id,
         );
       case HousingParticipationChangeKind.voluntaryWithdrawal:
-        final leaverId =
-            change.targetParticipantId ?? change.initiatorParticipantId;
+        final leaverId = participationChangeDepartureParticipantId(
+          kind: kind,
+          initiatorParticipantId: change.initiatorParticipantId,
+          targetParticipantId: change.targetParticipantId,
+        );
+        if (leaverId == null || leaverId.isEmpty) return;
         final remaining =
             (await membership.activeParticipantsForPlan(change.planId))
                 .where((p) => p.id != leaverId)
@@ -423,6 +469,7 @@ class HousingParticipationChangeService {
         );
         await penaltySvc.applyPenaltyIfDue(
           planId: change.planId,
+          changeId: change.id,
           leaverParticipantId: leaverId,
           departureDate: change.departureDate ?? DateTime.now(),
           remainingParticipantIds: remaining,
@@ -482,8 +529,12 @@ class HousingParticipationChangeService {
         return true;
       }(),
       HousingParticipationChangeKind.voluntaryWithdrawal => () async {
-        final leaverId =
-            change.targetParticipantId ?? change.initiatorParticipantId;
+        final leaverId = participationChangeDepartureParticipantId(
+          kind: kind,
+          initiatorParticipantId: change.initiatorParticipantId,
+          targetParticipantId: change.targetParticipantId,
+        );
+        if (leaverId == null || leaverId.isEmpty) return true;
         return !(await membershipService.isActiveMember(
           change.planId,
           leaverId,

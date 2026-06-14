@@ -102,6 +102,64 @@ class HousingParticipationChangeSyncService {
       planId,
     );
 
+    final existing = await (_db.select(_db.housingParticipationChanges)
+          ..where((t) => t.id.equals(changeId)))
+        .getSingleOrNull();
+    if (existing != null) {
+      await _applyStatusFromPayloadIfNeeded(payload, changeId);
+
+      final snapshots = payload['participant_snapshots'];
+      final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
+        db: _db,
+        planId: planId,
+        snapshots: snapshots,
+      );
+      final sourceInitiator =
+          payload['initiator_participant_id'] as String? ?? '';
+      final sourceTarget = payload['target_participant_id'] as String?;
+      final localInitiator = await resolveImportedParticipantId(
+        db: _db,
+        planId: planId,
+        sourceParticipantId: sourceInitiator,
+        sourceToLocal: sourceToLocal,
+        senderContactId: senderContactId,
+        snapshots: snapshots,
+      );
+      if (localInitiator != null && localInitiator.isNotEmpty) {
+        var localTarget = await _resolveImportedTargetParticipantId(
+          planId: planId,
+          payloadKind: payload['kind'] as String?,
+          sourceInitiator: sourceInitiator,
+          sourceTarget: sourceTarget,
+          localInitiator: localInitiator,
+          sourceToLocal: sourceToLocal,
+          senderContactId: senderContactId,
+          snapshots: snapshots,
+        );
+        if (existing.initiatorParticipantId != localInitiator ||
+            existing.targetParticipantId != localTarget) {
+          await (_db.update(_db.housingParticipationChanges)
+                ..where((t) => t.id.equals(changeId)))
+              .write(
+            HousingParticipationChangesCompanion(
+              initiatorParticipantId: drift.Value(localInitiator),
+              targetParticipantId: drift.Value(localTarget),
+            ),
+          );
+          _log(
+            'propose $changeId remapped participants '
+            '(initiator $sourceInitiator→$localInitiator, '
+            'target $sourceTarget→$localTarget)',
+          );
+        } else {
+          _log('propose $changeId already present (idempotent ok)');
+        }
+      } else {
+        _log('propose $changeId already present (idempotent ok)');
+      }
+      return true;
+    }
+
     final snapshots = payload['participant_snapshots'];
     final sourceToLocal = await mapSourceParticipantIdsFromSnapshots(
       db: _db,
@@ -124,47 +182,21 @@ class HousingParticipationChangeSyncService {
       _log('propose skip: initiator not mapped for $changeId');
       return false;
     }
-    final localTarget =
-        sourceTarget == null
-            ? null
-            : await resolveImportedParticipantId(
-              db: _db,
-              planId: planId,
-              sourceParticipantId: sourceTarget,
-              sourceToLocal: sourceToLocal,
-              snapshots: snapshots,
-            );
+    final localTarget = await _resolveImportedTargetParticipantId(
+      planId: planId,
+      payloadKind: payload['kind'] as String?,
+      sourceInitiator: sourceInitiator,
+      sourceTarget: sourceTarget,
+      localInitiator: localInitiator,
+      sourceToLocal: sourceToLocal,
+      senderContactId: senderContactId,
+      snapshots: snapshots,
+    );
     if (sourceTarget != null &&
         sourceTarget.isNotEmpty &&
         (localTarget == null || localTarget.isEmpty)) {
       _log('propose skip: target not mapped for $changeId');
       return false;
-    }
-
-    final existing = await (_db.select(_db.housingParticipationChanges)
-          ..where((t) => t.id.equals(changeId)))
-        .getSingleOrNull();
-    if (existing != null) {
-      if (existing.initiatorParticipantId != localInitiator ||
-          existing.targetParticipantId != localTarget) {
-        await (_db.update(_db.housingParticipationChanges)
-              ..where((t) => t.id.equals(changeId)))
-            .write(
-          HousingParticipationChangesCompanion(
-            initiatorParticipantId: drift.Value(localInitiator),
-            targetParticipantId: drift.Value(localTarget),
-          ),
-        );
-        _log(
-          'propose $changeId remapped participants '
-          '(initiator $sourceInitiator→$localInitiator, '
-          'target $sourceTarget→$localTarget)',
-        );
-      } else {
-        _log('propose $changeId already present (idempotent ok)');
-      }
-      await _applyEffectiveFromPayloadIfNeeded(payload, changeId);
-      return true;
     }
 
     await _db.into(_db.housingParticipationChanges).insert(
@@ -203,7 +235,7 @@ class HousingParticipationChangeSyncService {
       '(initiator $sourceInitiator→$localInitiator, '
       'target $sourceTarget→$localTarget)',
     );
-    await _applyEffectiveFromPayloadIfNeeded(payload, changeId);
+    await _applyStatusFromPayloadIfNeeded(payload, changeId);
     return true;
   }
 
@@ -392,16 +424,48 @@ class HousingParticipationChangeSyncService {
     debugPrint('housing_participation_change $message');
   }
 
-  Future<void> _applyEffectiveFromPayloadIfNeeded(
+  Future<String?> _resolveImportedTargetParticipantId({
+    required String planId,
+    required String? payloadKind,
+    required String sourceInitiator,
+    required String? sourceTarget,
+    required String localInitiator,
+    required Map<String, String> sourceToLocal,
+    required String senderContactId,
+    required Object? snapshots,
+  }) async {
+    final kind = HousingParticipationChangeKind.fromWire(payloadKind);
+    if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+      return localInitiator;
+    }
+    if (sourceTarget == null || sourceTarget.isEmpty) return null;
+    if (sourceTarget == sourceInitiator) return localInitiator;
+    return resolveImportedParticipantId(
+      db: _db,
+      planId: planId,
+      sourceParticipantId: sourceTarget,
+      sourceToLocal: sourceToLocal,
+      senderContactId: senderContactId,
+      snapshots: snapshots,
+    );
+  }
+
+  Future<void> _applyStatusFromPayloadIfNeeded(
     Map<String, dynamic> payload,
     String changeId,
   ) async {
     final status = HousingParticipationChangeStatus.fromWire(
       payload['status'] as String?,
     );
-    if (status != HousingParticipationChangeStatus.effective) return;
-    await HousingParticipationChangeService(_db).applyEffectiveFromPeerNotify(
-      changeId,
-    );
+    final changeSvc = HousingParticipationChangeService(_db);
+    switch (status) {
+      case HousingParticipationChangeStatus.effective:
+        await changeSvc.applyEffectiveFromPeerNotify(changeId);
+      case HousingParticipationChangeStatus.aborted:
+        await changeSvc.abortFromPeerNotify(changeId);
+      case null:
+      case HousingParticipationChangeStatus.pending:
+        break;
+    }
   }
 }

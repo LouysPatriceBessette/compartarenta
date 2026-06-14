@@ -9,6 +9,7 @@ import '../../housing/amendment/housing_active_agreement_service.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
+import '../../housing/participation/housing_participation_change_kind.dart';
 import '../../housing/participation/housing_participation_hub_gates.dart';
 import '../../housing/participation/housing_participation_membership_service.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
@@ -258,8 +259,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     final prefs = widget.prefs ?? await AppPreferences.load();
     final lang = prefs.languageCode ?? 'en';
     final l10n = lookupAppLocalizations(Locale(lang));
-    final dateFmt = effectiveDateFormat(prefs);
-    return HousingParticipationHubGates.compute(
+    final result = await HousingParticipationHubGates.compute(
       db: AppDatabase.processScope,
       planId: widget.planId,
       selfParticipantId: selfParticipantIdForPlan(widget.planId),
@@ -273,7 +273,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
             final pending = targetName;
             if (departureDate != null) {
               return l10n.housingParticipationChangeBannerWithdrawal(
-                formatPreferenceDate(departureDate.toLocal(), dateFmt),
+                initiatorName,
               );
             }
             if (pending != null && pending.isNotEmpty) {
@@ -287,6 +287,18 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
             );
           },
     );
+    final broadcastId = result.broadcastEffectiveChangeId;
+    if (broadcastId != null) {
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        await orch.sendParticipationChangeNotify(
+          changeId: broadcastId,
+          statusWireOverride:
+              HousingParticipationChangeStatus.effective.wireValue,
+        );
+      }
+    }
+    return result.gates;
   }
 
   Future<void> _openParticipationChangeDetail(

@@ -4898,8 +4898,8 @@ abstract class AppLocalizations {
   /// No description provided for @housingParticipationChangeBannerWithdrawal.
   ///
   /// In en, this message translates to:
-  /// **'Agreement ends: {date}'**
-  String housingParticipationChangeBannerWithdrawal(String date);
+  /// **'{name} is leaving the agreement'**
+  String housingParticipationChangeBannerWithdrawal(String name);
 
   /// No description provided for @housingParticipationChangeBannerEjection.
   ///

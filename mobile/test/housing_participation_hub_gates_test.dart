@@ -45,7 +45,7 @@ void main() {
     );
     await HousingParticipationMembershipService(db).ensureMembershipsForPlan(planId);
 
-    final gates = await HousingParticipationHubGates.compute(
+    final result = await HousingParticipationHubGates.compute(
       db: db,
       planId: planId,
       selfParticipantId: selfId,
@@ -57,6 +57,7 @@ void main() {
             required DateTime? departureDate,
           }) => 'banner',
     );
+    final gates = result.gates;
 
     expect(gates.showParticipationBanner, isTrue);
     expect(gates.requestAmendmentEnabled, isFalse);
@@ -104,7 +105,7 @@ void main() {
     );
     await HousingParticipationMembershipService(db).ensureMembershipsForPlan(planId);
 
-    final gates = await HousingParticipationHubGates.compute(
+    final result = await HousingParticipationHubGates.compute(
       db: db,
       planId: planId,
       selfParticipantId: selfId,
@@ -117,8 +118,8 @@ void main() {
           }) => 'banner',
     );
 
-    expect(gates.requestAmendmentEnabled, isTrue);
-    expect(gates.majorChangeEnabled, isFalse);
+    expect(result.gates.requestAmendmentEnabled, isTrue);
+    expect(result.gates.majorChangeEnabled, isFalse);
   });
 
   test('hub gates show ejection banner for the named candidate', () async {
@@ -168,7 +169,7 @@ void main() {
     );
     await HousingParticipationMembershipService(db).ensureMembershipsForPlan(planId);
 
-    final gates = await HousingParticipationHubGates.compute(
+    final result = await HousingParticipationHubGates.compute(
       db: db,
       planId: planId,
       selfParticipantId: selfId,
@@ -180,6 +181,7 @@ void main() {
             required DateTime? departureDate,
           }) => '$initiatorName ejects $targetName',
     );
+    final gates = result.gates;
 
     expect(gates.isEjectionCandidate, isTrue);
     expect(gates.showParticipationBanner, isTrue);

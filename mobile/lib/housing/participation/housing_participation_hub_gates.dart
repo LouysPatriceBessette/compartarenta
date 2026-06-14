@@ -5,6 +5,17 @@ import 'housing_participation_change_kind.dart';
 import 'housing_participation_change_service.dart';
 import 'housing_participation_membership_service.dart';
 
+/// Result of [HousingParticipationHubGates.compute].
+class HousingParticipationHubGatesResult {
+  const HousingParticipationHubGatesResult({
+    required this.gates,
+    this.broadcastEffectiveChangeId,
+  });
+
+  final HousingParticipationHubGates gates;
+  final String? broadcastEffectiveChangeId;
+}
+
 /// Hub tile enablement and banner visibility for participation changes.
 class HousingParticipationHubGates {
   const HousingParticipationHubGates({
@@ -31,7 +42,7 @@ class HousingParticipationHubGates {
   final HousingParticipationChangeKind? pendingChangeKind;
   final bool isEjectionCandidate;
 
-  static Future<HousingParticipationHubGates> compute({
+  static Future<HousingParticipationHubGatesResult> compute({
     required AppDatabase db,
     required String planId,
     required String selfParticipantId,
@@ -48,19 +59,22 @@ class HousingParticipationHubGates {
         !await membership.isActiveMember(planId, selfParticipantId);
 
     if (isPast) {
-      return HousingParticipationHubGates(
-        showParticipationBanner: false,
-        enterExpenseEnabled: false,
-        requestAmendmentEnabled: false,
-        majorChangeEnabled: false,
-        isPastAgreementForSelf: true,
-        pendingChangeId: null,
-        isEjectionCandidate: false,
+      return HousingParticipationHubGatesResult(
+        gates: HousingParticipationHubGates(
+          showParticipationBanner: false,
+          enterExpenseEnabled: false,
+          requestAmendmentEnabled: false,
+          majorChangeEnabled: false,
+          isPastAgreementForSelf: true,
+          pendingChangeId: null,
+          isEjectionCandidate: false,
+        ),
       );
     }
 
     final changeSvc = HousingParticipationChangeService(db);
-    await changeSvc.applyDueVoluntaryWithdrawals(planId);
+    final appliedChangeId =
+        await changeSvc.applyDueVoluntaryWithdrawalsReturningId(planId);
     final pending = await changeSvc.pendingForPlan(planId);
     final amendmentPending =
         await HousingProposalTransportService(db).hasPendingAmendmentForUi(
@@ -68,14 +82,17 @@ class HousingParticipationHubGates {
         );
 
     if (pending == null) {
-      return HousingParticipationHubGates(
-        showParticipationBanner: false,
-        enterExpenseEnabled: true,
-        requestAmendmentEnabled: !amendmentPending,
-        majorChangeEnabled: !amendmentPending,
-        isPastAgreementForSelf: false,
-        pendingChangeId: null,
-        isEjectionCandidate: false,
+      return HousingParticipationHubGatesResult(
+        gates: HousingParticipationHubGates(
+          showParticipationBanner: false,
+          enterExpenseEnabled: true,
+          requestAmendmentEnabled: !amendmentPending,
+          majorChangeEnabled: !amendmentPending,
+          isPastAgreementForSelf: false,
+          pendingChangeId: null,
+          isEjectionCandidate: false,
+        ),
+        broadcastEffectiveChangeId: appliedChangeId,
       );
     }
 
@@ -100,7 +117,7 @@ class HousingParticipationHubGates {
       departureDate: pending.departureDate,
     );
 
-    return switch (kind) {
+    final gates = switch (kind) {
       HousingParticipationChangeKind.immediateTermination =>
         HousingParticipationHubGates(
           showParticipationBanner: true,
@@ -147,5 +164,9 @@ class HousingParticipationHubGates {
         isEjectionCandidate: false,
       ),
     };
+    return HousingParticipationHubGatesResult(
+      gates: gates,
+      broadcastEffectiveChangeId: appliedChangeId,
+    );
   }
 }

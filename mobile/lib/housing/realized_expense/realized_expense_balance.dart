@@ -111,11 +111,19 @@ HousingBalanceData computeHousingBalanceData({
     if (expense.kind == RealizedExpenseKind.transfer) {
       final beneficiary = expense.beneficiaryParticipantId;
       if (beneficiary != null) {
-        addOwed(
-          beneficiary,
-          expense.payerParticipantId,
-          expense.amountMinor,
-        );
+        if (expense.amountMinor >= 0) {
+          addOwed(
+            beneficiary,
+            expense.payerParticipantId,
+            expense.amountMinor,
+          );
+        } else {
+          addOwed(
+            expense.payerParticipantId,
+            beneficiary,
+            -expense.amountMinor,
+          );
+        }
       }
       continue;
     }

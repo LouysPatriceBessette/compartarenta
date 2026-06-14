@@ -363,8 +363,8 @@ class RealizedExpenseRepository {
     String? description,
     String? expenseId,
   }) async {
-    if (amountMinor <= 0) {
-      throw ArgumentError.value(amountMinor, 'amountMinor', 'must be positive');
+    if (amountMinor == 0) {
+      throw ArgumentError.value(amountMinor, 'amountMinor', 'must not be zero');
     }
     final now = DateTime.now().toUtc();
     final id = expenseId ?? newExpenseId();

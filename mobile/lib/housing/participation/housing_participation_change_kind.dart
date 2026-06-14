@@ -27,6 +27,20 @@ enum HousingParticipationChangeKind {
       this == immediateTermination;
 }
 
+/// Roster participant who leaves the plan for [kind], when applicable.
+String? participationChangeDepartureParticipantId({
+  required HousingParticipationChangeKind? kind,
+  required String initiatorParticipantId,
+  required String? targetParticipantId,
+}) {
+  return switch (kind) {
+    HousingParticipationChangeKind.ejection => targetParticipantId,
+    HousingParticipationChangeKind.voluntaryWithdrawal => initiatorParticipantId,
+    HousingParticipationChangeKind.immediateTermination => null,
+    null => null,
+  };
+}
+
 /// Lifecycle status of a participation change request.
 enum HousingParticipationChangeStatus {
   pending('pending'),

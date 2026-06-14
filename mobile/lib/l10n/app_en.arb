@@ -1244,9 +1244,9 @@
   "@housingParticipationChangeBannerTermination": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "housingParticipationChangeBannerWithdrawal": "Agreement ends: {date}",
+  "housingParticipationChangeBannerWithdrawal": "{name} is leaving the agreement",
   "@housingParticipationChangeBannerWithdrawal": {
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": { "name": { "type": "String" } }
   },
   "housingParticipationChangeBannerEjection": "{initiator} requests to eject {target}.",
   "@housingParticipationChangeBannerEjection": {

@@ -51,6 +51,7 @@ class HousingWithdrawalPenaltyLedger {
 
   Future<void> applyPenaltyIfDue({
     required String planId,
+    required String changeId,
     required String leaverParticipantId,
     required DateTime departureDate,
     required List<String> remainingParticipantIds,
@@ -88,15 +89,19 @@ class HousingWithdrawalPenaltyLedger {
     for (var i = 0; i < remainingParticipantIds.length; i++) {
       final share = splits[i];
       if (share <= 0) continue;
+      final beneficiaryId = remainingParticipantIds[i];
+      final expenseId = 'penalty:$changeId:$beneficiaryId';
+      if (await repo.getById(expenseId) != null) continue;
       await repo.publishSystemTransfer(
         packageId: packageId,
         planId: planId,
-        amountMinor: share,
+        amountMinor: -share,
         currency: currency,
         paymentDate: paymentDate,
         payerParticipantId: leaverParticipantId,
-        beneficiaryParticipantId: remainingParticipantIds[i],
+        beneficiaryParticipantId: beneficiaryId,
         description: 'early_withdrawal_penalty',
+        expenseId: expenseId,
       );
     }
   }

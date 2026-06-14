@@ -89,6 +89,17 @@ class _HousingParticipationChangeDetailScreenState
         change.targetParticipantId == _selfId;
   }
 
+  bool get _canCancel {
+    final change = _change;
+    if (change == null) return false;
+    if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+      return false;
+    }
+    final kind = HousingParticipationChangeKind.fromWire(change.kind);
+    return kind == HousingParticipationChangeKind.voluntaryWithdrawal &&
+        change.initiatorParticipantId == _selfId;
+  }
+
   bool get _selfAlreadyDecided {
     return _decisions.any((d) => d.participantId == _selfId);
   }
@@ -118,6 +129,31 @@ class _HousingParticipationChangeDetailScreenState
         l10n.housingParticipationChangeDecisionRejected(name),
       null => l10n.housingParticipationChangeDecisionPending(name),
     };
+  }
+
+  Future<void> _cancel() async {
+    if (_working || _change == null) return;
+    setState(() => _working = true);
+    try {
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        await orch.cancelParticipationChangeWithdrawal(
+          changeId: _change!.id,
+          participantId: _selfId,
+        );
+      } else {
+        await HousingParticipationChangeService(
+          AppDatabase.processScope,
+        ).cancelVoluntaryWithdrawal(
+          changeId: _change!.id,
+          participantId: _selfId,
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
   }
 
   Future<void> _respond(bool accepted) async {
@@ -248,6 +284,13 @@ class _HousingParticipationChangeDetailScreenState
             OutlinedButton(
               onPressed: _working ? null : () => _respond(false),
               child: Text(l10n.housingParticipationChangeReject),
+            ),
+          ],
+          if (_canCancel) ...[
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: _working ? null : _cancel,
+              child: Text(l10n.commonCancel),
             ),
           ],
         ],

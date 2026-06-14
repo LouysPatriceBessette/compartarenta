@@ -771,4 +771,170 @@ void main() {
       expect(decisions.any((d) => d.participantId == monicaId), isTrue);
     },
   );
+
+  test(
+    'importNotifyFromPeer aborts pending voluntary withdrawal on peer cancel',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'plan:withdraw-abort';
+      const louysId = '$planId:louys';
+      const changeId = 'pc:withdraw-abort';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: louysId,
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          contactId: const drift.Value('contact:louys'),
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: 'pkg:$planId',
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await HousingParticipationMembershipService(db).ensureMembershipsForPlan(
+        planId,
+      );
+      await db.into(db.housingParticipationChanges).insert(
+        HousingParticipationChangesCompanion.insert(
+          id: changeId,
+          planId: planId,
+          packageId: 'pkg:$planId',
+          kind: HousingParticipationChangeKind.voluntaryWithdrawal.wireValue,
+          initiatorParticipantId: louysId,
+          targetParticipantId: drift.Value(louysId),
+          departureDate: drift.Value(DateTime.utc(2026, 7, 13)),
+          status: HousingParticipationChangeStatus.pending.wireValue,
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+
+      final abortedJson = '''
+{
+  "change_id": "$changeId",
+  "package_id": "pkg:$planId",
+  "plan_id": "$planId",
+  "kind": "voluntary_withdrawal",
+  "initiator_participant_id": "$louysId",
+  "target_participant_id": "$louysId",
+  "departure_date": "2026-07-13T00:00:00.000Z",
+  "status": "aborted",
+  "created_at": "2026-06-13T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$louysId", "displayName": "Louys", "contactId": "contact:louys"}
+  ]
+}
+''';
+
+      expect(
+        await HousingParticipationChangeSyncService(db).importNotifyFromPeer(
+          notifyJson: abortedJson,
+          senderContactId: 'contact:louys',
+        ),
+        isTrue,
+      );
+
+      final row = await HousingParticipationChangeService(db).getById(changeId);
+      expect(row?.status, HousingParticipationChangeStatus.aborted.wireValue);
+      expect(
+        await HousingParticipationMembershipService(db).isActiveMember(
+          planId,
+          louysId,
+        ),
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'importProposeFromPeer maps voluntary withdrawal target to initiator',
+    () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const planId = 'plan:withdraw-map';
+      const monicaId = '$planId:self';
+      const louysId = '$planId:p0';
+      const louysContact = 'contact:louys';
+      const changeId = 'pc:withdraw-map';
+
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: planId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: monicaId,
+          displayName: 'Monica',
+          avatarId: 'av-m',
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: louysId,
+          displayName: 'Louys',
+          avatarId: 'av-l',
+          contactId: const drift.Value(louysContact),
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+      await db.into(db.proposalPackages).insert(
+        ProposalPackagesCompanion.insert(
+          id: 'pkg:$planId',
+          planId: planId,
+          activeRevisionId: const drift.Value('rev:1'),
+          createdAt: DateTime.utc(2026, 6, 13),
+        ),
+      );
+
+      final json = '''
+{
+  "change_id": "$changeId",
+  "package_id": "pkg:$planId",
+  "plan_id": "$planId",
+  "kind": "voluntary_withdrawal",
+  "initiator_participant_id": "$planId:self",
+  "target_participant_id": "$planId:self",
+  "departure_date": "2026-06-13T00:00:00.000Z",
+  "status": "pending",
+  "created_at": "2026-06-13T12:00:00.000Z",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Louys", "contactId": "$louysContact", "avatarId": "av-l"}
+  ]
+}
+''';
+
+      expect(
+        await HousingParticipationChangeSyncService(db).importProposeFromPeer(
+          changeJson: json,
+          senderContactId: louysContact,
+        ),
+        isTrue,
+      );
+
+      final row = await (db.select(db.housingParticipationChanges)
+            ..where((t) => t.id.equals(changeId)))
+          .getSingle();
+      expect(row.initiatorParticipantId, louysId);
+      expect(row.targetParticipantId, louysId);
+    },
+  );
 }

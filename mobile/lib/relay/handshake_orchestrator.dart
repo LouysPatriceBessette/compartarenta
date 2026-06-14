@@ -2774,6 +2774,25 @@ class HandshakeOrchestrator {
     );
   }
 
+  /// Broadcasts voluntary withdrawal cancellation to connected co-participants.
+  Future<void> cancelParticipationChangeWithdrawal({
+    required String changeId,
+    required String participantId,
+  }) async {
+    final changeSvc = HousingParticipationChangeService(_db);
+    if (!await changeSvc.cancelVoluntaryWithdrawal(
+      changeId: changeId,
+      participantId: participantId,
+    )) {
+      return;
+    }
+    await sendParticipationChangeNotify(
+      changeId: changeId,
+      statusWireOverride:
+          HousingParticipationChangeStatus.aborted.wireValue,
+    );
+  }
+
   Future<void> sendParticipationChangeDecision({
     required String changeId,
     required String participantId,

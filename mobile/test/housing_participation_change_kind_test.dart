@@ -18,4 +18,23 @@ void main() {
       isFalse,
     );
   });
+
+  test('departure participant id uses initiator for voluntary withdrawal', () {
+    expect(
+      participationChangeDepartureParticipantId(
+        kind: HousingParticipationChangeKind.voluntaryWithdrawal,
+        initiatorParticipantId: 'plan:louys',
+        targetParticipantId: 'plan:monica',
+      ),
+      'plan:louys',
+    );
+    expect(
+      participationChangeDepartureParticipantId(
+        kind: HousingParticipationChangeKind.ejection,
+        initiatorParticipantId: 'plan:louys',
+        targetParticipantId: 'plan:monica',
+      ),
+      'plan:monica',
+    );
+  });
 }
