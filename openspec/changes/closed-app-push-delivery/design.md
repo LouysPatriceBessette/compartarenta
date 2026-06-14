@@ -8,7 +8,7 @@ Relevant constraints:
 - The privacy spec `subscription-entitlement-minimal-server-state` previously forbade any durable server-side mapping of users to anything other than subscription validation artifacts. This change explicitly relaxes that constraint for transport routing tokens.
 - The relay carries only ChaCha20-Poly1305 ciphertext; it has no business-domain knowledge. Push payloads must preserve that contract.
 - Web is dev-only. No production web UI is offered; web push is not implemented.
-- Multi-device per user is expected: one user may register several routing-id → token rows from different devices.
+- Product model: **one active installation per user identity** (no cross-device sync; see `data-locality-and-client-storage`). The relay MAY store multiple push tokens per recipient routing id during token refresh or platform transitions; that is transport mechanics, not support for simultaneous multi-device use of the same identity.
 
 ## Goals / Non-Goals
 
@@ -25,6 +25,7 @@ Relevant constraints:
 - Encrypted push payloads beyond what the OS push providers already protect.
 - Decrypting or interpreting envelope contents on the relay.
 - Web push delivery.
+- Multi-device identity sync or simultaneous use of one user identity on several devices (see `data-locality-and-client-storage`: one active installation per user; export/import is for device replacement only).
 - A high-priority "VoIP-style" iOS notification path.
 - Implementing every notification kind in V1. Only Contacts add requests are wired functionally; everything else continues to use the existing polling-based flow.
 - Storing message content, message identifiers, or any business-domain metadata on the relay beyond the existing envelope TTL window.
@@ -136,9 +137,11 @@ The relay MUST NOT include any envelope id, sender id, message kind specific to 
 
 iOS caveat: a pure data-only push (`content-available: 1`, no `alert`) is delivered only on a best-effort basis. If field testing shows that critical messages are throttled, the relay MAY add a generic, non-personalized `alert` such as "New activity". The exact wording is owned by the mobile app team and ships in app-side localized resources; the relay must not embed the user-facing text directly. This degraded mode is acceptable per product owner sign-off.
 
-### 5. Multi-device fan-out
+### 5. Routing push token fan-out
 
 The relay fans out to every active `(routing-id, provider, push_token)` row matching the envelope recipient. Per-row dispatch failures are individually logged with no message context, and rows whose providers report a permanent token error are purged eagerly. No "last device wins" logic.
+
+**Product note:** Compartarenta assumes **one active installation per user identity** (`data-locality-and-client-storage`). Multiple tokens per routing id are for transport overlap (refresh, reinstall), not simultaneous multi-device sync.
 
 ### 6. V1 functional scope: Contacts add requests only
 
@@ -190,7 +193,7 @@ The Go code for the dispatcher and the table schema can be developed and unit-te
 
 - **Privacy delta is permanent** → mitigated by narrow scope, strict TTL, and explicit non-coupling rules. The audit document captures the exact contract.
 - **iOS data-only delivery is best-effort** → mitigated by the option to add a generic non-personalized alert; documented as degraded mode that the product owner has pre-accepted.
-- **Multi-device users get multiple pushes** → acceptable; better than picking a single "primary" device incorrectly.
+- **Multiple push tokens per routing id during refresh overlap** → acceptable transport artifact; product does not support simultaneous multi-device use of one identity.
 - **FCM/APNs as third-party dependencies** → operator already runs the rest of the stack; adding push provider secrets is incremental, not architectural.
 - **Background task throttling** → if the OS denies a refresh window, the next foreground refresh fixes it; only sustained inactivity drops the registration.
 - **Operator visibility of last_seen_at and country** → mitigated by routing all access through the loopback-only statistics endpoint, by the append-only file, by the suppression threshold of 10 for country buckets, and by the absence of any path that exposes row-level data. The DB itself is never queried directly by the operator.

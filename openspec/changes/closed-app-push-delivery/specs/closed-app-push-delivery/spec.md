@@ -64,12 +64,15 @@ The system SHALL implement closed-app push delivery on Android via FCM HTTP v1 a
 - **THEN** the client SHALL NOT call the closed-app push registration endpoints
 - **AND** the relay SHALL NOT accept registrations whose provider value is reserved for web push
 
-### Requirement: Multi-device fan-out
-The system SHALL support multiple non-expired routing push tokens per recipient routing id. The relay SHALL dispatch a wake push to every registered token for the recipient on each qualifying envelope.
+### Requirement: Routing push token fan-out
+The relay SHALL support multiple non-expired routing push tokens per recipient routing id and SHALL dispatch a wake push to every registered token for the recipient on each qualifying envelope.
 
-#### Scenario: User has two active devices
-- **WHEN** a single recipient routing id has one active FCM token and one active APNs token
-- **THEN** the relay dispatches one wake push per registered token, in parallel, when an envelope arrives
+The **product** assumes **one active installation per user identity** (see `data-locality-and-client-storage`). Multiple tokens for the same routing id are therefore expected only for transport reasons (token refresh, OS reinstall, overlapping registrations during migration)—not for simultaneous multi-device use of the same person’s data.
+
+#### Scenario: Token refresh overlap
+- **WHEN** a client refreshes its FCM or APNs token and re-registers before the prior row expires
+- **THEN** the relay MAY briefly hold more than one non-expired token for the same recipient routing id
+- **AND** wake dispatch MAY target each registered token until TTL purge removes stale rows
 
 #### Scenario: Per-token dispatch failure does not block others
 - **WHEN** dispatch to one of several registered tokens fails

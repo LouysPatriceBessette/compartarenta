@@ -59,3 +59,16 @@ The application SHALL continue to treat the client-side store as the system of r
 #### Scenario: Successful relay delivery does not bypass acceptance
 - **WHEN** a relayed ciphertext message is successfully delivered to a peer
 - **THEN** the recipient’s accepted ledger changes only if the recipient accepts the proposal (or an equivalent explicit confirmation defined by the product)
+
+### Requirement: One active installation per user identity
+The product SHALL treat each real-world participant as having **at most one active app installation** that holds their cryptographic identity and local database at a time. The system SHALL NOT provide server-side synchronization of a single user’s operational data across multiple simultaneous devices. Moving to a new device SHALL be handled only through the documented **export / import** (or equivalent one-time migration) path when the prior device is lost, broken, or replaced—not through live multi-device sync.
+
+#### Scenario: No cross-device ledger sync
+- **WHEN** the same person installs the app on a second device while the first installation still holds data
+- **THEN** the product does not merge or reconcile the two local databases through any server
+- **AND** each installation is an independent identity unless the user performs a documented migration from one device to the other
+
+#### Scenario: Export supports device replacement only
+- **WHEN** the user exports data from one installation and imports it on another
+- **THEN** the purpose is recovery or device replacement
+- **AND** the product does not treat this as ongoing multi-device use of the same identity

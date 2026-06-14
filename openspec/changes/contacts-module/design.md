@@ -154,7 +154,11 @@ Rollback strategy: contacts data is purely additive. The migration that mirrors 
 
 ## Open Questions
 
-- Whether to allow a contact to live "across multiple devices" of the same user (multi-device identity is a separate concern; flagged for a future change).
+- ~~Whether to allow a contact to live "across multiple devices" of the same user~~ **Resolved:** no. One active installation per user identity; export/import is for device replacement only (`data-locality-and-client-storage`).
+
+### Decision: Plan-mediated contact establishment (housing)
+
+When co-participants receive the same housing proposal, each snapshot carries peer **long-term public keys**. Recipients who lack a connected contact for a co-participant establish the relationship via encrypted steady-state envelopes (`contactEstablishmentRequest` / `contactEstablishmentResponse`), not invitation codes. Specified in change `housing-plan-peer-contact-establishment`. Invitation codes remain for out-of-band pairing with truly unknown parties.
 - Whether the inviter is shown a final "name as the contact will appear in my app" override after handshake or always takes the invitee's chosen self-name (UX, not specification).
 
 ## Implementation Decisions
