@@ -1,7 +1,6 @@
-import 'package:flutter/widgets.dart';
-
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
+import 'notification_localizations.dart';
 import 'notification_permission_gate.dart';
 import 'contact_notification_service_stub.dart'
     if (dart.library.html) 'contact_notification_service_web.dart'
@@ -43,7 +42,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: l10n.pushNotificationContactAddRequestBody(displayName),
@@ -59,7 +58,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: l10n.pushNotificationContactAddedViaInvitationBody(displayName),
@@ -78,7 +77,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: accepted
@@ -96,7 +95,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
       body: _connectionRequestFailureBody(l10n, errorCode),
@@ -113,7 +112,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
       title: l10n.pushNotificationContactDisconnectionTitle,
       body: l10n.pushNotificationContactDisconnectionBody(displayName),
@@ -133,7 +132,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     }
     if (!await _systemAllowsNotifications()) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final trimmedPlanId = planId.trim();
     await impl.showContactNotification(
       title: l10n.pushNotificationContactAddRequestTitle,
@@ -152,17 +151,6 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     final status = await NotificationPermissionGate.instance.status();
     return status == NotificationSystemPermissionStatus.granted ||
         status == NotificationSystemPermissionStatus.provisional;
-  }
-
-  AppLocalizations _l10nForUiLocale() {
-    final lang = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    if (lang == 'fr') {
-      return lookupAppLocalizations(const Locale('fr'));
-    }
-    if (lang == 'es') {
-      return lookupAppLocalizations(const Locale('es'));
-    }
-    return lookupAppLocalizations(const Locale('en'));
   }
 
   String _connectionRequestFailureBody(AppLocalizations l10n, String code) {

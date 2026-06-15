@@ -11,10 +11,10 @@ import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
 import '../housing/housing_navigation_intent.dart';
 import '../firebase_options.dart';
-import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import 'closed_app_push_registration_service.dart';
+import 'notification_localizations.dart';
 import 'housing_browser_notification_stub.dart'
     if (dart.library.html) 'housing_browser_notification_web.dart'
     as housing_browser;
@@ -66,17 +66,6 @@ class PushNotificationService {
 
   static bool _started = false;
   static bool _localStarted = false;
-
-  static AppLocalizations _l10nForUiLocale() {
-    final lang = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    if (lang == 'fr') {
-      return lookupAppLocalizations(const Locale('fr'));
-    }
-    if (lang == 'es') {
-      return lookupAppLocalizations(const Locale('es'));
-    }
-    return lookupAppLocalizations(const Locale('en'));
-  }
 
   static Future<void> initialize() async {
     if (_started) return;
@@ -286,9 +275,12 @@ class PushNotificationService {
       return;
     }
 
-    final l10n = isBackgroundIsolate
-        ? lookupAppLocalizations(const Locale('en'))
-        : _l10nForUiLocale();
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingProposalNotification(prefs)) {
+      return;
+    }
+
+    final l10n = l10nForNotificationLocale(prefs: prefs);
 
     final title =
         message.notification?.title ??
@@ -318,10 +310,6 @@ class PushNotificationService {
       await android?.createNotificationChannel(_androidSilentChannel);
     }
 
-    final prefs = await AppPreferences.load();
-    if (!shouldDisplayHousingProposalNotification(prefs)) {
-      return;
-    }
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
 
@@ -374,7 +362,7 @@ class PushNotificationService {
       }
     }
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingProposalTitle;
     final body = l10n.pushNotificationHousingProposalBody;
 
@@ -418,7 +406,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingRealizedExpenseTitle;
     final body = senderDisplayName.trim().isEmpty
         ? l10n.pushNotificationHousingRealizedExpenseBody
@@ -469,7 +457,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingRealizedExpenseRejectedTitle;
     final body = senderDisplayName.trim().isEmpty
         ? l10n.pushNotificationHousingRealizedExpenseRejectedBody
@@ -520,7 +508,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingRealizedExpenseAcceptedTitle;
     final body = senderDisplayName.trim().isEmpty
         ? l10n.pushNotificationHousingRealizedExpenseAcceptedBody
@@ -577,7 +565,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingParticipationChangeTitle;
     final body =
         senderDisplayName.trim().isEmpty
@@ -635,7 +623,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingDecisionTitle;
     final body = senderDisplayName.trim().isEmpty
         ? l10n.pushNotificationHousingDecisionBody
@@ -689,7 +677,7 @@ class PushNotificationService {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
-    final l10n = _l10nForUiLocale();
+    final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingDecisionTitle;
     final body = switch (errorCode) {
       'relay_unavailable' =>
