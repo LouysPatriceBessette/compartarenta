@@ -33,3 +33,6 @@ Thumbs.db
 **/*.xcuserstate
 **/*.xccheckout
 
+# PDF generation tool
+.venv-nav-pdf/
+docs/tools/generate_navigation_schema_block_pdf.py
