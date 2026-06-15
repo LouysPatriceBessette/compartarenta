@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/regional_unit_choices.dart';
 import '../agreement_rules_diff.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import '../proposals/plan_agreement_proposal_service.dart';
@@ -169,7 +170,7 @@ Future<AgreementRulesAmendmentComparison?> loadAgreementRulesAmendmentComparison
       .getSingleOrNull();
   final currency = planRow?.currency.trim().isNotEmpty == true
       ? planRow!.currency.trim()
-      : 'CAD';
+      : kDefaultCurrencyCode;
 
   return AgreementRulesAmendmentComparison(
     buckets: buckets,

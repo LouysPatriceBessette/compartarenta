@@ -97,6 +97,10 @@ After Steps 1 and 2 land, attention focuses on completing housing:
 | **NEW** `relay-server-infrastructure-and-audit`   | Step 4 (with dev-environment deployment in parallel with Step 1).                                                                                                | Proposed |
 | **NEW** `per-module-licensing-and-bundles`        | Cross-cutting; consumed by Steps 1–5 as needed.                                                                                                                  | Proposed |
 
+## Post-v1 backlog (out of scope for the first public release)
+
+- **User-selectable currency and conversion.** The first release uses a single fixed storage currency (`CAD`, applied at onboarding) and shows amounts with the **`$` symbol only** — never the ISO code in UI. Settings → Units does not expose currency until multi-currency plans, user choice, and conversion logic are implemented. Existing currency picker data (`supported_currencies.dart`) and prefs storage remain for a future change; track implementation when conversion is specified.
+
 ## What this roadmap deliberately does NOT do
 
 - It does not change the product-level semantics of the relay (those live in `privacy-first-sync-architecture` and stay as-is).

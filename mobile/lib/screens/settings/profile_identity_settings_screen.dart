@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
@@ -155,7 +156,7 @@ class _ProfileIdentitySettingsScreenState
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextField(
               controller: _name,
               decoration: InputDecoration(
                 labelText: l10n.onboardingNameLabel,

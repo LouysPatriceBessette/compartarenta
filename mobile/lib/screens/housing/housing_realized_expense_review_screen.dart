@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/housing_navigation_intent.dart';
@@ -372,7 +373,7 @@ class _HousingRealizedExpenseReviewScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.housingRealizedExpenseRejectTitle),
-          content: TextField(
+          content: AppTextField(
             controller: controller,
             decoration: InputDecoration(
               labelText: l10n.housingRealizedExpenseRejectJustification,

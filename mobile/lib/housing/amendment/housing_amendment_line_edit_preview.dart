@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../prefs/regional_unit_choices.dart';
 import '../../util/display_date.dart';
 import '../expense_form/expense_plan_line_view_data.dart';
 import '../expense_form/housing_expense_line_presentation_card.dart';
@@ -183,7 +184,7 @@ class HousingAmendmentLineEditComparisonSection extends StatelessWidget {
             .getSingleOrNull();
         final currency = row?.currency.trim().isNotEmpty == true
             ? row!.currency.trim()
-            : 'CAD';
+            : kDefaultCurrencyCode;
         return loadLineEditAmendmentPreviewPair(
           db: db,
           planId: planId,

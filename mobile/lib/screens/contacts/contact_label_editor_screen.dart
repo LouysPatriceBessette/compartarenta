@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
@@ -128,7 +129,7 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            TextField(
+            AppTextField(
               controller: _labelController,
               decoration: InputDecoration(
                 labelText: l10n.contactsFieldNameLabel,
@@ -142,7 +143,7 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextField(
               controller: _notesController,
               decoration: InputDecoration(
                 labelText: l10n.contactsFieldNotesLabel,

@@ -1,6 +1,8 @@
 import 'package:compartarenta/prefs/app_preferences.dart';
+import 'package:compartarenta/prefs/time_zone_preference_field.dart';
+import 'package:compartarenta/prefs/week_start.dart';
 import 'package:compartarenta/l10n/app_localizations.dart';
-import 'package:compartarenta/screens/onboarding/steps/onboarding_preferences_step.dart';
+import 'package:compartarenta/widgets/supported_currency_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,9 +38,6 @@ void main() {
       tester.view.resetViewInsets();
     });
 
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await AppPreferences.load();
-
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [
@@ -48,18 +47,41 @@ void main() {
           GlobalWidgetsLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: OnboardingPreferencesStep(prefs: prefs, onFinish: () {}),
+        home: Builder(
+          builder: (context) {
+            return Scaffold(
+              body: FilledButton(
+                onPressed: () => showSupportedCurrencyPicker(
+                  context,
+                  searchHint: 'Search',
+                ),
+                child: const Text('Open picker'),
+              ),
+            );
+          },
         ),
       ),
     );
 
-    // Currency field is the first read-only TextFormField; timezone is second.
-    await tester.tap(find.byType(TextFormField).first);
+    await tester.tap(find.text('Open picker'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(TextField));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
     expect(find.text('ARS — peso argentin'), findsOneWidget);
+  });
+
+  test('completeOnboarding applies default regional prefs', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await AppPreferences.load();
+    await prefs.completeOnboarding();
+    expect(prefs.currency, 'CAD');
+    expect(prefs.dateFormat, 'YYYY-MM-DD');
+    expect(prefs.distanceUnit, DistanceUnit.km);
+    expect(prefs.weekStart, WeekStart.sunday);
+    expect(prefs.usesDeviceTimeZone, isTrue);
   });
 }
 

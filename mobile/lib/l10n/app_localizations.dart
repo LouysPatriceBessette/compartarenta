@@ -325,7 +325,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUnitsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Currency, date format, and distance'**
+  /// **'Various unit formats'**
   String get settingsUnitsSubtitle;
 
   /// No description provided for @settingsAboutTitle.
@@ -586,29 +586,23 @@ abstract class AppLocalizations {
   /// **'Welcome'**
   String get onboardingWelcomeTitle;
 
-  /// No description provided for @onboardingWelcomeCopyShort.
+  /// No description provided for @onboardingWelcomeIntro.
   ///
   /// In en, this message translates to:
-  /// **'Thanks for trying Compartarenta.\n\nThe app is free as long as it isn’t actively used. During this phase, you can configure your expense-sharing plan as precisely as you need. This plan will serve as a proposed agreement to share with one or more people.\n\nOnce your plan is accepted and put into service, the 6‑week free trial begins.'**
-  String get onboardingWelcomeCopyShort;
+  /// **'Compartarenta is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.'**
+  String get onboardingWelcomeIntro;
 
-  /// No description provided for @onboardingReadLater.
+  /// No description provided for @onboardingWelcomeConfidentialTitle.
   ///
   /// In en, this message translates to:
-  /// **'Read later'**
-  String get onboardingReadLater;
+  /// **'Confidential'**
+  String get onboardingWelcomeConfidentialTitle;
 
-  /// No description provided for @onboardingWelcomeMoreTitle.
+  /// No description provided for @onboardingWelcomeConfidentialBody.
   ///
   /// In en, this message translates to:
-  /// **'About the trial and license'**
-  String get onboardingWelcomeMoreTitle;
-
-  /// No description provided for @onboardingWelcomeCopyLong.
-  ///
-  /// In en, this message translates to:
-  /// **'At the end of the trial, you and your partners can choose to continue by purchasing a \$4 license per person. Each participant in the plan must have a license.\n\nThis license funds development and maintenance. There will NEVER be ads in the app.\n\nYour data is not used in any way: it stays on your device (and the participants’ devices) and nowhere else. The data belongs to you.\n\nIf you don’t renew the license, you won’t be able to add new data, but you will be able to export existing data.'**
-  String get onboardingWelcomeCopyLong;
+  /// **'Finally, real privacy. You can enter your data without any worry. No one other than you and your roommates will have access. This is not just a promise—it is a demonstrable fact. All of the app’s code is public and can be inspected and audited.\n\nThis does imply an important trade-off: there is no way to recover your data if you lose it (loss, theft, or breakage of your device). The app includes an import/export feature that is strongly suggested to use periodically to keep a backup. You are free to put the exported file wherever you want. Securing that backup is your responsibility.'**
+  String get onboardingWelcomeConfidentialBody;
 
   /// No description provided for @onboardingOk.
   ///
@@ -759,12 +753,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Housing'**
   String get homeModuleHousing;
-
-  /// No description provided for @homeModulePersonalBudget.
-  ///
-  /// In en, this message translates to:
-  /// **'Personal budget'**
-  String get homeModulePersonalBudget;
 
   /// No description provided for @homeModuleVehicle.
   ///

@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../car_sharing/binary_availability_week_editor.dart';
@@ -259,13 +260,13 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        TextField(controller: _make, decoration: InputDecoration(labelText: l10n.carSharingFieldMake)),
+        AppTextField(controller: _make, decoration: InputDecoration(labelText: l10n.carSharingFieldMake)),
         const SizedBox(height: 12),
-        TextField(controller: _model, decoration: InputDecoration(labelText: l10n.carSharingFieldModel)),
+        AppTextField(controller: _model, decoration: InputDecoration(labelText: l10n.carSharingFieldModel)),
         const SizedBox(height: 12),
-        TextField(controller: _color, decoration: InputDecoration(labelText: l10n.carSharingFieldColor)),
+        AppTextField(controller: _color, decoration: InputDecoration(labelText: l10n.carSharingFieldColor)),
         const SizedBox(height: 12),
-        TextField(
+        AppTextField(
           controller: _year,
           decoration: InputDecoration(labelText: l10n.carSharingFieldYear),
           keyboardType: TextInputType.number,
@@ -340,7 +341,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
           ),
           const SizedBox(height: 12),
         ],
-        TextField(
+        AppTextField(
           controller: _coNameControllers[i],
           decoration: InputDecoration(labelText: l10n.housingPlanParticipantNameLabel),
           onChanged: (_) {
@@ -429,36 +430,36 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        TextField(
+        AppTextField(
           controller: _estimatedValue,
           decoration: InputDecoration(labelText: l10n.carSharingEstimatedValueLabel),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: 16),
-        TextField(controller: _photoFront, decoration: InputDecoration(labelText: l10n.carSharingPhotoFront)),
+        AppTextField(controller: _photoFront, decoration: InputDecoration(labelText: l10n.carSharingPhotoFront)),
         const SizedBox(height: 8),
-        TextField(controller: _photoLeft, decoration: InputDecoration(labelText: l10n.carSharingPhotoLeft)),
+        AppTextField(controller: _photoLeft, decoration: InputDecoration(labelText: l10n.carSharingPhotoLeft)),
         const SizedBox(height: 8),
-        TextField(controller: _photoRight, decoration: InputDecoration(labelText: l10n.carSharingPhotoRight)),
+        AppTextField(controller: _photoRight, decoration: InputDecoration(labelText: l10n.carSharingPhotoRight)),
         const SizedBox(height: 8),
-        TextField(controller: _photoRear, decoration: InputDecoration(labelText: l10n.carSharingPhotoRear)),
+        AppTextField(controller: _photoRear, decoration: InputDecoration(labelText: l10n.carSharingPhotoRear)),
         const SizedBox(height: 8),
-        TextField(
+        AppTextField(
           controller: _photoSeatsFront,
           decoration: InputDecoration(labelText: l10n.carSharingPhotoSeatsFront),
         ),
         const SizedBox(height: 8),
-        TextField(
+        AppTextField(
           controller: _photoSeatsRear,
           decoration: InputDecoration(labelText: l10n.carSharingPhotoSeatsRear),
         ),
         const SizedBox(height: 8),
-        TextField(
+        AppTextField(
           controller: _photoDashboard,
           decoration: InputDecoration(labelText: l10n.carSharingPhotoDashboard),
         ),
         const SizedBox(height: 8),
-        TextField(
+        AppTextField(
           controller: _photoOdometer,
           decoration: InputDecoration(labelText: l10n.carSharingPhotoOdometer),
         ),
@@ -575,7 +576,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
           const SizedBox(height: 8),
           Text(l10n.carSharingFuelCustomHint, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
-          TextField(
+          AppTextField(
             controller: _fuelCustom,
             minLines: 4,
             maxLines: 10,
@@ -690,12 +691,12 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  AppTextField(
                     controller: titleCtrl,
                     decoration: InputDecoration(labelText: d10n.housingAgreementRuleCustomTitleLabel),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  AppTextField(
                     controller: bodyCtrl,
                     decoration: InputDecoration(
                       labelText: d10n.housingAgreementRuleCustomBodyLabel,
@@ -910,12 +911,12 @@ class _AddCarMaintenanceDialogState extends State<_AddCarMaintenanceDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            AppTextField(
               controller: _title,
               decoration: InputDecoration(labelText: l10n.carSharingMaintenanceTitleLabel),
             ),
             const SizedBox(height: 12),
-            TextField(
+            AppTextField(
               controller: _amount,
               decoration: InputDecoration(labelText: l10n.carSharingMaintenanceAmountLabel),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),

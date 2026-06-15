@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_amount_parse.dart';
@@ -12,6 +13,7 @@ import '../../housing/realized_expense/realized_expense_repository.dart';
 import '../../housing/realized_expense/realized_expense_status.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../prefs/regional_unit_choices.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../util/week_start_calendar.dart';
@@ -137,7 +139,7 @@ class _HousingRealizedExpenseFormScreenState
     return _FormContext(
       planLines: lines,
       participants: participants,
-      currency: currency.isNotEmpty ? currency : 'CAD',
+      currency: currency.isNotEmpty ? currency : kDefaultCurrencyCode,
       periodStart: agreement.periodStart,
       periodEnd: agreement.periodEnd,
       prefs: prefs,
@@ -504,7 +506,7 @@ class _HousingRealizedExpenseFormScreenState
                 ],
                 if (showDescriptionField) ...[
                   const SizedBox(height: 16),
-                  TextField(
+                  AppTextField(
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: l10n.housingRealizedExpenseTransferDescription,
@@ -512,7 +514,6 @@ class _HousingRealizedExpenseFormScreenState
                     ),
                     minLines: 3,
                     maxLines: 5,
-                    textCapitalization: TextCapitalization.sentences,
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -520,11 +521,14 @@ class _HousingRealizedExpenseFormScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: AppTextField(
                         controller: _amountController,
                         decoration: InputDecoration(
                           labelText: l10n.housingRealizedExpenseAmount,
-                          suffixText: ctx.currency,
+                          suffixText: currencyDisplaySymbol(
+                            context,
+                            ctx.currency,
+                          ),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,

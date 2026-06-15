@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -306,7 +307,7 @@ class _SplitRowState extends State<_SplitRow> {
         children: [
           Expanded(
             flex: 2,
-            child: TextField(
+            child: AppTextField(
               controller: _amountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
@@ -342,7 +343,7 @@ class _SplitRowState extends State<_SplitRow> {
           const SizedBox(width: 8),
           Expanded(
             flex: 2,
-            child: TextField(
+            child: AppTextField(
               controller: _pctCtrl,
               textAlign: TextAlign.end,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),

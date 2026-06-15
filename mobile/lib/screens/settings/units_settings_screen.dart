@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../data/supported_currencies.dart';
 import '../../data/supported_time_zones.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -16,11 +15,6 @@ class UnitsSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currency = prefs.currency.isEmpty
-        ? l10n.commonNotSet
-        : (supportedCurrencyByCode(prefs.currency)?.displayLine ??
-              prefs.currency);
-
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsUnitsTitle)),
       body: ListenableBuilder(
@@ -39,12 +33,6 @@ class UnitsSettingsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.settingsCurrencyTitle),
-                subtitle: Text(currency),
-              ),
-              const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 key: ValueKey(dateFmt),
                 isExpanded: true,

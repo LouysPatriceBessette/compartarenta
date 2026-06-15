@@ -89,12 +89,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           ListTile(
-            title: Text(l10n.settingsAboutTitle),
-            subtitle: Text(l10n.settingsAboutSubtitle),
+            title: Text(l10n.helpFaqTitle),
+            subtitle: Text(l10n.helpFaqIntro),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/about'),
+            onTap: () => context.push('/help/faq'),
           ),
-          const Divider(),
           ListTile(
             title: Text(l10n.settingsPrivacyPolicyTitle),
             subtitle: Text(_privacyPolicyUrl.toString()),
@@ -104,6 +103,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mode: LaunchMode.externalApplication,
               );
             },
+          ),
+          ListTile(
+            title: Text(l10n.settingsAboutTitle),
+            subtitle: Text(l10n.settingsAboutSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/about'),
           ),
           if (showDevTools) ...[
             const Divider(),

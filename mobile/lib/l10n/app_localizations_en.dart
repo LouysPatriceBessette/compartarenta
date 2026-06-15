@@ -121,7 +121,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsUnitsTitle => 'Units';
 
   @override
-  String get settingsUnitsSubtitle => 'Currency, date format, and distance';
+  String get settingsUnitsSubtitle => 'Various unit formats';
 
   @override
   String get settingsAboutTitle => 'About';
@@ -277,18 +277,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingWelcomeTitle => 'Welcome';
 
   @override
-  String get onboardingWelcomeCopyShort =>
-      'Thanks for trying Compartarenta.\n\nThe app is free as long as it isn’t actively used. During this phase, you can configure your expense-sharing plan as precisely as you need. This plan will serve as a proposed agreement to share with one or more people.\n\nOnce your plan is accepted and put into service, the 6‑week free trial begins.';
+  String get onboardingWelcomeIntro =>
+      'Compartarenta is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.';
 
   @override
-  String get onboardingReadLater => 'Read later';
+  String get onboardingWelcomeConfidentialTitle => 'Confidential';
 
   @override
-  String get onboardingWelcomeMoreTitle => 'About the trial and license';
-
-  @override
-  String get onboardingWelcomeCopyLong =>
-      'At the end of the trial, you and your partners can choose to continue by purchasing a \$4 license per person. Each participant in the plan must have a license.\n\nThis license funds development and maintenance. There will NEVER be ads in the app.\n\nYour data is not used in any way: it stays on your device (and the participants’ devices) and nowhere else. The data belongs to you.\n\nIf you don’t renew the license, you won’t be able to add new data, but you will be able to export existing data.';
+  String get onboardingWelcomeConfidentialBody =>
+      'Finally, real privacy. You can enter your data without any worry. No one other than you and your roommates will have access. This is not just a promise—it is a demonstrable fact. All of the app’s code is public and can be inspected and audited.\n\nThis does imply an important trade-off: there is no way to recover your data if you lose it (loss, theft, or breakage of your device). The app includes an import/export feature that is strongly suggested to use periodically to keep a backup. You are free to put the exported file wherever you want. Securing that backup is your responsibility.';
 
   @override
   String get onboardingOk => 'OK';
@@ -365,9 +362,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeModuleHousing => 'Housing';
-
-  @override
-  String get homeModulePersonalBudget => 'Personal budget';
 
   @override
   String get homeModuleVehicle => 'Vehicle';

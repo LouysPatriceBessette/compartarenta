@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/app_text_field.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../../prefs/app_preferences.dart';
@@ -74,7 +75,7 @@ class _OnboardingProfileStepState extends State<OnboardingProfileStep> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          TextField(
+          AppTextField(
             controller: _name,
             decoration: InputDecoration(
               labelText: l10n.onboardingNameLabel,

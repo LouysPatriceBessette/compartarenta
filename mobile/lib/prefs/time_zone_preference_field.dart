@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_text_field.dart';
 
 import '../data/supported_time_zones.dart';
 import '../l10n/app_localizations.dart';
@@ -98,7 +99,7 @@ class _TimeZonePreferenceFieldState extends State<TimeZonePreferenceField> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return TextFormField(
+    return AppTextFormField(
       readOnly: true,
       canRequestFocus: false,
       controller: _controller,

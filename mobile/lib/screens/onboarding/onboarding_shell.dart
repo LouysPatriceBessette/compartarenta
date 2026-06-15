@@ -4,12 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../prefs/app_preferences.dart';
 import '../../l10n/app_localizations.dart';
-import 'steps/onboarding_preferences_step.dart';
 import 'steps/onboarding_profile_step.dart';
 import 'steps/onboarding_language_step.dart';
 import 'steps/onboarding_splash_step.dart';
 import 'steps/onboarding_welcome_step.dart';
-import 'steps/onboarding_welcome_more_step.dart';
 
 String nextOnboardingLocation(AppPreferences prefs) {
   if (prefs.onboardingStep == null || prefs.onboardingStep == 'splash') {
@@ -19,17 +17,12 @@ String nextOnboardingLocation(AppPreferences prefs) {
     return '/onboarding/language';
   }
   if (!prefs.onboardingWelcomeDone) {
-    return prefs.onboardingStep == 'welcome_more'
-        ? '/onboarding/welcome_more'
-        : '/onboarding/welcome';
+    return '/onboarding/welcome';
   }
   if (!prefs.hasProfile) {
     return '/onboarding/profile';
   }
-  if (!prefs.hasRegionalPrefs) {
-    return '/onboarding/preferences';
-  }
-  return '/onboarding/preferences';
+  return '/onboarding/profile';
 }
 
 class OnboardingShell extends StatelessWidget {
@@ -68,20 +61,7 @@ class OnboardingShell extends StatelessWidget {
         break;
       case 'welcome':
         child = OnboardingWelcomeStep(
-          onContinue: () {
-            prefs.setOnboardingStep('welcome_more');
-            context.go('/onboarding/welcome_more');
-          },
-          onReadLater: () {
-            prefs.setOnboardingWelcomeDone(true);
-            prefs.setOnboardingStep('profile');
-            context.go(nextOnboardingLocation(prefs));
-          },
-        );
-        break;
-      case 'welcome_more':
-        child = OnboardingWelcomeMoreStep(
-          onOk: () async {
+          onContinue: () async {
             await prefs.setOnboardingWelcomeDone(true);
             await prefs.setOnboardingStep('profile');
             if (context.mounted) context.go(nextOnboardingLocation(prefs));
@@ -92,15 +72,6 @@ class OnboardingShell extends StatelessWidget {
         child = OnboardingProfileStep(
           prefs: prefs,
           onContinue: () async {
-            await prefs.setOnboardingStep('preferences');
-            if (context.mounted) context.go(nextOnboardingLocation(prefs));
-          },
-        );
-        break;
-      case 'preferences':
-        child = OnboardingPreferencesStep(
-          prefs: prefs,
-          onFinish: () async {
             await prefs.completeOnboarding();
             if (context.mounted) context.go('/');
           },
@@ -121,4 +92,3 @@ class OnboardingShell extends StatelessWidget {
     );
   }
 }
-

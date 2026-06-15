@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
@@ -790,7 +791,7 @@ class _HousingInviteProposalScreenState
                           child: Text(l10n.housingInviteRejectBlock),
                         ),
                       ] else if (canRespond) ...[
-                        TextField(
+                        AppTextField(
                           controller: _negotiateController,
                           minLines: 3,
                           maxLines: 8,

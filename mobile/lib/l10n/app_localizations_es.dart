@@ -120,7 +120,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsUnitsTitle => 'Unidades';
 
   @override
-  String get settingsUnitsSubtitle => 'Moneda, formato de fecha y distancia';
+  String get settingsUnitsSubtitle => 'Varios formatos de unidades';
 
   @override
   String get settingsAboutTitle => 'Acerca de';
@@ -279,18 +279,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingWelcomeTitle => 'Bienvenido';
 
   @override
-  String get onboardingWelcomeCopyShort =>
-      'Gracias por probar Compartarenta.\n\nLa aplicación es gratis mientras no se use de forma efectiva. Durante esta fase, puedes configurar tu plan de reparto de gastos con todo el detalle que necesites. Este plan servirá como propuesta de acuerdo para compartir con una o más personas.\n\nUna vez que tu plan sea aceptado y se ponga en servicio, comienza la prueba gratuita de 6 semanas.';
+  String get onboardingWelcomeIntro =>
+      'Compartarenta es una aplicación desarrollada para ayudar a los compañeros de piso a llevarse mejor.\n\nAl usar esta aplicación, evitarás malentendidos, olvidos y errores de cálculo que a menudo generan conflictos. Para sacarle el máximo partido, introduce los datos a medida que se conozcan.';
 
   @override
-  String get onboardingReadLater => 'Leer más tarde';
+  String get onboardingWelcomeConfidentialTitle => 'Confidencial';
 
   @override
-  String get onboardingWelcomeMoreTitle => 'Sobre la prueba y la licencia';
-
-  @override
-  String get onboardingWelcomeCopyLong =>
-      'Al finalizar la prueba, tú y tus socios podéis continuar comprando una licencia de 4 \$ por persona. Cada participante del plan debe tener una licencia.\n\nEsta licencia financia el desarrollo y el mantenimiento. NUNCA habrá anuncios en la aplicación.\n\nTus datos no se usan de ninguna forma: permanecen en tu dispositivo (y en los dispositivos de los participantes) y en ningún otro lugar. Los datos te pertenecen.\n\nSi no renuevas la licencia, no podrás añadir datos nuevos, pero podrás exportar los datos existentes.';
+  String get onboardingWelcomeConfidentialBody =>
+      'Por fin, una verdadera confidencialidad. Puedes introducir tus datos sin ningún temor. Nadie más que tú y tus compañeros de piso tendrá acceso. Esta afirmación no es una simple promesa: es un hecho demostrable. Todo el código de la aplicación es público y puede inspeccionarse y auditarse.\n\nEsto implica, sin embargo, un compromiso importante: no hay forma de recuperar tus datos si los pierdes (pérdida, robo o rotura de tu dispositivo). La aplicación incluye una función de importación/exportación de datos que se recomienda encarecidamente usar periódicamente para conservar una copia de seguridad. Eres libre de guardar el archivo exportado donde quieras. La custodia segura de esa copia será tu responsabilidad.';
 
   @override
   String get onboardingOk => 'OK';
@@ -367,9 +364,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get homeModuleHousing => 'Vivienda';
-
-  @override
-  String get homeModulePersonalBudget => 'Presupuesto personal';
 
   @override
   String get homeModuleVehicle => 'Vehículo';

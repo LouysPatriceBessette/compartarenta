@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_amount_parse.dart';
@@ -197,7 +198,7 @@ class _HousingInactiveSettlementFormScreenState
             ),
           ),
           const SizedBox(height: 24),
-          TextField(
+          AppTextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(
               signed: true,

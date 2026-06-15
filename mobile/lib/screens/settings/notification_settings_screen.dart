@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_permission_gate.dart';
@@ -285,7 +286,7 @@ class _NotificationSettingsScreenState
               widget.prefs.notificationCountryStatisticsEnabled)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: TextFormField(
+              child: AppTextFormField(
                 key: const ValueKey('countryStatsCountryField'),
                 readOnly: true,
                 canRequestFocus: false,

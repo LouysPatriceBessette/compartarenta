@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_text_field.dart';
 
 import '../data/supported_time_zones.dart';
 import '../l10n/app_localizations.dart';
@@ -99,13 +100,14 @@ class _TimeZonePickerBodyState extends State<_TimeZonePickerBody> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
+              child: AppTextField(
                 controller: _query,
                 decoration: InputDecoration(
                   hintText: l10n.prefsTimeZoneSearchHint,
                   prefixIcon: const Icon(Icons.search),
                 ),
                 textInputAction: TextInputAction.search,
+                textCapitalization: TextCapitalization.none,
                 autofocus: true,
               ),
             ),

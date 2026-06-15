@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
@@ -620,7 +621,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.housingAmendmentRejectTitle),
-          content: TextField(
+          content: AppTextField(
             controller: controller,
             decoration: InputDecoration(
               labelText: l10n.housingAmendmentRejectMessageLabel,

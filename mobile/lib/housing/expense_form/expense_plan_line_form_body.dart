@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'expense_plan_line_view_data.dart';
@@ -137,7 +138,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        TextField(
+        AppTextField(
           controller: titleController,
           decoration: InputDecoration(
             labelText: l10n.housingExpenseNameLabel,
@@ -156,7 +157,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        TextField(
+        AppTextField(
           controller: descriptionController,
           decoration: InputDecoration(
             labelText: l10n.housingPlanExpenseDescriptionLabel,
@@ -210,7 +211,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        TextField(
+        AppTextField(
           controller: amountController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(

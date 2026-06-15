@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../debug/local_storage_startup_log.dart';
 import '../debug/web_dev_host_session.dart';
+import 'regional_unit_choices.dart';
+import 'time_zone_policy_field.dart';
 import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
@@ -73,7 +75,9 @@ class AppPreferences extends ChangeNotifier {
 
   static Future<AppPreferences> load() async {
     final prefs = await _loadSharedPreferencesWithRetry();
-    return AppPreferences._(prefs);
+    final appPrefs = AppPreferences._(prefs);
+    await appPrefs._reconcileOnboardingAfterProfileOnly();
+    return appPrefs;
   }
 
   static Future<SharedPreferences> _loadSharedPreferencesWithRetry() async {
@@ -326,9 +330,33 @@ class AppPreferences extends ChangeNotifier {
   }
 
   bool get hasProfile => displayName.isNotEmpty && avatarId.isNotEmpty;
-  bool get hasRegionalPrefs =>
-      currency.isNotEmpty && dateFormat.isNotEmpty && distanceUnit != null;
   bool get hasPlanSelection => planTypes.isNotEmpty;
+
+  /// Regional defaults used when onboarding completes (see [applyDefaultRegionalPrefsIfUnset]).
+  Future<void> applyDefaultRegionalPrefsIfUnset() async {
+    if (currency.isEmpty) {
+      await setCurrency(kDefaultCurrencyCode);
+    }
+    if (dateFormat.isEmpty) {
+      await setDateFormat(kDefaultDateFormat);
+    }
+    if (distanceUnit == null) {
+      await setDistanceUnit(DistanceUnit.km);
+    }
+    if (weekStart == null) {
+      await setWeekStart(WeekStart.sunday);
+    }
+    if (_prefs.getString(_kTimeZonePolicy) == null) {
+      await setTimeZonePolicy(kTimeZonePolicyDevice);
+      await setTimeZoneId(null);
+    }
+  }
+
+  /// Users who finished profile before the removed preferences step.
+  Future<void> _reconcileOnboardingAfterProfileOnly() async {
+    if (onboardingComplete || !hasProfile) return;
+    await completeOnboarding();
+  }
 
   bool get housingDefaultPlanSummaryReached =>
       _prefs.getBool(_kHousingDefaultSummaryReached) ?? false;
@@ -383,6 +411,7 @@ class AppPreferences extends ChangeNotifier {
   }
 
   Future<void> completeOnboarding() async {
+    await applyDefaultRegionalPrefsIfUnset();
     await _prefs.setBool(_kOnboardingComplete, true);
     await _prefs.remove(_kOnboardingStep);
     await _prefs.remove(_kOnboardingLanguageDone);

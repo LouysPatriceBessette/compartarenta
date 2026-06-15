@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_text_field.dart';
 
 import '../data/supported_currencies.dart';
 
@@ -75,13 +76,14 @@ class _CurrencyPickerBodyState extends State<_CurrencyPickerBody> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
+              child: AppTextField(
                 controller: _query,
                 decoration: InputDecoration(
                   hintText: widget.searchHint,
                   prefixIcon: const Icon(Icons.search),
                 ),
                 textInputAction: TextInputAction.search,
+                textCapitalization: TextCapitalization.none,
                 autofocus: true,
               ),
             ),

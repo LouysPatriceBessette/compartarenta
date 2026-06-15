@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../contacts/contact_display.dart';
@@ -30,6 +31,7 @@ import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
+import '../../prefs/regional_unit_choices.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/week_start_calendar.dart';
@@ -388,7 +390,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         title: drift.Value(l10n.homeHousingPlan),
         currency: drift.Value(
           widget.prefs.currency.trim().isEmpty
-              ? 'CAD'
+              ? kDefaultCurrencyCode
               : widget.prefs.currency.trim(),
         ),
         notes: const drift.Value.absent(),
@@ -2122,7 +2124,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         ? 0
         : lines.map((e) => e.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
     final currency = widget.prefs.currency.trim().isEmpty
-        ? 'CAD'
+        ? kDefaultCurrencyCode
         : widget.prefs.currency.trim();
     final saved = await Navigator.of(context, rootNavigator: true).push<bool>(
       MaterialPageRoute<bool>(
@@ -2183,7 +2185,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         controlAffinity: ListTileControlAffinity.leading,
       ),
       if (_withdrawalSameForAll) ...[
-        TextField(
+        AppTextField(
           controller: _globalNotice,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
@@ -2191,14 +2193,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           ),
           onChanged: (_) => setState(() {}),
         ),
-        TextField(
+        AppTextField(
           controller: _globalPenalty,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
           onChanged: (_) => setState(() {}),
         ),
       ] else ...[
-        TextField(
+        AppTextField(
           controller: _perParticipantNotice[_withdrawalParticipantIndex],
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
@@ -2206,7 +2208,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           ),
           onChanged: (_) => setState(() {}),
         ),
-        TextField(
+        AppTextField(
           controller: _perParticipantPenalty[_withdrawalParticipantIndex],
           keyboardType: TextInputType.number,
           decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
@@ -2840,7 +2842,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              AppTextField(
                 controller: _buildingRulesBody,
                 maxLines: 8,
                 minLines: 4,
@@ -2930,14 +2932,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              AppTextField(
                 controller: _customRuleEditTitle,
                 decoration: InputDecoration(
                   labelText: l10n.housingAgreementRuleCustomTitleLabel,
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
+              AppTextField(
                 controller: _customRuleEditBody,
                 decoration: InputDecoration(
                   labelText: l10n.housingAgreementRuleCustomBodyLabel,
@@ -3072,14 +3074,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
+              AppTextField(
                 controller: _suggestionEditTitle,
                 decoration: InputDecoration(
                   labelText: l10n.housingAgreementRuleCustomTitleLabel,
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
+              AppTextField(
                 controller: _suggestionEditBody,
                 decoration: InputDecoration(
                   labelText: l10n.housingAgreementRuleCustomBodyLabel,
@@ -3141,14 +3143,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  AppTextField(
                     controller: titleCtrl,
                     decoration: InputDecoration(
                       labelText: d10n.housingAgreementRuleCustomTitleLabel,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  AppTextField(
                     controller: bodyCtrl,
                     decoration: InputDecoration(
                       labelText: d10n.housingAgreementRuleCustomBodyLabel,

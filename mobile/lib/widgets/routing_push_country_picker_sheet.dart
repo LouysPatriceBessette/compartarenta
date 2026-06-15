@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_text_field.dart';
 
 import '../util/routing_push_country_codes.dart';
 
@@ -107,13 +108,14 @@ class _RoutingPushCountryPickerBodyState
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
+              child: AppTextField(
                 controller: _query,
                 decoration: InputDecoration(
                   hintText: widget.searchHint,
                   prefixIcon: const Icon(Icons.search),
                 ),
                 textInputAction: TextInputAction.search,
+                textCapitalization: TextCapitalization.none,
                 autofocus: true,
               ),
             ),

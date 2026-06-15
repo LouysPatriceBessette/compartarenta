@@ -48,9 +48,6 @@ class HomeScreen extends StatelessWidget {
               ? ((contentW - gap) / 2).clamp(0.0, double.infinity)
               : contentW;
 
-          /// Material Icons does not expose `Icons.finance` in this SDK; `savings`
-          /// is the closest bundled match to the Material Symbol “Finance”.
-          const IconData budgetIcon = Icons.savings;
 
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
@@ -77,15 +74,6 @@ class HomeScreen extends StatelessWidget {
                     icon: MdiIcons.homeCity,
                     label: l10n.homeModuleHousing,
                     onTap: () => context.push('/housing'),
-                  ),
-                ),
-                SizedBox(
-                  width: moduleTileW,
-                  child: _HomeActionCard(
-                    icon: budgetIcon,
-                    label: l10n.homeModulePersonalBudget,
-                    onTap: showComingSoon,
-                    enabled: false,
                   ),
                 ),
                 SizedBox(

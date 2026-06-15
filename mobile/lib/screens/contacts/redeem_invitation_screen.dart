@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_text_field.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -357,7 +358,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              TextField(
+              AppTextField(
                 controller: _controller,
                 decoration: InputDecoration(
                   labelText: l10n.contactsEnterInviteCodeFieldLabel,
@@ -370,6 +371,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                   ),
                 ),
                 onChanged: (_) => _validate(),
+                textCapitalization: TextCapitalization.none,
                 style: const TextStyle(
                   fontFamily: 'monospace',
                   fontFeatures: [FontFeature.tabularFigures()],
