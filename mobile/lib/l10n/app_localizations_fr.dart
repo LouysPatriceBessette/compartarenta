@@ -1435,6 +1435,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get housingPlanParticipantMustBeConnectedContact =>
+      'Chaque co-participant doit être un contact connecté sur cet appareil avant l\'envoi de la proposition.';
+
+  @override
   String get housingInviteResponseDeadlineTitle => 'Fin du délai de réponse :';
 
   @override
@@ -2823,6 +2827,50 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get housingParticipationChangeEjectionAction =>
       'Je veux éjecter un participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantAction =>
+      'Je veux inviter un participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantTitle =>
+      'Inviter un participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantBody =>
+      'Ajouter quelqu\'un à une entente active exige de terminer le plan actuel et d\'en négocier un nouveau avec le consentement de tous. Consultez la FAQ pour le pourquoi.';
+
+  @override
+  String get housingParticipationChangeInviteParticipantFaqLink =>
+      'Consulter la FAQ';
+
+  @override
+  String get helpFaqTitle => 'Foire aux questions';
+
+  @override
+  String get helpFaqIntro =>
+      'Réponses aux questions fréquentes sur le fonctionnement de Compartarenta.';
+
+  @override
+  String get helpFaqHousingInviteParticipantTitle =>
+      'Pourquoi ne puis-je pas inviter quelqu\'un au plan actuel ?';
+
+  @override
+  String get helpFaqHousingInviteParticipantBody =>
+      'Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C\'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu\'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D\'ici là, l\'application conserve une entente stable pour tous.';
+
+  @override
+  String get housingVoteRefusedByAgreementExpiration =>
+      'Refusé par expiration de l\'entente';
+
+  @override
+  String get contactsDisconnectBlockedByPlansTitle =>
+      'Impossible de déconnecter ce contact pour l\'instant';
+
+  @override
+  String contactsDisconnectBlockedByPlansBody(String plans) {
+    return 'Ce contact fait partie d\'une entente active ou d\'un vote ouvert sur cet appareil : $plans. Terminez ou réglez cette activité avant de déconnecter.';
+  }
 
   @override
   String get housingParticipationChangeConfirmAction => 'Oui';

@@ -25,6 +25,11 @@
 - WHEN membership is `departed` THEN hub title uses **Past agreement** with departure date in range.
 - WHEN participation change is pending THEN show dark-red banner below amendment banner if both exist.
 
+### Case #4 — Invite participant (guidance only)
+
+- WHEN the user taps **I want to invite a participant** on Major change THEN an explanatory dialog opens (termination required + FAQ link).
+- The app SHALL NOT start an in-app add-participant negotiation flow from this entry (product decision: terminate current plan first).
+
 ## Constraints
 
 - At most one `pending` participation change per plan.

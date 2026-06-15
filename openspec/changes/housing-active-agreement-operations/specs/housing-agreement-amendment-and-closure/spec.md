@@ -56,10 +56,18 @@ The following MUST NOT be offered as in-force amendment types:
 
 These require **ending** the current agreement (per product closure rules) and creating a **new** proposal package (new negotiation cycle). The new plan MAY **fork** from the active snapshot to avoid manual re-entry (`housing-plan-proposal-offer-flow` fork lineage).
 
+The **Major change** screen SHALL offer **I want to invite a participant** as **guidance only** (dialog + FAQ): it explains that termination is required and does not start an in-app add-participant negotiation.
+
 #### Scenario: Add roommate blocked in amendment wizard
 
 - **WHEN** the user attempts to add a participant from amendment entry
 - **THEN** the app directs them to end agreement and start a new plan
+
+#### Scenario: Invite participant from Major change shows FAQ guidance
+
+- **WHEN** the user taps **I want to invite a participant** on Major change
+- **THEN** the app shows an explanatory dialog with a link to the FAQ section on why termination is required
+- **AND** no add-participant fork or send flow starts from that button
 
 ---
 

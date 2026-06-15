@@ -539,6 +539,7 @@
   "housingInvitePeriodOverlapTitle": "Conflit de période d'accord",
   "housingInvitePeriodOverlapBody": "Cet accord chevauche plus d'un jour calendaire avec un autre plan logement où vous êtes participant. Modifiez les dates ou réglez l'autre plan avant d'envoyer.",
   "housingInvitePeriodOverlapDetail": "Cet accord chevauche plus d'un jour calendaire avec « {planTitle} » ({dateRange}). Modifiez les dates ou réglez ce plan avant d'envoyer.",
+  "housingPlanParticipantMustBeConnectedContact": "Chaque co-participant doit être un contact connecté sur cet appareil avant l'envoi de la proposition.",
   "housingInviteResponseDeadlineTitle": "Fin du délai de réponse :",
   "housingInviteResponseDeadlineInDays": "{count, plural, one{Dans 1 jour} other{Dans {count} jours}}",
   "@housingInviteResponseDeadlineInDays": {
@@ -1118,6 +1119,22 @@
   "housingParticipationChangeTerminationAction": "Mettre un terme à l'entente immédiatement",
   "housingParticipationChangeWithdrawalAction": "Je veux me retirer de l'entente",
   "housingParticipationChangeEjectionAction": "Je veux éjecter un participant",
+  "housingParticipationChangeInviteParticipantAction": "Je veux inviter un participant",
+  "housingParticipationChangeInviteParticipantTitle": "Inviter un participant",
+  "housingParticipationChangeInviteParticipantBody": "Ajouter quelqu'un à une entente active exige de terminer le plan actuel et d'en négocier un nouveau avec le consentement de tous. Consultez la FAQ pour le pourquoi.",
+  "housingParticipationChangeInviteParticipantFaqLink": "Consulter la FAQ",
+  "helpFaqTitle": "Foire aux questions",
+  "helpFaqIntro": "Réponses aux questions fréquentes sur le fonctionnement de Compartarenta.",
+  "helpFaqHousingInviteParticipantTitle": "Pourquoi ne puis-je pas inviter quelqu'un au plan actuel ?",
+  "helpFaqHousingInviteParticipantBody": "Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D'ici là, l'application conserve une entente stable pour tous.",
+  "housingVoteRefusedByAgreementExpiration": "Refusé par expiration de l'entente",
+  "contactsDisconnectBlockedByPlansTitle": "Impossible de déconnecter ce contact pour l'instant",
+  "contactsDisconnectBlockedByPlansBody": "Ce contact fait partie d'une entente active ou d'un vote ouvert sur cet appareil : {plans}. Terminez ou réglez cette activité avant de déconnecter.",
+  "@contactsDisconnectBlockedByPlansBody": {
+    "placeholders": {
+      "plans": {"type": "String"}
+    }
+  },
   "housingParticipationChangeConfirmAction": "Oui",
   "housingParticipationChangeTerminationConfirmTitle": "Terminer l'entente immédiatement ?",
   "housingParticipationChangeTerminationConfirmBody": "Tous les participants devront accepter. L'entente sera close pour tous si la demande est acceptée à l'unanimité.",

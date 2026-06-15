@@ -1,5 +1,6 @@
 import '../../db/app_database.dart';
 import '../proposals/housing_proposal_transport_service.dart';
+import '../proposals/housing_agreement_expiration_vote_settlement.dart';
 import '../realized_expense/realized_expense_participants.dart';
 import 'housing_participation_change_kind.dart';
 import 'housing_participation_change_service.dart';
@@ -75,6 +76,7 @@ class HousingParticipationHubGates {
     final changeSvc = HousingParticipationChangeService(db);
     final appliedChangeId =
         await changeSvc.applyDueVoluntaryWithdrawalsReturningId(planId);
+    await settleExpiredAgreementVotes(db);
     final pending = await changeSvc.pendingForPlan(planId);
     final amendmentPending =
         await HousingProposalTransportService(db).hasPendingAmendmentForUi(

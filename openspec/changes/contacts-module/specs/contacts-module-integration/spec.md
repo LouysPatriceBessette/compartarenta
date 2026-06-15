@@ -41,6 +41,13 @@ A Contact whose kind is `local-only` SHALL NOT appear in module participant pick
 - **WHEN** a plan still references a migration-created or demoted local-only Contact as a co-participant
 - **THEN** the module SHALL block advancing or saving until the user replaces that slot with a connected Contact (or otherwise satisfies the module's validation), without silently treating the person as a full relay participant
 
+### Requirement: Proposals and activation require connected contacts only
+Housing (and other relay-backed modules) SHALL reject **send**, **final accept**, and **activation** when any co-participant row references a contact that is not `kind == connected` with relay routing material. Stubs, disconnected, and local-only rows MUST NOT appear in authoritative roster slots at send or activation time.
+
+#### Scenario: Send blocked without connected peer
+- **WHEN** a housing draft lists a co-participant whose contact is not connected on the author device
+- **THEN** send is blocked before any relay POST
+
 ### Requirement: Module participant rows do not embed mutable identity fields
 After adoption, a module's participant row SHALL embed only:
 - the Contact identifier (reference),

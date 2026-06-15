@@ -9,6 +9,10 @@
 - [x] Navigation intent + push notifications
 - [x] l10n fr/en/es
 - [x] Unit tests (ratio redistribution, hub gates)
+- [x] Major change invite-participant guidance dialog + FAQ anchor
+- [x] Contact disconnect gate (active / vote-pending plans)
+- [x] Agreement overlap voluntary-withdrawal exception
+- [x] Agreement-end vote expiry settlement
 - [ ] Journal merge with amendments
 - [ ] Inactive settlement transfer UI + balance graph extension
 - [ ] Integration harness (3-participant happy paths)

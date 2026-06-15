@@ -2,9 +2,10 @@ import 'dart:convert';
 
 import '../../db/app_database.dart';
 import 'agreement_period_day_overlap.dart';
-import 'housing_plan_period_gate.dart';
+import 'housing_agreement_overlap_withdrawal_exception.dart';
 
-/// First other housing plan whose agreement period blocks [candidate] (≥2 shared days).
+/// First other housing plan whose agreement period blocks [candidate] (≥2 shared days),
+/// unless a qualifying voluntary withdrawal on the conflicting plan clears the overlap.
 Future<({String planId, String planTitle, DateTime start, DateTime end})?>
 findFirstAgreementPeriodConflict({
   required AppDatabase db,
@@ -17,19 +18,26 @@ findFirstAgreementPeriodConflict({
     excludePlanId: excludePlanId,
   );
   for (final entry in blocking) {
-    if (agreementPeriodsConflictByDayRule(
+    if (!agreementPeriodsConflictByDayRule(
       candidateStart,
       candidateEnd,
       entry.start,
       entry.end,
     )) {
-      return (
-        planId: entry.planId,
-        planTitle: entry.planTitle,
-        start: entry.start,
-        end: entry.end,
-      );
+      continue;
     }
+    final cleared = await qualifyingVoluntaryWithdrawalClearsOverlap(
+      db: db,
+      conflictingPlanId: entry.planId,
+      candidatePeriodStart: candidateStart,
+    );
+    if (cleared) continue;
+    return (
+      planId: entry.planId,
+      planTitle: entry.planTitle,
+      start: entry.start,
+      end: entry.end,
+    );
   }
   return null;
 }

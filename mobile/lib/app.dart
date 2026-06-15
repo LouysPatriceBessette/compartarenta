@@ -18,6 +18,7 @@ import 'screens/settings/notification_settings_screen.dart';
 import 'screens/settings/profile_identity_settings_screen.dart';
 import 'screens/settings/units_settings_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/help/help_faq_route.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_module_entry_screen.dart';
 import 'screens/car_sharing/car_sharing_plan_screen.dart';
@@ -362,6 +363,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
         path: '/settings/about',
         builder: (context, state) => AboutSettingsScreen(config: config),
       ),
+      helpFaqRoute(),
       GoRoute(
         path: '/housing',
         builder: (context, state) => HousingModuleEntryScreen(prefs: prefs),

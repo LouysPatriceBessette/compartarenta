@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../contacts/contact_module_anchor.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -281,6 +282,26 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   Future<void> _confirmAndDisconnect(Contact contact) async {
     final l10n = AppLocalizations.of(context);
+    final blocks = await listContactDisconnectBlocks(_db, contact.id);
+    if (!mounted) return;
+    if (blocks.isNotEmpty) {
+      final titles = blocks.map((b) => b.planTitle).toSet().join(', ');
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.contactsDisconnectBlockedByPlansTitle),
+          content: Text(l10n.contactsDisconnectBlockedByPlansBody(titles)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.commonDone),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final orchestrator = HandshakeOrchestrator.maybeInstance;
     if (orchestrator == null) {
       ScaffoldMessenger.of(context).showSnackBar(

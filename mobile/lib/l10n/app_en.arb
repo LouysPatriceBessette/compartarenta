@@ -608,6 +608,7 @@
       "dateRange": { "type": "String" }
     }
   },
+  "housingPlanParticipantMustBeConnectedContact": "Every co-participant must be a connected contact on this device before you can send the proposal.",
   "housingInviteResponseDeadlineTitle": "Response deadline:",
   "housingInviteResponseDeadlineInDays": "{count, plural, one{In 1 day} other{In {count} days}}",
   "@housingInviteResponseDeadlineInDays": {
@@ -1220,6 +1221,22 @@
   "housingParticipationChangeTerminationAction": "End the agreement immediately",
   "housingParticipationChangeWithdrawalAction": "I want to withdraw from the agreement",
   "housingParticipationChangeEjectionAction": "I want to eject a participant",
+  "housingParticipationChangeInviteParticipantAction": "I want to invite a participant",
+  "housingParticipationChangeInviteParticipantTitle": "Inviting a participant",
+  "housingParticipationChangeInviteParticipantBody": "Adding someone to an active agreement requires ending the current plan and starting a new one with everyone’s consent. Read why in the FAQ.",
+  "housingParticipationChangeInviteParticipantFaqLink": "Read the FAQ",
+  "helpFaqTitle": "Frequently asked questions",
+  "helpFaqIntro": "Answers to common questions about how Compartarenta works.",
+  "helpFaqHousingInviteParticipantTitle": "Why can’t I invite someone to the current plan?",
+  "helpFaqHousingInviteParticipantBody": "An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.",
+  "housingVoteRefusedByAgreementExpiration": "Refused — agreement expired",
+  "contactsDisconnectBlockedByPlansTitle": "Can't disconnect this contact yet",
+  "contactsDisconnectBlockedByPlansBody": "This contact is part of an active housing agreement or an open vote on this device: {plans}. Finish or resolve that plan activity before disconnecting.",
+  "@contactsDisconnectBlockedByPlansBody": {
+    "placeholders": {
+      "plans": {"type": "String"}
+    }
+  },
   "housingParticipationChangeConfirmAction": "Yes",
   "housingParticipationChangeTerminationConfirmTitle": "End the agreement immediately?",
   "housingParticipationChangeTerminationConfirmBody": "All participants must accept. The agreement closes for everyone if accepted unanimously.",

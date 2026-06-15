@@ -5,6 +5,9 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
+- [ ] **Housing balance chart — roster SVG overflow with inactive participants** (bug, minor).  
+  Active roster is capped at **8** participants because only eight due-split SVG layouts exist. When **inactive participants** retain non-zero balances, the UI may need to show **more than eight** balance rows; relying on the active-roster cap alone can overflow or hide labels. Revisit chart / legend layout when inactive settlement display lands (`housing_participation_change` inactive participant follow-up).
+
 - [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
 
 - [ ] **Housing — post-activation onboarding swiper** (deferred UX).  

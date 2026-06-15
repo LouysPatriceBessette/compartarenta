@@ -2506,6 +2506,12 @@ abstract class AppLocalizations {
   /// **'This agreement overlaps by more than one calendar day with “{planTitle}” ({dateRange}). Change the dates or resolve that plan before sending.'**
   String housingInvitePeriodOverlapDetail(String planTitle, String dateRange);
 
+  /// No description provided for @housingPlanParticipantMustBeConnectedContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Every co-participant must be a connected contact on this device before you can send the proposal.'**
+  String get housingPlanParticipantMustBeConnectedContact;
+
   /// No description provided for @housingInviteResponseDeadlineTitle.
   ///
   /// In en, this message translates to:
@@ -4795,6 +4801,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I want to eject a participant'**
   String get housingParticipationChangeEjectionAction;
+
+  /// No description provided for @housingParticipationChangeInviteParticipantAction.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to invite a participant'**
+  String get housingParticipationChangeInviteParticipantAction;
+
+  /// No description provided for @housingParticipationChangeInviteParticipantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inviting a participant'**
+  String get housingParticipationChangeInviteParticipantTitle;
+
+  /// No description provided for @housingParticipationChangeInviteParticipantBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding someone to an active agreement requires ending the current plan and starting a new one with everyone’s consent. Read why in the FAQ.'**
+  String get housingParticipationChangeInviteParticipantBody;
+
+  /// No description provided for @housingParticipationChangeInviteParticipantFaqLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the FAQ'**
+  String get housingParticipationChangeInviteParticipantFaqLink;
+
+  /// No description provided for @helpFaqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently asked questions'**
+  String get helpFaqTitle;
+
+  /// No description provided for @helpFaqIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers to common questions about how Compartarenta works.'**
+  String get helpFaqIntro;
+
+  /// No description provided for @helpFaqHousingInviteParticipantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why can’t I invite someone to the current plan?'**
+  String get helpFaqHousingInviteParticipantTitle;
+
+  /// No description provided for @helpFaqHousingInviteParticipantBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.'**
+  String get helpFaqHousingInviteParticipantBody;
+
+  /// No description provided for @housingVoteRefusedByAgreementExpiration.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused — agreement expired'**
+  String get housingVoteRefusedByAgreementExpiration;
+
+  /// No description provided for @contactsDisconnectBlockedByPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t disconnect this contact yet'**
+  String get contactsDisconnectBlockedByPlansTitle;
+
+  /// No description provided for @contactsDisconnectBlockedByPlansBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact is part of an active housing agreement or an open vote on this device: {plans}. Finish or resolve that plan activity before disconnecting.'**
+  String contactsDisconnectBlockedByPlansBody(String plans);
 
   /// No description provided for @housingParticipationChangeConfirmAction.
   ///

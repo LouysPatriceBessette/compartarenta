@@ -302,6 +302,13 @@ The app SHALL prevent a user from **(a)** **sending** (as proposer) a new housin
 - **WHEN** the user has several pending offers whose periods never share **two or more** days with any blocking interval
 - **THEN** they MAY view and respond while that revision is open without calendar-based blocking beyond this rule
 
+#### Scenario: Voluntary withdrawal on active plan clears overlap for final accept on another offer
+
+- **WHEN** the user participates in active plan **P** with a blocking interval that would conflict with received offer **Q** (≥ 2 shared calendar days)
+- **AND** the user has initiated **Major change → voluntary withdrawal** on **P** with departure date on or before **Q**'s proposed `periodStart` (local calendar)
+- **THEN** **final accept** on **Q** is **not** blocked by overlap with **P**
+- **AND** **send** of other proposals remains subject to the standard overlap gate until **P**'s blocking interval no longer conflicts
+
 ---
 
 ### Requirement: Fork lineage is mandatory in history and in new revision metadata

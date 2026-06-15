@@ -42,3 +42,10 @@ A newly accepted housing plan SHALL NOT become trial-eligible if any participati
 - **WHEN** a newly accepted housing plan includes at least one installation identity already marked `trial_consumed`
 - **THEN** that plan does not receive a new housing trial period
 
+### Requirement: Trial gate applies at proposal acceptance and import
+Before treating a **new** housing plan as trial-eligible, the client and entitlement service SHALL evaluate **every** participating installation identity in the accepted roster. If **any** identity has previously consumed housing trial eligibility (`trial_consumed`), the plan MUST NOT start a new housing trial.
+
+#### Scenario: New plan with a previously trialed co-participant
+- **WHEN** a housing plan reaches unanimous activation and at least one participant's installation already consumed housing trial
+- **THEN** no new trial period is created for that plan on any device
+

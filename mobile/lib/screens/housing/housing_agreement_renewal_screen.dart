@@ -9,8 +9,11 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
+import '../help/help_faq_screen.dart';
 
-/// Major change: immediate termination, voluntary withdrawal, or ejection.
+/// Major change: immediate termination, voluntary withdrawal, ejection, or
+/// invite-participant guidance.
 class HousingAgreementRenewalScreen extends StatefulWidget {
   const HousingAgreementRenewalScreen({
     super.key,
@@ -189,6 +192,33 @@ class _HousingAgreementRenewalScreenState
     );
   }
 
+  Future<void> _showInviteParticipantInfo() async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.housingParticipationChangeInviteParticipantTitle),
+        content: Text(l10n.housingParticipationChangeInviteParticipantBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonDone),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openHelpFaq(
+                context,
+                anchor: HelpFaqAnchors.housingInviteParticipant,
+              );
+            },
+            child: Text(l10n.housingParticipationChangeInviteParticipantFaqLink),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _confirmEjection() async {
     final l10n = AppLocalizations.of(context);
     final candidates =
@@ -276,7 +306,7 @@ class _HousingAgreementRenewalScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentRosterChangeTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: screenBodyScrollPadding(context),
         children: [
           Text(l10n.housingParticipationChangeIntroLine1),
           const SizedBox(height: 8),
@@ -304,6 +334,11 @@ class _HousingAgreementRenewalScreenState
                     ? null
                     : _confirmEjection,
             child: Text(l10n.housingParticipationChangeEjectionAction),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: _working ? null : _showInviteParticipantInfo,
+            child: Text(l10n.housingParticipationChangeInviteParticipantAction),
           ),
         ],
       ),

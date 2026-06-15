@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../contacts/contact_display.dart';
+import '../../contacts/contact_module_anchor.dart';
 import '../../db/app_database.dart';
 import '../../housing/agreement_rules_diff.dart';
 import '../../housing/agreement_rules_display.dart';
@@ -1133,6 +1134,20 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         ),
       );
       return false;
+    }
+
+    for (var j = 0; j < _otherParticipantCount; j++) {
+      final contactId = _contactIds[j];
+      if (contactId == null ||
+          !await contactIsEligibleHousingPlanParticipant(_db, contactId)) {
+        if (!mounted || !flowContext.mounted) return false;
+        ScaffoldMessenger.of(flowContext).showSnackBar(
+          SnackBar(
+            content: Text(l10n.housingPlanParticipantMustBeConnectedContact),
+          ),
+        );
+        return false;
+      }
     }
 
     final proposerId = '$_planId:self';

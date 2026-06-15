@@ -1413,6 +1413,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get housingPlanParticipantMustBeConnectedContact =>
+      'Every co-participant must be a connected contact on this device before you can send the proposal.';
+
+  @override
   String get housingInviteResponseDeadlineTitle => 'Response deadline:';
 
   @override
@@ -2789,6 +2793,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get housingParticipationChangeEjectionAction =>
       'I want to eject a participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantAction =>
+      'I want to invite a participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantTitle =>
+      'Inviting a participant';
+
+  @override
+  String get housingParticipationChangeInviteParticipantBody =>
+      'Adding someone to an active agreement requires ending the current plan and starting a new one with everyone’s consent. Read why in the FAQ.';
+
+  @override
+  String get housingParticipationChangeInviteParticipantFaqLink =>
+      'Read the FAQ';
+
+  @override
+  String get helpFaqTitle => 'Frequently asked questions';
+
+  @override
+  String get helpFaqIntro =>
+      'Answers to common questions about how Compartarenta works.';
+
+  @override
+  String get helpFaqHousingInviteParticipantTitle =>
+      'Why can’t I invite someone to the current plan?';
+
+  @override
+  String get helpFaqHousingInviteParticipantBody =>
+      'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.';
+
+  @override
+  String get housingVoteRefusedByAgreementExpiration =>
+      'Refused — agreement expired';
+
+  @override
+  String get contactsDisconnectBlockedByPlansTitle =>
+      'Can\'t disconnect this contact yet';
+
+  @override
+  String contactsDisconnectBlockedByPlansBody(String plans) {
+    return 'This contact is part of an active housing agreement or an open vote on this device: $plans. Finish or resolve that plan activity before disconnecting.';
+  }
 
   @override
   String get housingParticipationChangeConfirmAction => 'Yes';

@@ -88,6 +88,22 @@ The Contacts UI SHALL present a **Disconnected** user-facing status (localized) 
 - **THEN** the peer's Contact for this user transitions to local-only on their device
 - **THEN** the peer's existing module ledger rows referencing the now-local-only Contact remain readable; new module proposals to this Contact from the peer's device stop
 
+### Requirement: Disconnect is blocked while the contact anchors active or vote-pending module work
+The app SHALL refuse **Disconnect contact** when the contact is referenced as a participant on a housing plan that has either:
+- an **in-force** unanimous agreement on this device, or
+- an **open** proposal, amendment, or participation-change vote pending on this device.
+
+The UI SHALL name the blocking plan(s). This is stricter than deletion blocking alone: a contact may remain referenced on a closed plan while disconnect becomes available once no active or vote-pending work remains.
+
+#### Scenario: Disconnect refused during active agreement
+- **WHEN** the user attempts to disconnect a connected contact listed on an active housing agreement
+- **THEN** disconnect is refused with a localized explanation listing the plan
+- **THEN** no disconnect envelope is sent
+
+#### Scenario: Disconnect allowed after agreement ends and votes settle
+- **WHEN** the agreement has ended, no open votes remain, and the contact is not required for in-flight ledger closure
+- **THEN** disconnect follows the normal explicit disconnect path
+
 ### Requirement: A blocked contact is treated as disconnected and ignored
 The app SHALL allow the user to **block** a Contact, which combines disconnection with a local rule that suppresses any inbound envelope from that Contact, even if a connection somehow re-emerges later. Blocking SHALL be a local-only enforcement; the relay SHALL NOT be asked to host blocklists.
 

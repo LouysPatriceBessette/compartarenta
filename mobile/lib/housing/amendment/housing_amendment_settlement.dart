@@ -10,7 +10,7 @@ bool archivedAmendmentWasAccepted(Map<String, dynamic> payload) {
       status == ProposalResponseStatus.negotiate.name) {
     return false;
   }
-  if (status == 'expired') return false;
+  if (status == 'expired' || status == 'agreement_expired') return false;
   return true;
 }
 

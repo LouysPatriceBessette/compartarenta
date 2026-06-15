@@ -1433,6 +1433,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get housingPlanParticipantMustBeConnectedContact =>
+      'Cada co-participante debe ser un contacto conectado en este dispositivo antes de enviar la propuesta.';
+
+  @override
   String get housingInviteResponseDeadlineTitle => 'Plazo de respuesta:';
 
   @override
@@ -2816,6 +2820,50 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get housingParticipationChangeEjectionAction =>
       'Quiero expulsar a un participante';
+
+  @override
+  String get housingParticipationChangeInviteParticipantAction =>
+      'Quiero invitar a un participante';
+
+  @override
+  String get housingParticipationChangeInviteParticipantTitle =>
+      'Invitar a un participante';
+
+  @override
+  String get housingParticipationChangeInviteParticipantBody =>
+      'Añadir a alguien a un acuerdo activo exige terminar el plan actual y negociar uno nuevo con el consentimiento de todos. Consulte las preguntas frecuentes para saber por qué.';
+
+  @override
+  String get housingParticipationChangeInviteParticipantFaqLink =>
+      'Ver preguntas frecuentes';
+
+  @override
+  String get helpFaqTitle => 'Preguntas frecuentes';
+
+  @override
+  String get helpFaqIntro =>
+      'Respuestas a preguntas habituales sobre el funcionamiento de Compartarenta.';
+
+  @override
+  String get helpFaqHousingInviteParticipantTitle =>
+      '¿Por qué no puedo invitar a alguien al plan actual?';
+
+  @override
+  String get helpFaqHousingInviteParticipantBody =>
+      'Un acuerdo de vivienda activo vincula a todos los participantes al mismo roster y a las mismas reglas de gastos. Añadir un compañero cambia quién debe qué durante todo el periodo, incluidos gastos pasados y en curso. Es un acuerdo nuevo, no un pequeño cambio.\n\nPara añadir a alguien, un participante debe terminar el plan actual (Cambio importante → retiro voluntario o terminación, según corresponda); luego el grupo puede negociar y aceptar un plan nuevo que incluya a la nueva persona. Hasta entonces, la aplicación mantiene un acuerdo estable para todos.';
+
+  @override
+  String get housingVoteRefusedByAgreementExpiration =>
+      'Rechazado por vencimiento del acuerdo';
+
+  @override
+  String get contactsDisconnectBlockedByPlansTitle =>
+      'No se puede desconectar este contacto todavía';
+
+  @override
+  String contactsDisconnectBlockedByPlansBody(String plans) {
+    return 'Este contacto forma parte de un acuerdo activo o de una votación abierta en este dispositivo: $plans. Finalice o resuelva esa actividad antes de desconectar.';
+  }
 
   @override
   String get housingParticipationChangeConfirmAction => 'Sí';

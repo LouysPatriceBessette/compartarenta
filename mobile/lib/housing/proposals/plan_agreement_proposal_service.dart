@@ -5,8 +5,8 @@ import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
 import '../agreement_rules_json.dart';
-import 'agreement_period_day_overlap.dart';
-import 'housing_plan_period_gate.dart';
+import 'housing_agreement_overlap_withdrawal_exception.dart';
+import 'housing_agreement_period_conflict.dart';
 import 'housing_proposal_revision_state.dart';
 import 'housing_proposal_transport_service.dart';
 
@@ -363,14 +363,18 @@ class PlanAgreementProposalService {
       return ProposalActivationOutcome.missingAgreementPeriodInRevision;
     }
 
-    final blocking = await listBlockingAgreementDayRanges(
+    final blocking = await listBlockingAgreementDayRangesWithPlanIds(
       _db,
       excludePlanId: planId,
     );
-    if (candidateConflictsWithAnyBlockingRange(
-      period.start,
-      period.end,
-      blocking,
+    if (await candidateConflictsWithBlockingRangesAfterWithdrawalException(
+      db: _db,
+      candidateStart: period.start,
+      candidateEnd: period.end,
+      blocking: [
+        for (final entry in blocking)
+          (start: entry.start, end: entry.end, planId: entry.planId),
+      ],
     )) {
       return ProposalActivationOutcome.blockedByOverlappingAgreementPeriod;
     }
