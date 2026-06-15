@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/app_decimal_text_field.dart';
+import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -146,7 +148,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   bool _withdrawalSameForAll = true;
   final TextEditingController _globalNotice = TextEditingController(text: '30');
-  final TextEditingController _globalPenalty = TextEditingController(text: '0');
+  final TextEditingController _globalPenalty = TextEditingController(text: '0.00');
   final List<TextEditingController> _perParticipantNotice = [];
   final List<TextEditingController> _perParticipantPenalty = [];
 
@@ -331,7 +333,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   void _resizeWithdrawalEditors(int total) {
     while (_perParticipantNotice.length < total) {
       _perParticipantNotice.add(TextEditingController(text: '30'));
-      _perParticipantPenalty.add(TextEditingController(text: '0'));
+      _perParticipantPenalty.add(TextEditingController(text: '0.00'));
     }
     while (_perParticipantNotice.length > total) {
       _perParticipantNotice.removeLast().dispose();
@@ -1120,8 +1122,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       final fmt = effectiveDateFormat(widget.prefs);
       final range =
           '${formatPreferenceDate(conflict.start, fmt)} – ${formatPreferenceDate(conflict.end, fmt)}';
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: flowContext,
+        guardKey: 'housingPlan.periodOverlap',
         builder: (ctx) => AlertDialog(
           title: Text(l10n.housingInvitePeriodOverlapTitle),
           content: Text(
@@ -1300,8 +1303,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
   Future<void> _onDestroyPlan() async {
     final l10n = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
+      guardKey: 'housingPlan.destroyPlan',
       builder: (ctx) => AlertDialog(
         title: Text(l10n.housingPlanDestroyTitle),
         content: Text(l10n.housingPlanDestroyBody),
@@ -1633,7 +1637,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                                   messenger.showSnackBar(
                                                     SnackBar(
                                                       content: Text(
-                                                        l10n.housingPlanExpenseValidationMessage,
+                                                        l10n.housingPlanAddAtLeastOneExpense,
                                                       ),
                                                     ),
                                                   );
@@ -1789,11 +1793,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           avatarIconFor: _avatarIconFor,
           onChooseContact: () => _chooseContactForParticipant(i),
         ),
-        const SizedBox(height: 24),
-        Text(
-          l10n.housingPlanParticipantsPlaceholderNote,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
       ],
     );
   }
@@ -1809,88 +1808,67 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           _periodEnd,
           l10n,
         );
+        const calendarIconScreenMargin = 18.0; // ~1/4 inch at 72 logical px/in
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 0, 16),
           children: [
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      l10n.housingPlanPlanStart,
-                      textAlign: TextAlign.center,
-                    ),
-                    subtitle: Text(
-                      formatPreferenceDate(_periodStart, fmt),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    onTap: () async {
-                      final picked = await showAppDatePicker(
-                        context: context,
-                        prefs: widget.prefs,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2100),
-                        initialDate: (_periodStart ?? DateTime.now()).toLocal(),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _periodStart = DateTime(
-                            picked.year,
-                            picked.month,
-                            picked.day,
-                          ).toUtc();
-                          _ensureEndAfterStartCalendar();
-                        });
-                        unawaited(_autosavePlanDraftToDb());
-                      }
-                    },
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      l10n.housingPlanPlanEnd,
-                      textAlign: TextAlign.center,
-                    ),
-                    subtitle: Text(
-                      formatPreferenceDate(_periodEnd, fmt),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    onTap: () async {
-                      final picked = await showAppDatePicker(
-                        context: context,
-                        prefs: widget.prefs,
-                        firstDate: _endDatePickerFirstDate(),
-                        lastDate: DateTime(2100),
-                        initialDate: _endDatePickerInitialDate(),
-                      );
-                      if (picked != null) {
-                        setState(
-                          () => _periodEnd = DateTime(
-                            picked.year,
-                            picked.month,
-                            picked.day,
-                          ).toUtc(),
-                        );
-                        unawaited(_autosavePlanDraftToDb());
-                      }
-                    },
-                  ),
-                ],
-              ),
+            _planDatePickerRow(
+              context: context,
+              label: l10n.housingPlanPlanStart,
+              dateText: formatPreferenceDate(_periodStart, fmt),
+              calendarIconScreenMargin: calendarIconScreenMargin,
+              onTap: () async {
+                final picked = await showAppDatePicker(
+                  context: context,
+                  prefs: widget.prefs,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                  initialDate: (_periodStart ?? DateTime.now()).toLocal(),
+                );
+                if (picked != null) {
+                  setState(() {
+                    _periodStart = DateTime(
+                      picked.year,
+                      picked.month,
+                      picked.day,
+                    ).toUtc();
+                    _ensureEndAfterStartCalendar();
+                  });
+                  unawaited(_autosavePlanDraftToDb());
+                }
+              },
+            ),
+            _planDatePickerRow(
+              context: context,
+              label: l10n.housingPlanPlanEnd,
+              dateText: formatPreferenceDate(_periodEnd, fmt),
+              calendarIconScreenMargin: calendarIconScreenMargin,
+              onTap: () async {
+                final picked = await showAppDatePicker(
+                  context: context,
+                  prefs: widget.prefs,
+                  firstDate: _endDatePickerFirstDate(),
+                  lastDate: DateTime(2100),
+                  initialDate: _endDatePickerInitialDate(),
+                );
+                if (picked != null) {
+                  setState(
+                    () => _periodEnd = DateTime(
+                      picked.year,
+                      picked.month,
+                      picked.day,
+                    ).toUtc(),
+                  );
+                  unawaited(_autosavePlanDraftToDb());
+                }
+              },
             ),
             if (durationText.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Center(
-                  child: Text(
-                    durationText,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  '${l10n.housingPlanDurationLabel}: $durationText',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
             if (_periodStart != null &&
@@ -1901,12 +1879,44 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                 child: Text(
                   l10n.housingPlanEndDateError,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  textAlign: TextAlign.center,
                 ),
               ),
           ],
         );
       },
+    );
+  }
+
+  Widget _planDatePickerRow({
+    required BuildContext context,
+    required String label,
+    required String dateText,
+    required double calendarIconScreenMargin,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$label: $dateText',
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(right: calendarIconScreenMargin),
+              child: Icon(
+                Icons.calendar_today_outlined,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1920,7 +1930,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           children: [
             Expanded(
               child: lines.isEmpty
-                  ? Center(child: Text(l10n.housingPlanTapToAddExpense))
+                  ? const SizedBox.shrink()
                   : ReorderableListView.builder(
                       buildDefaultDragHandles: false,
                       padding: const EdgeInsets.all(8),
@@ -2193,9 +2203,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           ),
           onChanged: (_) => setState(() {}),
         ),
-        AppTextField(
+        AppDecimalTextField(
           controller: _globalPenalty,
-          keyboardType: TextInputType.number,
+          fractionDigits: 2,
+          emptyBlurText: '0.00',
           decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
           onChanged: (_) => setState(() {}),
         ),
@@ -2208,9 +2219,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           ),
           onChanged: (_) => setState(() {}),
         ),
-        AppTextField(
+        AppDecimalTextField(
           controller: _perParticipantPenalty[_withdrawalParticipantIndex],
-          keyboardType: TextInputType.number,
+          fractionDigits: 2,
+          emptyBlurText: '0.00',
           decoration: InputDecoration(labelText: l10n.housingPlanPenaltyAmount),
           onChanged: (_) => setState(() {}),
         ),
@@ -2565,8 +2577,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final sourceDayName = quietHoursUiDayDisplayName(context, sourceUiDay);
     final selected = <int>{};
 
-    final copied = await showDialog<bool>(
+    final copied = await showAppDialog<bool>(
       context: context,
+      guardKey: 'housingPlan.copyQuietHours',
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) {
           final targetDays = [
@@ -3132,8 +3145,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final titleCtrl = TextEditingController();
     final bodyCtrl = TextEditingController();
     try {
-      final ok = await showDialog<bool>(
+      final ok = await showAppDialog<bool>(
         context: context,
+        guardKey: 'housingPlan.customRuleEditor',
         builder: (ctx) {
           final d10n = AppLocalizations.of(ctx);
           return AlertDialog(

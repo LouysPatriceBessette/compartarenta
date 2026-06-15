@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog.dart';
 import 'app_text_field.dart';
 
 import '../util/routing_push_country_codes.dart';
@@ -12,8 +13,9 @@ Future<String?> showRoutingPushCountryPicker(
   required String languageCode,
   String? selectedCode,
 }) {
-  return showModalBottomSheet<String>(
+  return showAppModalBottomSheet<String>(
     context: context,
+    guardKey: 'routingPushCountryPicker',
     isScrollControlled: true,
     showDragHandle: true,
     builder: (sheetContext) {

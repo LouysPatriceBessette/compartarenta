@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_dialog.dart';
 import '../../db/app_database.dart';
 import '../../housing/participation/housing_participation_change_service.dart';
 import '../../housing/participation/housing_withdrawal_penalty_ledger.dart';
@@ -95,8 +96,9 @@ class _HousingAgreementRenewalScreenState
 
   Future<void> _confirmImmediateTermination() async {
     final l10n = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
+      guardKey: 'housingAgreementRenewal.immediateTermination',
       builder:
           (ctx) => AlertDialog(
             title: Text(l10n.housingParticipationChangeTerminationConfirmTitle),
@@ -162,8 +164,9 @@ class _HousingAgreementRenewalScreenState
     }
 
     if (!mounted) return;
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
+      guardKey: 'housingAgreementRenewal.withdrawalConfirm',
       builder:
           (ctx) => AlertDialog(
             title: Text(l10n.housingParticipationChangeWithdrawalConfirmTitle),
@@ -194,8 +197,9 @@ class _HousingAgreementRenewalScreenState
 
   Future<void> _showInviteParticipantInfo() async {
     final l10n = AppLocalizations.of(context);
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
+      guardKey: 'housingAgreementRenewal.inviteParticipantInfo',
       builder: (ctx) => AlertDialog(
         title: Text(l10n.housingParticipationChangeInviteParticipantTitle),
         content: Text(l10n.housingParticipationChangeInviteParticipantBody),
@@ -226,8 +230,9 @@ class _HousingAgreementRenewalScreenState
     if (candidates.isEmpty) return;
 
     String? selectedId = candidates.first.id;
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
+      guardKey: 'housingAgreementRenewal.replaceParticipant',
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setLocal) {

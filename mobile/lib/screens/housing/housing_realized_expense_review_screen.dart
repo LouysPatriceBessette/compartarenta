@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
@@ -368,8 +369,9 @@ class _HousingRealizedExpenseReviewScreenState
   Future<void> _reject(_ReviewContext ctx) async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
-    final justification = await showDialog<String>(
+    final justification = await showAppDialog<String>(
       context: context,
+      guardKey: 'realizedExpenseReview.rejectJustification',
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.housingRealizedExpenseRejectTitle),

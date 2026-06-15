@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog.dart';
 import 'app_text_field.dart';
 
 import '../data/supported_time_zones.dart';
@@ -20,8 +21,9 @@ Future<TimeZonePickerResult?> showSupportedTimeZonePicker(
   required bool deviceSelected,
   String? selectedIanaId,
 }) {
-  return showModalBottomSheet<TimeZonePickerResult>(
+  return showAppModalBottomSheet<TimeZonePickerResult>(
     context: context,
+    guardKey: 'supportedTimeZonePicker',
     isScrollControlled: true,
     showDragHandle: true,
     builder: (sheetContext) {

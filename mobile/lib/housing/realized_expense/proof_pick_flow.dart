@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
+import '../../widgets/app_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../screens/housing/housing_proof_crop_screen.dart';
 import 'proof_attachment_storage.dart';
@@ -23,8 +24,9 @@ Future<StoredProof?> pickAndStoreProof(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
   final cameraOptionState = await proofCameraOptionState();
   if (!context.mounted) return null;
-  final source = await showModalBottomSheet<_ProofSource>(
+  final source = await showAppModalBottomSheet<_ProofSource>(
     context: context,
+    guardKey: 'proofPickSource',
     builder: (ctx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,

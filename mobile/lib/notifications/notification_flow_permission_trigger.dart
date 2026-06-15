@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/app_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import 'notification_permission_gate.dart';
@@ -40,8 +41,9 @@ class NotificationFlowPermissionTrigger {
     if (!context.mounted) return NotificationFlowPermissionResult.abortFlow;
 
     final l10n = AppLocalizations.of(context);
-    final choice = await showDialog<_NotificationFlowPromptChoice>(
+    final choice = await showAppDialog<_NotificationFlowPromptChoice>(
       context: context,
+      guardKey: 'notificationFlowPermissionPrompt',
       builder: (ctx) => AlertDialog(
         title: Text(l10n.notificationFlowPermissionPromptTitle),
         content: Text(l10n.notificationFlowPermissionPromptBody),

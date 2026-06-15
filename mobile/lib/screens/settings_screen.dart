@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../widgets/app_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:go_router/go_router.dart';
@@ -139,8 +140,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Clears onboarding progress and saved preferences.',
               ),
               onTap: () async {
-                final confirmed = await showDialog<bool>(
+                final confirmed = await showAppDialog<bool>(
                   context: context,
+                  guardKey: 'settings.resetOnboarding',
                   builder: (context) => AlertDialog(
                     title: const Text('Reset onboarding & preferences?'),
                     content: const Text(
@@ -189,8 +191,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'when a relay URL is configured.',
               ),
               onTap: () async {
-                final confirmed = await showDialog<bool>(
+                final confirmed = await showAppDialog<bool>(
                   context: context,
+                  guardKey: 'settings.resetDatabase',
                   builder: (context) => AlertDialog(
                     title: const Text('Reset local database?'),
                     content: Text(

@@ -495,7 +495,6 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
               final spec = await showExpenseRecurrenceFlow(
                 context: context,
                 prefs: widget.prefs,
-                periodStart: widget.periodStart,
                 periodEnd: widget.periodEnd,
                 initial: _recurrence,
                 dateFormat: widget.dateFormat,

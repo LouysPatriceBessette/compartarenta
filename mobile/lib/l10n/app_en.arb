@@ -180,7 +180,6 @@
   "housingPlanBack": "Back",
   "housingPlanNext": "Next",
   "housingPlanFinish": "Finish",
-  "housingPlanExpenseValidationMessage": "Add at least one expense. Each needs an amount, split totaling 100% across participants, and recurring items need a valid schedule.",
   "housingPlanSplitValidationMessage": "Each expense or category must total 100% across participants.",
   "housingPlanCouldNotContinue": "Could not continue: {error}",
   "@housingPlanCouldNotContinue": {
@@ -206,6 +205,7 @@
   },
   "housingPlanPlanStart": "Plan start",
   "housingPlanPlanEnd": "Plan end",
+  "housingPlanDurationLabel": "Duration",
   "housingPlanEndDateError": "End date must be after start date (by at least one calendar day).",
   "housingPlanCategoriesEmptyHint": "Tap + to add a category. On the next step you can assign each expense to a category so related items stay together.",
   "housingPlanDeleteCategoryTitle": "Delete category",
@@ -214,6 +214,7 @@
   "housingPlanDelete": "Delete",
   "housingPlanTapToAddExpense": "Tap + to add an expense.",
   "housingPlanAddExpensesFirst": "Add expenses first.",
+  "housingPlanAddAtLeastOneExpense": "Add at least one expense!",
   "housingPlanSplitNoCategory": "No category",
   "housingPlanWithdrawalIntro": "Early withdrawal rules.",
   "housingPlanWithdrawalSameForAll": "Same rule for all participants",

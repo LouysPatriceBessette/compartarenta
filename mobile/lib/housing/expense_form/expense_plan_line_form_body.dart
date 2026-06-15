@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_decimal_text_field.dart';
 import '../../widgets/app_text_field.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -211,9 +212,9 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        AppTextField(
-          controller: amountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        AppDecimalTextField(
+          controller: amountController!,
+          fractionDigits: 2,
           decoration: InputDecoration(
             labelText: l10n.housingPlanAmountLabel,
           ),

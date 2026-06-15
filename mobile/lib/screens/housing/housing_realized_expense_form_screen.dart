@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_decimal_text_field.dart';
+import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
@@ -302,8 +304,9 @@ class _HousingRealizedExpenseFormScreenState
     if (sum + newAmountMinor <= cap) return true;
 
     if (!mounted) return false;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
+      guardKey: 'realizedExpense.budgetCapConfirm',
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.housingRealizedExpenseBudgetCapTitle),
         content: Text(
@@ -521,17 +524,15 @@ class _HousingRealizedExpenseFormScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: AppTextField(
+                      child: AppDecimalTextField(
                         controller: _amountController,
+                        fractionDigits: 2,
                         decoration: InputDecoration(
                           labelText: l10n.housingRealizedExpenseAmount,
                           suffixText: currencyDisplaySymbol(
                             context,
                             ctx.currency,
                           ),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
                         ),
                       ),
                     ),

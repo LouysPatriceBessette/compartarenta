@@ -524,10 +524,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanFinish => 'Terminer';
 
   @override
-  String get housingPlanExpenseValidationMessage =>
-      'Ajoutez au moins une dépense. Chacune doit avoir un montant, une répartition totalisant 100 % entre les participants, et les dépenses récurrentes une échéance valide.';
-
-  @override
   String get housingPlanSplitValidationMessage =>
       'Chaque dépense ou catégorie doit totaliser 100 % entre les participants.';
 
@@ -582,6 +578,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingPlanPlanEnd => 'Fin du plan';
 
   @override
+  String get housingPlanDurationLabel => 'Durée';
+
+  @override
   String get housingPlanEndDateError =>
       'La date de fin doit être après la date de début (d’au moins un jour calendaire).';
 
@@ -608,6 +607,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingPlanAddExpensesFirst => 'Ajoutez d’abord des dépenses.';
+
+  @override
+  String get housingPlanAddAtLeastOneExpense => 'Ajoutez au moins une dépense!';
 
   @override
   String get housingPlanSplitNoCategory => 'Sans catégorie';

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
 import 'package:go_router/go_router.dart';
 
@@ -616,8 +617,9 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
   Future<void> _confirmReject() async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
-    final message = await showDialog<String>(
+    final message = await showAppDialog<String>(
       context: context,
+      guardKey: 'housingAmendmentDetail.negotiateMessage',
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.housingAmendmentRejectTitle),

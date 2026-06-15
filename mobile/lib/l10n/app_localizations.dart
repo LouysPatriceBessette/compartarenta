@@ -1030,12 +1030,6 @@ abstract class AppLocalizations {
   /// **'Finish'**
   String get housingPlanFinish;
 
-  /// No description provided for @housingPlanExpenseValidationMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Add at least one expense. Each needs an amount, split totaling 100% across participants, and recurring items need a valid schedule.'**
-  String get housingPlanExpenseValidationMessage;
-
   /// No description provided for @housingPlanSplitValidationMessage.
   ///
   /// In en, this message translates to:
@@ -1126,6 +1120,12 @@ abstract class AppLocalizations {
   /// **'Plan end'**
   String get housingPlanPlanEnd;
 
+  /// No description provided for @housingPlanDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get housingPlanDurationLabel;
+
   /// No description provided for @housingPlanEndDateError.
   ///
   /// In en, this message translates to:
@@ -1173,6 +1173,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add expenses first.'**
   String get housingPlanAddExpensesFirst;
+
+  /// No description provided for @housingPlanAddAtLeastOneExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one expense!'**
+  String get housingPlanAddAtLeastOneExpense;
 
   /// No description provided for @housingPlanSplitNoCategory.
   ///

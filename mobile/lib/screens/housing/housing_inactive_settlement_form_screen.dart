@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/app_text_field.dart';
+import '../../widgets/app_decimal_text_field.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_amount_parse.dart';
@@ -198,12 +198,10 @@ class _HousingInactiveSettlementFormScreenState
             ),
           ),
           const SizedBox(height: 24),
-          AppTextField(
+          AppDecimalTextField(
             controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(
-              signed: true,
-              decimal: true,
-            ),
+            fractionDigits: 2,
+            signed: true,
             decoration: InputDecoration(
               labelText: l10n.housingInactiveSettlementAmountLabel,
               helperText: l10n.housingInactiveSettlementAmountHint,

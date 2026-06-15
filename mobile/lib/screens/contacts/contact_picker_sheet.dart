@@ -4,6 +4,7 @@ import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../widgets/app_dialog.dart';
 import 'generate_invitation_screen.dart';
 
 /// Bottom sheet used by modules to select an existing Contact as a participant.
@@ -150,8 +151,9 @@ Future<Contact?> showContactPickerSheet({
   required AppDatabase db,
   Set<String> excludeContactIds = const <String>{},
 }) {
-  return showModalBottomSheet<Contact>(
+  return showAppModalBottomSheet<Contact>(
     context: context,
+    guardKey: 'contactPicker',
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) =>

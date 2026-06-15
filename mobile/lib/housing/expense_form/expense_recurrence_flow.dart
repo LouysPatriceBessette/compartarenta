@@ -2,28 +2,36 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../widgets/dialog_tap_guard.dart';
 import '../../util/week_start_calendar.dart';
 import 'expense_recurrence_labels.dart';
 import 'expense_recurrence_spec.dart';
 
-/// Picks agreement-bounded range and confirms recurrence kind.
+/// Picks a recurrence range (from the 1st of the current month through plan end)
+/// and confirms recurrence kind.
 ///
 /// Returns `null` when the user cancels either step or does not confirm a type.
 Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
   required BuildContext context,
   required AppPreferences prefs,
-  required DateTime periodStart,
   required DateTime periodEnd,
   required ExpenseRecurrenceSpec? initial,
   required String dateFormat,
 }) async {
+  return DialogTapGuard.run<ExpenseRecurrenceSpec?>(
+    'expenseRecurrenceFlow',
+    () async {
   final l10n = AppLocalizations.of(context);
-  final startLocal = DateUtils.dateOnly(periodStart.toLocal());
+  final now = DateTime.now();
   final endLocal = DateUtils.dateOnly(periodEnd.toLocal());
+  var firstDate = DateUtils.dateOnly(DateTime(now.year, now.month, 1));
+  if (firstDate.isAfter(endLocal)) {
+    firstDate = endLocal;
+  }
   final range = await showAppDateRangePicker(
     context: context,
     prefs: prefs,
-    firstDate: startLocal,
+    firstDate: firstDate,
     lastDate: endLocal,
     saveText: l10n.housingExpenseRecurrenceUseRange,
   );
@@ -105,6 +113,8 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
   );
   if (confirmed != true || picked == null) return null;
   return picked;
+    },
+  );
 }
 
 class _RecurrenceChoice {

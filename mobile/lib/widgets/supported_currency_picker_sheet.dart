@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog.dart';
 import 'app_text_field.dart';
 
 import '../data/supported_currencies.dart';
@@ -9,8 +10,9 @@ Future<String?> showSupportedCurrencyPicker(
   required String searchHint,
   String? selectedCode,
 }) {
-  return showModalBottomSheet<String>(
+  return showAppModalBottomSheet<String>(
     context: context,
+    guardKey: 'supportedCurrencyPicker',
     isScrollControlled: true,
     showDragHandle: true,
     builder: (sheetContext) {

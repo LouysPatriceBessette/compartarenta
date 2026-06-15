@@ -1,6 +1,8 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import '../../widgets/app_decimal_text_field.dart';
+import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -430,10 +432,10 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        AppTextField(
+        AppDecimalTextField(
           controller: _estimatedValue,
+          fractionDigits: 2,
           decoration: InputDecoration(labelText: l10n.carSharingEstimatedValueLabel),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: 16),
         AppTextField(controller: _photoFront, decoration: InputDecoration(labelText: l10n.carSharingPhotoFront)),
@@ -513,8 +515,9 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
   }
 
   Future<void> _showMaintenanceLineEditor(CarSharingMaintenanceLineDraft? existing) async {
-    final line = await showDialog<CarSharingMaintenanceLineDraft>(
+    final line = await showAppDialog<CarSharingMaintenanceLineDraft>(
       context: context,
+      guardKey: 'carSharing.maintenanceEditor',
       builder: (ctx) => _AddCarMaintenanceDialog(initial: existing),
     );
     if (!mounted || line == null) return;
@@ -680,8 +683,9 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
     final titleCtrl = TextEditingController();
     final bodyCtrl = TextEditingController();
     try {
-      final ok = await showDialog<bool>(
+      final ok = await showAppDialog<bool>(
         context: context,
+        guardKey: 'carSharing.customRuleEditor',
         builder: (ctx) {
           final d10n = AppLocalizations.of(ctx);
           return AlertDialog(
@@ -916,10 +920,10 @@ class _AddCarMaintenanceDialogState extends State<_AddCarMaintenanceDialog> {
               decoration: InputDecoration(labelText: l10n.carSharingMaintenanceTitleLabel),
             ),
             const SizedBox(height: 12),
-            AppTextField(
+            AppDecimalTextField(
               controller: _amount,
+              fractionDigits: 2,
               decoration: InputDecoration(labelText: l10n.carSharingMaintenanceAmountLabel),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 8),
             SwitchListTile(

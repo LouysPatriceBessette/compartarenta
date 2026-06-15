@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_dialog.dart';
 import '../../db/app_database.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/amendment/housing_amendment_ui_gates.dart';
@@ -508,8 +509,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     ).isPlanAgreementPeriodOpen(widget.planId);
     if (!open) {
       if (!context.mounted) return;
-      final goRenew = await showDialog<bool>(
+      final goRenew = await showAppDialog<bool>(
         context: context,
+        guardKey: 'housingActivePlan.agreementExpired',
         builder: (ctx) => AlertDialog(
           title: Text(l10n.housingAgreementExpiredTitle),
           content: Text(l10n.housingAgreementExpiredBody),

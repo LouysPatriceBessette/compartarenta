@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/app_dialog.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
 import '../l10n/app_localizations.dart';
@@ -48,8 +49,9 @@ class _ProfileLabelConflictHostState extends State<ProfileLabelConflictHost> {
       if (conflict == null) return;
       final l10n = AppLocalizations.of(context);
       final repo = ContactsRepository(AppDatabase.processScope);
-      final choice = await showDialog<_ConflictChoice>(
+      final choice = await showAppDialog<_ConflictChoice>(
         context: context,
+        guardKey: 'profileLabelConflict',
         barrierDismissible: true,
         builder: (ctx) => AlertDialog(
           title: Text(l10n.peerNameConflictTitle),

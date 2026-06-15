@@ -180,7 +180,6 @@
   "housingPlanBack": "Retour",
   "housingPlanNext": "Suivant",
   "housingPlanFinish": "Terminer",
-  "housingPlanExpenseValidationMessage": "Ajoutez au moins une dépense. Chacune doit avoir un montant, une répartition totalisant 100 % entre les participants, et les dépenses récurrentes une échéance valide.",
   "housingPlanSplitValidationMessage": "Chaque dépense ou catégorie doit totaliser 100 % entre les participants.",
   "housingPlanCouldNotContinue": "Impossible de continuer : {error}",
   "@housingPlanCouldNotContinue": {
@@ -206,6 +205,7 @@
   },
   "housingPlanPlanStart": "Début du plan",
   "housingPlanPlanEnd": "Fin du plan",
+  "housingPlanDurationLabel": "Durée",
   "housingPlanEndDateError": "La date de fin doit être après la date de début (d’au moins un jour calendaire).",
   "housingPlanCategoriesEmptyHint": "Appuyez sur + pour ajouter une catégorie. À l’étape suivante, vous pourrez rattacher chaque dépense à une catégorie pour garder les postes liés ensemble.",
   "housingPlanDeleteCategoryTitle": "Supprimer la catégorie",
@@ -214,6 +214,7 @@
   "housingPlanDelete": "Supprimer",
   "housingPlanTapToAddExpense": "Appuyez sur + pour ajouter une dépense.",
   "housingPlanAddExpensesFirst": "Ajoutez d’abord des dépenses.",
+  "housingPlanAddAtLeastOneExpense": "Ajoutez au moins une dépense!",
   "housingPlanSplitNoCategory": "Sans catégorie",
   "housingPlanWithdrawalIntro": "Règles de retrait anticipé.",
   "housingPlanWithdrawalSameForAll": "Même règle pour tous les participants",

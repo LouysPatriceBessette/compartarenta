@@ -518,10 +518,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanFinish => 'Finish';
 
   @override
-  String get housingPlanExpenseValidationMessage =>
-      'Add at least one expense. Each needs an amount, split totaling 100% across participants, and recurring items need a valid schedule.';
-
-  @override
   String get housingPlanSplitValidationMessage =>
       'Each expense or category must total 100% across participants.';
 
@@ -575,6 +571,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanPlanEnd => 'Plan end';
 
   @override
+  String get housingPlanDurationLabel => 'Duration';
+
+  @override
   String get housingPlanEndDateError =>
       'End date must be after start date (by at least one calendar day).';
 
@@ -600,6 +599,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingPlanAddExpensesFirst => 'Add expenses first.';
+
+  @override
+  String get housingPlanAddAtLeastOneExpense => 'Add at least one expense!';
 
   @override
   String get housingPlanSplitNoCategory => 'No category';

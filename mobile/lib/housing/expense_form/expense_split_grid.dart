@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../util/display_numbers.dart';
+import '../../util/fixed_decimal_input.dart';
 import '../../util/format_money.dart';
 import 'expense_amount_parse.dart';
 import 'expense_ratio_template_repository.dart';
@@ -253,6 +254,8 @@ class _SplitRowState extends State<_SplitRow> {
   }
 
   void _releaseAmountFocus() {
+    applyFixedDecimalInputOnBlur(_amountCtrl, fractionDigits: 2);
+    FocusScope.of(context).unfocus();
     setState(() {
       _amountFocused = false;
       _syncAmountControllerText();
@@ -261,6 +264,8 @@ class _SplitRowState extends State<_SplitRow> {
   }
 
   void _releasePercentFocus() {
+    applyFixedDecimalInputOnBlur(_pctCtrl, fractionDigits: 1);
+    FocusScope.of(context).unfocus();
     setState(() {
       _pctFocused = false;
       _syncAmountControllerText();
@@ -310,12 +315,14 @@ class _SplitRowState extends State<_SplitRow> {
             child: AppTextField(
               controller: _amountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.done,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
               ],
               decoration: const InputDecoration(isDense: true),
               onTap: () => setState(() => _amountFocused = true),
               onEditingComplete: _releaseAmountFocus,
+              onSubmitted: (_) => _releaseAmountFocus(),
               onTapOutside: (_) => _releaseAmountFocus(),
               onChanged: (v) {
                 final minor = parseAmountMinorFromText(v);
@@ -347,12 +354,14 @@ class _SplitRowState extends State<_SplitRow> {
               controller: _pctCtrl,
               textAlign: TextAlign.end,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 isDense: true,
                 suffixText: '%',
               ),
               onTap: () => setState(() => _pctFocused = true),
               onEditingComplete: _releasePercentFocus,
+              onSubmitted: (_) => _releasePercentFocus(),
               onTapOutside: (_) => _releasePercentFocus(),
               onChanged: (v) {
                 final t = v.trim().replaceAll('%', '').replaceAll(',', '.');

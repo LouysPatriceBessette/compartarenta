@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../widgets/app_dialog.dart';
 import '../../contacts/contact_module_anchor.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
@@ -179,8 +180,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       final titles = blockingPlans
           .map((p) => p.title.isEmpty ? p.id : p.title)
           .toList(growable: false);
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
+        guardKey: 'contactDetail.deleteBlockedByPlans',
         builder: (ctx) => AlertDialog(
           title: Text(l10n.contactsDeleteBlockedByPlansTitle),
           content: Text(
@@ -205,8 +207,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // left believing the relationship is still active. We point the user at
     // the Disconnect action and let them trigger it from the dialog.
     if (contact.kind == 'connected') {
-      final goDisconnect = await showDialog<bool>(
+      final goDisconnect = await showAppDialog<bool>(
         context: context,
+        guardKey: 'contactDetail.deleteConnectedRedirect',
         builder: (ctx) => AlertDialog(
           title: Text(l10n.contactsDeleteBlockedConnectedTitle),
           content: Text(l10n.contactsDeleteBlockedConnectedBody),
@@ -227,8 +230,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
+      guardKey: 'contactDetail.deleteConfirm',
       builder: (ctx) => AlertDialog(
         title: Text(l10n.contactsDeleteTitle),
         content: Text(l10n.contactsDeleteBody),
@@ -258,8 +262,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     final next = !contact.isBlocked;
     final title = next ? l10n.contactsBlockTitle : l10n.contactsUnblockTitle;
     final body = next ? l10n.contactsBlockBody : l10n.contactsUnblockBody;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
+      guardKey: 'contactDetail.blockConfirm',
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: Text(body),
@@ -286,8 +291,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     if (!mounted) return;
     if (blocks.isNotEmpty) {
       final titles = blocks.map((b) => b.planTitle).toSet().join(', ');
-      await showDialog<void>(
+      await showAppDialog<void>(
         context: context,
+        guardKey: 'contactDetail.disconnectBlockedByPlans',
         builder: (ctx) => AlertDialog(
           title: Text(l10n.contactsDisconnectBlockedByPlansTitle),
           content: Text(l10n.contactsDisconnectBlockedByPlansBody(titles)),
@@ -309,8 +315,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       );
       return;
     }
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
+      guardKey: 'contactDetail.disconnectConfirm',
       builder: (ctx) => AlertDialog(
         title: Text(l10n.contactsDisconnectTitle),
         content: Text(l10n.contactsDisconnectBody),

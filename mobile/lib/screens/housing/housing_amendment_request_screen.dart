@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_dialog.dart';
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/agreement_rules_diff.dart';
@@ -358,8 +359,9 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
       return;
     }
 
-    final lineId = await showDialog<String>(
+    final lineId = await showAppDialog<String>(
       context: context,
+      guardKey: 'housingAmendmentRequest.pickLine',
       builder: (dialogContext) => SimpleDialog(
         title: Text(l10n.housingAmendmentPickLine),
         children: [
@@ -376,8 +378,9 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
     if (lineId == null || !context.mounted) return;
 
     if (type == HousingAmendmentType.lineRemove) {
-      final ok = await showDialog<bool>(
+      final ok = await showAppDialog<bool>(
         context: context,
+        guardKey: 'housingAmendmentRequest.removeLineConfirm',
         builder: (dialogContext) => AlertDialog(
           title: Text(l10n.housingAmendmentTypeLineRemove),
           content: Text(l10n.housingAmendmentLineRemoveConfirm),
