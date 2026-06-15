@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import '../app_root_navigator.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
@@ -56,6 +57,7 @@ class PushNotificationService {
   static const String _housingParticipationChangePrefix =
       'housing_participation_change:';
   static const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
+  static const String _contactsPayload = 'contacts';
 
   static const List<String> _housingKinds = <String>[
     'housing_proposal',
@@ -229,6 +231,10 @@ class PushNotificationService {
         HousingNavigationIntent.requestOpenMissingContacts(planId);
         _navigateToHousing();
       }
+      return;
+    }
+    if (payload == _contactsPayload) {
+      _navigateToContacts();
     }
   }
 
@@ -715,6 +721,32 @@ class PushNotificationService {
       ),
       payload: _housingTapPayload,
     );
+  }
+
+  /// Opens [/contacts] from a notification tap. Skips navigation when the user
+  /// is already in the contacts module so we do not stack a second
+  /// [ContactsListScreen] above an open contact detail route.
+  static void _navigateToContacts() {
+    void attempt([int tries = 0]) {
+      final ctx = appRootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        final router = GoRouter.of(ctx);
+        if (router.state.matchedLocation.startsWith('/contacts')) {
+          return;
+        }
+        router.go('/contacts');
+        return;
+      }
+      if (tries >= 30) {
+        debugPrint(
+          'PushNotificationService: navigate to /contacts skipped (no context)',
+        );
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
+    }
+
+    attempt();
   }
 
   static void _navigateToHousing() {

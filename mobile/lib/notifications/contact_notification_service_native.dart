@@ -1,7 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:go_router/go_router.dart';
 
-import '../app_root_navigator.dart';
 import 'push_notification_service.dart';
 
 final FlutterLocalNotificationsPlugin _plugin =
@@ -25,7 +23,6 @@ const AndroidNotificationChannel _androidSilentChannel =
     );
 
 const String _contactsPayload = 'contacts';
-const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
 
 bool _initialized = false;
 
@@ -70,14 +67,6 @@ Future<void> _ensureInitialized() async {
     ),
     onDidReceiveNotificationResponse: (response) {
       PushNotificationService.dispatchLocalNotificationTap(response);
-      final payload = response.payload;
-      if (payload == null || payload.startsWith(_planPeerEstablishmentPrefix)) {
-        return;
-      }
-      if (payload != _contactsPayload) return;
-      final ctx = appRootNavigatorKey.currentContext;
-      if (ctx == null || !ctx.mounted) return;
-      GoRouter.of(ctx).push('/contacts');
     },
   );
 

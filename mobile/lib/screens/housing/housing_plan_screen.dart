@@ -483,7 +483,52 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     return true;
   }
 
-  Future<void> _loadFromDb() async {
+  /// Clears in-memory wizard fields so a destroyed draft does not keep stale
+  /// participants, dates, or step progress from before [deletePlanRelatedData].
+  void _resetWizardInMemoryState() {
+    _otherParticipantCount = 1;
+    _coEditorIndex = 0;
+    _resizeParticipantEditors(1);
+    for (var i = 0; i < _nameControllers.length; i++) {
+      _nameControllers[i].clear();
+      _avatarIds[i] = 'mdi:0';
+      _contactIds[i] = null;
+    }
+    _periodStart = null;
+    _periodEnd = null;
+    _withdrawalParticipantIndex = 0;
+    _withdrawalSameForAll = true;
+    _globalNotice.text = '30';
+    _globalPenalty.text = '0.00';
+    for (var i = 0; i < _perParticipantNotice.length; i++) {
+      _perParticipantNotice[i].text = '30';
+      _perParticipantPenalty[i].text = '0.00';
+    }
+    _rulesDraft = AgreementRulesDraft();
+    _buildingRulesBody.text =
+        _lookupAppLocalizationsSync().housingAgreementRuleBuildingHint;
+    _buildingRulesEditing = false;
+    _customRuleEditingId = null;
+    _customRuleEditTitle?.dispose();
+    _customRuleEditTitle = null;
+    _customRuleEditBody?.dispose();
+    _customRuleEditBody = null;
+    _suggestionEditingId = null;
+    _suggestionEditTitle?.dispose();
+    _suggestionEditTitle = null;
+    _suggestionEditBody?.dispose();
+    _suggestionEditBody = null;
+    _curfewExpanded = false;
+    _curfewEditing = false;
+    _withdrawalExpanded = false;
+    _withdrawalEditing = false;
+    _buildingExpanded = false;
+    _expandedCustomRuleIds.clear();
+    _expandedSuggestionIds.clear();
+    _linesEpoch++;
+  }
+
+  Future<void> _loadFromDb({bool inferResumeStep = true}) async {
     await _ensurePlanShell();
     if (kIsWeb && HousingPlanDraftBackup.appliesToPlan(_planId)) {
       final restored = await HousingPlanDraftBackup.restoreIfNeeded(
@@ -562,17 +607,23 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       return;
     }
 
-    final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
-    if (dbComplete) {
-      _showSummary = !widget.openEditorInitially;
-      if (_showSummary) {
-        _summaryReloadToken++;
-      }
-      await widget.prefs.setHousingDefaultPlanSummaryReached(true);
-    } else {
+    if (!inferResumeStep) {
       _showSummary = false;
+      _stepIndex = 0;
       await widget.prefs.setHousingDefaultPlanSummaryReached(false);
-      _stepIndex = await _inferResumeStepIndex();
+    } else {
+      final dbComplete = await _isHousingPlanWizardFullyDoneInDb();
+      if (dbComplete) {
+        _showSummary = !widget.openEditorInitially;
+        if (_showSummary) {
+          _summaryReloadToken++;
+        }
+        await widget.prefs.setHousingDefaultPlanSummaryReached(true);
+      } else {
+        _showSummary = false;
+        await widget.prefs.setHousingDefaultPlanSummaryReached(false);
+        _stepIndex = await _inferResumeStepIndex();
+      }
     }
     _draftLoadedFromDb = true;
   }
@@ -1327,18 +1378,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       await HousingPlanDraftBackup.clear(widget.prefs, _planId);
     }
     await widget.prefs.setHousingDefaultPlanSummaryReached(false);
-    await _ensurePlanShell();
-    setState(() {
-      _showSummary = false;
-      _stepIndex = 0;
-      _withdrawalParticipantIndex = 0;
-    });
-    await _loadFromDb();
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.housingPlanRemovedSnackbar)));
-    }
+    _resetWizardInMemoryState();
+    await _loadFromDb(inferResumeStep: false);
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.housingPlanRemovedSnackbar)));
   }
 
   Widget _stepperRail() {
