@@ -25,6 +25,7 @@ import 'housing_amendment_request_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
 import 'housing_balances_screen.dart';
 import 'housing_expense_payment_status_screen.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_active_hub_placeholder_screen.dart';
 import 'housing_monthly_expenses_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
@@ -625,7 +626,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                 ? gates.majorChangeSubtitle
                                 : null;
                         return ListView(
-                          padding: const EdgeInsets.all(16),
+                          padding: screenBodyScrollPadding(context),
                           children: [
                             if (hasPendingAmendment)
                               Card(

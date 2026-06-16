@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_text_field.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../widgets/screen_body_padding.dart';
 import '../../notifications/notification_permission_gate.dart';
 import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
@@ -124,6 +125,7 @@ class _NotificationSettingsScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsNotificationsTitle)),
       body: ListView(
+        padding: screenBodyScrollPadding(context, content: EdgeInsets.zero),
         children: [
           _SectionHeader(title: l10n.settingsNotificationsGeneralSection),
           FutureBuilder<NotificationSystemPermissionStatus>(

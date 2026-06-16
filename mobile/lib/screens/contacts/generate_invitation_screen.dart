@@ -13,6 +13,7 @@ import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/deadline_remaining.dart';
+import '../../widgets/screen_body_padding.dart';
 import '../../util/display_date.dart';
 import '../../widgets/standard_validity_duration_bar.dart';
 
@@ -238,10 +239,9 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     final generated = _generated;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.contactsInviteTitle)),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: generated == null
+      body: Padding(
+        padding: screenBodyScrollPadding(context),
+        child: generated == null
               ? _IntroForm(
                   selected: _validFor,
                   onSelect: (d) => setState(() => _validFor = d),
@@ -259,7 +259,6 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
                   onRevoke: _revoke,
                   onDone: () => context.pop(),
                 ),
-        ),
       ),
     );
   }
@@ -463,13 +462,21 @@ class _GeneratedView extends StatelessWidget {
             ),
           ),
         ),
-        OutlinedButton.icon(
-          icon: const Icon(Icons.cancel_outlined),
-          label: Text(l10n.contactsInviteRevokeAction),
-          onPressed: onRevoke,
+        Padding(
+          padding: EdgeInsets.only(bottom: screenBottomSafeInset(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              OutlinedButton.icon(
+                icon: const Icon(Icons.cancel_outlined),
+                label: Text(l10n.contactsInviteRevokeAction),
+                onPressed: onRevoke,
+              ),
+              const SizedBox(height: 8),
+              FilledButton(onPressed: onDone, child: Text(l10n.commonDone)),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        FilledButton(onPressed: onDone, child: Text(l10n.commonDone)),
       ],
     );
   }

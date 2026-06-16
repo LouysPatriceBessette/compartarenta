@@ -5,6 +5,7 @@ import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_plan_line_view_data.dart';
 import '../../housing/expense_form/housing_expense_line_presentation_card.dart';
 import '../../l10n/app_localizations.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Swipeable read-only expense cards for a housing proposal preview.
 class HousingProposalExpensesDetailScreen extends StatefulWidget {
@@ -174,9 +175,11 @@ class _HousingProposalExpensesDetailScreenState
                           child: Text(l10n.housingInviteExpensesDetailLoadError),
                         );
                       }
-                      final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
                       return SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + bottomInset),
+                        padding: screenBodyScrollPadding(
+                          context,
+                          content: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                        ),
                         child: HousingExpenseLinePresentationCard(viewData: view),
                       );
                     },

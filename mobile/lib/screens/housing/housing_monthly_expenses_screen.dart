@@ -10,6 +10,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_rejected_expenses_screen.dart';
 import 'housing_realized_expense_review_screen.dart';
 
@@ -222,16 +223,21 @@ class _HousingMonthlyExpensesScreenState
                               ),
                             ),
                         ];
-                        return SafeArea(
-                          top: false,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        return ListView.separated(
+                            padding: screenBodyScrollPadding(
+                              context,
+                              content: const EdgeInsets.fromLTRB(
+                                16,
+                                16,
+                                16,
+                                24,
+                              ),
+                            ),
                             itemCount: children.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) => children[index],
-                          ),
-                        );
+                          );
                       },
                     );
                   },

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/screen_body_padding.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
+        padding: screenBodyScrollPadding(context, content: EdgeInsets.zero),
         children: [
           ListTile(
             title: Text(l10n.settingsLanguageTitle),

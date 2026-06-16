@@ -10,6 +10,7 @@ import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Edit how this device shows a connected (or disconnected) contact: local
 /// label and notes only. Peer canonical name and avatar are read-only.
@@ -94,7 +95,7 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
       appBar: AppBar(title: Text(l10n.contactsLabelEditorTitle)),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: screenBodyScrollPadding(context),
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_agreement_rules_read_only.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
@@ -67,9 +68,8 @@ class _HousingActivePlanReadOnlyScreenState
                   displayCurrency: data.currency,
                 );
 
-          final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
           return ListView(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+            padding: screenBodyScrollPadding(context),
             children: [
               Text(
                 l10n.housingActivePlanDatesLabel,

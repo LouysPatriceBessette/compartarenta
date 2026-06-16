@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Records a closure transfer toward an inactive (departed) participant.
 class HousingInactiveSettlementFormScreen extends StatefulWidget {
@@ -183,7 +184,7 @@ class _HousingInactiveSettlementFormScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingInactiveSettlementTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: screenBodyScrollPadding(context),
         children: [
           Text(
             l10n.housingInactiveSettlementParticipantLabel(

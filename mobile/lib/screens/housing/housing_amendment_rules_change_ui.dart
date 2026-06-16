@@ -166,11 +166,9 @@ class HousingAmendmentRulesListGroupScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(rulesChangeGroupTitle(l10n, category, comparison.buckets)),
       ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: housingAmendmentSafeAreaContentPadding,
-          children: [
+      body: ListView(
+        padding: housingAmendmentScreenPadding(context),
+        children: [
           for (final entry in entries)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -181,8 +179,7 @@ class HousingAmendmentRulesListGroupScreen extends StatelessWidget {
                 firstDayOfWeekIndex: firstDayOfWeekIndex,
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -215,11 +212,9 @@ class HousingAmendmentRulesModifiedGroupScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: housingAmendmentSafeAreaContentPadding,
-          children: [
+      body: ListView(
+        padding: housingAmendmentScreenPadding(context),
+        children: [
             for (var i = 0; i < entries.length; i++) ...[
               if (i > 0) const Divider(height: 40),
               Text(
@@ -252,8 +247,7 @@ class HousingAmendmentRulesModifiedGroupScreen extends StatelessWidget {
                 accordionOnlyRule: true,
               ),
             ],
-          ],
-        ),
+        ],
       ),
     );
   }

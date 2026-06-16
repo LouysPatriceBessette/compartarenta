@@ -20,6 +20,7 @@ import '../../prefs/regional_unit_choices.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../util/week_start_calendar.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Full-screen realized expense entry (pass 2 — local draft + propose).
 class HousingRealizedExpenseFormScreen extends StatefulWidget {
@@ -494,7 +495,10 @@ class _HousingRealizedExpenseFormScreenState
                 _kind == RealizedExpenseKind.normal;
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: screenBodyScrollPadding(
+                context,
+                content: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              ),
               children: [
                 Text(
                   l10n.housingRealizedExpenseKind,

@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Lists every co-participant on a housing proposal and whether this device
 /// has a relay-reachable contact for them.
@@ -129,7 +130,7 @@ class _HousingPlanMissingContactsScreenState
           }
           final allConnected = rows.every((r) => r.isConnected);
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: screenBodyScrollPadding(context),
             children: [
               Text(
                 l10n.housingPlanMissingContactsIntro,

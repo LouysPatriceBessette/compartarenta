@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../config/app_config.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/async_state.dart';
+import '../../widgets/screen_body_padding.dart';
 
 class AboutSettingsScreen extends StatefulWidget {
   const AboutSettingsScreen({super.key, required this.config});
@@ -24,6 +25,7 @@ class _AboutSettingsScreenState extends State<AboutSettingsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsAboutTitle)),
       body: ListView(
+        padding: screenBodyScrollPadding(context, content: EdgeInsets.zero),
         children: [
           ListTile(
             title: Text(l10n.settingsEnvironmentTitle),

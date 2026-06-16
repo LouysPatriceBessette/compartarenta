@@ -10,6 +10,7 @@ import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Detail view for a Contact. Exposes edit, delete, block, and (when
 /// connected) disconnect actions.
@@ -392,7 +393,7 @@ class _ContactDetail extends StatelessWidget {
         ? l10n.contactsLabelEditorTitle
         : l10n.commonEdit;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Row(
           children: [

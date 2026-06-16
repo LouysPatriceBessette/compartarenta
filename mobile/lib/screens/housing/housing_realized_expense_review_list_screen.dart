@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_realized_expense_review_screen.dart';
 
 class HousingRealizedExpenseReviewListScreen extends StatefulWidget {
@@ -92,7 +93,7 @@ class _HousingRealizedExpenseReviewListScreenState
           return SafeArea(
             top: false,
             child: ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: screenBodyScrollPadding(context),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {

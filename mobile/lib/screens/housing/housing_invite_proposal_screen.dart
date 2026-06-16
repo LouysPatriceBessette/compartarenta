@@ -25,6 +25,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_invitation_status_dialog.dart';
 
@@ -599,7 +600,7 @@ class _HousingInviteProposalScreenState
             children: [
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: screenBodyScrollPadding(context),
                   children: [
                     if (isAuthor) ...[
                       Text(

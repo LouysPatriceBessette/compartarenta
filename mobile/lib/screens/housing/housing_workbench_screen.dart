@@ -8,6 +8,7 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
@@ -373,7 +374,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
               .toList();
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: screenBodyScrollPadding(context),
             children: [
               if (drafts.isNotEmpty) ...[
                 Text(

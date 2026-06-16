@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_text_field.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
@@ -147,9 +148,8 @@ class _ProfileIdentitySettingsScreenState
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsProfileIdentityTitle)),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: ListView(
+        padding: screenBodyScrollPadding(context),
           children: [
             Text(
               l10n.settingsProfileIdentitySubtitle,
@@ -253,7 +253,6 @@ class _ProfileIdentitySettingsScreenState
             ),
           ],
         ),
-      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_date.dart';
 import '../../prefs/app_preferences.dart';
+import '../../widgets/screen_body_padding.dart';
 
 class ActivityLogSettingsScreen extends StatefulWidget {
   const ActivityLogSettingsScreen({super.key, required this.prefs});
@@ -371,6 +372,10 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
                   );
                 }
                 return ListView.separated(
+                  padding: screenBodyScrollPadding(
+                    context,
+                    content: EdgeInsets.zero,
+                  ),
                   itemCount: rows.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {

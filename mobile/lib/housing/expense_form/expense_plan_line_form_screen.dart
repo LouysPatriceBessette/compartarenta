@@ -10,6 +10,7 @@ import '../../housing/housing_plan_draft_backup.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../screens/housing/housing_amendment_submit_preview_screen.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'expense_amount_parse.dart';
 import 'expense_line_persistence.dart';
 import 'expense_plan_line_form_body.dart';
@@ -467,12 +468,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
         ),
       ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          16 + MediaQuery.viewPaddingOf(context).bottom,
-        ),
+        padding: screenBodyScrollPadding(context),
         children: [
           ExpensePlanLineFormBody.edit(
             lockRecurrenceAndSplit: widget.lockRecurrenceAndSplit,

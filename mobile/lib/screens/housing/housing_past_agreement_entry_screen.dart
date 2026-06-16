@@ -7,6 +7,7 @@ import '../../housing/participation/housing_participation_membership_service.dar
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_plan_screen.dart';
 
@@ -89,7 +90,7 @@ class HousingPastAgreementEntryScreen extends StatelessWidget {
                     : '${l10n.housingPastHubTitle} $periodRange';
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: screenBodyScrollPadding(context),
               children: [
                 Card(
                   child: ListTile(

@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_realized_expense_review_screen.dart';
 
 class HousingRejectedExpensesScreen extends StatelessWidget {
@@ -57,10 +58,11 @@ class HousingRejectedExpensesScreen extends StatelessWidget {
               final dateFmt = loadedPrefs == null
                   ? null
                   : effectiveDateFormat(loadedPrefs);
-              return SafeArea(
-                top: false,
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              return ListView.separated(
+                padding: screenBodyScrollPadding(
+                  context,
+                  content: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                ),
                   itemCount: rows.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
@@ -107,8 +109,7 @@ class HousingRejectedExpensesScreen extends StatelessWidget {
                       ),
                     );
                   },
-                ),
-              );
+                );
             },
           );
         },

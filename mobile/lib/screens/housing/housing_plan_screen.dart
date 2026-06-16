@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_decimal_text_field.dart';
 import '../../widgets/app_dialog.dart';
 import '../../widgets/app_text_field.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../../contacts/contact_display.dart';
@@ -1565,14 +1566,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       top: false,
                       child: Padding(
                         padding: widget.amendmentRulesOnly
-                            ? housingAmendmentSafeAreaContentPadding
-                            : EdgeInsets.fromLTRB(
-                                16,
-                                16,
-                                16,
-                                16 +
-                                    MediaQuery.viewPaddingOf(context).bottom,
-                              ),
+                            ? housingAmendmentScreenPadding(context)
+                            : screenBodyScrollPadding(context),
                         child: widget.amendmentRulesOnly
                             ? SizedBox(
                                 width: double.infinity,
@@ -1809,7 +1804,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final l10n = AppLocalizations.of(context);
     final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         if (_otherParticipantCount > 1) ...[
           Row(
@@ -1856,7 +1851,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         );
         const calendarIconScreenMargin = 18.0; // ~1/4 inch at 72 logical px/in
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 0, 16),
+          padding: screenBodyScrollPadding(
+            context,
+            content: const EdgeInsets.fromLTRB(16, 16, 0, 16),
+          ),
           children: [
             _planDatePickerRow(
               context: context,
@@ -3263,7 +3261,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final l10n = AppLocalizations.of(context);
     final listBottom = widget.amendmentRulesOnly
         ? housingAmendmentStickyFooterScrollInset(context)
-        : 16.0;
+        : screenBodyScrollPadding(context).bottom;
     return ListView(
       padding: EdgeInsets.fromLTRB(16, 16, 16, listBottom),
       children: [
@@ -3665,7 +3663,7 @@ class _SummaryViewState extends State<_SummaryView> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: screenBodyScrollPadding(context),
                 children: [
                   Text(
                     l10n.housingInviteProposalIntroTitle,
@@ -3882,11 +3880,9 @@ class _SummaryViewState extends State<_SummaryView> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                0,
-                16,
-                16 + MediaQuery.viewPaddingOf(context).bottom,
+              padding: screenBodyScrollPadding(
+                context,
+                content: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

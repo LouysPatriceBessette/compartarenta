@@ -6,6 +6,7 @@ import '../../prefs/app_preferences.dart';
 import '../../prefs/regional_unit_choices.dart';
 import '../../prefs/time_zone_preference_field.dart';
 import '../../prefs/week_start.dart';
+import '../../widgets/screen_body_padding.dart';
 
 class UnitsSettingsScreen extends StatelessWidget {
   const UnitsSettingsScreen({super.key, required this.prefs});
@@ -31,7 +32,7 @@ class UnitsSettingsScreen extends StatelessWidget {
               : prefs.timeZoneId;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: screenBodyScrollPadding(context),
             children: [
               DropdownButtonFormField<String>(
                 key: ValueKey(dateFmt),

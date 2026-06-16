@@ -12,6 +12,7 @@ import '../../housing/agreement_rules_json.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/format_money.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Vertical-stepper wizard for a shared-car plan (local draft in [AppPreferences]).
 class CarSharingPlanScreen extends StatefulWidget {
@@ -260,7 +261,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
 
   Widget _stepVehicle(AppLocalizations l10n) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         AppTextField(controller: _make, decoration: InputDecoration(labelText: l10n.carSharingFieldMake)),
         const SizedBox(height: 12),
@@ -280,7 +281,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
   Widget _stepOwner(AppLocalizations l10n) {
     final name = widget.prefs.displayName.trim().isEmpty ? '—' : widget.prefs.displayName.trim();
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Text(l10n.carSharingOwnerPrompt(name), style: Theme.of(context).textTheme.bodyLarge),
         const SizedBox(height: 16),
@@ -323,7 +324,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
   Widget _stepParticipants(AppLocalizations l10n) {
     final i = _draft.coParticipants.length > 1 ? _coEditorIndex : 0;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         if (_draft.coParticipants.length > 1) ...[
           Row(
@@ -395,7 +396,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
 
   Widget _stepInsurance(AppLocalizations l10n) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         CheckboxListTile(
           value: _draft.insuranceNotifyOnAcceptance,
@@ -430,7 +431,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
 
   Widget _stepCurrentState(AppLocalizations l10n) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         AppDecimalTextField(
           controller: _estimatedValue,
@@ -472,7 +473,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
   Widget _stepMaintenance(AppLocalizations l10n) {
     final dc = displayCurrencyCodeForPlan(widget.prefs, const []);
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Text(l10n.carSharingMaintenanceIntro, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 12),
@@ -536,7 +537,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
 
   Widget _stepAvailability(AppLocalizations l10n) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Text(l10n.carSharingAvailabilityIntro, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 12),
@@ -563,7 +564,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
 
   Widget _stepFuel(AppLocalizations l10n) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Text(l10n.carSharingFuelIntro, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 16),
@@ -594,7 +595,7 @@ class _CarSharingPlanScreenState extends State<CarSharingPlanScreen> {
   Widget _stepClauses(AppLocalizations l10n) {
     final rules = _draft.clauseRules;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: screenBodyScrollPadding(context),
       children: [
         Text(l10n.carSharingClausesIntro, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 16),

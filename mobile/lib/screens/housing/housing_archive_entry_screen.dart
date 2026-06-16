@@ -7,6 +7,7 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../widgets/screen_body_padding.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
 
@@ -200,7 +201,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
             sortNewestFirst(pending);
             sortNewestFirst(archived);
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: screenBodyScrollPadding(context),
               children: [
                 Text(
                   l10n.housingArchiveEntryBody,

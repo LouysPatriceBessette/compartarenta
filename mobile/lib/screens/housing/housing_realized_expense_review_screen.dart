@@ -19,6 +19,7 @@ import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/fullscreen_image_viewer_screen.dart';
+import '../../widgets/screen_body_padding.dart';
 import '../../widgets/local_file_image_provider.dart';
 import 'housing_realized_expense_form_screen.dart';
 
@@ -606,7 +607,7 @@ class _HousingRealizedExpenseReviewScreenState
               : null;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: screenBodyScrollPadding(context),
             children: [
               Text(
                 formatMinorAsMoney(

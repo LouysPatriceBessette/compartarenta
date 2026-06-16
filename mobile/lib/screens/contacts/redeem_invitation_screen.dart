@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
 import '../../l10n/app_localizations.dart';
+import '../../widgets/screen_body_padding.dart';
 import '../../notifications/contact_notification_service.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
@@ -332,10 +333,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     final codeExpired = _isInvitationExpired();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.contactsEnterInviteCodeTitle)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+      body: SingleChildScrollView(
+        padding: screenBodyScrollPadding(context),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (widget.housingMissingParticipantName != null &&
@@ -470,7 +470,6 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 

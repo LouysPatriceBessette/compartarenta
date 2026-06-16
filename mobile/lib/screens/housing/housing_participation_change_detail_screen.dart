@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../prefs/app_preferences.dart';
+import '../../widgets/screen_body_padding.dart';
 
 /// Accept/refuse (voting flows) or read-only detail for a participation change.
 class HousingParticipationChangeDetailScreen extends StatefulWidget {
@@ -224,7 +225,7 @@ class _HousingParticipationChangeDetailScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingParticipationChangeDetailTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: screenBodyScrollPadding(context),
         children: [
           Text(bodyText),
           if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) ...[
