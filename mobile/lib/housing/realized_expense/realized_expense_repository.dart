@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db/app_database.dart';
@@ -203,6 +204,13 @@ class RealizedExpenseRepository {
     await _recomputeExpenseStatus(expenseId, now: now);
     final proposed = (await getById(expenseId))!;
     await captureLineSnapshotForExpense(_db, proposed);
+    final acceptances = await acceptancesFor(expenseId);
+    debugPrint(
+      'housing_realized_expense qa: propose local expense=$expenseId '
+      'kind=${row.kind} payer=$payerId beneficiary=$beneficiaryId '
+      'acceptances=${acceptances.length} '
+      'rows=${acceptances.isEmpty ? "(none)" : acceptances.map((a) => "${a.participantId}:${a.decision}").join(",")}',
+    );
     return (await getById(expenseId))!;
   }
 

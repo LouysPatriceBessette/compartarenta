@@ -1482,9 +1482,31 @@ class HandshakeOrchestrator {
       if (expense != null) {
         final ledger = RealizedExpenseLedgerService(_db);
         await ledger.markPlanActiveUseIfNeeded(expense.planId);
+        final selfId = ledger.selfIdForPlan(expense.planId);
+        final visibility = await ledger.visibilityFor(
+          expense: expense,
+          selfParticipantId: selfId,
+        );
+        final summary = await ledger.pendingSummary(
+          packageId: expense.packageId,
+          planId: expense.planId,
+        );
+        final acceptances = await RealizedExpenseRepository(_db).acceptancesFor(
+          expenseId,
+        );
         final shouldNotify = await ledger.shouldNotifyImportedProposal(
           expense: expense,
-          selfParticipantId: ledger.selfIdForPlan(expense.planId),
+          selfParticipantId: selfId,
+        );
+        debugPrint(
+          'housing_realized_expense qa: import post expense=$expenseId '
+          'self=$selfId localPayer=${expense.payerParticipantId} '
+          'localBeneficiary=${expense.beneficiaryParticipantId} '
+          'acceptances=${acceptances.length} '
+          'rows=${acceptances.isEmpty ? "(none)" : acceptances.map((a) => "${a.participantId}:${a.decision}").join(",")} '
+          'visibility=$visibility shouldNotify=$shouldNotify '
+          'pendingYou=${summary.waitingForYouCount} '
+          'pendingOthers=${summary.waitingForOthersCount}',
         );
         if (shouldNotify) {
           await PushNotificationService.showLocalHousingRealizedExpenseNotification(
@@ -2662,6 +2684,27 @@ class HandshakeOrchestrator {
     final expenseJson = await RealizedExpenseSyncService(
       _db,
     ).buildProposeJson(expense: expense, attachments: attachments);
+    try {
+      final payload = jsonDecode(expenseJson) as Map<String, dynamic>;
+      final attachmentNames = attachments
+          .map((a) => a.displayFileName)
+          .join(',');
+      debugPrint(
+        'housing_realized_expense qa: propose send expense=$expenseId '
+        'kind=${payload['kind']} '
+        'sourcePayer=${payload['payer_participant_id']} '
+        'sourceBeneficiary=${payload['beneficiary_participant_id']} '
+        'localPayer=${expense.payerParticipantId} '
+        'localBeneficiary=${expense.beneficiaryParticipantId} '
+        'attachments=${attachments.length} names=$attachmentNames '
+        'jsonBytes=${expenseJson.length}',
+      );
+    } on Object catch (e) {
+      debugPrint(
+        'housing_realized_expense qa: propose send expense=$expenseId '
+        'payload decode failed: $e',
+      );
+    }
 
     final relayReachableContacts = (await _contacts.list())
         .where((c) {

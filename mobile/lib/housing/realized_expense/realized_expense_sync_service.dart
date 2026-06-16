@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
+
+// QA grep: `housing_realized_expense qa:` (transfer import / review banner diagnosis)
 import '../../db/app_database.dart';
 import '../housing_participant_snapshot_map.dart';
 import '../housing_plan_peer_contacts.dart';
@@ -128,6 +130,16 @@ class RealizedExpenseSyncService {
           ..where((t) => t.id.equals(expenseId)))
         .getSingleOrNull();
     if (existing != null) {
+      final acceptances = await RealizedExpenseRepository(_db).acceptancesFor(
+        expenseId,
+      );
+      _logQaTransfer(
+        'import duplicate expense=$expenseId kind=${existing.kind} '
+        'localPayer=${existing.payerParticipantId} '
+        'localBeneficiary=${existing.beneficiaryParticipantId} '
+        'acceptances=${acceptances.length} '
+        'rows=${_acceptanceRowsForLog(acceptances)}',
+      );
       _log('import ok: duplicate $expenseId (idempotent)');
       return true;
     }
@@ -192,6 +204,12 @@ class RealizedExpenseSyncService {
     final beneficiaryLocal =
         beneficiarySource == null || beneficiarySource.isEmpty
             ? null
+            : kind == RealizedExpenseKind.transfer
+            ? await _resolveTransferBeneficiaryLocalId(
+                planId: target.planId,
+                beneficiarySource: beneficiarySource,
+                snapshots: payload['participant_snapshots'],
+              )
             : await resolveImportedParticipantId(
               db: _db,
               planId: target.planId,
@@ -200,9 +218,22 @@ class RealizedExpenseSyncService {
             );
     if (kind == RealizedExpenseKind.transfer &&
         (beneficiaryLocal == null || beneficiaryLocal.isEmpty)) {
+      _logQaTransfer(
+        'import skip beneficiary expense=$expenseId plan=${target.planId} '
+        'sourceBeneficiary=$beneficiarySource senderContact=$senderContactId',
+      );
       _log('import skip: transfer beneficiary not found on ${target.planId}');
       return false;
     }
+
+    _logQaTransfer(
+      'import map expense=$expenseId kind=$kind plan=${target.planId} '
+      'sourcePayer=$sourcePayer sourceBeneficiary=$beneficiarySource '
+      'localPayer=$payerId localBeneficiary=$beneficiaryLocal '
+      'self=${selfParticipantIdForPlan(target.planId)} '
+      'senderContact=$senderContactId '
+      'payerEqBeneficiary=${payerId == beneficiaryLocal}',
+    );
 
     final paymentDate = DateTime.tryParse(
       payload['payment_date'] as String? ?? '',
@@ -295,6 +326,14 @@ class RealizedExpenseSyncService {
 
     await captureLineSnapshotForExpense(_db, importedExpense);
 
+    final acceptances = await repo.acceptancesFor(expenseId);
+    _logQaTransfer(
+      'import acceptances expense=$expenseId count=${acceptances.length} '
+      'rows=${_acceptanceRowsForLog(acceptances)} '
+      'storedPayer=${importedExpense.payerParticipantId} '
+      'storedBeneficiary=${importedExpense.beneficiaryParticipantId}',
+    );
+
     _log('import ok: $expenseId -> plan ${target.planId}');
     return true;
   }
@@ -385,8 +424,68 @@ class RealizedExpenseSyncService {
     return true;
   }
 
+  /// Maps a transfer beneficiary from relay snapshots by display name first.
+  ///
+  /// Peer slot ids (`:p1`, …) are device-local. [mapSourceParticipantIdsFromSnapshots]
+  /// may match a routing [Contact.id] on the payer's roster slot (e.g. plan-est)
+  /// when the receiver **is** the beneficiary — display name disambiguates.
+  Future<String?> _resolveTransferBeneficiaryLocalId({
+    required String planId,
+    required String beneficiarySource,
+    required Object? snapshots,
+  }) async {
+    final fromDisplayName = await _localParticipantIdForSnapshotDisplayName(
+      planId: planId,
+      sourceParticipantId: beneficiarySource,
+      snapshots: snapshots,
+    );
+    if (fromDisplayName != null && fromDisplayName.isNotEmpty) {
+      return fromDisplayName;
+    }
+    return localParticipantIdForSnapshotSource(
+      db: _db,
+      planId: planId,
+      sourceParticipantId: beneficiarySource,
+      snapshots: snapshots,
+    );
+  }
+
+  Future<String?> _localParticipantIdForSnapshotDisplayName({
+    required String planId,
+    required String sourceParticipantId,
+    required Object? snapshots,
+  }) async {
+    if (sourceParticipantId.isEmpty || snapshots is! List) return null;
+
+    for (final raw in snapshots) {
+      if (raw is! Map) continue;
+      if ((raw['id'] as String?) != sourceParticipantId) continue;
+      final name = (raw['displayName'] as String? ?? '').trim().toLowerCase();
+      if (name.isEmpty) return null;
+      final roster = await participantsForPlan(_db, planId);
+      for (final participant in roster) {
+        if (participant.displayName.trim().toLowerCase() == name) {
+          return participant.id;
+        }
+      }
+      return null;
+    }
+    return null;
+  }
+
   void _log(String message) {
     debugPrint('housing_realized_expense $message');
+  }
+
+  void _logQaTransfer(String message) {
+    debugPrint('housing_realized_expense qa: $message');
+  }
+
+  String _acceptanceRowsForLog(List<RealizedExpenseAcceptance> acceptances) {
+    if (acceptances.isEmpty) return '(none)';
+    return acceptances
+        .map((a) => '${a.participantId}:${a.decision}')
+        .join(',');
   }
 
   Future<_LocalAgreementTarget?> _resolveLocalAgreementTarget({

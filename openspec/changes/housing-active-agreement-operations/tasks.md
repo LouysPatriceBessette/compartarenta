@@ -37,7 +37,7 @@
 - [x] Q.2 Monthly expenses: detail row / drill-down
 - [x] Q.3 Proof viewer (local attachments)
 - [x] Q.4 Optional notification when a peer accepts
-- [ ] Q.5 Document picker regression QA
+- [x] Q.5 Document picker regression QA
 - [ ] Q.6 Abandon rejected expense (originator)
 - [ ] Q.7 Resubmit must require changes vs. rejected version
 
