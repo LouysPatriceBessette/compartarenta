@@ -2553,7 +2553,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeIntro =>
-      'Collez ou tapez le code reçu d’un contact. L’app vérifie d’abord son format localement.';
+      'Collez ou tapez le code reçu d’un contact.';
 
   @override
   String get contactsEnterInviteCodeFieldLabel => 'Code d’invitation';
@@ -2715,7 +2715,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsFieldAvatarReadOnlyFootnote =>
-      'Seul ce contact peut changer son avatar sur son appareil.';
+      'Vous pouvez lui attribuer un autre nom.\n\nAttention! Le contact en sera informé dans:\n    Paramètres >\n        Profil >\n            Comment les autres vous nomment.';
 
   @override
   String get contactsFieldAvatarLabel => 'Avatar';
@@ -2725,6 +2725,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactsFieldNotesHint => 'Rappel personnel, non partagé';
+
+  @override
+  String get contactsFieldNotesFootnote =>
+      'Vos notes personnelles. Ne seront pas partagées.';
 
   @override
   String get contactsDeleteTitle => 'Supprimer ce contact ?';
@@ -2798,8 +2802,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsLabelEditorTitle => 'Comment vous voyez ce contact';
 
   @override
-  String get contactsLabelEditorHint =>
-      'Laisser vide pour utiliser le nom qu’il choisit sur son appareil';
+  String get contactsLabelEditorHint => 'Vide pour garder le nom original';
 
   @override
   String get contactsFieldTheirNameLabel => 'Son nom';

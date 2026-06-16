@@ -4352,7 +4352,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsEnterInviteCodeIntro.
   ///
   /// In en, this message translates to:
-  /// **'Paste or type the code you received from a contact. The app checks the format locally before doing anything else.'**
+  /// **'Paste or type the code you received from a contact.'**
   String get contactsEnterInviteCodeIntro;
 
   /// No description provided for @contactsEnterInviteCodeFieldLabel.
@@ -4614,7 +4614,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsFieldAvatarReadOnlyFootnote.
   ///
   /// In en, this message translates to:
-  /// **'Only they can change their avatar on their device.'**
+  /// **'You may assign them a different name.\n\nNote: they will be notified in:\n    Settings >\n        Profile >\n            How others name you.'**
   String get contactsFieldAvatarReadOnlyFootnote;
 
   /// No description provided for @contactsFieldAvatarLabel.
@@ -4634,6 +4634,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Personal reminder, not shared'**
   String get contactsFieldNotesHint;
+
+  /// No description provided for @contactsFieldNotesFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal notes. They will not be shared.'**
+  String get contactsFieldNotesFootnote;
 
   /// No description provided for @contactsDeleteTitle.
   ///
@@ -4746,7 +4752,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsLabelEditorHint.
   ///
   /// In en, this message translates to:
-  /// **'Leave blank to use the name they choose on their device'**
+  /// **'Leave blank to keep their original name'**
   String get contactsLabelEditorHint;
 
   /// No description provided for @contactsFieldTheirNameLabel.

@@ -3,9 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
+import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
+import 'contact_invitation_list_tile.dart';
 
-/// Outstanding-invitations list with status and revoke action.
+/// Sent invitations (pending / expired) with access to the shareable code.
 class OutstandingInvitationsScreen extends StatefulWidget {
   const OutstandingInvitationsScreen({super.key});
 
@@ -17,8 +21,9 @@ class OutstandingInvitationsScreen extends StatefulWidget {
 class _OutstandingInvitationsScreenState
     extends State<OutstandingInvitationsScreen> {
   AppDatabase get _db => AppDatabase.processScope;
-  late final ContactInvitationsRepository _repo =
+  late final ContactInvitationsRepository _invitationsRepo =
       ContactInvitationsRepository(_db);
+  late final ContactsRepository _contactsRepo = ContactsRepository(_db);
 
   Future<List<ContactInvitation>>? _future;
 
@@ -30,12 +35,22 @@ class _OutstandingInvitationsScreenState
 
   void _reload() {
     setState(() {
-      _future = _repo.listWithFreshStatus();
+      _future = _invitationsRepo.listWithFreshStatus();
     });
   }
 
-  Future<void> _revoke(String id) async {
-    await _repo.revoke(id);
+  Future<void> _openInvitationCode(ContactInvitation invitation) async {
+    await context.push('/contacts/invitations/code/${invitation.id}');
+    if (!mounted) return;
+    _reload();
+  }
+
+  Future<void> _deleteExpiredInvitation(ContactInvitation invitation) async {
+    final stubId = invitation.contactStubId;
+    if (stubId != null && stubId.isNotEmpty) {
+      await _contactsRepo.deleteLocally(stubId);
+    }
+    if (!mounted) return;
     _reload();
   }
 
@@ -45,10 +60,10 @@ class _OutstandingInvitationsScreenState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.contactsInvitationsTitle)),
       floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: Text(l10n.contactsInviteGenerateAction),
+        icon: const Icon(Icons.person_add),
+        label: Text(l10n.contactsAddContactAction),
         onPressed: () =>
-            context.push('/contacts/invite/new').then((_) => _reload()),
+            context.push('/contacts/invitations/new').then((_) => _reload()),
       ),
       body: FutureBuilder<List<ContactInvitation>>(
         future: _future,
@@ -56,8 +71,8 @@ class _OutstandingInvitationsScreenState
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final all = snapshot.data ?? const <ContactInvitation>[];
-          if (all.isEmpty) {
+          final items = sortSentInvitationsForList(snapshot.data ?? const []);
+          if (items.isEmpty) {
             return Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
@@ -68,49 +83,29 @@ class _OutstandingInvitationsScreenState
               ),
             );
           }
-          return ListView.separated(
-            itemCount: all.length,
-            separatorBuilder: (_, _) => const Divider(height: 0),
-            itemBuilder: (context, index) {
-              final row = all[index];
-              return ListTile(
-                title: Text(
-                  l10n.contactsInvitationsItemTitle(
-                    row.createdAt.toLocal().toString(),
-                  ),
-                ),
-                subtitle: Text(
-                  '${_statusLabel(l10n, row.status)}'
-                  ' · '
-                  '${l10n.contactsInviteExpiresAt(row.expiresAt.toLocal().toString())}',
-                ),
-                trailing: row.status == 'pending'
-                    ? IconButton(
-                        icon: const Icon(Icons.cancel_outlined),
-                        tooltip: l10n.contactsInviteRevokeAction,
-                        onPressed: () => _revoke(row.id),
-                      )
-                    : null,
+          return FutureBuilder<AppPreferences>(
+            future: AppPreferences.load(),
+            builder: (context, prefsSnap) {
+              final dateFormat = prefsSnap.hasData
+                  ? effectiveDateFormat(prefsSnap.data!)
+                  : 'YYYY-MM-DD';
+              return ListView.separated(
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const Divider(height: 0),
+                itemBuilder: (context, index) {
+                  final row = items[index];
+                  return ContactInvitationListTile(
+                    invitation: row,
+                    dateFormat: dateFormat,
+                    onOpenCode: () => _openInvitationCode(row),
+                    onDeleteExpired: () => _deleteExpiredInvitation(row),
+                  );
+                },
               );
             },
           );
         },
       ),
     );
-  }
-
-  String _statusLabel(AppLocalizations l10n, String status) {
-    switch (status) {
-      case 'pending':
-        return l10n.contactsInvitationsStatusPending;
-      case 'used':
-        return l10n.contactsInvitationsStatusUsed;
-      case 'expired':
-        return l10n.contactsInvitationsStatusExpired;
-      case 'revoked':
-        return l10n.contactsInvitationsStatusRevoked;
-      default:
-        return status;
-    }
   }
 }

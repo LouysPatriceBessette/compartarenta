@@ -207,6 +207,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
           final pluginLink = isNativePluginLinkError(error);
           final errorTheme = buildAppTheme();
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             theme: errorTheme,
             home: Scaffold(
               body: SafeArea(
@@ -264,6 +265,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         }
         if (snapshot.connectionState != ConnectionState.done || prefs == null) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             theme: buildAppTheme(),
             home: const Scaffold(
               body: Center(child: CircularProgressIndicator()),
@@ -282,6 +284,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
             final locale = override == null ? null : Locale(override);
 
             return MaterialApp.router(
+              debugShowCheckedModeBanner: false,
               onGenerateTitle: (context) =>
                   AppLocalizations.of(context).appTitle,
               theme: buildAppTheme(),
@@ -374,11 +377,11 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       ),
       GoRoute(
         path: '/contacts',
-        builder: (context, state) => const ContactsListScreen(),
+        builder: (context, state) => ContactsListScreen(config: config),
         routes: [
           GoRoute(
             path: 'new',
-            redirect: (context, state) => '/contacts/invite/new',
+            redirect: (context, state) => '/contacts/invitations/new',
           ),
           GoRoute(
             path: 'invite/new',
@@ -391,13 +394,29 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
           ),
           GoRoute(
             path: 'invite/code/:invitationId',
-            builder: (context, state) => GenerateInvitationScreen(
-              viewInvitationId: state.pathParameters['invitationId'],
-            ),
+            redirect: (context, state) =>
+                '/contacts/invitations/code/${state.pathParameters['invitationId']}',
           ),
           GoRoute(
             path: 'invitations',
             builder: (context, state) => const OutstandingInvitationsScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) {
+                  final extra = state.extra;
+                  return GenerateInvitationScreen(
+                    reconnectContactId: extra is String ? extra : null,
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'code/:invitationId',
+                builder: (context, state) => GenerateInvitationScreen(
+                  viewInvitationId: state.pathParameters['invitationId'],
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'redeem',

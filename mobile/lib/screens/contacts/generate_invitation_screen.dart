@@ -257,7 +257,6 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
                   showDeadlineRemaining:
                       generated.row.status == InvitationStatus.pending,
                   onRevoke: _revoke,
-                  onDone: () => context.pop(),
                 ),
       ),
     );
@@ -341,7 +340,6 @@ class _GeneratedView extends StatelessWidget {
     required this.expiresAt,
     required this.showDeadlineRemaining,
     required this.onRevoke,
-    required this.onDone,
   });
 
   final String shortCode;
@@ -350,7 +348,6 @@ class _GeneratedView extends StatelessWidget {
   final DateTime expiresAt;
   final bool showDeadlineRemaining;
   final VoidCallback onRevoke;
-  final VoidCallback onDone;
 
   @override
   Widget build(BuildContext context) {
@@ -368,11 +365,23 @@ class _GeneratedView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.contactsInviteShareWarning,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
+                if (showDeadlineRemaining) ...[
+                  FutureBuilder<AppPreferences>(
+                    future: AppPreferences.load(),
+                    builder: (context, snap) {
+                      if (!snap.hasData) return const SizedBox.shrink();
+                      return Center(
+                        child: DeadlineDisplay(
+                          title: l10n.contactsInviteDeadlineTitle,
+                          deadlineUtc: expiresAt,
+                          dateFormat: effectiveDateFormat(snap.data!),
+                          l10n: l10n,
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -441,41 +450,19 @@ class _GeneratedView extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (showDeadlineRemaining) ...[
-                  const SizedBox(height: 16),
-                  FutureBuilder<AppPreferences>(
-                    future: AppPreferences.load(),
-                    builder: (context, snap) {
-                      if (!snap.hasData) return const SizedBox.shrink();
-                      return Center(
-                        child: DeadlineDisplay(
-                          title: l10n.contactsInviteDeadlineTitle,
-                          deadlineUtc: expiresAt,
-                          dateFormat: effectiveDateFormat(snap.data!),
-                          l10n: l10n,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                const SizedBox(height: 16),
+                Text(
+                  l10n.contactsInviteShareWarning,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ),
         ),
-        Padding(
-          padding: EdgeInsets.only(bottom: screenBottomSafeInset(context)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              OutlinedButton.icon(
-                icon: const Icon(Icons.cancel_outlined),
-                label: Text(l10n.contactsInviteRevokeAction),
-                onPressed: onRevoke,
-              ),
-              const SizedBox(height: 8),
-              FilledButton(onPressed: onDone, child: Text(l10n.commonDone)),
-            ],
-          ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.cancel_outlined),
+          label: Text(l10n.contactsInviteRevokeAction),
+          onPressed: onRevoke,
         ),
       ],
     );

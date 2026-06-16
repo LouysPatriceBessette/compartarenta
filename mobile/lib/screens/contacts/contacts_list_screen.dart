@@ -4,59 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/app_config.dart';
 import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
-import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
-import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
-import '../../util/display_date.dart';
 
-/// Outstanding invitation row for [contact], if this list row is an inviter stub.
-ContactInvitation? invitationForContactStub(
-  Contact contact,
-  Map<String, ContactInvitation> byStub,
-) {
-  final direct = byStub[contact.id];
-  if (direct != null) return direct;
-  const prefix = 'contact:handshake:';
-  if (!contact.id.startsWith(prefix)) return null;
-  final invitationId = contact.id.substring(prefix.length);
-  for (final row in byStub.values) {
-    if (row.id == invitationId) return row;
-  }
-  return null;
-}
+/// Connected contacts first (A–Z), then other non-invitation rows (A–Z).
+List<Contact> sortContactsForMainList(List<Contact> contacts) {
+  bool isInvitationStub(Contact contact) =>
+      contact.id.startsWith('contact:handshake:');
 
-/// Invitations first (newest creation first), then connected (A–Z), then others (A–Z).
-List<Contact> sortContactsForMainList(
-  List<Contact> contacts,
-  Map<String, ContactInvitation> invitations,
-) {
   int tier(Contact contact) {
-    if (contact.kind == 'connected') return 1;
-    if (invitationForContactStub(contact, invitations) != null) return 0;
-    return 2;
+    if (contact.kind == 'connected') return 0;
+    if (isInvitationStub(contact)) return -1;
+    return 1;
   }
 
-  final sorted = List<Contact>.of(contacts);
+  final sorted = contacts.where((c) => !isInvitationStub(c)).toList();
   sorted.sort((a, b) {
     final tierA = tier(a);
     final tierB = tier(b);
     if (tierA != tierB) return tierA.compareTo(tierB);
-    switch (tierA) {
-      case 0:
-        final invA = invitationForContactStub(a, invitations)!;
-        final invB = invitationForContactStub(b, invitations)!;
-        return invB.createdAt.compareTo(invA.createdAt);
-      case 1:
-      case 2:
-        return _compareDisplayNames(a, b);
-      default:
-        return 0;
-    }
+    return _compareDisplayNames(a, b);
   });
   return sorted;
 }
@@ -71,7 +43,9 @@ int _compareDisplayNames(Contact a, Contact b) {
 
 /// Main entry point for the Contacts area.
 class ContactsListScreen extends StatefulWidget {
-  const ContactsListScreen({super.key});
+  const ContactsListScreen({super.key, required this.config});
+
+  final AppConfig config;
 
   @override
   State<ContactsListScreen> createState() => _ContactsListScreenState();
@@ -80,13 +54,10 @@ class ContactsListScreen extends StatefulWidget {
 class _ContactsListScreenState extends State<ContactsListScreen> {
   AppDatabase get _db => AppDatabase.processScope;
   late final ContactsRepository _repo = ContactsRepository(_db);
-  late final ContactInvitationsRepository _invitationsRepo =
-      ContactInvitationsRepository(_db);
   HandshakeOrchestrator? get _orchestrator =>
       HandshakeOrchestrator.maybeInstance;
 
-  Future<({List<Contact> contacts, Map<String, ContactInvitation> invitations})>?
-      _future;
+  Future<List<Contact>>? _future;
   bool _refreshingIncoming = false;
 
   /// Last seen length of [HandshakeOrchestrator.incomingHandshakes]. When it
@@ -130,8 +101,6 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     if (n != _lastIncomingHandshakesCount) {
       _lastIncomingHandshakesCount = n;
       _reload();
-      // Brief follow-up read after the frame in case the last handshake row
-      // is cleared asynchronously right as the count hits zero.
       if (n == 0) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future<void>.delayed(const Duration(milliseconds: 48), () {
@@ -149,29 +118,9 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     });
   }
 
-  Future<({List<Contact> contacts, Map<String, ContactInvitation> invitations})>
-      _loadContacts() async {
+  Future<List<Contact>> _loadContacts() async {
     final contacts = await _repo.list();
-    final invitations = await _invitationsRepo.mapOutstandingByContactStub();
-    return (
-      contacts: sortContactsForMainList(contacts, invitations),
-      invitations: invitations,
-    );
-  }
-
-  Future<void> _openInvitationCode(ContactInvitation invitation) async {
-    await context.push('/contacts/invite/code/${invitation.id}');
-    if (!mounted) return;
-    _reload();
-  }
-
-  Future<void> _deleteExpiredInvitationStub({
-    required Contact contact,
-    required ContactInvitation invitation,
-  }) async {
-    await _repo.deleteLocally(contact.id);
-    if (!mounted) return;
-    _reload();
+    return sortContactsForMainList(contacts);
   }
 
   Future<void> _openIncoming() async {
@@ -184,7 +133,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   }
 
   Future<void> _openInviteContact() async {
-    await context.push('/contacts/invite/new');
+    await context.push('/contacts/invitations/new');
     if (!mounted) return;
     _reload();
   }
@@ -195,8 +144,24 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     final l10n = AppLocalizations.of(context);
     setState(() => _refreshingIncoming = true);
     try {
-      final activeBefore = await orch.activePendingHandshakeRows();
-      final allBefore = await orch.allPendingHandshakeRowsForDiagnostics();
+      final showDiagnostics =
+          widget.config.environment != AppEnvironment.prod;
+      var activeCount = 0;
+      var totalCount = 0;
+      var latest = 'none';
+      if (showDiagnostics) {
+        final activeBefore = await orch.activePendingHandshakeRows();
+        final allBefore = await orch.allPendingHandshakeRowsForDiagnostics();
+        activeCount = activeBefore.length;
+        totalCount = allBefore.length;
+        final latestError =
+            allBefore.isEmpty ? '' : allBefore.last.lastErrorCode;
+        latest = allBefore.isEmpty
+            ? 'none'
+            : latestError.isEmpty
+            ? allBefore.last.state
+            : '${allBefore.last.state}/$latestError';
+      }
       await orch.processAllPendingHandshakes();
       await orch.pollSteadyStateInboxes();
       await orch.refreshIncomingHandshakes();
@@ -204,22 +169,17 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
       _reload();
       final count = orch.incomingHandshakes.value.length;
-      final activeCount = activeBefore.length;
-      final latestError = allBefore.isEmpty ? '' : allBefore.last.lastErrorCode;
-      final latest = allBefore.isEmpty
-          ? 'none'
-          : latestError.isEmpty
-          ? allBefore.last.state
-          : '${allBefore.last.state}/$latestError';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             count == 0
-                ? l10n.contactsRefreshIncomingDiagnostics(
-                    activeCount,
-                    allBefore.length,
-                    latest,
-                  )
+                ? showDiagnostics
+                    ? l10n.contactsRefreshIncomingDiagnostics(
+                        activeCount,
+                        totalCount,
+                        latest,
+                      )
+                    : l10n.contactsRefreshIncomingNone
                 : l10n.contactsRefreshIncomingFound(count),
           ),
         ),
@@ -281,56 +241,26 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
         children: [
           _IncomingBanner(orchestrator: _orchestrator, onTap: _openIncoming),
           Expanded(
-            child: FutureBuilder<
-                ({
-                  List<Contact> contacts,
-                  Map<String, ContactInvitation> invitations,
-                })>(
+            child: FutureBuilder<List<Contact>>(
               future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final data = snapshot.data;
-                final items = data?.contacts ?? const <Contact>[];
-                final invitations = data?.invitations ?? const {};
+                final items = snapshot.data ?? const <Contact>[];
                 if (items.isEmpty) {
                   return const _ContactsEmptyState();
                 }
-                return FutureBuilder<AppPreferences>(
-                  future: AppPreferences.load(),
-                  builder: (context, prefsSnap) {
-                    final dateFormat = prefsSnap.hasData
-                        ? effectiveDateFormat(prefsSnap.data!)
-                        : 'YYYY-MM-DD';
-                    return ListView.separated(
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const Divider(height: 0),
-                      itemBuilder: (context, index) {
-                        final contact = items[index];
-                        final invitation = invitationForContactStub(
-                          contact,
-                          invitations,
-                        );
-                        if (invitation != null && contact.kind != 'connected') {
-                          return _InvitationStubTile(
-                            contact: contact,
-                            invitation: invitation,
-                            dateFormat: dateFormat,
-                            onOpenCode: () => _openInvitationCode(invitation),
-                            onDelete: () => _deleteExpiredInvitationStub(
-                              contact: contact,
-                              invitation: invitation,
-                            ),
-                          );
-                        }
-                        return _ContactTile(
-                          contact: contact,
-                          onTap: () => context
-                              .push('/contacts/${contact.id}')
-                              .then((_) => _reload()),
-                        );
-                      },
+                return ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const Divider(height: 0),
+                  itemBuilder: (context, index) {
+                    final contact = items[index];
+                    return _ContactTile(
+                      contact: contact,
+                      onTap: () => context
+                          .push('/contacts/${contact.id}')
+                          .then((_) => _reload()),
                     );
                   },
                 );
@@ -415,63 +345,6 @@ class _ContactsEmptyState extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _InvitationStubTile extends StatelessWidget {
-  const _InvitationStubTile({
-    required this.contact,
-    required this.invitation,
-    required this.dateFormat,
-    required this.onOpenCode,
-    required this.onDelete,
-  });
-
-  final Contact contact;
-  final ContactInvitation invitation;
-  final String dateFormat;
-  final VoidCallback onOpenCode;
-  final VoidCallback onDelete;
-
-  bool get _isExpired =>
-      invitation.status == InvitationStatus.expired ||
-      invitation.expiresAt.isBefore(DateTime.now().toUtc());
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final subtitle = _isExpired
-        ? l10n.deadlineRemainingExpired
-        : formatPreferenceDateTime(invitation.createdAt, dateFormat);
-
-    return ListTile(
-      onTap: _isExpired ? null : onOpenCode,
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primaryContainer,
-        child: Icon(
-          Icons.outgoing_mail,
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-      title: Text(l10n.contactsInvitationStubTitle),
-      subtitle: Text(
-        subtitle,
-        style: _isExpired
-            ? TextStyle(
-                color: theme.colorScheme.error,
-                fontWeight: FontWeight.w600,
-              )
-            : null,
-      ),
-      trailing: _isExpired
-          ? IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.commonDelete,
-              onPressed: onDelete,
-            )
-          : const Icon(Icons.chevron_right),
     );
   }
 }

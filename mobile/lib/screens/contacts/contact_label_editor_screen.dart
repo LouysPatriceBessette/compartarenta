@@ -148,9 +148,13 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
               controller: _notesController,
               decoration: InputDecoration(
                 labelText: l10n.contactsFieldNotesLabel,
-                hintText: l10n.contactsFieldNotesHint,
               ),
               maxLines: 3,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.contactsFieldNotesFootnote,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
             Row(

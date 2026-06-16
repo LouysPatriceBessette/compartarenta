@@ -534,11 +534,6 @@ class _ContactDetail extends StatelessWidget {
           label: Text(l10n.commonDelete),
           onPressed: deleted ? null : onDelete,
         ),
-        const SizedBox(height: 16),
-        Text(
-          l10n.contactsDeletePreservesHistory,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
       ],
     );
   }
