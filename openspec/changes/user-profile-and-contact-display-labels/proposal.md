@@ -8,7 +8,7 @@ This change is specification-only; implementation follows in a later pass.
 
 ## What Changes
 
-- **Settings / self-identity:** explicit requirements to edit the user’s own display name and avatar after setup, with validation and propagation to connected peers via existing encrypted **profile-update** semantics (`contact-handshake-over-relay`).
+- **Settings / self-identity:** explicit requirements to edit the user’s own display name and avatar after setup, with validation and propagation to connected peers via existing encrypted **profile-update** semantics (`contact-handshake-over-relay`), subject to housing open-vote display-name freeze (`housing-plan-proposal-offer-flow` task **1.24**).
 - **Contact display ownership:** distinguish the peer’s **canonical** identity (what they choose for themselves and broadcast) from each owner’s **local display label** (how this device shows that contact). Only the peer edits their **avatar**; others cannot change it.
 - **Peer visibility:** a profile area listing, per connected contact, the effective label that contact uses for the local user, plus any local override the user applied on their side.
 - **Canonical name changes vs local overrides:** rules for notifications when the peer updates their name, and for **accept (align)** vs **keep override** when the new canonical name collides or relates to an existing local label (including the “already matches my override” silent case).
@@ -25,7 +25,7 @@ This change is specification-only; implementation follows in a later pass.
 ### Modified Capabilities
 
 - `contacts-domain-model`: Disconnected presentation; pointer to split canonical vs local display.
-- `contact-handshake-over-relay`: Clarify profile-update as **canonical self** broadcast; reference label/notification rules.
+- `contact-handshake-over-relay`: Clarify profile-update as **canonical self** broadcast; reference label/notification rules and housing vote display-name freeze (`housing-plan-proposal-offer-flow`).
 - `contact-privacy-and-deletion`: Disconnect/reconnect UX at product level (no new relay privacy class).
 - `initial-configuration`: Cross-reference detailed post-setup identity editing to this change.
 

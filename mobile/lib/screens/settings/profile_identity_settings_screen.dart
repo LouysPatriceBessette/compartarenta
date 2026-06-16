@@ -4,6 +4,8 @@ import '../../widgets/screen_body_padding.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../contacts/avatar_palette.dart';
+import '../../contacts/profile_rename_policy.dart';
+import '../../housing/housing_participant_profile_sync.dart';
 import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
@@ -28,6 +30,23 @@ class _ProfileIdentitySettingsScreenState
       TextEditingController(text: widget.prefs.displayName);
   late String _avatarId = widget.prefs.avatarId;
   bool _saving = false;
+  List<ProfileRenameBlock> _renameBlocks = const [];
+  bool _renameBlocksLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRenameBlocks();
+  }
+
+  Future<void> _loadRenameBlocks() async {
+    final blocks = await listProfileRenameBlocks(AppDatabase.processScope);
+    if (!mounted) return;
+    setState(() {
+      _renameBlocks = blocks;
+      _renameBlocksLoading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -35,8 +54,17 @@ class _ProfileIdentitySettingsScreenState
     super.dispose();
   }
 
+  bool get _displayNameChanged =>
+      _name.text.trim() != widget.prefs.displayName.trim();
+
+  bool get _nameChangeBlocked =>
+      !_renameBlocksLoading && _renameBlocks.isNotEmpty && _displayNameChanged;
+
   bool get _canSave =>
-      _name.text.trim().isNotEmpty && _avatarId.trim().isNotEmpty;
+      _name.text.trim().isNotEmpty &&
+      _avatarId.trim().isNotEmpty &&
+      !_nameChangeBlocked &&
+      !_saving;
 
   Future<List<Contact>> _connectedContacts() async {
     final repo = ContactsRepository(AppDatabase.processScope);
@@ -47,10 +75,25 @@ class _ProfileIdentitySettingsScreenState
   Future<void> _save() async {
     if (!_canSave || _saving) return;
     setState(() => _saving = true);
+    final newName = _name.text.trim();
+    final nameChanged = _displayNameChanged;
+    if (nameChanged && await profileDisplayNameChangeBlocked(AppDatabase.processScope)) {
+      await _loadRenameBlocks();
+      if (!mounted) return;
+      setState(() => _saving = false);
+      return;
+    }
     await widget.prefs.setProfileIdentity(
-      displayName: _name.text.trim(),
+      displayName: newName,
       avatarId: _avatarId,
     );
+    if (nameChanged) {
+      await syncSelfParticipantRowsForProfile(
+        db: AppDatabase.processScope,
+        displayName: newName,
+        avatarId: _avatarId,
+      );
+    }
     final repo = ContactsRepository(AppDatabase.processScope);
     await repo.clearTheirLabelForMeWhenMatchesCanonical(_name.text.trim());
     final orch = HandshakeOrchestrator.maybeInstance;
@@ -164,6 +207,17 @@ class _ProfileIdentitySettingsScreenState
               ),
               onChanged: (_) => setState(() {}),
             ),
+            if (_nameChangeBlocked) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.settingsProfileRenameBlockedBody(
+                  _renameBlocks.map((b) => b.planTitle).toSet().join(', '),
+                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Text(
               l10n.onboardingAvatarTitle,
@@ -246,7 +300,7 @@ class _ProfileIdentitySettingsScreenState
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: _canSave && !_saving ? _save : null,
+                  onPressed: _canSave ? _save : null,
                   child: Text(l10n.commonSave),
                 ),
               ],

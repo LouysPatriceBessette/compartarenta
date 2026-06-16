@@ -21,3 +21,9 @@ When a recipient's imported proposal lists co-participants who are not relay-rea
 - **WHEN** Louys has imported Monica's proposal but lacks Roberr as a connected contact
 - **THEN** Louys cannot Accept the housing offer until Roberr is connected via plan-mediated establishment or an equivalent connected contact match
 - **AND** the missing-contacts hub shows **Establish contact** for Roberr
+
+---
+
+### Requirement: Profile rename policy during housing votes (cross-reference)
+
+Display-name changes during open housing votes, roster sync before send, and plan-mediated rename reconciliation are specified in the sibling change `housing-plan-proposal-offer-and-responses` (`housing-plan-proposal-offer-flow`, task **1.24**). This change does **not** re-send proposals on rename; it relies on pubkey-bearing snapshots plus establishment-time reconciliation.

@@ -11,7 +11,9 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../housing/housing_participant_profile_sync.dart';
 import '../housing/housing_plan_peer_contacts.dart';
+import '../housing/housing_plan_peer_identity_reconcile.dart';
 import '../housing/plan_peer_establishment_service.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/proposals/plan_agreement_proposal_service.dart';
@@ -1280,6 +1282,12 @@ class HandshakeOrchestrator {
       }
       await _contacts.rename(
         id: contact.id,
+        displayName: newDn,
+        avatarId: newAv,
+      );
+      await syncParticipantRowsForContactProfile(
+        db: _db,
+        contactId: contact.id,
         displayName: newDn,
         avatarId: newAv,
       );
@@ -3592,6 +3600,19 @@ class HandshakeOrchestrator {
 
     if (row != null && row.outboundPendingAt != null) {
       final selfProfile = await _loadSelfProfileForAck();
+      if (planMediatedPeerNameMismatch(
+        storedName: row.peerDisplayName,
+        incomingName: decrypted.requesterDisplayName,
+      )) {
+        await reconcilePlanMediatedPeerIdentity(
+          db: _db,
+          peerPublicMaterialB64: peerB64,
+          displayName: decrypted.requesterDisplayName,
+          avatarId: decrypted.requesterAvatarId,
+          planId: row.planId,
+          participantId: row.participantId,
+        );
+      }
       await _postContactEstablishmentResponse(
         peerPub: peerPub,
         accepted: true,
@@ -3636,6 +3657,22 @@ class HandshakeOrchestrator {
       row = await _db.getPlanPeerEstablishment(rowId);
     }
     if (row == null) return;
+
+    if (planMediatedPeerNameMismatch(
+      storedName: row.peerDisplayName,
+      incomingName: decrypted.requesterDisplayName,
+    )) {
+      await reconcilePlanMediatedPeerIdentity(
+        db: _db,
+        peerPublicMaterialB64: peerB64,
+        displayName: decrypted.requesterDisplayName,
+        avatarId: decrypted.requesterAvatarId,
+        planId: row.planId,
+        participantId: row.participantId,
+      );
+      row = await _db.getPlanPeerEstablishment(row.id);
+      if (row == null) return;
+    }
 
     await service.markInboundPending(
       establishmentId: row.id,
@@ -3685,28 +3722,43 @@ class HandshakeOrchestrator {
 
     final peerB64 = RelayRouting.b64(peerPub);
     final service = PlanPeerEstablishmentService(_db);
-    final row =
+    var row =
         establishment ??
         await _db.getPlanPeerEstablishmentByPeer(peerB64);
     if (row == null) return;
 
     await service.clearOutboundPending(row.id);
     if (decrypted.accepted) {
+      final responderName = decrypted.responderDisplayName.isEmpty
+          ? row.peerDisplayName
+          : decrypted.responderDisplayName;
+      final responderAvatar = decrypted.responderAvatarId.isEmpty
+          ? row.peerAvatarId
+          : decrypted.responderAvatarId;
+      if (planMediatedPeerNameMismatch(
+        storedName: row.peerDisplayName,
+        incomingName: responderName,
+      )) {
+        await reconcilePlanMediatedPeerIdentity(
+          db: _db,
+          peerPublicMaterialB64: peerB64,
+          displayName: responderName,
+          avatarId: responderAvatar,
+          planId: row.planId,
+          participantId: row.participantId,
+        );
+        row = await _db.getPlanPeerEstablishment(row.id);
+        if (row == null) return;
+      }
       await _promotePlanPeerContact(
         planId: row.planId,
         participantId: row.participantId,
         peerPub: peerPub,
-        peerDisplayName: decrypted.responderDisplayName.isEmpty
-            ? row.peerDisplayName
-            : decrypted.responderDisplayName,
-        peerAvatarId: decrypted.responderAvatarId.isEmpty
-            ? row.peerAvatarId
-            : decrypted.responderAvatarId,
+        peerDisplayName: responderName,
+        peerAvatarId: responderAvatar,
       );
       await _contactNotifications.contactAddRequestResolved(
-        displayName: decrypted.responderDisplayName.isEmpty
-            ? row.peerDisplayName
-            : decrypted.responderDisplayName,
+        displayName: responderName,
         accepted: true,
       );
     } else {

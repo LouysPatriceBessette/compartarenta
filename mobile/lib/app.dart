@@ -28,7 +28,9 @@ import 'screens/contacts/contacts_list_screen.dart';
 import 'screens/contacts/generate_invitation_screen.dart';
 import 'screens/contacts/incoming_handshakes_screen.dart';
 import 'screens/contacts/outstanding_invitations_screen.dart';
+import 'contacts/profile_rename_policy.dart';
 import 'housing/housing_plan_peer_contacts.dart';
+import 'housing/housing_participant_profile_sync.dart';
 import 'screens/contacts/redeem_invitation_screen.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'notifications/closed_app_push_registration_service.dart';
@@ -165,11 +167,16 @@ class _CompartarentaAppState extends State<CompartarentaApp>
 
       if (dn.trim().isNotEmpty && dn != prevDn) {
         unawaited(_clearTheirLabelsIfCanonicalMatches(dn));
+        unawaited(_syncSelfParticipantsIfAllowed(dn, av));
       }
 
       final orch = HandshakeOrchestrator.maybeInstance;
       if (orch == null) return;
       if (prefs.displayName.isEmpty || prefs.avatarId.isEmpty) return;
+      if (dn != prevDn) {
+        unawaited(_broadcastProfileIfAllowed(orch, dn, av, prefs));
+        return;
+      }
       // Fire and forget — broadcaster catches its own errors.
       // ignore: unawaited_futures
       orch.broadcastProfileUpdate(
@@ -177,6 +184,37 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         avatarId: prefs.avatarId,
       );
     });
+  }
+
+  Future<void> _syncSelfParticipantsIfAllowed(String dn, String av) async {
+    try {
+      if (await profileDisplayNameChangeBlocked(AppDatabase.processScope)) {
+        return;
+      }
+      await syncSelfParticipantRowsForProfile(
+        db: AppDatabase.processScope,
+        displayName: dn,
+        avatarId: av,
+      );
+    } catch (_) {
+      // Best-effort.
+    }
+  }
+
+  Future<void> _broadcastProfileIfAllowed(
+    HandshakeOrchestrator orch,
+    String dn,
+    String av,
+    AppPreferences prefs,
+  ) async {
+    try {
+      if (await profileDisplayNameChangeBlocked(AppDatabase.processScope)) {
+        return;
+      }
+      await orch.broadcastProfileUpdate(displayName: dn, avatarId: av);
+    } catch (_) {
+      // Best-effort.
+    }
   }
 
   Future<void> _clearTheirLabelsIfCanonicalMatches(String canonical) async {

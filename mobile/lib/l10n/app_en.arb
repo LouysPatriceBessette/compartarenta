@@ -1233,6 +1233,12 @@
   "settingsProfileAppearancesColumnTheirLabel": "Their label for you",
   "settingsProfileAppearancesEmpty": "No connected contacts yet. Pair with someone to see how they label you here.",
   "settingsProfileAppearancesNoSharedLabels": "No contact has shared a custom name for you in their list yet.",
+  "settingsProfileRenameBlockedBody": "You are part of an open housing vote on this device: {plans}. Finish or resolve that vote before changing your display name.",
+  "@settingsProfileRenameBlockedBody": {
+    "placeholders": {
+      "plans": { "type": "String" }
+    }
+  },
   "peerNameConflictTitle": "Contact updated their name",
   "peerNameConflictBody": "You label this contact \"{label}\". They now use \"{canonical}\" on their device.",
   "@peerNameConflictBody": {

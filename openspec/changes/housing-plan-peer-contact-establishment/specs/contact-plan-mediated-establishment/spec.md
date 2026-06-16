@@ -84,3 +84,20 @@ The user-visible notification (and in-app prompt) for an inbound establishment r
 
 - **WHEN** Louys (requester) and Monica (proposer) are shown in the decrypted request
 - **THEN** Roberr's notification uses those names in the sentence above
+
+---
+
+### Requirement: Establishment messages reconcile renamed peers by public key
+
+When an inbound `contactEstablishmentRequest` or `contactEstablishmentResponse` carries a display name that **differs** from the locally stored name for the same `peerPublicMaterialB64` on a plan missing-contact row, the client SHALL reconcile all local state for that peer on the plan: establishment row, participant row, linked contact (if any), and `participantSnapshots` in stored revision payloads. Matching SHALL use **public key equality**, not display-name equality. General missing-contact detection (`relayReachableContactForParticipant`) SHALL NOT gain a broad pubkey fallback beyond this handshake path.
+
+#### Scenario: Requester renamed after proposal send
+
+- **WHEN** C's watch list still shows B under an old name from `participantSnapshots` but B's establishment request arrives with a new display name and the same snapshot public key
+- **THEN** C's plan UI, establishment row, and stored snapshots show B's current name before accept/refuse
+- **THEN** missing-contact matching behavior outside this handshake is unchanged
+
+#### Scenario: Accept response carries updated responder name
+
+- **WHEN** C sent an establishment request and B's accept response uses a display name that differs from C's stored roster name but matches B's public key
+- **THEN** C reconciles local plan and contact state to B's current name before promoting the connected contact

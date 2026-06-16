@@ -2833,6 +2833,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ningún contacto ha compartido aún un nombre personalizado para ti en su lista.';
 
   @override
+  String settingsProfileRenameBlockedBody(String plans) {
+    return 'Formas parte de una votación de vivienda abierta en este dispositivo: $plans. Finaliza o resuelve esa votación antes de cambiar tu nombre mostrado.';
+  }
+
+  @override
   String get peerNameConflictTitle => 'El contacto cambió de nombre';
 
   @override

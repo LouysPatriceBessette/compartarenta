@@ -44,3 +44,9 @@
 - If the module has archived revisions but no active/open proposal, Housing entry shows an archive/new-plan choice before step 1. Eligible archives open the editor prefilled from the snapshot; ineligible archives open read-only offer review.
 - **Agreement period overlap gate** replaces a blanket “withdraw from a plan first” rule: comparison uses **calendar dates only** (no time-of-day, no UTC for this gate). **At most one shared day** between periods never blocks; **two or more** shared days block **send** / **final accept** until dates change.
 
+## Profile rename and roster identity (task 1.24)
+
+- **Before send:** inbound `profile_update` and local self-rename update linked `participants` rows (`contactId` / `:self`); exported `participantSnapshots` reflect current Contact names at send time.
+- **During open vote:** self **display-name** change is blocked for every local housing vote (open proposal/amendment, pending participation change, agreement-expiration settlement window); avatar-only edits and avatar `profile_update` remain allowed; no automatic proposal re-send.
+- **Plan-mediated establishment race:** reconcile name mismatch on `contactEstablishmentRequest` / `contactEstablishmentResponse` when public keys match (`housing-plan-peer-contact-establishment`); do not add pubkey fallback to `relayReachableContactForParticipant`.
+

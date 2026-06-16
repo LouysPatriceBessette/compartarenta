@@ -101,6 +101,10 @@ If Louys and Roberr each tap **Establish contact** before either responds:
 | | Invitation code | Plan-mediated establishment |
 |--|-----------------|---------------------------|
 | Peer identity before message | Unknown | Known (`peerPublicMaterialB64` in proposal) |
+
+### Rename / proposal race (task 1.24 edge case)
+
+If a co-participant renames around the same time a proposal is in flight, snapshot `displayName` may lag while `peerPublicMaterialB64` stays stable. Recipients reconcile identity **only** when processing plan-mediated `contactEstablishmentRequest` / `contactEstablishmentResponse` (same public key, different name). There is **no** automatic proposal re-send and **no** broad pubkey fallback in `relayReachableContactForParticipant`. During an **open vote**, participants cannot change their own display name (avatar-only edits still allowed).
 | Address bootstrap | Nonce-derived handshake addresses | Pairwise steady-state addresses from long-term keys |
 | Target confirmation | Was manual on inviter; product may auto-accept code redemption on inviter side separately | **Explicit Accept/Refuse on target** |
 | Housing missing-contacts UI | Create / enter code | **Establish contact** only |

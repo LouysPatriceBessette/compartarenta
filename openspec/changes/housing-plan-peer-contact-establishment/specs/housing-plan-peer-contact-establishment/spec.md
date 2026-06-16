@@ -102,3 +102,15 @@ Missing-contact detection, watch-list updates, and the missing-contacts hub beha
 - **WHEN** Louys receives an amendment on the same received plan
 - **THEN** missing contacts are re-evaluated and watches updated
 - **AND** the same **Establish contact** actions apply for any still-missing peers
+
+---
+
+### Requirement: Renamed peers reconcile by public key during establishment
+
+When plan-mediated establishment messages arrive with a display name that differs from the stored missing-peer name but the sender's long-term public key matches `peerPublicMaterialB64` from `participantSnapshots`, the client SHALL reconcile establishment, participant, contact, and revision snapshot fields per `contact-plan-mediated-establishment`. The app SHALL NOT require invitation codes or manual roster edits for this edge case.
+
+#### Scenario: Crossed rename and proposal delivery
+
+- **WHEN** B's display name changes around the same time A's proposal is in flight and C receives an establishment message from B under the new name
+- **THEN** C's missing-contact UI and plan roster show B's current name after reconciliation
+- **THEN** accept/refuse gates use the reconciled identity; general pubkey fallback in `relayReachableContactForParticipant` is still not used

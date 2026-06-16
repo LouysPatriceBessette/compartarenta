@@ -35,6 +35,7 @@
 ## 6. Spec alignment
 
 - [x] 6.1 Remove or update any task/docs that still say housing missing contacts use invitation codes (`housing-plan-proposal-offer-and-responses/tasks.md` item 1.24 area cross-refs).
+- [x] 6.2 Plan-mediated establishment reconciles display-name drift when `peerPublicMaterialB64` matches (`housing-plan-proposal-offer-and-responses` task **1.24** case 3); documented in `contact-plan-mediated-establishment` and `housing-plan-peer-contact-establishment` specs.
 
 ## Manual QA (Jun 2026)
 

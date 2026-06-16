@@ -2805,6 +2805,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'No contact has shared a custom name for you in their list yet.';
 
   @override
+  String settingsProfileRenameBlockedBody(String plans) {
+    return 'You are part of an open housing vote on this device: $plans. Finish or resolve that vote before changing your display name.';
+  }
+
+  @override
   String get peerNameConflictTitle => 'Contact updated their name';
 
   @override

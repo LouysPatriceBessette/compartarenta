@@ -4809,6 +4809,12 @@ abstract class AppLocalizations {
   /// **'No contact has shared a custom name for you in their list yet.'**
   String get settingsProfileAppearancesNoSharedLabels;
 
+  /// No description provided for @settingsProfileRenameBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are part of an open housing vote on this device: {plans}. Finish or resolve that vote before changing your display name.'**
+  String settingsProfileRenameBlockedBody(String plans);
+
   /// No description provided for @peerNameConflictTitle.
   ///
   /// In en, this message translates to:

@@ -19,7 +19,7 @@ Today the app blocks plan acceptance and offers **invitation codes** (create / r
 | Capability | Relationship |
 |------------|--------------|
 | `plan-contract-proposal-payload` | **Modified** — participant identity snapshots include relay public keys. |
-| `housing-plan-proposal-offer-flow` | **Modified** — missing-contact remediation uses plan-mediated establishment, not codes. |
+| `housing-plan-proposal-offer-flow` | **Modified** — missing-contact remediation uses plan-mediated establishment, not codes. **Cross-cut** task **1.24**: roster sync before send, display-name freeze during open votes, pubkey reconciliation on establishment messages (no proposal re-send). |
 | `contact-invitation-and-codes` | **Unchanged** for general pairing; **not used** on housing missing-contacts surfaces. |
 | `contact-handshake-over-relay` | **Companion** — hello/ack-by-code remains for strangers; plan-mediated path is a **separate** steady-state envelope exchange between known keys. |
 | `closed-app-push-delivery` | **Extended** — wake transport applies to plan-mediated establishment envelopes. |

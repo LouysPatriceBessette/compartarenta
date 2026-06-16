@@ -29,9 +29,13 @@ Module participant rows SHALL store:
 - a historical display snapshot (`displayName`, `avatarId`) captured when the
   participant is added or when a proposal is accepted.
 
-The Contact remains the source of truth for current display information while
-the participant snapshot preserves historical readability if the Contact is
-renamed or deleted later.
+The Contact remains the source of truth for current display information. Module participant rows also store a **denormalized** `displayName` / `avatarId` copy (linked by `contactId`) for roster rendering; those fields are updated when the Contact’s canonical profile changes (inbound `profile_update`), per `housing-plan-proposal-offer-flow` task **1.24**. Separate **historical** snapshots captured at acceptance remain unchanged.
+
+## Profile rename and housing votes
+
+- **Before send / outside open votes:** inbound `profile_update` and local self-rename update linked `participants` rows (`contactId` match or `:self` rows).
+- **During open housing votes** (proposal, amendment, participation change, agreement-expiration settlement window): the local user **cannot** change their own **display name**; avatar-only edits remain allowed; no name-bearing `profile_update` broadcast.
+- **Plan-mediated establishment race:** when `contactEstablishmentRequest` / `contactEstablishmentResponse` arrives with the same `peerPublicMaterialB64` as a known missing peer but a different display name, reconcile establishment row, participant row, contact (if any), and revision `participantSnapshots` — without adding pubkey fallback to general missing-contact matching.
 
 ## Alias Rules
 

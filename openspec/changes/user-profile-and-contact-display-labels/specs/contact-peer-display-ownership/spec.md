@@ -58,6 +58,9 @@ When a peer **updates their canonical display name** via profile-update:
 - **WHEN** the new canonical string **differs** from the local display label (including when a label was never set and the old canonical differed)  
 - **THEN** the app SHALL surface a non-blocking notification or inbox-style item: the peer has a new preferred name, with actions **Align to their name** (clears or resets local label so effective = canonical) and **Keep my label** (local display label unchanged).
 
+- **WHEN** the peer's canonical name or avatar changes and a module participant row references that contact by `contactId`  
+- **THEN** denormalized roster display fields on that row are updated per `contacts-module-integration` and `housing-plan-proposal-offer-flow` (task **1.24**)
+
 #### Scenario: Monica keeps “Erik”
 - **WHEN** Fafoin’s canonical name becomes “Éric” and Monica had overridden “Erik”
 - **THEN** Monica receives the name-change affordance and can choose **Keep my label**, leaving her list showing “Erik” until she changes it

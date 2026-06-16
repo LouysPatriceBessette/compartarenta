@@ -2838,6 +2838,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun contact ne vous a encore communiqué un nom personnalisé dans sa liste.';
 
   @override
+  String settingsProfileRenameBlockedBody(String plans) {
+    return 'Vous participez à un vote logement ouvert sur cet appareil : $plans. Terminez ou réglez ce vote avant de changer votre nom affiché.';
+  }
+
+  @override
   String get peerNameConflictTitle => 'Le contact a changé de nom';
 
   @override

@@ -11,6 +11,7 @@
 - [x] 2.1 Settings UI: edit display name with the same validation as onboarding.
 - [x] 2.2 Settings UI: edit avatar from the supported palette.
 - [x] 2.3 Wire saves to existing profile-update broadcast for connected peers.
+- [x] 2.4 Block self **display-name** save and name-bearing `profile_update` broadcast while the local user is on roster for an open housing vote (`housing-plan-proposal-offer-flow` / task **1.24**); avatar-only edits remain allowed.
 
 ## 3. Contacts UI
 

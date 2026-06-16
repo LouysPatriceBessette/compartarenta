@@ -126,4 +126,4 @@ work.
   - **Likely area:** `mobile/lib/relay/handshake_orchestrator.dart`, `mobile/lib/screens/contacts/redeem_invitation_screen.dart`, pending-handshake rows and `processAllPendingHandshakes` / steady inbox poll timing.
   - **Related:** task **4.4** (nonce consumption on `hello`), task **4.7** (promotion to connected on both sides).
 
-- [ ] 9.2 **Bug (high / likely — housing cross-cut):** In-flight housing proposal not re-sent when a co-participant renames before all peer contacts exist — recipients stay blocked on stale participant identity. **Track implementation in** [`housing-plan-proposal-offer-and-responses` task **1.24**](../housing-plan-proposal-offer-and-responses/tasks.md).
+- [x] 9.2 **Bug (high / likely — housing cross-cut):** Profile rename vs missing-contact / open-vote identity policy (**housing-plan-proposal-offer-and-responses** task **1.24**). Before send: sync `participants` from Contact profile updates. During open votes: block self display-name change and name-bearing `profile_update` broadcast. Plan-mediated establishment: reconcile by `peerPublicMaterialB64` on request/response only.

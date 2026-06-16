@@ -391,6 +391,51 @@ The workbench (and plan authoring steps) SHALL offer **Fork from this offer** on
 
 ---
 
+### Requirement: Roster participants track contact profile updates before send
+
+When a connected contact’s canonical display name or avatar changes on this device (inbound `profile_update` or local contact merge), the app SHALL update every local `participants` row whose `contactId` references that contact. This applies to draft and received rosters **before** any open vote blocks identity changes.
+
+When the local user changes their own display name in Settings, the app SHALL update every local `participants` row whose id ends with `:self` on the same device.
+
+#### Scenario: Author draft roster reflects peer rename before send
+
+- **WHEN** co-participant **B** renames and **A** receives `profile_update` before **A** sends the housing offer
+- **THEN** **A**’s contact row and every linked roster participant row show **B**’s new name
+- **THEN** the exported `participantSnapshots` on send use the updated name
+
+---
+
+### Requirement: Display-name changes are blocked during open housing votes
+
+While the local user is on the roster of a housing plan with an **open** vote on this device, the user SHALL NOT be allowed to change their **own display name**. Open votes include: an open proposal or amendment revision (`pendingRevisionId`, not expired), a pending participation-change vote, and any other in-flight housing vote surfaced to the user on this device.
+
+Avatar-only edits SHALL remain allowed. The app SHALL NOT broadcast `profile_update` envelopes that change the local user’s display name while blocked.
+
+#### Scenario: Rename blocked during open proposal vote
+
+- **WHEN** the user is a roster participant on a plan whose pending revision is still open for responses
+- **THEN** Settings → Profile disables saving a new display name and explains which plan(s) block the change
+
+#### Scenario: Avatar change still allowed during vote
+
+- **WHEN** the user changes only their avatar during an open vote
+- **THEN** save succeeds and peers may receive an avatar update per existing profile-update rules
+
+---
+
+### Requirement: Plan-mediated contact establishment reconciles renamed peers by public key
+
+During plan-mediated peer contact establishment (`contactEstablishmentRequest` / `contactEstablishmentResponse`), when the sender’s long-term public key matches a known missing-peer row but the proposed display name differs from the stored roster / establishment name, the client SHALL reconcile all local state for that peer on this plan: establishment row, participant row, linked contact (if any), and `participantSnapshots` in stored revision payloads.
+
+This reconciliation SHALL NOT alter general missing-contact matching (`relayReachableContactForParticipant`) beyond the establishment handshake handlers.
+
+#### Scenario: Missing peer renamed between proposal send and establishment request
+
+- **WHEN** **C** receives a plan-mediated establishment request from **B** using a new display name but the same `peerPublicMaterialB64` already present in the proposal snapshot
+- **THEN** **C**’s plan UI and establishment row show **B**’s current name before the user accepts or refuses
+
+---
+
 ## Notes (non-normative)
 
 - Wire message kinds and JSON fields for offer/response/broadcast SHOULD be documented next to `docs/contacts-module-relay-payload.md`; relay Go changes are **not** assumed unless a future audit requires a new opaque `kind` byte — prefer evolving client plaintext schema under existing steady-state encryption where policy allows.

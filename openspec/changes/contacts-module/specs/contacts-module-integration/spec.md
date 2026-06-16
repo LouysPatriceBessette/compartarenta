@@ -52,14 +52,21 @@ Housing (and other relay-backed modules) SHALL reject **send**, **final accept**
 After adoption, a module's participant row SHALL embed only:
 - the Contact identifier (reference),
 - module-specific attributes (role, ratio, per-module alias, etc.),
-- optional historical display snapshots (name, avatar at time of acceptance, per `contacts-domain-model`).
+- optional **denormalized** display fields (`displayName`, `avatarId`) that mirror the linked Contact for roster rendering and offline matching, updated when the Contact’s canonical profile changes (inbound `profile_update` or local contact merge) **except** while an open housing vote freezes roster identity per `housing-plan-proposal-offer-flow`,
+- optional **historical** display snapshots (name, avatar at time of acceptance, per `contacts-domain-model`) that MUST NOT change after capture.
 
-Module participant rows SHALL NOT embed a "live" name or avatar field as the authoritative current identity.
+The Contact remains the **authoritative** source for current peer identity; participant display fields are not a second canonical store.
 
-#### Scenario: Updating a contact's name updates all module displays
-- **WHEN** the local user renames a Contact
-- **THEN** every module's current display of that participant reflects the new name
+#### Scenario: Updating a contact's name updates module roster rows
+- **WHEN** the local device applies a canonical name or avatar change for a Contact (inbound `profile_update` or equivalent)
+- **THEN** every module participant row with that `contactId` updates its denormalized `displayName` / `avatarId` to match
 - **THEN** historical snapshot fields (if any) remain unchanged
+- **THEN** current module UI that reads roster display fields reflects the new name
+
+#### Scenario: Open housing vote freezes self display name on roster
+- **WHEN** the local user is on roster for an open housing vote and attempts to change their own display name
+- **THEN** the change is blocked in Settings and no name-bearing `profile_update` is sent
+- **THEN** existing roster rows for that vote remain unchanged until the vote closes
 
 ### Requirement: Modules MAY define a per-module display alias
 A module MAY allow the user to set a per-module display alias for a participant (e.g., a nickname used only inside that module's UI). The alias SHALL be stored on the module participant row, not on the Contact. The alias SHALL NOT override the Contact's authoritative display name elsewhere in the app.

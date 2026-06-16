@@ -1096,6 +1096,12 @@
   "settingsProfileAppearancesColumnTheirLabel": "Su etiqueta para ti",
   "settingsProfileAppearancesEmpty": "Aún no hay contactos conectados. Empareja con alguien para ver aquí cómo te nombran.",
   "settingsProfileAppearancesNoSharedLabels": "Ningún contacto ha compartido aún un nombre personalizado para ti en su lista.",
+  "settingsProfileRenameBlockedBody": "Formas parte de una votación de vivienda abierta en este dispositivo: {plans}. Finaliza o resuelve esa votación antes de cambiar tu nombre mostrado.",
+  "@settingsProfileRenameBlockedBody": {
+    "placeholders": {
+      "plans": { "type": "String" }
+    }
+  },
   "peerNameConflictTitle": "El contacto cambió de nombre",
   "peerNameConflictBody": "Muestras a este contacto como «{label}». Ahora usa «{canonical}» en su dispositivo.",
   "@peerNameConflictBody": {

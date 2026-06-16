@@ -1113,6 +1113,12 @@
   "settingsProfileAppearancesColumnTheirLabel": "Son libellé pour vous",
   "settingsProfileAppearancesEmpty": "Aucun contact connecté pour l'instant. Associez-vous à quelqu'un pour voir ici comment il vous nomme.",
   "settingsProfileAppearancesNoSharedLabels": "Aucun contact ne vous a encore communiqué un nom personnalisé dans sa liste.",
+  "settingsProfileRenameBlockedBody": "Vous participez à un vote logement ouvert sur cet appareil : {plans}. Terminez ou réglez ce vote avant de changer votre nom affiché.",
+  "@settingsProfileRenameBlockedBody": {
+    "placeholders": {
+      "plans": { "type": "String" }
+    }
+  },
   "peerNameConflictTitle": "Le contact a changé de nom",
   "peerNameConflictBody": "Vous affichez ce contact sous « {label} ». Il utilise maintenant « {canonical} » sur son appareil.",
   "@peerNameConflictBody": {

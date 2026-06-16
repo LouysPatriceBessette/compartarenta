@@ -8,7 +8,7 @@ Housing invitation UX was initially oriented toward **invitation codes**. The **
 
 | Capability | Relationship |
 |------------|----------------|
-| `contacts-module-integration` | Plan participants are **connected** contacts; no parallel “temporary participant” path. |
+| `contacts-module-integration` | Plan participants are **connected** contacts; no parallel “temporary participant” path. Roster `participants` rows mirror linked Contact profile updates; display-name freeze during open votes (task **1.24**). |
 | `contact-invitation-and-codes` | **No conflict**: those codes are for **pairing** (hello/ack) before a relay relationship exists. Plan offers are sent **after** connection, using the same opaque envelope transport as other steady-state messages. **Housing missing-contacts remediation** is specified in change `housing-plan-peer-contact-establishment` (plan-mediated establishment; no codes on that hub). |
 | `plan-contract-proposal-payload` | **Aligned**: offers MUST be a **self-contained** proposal package with stable `packageId` / `revisionId` / `contentHash` per that spec. |
 | `contract-unanimous-renegotiation` | **Aligned**: a revision becomes **active** only after **unanimous accept** of the **same** revision. This change adds **product rules** for *how* responses are collected (parallel responses + early invalidation on first Negotiate/Refuse) without merging mixed terms mid-flight. **Multiple pending revisions** (different `packageId` or parallel forks) do not violate unanimity until a revision reaches **active**. **Cross-plan** propose/accept is constrained by the **agreement period overlap gate** in `housing-plan-proposal-offer-flow` (day-only: **≥ 2** shared calendar days block; **≤ 1** shared day never blocks), not by a blanket single-active rule. |
@@ -24,7 +24,7 @@ Housing invitation UX was initially oriented toward **invitation codes**. The **
 
 ## Deliverable
 
-The capability spec [`specs/housing-plan-proposal-offer-flow/spec.md`](specs/housing-plan-proposal-offer-flow/spec.md) covers: author flow, recipient flow, parallel responses and invalidation, broadcast of responses, **Settings activity log**, fork from invalidated offers, **concurrent open offers** (parallel forks and multi-plan recipients), **agreement period overlap gate** (day-only: block **send** / **final accept** only when **≥ 2** shared calendar days with a blocking interval on another participating plan; **≤ 1** shared day allowed, no UTC for this test), **fork lineage metadata**, **workbench + home selector** rules, and **fork UI gating** (no fork while source revision is still open).
+The capability spec [`specs/housing-plan-proposal-offer-flow/spec.md`](specs/housing-plan-proposal-offer-flow/spec.md) covers: author flow, recipient flow, parallel responses and invalidation, broadcast of responses, **Settings activity log**, fork from invalidated offers, **concurrent open offers** (parallel forks and multi-plan recipients), **agreement period overlap gate** (day-only: block **send** / **final accept** only when **≥ 2** shared calendar days with a blocking interval on another participating plan; **≤ 1** shared day allowed, no UTC for this test), **fork lineage metadata**, **workbench + home selector** rules, **fork UI gating** (no fork while source revision is still open), and **profile rename / roster identity policy** (task **1.24**: roster sync before send, display-name freeze during open votes, plan-mediated pubkey reconciliation).
 
 
 
