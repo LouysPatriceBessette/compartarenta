@@ -3,10 +3,10 @@ import 'package:compartarenta/screens/contacts/contacts_list_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('sortContactsForMainList excludes invitation stubs and sorts connected first', () {
+  test('sortContactsForMainList excludes pending invitation stubs and sorts connected first', () {
     final older = DateTime.utc(2026, 5, 23, 18, 1);
     final newer = DateTime.utc(2026, 5, 23, 18, 18);
-    final stub = Contact(
+    final pendingStub = Contact(
       id: 'contact:handshake:aaa',
       kind: 'local-only',
       displayName: 'Stub',
@@ -15,6 +15,18 @@ void main() {
       createdAt: older,
       updatedAt: older,
       isBlocked: false,
+    );
+    final connectedInviterStub = Contact(
+      id: 'contact:handshake:bbb',
+      kind: 'connected',
+      displayName: 'Bob',
+      avatarId: 'a01',
+      notes: '',
+      createdAt: newer,
+      updatedAt: newer,
+      isBlocked: false,
+      relayRoutingId: 'r',
+      peerPublicMaterial: 'p',
     );
     final zed = Contact(
       id: 'contact:connected:zed',
@@ -51,10 +63,17 @@ void main() {
       isBlocked: false,
     );
 
-    final sorted = sortContactsForMainList([anna, stub, zed, local]);
+    final sorted = sortContactsForMainList([
+      anna,
+      pendingStub,
+      connectedInviterStub,
+      zed,
+      local,
+    ]);
 
     expect(sorted.map((c) => c.id).toList(), [
       anna.id,
+      connectedInviterStub.id,
       zed.id,
       local.id,
     ]);

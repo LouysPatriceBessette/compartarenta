@@ -14,16 +14,17 @@ import '../../relay/handshake_orchestrator.dart';
 
 /// Connected contacts first (A–Z), then other non-invitation rows (A–Z).
 List<Contact> sortContactsForMainList(List<Contact> contacts) {
-  bool isInvitationStub(Contact contact) =>
-      contact.id.startsWith('contact:handshake:');
+  bool isPendingInvitationStub(Contact contact) =>
+      contact.id.startsWith('contact:handshake:') &&
+      contact.kind != 'connected';
 
   int tier(Contact contact) {
     if (contact.kind == 'connected') return 0;
-    if (isInvitationStub(contact)) return -1;
+    if (isPendingInvitationStub(contact)) return -1;
     return 1;
   }
 
-  final sorted = contacts.where((c) => !isInvitationStub(c)).toList();
+  final sorted = contacts.where((c) => !isPendingInvitationStub(c)).toList();
   sorted.sort((a, b) {
     final tierA = tier(a);
     final tierB = tier(b);
