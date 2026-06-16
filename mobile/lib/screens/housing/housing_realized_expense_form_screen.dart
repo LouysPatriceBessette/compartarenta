@@ -5,6 +5,7 @@ import '../../widgets/app_text_field.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/expense_form/expense_amount_parse.dart';
+import '../../housing/realized_expense/expense_payment_chart_carry.dart';
 import '../../housing/realized_expense/proof_attachment_export.dart';
 import '../../housing/realized_expense/proof_attachment_storage.dart';
 import '../../housing/realized_expense/proof_pick_flow.dart';
@@ -329,6 +330,74 @@ class _HousingRealizedExpenseFormScreenState
     return confirmed == true;
   }
 
+  Future<int?> _resolvePaymentChartCarryForwardMinor(
+    AppLocalizations l10n,
+    _FormContext ctx,
+    int newAmountMinor,
+  ) async {
+    if (!RealizedExpenseKind.usesPlanLine(_kind) || _planLineId == null) {
+      return 0;
+    }
+    final payment = _paymentDate ?? DateTime.now();
+    final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
+    final chartCtx = await chartSubmissionContext(
+      db: AppDatabase.processScope,
+      ledger: ledger,
+      planId: widget.planId,
+      packageId: widget.packageId,
+      planLineId: _planLineId!,
+      paymentDate: payment,
+      excludeExpenseId: _draftExpenseId,
+    );
+    if (chartCtx == null) {
+      return 0;
+    }
+
+    final excess = expensePaymentChartExcessMinor(
+      context: chartCtx,
+      newAmountMinor: newAmountMinor,
+    );
+    if (excess <= 0) {
+      return 0;
+    }
+
+    if (!mounted) return null;
+    final deferToNextMonth = await showAppDialog<bool>(
+      context: context,
+      guardKey: 'realizedExpense.paymentChartCarryConfirm',
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.housingRealizedExpensePaymentChartCarryTitle),
+        content: Text(
+          l10n.housingRealizedExpensePaymentChartCarryBody(
+            formatMinorAsMoney(
+              dialogContext,
+              chartCtx.monthlyTotalMinor,
+              ctx.currency,
+            ),
+            formatMinorAsMoney(dialogContext, excess, ctx.currency),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.housingRealizedExpensePaymentChartCarryCurrentMonth),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.housingRealizedExpensePaymentChartCarryNextMonth),
+          ),
+        ],
+      ),
+    );
+    if (deferToNextMonth == null) {
+      return null;
+    }
+    return expensePaymentChartCarryForwardForSubmission(
+      excessMinor: excess,
+      deferToNextMonth: deferToNextMonth,
+    );
+  }
+
   Future<void> _submit(_FormContext ctx) async {
     final l10n = AppLocalizations.of(context);
     final error = _validate(l10n, ctx);
@@ -340,6 +409,12 @@ class _HousingRealizedExpenseFormScreenState
     }
     final minor = parseAmountMinorFromText(_amountController.text)!;
     if (!await _confirmBudgetCapIfNeeded(l10n, ctx, minor)) return;
+    final carryForwardMinor = await _resolvePaymentChartCarryForwardMinor(
+      l10n,
+      ctx,
+      minor,
+    );
+    if (carryForwardMinor == null) return;
 
     setState(() => _submitting = true);
     try {
@@ -362,6 +437,7 @@ class _HousingRealizedExpenseFormScreenState
             ? _descriptionController.text
             : null,
         existingExpenseId: _draftExpenseId,
+        paymentChartCarryForwardMinor: carryForwardMinor,
         attachments: _attachmentDrafts(),
       );
       await _repo.proposeLocally(saved.id);

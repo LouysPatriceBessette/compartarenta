@@ -241,6 +241,7 @@
   "housingActiveHubEnterExpense": "Enter an expense",
   "housingActiveHubMonthlyExpenses": "Recorded expenses",
   "housingActiveHubBalances": "Expenses owed by each",
+  "housingActiveHubPaymentStatus": "Payment status due",
   "housingActiveHubViewPlan": "View current plan",
   "housingActiveHubRequestAmendment": "Request plan modification",
   "housingActiveHubExportImport": "Export / import data",
@@ -406,6 +407,23 @@
       "amount": { "type": "String" }
     }
   },
+  "housingExpensePaymentStatusTitle": "Payment status due",
+  "housingExpensePaymentStatusEmpty": "No plan expenses to display.",
+  "housingExpensePaymentStatusDetailsTitle": "Payments — {expenseName}",
+  "@housingExpensePaymentStatusDetailsTitle": {
+    "placeholders": {
+      "expenseName": { "type": "String" }
+    }
+  },
+  "housingExpensePaymentStatusDetailsEmpty": "No published payments for this expense this month.",
+  "housingExpensePaymentStatusDetailsLine": "{amount} — {date} — {payer}",
+  "@housingExpensePaymentStatusDetailsLine": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "date": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
   "@housingBalancesOwesAmountTo": {
     "placeholders": {
       "amount": { "type": "String" },
@@ -420,6 +438,16 @@
     }
   },
   "housingRealizedExpenseBudgetCapConfirm": "Submit anyway",
+  "housingRealizedExpensePaymentChartCarryTitle": "Monthly amount exceeded",
+  "housingRealizedExpensePaymentChartCarryBody": "This payment exceeds the monthly amount ({monthlyTotal}) for this plan line by {excess}. Should the excess be counted on the next month in the payment status chart?",
+  "@housingRealizedExpensePaymentChartCarryBody": {
+    "placeholders": {
+      "monthlyTotal": { "type": "String" },
+      "excess": { "type": "String" }
+    }
+  },
+  "housingRealizedExpensePaymentChartCarryNextMonth": "Carry to next month",
+  "housingRealizedExpensePaymentChartCarryCurrentMonth": "Show on current month",
   "housingActivePlanReadOnlyTitle": "Current plan",
   "housingActivePlanDatesLabel": "Plan dates",
   "housingActivePlanReadOnlyExpenses": "View expense lines",

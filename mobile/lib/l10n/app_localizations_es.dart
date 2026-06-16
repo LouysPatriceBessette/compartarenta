@@ -677,6 +677,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingActiveHubBalances => 'Gastos debidos de cada uno';
 
   @override
+  String get housingActiveHubPaymentStatus => 'Estado de pagos debidos';
+
+  @override
   String get housingActiveHubViewPlan => 'Ver plan actual';
 
   @override
@@ -1028,6 +1031,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingBalancesInactiveMarker => '(participante anterior)';
 
   @override
+  String get housingExpensePaymentStatusTitle => 'Estado de pagos debidos';
+
+  @override
+  String get housingExpensePaymentStatusEmpty =>
+      'No hay gastos del plan para mostrar.';
+
+  @override
+  String housingExpensePaymentStatusDetailsTitle(String expenseName) {
+    return 'Pagos — $expenseName';
+  }
+
+  @override
+  String get housingExpensePaymentStatusDetailsEmpty =>
+      'No hay pagos publicados para este gasto este mes.';
+
+  @override
+  String housingExpensePaymentStatusDetailsLine(
+    String amount,
+    String date,
+    String payer,
+  ) {
+    return '$amount — $date — $payer';
+  }
+
+  @override
   String get housingRealizedExpenseBudgetCapTitle =>
       'Presupuesto mensual superado';
 
@@ -1038,6 +1066,26 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseBudgetCapConfirm => 'Enviar de todos modos';
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryTitle =>
+      'Importe mensual superado';
+
+  @override
+  String housingRealizedExpensePaymentChartCarryBody(
+    String monthlyTotal,
+    String excess,
+  ) {
+    return 'Este pago supera el importe mensualizado ($monthlyTotal) de este gasto en $excess. ¿Trasladar el excedente al mes siguiente en el gráfico de estado de pagos?';
+  }
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryNextMonth =>
+      'Trasladar al mes siguiente';
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryCurrentMonth =>
+      'Mostrar en el mes actual';
 
   @override
   String get housingActivePlanReadOnlyTitle => 'Plan actual';

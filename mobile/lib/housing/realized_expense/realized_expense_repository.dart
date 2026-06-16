@@ -70,6 +70,7 @@ class RealizedExpenseRepository {
     String? beneficiaryParticipantId,
     String? description,
     String? existingExpenseId,
+    int paymentChartCarryForwardMinor = 0,
     List<RealizedExpenseAttachmentDraft>? attachments,
   }) async {
     final now = DateTime.now().toUtc();
@@ -94,6 +95,9 @@ class RealizedExpenseRepository {
             kind: kind,
             beneficiaryParticipantId: drift.Value(beneficiaryParticipantId),
             description: drift.Value(description?.trim()),
+            paymentChartCarryForwardMinor: drift.Value(
+              paymentChartCarryForwardMinor,
+            ),
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
           ),

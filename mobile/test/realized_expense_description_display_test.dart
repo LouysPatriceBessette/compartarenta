@@ -15,6 +15,7 @@ void main() {
       planLineId: '',
       status: RealizedExpenseStatus.published,
       amountMinor: -50000,
+      paymentChartCarryForwardMinor: 0,
       currency: 'CAD',
       paymentDate: DateTime.utc(2026, 6, 14),
       payerParticipantId: 'plan:louys',

@@ -672,6 +672,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingActiveHubBalances => 'Expenses owed by each';
 
   @override
+  String get housingActiveHubPaymentStatus => 'Payment status due';
+
+  @override
   String get housingActiveHubViewPlan => 'View current plan';
 
   @override
@@ -1015,6 +1018,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingBalancesInactiveMarker => '(former participant)';
 
   @override
+  String get housingExpensePaymentStatusTitle => 'Payment status due';
+
+  @override
+  String get housingExpensePaymentStatusEmpty => 'No plan expenses to display.';
+
+  @override
+  String housingExpensePaymentStatusDetailsTitle(String expenseName) {
+    return 'Payments — $expenseName';
+  }
+
+  @override
+  String get housingExpensePaymentStatusDetailsEmpty =>
+      'No published payments for this expense this month.';
+
+  @override
+  String housingExpensePaymentStatusDetailsLine(
+    String amount,
+    String date,
+    String payer,
+  ) {
+    return '$amount — $date — $payer';
+  }
+
+  @override
   String get housingRealizedExpenseBudgetCapTitle => 'Monthly budget exceeded';
 
   @override
@@ -1024,6 +1051,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingRealizedExpenseBudgetCapConfirm => 'Submit anyway';
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryTitle =>
+      'Monthly amount exceeded';
+
+  @override
+  String housingRealizedExpensePaymentChartCarryBody(
+    String monthlyTotal,
+    String excess,
+  ) {
+    return 'This payment exceeds the monthly amount ($monthlyTotal) for this plan line by $excess. Should the excess be counted on the next month in the payment status chart?';
+  }
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryNextMonth =>
+      'Carry to next month';
+
+  @override
+  String get housingRealizedExpensePaymentChartCarryCurrentMonth =>
+      'Show on current month';
 
   @override
   String get housingActivePlanReadOnlyTitle => 'Current plan';

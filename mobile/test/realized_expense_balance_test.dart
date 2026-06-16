@@ -319,6 +319,7 @@ RealizedExpense _expense({
     planLineId: planLineId,
     status: RealizedExpenseStatus.published,
     amountMinor: amountMinor,
+    paymentChartCarryForwardMinor: 0,
     currency: 'CAD',
     paymentDate: timestamp,
     payerParticipantId: payerParticipantId,

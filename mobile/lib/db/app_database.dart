@@ -427,6 +427,10 @@ class RealizedExpenses extends Table {
   /// JSON array of `{participantId, weight}` basis points at proposal time.
   TextColumn get splitRatiosJson => text().nullable()();
 
+  /// Amount of this payment deferred to the next month on the payment-status chart.
+  IntColumn get paymentChartCarryForwardMinor =>
+      integer().withDefault(const Constant(0))();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -681,7 +685,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -880,6 +884,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 21) {
         await m.createTable(planPeerEstablishments);
+      }
+      if (from < 22) {
+        await _migrateAddColumn(
+          m,
+          realizedExpenses,
+          realizedExpenses.paymentChartCarryForwardMinor,
+        );
       }
     },
     beforeOpen: (details) async {

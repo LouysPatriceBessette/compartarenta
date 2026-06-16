@@ -1306,6 +1306,12 @@ abstract class AppLocalizations {
   /// **'Expenses owed by each'**
   String get housingActiveHubBalances;
 
+  /// No description provided for @housingActiveHubPaymentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status due'**
+  String get housingActiveHubPaymentStatus;
+
   /// No description provided for @housingActiveHubViewPlan.
   ///
   /// In en, this message translates to:
@@ -1882,6 +1888,40 @@ abstract class AppLocalizations {
   /// **'(former participant)'**
   String get housingBalancesInactiveMarker;
 
+  /// No description provided for @housingExpensePaymentStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status due'**
+  String get housingExpensePaymentStatusTitle;
+
+  /// No description provided for @housingExpensePaymentStatusEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plan expenses to display.'**
+  String get housingExpensePaymentStatusEmpty;
+
+  /// No description provided for @housingExpensePaymentStatusDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments — {expenseName}'**
+  String housingExpensePaymentStatusDetailsTitle(String expenseName);
+
+  /// No description provided for @housingExpensePaymentStatusDetailsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No published payments for this expense this month.'**
+  String get housingExpensePaymentStatusDetailsEmpty;
+
+  /// No description provided for @housingExpensePaymentStatusDetailsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} — {date} — {payer}'**
+  String housingExpensePaymentStatusDetailsLine(
+    String amount,
+    String date,
+    String payer,
+  );
+
   /// No description provided for @housingRealizedExpenseBudgetCapTitle.
   ///
   /// In en, this message translates to:
@@ -1899,6 +1939,33 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submit anyway'**
   String get housingRealizedExpenseBudgetCapConfirm;
+
+  /// No description provided for @housingRealizedExpensePaymentChartCarryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly amount exceeded'**
+  String get housingRealizedExpensePaymentChartCarryTitle;
+
+  /// No description provided for @housingRealizedExpensePaymentChartCarryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This payment exceeds the monthly amount ({monthlyTotal}) for this plan line by {excess}. Should the excess be counted on the next month in the payment status chart?'**
+  String housingRealizedExpensePaymentChartCarryBody(
+    String monthlyTotal,
+    String excess,
+  );
+
+  /// No description provided for @housingRealizedExpensePaymentChartCarryNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry to next month'**
+  String get housingRealizedExpensePaymentChartCarryNextMonth;
+
+  /// No description provided for @housingRealizedExpensePaymentChartCarryCurrentMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on current month'**
+  String get housingRealizedExpensePaymentChartCarryCurrentMonth;
 
   /// No description provided for @housingActivePlanReadOnlyTitle.
   ///

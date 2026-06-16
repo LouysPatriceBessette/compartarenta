@@ -24,6 +24,7 @@ import 'housing_agreement_renewal_screen.dart';
 import 'housing_amendment_request_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
 import 'housing_balances_screen.dart';
+import 'housing_expense_payment_status_screen.dart';
 import 'housing_active_hub_placeholder_screen.dart';
 import 'housing_monthly_expenses_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
@@ -727,6 +728,22 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                         (_) => HousingBalancesScreen(
                                           planId: widget.planId,
                                           currency: header.currency,
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                            _HubTile(
+                              icon: Icons.bar_chart_outlined,
+                              label: l10n.housingActiveHubPaymentStatus,
+                              onTap: () {
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute<void>(
+                                    builder:
+                                        (_) => HousingExpensePaymentStatusScreen(
+                                          packageId: widget.packageId,
+                                          planId: widget.planId,
+                                          prefs: widget.prefs,
                                         ),
                                   ),
                                 );

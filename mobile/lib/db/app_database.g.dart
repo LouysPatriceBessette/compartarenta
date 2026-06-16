@@ -8052,6 +8052,18 @@ class $RealizedExpensesTable extends RealizedExpenses
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _paymentChartCarryForwardMinorMeta =
+      const VerificationMeta('paymentChartCarryForwardMinor');
+  @override
+  late final GeneratedColumn<int> paymentChartCarryForwardMinor =
+      GeneratedColumn<int>(
+        'payment_chart_carry_forward_minor',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -8091,6 +8103,7 @@ class $RealizedExpensesTable extends RealizedExpenses
     priorExpenseId,
     planLineTitleSnapshot,
     splitRatiosJson,
+    paymentChartCarryForwardMinor,
     createdAt,
     updatedAt,
   ];
@@ -8240,6 +8253,15 @@ class $RealizedExpensesTable extends RealizedExpenses
         ),
       );
     }
+    if (data.containsKey('payment_chart_carry_forward_minor')) {
+      context.handle(
+        _paymentChartCarryForwardMinorMeta,
+        paymentChartCarryForwardMinor.isAcceptableOrUnknown(
+          data['payment_chart_carry_forward_minor']!,
+          _paymentChartCarryForwardMinorMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -8325,6 +8347,10 @@ class $RealizedExpensesTable extends RealizedExpenses
         DriftSqlType.string,
         data['${effectivePrefix}split_ratios_json'],
       ),
+      paymentChartCarryForwardMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}payment_chart_carry_forward_minor'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -8368,6 +8394,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
 
   /// JSON array of `{participantId, weight}` basis points at proposal time.
   final String? splitRatiosJson;
+
+  /// Amount of this payment deferred to the next month on the payment-status chart.
+  final int paymentChartCarryForwardMinor;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RealizedExpense({
@@ -8386,6 +8415,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     this.priorExpenseId,
     this.planLineTitleSnapshot,
     this.splitRatiosJson,
+    required this.paymentChartCarryForwardMinor,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -8419,6 +8449,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     if (!nullToAbsent || splitRatiosJson != null) {
       map['split_ratios_json'] = Variable<String>(splitRatiosJson);
     }
+    map['payment_chart_carry_forward_minor'] = Variable<int>(
+      paymentChartCarryForwardMinor,
+    );
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -8451,6 +8484,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       splitRatiosJson: splitRatiosJson == null && nullToAbsent
           ? const Value.absent()
           : Value(splitRatiosJson),
+      paymentChartCarryForwardMinor: Value(paymentChartCarryForwardMinor),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -8483,6 +8517,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
         json['planLineTitleSnapshot'],
       ),
       splitRatiosJson: serializer.fromJson<String?>(json['splitRatiosJson']),
+      paymentChartCarryForwardMinor: serializer.fromJson<int>(
+        json['paymentChartCarryForwardMinor'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -8510,6 +8547,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
         planLineTitleSnapshot,
       ),
       'splitRatiosJson': serializer.toJson<String?>(splitRatiosJson),
+      'paymentChartCarryForwardMinor': serializer.toJson<int>(
+        paymentChartCarryForwardMinor,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -8531,6 +8571,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     Value<String?> priorExpenseId = const Value.absent(),
     Value<String?> planLineTitleSnapshot = const Value.absent(),
     Value<String?> splitRatiosJson = const Value.absent(),
+    int? paymentChartCarryForwardMinor,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RealizedExpense(
@@ -8557,6 +8598,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     splitRatiosJson: splitRatiosJson.present
         ? splitRatiosJson.value
         : this.splitRatiosJson,
+    paymentChartCarryForwardMinor:
+        paymentChartCarryForwardMinor ?? this.paymentChartCarryForwardMinor,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -8595,6 +8638,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
       splitRatiosJson: data.splitRatiosJson.present
           ? data.splitRatiosJson.value
           : this.splitRatiosJson,
+      paymentChartCarryForwardMinor: data.paymentChartCarryForwardMinor.present
+          ? data.paymentChartCarryForwardMinor.value
+          : this.paymentChartCarryForwardMinor,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -8618,6 +8664,9 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           ..write('priorExpenseId: $priorExpenseId, ')
           ..write('planLineTitleSnapshot: $planLineTitleSnapshot, ')
           ..write('splitRatiosJson: $splitRatiosJson, ')
+          ..write(
+            'paymentChartCarryForwardMinor: $paymentChartCarryForwardMinor, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -8641,6 +8690,7 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
     priorExpenseId,
     planLineTitleSnapshot,
     splitRatiosJson,
+    paymentChartCarryForwardMinor,
     createdAt,
     updatedAt,
   );
@@ -8663,6 +8713,8 @@ class RealizedExpense extends DataClass implements Insertable<RealizedExpense> {
           other.priorExpenseId == this.priorExpenseId &&
           other.planLineTitleSnapshot == this.planLineTitleSnapshot &&
           other.splitRatiosJson == this.splitRatiosJson &&
+          other.paymentChartCarryForwardMinor ==
+              this.paymentChartCarryForwardMinor &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -8683,6 +8735,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
   final Value<String?> priorExpenseId;
   final Value<String?> planLineTitleSnapshot;
   final Value<String?> splitRatiosJson;
+  final Value<int> paymentChartCarryForwardMinor;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -8702,6 +8755,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     this.priorExpenseId = const Value.absent(),
     this.planLineTitleSnapshot = const Value.absent(),
     this.splitRatiosJson = const Value.absent(),
+    this.paymentChartCarryForwardMinor = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -8722,6 +8776,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     this.priorExpenseId = const Value.absent(),
     this.planLineTitleSnapshot = const Value.absent(),
     this.splitRatiosJson = const Value.absent(),
+    this.paymentChartCarryForwardMinor = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -8753,6 +8808,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Expression<String>? priorExpenseId,
     Expression<String>? planLineTitleSnapshot,
     Expression<String>? splitRatiosJson,
+    Expression<int>? paymentChartCarryForwardMinor,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -8776,6 +8832,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
       if (planLineTitleSnapshot != null)
         'plan_line_title_snapshot': planLineTitleSnapshot,
       if (splitRatiosJson != null) 'split_ratios_json': splitRatiosJson,
+      if (paymentChartCarryForwardMinor != null)
+        'payment_chart_carry_forward_minor': paymentChartCarryForwardMinor,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -8798,6 +8856,7 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     Value<String?>? priorExpenseId,
     Value<String?>? planLineTitleSnapshot,
     Value<String?>? splitRatiosJson,
+    Value<int>? paymentChartCarryForwardMinor,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -8820,6 +8879,8 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
       planLineTitleSnapshot:
           planLineTitleSnapshot ?? this.planLineTitleSnapshot,
       splitRatiosJson: splitRatiosJson ?? this.splitRatiosJson,
+      paymentChartCarryForwardMinor:
+          paymentChartCarryForwardMinor ?? this.paymentChartCarryForwardMinor,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -8878,6 +8939,11 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
     if (splitRatiosJson.present) {
       map['split_ratios_json'] = Variable<String>(splitRatiosJson.value);
     }
+    if (paymentChartCarryForwardMinor.present) {
+      map['payment_chart_carry_forward_minor'] = Variable<int>(
+        paymentChartCarryForwardMinor.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8908,6 +8974,9 @@ class RealizedExpensesCompanion extends UpdateCompanion<RealizedExpense> {
           ..write('priorExpenseId: $priorExpenseId, ')
           ..write('planLineTitleSnapshot: $planLineTitleSnapshot, ')
           ..write('splitRatiosJson: $splitRatiosJson, ')
+          ..write(
+            'paymentChartCarryForwardMinor: $paymentChartCarryForwardMinor, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -16959,6 +17028,7 @@ typedef $$RealizedExpensesTableCreateCompanionBuilder =
       Value<String?> priorExpenseId,
       Value<String?> planLineTitleSnapshot,
       Value<String?> splitRatiosJson,
+      Value<int> paymentChartCarryForwardMinor,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -16980,6 +17050,7 @@ typedef $$RealizedExpensesTableUpdateCompanionBuilder =
       Value<String?> priorExpenseId,
       Value<String?> planLineTitleSnapshot,
       Value<String?> splitRatiosJson,
+      Value<int> paymentChartCarryForwardMinor,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -17066,6 +17137,11 @@ class $$RealizedExpensesTableFilterComposer
 
   ColumnFilters<String> get splitRatiosJson => $composableBuilder(
     column: $table.splitRatiosJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paymentChartCarryForwardMinor => $composableBuilder(
+    column: $table.paymentChartCarryForwardMinor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17164,6 +17240,11 @@ class $$RealizedExpensesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get paymentChartCarryForwardMinor => $composableBuilder(
+    column: $table.paymentChartCarryForwardMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -17247,6 +17328,11 @@ class $$RealizedExpensesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get paymentChartCarryForwardMinor => $composableBuilder(
+    column: $table.paymentChartCarryForwardMinor,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -17306,6 +17392,7 @@ class $$RealizedExpensesTableTableManager
                 Value<String?> priorExpenseId = const Value.absent(),
                 Value<String?> planLineTitleSnapshot = const Value.absent(),
                 Value<String?> splitRatiosJson = const Value.absent(),
+                Value<int> paymentChartCarryForwardMinor = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17325,6 +17412,7 @@ class $$RealizedExpensesTableTableManager
                 priorExpenseId: priorExpenseId,
                 planLineTitleSnapshot: planLineTitleSnapshot,
                 splitRatiosJson: splitRatiosJson,
+                paymentChartCarryForwardMinor: paymentChartCarryForwardMinor,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -17346,6 +17434,7 @@ class $$RealizedExpensesTableTableManager
                 Value<String?> priorExpenseId = const Value.absent(),
                 Value<String?> planLineTitleSnapshot = const Value.absent(),
                 Value<String?> splitRatiosJson = const Value.absent(),
+                Value<int> paymentChartCarryForwardMinor = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -17365,6 +17454,7 @@ class $$RealizedExpensesTableTableManager
                 priorExpenseId: priorExpenseId,
                 planLineTitleSnapshot: planLineTitleSnapshot,
                 splitRatiosJson: splitRatiosJson,
+                paymentChartCarryForwardMinor: paymentChartCarryForwardMinor,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

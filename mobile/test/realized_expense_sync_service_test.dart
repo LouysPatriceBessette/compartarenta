@@ -58,6 +58,7 @@ void main() {
         planLineId: 'line:rent',
         status: RealizedExpenseStatus.proposed,
         amountMinor: 5000,
+        paymentChartCarryForwardMinor: 287,
         currency: 'CAD',
         paymentDate: DateTime.utc(2026, 5, 23),
         payerParticipantId: '$planId:p0',
@@ -83,6 +84,7 @@ void main() {
         .getSingle();
     expect(row.payerParticipantId, '$planId:p0');
     expect(row.planLineId, 'line:rent');
+    expect(row.paymentChartCarryForwardMinor, 287);
 
     final acceptances = await (db.select(db.realizedExpenseAcceptances)
           ..where((t) => t.expenseId.equals('realized:1')))

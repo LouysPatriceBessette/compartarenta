@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../housing/realized_expense/realized_expense_balance.dart';
+import 'housing_chart_palette.dart';
 
 final class HousingBalancesGraphPainter extends CustomPainter {
   const HousingBalancesGraphPainter({
@@ -13,17 +14,6 @@ final class HousingBalancesGraphPainter extends CustomPainter {
 
   final List<HousingBalanceParticipant> participants;
   final HousingBalanceModeData modeData;
-
-  static const List<Color> _palette = [
-    Color(0xFFD32F2F),
-    Color(0xFF1976D2),
-    Color(0xFF388E3C),
-    Color(0xFFF57C00),
-    Color(0xFF7B1FA2),
-    Color(0xFF00838F),
-    Color(0xFF6D4C41),
-    Color(0xFF455A64),
-  ];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,7 +88,7 @@ final class HousingBalancesGraphPainter extends CustomPainter {
       final start = _linePointNearNode(fromCenter, unit, fromRadius, size);
       final end = _linePointNearNode(toCenter, -unit, toRadius, size);
 
-      final fromColor = _palette[fromIndex % _palette.length];
+      final fromColor = housingChartColorForIndex(fromIndex);
       debtEdgePaint.shader = ui.Gradient.linear(
         start,
         end,
@@ -117,7 +107,7 @@ final class HousingBalancesGraphPainter extends CustomPainter {
       final appearance = _nodeAppearance(
         participantCount: participants.length,
         diameterPercent: node?.diameterPercent ?? 0,
-        color: _palette[i % _palette.length],
+        color: housingChartColorForIndex(i),
       );
       final radius = _nodeRadius(size, node?.diameterPercent ?? 0);
       final fillPaint = Paint()

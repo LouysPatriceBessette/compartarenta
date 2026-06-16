@@ -89,6 +89,7 @@ class RealizedExpenseSyncService {
       if (splitRatiosPayload != null && splitRatiosPayload.isNotEmpty)
         'split_ratios': splitRatiosPayload,
       'amount_minor': expense.amountMinor,
+      'payment_chart_carry_forward_minor': expense.paymentChartCarryForwardMinor,
       'currency': expense.currency,
       'payment_date': expense.paymentDate.toUtc().toIso8601String(),
       'kind': expense.kind,
@@ -230,6 +231,9 @@ class RealizedExpenseSyncService {
             planLineId: planLineId,
             status: RealizedExpenseStatus.proposed,
             amountMinor: payload['amount_minor'] as int? ?? 0,
+            paymentChartCarryForwardMinor: drift.Value(
+              payload['payment_chart_carry_forward_minor'] as int? ?? 0,
+            ),
             currency: payload['currency'] as String? ?? '',
             paymentDate: paymentDate,
             payerParticipantId: payerId,
