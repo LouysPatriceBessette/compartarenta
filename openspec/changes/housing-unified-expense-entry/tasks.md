@@ -59,10 +59,10 @@
 
 Specified in `openspec/changes/housing-active-agreement-operations/`. Implementation tracked there and in `repo-maintenance-backlog`.
 
-- [ ] D.1 Wire `ExpensePlanLineForm` with `ExpensePlanLineFormScope` for accepted / in-force plans
-- [ ] D.2 Budgeted (max): confirmation dialog when a submitted expense exceeds the monthly cap
+- [x] D.1 Wire `ExpensePlanLineForm` with `ExpensePlanLineFormScope` for accepted / in-force plans
+- [x] D.2 Budgeted (max): confirmation dialog when a submitted expense exceeds the monthly cap
 - [ ] D.3 Notifications: designated payer vs default **All** (all participants: before-date + overdue reminders)
-- [ ] D.4 Define which fields are editable on an in-force plan vs proposal draft
+- [x] D.4 Define which fields are editable on an in-force plan vs proposal draft
 
 ---
 
@@ -70,8 +70,8 @@ Specified in `openspec/changes/housing-active-agreement-operations/`. Implementa
 
 - [x] Wizard shows 4 steps; no standalone categories or split steps
 - [x] Expense form is full screen; dialog not used for add/edit
-- [ ] Approximate/min/max UI absent; Determined / Budgeted (max) works
-- [ ] Grid hidden without amount; correction row blocks save
-- [ ] Like selector appears after first non-equal expense; copying then editing clears Like
-- [ ] Recurrence range cannot exceed agreement period; confirm dialog required; calendar only when recurring
-- [ ] Proposal payload includes new fields when a proposal is built (no legacy import path added)
+- [x] Approximate/min/max UI absent; Determined / Budgeted (max) works
+- [x] Grid hidden without amount; correction row blocks save
+- [x] Like selector appears after first non-equal expense; copying then editing clears Like
+- [x] Recurrence range cannot exceed agreement period; confirm dialog required; calendar only when recurring
+- [x] Proposal payload includes new fields when a proposal is built (no legacy import path added)

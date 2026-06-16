@@ -33,10 +33,10 @@
 
 ### Pass 3 — deferred QA / polish (see `qa-pass-3-follow-up.md`)
 
-- [ ] Q.1 Submitter visibility for in-flight (non-published) expenses
-- [ ] Q.2 Monthly expenses: detail row / drill-down
-- [ ] Q.3 Proof viewer (local attachments)
-- [ ] Q.4 Optional notification when a peer accepts
+- [x] Q.1 Submitter visibility for in-flight (non-published) expenses
+- [x] Q.2 Monthly expenses: detail row / drill-down
+- [x] Q.3 Proof viewer (local attachments)
+- [x] Q.4 Optional notification when a peer accepts
 - [ ] Q.5 Document picker regression QA
 - [ ] Q.6 Abandon rejected expense (originator)
 - [ ] Q.7 Resubmit must require changes vs. rejected version

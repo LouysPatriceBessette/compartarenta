@@ -6,7 +6,7 @@ Deferred engineering chores. Pick these up when convenient; they are
 ## Backlog
 
 - [ ] **Housing balance chart — roster SVG overflow with inactive participants** (bug, minor).  
-  Active roster is capped at **8** participants because only eight due-split SVG layouts exist. When **inactive participants** retain non-zero balances, the UI may need to show **more than eight** balance rows; relying on the active-roster cap alone can overflow or hide labels. Revisit chart / legend layout when inactive settlement display lands (`housing_participation_change` inactive participant follow-up).
+  Active roster is capped at **8** participants because only eight due-split SVG layouts exist. When **inactive participants** retain non-zero balances, the UI may need to show **more than eight** balance rows; relying on the active-roster cap alone can overflow or hide labels. Inactive settlement tiles landed on the balances screen (2026); chart/legend layout still needs a pass.
 
 - [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
 
@@ -15,16 +15,15 @@ Deferred engineering chores. Pick these up when convenient; they are
   **Depends on:** hub implemented (`housing-active-agreement-operations`).  
   **Track:** `openspec/changes/housing-active-agreement-operations/design.md` § Deferred UX.
 
-- [ ] **Housing — active plan in-force implementation** (spec exists: `housing-active-agreement-operations`).  
-  Implement passes in that change’s `tasks.md` (hub, realized expense entry/ledger, amendment, export).  
-  Supersedes the old “define usage-flow spec first” gate — specs are in `housing-realized-expense-entry`, `housing-realized-expense-ledger`, `housing-agreement-amendment-and-closure`, `housing-agreement-data-portability`.
-
 - [ ] **Mobile dependencies — phase 3 (remaining majors).**  
   `go_router`, `flutter_secure_storage`, `app_links`, … as features need them.  
   **Mobile-only**; relay wake stays on `closed-app-push-delivery`.  
   **Scope:** `mobile/` + workspace `pubspec.lock` only.
 
 ## Done
+
+- [x] **Housing — active plan in-force implementation** (spec: `housing-active-agreement-operations`).  
+  Hub, realized expense entry/ledger, and amendment passes landed (2026); export/import (pass 5) remains open in that change’s `tasks.md`.
 
 - [x] **User units + calendar week start** — `openspec/changes/user-units-and-calendar-preferences/`: editable date format and distance in Settings → Units; week start (Sunday/Monday) in onboarding and settings; `showAppDatePicker` / `showAppDateRangePicker`; quiet-hours and car availability week columns use `prefs.resolvedFirstDayOfWeekIndex`. Currency and time-zone policy edit remain TBD (2026-05-22).
 

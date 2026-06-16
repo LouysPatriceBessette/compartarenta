@@ -13,7 +13,7 @@
 - [x] Contact disconnect gate (active / vote-pending plans)
 - [x] Agreement overlap voluntary-withdrawal exception
 - [x] Agreement-end vote expiry settlement
-- [ ] Journal merge with amendments
-- [ ] Inactive settlement transfer UI + balance graph extension
+- [x] Journal merge with amendments
+- [x] Inactive settlement transfer UI + balance graph extension
 - [ ] Integration harness (3-participant happy paths)
-- [ ] Penalty ledger system expense publishing
+- [x] Penalty ledger system expense publishing
