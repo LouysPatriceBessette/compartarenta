@@ -15,5 +15,5 @@
 - [x] Agreement-end vote expiry settlement
 - [x] Journal merge with amendments
 - [x] Inactive settlement transfer UI + balance graph extension
-- [ ] Integration harness (3-participant happy paths)
+- [x] Integration harness (3-participant happy paths)
 - [x] Penalty ledger system expense publishing
