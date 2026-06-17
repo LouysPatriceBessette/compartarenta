@@ -1699,8 +1699,38 @@ abstract class AppLocalizations {
   /// No description provided for @housingRealizedExpenseReviewDecisionsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Review status'**
+  /// **'Decisions'**
   String get housingRealizedExpenseReviewDecisionsTitle;
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionTableNameColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get housingRealizedExpenseReviewDecisionTableNameColumn;
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionTableDateColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get housingRealizedExpenseReviewDecisionTableDateColumn;
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionPendingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get housingRealizedExpenseReviewDecisionPendingShort;
+
+  /// No description provided for @housingRealizedExpenseReviewDecisionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get housingRealizedExpenseReviewDecisionUnknown;
+
+  /// No description provided for @housingRealizedExpenseReviewMotifLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get housingRealizedExpenseReviewMotifLabel;
 
   /// No description provided for @housingRealizedExpenseReviewDecisionPending.
   ///
@@ -1743,6 +1773,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make sure you have received the transfer before accepting. There is no deadline.'**
   String get housingRealizedExpenseTransferReviewHint;
+
+  /// No description provided for @housingRealizedExpenseReviewSubmittedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense submitted by: {name}'**
+  String housingRealizedExpenseReviewSubmittedBy(String name);
 
   /// No description provided for @housingRealizedExpenseReviewPayer.
   ///

@@ -38,8 +38,8 @@
 - [x] Q.3 Proof viewer (local attachments)
 - [x] Q.4 Optional notification when a peer accepts
 - [x] Q.5 Document picker regression QA
-- [ ] Q.6 Abandon rejected expense (originator)
-- [ ] Q.7 Resubmit must require changes vs. rejected version
+- [x] Q.6 Abandon rejected expense (originator) — **decided: no** (keep correct-and-resubmit only)
+- [x] Q.7 Resubmit must require changes vs. rejected version — **decided: no**
 
 ## Pass 4 — Amendment & closure (`housing-agreement-amendment-and-closure`)
 

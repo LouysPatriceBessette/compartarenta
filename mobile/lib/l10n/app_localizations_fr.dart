@@ -913,7 +913,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseReviewRejectedWord => 'Refusé';
 
   @override
-  String get housingRealizedExpenseReviewDecisionsTitle => 'État des révisions';
+  String get housingRealizedExpenseReviewDecisionsTitle => 'Décisions';
+
+  @override
+  String get housingRealizedExpenseReviewDecisionTableNameColumn => 'Nom';
+
+  @override
+  String get housingRealizedExpenseReviewDecisionTableDateColumn => 'Date';
+
+  @override
+  String get housingRealizedExpenseReviewDecisionPendingShort => 'En attente';
+
+  @override
+  String get housingRealizedExpenseReviewDecisionUnknown => 'Inconnue';
+
+  @override
+  String get housingRealizedExpenseReviewMotifLabel => 'Motif';
 
   @override
   String housingRealizedExpenseReviewDecisionPending(String name) {
@@ -948,6 +963,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get housingRealizedExpenseTransferReviewHint =>
       'Vérifiez que vous avez bien reçu le virement avant d\'accepter. Il n\'y a pas de délai limite.';
+
+  @override
+  String housingRealizedExpenseReviewSubmittedBy(String name) {
+    return 'Dépense faite par : $name';
+  }
 
   @override
   String housingRealizedExpenseReviewPayer(String name) {

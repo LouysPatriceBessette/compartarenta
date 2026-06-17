@@ -70,10 +70,55 @@ For a **transfer**, only the beneficiary participant SHALL receive a pending rev
 
 After rejection, the originator SHALL be able to edit the expense and **resubmit** as a **new proposal** (new stable proposal id). Prior rejected proposal ids remain in audit history. Resubmission MUST NOT silently overwrite peer acceptance of the rejected version.
 
+The originator SHALL NOT be offered a separate **abandon** action that drops a rejected proposal without resubmitting; rejected rows remain in audit history and the payer is steered toward **correct and resubmit** only.
+
+Resubmission SHALL NOT be blocked when the edited draft is unchanged vs. the rejected version; the product does not require a mandatory delta before resubmit.
+
 #### Scenario: Resubmit after missing proof rejection
 
 - **WHEN** the originator adds proof and resubmits
 - **THEN** peers see a new pending proposal and must accept again
+
+#### Scenario: No abandon-only path
+
+- **WHEN** an expense is rejected
+- **THEN** the originator can open the rejected detail and use **correct and resubmit**, but there is no **abandon expense** control
+
+#### Scenario: Unchanged resubmit allowed
+
+- **WHEN** the originator resubmits without changing amount, date, line, kind, beneficiary, or proof vs. the rejected version
+- **THEN** the client still creates a new proposal id and peers must review again
+
+---
+
+### Requirement: Expense review detail shows per-decider decisions after settlement
+
+When an expense review detail is shown for a **published** or **rejected** expense, the client SHALL display a decision table listing each **required reviewer** for that expense kind (full roster for payments; payer and beneficiary only for transfers). Non-deciders MUST NOT appear.
+
+Each row SHALL show the participant display name and a localized decision label:
+
+- **Accepted** — green
+- **Rejected** — red
+- **Unknown** — orange, when the participant had not decided before the **first decisive rejection**
+
+Rows with a recorded decision time SHALL be ordered by reception time (earliest first). Rows without a decision time (unknown) SHALL follow, ordered alphabetically by display name.
+
+For **rejected** expenses, the detail SHALL also show, below the centered final status and above the decision table:
+
+- a **Reason** (`Motif`) label, and
+- the rejection justification from the participant who made the first decisive rejection.
+
+During **proposed** review, the same table format MAY list pending reviewers as **pending** (distinct from post-rejection **unknown**).
+
+#### Scenario: Rejected expense preserves earlier acceptances in the table
+
+- **WHEN** participant A accepted, participant B rejected with justification J, and participant C had not responded before B's rejection
+- **THEN** the review detail shows **Rejected** centered, **Reason** with J, and a table row for A as accepted, B as rejected, and C as unknown
+
+#### Scenario: Transfer table excludes non-impacted roster members
+
+- **WHEN** a transfer expense is rejected
+- **THEN** the decision table lists only the payer and beneficiary, not other roster participants
 
 ---
 

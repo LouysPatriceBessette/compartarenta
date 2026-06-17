@@ -32,9 +32,9 @@ class _ReviewContext {
     required this.proofAttachment,
     required this.visibility,
     required this.prefs,
-    required this.rejections,
     required this.finalDecisionStatus,
     required this.participantReviewStatuses,
+    required this.decisiveRejectionJustification,
   });
 
   final RealizedExpense expense;
@@ -44,31 +44,34 @@ class _ReviewContext {
   final RealizedExpenseAttachment? proofAttachment;
   final RealizedExpenseReviewVisibility visibility;
   final AppPreferences prefs;
-  final List<RealizedExpenseAcceptance> rejections;
   final _FinalDecisionStatus? finalDecisionStatus;
   final List<_ParticipantReviewStatus> participantReviewStatuses;
+  final String? decisiveRejectionJustification;
 }
 
 class _ParticipantReviewStatus {
   const _ParticipantReviewStatus({
     required this.participantName,
-    required this.decision,
+    required this.display,
+    this.decidedAt,
   });
 
   final String participantName;
-  final String decision;
+  final _ReviewDecisionDisplay display;
+  final DateTime? decidedAt;
+}
+
+enum _ReviewDecisionDisplay {
+  accepted,
+  rejected,
+  pending,
+  unknown,
 }
 
 class _FinalDecisionStatus {
-  const _FinalDecisionStatus({
-    required this.accepted,
-    required this.participantName,
-    required this.decidedAt,
-  });
+  const _FinalDecisionStatus({required this.accepted});
 
   final bool accepted;
-  final String participantName;
-  final DateTime decidedAt;
 }
 
 class HousingRealizedExpenseReviewScreen extends StatefulWidget {
@@ -196,14 +199,15 @@ class _HousingRealizedExpenseReviewScreenState
       selfParticipantId: selfParticipantIdForPlan(widget.planId),
     );
     final acceptances = await _repo.acceptancesFor(expense.id);
-    final rejections = acceptances
-        .where((a) => a.decision == RealizedExpenseDecision.rejected)
-        .toList(growable: false);
-    final finalDecisionStatus = _resolveFinalDecisionStatus(
-      expense: expense,
-      acceptances: acceptances,
-      roster: roster,
-    );
+    final finalDecisionStatus = switch (expense.status) {
+      RealizedExpenseStatus.published => const _FinalDecisionStatus(
+        accepted: true,
+      ),
+      RealizedExpenseStatus.rejected => const _FinalDecisionStatus(
+        accepted: false,
+      ),
+      _ => null,
+    };
     final attachments = await _repo.attachmentsFor(expense.id);
 
     final participantReviewStatuses = _participantReviewStatuses(
@@ -211,6 +215,10 @@ class _HousingRealizedExpenseReviewScreenState
       acceptances: acceptances,
       roster: roster,
     );
+    final decisiveRejectionJustification = expense.status ==
+            RealizedExpenseStatus.rejected
+        ? _decisiveRejectionJustification(acceptances)
+        : null;
 
     return _ReviewContext(
       expense: expense,
@@ -220,10 +228,26 @@ class _HousingRealizedExpenseReviewScreenState
       proofAttachment: attachments.isEmpty ? null : attachments.first,
       visibility: visibility,
       prefs: prefs,
-      rejections: rejections,
       finalDecisionStatus: finalDecisionStatus,
       participantReviewStatuses: participantReviewStatuses,
+      decisiveRejectionJustification: decisiveRejectionJustification,
     );
+  }
+
+  String? _decisiveRejectionJustification(
+    List<RealizedExpenseAcceptance> acceptances,
+  ) {
+    final rejections = acceptances
+        .where(
+          (a) =>
+              a.decision == RealizedExpenseDecision.rejected &&
+              a.decidedAt != null,
+        )
+        .toList(growable: false)
+      ..sort((a, b) => a.decidedAt!.compareTo(b.decidedAt!));
+    if (rejections.isEmpty) return null;
+    final text = (rejections.first.rejectionJustification ?? '').trim();
+    return text.isEmpty ? null : text;
   }
 
   List<_ParticipantReviewStatus> _participantReviewStatuses({
@@ -231,12 +255,11 @@ class _HousingRealizedExpenseReviewScreenState
     required List<RealizedExpenseAcceptance> acceptances,
     required List<Participant> roster,
   }) {
-    if (expense.status != RealizedExpenseStatus.proposed) {
-      return const [];
-    }
+    final isRejected = expense.status == RealizedExpenseStatus.rejected;
     final out = <_ParticipantReviewStatus>[];
     for (final p in roster) {
       if (!_repo.isTransferReviewParticipant(expense, p.id)) continue;
+      if (p.id == expense.payerParticipantId) continue;
       RealizedExpenseAcceptance? row;
       for (final a in acceptances) {
         if (a.participantId == p.id) {
@@ -244,63 +267,160 @@ class _HousingRealizedExpenseReviewScreenState
           break;
         }
       }
+      final decision = row?.decision ?? RealizedExpenseDecision.pending;
+      final display = switch (decision) {
+        RealizedExpenseDecision.accepted => _ReviewDecisionDisplay.accepted,
+        RealizedExpenseDecision.rejected => _ReviewDecisionDisplay.rejected,
+        RealizedExpenseDecision.pending =>
+          isRejected
+              ? _ReviewDecisionDisplay.unknown
+              : _ReviewDecisionDisplay.pending,
+        _ => isRejected
+            ? _ReviewDecisionDisplay.unknown
+            : _ReviewDecisionDisplay.pending,
+      };
       out.add(
         _ParticipantReviewStatus(
           participantName: p.displayName,
-          decision: row?.decision ?? RealizedExpenseDecision.pending,
+          display: display,
+          decidedAt: row?.decidedAt,
         ),
       );
     }
-    return out;
+    return _sortParticipantReviewStatuses(out);
   }
 
-  String _participantReviewLine(AppLocalizations l10n, _ParticipantReviewStatus row) {
-    return switch (row.decision) {
-      RealizedExpenseDecision.accepted =>
-        l10n.housingRealizedExpenseReviewDecisionAccepted(row.participantName),
-      RealizedExpenseDecision.rejected =>
-        l10n.housingRealizedExpenseReviewDecisionRejected(row.participantName),
-      _ => l10n.housingRealizedExpenseReviewDecisionPending(row.participantName),
+  List<_ParticipantReviewStatus> _sortParticipantReviewStatuses(
+    List<_ParticipantReviewStatus> rows,
+  ) {
+    final responded = rows.where((r) => r.decidedAt != null).toList()
+      ..sort((a, b) => a.decidedAt!.compareTo(b.decidedAt!));
+    final unanswered = rows.where((r) => r.decidedAt == null).toList()
+      ..sort((a, b) => a.participantName.compareTo(b.participantName));
+    return [...responded, ...unanswered];
+  }
+
+  Color _decisionIconColor(
+    BuildContext context,
+    _ReviewDecisionDisplay display,
+  ) {
+    return switch (display) {
+      _ReviewDecisionDisplay.accepted => Colors.green.shade700,
+      _ReviewDecisionDisplay.rejected => Theme.of(context).colorScheme.error,
+      _ReviewDecisionDisplay.pending => Colors.orange.shade800,
+      _ReviewDecisionDisplay.unknown => Colors.orange.shade800,
     };
   }
 
-  _FinalDecisionStatus? _resolveFinalDecisionStatus({
-    required RealizedExpense expense,
-    required List<RealizedExpenseAcceptance> acceptances,
-    required List<Participant> roster,
-  }) {
-    Iterable<RealizedExpenseAcceptance> matches;
-    var accepted = false;
+  Widget _buildDecisionIndicator(
+    BuildContext context,
+    _ReviewDecisionDisplay display,
+  ) {
+    final color = _decisionIconColor(context, display);
+    return switch (display) {
+      _ReviewDecisionDisplay.accepted => Icon(
+        Icons.check,
+        color: color,
+        size: 20,
+      ),
+      _ReviewDecisionDisplay.rejected => Icon(
+        Icons.close,
+        color: color,
+        size: 20,
+      ),
+      _ => Text(
+        '?',
+        style: TextStyle(
+          color: color,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          height: 1,
+        ),
+      ),
+    };
+  }
 
-    if (expense.status == RealizedExpenseStatus.published) {
-      accepted = true;
-      matches = acceptances.where(
-        (a) =>
-            a.decision == RealizedExpenseDecision.accepted &&
-            a.decidedAt != null,
-      );
-    } else if (expense.status == RealizedExpenseStatus.rejected) {
-      matches = acceptances.where(
-        (a) =>
-            a.decision == RealizedExpenseDecision.rejected &&
-            a.decidedAt != null,
-      );
-    } else {
-      return null;
-    }
+  Widget _buildDecisionTable(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<_ParticipantReviewStatus> rows,
+    String dateFmt,
+  ) {
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final borderColor = Theme.of(context).colorScheme.outlineVariant;
+    final headerStyle = Theme.of(context).textTheme.titleSmall;
+    final cellStyle = Theme.of(context).textTheme.bodyLarge;
 
-    final candidateRows = matches.toList(growable: false);
-    if (candidateRows.isEmpty) return null;
-    final peerRows = candidateRows
-        .where((a) => a.participantId != expense.payerParticipantId)
-        .toList(growable: false);
-    final source = peerRows.isNotEmpty ? peerRows : candidateRows;
-    source.sort((a, b) => b.decidedAt!.compareTo(a.decidedAt!));
-    final row = source.first;
-    return _FinalDecisionStatus(
-      accepted: accepted,
-      participantName: displayNameForParticipant(row.participantId, roster),
-      decidedAt: row.decidedAt!,
+    TableRow tableRow(List<Widget> cells) => TableRow(
+      children: [
+        for (final cell in cells)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: cell,
+          ),
+      ],
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.housingRealizedExpenseReviewDecisionsTitle,
+            style: headerStyle,
+          ),
+          const SizedBox(height: 8),
+          Table(
+            border: TableBorder.all(color: borderColor),
+            columnWidths: const {
+              0: FlexColumnWidth(1.2),
+              1: FlexColumnWidth(1),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              tableRow([
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.housingRealizedExpenseReviewDecisionTableNameColumn,
+                    style: headerStyle,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.housingRealizedExpenseReviewDecisionTableDateColumn,
+                    style: headerStyle,
+                  ),
+                ),
+              ]),
+              for (final row in rows)
+                tableRow([
+                  Row(
+                    children: [
+                      _buildDecisionIndicator(context, row.display),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(row.participantName, style: cellStyle),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      row.decidedAt == null
+                          ? ''
+                          : formatPreferenceDateTime(row.decidedAt!, dateFmt),
+                      style: cellStyle,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ]),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -596,6 +716,7 @@ class _HousingRealizedExpenseReviewScreenState
             beneficiaryDisplayName: ctx.beneficiaryName ?? '',
           );
           final finalDecisionStatus = ctx.finalDecisionStatus;
+          final hasReviewTableRows = ctx.participantReviewStatuses.isNotEmpty;
           final transferSummary =
               expense.kind == RealizedExpenseKind.transfer &&
                   ctx.beneficiaryName != null
@@ -609,6 +730,14 @@ class _HousingRealizedExpenseReviewScreenState
           return ListView(
             padding: screenBodyScrollPadding(context),
             children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 24),
+                child: Text(
+                  l10n.housingRealizedExpenseReviewSubmittedBy(ctx.payerName),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 formatMinorAsMoney(
                   context,
@@ -731,7 +860,30 @@ class _HousingRealizedExpenseReviewScreenState
                   ),
                 ),
               ],
-              if (ctx.participantReviewStatuses.isNotEmpty) ...[
+              if (finalDecisionStatus != null) ...[
+                const SizedBox(height: 48),
+                Center(
+                  child: Text(
+                    finalDecisionStatus.accepted
+                        ? l10n.housingRealizedExpenseReviewAcceptedWord
+                        : l10n.housingRealizedExpenseReviewRejectedWord,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize:
+                          (Theme.of(context).textTheme.bodyLarge?.fontSize ??
+                              16) *
+                          1.8,
+                      fontWeight: FontWeight.w700,
+                      color: finalDecisionStatus.accepted
+                          ? Colors.green.shade700
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+              if (finalDecisionStatus != null &&
+                  !finalDecisionStatus.accepted &&
+                  (ctx.decisiveRejectionJustification ?? '').isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.only(left: 24),
@@ -739,32 +891,33 @@ class _HousingRealizedExpenseReviewScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.housingRealizedExpenseReviewDecisionsTitle,
+                        l10n.housingRealizedExpenseReviewMotifLabel,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
-                      for (final row in ctx.participantReviewStatuses)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(_participantReviewLine(l10n, row)),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Text(ctx.decisiveRejectionJustification!),
+                      ),
                     ],
                   ),
                 ),
               ],
-              if (ctx.rejections.isNotEmpty) ...[
-                const SizedBox(height: 48),
-                Text(
-                  l10n.housingRealizedExpenseReviewRejections,
-                  style: Theme.of(context).textTheme.titleSmall,
+              if (hasReviewTableRows) ...[
+                SizedBox(height: finalDecisionStatus != null ? 24 : 48),
+                _buildDecisionTable(
+                  context,
+                  l10n,
+                  ctx.participantReviewStatuses,
+                  dateFmt,
                 ),
-                for (final r in ctx.rejections)
-                  if ((r.rejectionJustification ?? '').trim().isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(r.rejectionJustification!.trim()),
-                    ),
-                const SizedBox(height: 16),
               ],
               if (canReview) ...[
                 const SizedBox(height: 48),
@@ -779,61 +932,10 @@ class _HousingRealizedExpenseReviewScreenState
                 ),
               ],
               if (canResubmit) ...[
-                SizedBox(height: ctx.rejections.isNotEmpty ? 8 : 48),
+                const SizedBox(height: 48),
                 FilledButton.tonal(
                   onPressed: () => _resubmit(ctx),
                   child: Text(l10n.housingRealizedExpenseResubmit),
-                ),
-              ],
-              if (finalDecisionStatus != null) ...[
-                const SizedBox(height: 48),
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        finalDecisionStatus.accepted
-                            ? l10n.housingRealizedExpenseReviewAcceptedWord
-                            : l10n.housingRealizedExpenseReviewRejectedWord,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize:
-                              (Theme.of(
-                                    context,
-                                  ).textTheme.bodyLarge?.fontSize ??
-                                  16) *
-                              1.8,
-                          fontWeight: FontWeight.w700,
-                          color: finalDecisionStatus.accepted
-                              ? Colors.green.shade700
-                              : Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.housingRealizedExpenseReviewByName(
-                          finalDecisionStatus.participantName,
-                        ),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: finalDecisionStatus.accepted
-                              ? Colors.green.shade700
-                              : Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                      Text(
-                        formatPreferenceDateTime(
-                          finalDecisionStatus.decidedAt,
-                          dateFmt,
-                        ),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: finalDecisionStatus.accepted
-                              ? Colors.green.shade700
-                              : Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ],

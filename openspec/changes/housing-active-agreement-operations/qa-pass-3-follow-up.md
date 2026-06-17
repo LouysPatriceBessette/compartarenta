@@ -28,9 +28,9 @@
 
 ### Rejection and resubmit policy
 
-6. **Abandon rejected expense** — Allow the originator to **drop** a rejected proposal instead of being steered only toward correct-and-resubmit (audit history retained; no new proposal required).
+6. **Abandon rejected expense** — ~~Allow the originator to **drop** a rejected proposal~~ **Decided 2026-06-16: will not implement.** Keep correct-and-resubmit only; rejected rows stay in audit history.
 
-7. **Resubmit requires changes** — Block resubmit when nothing changed vs. the rejected version (amount, date, line, kind, beneficiary, proofs). Today resubmit without edits is allowed; product rule should require a real correction.
+7. **Resubmit requires changes** — ~~Block resubmit when nothing changed vs. the rejected version~~ **Decided 2026-06-16: will not implement.** Unchanged resubmit remains allowed (new proposal id, peers review again).
 
 ## Suggested ordering (non-binding)
 

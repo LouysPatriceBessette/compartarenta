@@ -326,7 +326,12 @@
   "housingRealizedExpenseReviewDescriptionNone": "Aucun",
   "housingRealizedExpenseReviewAcceptedWord": "Accepté",
   "housingRealizedExpenseReviewRejectedWord": "Refusé",
-  "housingRealizedExpenseReviewDecisionsTitle": "État des révisions",
+  "housingRealizedExpenseReviewDecisionsTitle": "Décisions",
+  "housingRealizedExpenseReviewDecisionTableNameColumn": "Nom",
+  "housingRealizedExpenseReviewDecisionTableDateColumn": "Date",
+  "housingRealizedExpenseReviewDecisionPendingShort": "En attente",
+  "housingRealizedExpenseReviewDecisionUnknown": "Inconnue",
+  "housingRealizedExpenseReviewMotifLabel": "Motif",
   "housingRealizedExpenseReviewDecisionPending": "{name} : en attente",
   "housingRealizedExpenseReviewDecisionAccepted": "{name} : accepté",
   "housingRealizedExpenseReviewDecisionRejected": "{name} : refusé",
@@ -351,6 +356,12 @@
     }
   },
   "housingRealizedExpenseTransferReviewHint": "Vérifiez que vous avez bien reçu le virement avant d'accepter. Il n'y a pas de délai limite.",
+  "housingRealizedExpenseReviewSubmittedBy": "Dépense faite par : {name}",
+  "@housingRealizedExpenseReviewSubmittedBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "housingRealizedExpenseReviewPayer": "Payée par {name}",
   "housingRealizedExpenseReviewRejections": "Refus",
   "housingRealizedExpenseAccept": "Accepter",
