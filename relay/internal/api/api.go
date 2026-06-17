@@ -24,6 +24,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/compartarenta/relay/internal/config"
+	"github.com/compartarenta/relay/internal/entitlement"
 	"github.com/compartarenta/relay/internal/logging"
 	"github.com/compartarenta/relay/internal/metrics"
 	"github.com/compartarenta/relay/internal/push"
@@ -44,12 +45,13 @@ type Server struct {
 	idMaxLen     int
 	envelopeIDFn func() ([]byte, error)
 	pushWake     *push.Dispatcher
+	entitlement  *entitlement.Client
 }
 
 // NewServer constructs a fully-wired Server. The identity / IP rate
 // limiters are owned by the server and live for the process lifetime.
 func NewServer(cfg config.Config, st *store.Store, l *logging.Logger, wake *push.Dispatcher) *Server {
-	return &Server{
+	s := &Server{
 		cfg:          cfg,
 		store:        st,
 		logger:       l,
@@ -61,6 +63,10 @@ func NewServer(cfg config.Config, st *store.Store, l *logging.Logger, wake *push
 		envelopeIDFn: randomEnvelopeID,
 		pushWake:     wake,
 	}
+	if cfg.EntitlementEnabled {
+		s.entitlement = entitlement.NewClient(cfg.EntitlementIntrospectURL, cfg.EntitlementInternalToken)
+	}
+	return s
 }
 
 // PublicHandler returns the http.Handler bound to the public listener.
@@ -194,16 +200,52 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 }
 
 // ---------------------------------------------------------------------------
+// Entitlement gating (housing kinds 5–9)
+// ---------------------------------------------------------------------------
+
+func (s *Server) checkEntitlement(w http.ResponseWriter, r *http.Request, kind int, gate *entitlement.Gate) error {
+	if !s.cfg.EntitlementEnabled || s.entitlement == nil {
+		return nil
+	}
+	if !entitlement.IsGatedKind(kind) {
+		return nil
+	}
+	if code, ok := entitlement.ValidateGate(kind, gate); !ok {
+		metrics.EntitlementRejections.WithLabelValues(code).Inc()
+		metrics.HTTPRejections.WithLabelValues("envelopes", code).Inc()
+		writeError(w, http.StatusBadRequest, code, "entitlement gate metadata required for this envelope kind")
+		return errEntitlementDenied
+	}
+	allow, code, err := s.entitlement.IntrospectEnvelope(r.Context(), kind, gate)
+	if err != nil {
+		metrics.EntitlementRejections.WithLabelValues(code).Inc()
+		metrics.HTTPRejections.WithLabelValues("envelopes", code).Inc()
+		writeError(w, http.StatusServiceUnavailable, code, "entitlement introspection failed")
+		return errEntitlementDenied
+	}
+	if !allow {
+		metrics.EntitlementRejections.WithLabelValues(code).Inc()
+		metrics.HTTPRejections.WithLabelValues("envelopes", code).Inc()
+		writeError(w, http.StatusForbidden, code, "entitlement refused this envelope")
+		return errEntitlementDenied
+	}
+	return nil
+}
+
+var errEntitlementDenied = errors.New("entitlement denied")
+
+// ---------------------------------------------------------------------------
 // POST /v1/envelopes
 // ---------------------------------------------------------------------------
 
 type envelopeRequest struct {
-	SenderIdentity    string `json:"sender_identity"`
-	RecipientIdentity string `json:"recipient_identity"`
-	IdempotencyKey    string `json:"idempotency_key"`
-	Ciphertext        string `json:"ciphertext"`
-	Kind              int    `json:"kind"`
-	TTLSeconds        int    `json:"ttl_seconds"`
+	SenderIdentity    string            `json:"sender_identity"`
+	RecipientIdentity string            `json:"recipient_identity"`
+	IdempotencyKey    string            `json:"idempotency_key"`
+	Ciphertext        string            `json:"ciphertext"`
+	Kind              int               `json:"kind"`
+	TTLSeconds        int               `json:"ttl_seconds"`
+	EntitlementGate   *entitlement.Gate `json:"entitlement_gate,omitempty"`
 }
 
 type envelopeResponse struct {
@@ -258,6 +300,10 @@ func (s *Server) handleEnvelopes(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ok {
 		s.rejectBadFraming(w, r, "envelopes", "no_routing_relationship")
+		return
+	}
+
+	if err := s.checkEntitlement(w, r, req.Kind, req.EntitlementGate); err != nil {
 		return
 	}
 

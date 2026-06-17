@@ -119,6 +119,18 @@ type Config struct {
 
 	// ReminderCronInterval is how often due fires are claimed. Default: 1m.
 	ReminderCronInterval time.Duration
+
+	// EntitlementEnabled gates housing envelope kinds via the entitlement
+	// service when true and EntitlementIntrospectURL is set.
+	EntitlementEnabled bool
+
+	// EntitlementIntrospectURL is the base URL of the entitlement service
+	// (e.g. http://entitlement:8080). Empty disables introspection calls.
+	EntitlementIntrospectURL string
+
+	// EntitlementInternalToken is sent as Bearer auth to the entitlement
+	// introspection endpoint when non-empty.
+	EntitlementInternalToken string
 }
 
 // Load reads configuration from environment variables. Errors are
@@ -153,6 +165,12 @@ func Load() (Config, error) {
 		StatsListenAddr:           env("STATS_LISTEN_ADDR", "127.0.0.1:9091"),
 		ReminderCronEnabled:       boolEnv(&errs, "REMINDER_CRON_ENABLED", false),
 		ReminderCronInterval:      durEnv(&errs, "REMINDER_CRON_INTERVAL", time.Minute),
+		EntitlementEnabled:        boolEnv(&errs, "ENTITLEMENT_ENABLED", false),
+		EntitlementIntrospectURL:  strings.TrimSpace(os.Getenv("ENTITLEMENT_INTROSPECT_URL")),
+		EntitlementInternalToken:  strings.TrimSpace(os.Getenv("ENTITLEMENT_INTERNAL_TOKEN")),
+	}
+	if c.EntitlementEnabled && c.EntitlementIntrospectURL == "" {
+		errs = append(errs, errors.New("ENTITLEMENT_ENABLED requires ENTITLEMENT_INTROSPECT_URL"))
 	}
 	if c.DatabaseURL == "" {
 		errs = append(errs, errors.New("DATABASE_URL is required and must come from an explicit secret store (not committed)"))

@@ -1,0 +1,105 @@
+# Dev stack: relay + entitlement on a shared private network.
+#
+# Usage from repository root:
+#   cp relay/.env.example relay/.env
+#   cp entitlement/.env.example entitlement/.env
+#   # set ENTITLEMENT_ENABLED=true and ENTITLEMENT_INTROSPECT_URL in relay/.env
+#   docker compose -f deploy/compose.dev-stack.yml up --build
+#
+# Relay:     http://127.0.0.1:8080
+# Entitlement: http://127.0.0.1:8081
+
+name: compartarenta-dev-stack
+
+networks:
+  stack-net:
+    driver: bridge
+
+volumes:
+  relay-pgdata: {}
+  entitlement-pgdata: {}
+
+services:
+  relay-postgres:
+    image: postgres:17-alpine
+    networks: [stack-net]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-relay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-relay-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-relay}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - relay-pgdata:/var/lib/postgresql/data
+    user: "70:70"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-relay}", "-d", "${POSTGRES_DB:-relay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  entitlement-postgres:
+    image: postgres:17-alpine
+    networks: [stack-net]
+    environment:
+      POSTGRES_USER: ${ENTITLEMENT_POSTGRES_USER:-entitlement}
+      POSTGRES_PASSWORD: ${ENTITLEMENT_POSTGRES_PASSWORD:-entitlement-dev}
+      POSTGRES_DB: ${ENTITLEMENT_POSTGRES_DB:-entitlement}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - entitlement-pgdata:/var/lib/postgresql/data
+    user: "70:70"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${ENTITLEMENT_POSTGRES_USER:-entitlement}", "-d", "${ENTITLEMENT_POSTGRES_DB:-entitlement}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  entitlement:
+    build:
+      context: ../entitlement
+      args:
+        BUILD_DIGEST: ${BUILD_DIGEST:-dev}
+    networks: [stack-net]
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      entitlement-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${ENTITLEMENT_POSTGRES_USER:-entitlement}:${ENTITLEMENT_POSTGRES_PASSWORD:-entitlement-dev}@entitlement-postgres:5432/${ENTITLEMENT_POSTGRES_DB:-entitlement}?sslmode=disable
+      LISTEN_ADDR: "0.0.0.0:8080"
+      TRIAL_DURATION: ${TRIAL_DURATION:-336h}
+      GRACE_DURATION: ${GRACE_DURATION:-168h}
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
+    read_only: true
+    cap_drop: ["ALL"]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=8m
+
+  relay:
+    build:
+      context: ../relay
+      args:
+        BUILD_DIGEST: ${BUILD_DIGEST:-dev}
+    networks: [stack-net]
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      relay-postgres:
+        condition: service_healthy
+      entitlement:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-relay}:${POSTGRES_PASSWORD:-relay-dev}@relay-postgres:5432/${POSTGRES_DB:-relay}?sslmode=disable
+      PUBLIC_LISTEN_ADDR: "0.0.0.0:8080"
+      PRIVATE_LISTEN_ADDR: "0.0.0.0:9090"
+      ENVELOPE_MAX_BYTES: "262144"
+      ENTITLEMENT_ENABLED: ${ENTITLEMENT_ENABLED:-true}
+      ENTITLEMENT_INTROSPECT_URL: ${ENTITLEMENT_INTROSPECT_URL:-http://entitlement:8080}
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+    read_only: true
+    cap_drop: ["ALL"]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m

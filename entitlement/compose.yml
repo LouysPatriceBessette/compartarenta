@@ -1,0 +1,60 @@
+# Compartarenta entitlement service — reference compose manifest.
+#
+# Deploy alongside the relay stack. The relay reaches entitlement on the
+# shared private network via ENTITLEMENT_INTROSPECT_URL.
+
+name: compartarenta-entitlement
+
+networks:
+  entitlement-net:
+    driver: bridge
+
+volumes:
+  entitlement-pgdata: {}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: compartarenta-entitlement-db
+    restart: unless-stopped
+    networks: [entitlement-net]
+    environment:
+      POSTGRES_USER: ${ENTITLEMENT_POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${ENTITLEMENT_POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${ENTITLEMENT_POSTGRES_DB:?required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - entitlement-pgdata:/var/lib/postgresql/data
+    user: "70:70"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${ENTITLEMENT_POSTGRES_USER}", "-d", "${ENTITLEMENT_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  entitlement:
+    image: compartarenta-entitlement:${ENTITLEMENT_TAG:-dev}
+    build:
+      context: .
+      args:
+        BUILD_DIGEST: ${BUILD_DIGEST:-dev}
+    container_name: compartarenta-entitlement
+    restart: unless-stopped
+    networks: [entitlement-net]
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${ENTITLEMENT_POSTGRES_USER}:${ENTITLEMENT_POSTGRES_PASSWORD}@postgres:5432/${ENTITLEMENT_POSTGRES_DB}?sslmode=disable
+      LISTEN_ADDR: "0.0.0.0:8080"
+      TRIAL_DURATION: "336h"
+      GRACE_DURATION: "168h"
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=8m

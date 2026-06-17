@@ -164,6 +164,16 @@ var (
 		Name:      "housing_reconciles_total",
 		Help:      "Housing payment schedule reconciliation requests accepted.",
 	})
+
+	EntitlementRejections = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "relay",
+			Subsystem: "entitlement",
+			Name:      "rejections_total",
+			Help:      "Gated envelopes rejected by entitlement checks.",
+		},
+		[]string{"code"},
+	)
 )
 
 func init() {
@@ -174,6 +184,6 @@ func init() {
 		SweeperRuns, SweeperRunDuration,
 		QueueDepth, OldestUndeliveredSeconds, RateLimitRejections,
 		ReminderCronRuns, ReminderCronRunDuration, ReminderFiresDispatched,
-		SchedulingReconciles,
+		SchedulingReconciles, EntitlementRejections,
 	)
 }

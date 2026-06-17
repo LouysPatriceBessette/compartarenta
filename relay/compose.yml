@@ -97,6 +97,9 @@ services:
       # boundary). Set this when an in-browser build needs to talk to
       # this relay; see `relay/.env.example` for the contract.
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      ENTITLEMENT_ENABLED: ${ENTITLEMENT_ENABLED:-false}
+      ENTITLEMENT_INTROSPECT_URL: ${ENTITLEMENT_INTROSPECT_URL:-}
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
     read_only: true
     cap_drop: ["ALL"]
     security_opt:
