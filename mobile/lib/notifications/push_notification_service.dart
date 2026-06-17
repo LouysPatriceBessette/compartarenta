@@ -450,6 +450,54 @@ class PushNotificationService {
     );
   }
 
+  static Future<void> showLocalHousingPaymentReminderNotification({
+    required String lineTitle,
+    required String reminderKind,
+    String? planId,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!prefs.notificationsEnabled || !prefs.notificationHousingPaymentReminders) {
+      return;
+    }
+
+    final l10n = l10nForNotificationLocale(prefs: prefs);
+    final title = reminderKind == 'overdue'
+        ? l10n.pushNotificationHousingPaymentReminderOverdueTitle
+        : l10n.pushNotificationHousingPaymentReminderBeforeDueTitle;
+    final body = reminderKind == 'overdue'
+        ? l10n.pushNotificationHousingPaymentReminderOverdueBody(lineTitle)
+        : l10n.pushNotificationHousingPaymentReminderBeforeDueBody(lineTitle);
+
+    var payload = _housingTapPayload;
+    if (planId != null && planId.isNotEmpty) {
+      payload = '$_housingTapPayload:$planId';
+    }
+
+    if (kIsWeb) return;
+
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: payload,
+    );
+  }
+
   static Future<void> showLocalHousingRealizedExpenseRejectedNotification({
     required String senderDisplayName,
     String? expenseId,

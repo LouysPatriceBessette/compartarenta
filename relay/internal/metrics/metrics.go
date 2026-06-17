@@ -135,6 +135,35 @@ var (
 		},
 		[]string{"scope"},
 	)
+
+	ReminderCronRuns = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "relay",
+		Subsystem: "reminder_cron",
+		Name:      "runs_total",
+		Help:      "Reminder cron invocations.",
+	})
+
+	ReminderCronRunDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "relay",
+		Subsystem: "reminder_cron",
+		Name:      "run_duration_seconds",
+		Help:      "Time taken by each reminder cron run.",
+		Buckets:   prometheus.ExponentialBuckets(0.001, 2, 12),
+	})
+
+	ReminderFiresDispatched = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "relay",
+		Subsystem: "reminder_cron",
+		Name:      "fires_dispatched_total",
+		Help:      "Scheduled notification fires claimed and marked fired.",
+	})
+
+	SchedulingReconciles = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "relay",
+		Subsystem: "scheduling",
+		Name:      "housing_reconciles_total",
+		Help:      "Housing payment schedule reconciliation requests accepted.",
+	})
 )
 
 func init() {
@@ -144,5 +173,7 @@ func init() {
 		IdempotencyExpired, RoutingCreated, RoutingSevered,
 		SweeperRuns, SweeperRunDuration,
 		QueueDepth, OldestUndeliveredSeconds, RateLimitRejections,
+		ReminderCronRuns, ReminderCronRunDuration, ReminderFiresDispatched,
+		SchedulingReconciles,
 	)
 }

@@ -538,6 +538,19 @@ class HousingInactiveParticipants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Local overdue journal cards (orange, non-navigable) on Accepted expenses.
+class HousingPaymentOverdueJournalEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get planId => text()();
+  TextColumn get planLineId => text()();
+  TextColumn get periodKey => text()();
+  DateTimeColumn get periodDueAt => dateTime()();
+  DateTimeColumn get recordedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Inbound watch list and outbound/inbound pending state for plan-mediated
 /// peer contact establishment (known public keys from proposal snapshots).
 class PlanPeerEstablishments extends Table {
@@ -585,6 +598,7 @@ class PlanPeerEstablishments extends Table {
     HousingParticipationDecisions,
     HousingPlanMemberships,
     HousingInactiveParticipants,
+    HousingPaymentOverdueJournalEntries,
     PlanPeerEstablishments,
   ],
 )
@@ -685,7 +699,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -892,6 +906,9 @@ class AppDatabase extends _$AppDatabase {
           realizedExpenses.paymentChartCarryForwardMinor,
         );
       }
+      if (from < 23) {
+        await m.createTable(housingPaymentOverdueJournalEntries);
+      }
     },
     beforeOpen: (details) async {
       // Drift will run onCreate/onUpgrade automatically.
@@ -966,6 +983,34 @@ class AppDatabase extends _$AppDatabase {
       }
     });
     return keep;
+  }
+
+  Future<void> upsertHousingPaymentOverdueJournalEntry({
+    required String id,
+    required String planId,
+    required String planLineId,
+    required String periodKey,
+    required DateTime periodDueAt,
+    required DateTime recordedAt,
+  }) async {
+    await into(housingPaymentOverdueJournalEntries).insertOnConflictUpdate(
+      HousingPaymentOverdueJournalEntriesCompanion.insert(
+        id: id,
+        planId: planId,
+        planLineId: planLineId,
+        periodKey: periodKey,
+        periodDueAt: periodDueAt,
+        recordedAt: recordedAt,
+      ),
+    );
+  }
+
+  Future<List<HousingPaymentOverdueJournalEntry>>
+  listHousingPaymentOverdueJournalForPlan(String planId) async {
+    return (select(housingPaymentOverdueJournalEntries)
+          ..where((t) => t.planId.equals(planId))
+          ..orderBy([(t) => OrderingTerm.desc(t.recordedAt)]))
+        .get();
   }
 
   Future<void> upsertPlanLine(PlanLinesCompanion line) =>

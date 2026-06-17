@@ -52,6 +52,8 @@ class AppPreferences extends ChangeNotifier {
       'notifications.housing.decisionChange';
   static const _kNotificationsHousingOfferExpiration =
       'notifications.housing.offerExpiration';
+  static const _kNotificationsHousingPaymentReminders =
+      'notifications.housing.paymentReminders';
   static const _kNotificationsSoundEnabled = 'notifications.sound.enabled';
   static const _kNotificationsCountryStatsEnabled =
       'notifications.countryStats.enabled';
@@ -282,6 +284,11 @@ class AppPreferences extends ChangeNotifier {
       _notificationBool(_kNotificationsHousingOfferExpiration);
   Future<void> setNotificationHousingOfferExpiration(bool value) =>
       _setNotificationBool(_kNotificationsHousingOfferExpiration, value);
+
+  bool get notificationHousingPaymentReminders =>
+      _notificationBool(_kNotificationsHousingPaymentReminders);
+  Future<void> setNotificationHousingPaymentReminders(bool value) =>
+      _setNotificationBool(_kNotificationsHousingPaymentReminders, value);
 
   bool get notificationSoundEnabled =>
       _notificationBool(_kNotificationsSoundEnabled);
@@ -533,6 +540,7 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kNotificationsHousingPlanSubmission);
     await _prefs.remove(_kNotificationsHousingDecisionChange);
     await _prefs.remove(_kNotificationsHousingOfferExpiration);
+    await _prefs.remove(_kNotificationsHousingPaymentReminders);
     await _prefs.remove(_kNotificationsSoundEnabled);
     await _prefs.remove(_kNotificationsCountryStatsEnabled);
     await _prefs.remove(_kNotificationsCountryStatsCode);

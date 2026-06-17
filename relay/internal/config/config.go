@@ -112,6 +112,13 @@ type Config struct {
 	// statistics endpoint. Default: 127.0.0.1:9091. Set to "-" to disable
 	// the stats listener entirely.
 	StatsListenAddr string
+
+	// ReminderCronEnabled gates the scheduled-notification fire dispatcher.
+	// Default: false.
+	ReminderCronEnabled bool
+
+	// ReminderCronInterval is how often due fires are claimed. Default: 1m.
+	ReminderCronInterval time.Duration
 }
 
 // Load reads configuration from environment variables. Errors are
@@ -144,6 +151,8 @@ func Load() (Config, error) {
 		APNsGenericAlertBody:      strings.TrimSpace(os.Getenv("APNS_GENERIC_ALERT_BODY")),
 		RoutingPushTokenTTL:       time.Duration(routingTTLSeconds) * time.Second,
 		StatsListenAddr:           env("STATS_LISTEN_ADDR", "127.0.0.1:9091"),
+		ReminderCronEnabled:       boolEnv(&errs, "REMINDER_CRON_ENABLED", false),
+		ReminderCronInterval:      durEnv(&errs, "REMINDER_CRON_INTERVAL", time.Minute),
 	}
 	if c.DatabaseURL == "" {
 		errs = append(errs, errors.New("DATABASE_URL is required and must come from an explicit secret store (not committed)"))

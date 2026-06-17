@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import '../relay_client.dart';
+import '../relay_scheduling.dart';
 
 /// In-memory implementation of [RelayClient] used by orchestrator tests
 /// and by the future end-to-end widget tests.
@@ -201,6 +202,58 @@ class FakeRelayClient implements RelayClient {
           r.pushToken == pushToken &&
           _eq(r.recipient, recipientIdentity),
     );
+  }
+
+  final List<RelayPendingReminderDelivery> pendingReminderDeliveries =
+      <RelayPendingReminderDelivery>[];
+
+  @override
+  Future<void> upsertSchedulingTimezone({
+    required Uint8List recipientIdentity,
+    required String ianaTimezone,
+  }) async {
+    _maybeThrowOnce();
+  }
+
+  @override
+  Future<void> reconcileHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required Uint8List planIdBytes,
+    required int generation,
+    required List<HousingReminderScheduleTarget> targets,
+  }) async {
+    _maybeThrowOnce();
+  }
+
+  @override
+  Future<void> cancelHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required List<Uint8List> scopeKeyBytes,
+    required String reminderKind,
+    required Uint8List periodKeyBytes,
+  }) async {
+    _maybeThrowOnce();
+  }
+
+  @override
+  Future<List<RelayPendingReminderDelivery>> fetchPendingReminderDeliveries({
+    required Uint8List recipientIdentity,
+    int limit = 32,
+  }) async {
+    _maybeThrowOnce();
+    return pendingReminderDeliveries
+        .where((d) => _eq(d.fireId, d.fireId))
+        .take(limit)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> ackReminderDelivery({
+    required Uint8List recipientIdentity,
+    required Uint8List fireId,
+  }) async {
+    _maybeThrowOnce();
+    pendingReminderDeliveries.removeWhere((d) => _eq(d.fireId, fireId));
   }
 
   @override

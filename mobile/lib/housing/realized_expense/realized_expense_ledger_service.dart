@@ -237,6 +237,25 @@ class RealizedExpenseLedgerService {
         .toList(growable: false);
   }
 
+  /// All published expenses for one plan line (any payment date).
+  Future<List<RealizedExpense>> listPublishedForPlanLine({
+    required String packageId,
+    required String planId,
+    required String planLineId,
+  }) async {
+    final rows =
+        await (_db.select(_db.realizedExpenses)
+              ..where((t) => t.packageId.equals(packageId))
+              ..where((t) => t.planId.equals(planId))
+              ..where((t) => t.planLineId.equals(planLineId))
+              ..where((t) => t.status.equals(RealizedExpenseStatus.published))
+              ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
+            .get();
+    return rows
+        .where((e) => RealizedExpenseKind.usesPlanLine(e.kind))
+        .toList(growable: false);
+  }
+
   Future<List<RealizedExpense>> listRejectedForMonth({
     required String packageId,
     required String planId,

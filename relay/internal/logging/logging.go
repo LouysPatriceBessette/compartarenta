@@ -34,6 +34,7 @@ const (
 	KeyCountEnvExp     FieldKey = "envelopes_expired"
 	KeyCountIdemExp    FieldKey = "idempotency_expired"
 	KeyCountRoutPrune  FieldKey = "routing_pruned"
+	KeyReminderFires   FieldKey = "reminder_fires_claimed"
 	KeyActor           FieldKey = "actor"
 	KeyAction          FieldKey = "action"
 	KeyTarget          FieldKey = "target"
@@ -47,7 +48,7 @@ var allowedKeys = map[FieldKey]struct{}{
 	KeySenderIdentity: {}, KeyRecipientIdent: {}, KeyError: {},
 	KeyDurationMS: {}, KeyRejectionReason: {}, KeySchemaVersion: {},
 	KeyMigrationCount: {}, KeySweeperRun: {}, KeyCountEnvExp: {},
-	KeyCountIdemExp: {}, KeyCountRoutPrune: {}, KeyActor: {},
+	KeyCountIdemExp: {}, KeyCountRoutPrune: {}, KeyReminderFires: {}, KeyActor: {},
 	KeyAction: {}, KeyTarget: {}, KeyBuild: {}, KeyAddr: {},
 	KeyComponent: {},
 }

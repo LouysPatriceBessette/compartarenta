@@ -1931,6 +1931,32 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationHousingPaymentReminderBeforeDueTitle =>
+      'Rappel de paiement';
+
+  @override
+  String pushNotificationHousingPaymentReminderBeforeDueBody(String lineTitle) {
+    return 'L\'échéance de $lineTitle approche.';
+  }
+
+  @override
+  String get pushNotificationHousingPaymentReminderOverdueTitle =>
+      'Paiement en retard';
+
+  @override
+  String pushNotificationHousingPaymentReminderOverdueBody(String lineTitle) {
+    return 'Le paiement de $lineTitle n\'a pas été complété pour cette période.';
+  }
+
+  @override
+  String get notificationHousingPaymentRemindersLabel => 'Rappels de paiement';
+
+  @override
+  String housingOverdueJournalCardBody(String lineTitle) {
+    return 'Le paiement de $lineTitle n\'a pas été complété pour cette période.';
+  }
+
+  @override
   String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
       'Le serveur de relai est temporairement indisponible.';
 

@@ -36,6 +36,7 @@ Future<void> runWakeInboxPollOnce() async {
     );
     await orchestrator.processAllPendingHandshakes();
     await orchestrator.pollSteadyStateInboxes();
+    await orchestrator.pollHousingPaymentReminders();
     relay.close();
   } catch (e, st) {
     debugPrint('runWakeInboxPollOnce failed: $e\n$st');

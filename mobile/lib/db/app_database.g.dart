@@ -12078,6 +12078,441 @@ class HousingInactiveParticipantsCompanion
   }
 }
 
+class $HousingPaymentOverdueJournalEntriesTable
+    extends HousingPaymentOverdueJournalEntries
+    with
+        TableInfo<
+          $HousingPaymentOverdueJournalEntriesTable,
+          HousingPaymentOverdueJournalEntry
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HousingPaymentOverdueJournalEntriesTable(
+    this.attachedDatabase, [
+    this._alias,
+  ]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+    'plan_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _planLineIdMeta = const VerificationMeta(
+    'planLineId',
+  );
+  @override
+  late final GeneratedColumn<String> planLineId = GeneratedColumn<String>(
+    'plan_line_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodKeyMeta = const VerificationMeta(
+    'periodKey',
+  );
+  @override
+  late final GeneratedColumn<String> periodKey = GeneratedColumn<String>(
+    'period_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodDueAtMeta = const VerificationMeta(
+    'periodDueAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> periodDueAt = GeneratedColumn<DateTime>(
+    'period_due_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    planId,
+    planLineId,
+    periodKey,
+    periodDueAt,
+    recordedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'housing_payment_overdue_journal_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HousingPaymentOverdueJournalEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(
+        _planIdMeta,
+        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('plan_line_id')) {
+      context.handle(
+        _planLineIdMeta,
+        planLineId.isAcceptableOrUnknown(
+          data['plan_line_id']!,
+          _planLineIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_planLineIdMeta);
+    }
+    if (data.containsKey('period_key')) {
+      context.handle(
+        _periodKeyMeta,
+        periodKey.isAcceptableOrUnknown(data['period_key']!, _periodKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodKeyMeta);
+    }
+    if (data.containsKey('period_due_at')) {
+      context.handle(
+        _periodDueAtMeta,
+        periodDueAt.isAcceptableOrUnknown(
+          data['period_due_at']!,
+          _periodDueAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodDueAtMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HousingPaymentOverdueJournalEntry map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HousingPaymentOverdueJournalEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      planId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_id'],
+      )!,
+      planLineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plan_line_id'],
+      )!,
+      periodKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_key'],
+      )!,
+      periodDueAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}period_due_at'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $HousingPaymentOverdueJournalEntriesTable createAlias(String alias) {
+    return $HousingPaymentOverdueJournalEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class HousingPaymentOverdueJournalEntry extends DataClass
+    implements Insertable<HousingPaymentOverdueJournalEntry> {
+  final String id;
+  final String planId;
+  final String planLineId;
+  final String periodKey;
+  final DateTime periodDueAt;
+  final DateTime recordedAt;
+  const HousingPaymentOverdueJournalEntry({
+    required this.id,
+    required this.planId,
+    required this.planLineId,
+    required this.periodKey,
+    required this.periodDueAt,
+    required this.recordedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['plan_line_id'] = Variable<String>(planLineId);
+    map['period_key'] = Variable<String>(periodKey);
+    map['period_due_at'] = Variable<DateTime>(periodDueAt);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    return map;
+  }
+
+  HousingPaymentOverdueJournalEntriesCompanion toCompanion(bool nullToAbsent) {
+    return HousingPaymentOverdueJournalEntriesCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      planLineId: Value(planLineId),
+      periodKey: Value(periodKey),
+      periodDueAt: Value(periodDueAt),
+      recordedAt: Value(recordedAt),
+    );
+  }
+
+  factory HousingPaymentOverdueJournalEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HousingPaymentOverdueJournalEntry(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      planLineId: serializer.fromJson<String>(json['planLineId']),
+      periodKey: serializer.fromJson<String>(json['periodKey']),
+      periodDueAt: serializer.fromJson<DateTime>(json['periodDueAt']),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'planLineId': serializer.toJson<String>(planLineId),
+      'periodKey': serializer.toJson<String>(periodKey),
+      'periodDueAt': serializer.toJson<DateTime>(periodDueAt),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+    };
+  }
+
+  HousingPaymentOverdueJournalEntry copyWith({
+    String? id,
+    String? planId,
+    String? planLineId,
+    String? periodKey,
+    DateTime? periodDueAt,
+    DateTime? recordedAt,
+  }) => HousingPaymentOverdueJournalEntry(
+    id: id ?? this.id,
+    planId: planId ?? this.planId,
+    planLineId: planLineId ?? this.planLineId,
+    periodKey: periodKey ?? this.periodKey,
+    periodDueAt: periodDueAt ?? this.periodDueAt,
+    recordedAt: recordedAt ?? this.recordedAt,
+  );
+  HousingPaymentOverdueJournalEntry copyWithCompanion(
+    HousingPaymentOverdueJournalEntriesCompanion data,
+  ) {
+    return HousingPaymentOverdueJournalEntry(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      planLineId: data.planLineId.present
+          ? data.planLineId.value
+          : this.planLineId,
+      periodKey: data.periodKey.present ? data.periodKey.value : this.periodKey,
+      periodDueAt: data.periodDueAt.present
+          ? data.periodDueAt.value
+          : this.periodDueAt,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingPaymentOverdueJournalEntry(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('planLineId: $planLineId, ')
+          ..write('periodKey: $periodKey, ')
+          ..write('periodDueAt: $periodDueAt, ')
+          ..write('recordedAt: $recordedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, planId, planLineId, periodKey, periodDueAt, recordedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HousingPaymentOverdueJournalEntry &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.planLineId == this.planLineId &&
+          other.periodKey == this.periodKey &&
+          other.periodDueAt == this.periodDueAt &&
+          other.recordedAt == this.recordedAt);
+}
+
+class HousingPaymentOverdueJournalEntriesCompanion
+    extends UpdateCompanion<HousingPaymentOverdueJournalEntry> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> planLineId;
+  final Value<String> periodKey;
+  final Value<DateTime> periodDueAt;
+  final Value<DateTime> recordedAt;
+  final Value<int> rowid;
+  const HousingPaymentOverdueJournalEntriesCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.planLineId = const Value.absent(),
+    this.periodKey = const Value.absent(),
+    this.periodDueAt = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HousingPaymentOverdueJournalEntriesCompanion.insert({
+    required String id,
+    required String planId,
+    required String planLineId,
+    required String periodKey,
+    required DateTime periodDueAt,
+    required DateTime recordedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       planId = Value(planId),
+       planLineId = Value(planLineId),
+       periodKey = Value(periodKey),
+       periodDueAt = Value(periodDueAt),
+       recordedAt = Value(recordedAt);
+  static Insertable<HousingPaymentOverdueJournalEntry> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? planLineId,
+    Expression<String>? periodKey,
+    Expression<DateTime>? periodDueAt,
+    Expression<DateTime>? recordedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (planLineId != null) 'plan_line_id': planLineId,
+      if (periodKey != null) 'period_key': periodKey,
+      if (periodDueAt != null) 'period_due_at': periodDueAt,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HousingPaymentOverdueJournalEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? planId,
+    Value<String>? planLineId,
+    Value<String>? periodKey,
+    Value<DateTime>? periodDueAt,
+    Value<DateTime>? recordedAt,
+    Value<int>? rowid,
+  }) {
+    return HousingPaymentOverdueJournalEntriesCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      planLineId: planLineId ?? this.planLineId,
+      periodKey: periodKey ?? this.periodKey,
+      periodDueAt: periodDueAt ?? this.periodDueAt,
+      recordedAt: recordedAt ?? this.recordedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (planLineId.present) {
+      map['plan_line_id'] = Variable<String>(planLineId.value);
+    }
+    if (periodKey.present) {
+      map['period_key'] = Variable<String>(periodKey.value);
+    }
+    if (periodDueAt.present) {
+      map['period_due_at'] = Variable<DateTime>(periodDueAt.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HousingPaymentOverdueJournalEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('planLineId: $planLineId, ')
+          ..write('periodKey: $periodKey, ')
+          ..write('periodDueAt: $periodDueAt, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PlanPeerEstablishmentsTable extends PlanPeerEstablishments
     with TableInfo<$PlanPeerEstablishmentsTable, PlanPeerEstablishment> {
   @override
@@ -13070,6 +13505,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $HousingPlanMembershipsTable(this);
   late final $HousingInactiveParticipantsTable housingInactiveParticipants =
       $HousingInactiveParticipantsTable(this);
+  late final $HousingPaymentOverdueJournalEntriesTable
+  housingPaymentOverdueJournalEntries =
+      $HousingPaymentOverdueJournalEntriesTable(this);
   late final $PlanPeerEstablishmentsTable planPeerEstablishments =
       $PlanPeerEstablishmentsTable(this);
   @override
@@ -13099,6 +13537,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     housingParticipationDecisions,
     housingPlanMemberships,
     housingInactiveParticipants,
+    housingPaymentOverdueJournalEntries,
     planPeerEstablishments,
   ];
 }
@@ -19180,6 +19619,250 @@ typedef $$HousingInactiveParticipantsTableProcessedTableManager =
       HousingInactiveParticipant,
       PrefetchHooks Function()
     >;
+typedef $$HousingPaymentOverdueJournalEntriesTableCreateCompanionBuilder =
+    HousingPaymentOverdueJournalEntriesCompanion Function({
+      required String id,
+      required String planId,
+      required String planLineId,
+      required String periodKey,
+      required DateTime periodDueAt,
+      required DateTime recordedAt,
+      Value<int> rowid,
+    });
+typedef $$HousingPaymentOverdueJournalEntriesTableUpdateCompanionBuilder =
+    HousingPaymentOverdueJournalEntriesCompanion Function({
+      Value<String> id,
+      Value<String> planId,
+      Value<String> planLineId,
+      Value<String> periodKey,
+      Value<DateTime> periodDueAt,
+      Value<DateTime> recordedAt,
+      Value<int> rowid,
+    });
+
+class $$HousingPaymentOverdueJournalEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $HousingPaymentOverdueJournalEntriesTable> {
+  $$HousingPaymentOverdueJournalEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodKey => $composableBuilder(
+    column: $table.periodKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get periodDueAt => $composableBuilder(
+    column: $table.periodDueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HousingPaymentOverdueJournalEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HousingPaymentOverdueJournalEntriesTable> {
+  $$HousingPaymentOverdueJournalEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+    column: $table.planId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodKey => $composableBuilder(
+    column: $table.periodKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get periodDueAt => $composableBuilder(
+    column: $table.periodDueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HousingPaymentOverdueJournalEntriesTable> {
+  $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get planLineId => $composableBuilder(
+    column: $table.planLineId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get periodKey =>
+      $composableBuilder(column: $table.periodKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get periodDueAt => $composableBuilder(
+    column: $table.periodDueAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$HousingPaymentOverdueJournalEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HousingPaymentOverdueJournalEntriesTable,
+          HousingPaymentOverdueJournalEntry,
+          $$HousingPaymentOverdueJournalEntriesTableFilterComposer,
+          $$HousingPaymentOverdueJournalEntriesTableOrderingComposer,
+          $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer,
+          $$HousingPaymentOverdueJournalEntriesTableCreateCompanionBuilder,
+          $$HousingPaymentOverdueJournalEntriesTableUpdateCompanionBuilder,
+          (
+            HousingPaymentOverdueJournalEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $HousingPaymentOverdueJournalEntriesTable,
+              HousingPaymentOverdueJournalEntry
+            >,
+          ),
+          HousingPaymentOverdueJournalEntry,
+          PrefetchHooks Function()
+        > {
+  $$HousingPaymentOverdueJournalEntriesTableTableManager(
+    _$AppDatabase db,
+    $HousingPaymentOverdueJournalEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HousingPaymentOverdueJournalEntriesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HousingPaymentOverdueJournalEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> planId = const Value.absent(),
+                Value<String> planLineId = const Value.absent(),
+                Value<String> periodKey = const Value.absent(),
+                Value<DateTime> periodDueAt = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HousingPaymentOverdueJournalEntriesCompanion(
+                id: id,
+                planId: planId,
+                planLineId: planLineId,
+                periodKey: periodKey,
+                periodDueAt: periodDueAt,
+                recordedAt: recordedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String planId,
+                required String planLineId,
+                required String periodKey,
+                required DateTime periodDueAt,
+                required DateTime recordedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => HousingPaymentOverdueJournalEntriesCompanion.insert(
+                id: id,
+                planId: planId,
+                planLineId: planLineId,
+                periodKey: periodKey,
+                periodDueAt: periodDueAt,
+                recordedAt: recordedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HousingPaymentOverdueJournalEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HousingPaymentOverdueJournalEntriesTable,
+      HousingPaymentOverdueJournalEntry,
+      $$HousingPaymentOverdueJournalEntriesTableFilterComposer,
+      $$HousingPaymentOverdueJournalEntriesTableOrderingComposer,
+      $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer,
+      $$HousingPaymentOverdueJournalEntriesTableCreateCompanionBuilder,
+      $$HousingPaymentOverdueJournalEntriesTableUpdateCompanionBuilder,
+      (
+        HousingPaymentOverdueJournalEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $HousingPaymentOverdueJournalEntriesTable,
+          HousingPaymentOverdueJournalEntry
+        >,
+      ),
+      HousingPaymentOverdueJournalEntry,
+      PrefetchHooks Function()
+    >;
 typedef $$PlanPeerEstablishmentsTableCreateCompanionBuilder =
     PlanPeerEstablishmentsCompanion Function({
       required String id,
@@ -19687,6 +20370,12 @@ class $AppDatabaseManager {
       $$HousingInactiveParticipantsTableTableManager(
         _db,
         _db.housingInactiveParticipants,
+      );
+  $$HousingPaymentOverdueJournalEntriesTableTableManager
+  get housingPaymentOverdueJournalEntries =>
+      $$HousingPaymentOverdueJournalEntriesTableTableManager(
+        _db,
+        _db.housingPaymentOverdueJournalEntries,
       );
   $$PlanPeerEstablishmentsTableTableManager get planPeerEstablishments =>
       $$PlanPeerEstablishmentsTableTableManager(

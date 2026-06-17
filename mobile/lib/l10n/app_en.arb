@@ -855,6 +855,21 @@
   "pushNotificationHousingDecisionTitle": "Housing proposal response",
   "pushNotificationHousingDecisionBody": "A participant responded to a housing proposal.",
   "pushNotificationHousingDecisionBodyFrom": "{name} responded to a housing proposal.",
+  "pushNotificationHousingPaymentReminderBeforeDueTitle": "Payment reminder",
+  "pushNotificationHousingPaymentReminderBeforeDueBody": "{lineTitle} is due soon.",
+  "@pushNotificationHousingPaymentReminderBeforeDueBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
+  "pushNotificationHousingPaymentReminderOverdueTitle": "Payment overdue",
+  "pushNotificationHousingPaymentReminderOverdueBody": "{lineTitle} was not completed for this period.",
+  "@pushNotificationHousingPaymentReminderOverdueBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
+  "notificationHousingPaymentRemindersLabel": "Payment reminders",
+  "housingOverdueJournalCardBody": "{lineTitle} was not completed for this period.",
+  "@housingOverdueJournalCardBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

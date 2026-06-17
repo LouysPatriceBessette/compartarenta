@@ -21,6 +21,7 @@ import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
 import '../housing/participation/housing_participation_change_sync_service.dart';
 import '../housing/participation/housing_participation_membership_service.dart';
+import '../housing/reminders/housing_payment_reminder_service.dart';
 import '../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
 import '../housing/realized_expense/realized_expense_status.dart';
@@ -214,6 +215,9 @@ class HandshakeOrchestrator {
   final Duration _ackTtl;
   final Duration _steadyTtl;
   final DateTime Function() _now;
+
+  AppPreferences? _cachedPrefs;
+  HousingPaymentReminderService? _cachedReminderService;
 
   /// Same [RelayClient] passed at construction (used for routing push).
   RelayClient get relayClient => _relay;
@@ -865,12 +869,19 @@ class HandshakeOrchestrator {
   /// inbound steady envelopes (profile, disconnect, housing proposal, …).
   ///
   /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
+  /// Scheduled housing payment reminders are polled via
+  /// [pollHousingPaymentReminders] (wake / foreground resume), not here.
   Future<void> pollSteadyStateInboxes() async {
     try {
       await _pollSteadyStateInboxesBody();
     } catch (e, st) {
       debugPrint('pollSteadyStateInboxes failed: $e\n$st');
     }
+  }
+
+  /// Fetches relay-fired housing payment reminders and shows local notifications.
+  Future<void> pollHousingPaymentReminders() async {
+    await _pollHousingPaymentReminders();
   }
 
   Future<void> _pollSteadyStateInboxesBody() async {
@@ -1086,6 +1097,9 @@ class HandshakeOrchestrator {
       ),
     );
   }
+
+  /// This device's long-term X25519 public key bytes.
+  Future<Uint8List> selfLongTermPublicKey() => _identity.publicKey();
 
   /// Recipient routing ids whose inboxes this device polls: steady-state
   /// addresses for each connected contact plus handshake listen addresses
@@ -2550,10 +2564,16 @@ class HandshakeOrchestrator {
       details: {'status': status.name},
     );
     if (status == ProposalResponseStatus.accepted) {
-      await transport.tryActivatePlanIfUnanimous(
+      final outcome = await transport.tryActivatePlanIfUnanimous(
         planId: planId,
         revisionId: selectedRevisionId,
       );
+      if (outcome == ProposalActivationOutcome.activated) {
+        await _reconcileHousingPaymentRemindersAfterActivation(
+          planId: planId,
+          revisionId: selectedRevisionId,
+        );
+      }
       await transport.reconcileStalePackagePending(planId);
     } else if (sendResult.sentCount > 0) {
       await transport.archiveInvalidatedProposal(
@@ -2929,6 +2949,12 @@ class HandshakeOrchestrator {
       }
     }
     debugPrint('housing_realized_expense decision send done for $expenseId');
+    if (decision == RealizedExpenseDecision.accepted) {
+      await _maybeReconcileHousingRemindersAfterExpenseAccept(
+        expenseId: expenseId,
+        participantId: participantId,
+      );
+    }
   }
 
   /// Broadcasts a participation change proposal to connected co-participants.
@@ -3211,10 +3237,16 @@ class HandshakeOrchestrator {
     )..where((t) => t.id.equals(revision.packageId))).getSingleOrNull();
     if (pkg != null) {
       if (status == ProposalResponseStatus.accepted) {
-        await transport.tryActivatePlanIfUnanimous(
+        final outcome = await transport.tryActivatePlanIfUnanimous(
           planId: pkg.planId,
           revisionId: revision.id,
         );
+        if (outcome == ProposalActivationOutcome.activated) {
+          await _reconcileHousingPaymentRemindersAfterActivation(
+            planId: pkg.planId,
+            revisionId: revision.id,
+          );
+        }
       } else {
         await transport.archiveInvalidatedProposal(
           planId: pkg.planId,
@@ -3932,5 +3964,92 @@ class HandshakeOrchestrator {
       if (row.peerPublicMaterialB64 == peerB64) return row.participantId;
     }
     return null;
+  }
+
+  Future<HousingPaymentReminderService> _housingPaymentReminderService() async {
+    if (_cachedReminderService != null) return _cachedReminderService!;
+    _cachedPrefs ??= await AppPreferences.load();
+    _cachedReminderService = HousingPaymentReminderService(
+      db: _db,
+      relay: _relay,
+      prefs: _cachedPrefs!,
+      orchestrator: this,
+      contacts: _contacts,
+    );
+    return _cachedReminderService!;
+  }
+
+  Future<void> _pollHousingPaymentReminders() async {
+    if (kIsWeb) return;
+    try {
+      final service = await _housingPaymentReminderService();
+      await service.pollAndDeliverPendingReminders();
+    } catch (e, st) {
+      debugPrint('pollHousingPaymentReminders: $e\n$st');
+    }
+  }
+
+  Future<void> _reconcileHousingPaymentRemindersAfterActivation({
+    required String planId,
+    required String revisionId,
+  }) async {
+    if (kIsWeb) return;
+    final service = await _housingPaymentReminderService();
+    await service.upsertSelfTimezoneOnRelay();
+    final selfPub = await selfLongTermPublicKey();
+    final peers = await _db.listPlanPeerEstablishmentsForPlan(planId);
+    Uint8List? senderRouting;
+    for (final row in peers) {
+      try {
+        final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+        senderRouting = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        break;
+      } catch (_) {
+        continue;
+      }
+    }
+    if (senderRouting == null) return;
+    await service.reconcilePlanSchedule(
+      planId: planId,
+      revisionId: revisionId,
+      senderRoutingId: senderRouting,
+    );
+  }
+
+  Future<void> _maybeReconcileHousingRemindersAfterExpenseAccept({
+    required String expenseId,
+    required String participantId,
+  }) async {
+    if (kIsWeb) return;
+    final expense = await RealizedExpenseRepository(_db).getById(expenseId);
+    if (expense == null ||
+        expense.status != RealizedExpenseStatus.published) {
+      return;
+    }
+    final service = await _housingPaymentReminderService();
+    final selfPub = await selfLongTermPublicKey();
+    final peers = await _db.listPlanPeerEstablishmentsForPlan(expense.planId);
+    Uint8List? senderRouting;
+    for (final row in peers) {
+      try {
+        final peerPub = RelayRouting.unb64(row.peerPublicMaterialB64);
+        senderRouting = await RelayRouting.steadyStateAddress(
+          firstPub: selfPub,
+          secondPub: peerPub,
+        );
+        break;
+      } catch (_) {
+        continue;
+      }
+    }
+    if (senderRouting == null) return;
+    await service.reconcilePlanSchedule(
+      planId: expense.planId,
+      revisionId: 'coverage:$expenseId',
+      senderRoutingId: senderRouting,
+    );
   }
 }

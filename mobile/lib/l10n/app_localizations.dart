@@ -3305,6 +3305,42 @@ abstract class AppLocalizations {
   /// **'{name} responded to a housing proposal.'**
   String pushNotificationHousingDecisionBodyFrom(String name);
 
+  /// No description provided for @pushNotificationHousingPaymentReminderBeforeDueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment reminder'**
+  String get pushNotificationHousingPaymentReminderBeforeDueTitle;
+
+  /// No description provided for @pushNotificationHousingPaymentReminderBeforeDueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{lineTitle} is due soon.'**
+  String pushNotificationHousingPaymentReminderBeforeDueBody(String lineTitle);
+
+  /// No description provided for @pushNotificationHousingPaymentReminderOverdueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment overdue'**
+  String get pushNotificationHousingPaymentReminderOverdueTitle;
+
+  /// No description provided for @pushNotificationHousingPaymentReminderOverdueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{lineTitle} was not completed for this period.'**
+  String pushNotificationHousingPaymentReminderOverdueBody(String lineTitle);
+
+  /// No description provided for @notificationHousingPaymentRemindersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment reminders'**
+  String get notificationHousingPaymentRemindersLabel;
+
+  /// No description provided for @housingOverdueJournalCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{lineTitle} was not completed for this period.'**
+  String housingOverdueJournalCardBody(String lineTitle);
+
   /// No description provided for @pushNotificationHousingResponseFailureRelayUnavailableBody.
   ///
   /// In en, this message translates to:

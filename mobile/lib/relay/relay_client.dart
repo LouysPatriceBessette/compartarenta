@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'routing.dart';
+import 'relay_scheduling.dart';
 
 /// Interface implemented by every relay client (HTTP-backed in
 /// production, in-memory fakes in tests).
@@ -73,6 +74,35 @@ abstract class RelayClient {
     required String provider,
     required String pushToken,
     required Uint8List recipientIdentity,
+  });
+
+  Future<void> upsertSchedulingTimezone({
+    required Uint8List recipientIdentity,
+    required String ianaTimezone,
+  });
+
+  Future<void> reconcileHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required Uint8List planIdBytes,
+    required int generation,
+    required List<HousingReminderScheduleTarget> targets,
+  });
+
+  Future<void> cancelHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required List<Uint8List> scopeKeyBytes,
+    required String reminderKind,
+    required Uint8List periodKeyBytes,
+  });
+
+  Future<List<RelayPendingReminderDelivery>> fetchPendingReminderDeliveries({
+    required Uint8List recipientIdentity,
+    int limit = 32,
+  });
+
+  Future<void> ackReminderDelivery({
+    required Uint8List recipientIdentity,
+    required Uint8List fireId,
   });
 
   void close();
@@ -271,6 +301,118 @@ class HttpRelayClient implements RelayClient {
         .timeout(_timeout);
     if (res.statusCode == 204) return;
     throw RelayClientError._fromResponse('routing_push_unregister', res);
+  }
+
+  @override
+  Future<void> upsertSchedulingTimezone({
+    required Uint8List recipientIdentity,
+    required String ianaTimezone,
+  }) async {
+    final uri = baseUrl.resolve('/v1/scheduling/timezone');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'recipient_identity': RelayRouting.b64(recipientIdentity),
+            'iana_timezone': ianaTimezone,
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('scheduling_timezone', res);
+    }
+  }
+
+  @override
+  Future<void> reconcileHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required Uint8List planIdBytes,
+    required int generation,
+    required List<HousingReminderScheduleTarget> targets,
+  }) async {
+    final uri = baseUrl.resolve('/v1/scheduling/housing/reconcile');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'sender_identity': RelayRouting.b64(senderIdentity),
+            'plan_id': RelayRouting.b64(planIdBytes),
+            'generation': generation,
+            'targets': targets.map((t) => t.toJson()).toList(),
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('scheduling_housing_reconcile', res);
+    }
+  }
+
+  @override
+  Future<void> cancelHousingPaymentSchedule({
+    required Uint8List senderIdentity,
+    required List<Uint8List> scopeKeyBytes,
+    required String reminderKind,
+    required Uint8List periodKeyBytes,
+  }) async {
+    final uri = baseUrl.resolve('/v1/scheduling/housing/cancel');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'sender_identity': RelayRouting.b64(senderIdentity),
+            'scope_keys': scopeKeyBytes.map(RelayRouting.b64).toList(),
+            'reminder_kind': reminderKind,
+            'period_key': RelayRouting.b64(periodKeyBytes),
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('scheduling_housing_cancel', res);
+    }
+  }
+
+  @override
+  Future<List<RelayPendingReminderDelivery>> fetchPendingReminderDeliveries({
+    required Uint8List recipientIdentity,
+    int limit = 32,
+  }) async {
+    final uri = baseUrl.resolve(
+      '/v1/scheduling/pending-deliveries?recipient_identity=${RelayRouting.b64(recipientIdentity)}&limit=$limit',
+    );
+    final res = await _client.get(uri).timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('scheduling_pending', res);
+    }
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    final raw = json['deliveries'] as List<dynamic>? ?? const [];
+    return raw
+        .cast<Map<String, dynamic>>()
+        .map(RelayPendingReminderDelivery.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> ackReminderDelivery({
+    required Uint8List recipientIdentity,
+    required Uint8List fireId,
+  }) async {
+    final uri = baseUrl.resolve('/v1/scheduling/ack-delivery');
+    final res = await _client
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'recipient_identity': RelayRouting.b64(recipientIdentity),
+            'fire_id': RelayRouting.b64(fireId),
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode != 200) {
+      throw RelayClientError._fromResponse('scheduling_ack', res);
+    }
   }
 }
 

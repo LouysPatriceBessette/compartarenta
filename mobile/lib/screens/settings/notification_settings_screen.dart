@@ -235,6 +235,18 @@ class _NotificationSettingsScreenState
                   }
                 : null,
           ),
+          SwitchListTile(
+            title: Text(l10n.notificationHousingPaymentRemindersLabel),
+            value: widget.prefs.notificationHousingPaymentReminders,
+            onChanged: notificationsEnabled
+                ? (value) async {
+                    await widget.prefs.setNotificationHousingPaymentReminders(
+                      value,
+                    );
+                    if (mounted) setState(() {});
+                  }
+                : null,
+          ),
           const Divider(),
           _SectionHeader(title: l10n.settingsNotificationsSoundSection),
           SwitchListTile(

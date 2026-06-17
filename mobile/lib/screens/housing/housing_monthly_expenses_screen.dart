@@ -71,6 +71,11 @@ class _HousingMonthlyExpensesScreenState
         debugPrint('housing monthly expenses poll: $e\n$st');
       }),
     );
+    unawaited(
+      orch.pollHousingPaymentReminders().catchError((Object e, StackTrace st) {
+        debugPrint('housing monthly expenses reminder poll: $e\n$st');
+      }),
+    );
   }
 
   Future<_MonthWindow?> _loadWindow() async {
@@ -173,7 +178,7 @@ class _HousingMonthlyExpensesScreenState
                       return const Center(child: CircularProgressIndicator());
                     }
                     final lists = snap.data ?? const _MonthExpenseLists();
-                    if (lists.published.isEmpty) {
+                    if (lists.published.isEmpty && lists.overdue.isEmpty) {
                       return SafeArea(
                         top: false,
                         child: Center(
@@ -191,6 +196,13 @@ class _HousingMonthlyExpensesScreenState
                             ? null
                             : effectiveDateFormat(prefs);
                         final children = <Widget>[
+                          for (final entry in lists.overdue)
+                            _buildOverdueJournalCard(
+                              context,
+                              entry: entry,
+                              lineTitle: lists.lineTitleById[entry.planLineId] ??
+                                  entry.planLineId,
+                            ),
                           for (final expense in lists.published)
                             _buildPublishedExpenseCard(
                               context,
@@ -237,7 +249,39 @@ class _HousingMonthlyExpensesScreenState
       year: year,
       month: month,
     );
-    return _MonthExpenseLists(published: published);
+    final db = AppDatabase.processScope;
+    final overdueAll = await db.listHousingPaymentOverdueJournalForPlan(planId);
+    final overdue = overdueAll.where((e) {
+      final d = e.periodDueAt.toLocal();
+      return d.year == year && d.month == month;
+    }).toList(growable: false);
+    final lines = await db.listPlanLines(planId);
+    final titles = <String, String>{
+      for (final line in lines) line.id: line.title,
+    };
+    return _MonthExpenseLists(
+      published: published,
+      overdue: overdue,
+      lineTitleById: titles,
+    );
+  }
+
+  Widget _buildOverdueJournalCard(
+    BuildContext context, {
+    required HousingPaymentOverdueJournalEntry entry,
+    required String lineTitle,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    return Card(
+      color: Colors.orange.shade50,
+      child: ListTile(
+        enabled: false,
+        title: Text(
+          l10n.housingOverdueJournalCardBody(lineTitle),
+          style: TextStyle(color: Colors.orange.shade900),
+        ),
+      ),
+    );
   }
 
   Widget _buildPublishedExpenseCard(
@@ -300,7 +344,11 @@ class _MonthWindow {
 class _MonthExpenseLists {
   const _MonthExpenseLists({
     this.published = const [],
+    this.overdue = const [],
+    this.lineTitleById = const {},
   });
 
   final List<RealizedExpense> published;
+  final List<HousingPaymentOverdueJournalEntry> overdue;
+  final Map<String, String> lineTitleById;
 }

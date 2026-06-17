@@ -36,6 +36,7 @@ import (
 	"github.com/compartarenta/relay/internal/logging"
 	"github.com/compartarenta/relay/internal/metrics"
 	"github.com/compartarenta/relay/internal/push"
+	"github.com/compartarenta/relay/internal/remindercron"
 	"github.com/compartarenta/relay/internal/stats"
 	"github.com/compartarenta/relay/internal/store"
 	"github.com/compartarenta/relay/internal/sweeper"
@@ -108,6 +109,8 @@ func run() error {
 	srv := api.NewServer(cfg, st, logger, wake)
 	sw := sweeper.New(cfg, st, logger)
 	go sw.Loop(ctx)
+	rc := remindercron.New(cfg, st, logger, wake)
+	go rc.Loop(ctx)
 
 	publicServer := &http.Server{
 		Addr:              cfg.PublicListenAddr,

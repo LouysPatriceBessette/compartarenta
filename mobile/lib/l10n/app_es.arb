@@ -739,6 +739,21 @@
   "pushNotificationHousingDecisionTitle": "Respuesta a una propuesta de vivienda",
   "pushNotificationHousingDecisionBody": "Un participante respondió a una propuesta de vivienda.",
   "pushNotificationHousingDecisionBodyFrom": "{name} respondió a una propuesta de vivienda.",
+  "pushNotificationHousingPaymentReminderBeforeDueTitle": "Recordatorio de pago",
+  "pushNotificationHousingPaymentReminderBeforeDueBody": "Pronto vence {lineTitle}.",
+  "@pushNotificationHousingPaymentReminderBeforeDueBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
+  "pushNotificationHousingPaymentReminderOverdueTitle": "Pago atrasado",
+  "pushNotificationHousingPaymentReminderOverdueBody": "El pago de {lineTitle} no se completó para este período.",
+  "@pushNotificationHousingPaymentReminderOverdueBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
+  "notificationHousingPaymentRemindersLabel": "Recordatorios de pago",
+  "housingOverdueJournalCardBody": "El pago de {lineTitle} no se completó para este período.",
+  "@housingOverdueJournalCardBody": {
+    "placeholders": { "lineTitle": { "type": "String" } }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
