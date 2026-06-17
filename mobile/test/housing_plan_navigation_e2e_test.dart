@@ -42,7 +42,7 @@ void main() {
           find.byKey(const ValueKey('active-hub-housing:default')),
           findsOneWidget,
         );
-        expect(find.text('Enter an expense'), findsOneWidget);
+        expect(find.text('Submit an expense'), findsOneWidget);
         expect(find.text('Housing plans'), findsNothing);
       },
     );

@@ -671,26 +671,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get housingActiveHubEnterExpense => 'Entrer une dépense';
+  String get housingActiveHubEnterExpense => 'Soumettre une dépense';
 
   @override
-  String get housingActiveHubMonthlyExpenses => 'Dépenses réalisées';
+  String get housingActiveHubMonthlyExpenses => 'Dépenses acceptées';
 
   @override
-  String get housingActiveHubBalances => 'Dépenses dûes de chacun';
+  String get housingActiveHubBalances => 'Dûs entre participants';
 
   @override
-  String get housingActiveHubPaymentStatus => 'État des paiements dus';
+  String get housingActiveHubPaymentStatus => 'Dépenses courantes';
 
   @override
-  String get housingActiveHubViewPlan => 'Consulter le plan actuel';
+  String get housingActiveHubViewPlan => 'Consulter le plan';
 
   @override
-  String get housingActiveHubRequestAmendment =>
-      'Demander une modification du plan';
+  String get housingActiveHubRequestAmendment => 'Modifier le plan';
 
   @override
-  String get housingActiveHubExportImport => 'Exporter / importer les données';
+  String get housingActiveHubJournals => 'Journaux';
+
+  @override
+  String get housingActiveHubExportImport => 'Sauvegarde de sécurité';
 
   @override
   String get housingActiveHubPassPlaceholderTitle => 'Bientôt disponible';
@@ -700,7 +702,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet écran sera disponible à la prochaine étape d\'implémentation.';
 
   @override
-  String get housingRealizedExpenseTitle => 'Entrer une dépense';
+  String get housingRealizedExpenseTitle => 'Soumettre une dépense';
 
   @override
   String get housingRealizedExpensePlanLine => 'Ligne du plan';
@@ -1002,7 +1004,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingRealizedExpenseResubmit => 'Corriger et resoumettre';
 
   @override
-  String get housingMonthlyExpensesTitle => 'Dépenses réalisées';
+  String get housingMonthlyExpensesTitle => 'Dépenses acceptées';
 
   @override
   String housingMonthlyExpensesMonthLabel(int year, int month) {
@@ -1021,7 +1023,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune dépense refusée pour ce mois.';
 
   @override
-  String get housingBalancesTitle => 'Balances dues';
+  String get housingBalancesTitle => 'Dûs entre participants';
 
   @override
   String get housingBalancesEmpty =>
@@ -1053,7 +1055,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingBalancesInactiveMarker => '(ancien participant)';
 
   @override
-  String get housingExpensePaymentStatusTitle => 'État des paiements dus';
+  String get housingExpensePaymentStatusTitle => 'Dépenses courantes';
 
   @override
   String get housingExpensePaymentStatusEmpty =>
@@ -1109,7 +1111,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Afficher sur le mois courant';
 
   @override
-  String get housingActivePlanReadOnlyTitle => 'Plan actuel';
+  String get housingActivePlanReadOnlyTitle => 'Détail du plan';
 
   @override
   String get housingActivePlanDatesLabel => 'Dates du plan';
@@ -1118,7 +1120,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingActivePlanReadOnlyExpenses => 'Voir les lignes de dépense';
 
   @override
-  String get housingAmendmentRequestTitle => 'Demander une modification';
+  String get housingAmendmentRequestTitle => 'Modifier le plan';
 
   @override
   String get housingAmendmentRequestIntro =>
@@ -1360,7 +1362,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingAmendmentRequestStatusAction => 'Statut de la demande';
 
   @override
-  String get housingAmendmentJournalTitle => 'Journal des changements';
+  String get housingAmendmentJournalTitle => 'Changements au plan';
+
+  @override
+  String get housingJournalsTitle => 'Journaux';
 
   @override
   String get housingAmendmentJournalSubtitle =>

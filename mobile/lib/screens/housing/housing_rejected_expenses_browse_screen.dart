@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
@@ -7,14 +5,14 @@ import '../../housing/realized_expense/realized_expense_description_display.dart
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
-import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_realized_expense_review_screen.dart';
 
-class HousingMonthlyExpensesScreen extends StatefulWidget {
-  const HousingMonthlyExpensesScreen({
+/// Month-scoped browse entry for rejected expenses (from the journals hub).
+class HousingRejectedExpensesBrowseScreen extends StatefulWidget {
+  const HousingRejectedExpensesBrowseScreen({
     super.key,
     required this.packageId,
     required this.planId,
@@ -26,12 +24,12 @@ class HousingMonthlyExpensesScreen extends StatefulWidget {
   final AppPreferences? prefs;
 
   @override
-  State<HousingMonthlyExpensesScreen> createState() =>
-      _HousingMonthlyExpensesScreenState();
+  State<HousingRejectedExpensesBrowseScreen> createState() =>
+      _HousingRejectedExpensesBrowseScreenState();
 }
 
-class _HousingMonthlyExpensesScreenState
-    extends State<HousingMonthlyExpensesScreen> {
+class _HousingRejectedExpensesBrowseScreenState
+    extends State<HousingRejectedExpensesBrowseScreen> {
   late DateTime _month;
   late Future<_MonthWindow?> _windowFuture;
 
@@ -41,36 +39,6 @@ class _HousingMonthlyExpensesScreenState
     final now = DateTime.now();
     _month = DateTime(now.year, now.month);
     _windowFuture = _loadWindow();
-    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
-      _onSteadyInboxTick,
-    );
-    _pollInboxOnce();
-  }
-
-  @override
-  void dispose() {
-    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
-      _onSteadyInboxTick,
-    );
-    super.dispose();
-  }
-
-  void _onSteadyInboxTick() {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {});
-    });
-  }
-
-  void _pollInboxOnce() {
-    final orch = HandshakeOrchestrator.maybeInstance;
-    if (orch == null) return;
-    unawaited(
-      orch.pollSteadyStateInboxes().catchError((Object e, StackTrace st) {
-        debugPrint('housing monthly expenses poll: $e\n$st');
-      }),
-    );
   }
 
   Future<_MonthWindow?> _loadWindow() async {
@@ -116,7 +84,7 @@ class _HousingMonthlyExpensesScreenState
     final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.housingMonthlyExpensesTitle)),
+      appBar: AppBar(title: Text(l10n.housingRejectedExpensesTitle)),
       body: FutureBuilder<_MonthWindow?>(
         future: _windowFuture,
         builder: (context, windowSnap) {
@@ -160,9 +128,8 @@ class _HousingMonthlyExpensesScreenState
                 ),
               ),
               Expanded(
-                child: FutureBuilder<_MonthExpenseLists>(
-                  future: _loadMonthExpenseLists(
-                    ledger: ledger,
+                child: FutureBuilder<List<RealizedExpense>>(
+                  future: ledger.listRejectedForMonth(
                     packageId: widget.packageId,
                     planId: widget.planId,
                     year: year,
@@ -172,12 +139,12 @@ class _HousingMonthlyExpensesScreenState
                     if (snap.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    final lists = snap.data ?? const _MonthExpenseLists();
-                    if (lists.published.isEmpty) {
+                    final rows = snap.data ?? const [];
+                    if (rows.isEmpty) {
                       return SafeArea(
                         top: false,
                         child: Center(
-                          child: Text(l10n.housingMonthlyExpensesEmpty),
+                          child: Text(l10n.housingRejectedExpensesEmpty),
                         ),
                       );
                     }
@@ -186,33 +153,67 @@ class _HousingMonthlyExpensesScreenState
                           ? Future.value(widget.prefs)
                           : AppPreferences.load(),
                       builder: (context, prefsSnap) {
-                        final prefs = prefsSnap.data;
-                        final dateFmt = prefs == null
+                        final loadedPrefs = prefsSnap.data;
+                        final dateFmt = loadedPrefs == null
                             ? null
-                            : effectiveDateFormat(prefs);
-                        final children = <Widget>[
-                          for (final expense in lists.published)
-                            _buildPublishedExpenseCard(
-                              context,
-                              expense: expense,
-                              dateFmt: dateFmt,
-                            ),
-                        ];
+                            : effectiveDateFormat(loadedPrefs);
                         return ListView.separated(
-                            padding: screenBodyScrollPadding(
-                              context,
-                              content: const EdgeInsets.fromLTRB(
-                                16,
-                                16,
-                                16,
-                                24,
+                          padding: screenBodyScrollPadding(
+                            context,
+                            content: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                          ),
+                          itemCount: rows.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final expense = rows[index];
+                            final subtitleParts = <String>[];
+                            if (dateFmt != null) {
+                              subtitleParts.add(
+                                formatPreferenceDate(
+                                  expense.paymentDate,
+                                  dateFmt,
+                                ),
+                              );
+                            }
+                            final description = realizedExpenseDescriptionForList(
+                              l10n,
+                              expense,
+                            );
+                            if (description.isNotEmpty) {
+                              subtitleParts.add(description);
+                            }
+                            return Card(
+                              child: ListTile(
+                                title: Text(
+                                  formatMinorAsMoney(
+                                    context,
+                                    expense.amountMinor,
+                                    expense.currency,
+                                  ),
+                                ),
+                                subtitle: subtitleParts.isEmpty
+                                    ? null
+                                    : Text(subtitleParts.join(' · ')),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () async {
+                                  await Navigator.of(context).push<void>(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          HousingRealizedExpenseReviewScreen(
+                                            expenseId: expense.id,
+                                            planId: widget.planId,
+                                            packageId: widget.packageId,
+                                            prefs: widget.prefs,
+                                          ),
+                                    ),
+                                  );
+                                  if (mounted) setState(() {});
+                                },
                               ),
-                            ),
-                            itemCount: children.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) => children[index],
-                          );
+                            );
+                          },
+                        );
                       },
                     );
                   },
@@ -220,63 +221,6 @@ class _HousingMonthlyExpensesScreenState
               ),
             ],
           );
-        },
-      ),
-    );
-  }
-
-  Future<_MonthExpenseLists> _loadMonthExpenseLists({
-    required RealizedExpenseLedgerService ledger,
-    required String packageId,
-    required String planId,
-    required int year,
-    required int month,
-  }) async {
-    final published = await ledger.listPublishedForMonth(
-      packageId: packageId,
-      year: year,
-      month: month,
-    );
-    return _MonthExpenseLists(published: published);
-  }
-
-  Widget _buildPublishedExpenseCard(
-    BuildContext context, {
-    required RealizedExpense expense,
-    required String? dateFmt,
-  }) {
-    final l10n = AppLocalizations.of(context);
-    final subtitleParts = <String>[];
-    if (dateFmt != null) {
-      subtitleParts.add(formatPreferenceDate(expense.paymentDate, dateFmt));
-    }
-    final description = realizedExpenseDescriptionForList(l10n, expense);
-    if (description.isNotEmpty) {
-      subtitleParts.add(description);
-    }
-    return Card(
-      child: ListTile(
-        title: Text(
-          formatMinorAsMoney(context, expense.amountMinor, expense.currency),
-        ),
-        subtitle: subtitleParts.isEmpty
-            ? null
-            : Text(subtitleParts.join(' · ')),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () async {
-          await Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => HousingRealizedExpenseReviewScreen(
-                expenseId: expense.id,
-                planId: widget.planId,
-                packageId: widget.packageId,
-                prefs: widget.prefs,
-              ),
-            ),
-          );
-          if (mounted) {
-            setState(() {});
-          }
         },
       ),
     );
@@ -295,12 +239,4 @@ class _MonthWindow {
     if (normalized.isAfter(lastMonth)) return lastMonth;
     return normalized;
   }
-}
-
-class _MonthExpenseLists {
-  const _MonthExpenseLists({
-    this.published = const [],
-  });
-
-  final List<RealizedExpense> published;
 }

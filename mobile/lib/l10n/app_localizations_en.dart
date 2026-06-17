@@ -663,25 +663,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get housingActiveHubEnterExpense => 'Enter an expense';
+  String get housingActiveHubEnterExpense => 'Submit an expense';
 
   @override
-  String get housingActiveHubMonthlyExpenses => 'Recorded expenses';
+  String get housingActiveHubMonthlyExpenses => 'Accepted expenses';
 
   @override
-  String get housingActiveHubBalances => 'Expenses owed by each';
+  String get housingActiveHubBalances => 'Balances between participants';
 
   @override
-  String get housingActiveHubPaymentStatus => 'Payment status due';
+  String get housingActiveHubPaymentStatus => 'Current expenses';
 
   @override
-  String get housingActiveHubViewPlan => 'View current plan';
+  String get housingActiveHubViewPlan => 'View plan';
 
   @override
-  String get housingActiveHubRequestAmendment => 'Request plan modification';
+  String get housingActiveHubRequestAmendment => 'Modify plan';
 
   @override
-  String get housingActiveHubExportImport => 'Export / import data';
+  String get housingActiveHubJournals => 'Journals';
+
+  @override
+  String get housingActiveHubExportImport => 'Security backup';
 
   @override
   String get housingActiveHubPassPlaceholderTitle => 'Coming soon';
@@ -691,7 +694,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This screen will be available in the next implementation pass.';
 
   @override
-  String get housingRealizedExpenseTitle => 'Enter an expense';
+  String get housingRealizedExpenseTitle => 'Submit an expense';
 
   @override
   String get housingRealizedExpensePlanLine => 'Plan line';
@@ -987,7 +990,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseResubmit => 'Correct and resubmit';
 
   @override
-  String get housingMonthlyExpensesTitle => 'Recorded expenses';
+  String get housingMonthlyExpensesTitle => 'Accepted expenses';
 
   @override
   String housingMonthlyExpensesMonthLabel(int year, int month) {
@@ -1006,7 +1009,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No rejected expenses for this month.';
 
   @override
-  String get housingBalancesTitle => 'Balances owed';
+  String get housingBalancesTitle => 'Balances between participants';
 
   @override
   String get housingBalancesEmpty =>
@@ -1038,7 +1041,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingBalancesInactiveMarker => '(former participant)';
 
   @override
-  String get housingExpensePaymentStatusTitle => 'Payment status due';
+  String get housingExpensePaymentStatusTitle => 'Current expenses';
 
   @override
   String get housingExpensePaymentStatusEmpty => 'No plan expenses to display.';
@@ -1093,7 +1096,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show on current month';
 
   @override
-  String get housingActivePlanReadOnlyTitle => 'Current plan';
+  String get housingActivePlanReadOnlyTitle => 'Plan detail';
 
   @override
   String get housingActivePlanDatesLabel => 'Plan dates';
@@ -1102,7 +1105,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingActivePlanReadOnlyExpenses => 'View expense lines';
 
   @override
-  String get housingAmendmentRequestTitle => 'Request plan modification';
+  String get housingAmendmentRequestTitle => 'Modify plan';
 
   @override
   String get housingAmendmentRequestIntro =>
@@ -1342,7 +1345,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingAmendmentRequestStatusAction => 'Request status';
 
   @override
-  String get housingAmendmentJournalTitle => 'Change log';
+  String get housingAmendmentJournalTitle => 'Plan changes';
+
+  @override
+  String get housingJournalsTitle => 'Journals';
 
   @override
   String get housingAmendmentJournalSubtitle => 'Accepted and refused requests';

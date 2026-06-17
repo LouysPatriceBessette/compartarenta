@@ -1291,43 +1291,49 @@ abstract class AppLocalizations {
   /// No description provided for @housingActiveHubEnterExpense.
   ///
   /// In en, this message translates to:
-  /// **'Enter an expense'**
+  /// **'Submit an expense'**
   String get housingActiveHubEnterExpense;
 
   /// No description provided for @housingActiveHubMonthlyExpenses.
   ///
   /// In en, this message translates to:
-  /// **'Recorded expenses'**
+  /// **'Accepted expenses'**
   String get housingActiveHubMonthlyExpenses;
 
   /// No description provided for @housingActiveHubBalances.
   ///
   /// In en, this message translates to:
-  /// **'Expenses owed by each'**
+  /// **'Balances between participants'**
   String get housingActiveHubBalances;
 
   /// No description provided for @housingActiveHubPaymentStatus.
   ///
   /// In en, this message translates to:
-  /// **'Payment status due'**
+  /// **'Current expenses'**
   String get housingActiveHubPaymentStatus;
 
   /// No description provided for @housingActiveHubViewPlan.
   ///
   /// In en, this message translates to:
-  /// **'View current plan'**
+  /// **'View plan'**
   String get housingActiveHubViewPlan;
 
   /// No description provided for @housingActiveHubRequestAmendment.
   ///
   /// In en, this message translates to:
-  /// **'Request plan modification'**
+  /// **'Modify plan'**
   String get housingActiveHubRequestAmendment;
+
+  /// No description provided for @housingActiveHubJournals.
+  ///
+  /// In en, this message translates to:
+  /// **'Journals'**
+  String get housingActiveHubJournals;
 
   /// No description provided for @housingActiveHubExportImport.
   ///
   /// In en, this message translates to:
-  /// **'Export / import data'**
+  /// **'Security backup'**
   String get housingActiveHubExportImport;
 
   /// No description provided for @housingActiveHubPassPlaceholderTitle.
@@ -1345,7 +1351,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingRealizedExpenseTitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter an expense'**
+  /// **'Submit an expense'**
   String get housingRealizedExpenseTitle;
 
   /// No description provided for @housingRealizedExpensePlanLine.
@@ -1843,7 +1849,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingMonthlyExpensesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recorded expenses'**
+  /// **'Accepted expenses'**
   String get housingMonthlyExpensesTitle;
 
   /// No description provided for @housingMonthlyExpensesMonthLabel.
@@ -1873,7 +1879,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingBalancesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Balances owed'**
+  /// **'Balances between participants'**
   String get housingBalancesTitle;
 
   /// No description provided for @housingBalancesEmpty.
@@ -1927,7 +1933,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingExpensePaymentStatusTitle.
   ///
   /// In en, this message translates to:
-  /// **'Payment status due'**
+  /// **'Current expenses'**
   String get housingExpensePaymentStatusTitle;
 
   /// No description provided for @housingExpensePaymentStatusEmpty.
@@ -2006,7 +2012,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingActivePlanReadOnlyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Current plan'**
+  /// **'Plan detail'**
   String get housingActivePlanReadOnlyTitle;
 
   /// No description provided for @housingActivePlanDatesLabel.
@@ -2024,7 +2030,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentRequestTitle.
   ///
   /// In en, this message translates to:
-  /// **'Request plan modification'**
+  /// **'Modify plan'**
   String get housingAmendmentRequestTitle;
 
   /// No description provided for @housingAmendmentRequestIntro.
@@ -2432,8 +2438,14 @@ abstract class AppLocalizations {
   /// No description provided for @housingAmendmentJournalTitle.
   ///
   /// In en, this message translates to:
-  /// **'Change log'**
+  /// **'Plan changes'**
   String get housingAmendmentJournalTitle;
+
+  /// No description provided for @housingJournalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journals'**
+  String get housingJournalsTitle;
 
   /// No description provided for @housingAmendmentJournalSubtitle.
   ///

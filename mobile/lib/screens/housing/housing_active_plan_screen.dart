@@ -25,9 +25,10 @@ import 'housing_amendment_request_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
 import 'housing_balances_screen.dart';
 import 'housing_expense_payment_status_screen.dart';
+import '../../widgets/balanced_text.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_active_hub_placeholder_screen.dart';
-import 'housing_monthly_expenses_screen.dart';
+import 'housing_journals_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
 import 'housing_realized_expense_review_screen.dart';
@@ -371,13 +372,17 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     if (mounted) _reload();
   }
 
-  Future<void> _openAmendmentJournal(BuildContext context) async {
+  Future<void> _openJournals(BuildContext context) async {
     final prefs = widget.prefs ?? await AppPreferences.load();
     if (!context.mounted) return;
-    await openHousingAmendmentJournal(
-      context,
-      planId: widget.planId,
-      prefs: prefs,
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HousingJournalsScreen(
+          packageId: widget.packageId,
+          planId: widget.planId,
+          prefs: prefs,
+        ),
+      ),
     );
     if (mounted) _reload();
   }
@@ -703,22 +708,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                             ),
                             const _HubSectionDivider(),
                             _HubTile(
-                              icon: Icons.calendar_month_outlined,
-                              label: l10n.housingActiveHubMonthlyExpenses,
-                              onTap: () {
-                                Navigator.of(context).push<void>(
-                                  MaterialPageRoute<void>(
-                                    builder:
-                                        (_) => HousingMonthlyExpensesScreen(
-                                          packageId: widget.packageId,
-                                          planId: widget.planId,
-                                          prefs: widget.prefs,
-                                        ),
-                                  ),
-                                );
-                              },
-                            ),
-                            _HubTile(
                               icon: Icons.account_balance_wallet_outlined,
                               label: l10n.housingActiveHubBalances,
                               onTap: () {
@@ -772,12 +761,12 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               subtitleColor: Colors.red.shade700,
                               onTap: () => _openMajorChange(context),
                             ),
-                            _HubTile(
-                              icon: Icons.history,
-                              label: l10n.housingAmendmentJournalTitle,
-                              onTap: () => _openAmendmentJournal(context),
-                            ),
                             const _HubSectionDivider(),
+                            _HubTile(
+                              icon: Icons.menu_book_outlined,
+                              label: l10n.housingActiveHubJournals,
+                              onTap: () => _openJournals(context),
+                            ),
                             _HubTile(
                               icon: Icons.import_export_outlined,
                               label: l10n.housingActiveHubExportImport,
@@ -849,7 +838,7 @@ class _HubTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon),
-        title: Text(label),
+        title: BalancedText(label),
         subtitle:
             subtitle == null
                 ? null

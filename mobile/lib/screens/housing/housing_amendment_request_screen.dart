@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../widgets/app_dialog.dart';
+import '../../widgets/balanced_text.dart';
 import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/agreement_rules_diff.dart';
@@ -34,12 +35,10 @@ class _AmendmentMenuOption extends _AmendmentMenuEntry {
   const _AmendmentMenuOption({
     this.type,
     required this.title,
-    required this.subtitle,
   });
 
   final HousingAmendmentType? type;
   final String title;
-  final String subtitle;
 }
 
 /// Picker for a single in-force plan modification (pass 4).
@@ -137,28 +136,23 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineAdd,
           title: l10n.housingAmendmentTypeLineAdd,
-          subtitle: l10n.housingAmendmentTypeLineAddHint,
         ),
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineEdit,
           title: l10n.housingAmendmentTypeLineEdit,
-          subtitle: l10n.housingAmendmentTypeLineEditHint,
         ),
         _AmendmentMenuOption(
           type: HousingAmendmentType.lineRemove,
           title: l10n.housingAmendmentTypeLineRemove,
-          subtitle: l10n.housingAmendmentTypeLineRemoveHint,
         ),
         const _AmendmentMenuSeparator(),
         _AmendmentMenuOption(
           type: HousingAmendmentType.agreementEnd,
           title: l10n.housingAmendmentTypeAgreementEnd,
-          subtitle: l10n.housingAmendmentTypeAgreementEndHint,
         ),
         _AmendmentMenuOption(
           type: HousingAmendmentType.ruleChange,
           title: l10n.housingAmendmentTypeRuleChange,
-          subtitle: l10n.housingAmendmentTypeRuleChangeHint,
         ),
       ];
 
@@ -218,12 +212,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
                       ),
                 ),
                 const SizedBox(height: 16),
-              ] else ...[
-                Text(
-                  l10n.housingAmendmentRequestIntro,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
+              ] else
                 for (final entry in entries)
                   switch (entry) {
                     _AmendmentMenuSeparator() => const Padding(
@@ -233,8 +222,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
                     final _AmendmentMenuOption opt => Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
-                          title: Text(opt.title),
-                          subtitle: Text(opt.subtitle),
+                          title: BalancedText(opt.title),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => _onOptionTap(
                             context,
@@ -245,7 +233,6 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
                         ),
                       ),
                   },
-              ],
             ],
           );
         },
