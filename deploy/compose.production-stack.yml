@@ -1,0 +1,156 @@
+# Compartarenta production stack: relay + entitlement on one private Docker network.
+#
+# Intended for the VPS layout documented in docs/stack-deployment.md:
+#
+#   /srv/compartarenta-relay/
+#   ├── source/          git clone of this repository
+#   └── env/.env         secrets (mode 0600)
+#
+# Deploy from /srv/compartarenta-relay:
+#
+#   docker compose --env-file env/.env \
+#     -f source/deploy/compose.production-stack.yml build
+#
+#   docker compose --env-file env/.env \
+#     -f source/deploy/compose.production-stack.yml up -d
+#
+# Invariants:
+#   * Relay Postgres volume name `pgdata` matches relay/compose.yml so an
+#     existing relay-only deployment can migrate without data loss.
+#   * Neither Postgres port is published to the host.
+#   * Relay binds 127.0.0.1:8080 and :9090 (Apache reverse proxy).
+#   * Entitlement binds 127.0.0.1:8081 only (not Apache-proxied).
+#   * Relay reaches entitlement at http://entitlement:8080 on stack-net.
+
+name: compartarenta-relay
+
+networks:
+  stack-net:
+    driver: bridge
+
+volumes:
+  pgdata: {}
+  entitlement-pgdata: {}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: compartarenta-relay-db
+    restart: unless-stopped
+    networks: [stack-net]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    user: "70:70"
+    read_only: false
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  entitlement-postgres:
+    image: postgres:17-alpine
+    container_name: compartarenta-entitlement-db
+    restart: unless-stopped
+    networks: [stack-net]
+    environment:
+      POSTGRES_USER: ${ENTITLEMENT_POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${ENTITLEMENT_POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${ENTITLEMENT_POSTGRES_DB:?required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - entitlement-pgdata:/var/lib/postgresql/data
+    user: "70:70"
+    read_only: false
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${ENTITLEMENT_POSTGRES_USER}", "-d", "${ENTITLEMENT_POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  entitlement:
+    image: compartarenta-entitlement:${ENTITLEMENT_TAG:-dev}
+    build:
+      context: ../entitlement
+      args:
+        BUILD_DIGEST: ${ENTITLEMENT_BUILD_DIGEST:-${BUILD_DIGEST:-dev}}
+    container_name: compartarenta-entitlement
+    restart: unless-stopped
+    networks: [stack-net]
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      entitlement-postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${ENTITLEMENT_POSTGRES_USER}:${ENTITLEMENT_POSTGRES_PASSWORD}@entitlement-postgres:5432/${ENTITLEMENT_POSTGRES_DB}?sslmode=disable
+      LISTEN_ADDR: "0.0.0.0:8080"
+      TRIAL_DURATION: ${TRIAL_DURATION:-336h}
+      GRACE_DURATION: ${GRACE_DURATION:-168h}
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
+      SHUTDOWN_TIMEOUT: ${ENTITLEMENT_SHUTDOWN_TIMEOUT:-30s}
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=8m
+
+  relay:
+    image: compartarenta-relay:${RELAY_TAG:-dev}
+    build:
+      context: ../relay
+      args:
+        BUILD_DIGEST: ${BUILD_DIGEST:-dev}
+    container_name: compartarenta-relay
+    restart: unless-stopped
+    networks: [stack-net]
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      entitlement:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      PUBLIC_LISTEN_ADDR: "0.0.0.0:8080"
+      PRIVATE_LISTEN_ADDR: "0.0.0.0:9090"
+      ENVELOPE_MAX_BYTES: "${ENVELOPE_MAX_BYTES:-262144}"
+      ENVELOPE_TTL_MIN: "${ENVELOPE_TTL_MIN:-24h}"
+      ENVELOPE_TTL_MAX: "${ENVELOPE_TTL_MAX:-168h}"
+      IDEMPOTENCY_TTL: "${IDEMPOTENCY_TTL:-24h}"
+      DISCONNECT_GRACE: "${DISCONNECT_GRACE:-5m}"
+      ROUTING_INACTIVITY_TTL: "${ROUTING_INACTIVITY_TTL:-4368h}"
+      SWEEPER_INTERVAL: "${SWEEPER_INTERVAL:-1m}"
+      RATE_LIMIT_PER_IDENTITY: "${RATE_LIMIT_PER_IDENTITY:-5}"
+      RATE_LIMIT_PER_IP: "${RATE_LIMIT_PER_IP:-20}"
+      SHUTDOWN_TIMEOUT: "${SHUTDOWN_TIMEOUT:-30s}"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      WAKE_PUSH_DISPATCH_ENABLED: "${WAKE_PUSH_DISPATCH_ENABLED:-false}"
+      FCM_SERVICE_ACCOUNT_JSON_PATH: ${FCM_SERVICE_ACCOUNT_JSON_PATH:-}
+      APNS_AUTH_KEY_PATH: ${APNS_AUTH_KEY_PATH:-}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      APNS_BUNDLE_ID: ${APNS_BUNDLE_ID:-}
+      APNS_ENVIRONMENT: ${APNS_ENVIRONMENT:-production}
+      APNS_GENERIC_ALERT_BODY: ${APNS_GENERIC_ALERT_BODY:-}
+      ROUTING_PUSH_TOKEN_TTL_SECONDS: "${ROUTING_PUSH_TOKEN_TTL_SECONDS:-1209600}"
+      STATS_LISTEN_ADDR: "${STATS_LISTEN_ADDR:-127.0.0.1:9091}"
+      REMINDER_CRON_ENABLED: "${REMINDER_CRON_ENABLED:-false}"
+      REMINDER_CRON_INTERVAL: "${REMINDER_CRON_INTERVAL:-1m}"
+      ENTITLEMENT_ENABLED: "${ENTITLEMENT_ENABLED:-true}"
+      ENTITLEMENT_INTROSPECT_URL: "${ENTITLEMENT_INTROSPECT_URL:-http://entitlement:8080}"
+      ENTITLEMENT_INTERNAL_TOKEN: ${ENTITLEMENT_INTERNAL_TOKEN:-}
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m

@@ -1,5 +1,11 @@
 # Compartarenta Relay — Deployment Runbook
 
+> **Relay + entitlement on the same VPS:** use
+> [`stack-deployment.md`](./stack-deployment.md) for pull, `.env`, build,
+> and upgrade of the combined stack (`deploy/compose.production-stack.yml`).
+> This document remains the reference for Apache, TLS, host preparation,
+> and relay-only operational details.
+
 This runbook describes how to deploy the Compartarenta relay on an
 existing Ubuntu VPS that **already hosts other services**, under a
 dedicated sub-domain, with Apache as the reverse proxy in front of the
@@ -15,8 +21,8 @@ should cross-reference this document with
 |--------------------------------|------------------------------------------------------------|
 | Relay source                   | [`relay/`](../relay)                                       |
 | Migrations (canonical)         | [`relay/internal/store/schema/`](../relay/internal/store/schema) |
-| Container manifest             | [`relay/compose.yml`](../relay/compose.yml)                |
-| Environment template           | [`relay/.env.example`](../relay/.env.example)              |
+| Container manifest             | [`relay/compose.yml`](../relay/compose.yml) (relay-only) or [`deploy/compose.production-stack.yml`](../deploy/compose.production-stack.yml) (relay + entitlement) |
+| Environment template           | [`relay/.env.example`](../relay/.env.example) or [`deploy/env.stack.example`](../deploy/env.stack.example) |
 | Apache vhost template          | [`relay/deploy/apache2/relay-vhost.conf.template`](../relay/deploy/apache2/relay-vhost.conf.template) |
 | Audit checklist                | [`relay-audit-checklist.md`](./relay-audit-checklist.md)   |
 | Audit log                      | [`relay-audit-log.md`](./relay-audit-log.md)               |
