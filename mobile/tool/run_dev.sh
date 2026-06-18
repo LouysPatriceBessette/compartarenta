@@ -22,6 +22,9 @@ fi
 # the handshake plumbing is enabled out of the box. Override via env
 # (preferred) or by appending --dart-define=API_BASE_URL=... yourself.
 API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
+# shellcheck source=entitlement_base_url_default.sh
+source "${DIR}/tool/entitlement_base_url_default.sh"
+ENTITLEMENT_BASE_URL_VALUE="$(entitlement_base_url_default "${API_BASE_URL_VALUE}")"
 
 should_filter_android_logs=true
 install_mobile_target=true
@@ -43,6 +46,9 @@ run_args=(
   --dart-define=ENV=dev
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"
 )
+if [[ -n "${ENTITLEMENT_BASE_URL_VALUE}" ]]; then
+  run_args+=(--dart-define="ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}")
+fi
 # Reinstall native plugins (shared_preferences, path_provider) after plugin or Gradle changes.
 if [[ "${install_mobile_target}" == "true" ]]; then
   run_args+=(--uninstall-first)

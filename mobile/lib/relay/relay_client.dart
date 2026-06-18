@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import '../entitlement/entitlement_gate.dart';
 import 'routing.dart';
 import 'relay_scheduling.dart';
 
@@ -42,6 +43,7 @@ abstract class RelayClient {
     required Uint8List ciphertext,
     required int kind,
     required Duration ttl,
+    EntitlementGate? entitlementGate,
   });
 
   Future<List<RelayEnvelopeView>> fetchInbox({
@@ -157,20 +159,25 @@ class HttpRelayClient implements RelayClient {
     required Uint8List ciphertext,
     required int kind,
     required Duration ttl,
+    EntitlementGate? entitlementGate,
   }) async {
     final uri = baseUrl.resolve('/v1/envelopes');
+    final payload = <String, dynamic>{
+      'sender_identity': RelayRouting.b64(senderIdentity),
+      'recipient_identity': RelayRouting.b64(recipientIdentity),
+      'idempotency_key': RelayRouting.b64(idempotencyKey),
+      'ciphertext': RelayRouting.b64(ciphertext),
+      'kind': kind,
+      'ttl_seconds': ttl.inSeconds,
+    };
+    if (entitlementGate != null) {
+      payload['entitlement_gate'] = entitlementGate.toJson();
+    }
     final res = await _client
         .post(
           uri,
           headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'sender_identity': RelayRouting.b64(senderIdentity),
-            'recipient_identity': RelayRouting.b64(recipientIdentity),
-            'idempotency_key': RelayRouting.b64(idempotencyKey),
-            'ciphertext': RelayRouting.b64(ciphertext),
-            'kind': kind,
-            'ttl_seconds': ttl.inSeconds,
-          }),
+          body: jsonEncode(payload),
         )
         .timeout(_timeout);
     if (res.statusCode != 200 && res.statusCode != 201) {

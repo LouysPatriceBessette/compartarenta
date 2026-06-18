@@ -18,6 +18,9 @@ source "${ROOT}/tool/ensure_pub_get.sh"
 ensure_workspace_pub_get "${ROOT}"
 
 API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
+# shellcheck source=entitlement_base_url_default.sh
+source "${DIR}/tool/entitlement_base_url_default.sh"
+ENTITLEMENT_BASE_URL_VALUE="$(entitlement_base_url_default "${API_BASE_URL_VALUE}")"
 # Use localhost (not 127.0.0.1): Flutter web is served at http://localhost:WEB_PORT
 # and the browser blocks cross-origin calls to 127.0.0.1.
 WEB_DEV_SESSION_HOST="${WEB_DEV_SESSION_HOST:-localhost}"
@@ -269,15 +272,25 @@ if [[ "${WEB_DEV_WIPE_BROWSER_ON_START}" == "1" ]]; then
 fi
 
 echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
+if [[ -n "${ENTITLEMENT_BASE_URL_VALUE}" ]]; then
+  echo "Entitlement client API: ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}"
+fi
 
-./tool/flutterw run \
-  -d chrome \
-  "${web_port_args[@]}" \
-  --no-pub \
-  --no-web-resources-cdn \
-  --web-header=Cross-Origin-Opener-Policy=same-origin \
-  --web-header=Cross-Origin-Embedder-Policy=require-corp \
-  --dart-define=ENV=dev \
-  --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
-  --dart-define="WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL}" \
-  "$@"
+web_run_args=(
+  run
+  -d chrome
+  "${web_port_args[@]}"
+  --no-pub
+  --no-web-resources-cdn
+  --web-header=Cross-Origin-Opener-Policy=same-origin
+  --web-header=Cross-Origin-Embedder-Policy=require-corp
+  --dart-define=ENV=dev
+  --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"
+  --dart-define="WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL}"
+)
+if [[ -n "${ENTITLEMENT_BASE_URL_VALUE}" ]]; then
+  web_run_args+=(--dart-define="ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}")
+fi
+web_run_args+=("$@")
+
+./tool/flutterw "${web_run_args[@]}"

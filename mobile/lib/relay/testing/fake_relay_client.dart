@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import '../../entitlement/entitlement_gate.dart';
 import '../relay_client.dart';
 import '../relay_scheduling.dart';
 
@@ -82,6 +83,7 @@ class FakeRelayClient implements RelayClient {
     required Uint8List ciphertext,
     required int kind,
     required Duration ttl,
+    EntitlementGate? entitlementGate,
   }) async {
     _maybeThrowOnce();
     if (!_hasRouting(senderIdentity, recipientIdentity)) {

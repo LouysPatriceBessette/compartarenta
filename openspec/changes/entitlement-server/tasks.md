@@ -26,7 +26,7 @@
 
 ## 5. Follow-ups (not Phase A)
 
-- [ ] 5.1 Mobile client: register installation, report metadata, attach `entitlement_gate`.
+- [x] 5.1 Mobile client: register installation, report metadata, attach `entitlement_gate`.
 - [ ] 5.2 Phase B: Google Play `LicenseVerifier` implementation.
 - [ ] 5.3 Phase C: Apple validation; `docs/store-mapping.md`.
 - [ ] 5.4 Audit checklist extension for entitlement deployment.

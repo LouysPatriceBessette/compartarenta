@@ -9,6 +9,9 @@ import 'config/app_config.dart';
 import 'debug/local_storage_startup_log.dart';
 import 'debug/web_dev_db_write_observer.dart';
 import 'debug/web_dev_host_session.dart';
+import 'entitlement/entitlement_coordinator.dart';
+import 'entitlement/participant_installation_store.dart';
+import 'entitlement/plan_participant_installation_registry.dart';
 import 'relay/relay_diagnostics.dart';
 import 'debug/web_storage_flush.dart';
 import 'contacts/contact_invitations_repository.dart';
@@ -88,12 +91,24 @@ Future<void> bootstrap() async {
         try {
           final identity = IdentityKeystore.secureStorage();
           final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
+          EntitlementCoordinator? entitlementCoordinator;
+          if (config.entitlementEnabled) {
+            final registry = await PlanParticipantInstallationRegistry.load();
+            entitlementCoordinator = EntitlementCoordinator(
+              config: config,
+              installationStore: ParticipantInstallationStore.secureStorage(),
+              registry: registry,
+            );
+            EntitlementCoordinator.install(entitlementCoordinator);
+            unawaited(entitlementCoordinator.ensureRegistered());
+          }
           final orchestrator = HandshakeOrchestrator(
             db: appDb,
             identity: identity,
             relay: relay,
             contacts: ContactsRepository(appDb),
             invitations: ContactInvitationsRepository(appDb),
+            entitlement: entitlementCoordinator,
           );
           HandshakeOrchestrator.install(orchestrator);
           if (kDebugMode) {

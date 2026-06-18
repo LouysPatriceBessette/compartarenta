@@ -11,6 +11,7 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../entitlement/entitlement_coordinator.dart';
 import '../housing/housing_participant_profile_sync.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/housing_plan_peer_identity_reconcile.dart';
@@ -174,6 +175,7 @@ class HandshakeOrchestrator {
     required RelayClient relay,
     required ContactsRepository contacts,
     required ContactInvitationsRepository invitations,
+    EntitlementCoordinator? entitlement,
     ContactNotificationSink contactNotifications =
         const DefaultContactNotificationSink(),
     Duration pollInterval = const Duration(seconds: 10),
@@ -186,6 +188,7 @@ class HandshakeOrchestrator {
        _relay = relay,
        _contacts = contacts,
        _invitations = invitations,
+       _entitlement = entitlement ?? EntitlementCoordinator.maybeInstance,
        _contactNotifications = contactNotifications,
        _pollInterval = pollInterval,
        _helloTtl = helloTtl,
@@ -209,6 +212,7 @@ class HandshakeOrchestrator {
   final RelayClient _relay;
   final ContactsRepository _contacts;
   final ContactInvitationsRepository _invitations;
+  final EntitlementCoordinator? _entitlement;
   final ContactNotificationSink _contactNotifications;
   final Duration _pollInterval;
   final Duration _helloTtl;
@@ -2414,13 +2418,15 @@ class HandshakeOrchestrator {
               selfListenAddr: selfAddr,
               peerListenAddr: peerAddr,
             );
-            await _relay.postEnvelope(
+            await _postGatedEnvelope(
               senderIdentity: selfAddr,
               recipientIdentity: peerAddr,
               idempotencyKey: _randomBytes(16),
               ciphertext: frame,
               kind: EnvelopeKind.housingProposal,
               ttl: _steadyTtl,
+              planId: planId,
+              selfParticipantId: '$planId:self',
             );
             debugPrint(
               'housing_proposal posted for ${participant.id} to ${target.id}',
@@ -2495,6 +2501,55 @@ class HandshakeOrchestrator {
     return targets;
   }
 
+  Future<void> _postGatedEnvelope({
+    required Uint8List senderIdentity,
+    required Uint8List recipientIdentity,
+    required Uint8List idempotencyKey,
+    required Uint8List ciphertext,
+    required int kind,
+    required Duration ttl,
+    required String planId,
+    required String selfParticipantId,
+    String? expenseId,
+    String? revisionId,
+    String? decisionKind,
+  }) async {
+    final gate = await _entitlement?.gateFor(
+      planId: planId,
+      selfParticipantId: selfParticipantId,
+      kind: kind,
+      expenseId: expenseId,
+      revisionId: revisionId,
+      decisionKind: decisionKind,
+    );
+    await _relay.postEnvelope(
+      senderIdentity: senderIdentity,
+      recipientIdentity: recipientIdentity,
+      idempotencyKey: idempotencyKey,
+      ciphertext: ciphertext,
+      kind: kind,
+      ttl: ttl,
+      entitlementGate: gate,
+    );
+  }
+
+  Future<void> _reportEntitlementRosterAfterActivation({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final entitlement = _entitlement;
+    if (entitlement == null || !entitlement.enabled) return;
+    final participants = (await _db.listParticipants())
+        .where((p) => p.id.startsWith('$planId:p') || p.id == '$planId:self')
+        .map((p) => p.id)
+        .toList(growable: false);
+    await entitlement.reportRosterIfComplete(
+      planId: planId,
+      revisionId: revisionId,
+      participantIds: participants,
+    );
+  }
+
   Future<HousingProposalSendResult> sendHousingProposalResponse({
     required String planId,
     required ProposalResponseStatus status,
@@ -2554,6 +2609,8 @@ class HandshakeOrchestrator {
     final sendResult = await _broadcastHousingProposalResponse(
       planId: planId,
       response: response,
+      revisionId: selectedRevisionId,
+      status: status,
     );
     await RelayActivityLogService(_db).append(
       kind: RelayActivityLogKinds.housingProposalResponse,
@@ -2569,6 +2626,10 @@ class HandshakeOrchestrator {
         revisionId: selectedRevisionId,
       );
       if (outcome == ProposalActivationOutcome.activated) {
+        await _reportEntitlementRosterAfterActivation(
+          planId: planId,
+          revisionId: selectedRevisionId,
+        );
         await _reconcileHousingPaymentRemindersAfterActivation(
           planId: planId,
           revisionId: selectedRevisionId,
@@ -2590,6 +2651,8 @@ class HandshakeOrchestrator {
   Future<HousingProposalSendResult> _broadcastHousingProposalResponse({
     required String planId,
     required HousingProposalResponseEnvelope response,
+    required String revisionId,
+    required ProposalResponseStatus status,
   }) async {
     final participants = (await _db.listParticipants())
         .where((p) => p.id.startsWith('$planId:p'))
@@ -2659,13 +2722,17 @@ class HandshakeOrchestrator {
                 selfListenAddr: selfAddr,
                 peerListenAddr: peerAddr,
               );
-              await _relay.postEnvelope(
+              await _postGatedEnvelope(
                 senderIdentity: selfAddr,
                 recipientIdentity: peerAddr,
                 idempotencyKey: _randomBytes(16),
                 ciphertext: frame,
                 kind: EnvelopeKind.housingProposalResponse,
                 ttl: _steadyTtl,
+                planId: planId,
+                selfParticipantId: '$planId:self',
+                revisionId: revisionId,
+                decisionKind: status.name,
               );
             },
           );
@@ -2772,14 +2839,17 @@ class HandshakeOrchestrator {
           selfListenAddr: selfAddr,
           peerListenAddr: peerAddr,
         );
-        await _relay.postEnvelope(
+        await _postGatedEnvelope(
           senderIdentity: selfAddr,
           recipientIdentity: peerAddr,
           idempotencyKey: _randomBytes(16),
           ciphertext: frame,
-            kind: EnvelopeKind.housingRealizedExpensePropose,
-            ttl: _steadyTtl,
-          );
+          kind: EnvelopeKind.housingRealizedExpensePropose,
+          ttl: _steadyTtl,
+          planId: expense.planId,
+          selfParticipantId: '${expense.planId}:self',
+          expenseId: expenseId,
+        );
           RelayDiagnostics.logHousingRealizedExpense(
             'posted for ${expense.planId} to ${target.id}',
           );
@@ -2928,13 +2998,17 @@ class HandshakeOrchestrator {
             selfListenAddr: selfAddr,
             peerListenAddr: peerAddr,
           );
-          await _relay.postEnvelope(
+          await _postGatedEnvelope(
             senderIdentity: selfAddr,
             recipientIdentity: peerAddr,
             idempotencyKey: _randomBytes(16),
             ciphertext: frame,
             kind: kind,
             ttl: _steadyTtl,
+            planId: planId,
+            selfParticipantId: participantId,
+            expenseId: expenseId,
+            decisionKind: decision,
           );
           debugPrint(
             'housing_realized_expense decision posted for $expenseId '
@@ -3242,6 +3316,10 @@ class HandshakeOrchestrator {
           revisionId: revision.id,
         );
         if (outcome == ProposalActivationOutcome.activated) {
+          await _reportEntitlementRosterAfterActivation(
+            planId: pkg.planId,
+            revisionId: revision.id,
+          );
           await _reconcileHousingPaymentRemindersAfterActivation(
             planId: pkg.planId,
             revisionId: revision.id,

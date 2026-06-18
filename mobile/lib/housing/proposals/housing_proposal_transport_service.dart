@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 
 import '../../activity/relay_activity_log_service.dart';
+import '../../entitlement/entitlement_coordinator.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../housing_plan_peer_contacts.dart';
@@ -75,28 +76,31 @@ class HousingProposalTransportService {
     final participants = await _participantsForPlan(planId);
     final contacts = await ContactsRepository(_db).list();
     final reachable = contacts.where(isRelayReachableContact).toList();
+    final entitlement = EntitlementCoordinator.maybeInstance;
+    final snapshots = <Map<String, Object?>>[];
+    for (final p in participants) {
+      final connected = relayReachableContactForParticipant(
+        p,
+        reachable,
+      );
+      final peerB64 = connected?.peerPublicMaterial;
+      snapshots.add({
+        'id': p.id,
+        'displayName': p.displayName,
+        'avatarId': p.avatarId,
+        if (p.contactId != null) 'contactId': p.contactId,
+        if (entitlement != null && entitlement.enabled)
+          'participantInstallationId': await entitlement.installationIdForSnapshot(
+            planId: planId,
+            participantId: p.id,
+          ),
+        if (peerB64 != null && peerB64.isNotEmpty)
+          'peerPublicMaterialB64': peerB64,
+      });
+    }
     final enriched = Map<String, Object?>.from(payload)
       ..['targetParticipantId'] = targetParticipantId
-      ..['participantSnapshots'] = [
-        for (final p in participants)
-          {
-            'id': p.id,
-            'displayName': p.displayName,
-            'avatarId': p.avatarId,
-            if (p.contactId != null) 'contactId': p.contactId,
-            ...() {
-              final connected = relayReachableContactForParticipant(
-                p,
-                reachable,
-              );
-              final peerB64 = connected?.peerPublicMaterial;
-              if (peerB64 != null && peerB64.isNotEmpty) {
-                return {'peerPublicMaterialB64': peerB64};
-              }
-              return <String, String>{};
-            }(),
-          },
-      ];
+      ..['participantSnapshots'] = snapshots;
     return jsonEncode(enriched);
   }
 
@@ -189,6 +193,12 @@ class HousingProposalTransportService {
         );
       }
     }
+
+    await EntitlementCoordinator.maybeInstance?.ingestSnapshotsFromPayload(
+      planId: targetPlanId,
+      payload: payload,
+      sourceToLocalParticipant: sourceToLocalParticipant,
+    );
 
     if (existingPkg?.activeRevisionId != null &&
         existingPkg!.activeRevisionId!.isNotEmpty &&
