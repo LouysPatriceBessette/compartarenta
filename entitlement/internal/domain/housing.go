@@ -186,6 +186,9 @@ func (h *Housing) Introspect(ctx context.Context, in IntrospectInput) (Introspec
 	if err != nil {
 		return IntrospectResult{}, err
 	}
+	if isPreActiveUse(plan) && isNegotiationOperation(op) {
+		return IntrospectResult{Allow: true, Code: "allowed"}, nil
+	}
 	if plan == nil {
 		if isMutatingOperation(op) {
 			return IntrospectResult{Allow: false, Code: "entitlement_not_entitled"}, nil
@@ -263,6 +266,19 @@ func participantInRoster(roster []string, id string) bool {
 
 func isActiveUseOperation(op string) bool {
 	return op == "housing_realized_expense_propose" || op == "realized_expense_propose"
+}
+
+// Negotiation (proposal offer/response) is free until qualifying active use
+// starts; roster and trial gating apply to ledger sync afterward.
+func isNegotiationOperation(op string) bool {
+	return op == "housing_proposal" || op == "housing_proposal_response"
+}
+
+func isPreActiveUse(plan *store.Plan) bool {
+	if plan == nil {
+		return true
+	}
+	return plan.ActiveUseStartedAt == nil
 }
 
 func isMutatingOperation(op string) bool {
