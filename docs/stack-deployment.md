@@ -29,6 +29,7 @@ Product semantics: `openspec/changes/entitlement-server`,
 | Relay source | [`relay/`](../relay) |
 | Apache / TLS / host prep | [`relay-deployment.md`](./relay-deployment.md) |
 | Audit checklist | [`relay-audit-checklist.md`](./relay-audit-checklist.md) |
+| Daily stats cron (Docker VPS) | [`relay/scripts/daily-stats-append-via-docker.sh`](../relay/scripts/daily-stats-append-via-docker.sh) — see [Daily statistics cron](#daily-statistics-cron-containerized-vps) |
 
 ## Topology (additions over relay-only)
 
@@ -319,6 +320,38 @@ SSH tunnel for entitlement API from your workstation:
 ssh -L 8081:127.0.0.1:8081 <admin>@<vps>
 curl -s http://127.0.0.1:8081/healthz | jq .
 ```
+
+---
+
+## Daily statistics cron (containerized VPS)
+
+The relay serves daily push-dispatch aggregates on an **in-container**
+loopback listener (`STATS_LISTEN_ADDR`, default `127.0.0.1:9091`). Port
+9091 is **not** mapped to the host. A host cron job that runs
+`daily-stats-append.sh` (plain `curl` to `127.0.0.1:9091`) will fail
+with `curl: (7) Failed to connect`.
+
+**Use the Docker wrapper** documented in
+[`relay-deployment.md`](./relay-deployment.md) (section "Daily
+closed-app push statistics"):
+
+| Script | When |
+|--------|------|
+| `source/relay/scripts/daily-stats-append-via-docker.sh` | **VPS production** (relay in Docker) |
+| `source/relay/scripts/daily-stats-append.sh` | Relay on host loopback only (not this stack) |
+
+Recommended crontab (`compartarenta-relay` user, 00:07 UTC):
+
+```cron
+CRON_TZ=UTC
+7 0 * * * /srv/compartarenta-relay/source/relay/scripts/daily-stats-append-via-docker.sh >> /srv/compartarenta-stats/cron.log 2>&1
+```
+
+After deploy or cron change, run the script once manually and confirm
+`tail -1 /srv/compartarenta-stats/daily.jsonl` shows a new `date` line.
+`STATS_FILE_PATH` in `env/.env` is for operator documentation; the
+cron script reads `STATS_FILE_PATH` from the environment if set in
+crontab, or uses the default `/srv/compartarenta-stats/daily.jsonl`.
 
 ---
 
