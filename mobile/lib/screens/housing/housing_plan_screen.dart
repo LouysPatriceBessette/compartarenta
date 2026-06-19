@@ -29,6 +29,7 @@ import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
 import '../../housing/housing_plan_draft_backup.dart';
+import '../../housing/housing_plan_id.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../housing/split_minor_by_weights.dart';
@@ -50,14 +51,14 @@ import 'housing_proposal_expenses_detail_screen.dart';
 
 /// Housing plan setup: vertical stepper (4 steps) then summary.
 class HousingPlanScreen extends StatefulWidget {
-  const HousingPlanScreen({
+  HousingPlanScreen({
     super.key,
     required this.prefs,
-    this.planId = 'housing:default',
+    String? planId,
     this.openEditorInitially = false,
     this.amendmentRulesOnly = false,
     this.amendmentSubmitToGroup = false,
-  });
+  }) : planId = planId ?? newHousingPlanId();
 
   final AppPreferences prefs;
 

@@ -4,6 +4,7 @@ import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
+import '../../housing/housing_plan_id.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -292,7 +293,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
     final archive = row.archive;
     if (archive == null) return;
     setState(() => _creatingDerivedDraft = true);
-    final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final id = newHousingPlanId();
     try {
       await HousingProposalTransportService(_db).createForkDraftFromArchive(
         listPlanId: row.plan.id,
@@ -323,7 +324,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
   }
 
   Future<void> _newPlan() async {
-    final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final id = newHousingPlanId();
     await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
       context,
       MaterialPageRoute<void>(

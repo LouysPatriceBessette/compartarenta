@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
 import '../agreement_rules_json.dart';
+import '../housing_plan_id.dart';
 import 'housing_agreement_overlap_withdrawal_exception.dart';
 import 'housing_agreement_period_conflict.dart';
 import 'housing_proposal_revision_state.dart';
@@ -67,6 +68,7 @@ class PlanAgreementProposalService {
     return {
       'kind': kind,
       'packageId': packageId,
+      'entitlementPlanId': entitlementPlanIdForLocalPlan(planId),
       'participantSourceIds': {for (final p in participants) p.id: p.id},
       'plan': {
         'type': plan.type,

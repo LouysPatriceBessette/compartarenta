@@ -64,6 +64,26 @@ Treat their confirmation as evidence for **that** hypothesis only. Implement the
 **smallest** change for that cause; verify with tests/logs; revert if validation
 fails.
 
+## Root cause vs symptom narrowing (user-confirmed causes)
+
+When the user confirms a **structural** cause (non-unique identifiers, shared
+defaults, stale cross-run keys, ambiguous routing keys, etc.), **fix the
+structure** — do **not** narrow scope as a workaround.
+
+| Confirmed root cause | Forbidden “fix” | Required direction |
+| --- | --- | --- |
+| Plan / entitlement id not globally unique (`housing:default`, derived tokens reused across runs) | Gate only some envelope kinds, special-case one screen, or “legacy run” branches that hide the collision | Assign a **new opaque id at creation** (e.g. UUID on draft creation); propagate **as-is** to peers and entitlement |
+| Same symptom on fresh test data | Blame stale local/entitlement DB without this run’s evidence | Treat as product bug; id/lifecycle must be correct for **new** plans |
+| User rejects a scope-reduction patch | Re-submit the same patch under another name | Stop; propose structural fix or ask before implementing |
+
+**Smallest change** applies to **how** you implement the confirmed fix, not to
+**replacing** it with a narrower hack. Reducing which code paths use the correct
+id **creates regressions** and is not an acceptable substitute for uniqueness.
+
+Implement structural fixes only after the user confirms the cause **or** code/logs
+prove it in the same turn. Do not ship scope-reduction patches while diagnosis
+still points at identifier design.
+
 ## Self-check before any edit under `mobile/`, `relay/`, etc.
 
 Ask: “Would I bet the user's time on this diff without citing a log line, test

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/housing_module_exit.dart';
+import '../../housing/housing_plan_id.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
@@ -43,7 +44,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   Future<void> _forkArchive(HousingProposalArchive archive) async {
     if (_creatingDerivedDraft) return;
     setState(() => _creatingDerivedDraft = true);
-    final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final id = newHousingPlanId();
     try {
       HousingNavigationIntent.pushSuppressProposalSettledRedirect();
       try {
@@ -110,7 +111,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   Future<void> _newPlan() async {
     if (_creatingDerivedDraft) return;
     setState(() => _creatingDerivedDraft = true);
-    final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
+    final id = newHousingPlanId();
     try {
       HousingNavigationIntent.pushSuppressProposalSettledRedirect();
       try {

@@ -143,7 +143,20 @@ void main() {
       );
     });
 
-    test('gateFor uses canonical plan id for author plan', () async {
+    test('gateFor uses stable uuid plan id for author plan', () async {
+      const localPlanId = 'housing:66666666-6666-4666-8666-666666666666';
+      final gate = await coordinator.gateFor(
+        planId: localPlanId,
+        selfParticipantId: '$localPlanId:self',
+        kind: EnvelopeKind.housingRealizedExpensePropose,
+      );
+
+      expect(gate, isNotNull);
+      expect(gate!.planId, localPlanId);
+      expect(gate.toJson()['plan_id'], localPlanId);
+    });
+
+    test('gateFor keeps legacy derived id for housing:default', () async {
       const localPlanId = 'housing:default';
       final gate = await coordinator.gateFor(
         planId: localPlanId,

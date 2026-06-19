@@ -8,6 +8,7 @@ import '../../entitlement/entitlement_coordinator.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../housing_plan_peer_contacts.dart';
+import '../housing_plan_id.dart';
 import '../plan_peer_establishment_service.dart';
 import '../agreement_rules_json.dart';
 import '../amendment/housing_amendment_type.dart';
@@ -125,7 +126,10 @@ class HousingProposalTransportService {
       payload['revisionId'],
       fallback: 'rev:${DateTime.now().toUtc().microsecondsSinceEpoch}',
     );
-    final receivedPlanId = 'received:${_token(sourcePackageId)}';
+    final authorPlanId = authorPlanIdFromProposalPayload(payload);
+    final receivedPlanId = authorPlanId == null
+        ? 'received:${_token(sourcePackageId)}'
+        : receivedPlanIdForAuthorPlan(authorPlanId);
     final receivedPackageId = 'pkg:$receivedPlanId';
     final receivedRevisionId =
         'rev:$receivedPlanId:${_token(sourceRevisionId)}';
