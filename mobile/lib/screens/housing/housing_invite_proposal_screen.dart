@@ -504,7 +504,14 @@ class _HousingInviteProposalScreenState
           final routeAsAmendment = snap.data![7] as bool;
           final hasMissingPeerContacts = missingPeerContacts.isNotEmpty;
           if (agr == null || roster.isEmpty) {
-            return Center(child: Text(l10n.housingPlanSummaryMissingAgreement));
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(l10n.housingInviteProposalAppBarTitle),
+              ),
+              body: Center(
+                child: Text(l10n.housingPlanSummaryMissingAgreement),
+              ),
+            );
           }
           final revisionForRoute = proposal.revisionId;
           if (routeAsAmendment && !_redirectedToAmendment) {

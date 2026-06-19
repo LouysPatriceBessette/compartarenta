@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/amendment/housing_amendment_summary.dart';
 import '../../housing/housing_module_exit.dart';
+import '../../housing/housing_inline_draft_plan.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -54,6 +55,7 @@ class _HousingEntrySnapshot {
     this.primaryActivePlan,
     this.primaryActivePackage,
     this.primaryActivePlanIsPastForSelf = false,
+    this.inlineDraftPlanId,
   });
 
   final List<Plan> plans;
@@ -63,6 +65,8 @@ class _HousingEntrySnapshot {
   final Plan? primaryActivePlan;
   final ProposalPackage? primaryActivePackage;
   final bool primaryActivePlanIsPastForSelf;
+  /// Stable wizard plan id while [plans] is still empty (no `:self` row yet).
+  final String? inlineDraftPlanId;
 }
 
 /// Routes to [HousingWorkbenchScreen] when there is more than one housing plan
@@ -82,6 +86,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   /// [FutureBuilder] forever (visible as a flickering screen).
   Future<_HousingEntrySnapshot>? _entryFuture;
   int _workbenchReloadToken = 0;
+  String? _inlineDraftPlanId;
 
   @override
   void initState() {
@@ -382,12 +387,21 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       );
     }
 
+    String? inlineDraftPlanId;
+    if (plans.isEmpty) {
+      _inlineDraftPlanId ??= await resolveInlineHousingDraftPlanId(db);
+      inlineDraftPlanId = _inlineDraftPlanId;
+    } else {
+      _inlineDraftPlanId = null;
+    }
+
     if (plans.length != 1) {
       return _HousingEntrySnapshot(
         plans: plans,
         primaryActivePlan: primaryActivePlan,
         primaryActivePackage: primaryActivePackage,
         primaryActivePlanIsPastForSelf: primaryActivePlanIsPastForSelf,
+        inlineDraftPlanId: inlineDraftPlanId,
       );
     }
     final planId = plans.single.id;
@@ -404,6 +418,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       primaryActivePlan: primaryActivePlan,
       primaryActivePackage: primaryActivePackage,
       primaryActivePlanIsPastForSelf: primaryActivePlanIsPastForSelf,
+      inlineDraftPlanId: inlineDraftPlanId,
     );
   }
 
@@ -476,7 +491,17 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
             );
           }
           if (plans.isEmpty) {
-            return HousingPlanScreen(prefs: widget.prefs);
+            final draftId = entry.inlineDraftPlanId;
+            if (draftId == null) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return HousingPlanScreen(
+              key: ValueKey('inline-draft-$draftId'),
+              prefs: widget.prefs,
+              planId: draftId,
+            );
           }
           final pkg = entry.package;
           if (pkg?.pendingRevisionId != null) {
