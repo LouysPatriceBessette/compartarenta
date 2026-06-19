@@ -143,6 +143,7 @@ Future<T> runWithDeferredDevHostSessionSave<T>(
       await waitForDevHostDriftTransactionsIdle();
       // Drift's web remote executor needs a tick after commit before reads.
       await Future<void>.delayed(const Duration(milliseconds: 50));
+      await db.syncWebStorageToDisk();
       await flushDevHostSessionSave(db);
     }
   }

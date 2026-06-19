@@ -3,7 +3,10 @@
 // ignore: deprecated_member_use
 import 'dart:html' as html;
 
+import 'package:flutter/foundation.dart';
+
 import '../housing/housing_navigation_intent.dart';
+import '../relay/handshake_orchestrator.dart';
 
 Future<void> showHousingBrowserNotification({
   required String title,
@@ -16,8 +19,22 @@ Future<void> showHousingBrowserNotification({
 }) async {
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
+  debugPrint(
+    'housing_browser_notification: show title=$title '
+    'proposalPlanId=${openProposalPlanId ?? '-'} '
+    'amendmentPlanId=${openAmendmentPlanId ?? '-'}',
+  );
   final notification = html.Notification(title, body: body);
-  notification.onClick.listen((_) {
+  notification.onClick.listen((_) async {
+    final orchestrator = HandshakeOrchestrator.maybeInstance;
+    if (orchestrator != null) {
+      await orchestrator.pollSteadyStateInboxes().catchError((
+        Object e,
+        StackTrace st,
+      ) {
+        debugPrint('housing browser notification click poll: $e\n$st');
+      });
+    }
     if (expenseId != null && expenseId.isNotEmpty) {
       HousingNavigationIntent.requestReview(expenseId);
     } else if (openProposalPlanId != null && openProposalPlanId.isNotEmpty) {

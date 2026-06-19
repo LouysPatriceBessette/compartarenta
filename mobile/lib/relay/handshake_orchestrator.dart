@@ -927,9 +927,7 @@ class HandshakeOrchestrator {
         );
         continue;
       }
-      if (envs.isEmpty) {
-        RelayDiagnostics.logSteadyInbox('steady inbox empty for $pollLabel');
-      } else {
+      if (envs.isNotEmpty) {
         RelayDiagnostics.logSteadyInbox(
           'steady inbox fetched ${envs.length} envelope(s) for $pollLabel',
         );

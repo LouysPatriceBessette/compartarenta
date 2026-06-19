@@ -1,0 +1,71 @@
+---
+description: Interdit tout codage basé sur probabilité; hypothèses soumises à l'utilisateur
+alwaysApply: true
+---
+
+# No probability-based coding
+
+Complements `no-blind-patching-evidence-first.mdc` and
+`conversation-test-context-discipline.mdc`. When they overlap, this rule is
+**stricter** on implementation.
+
+## Hard rule
+
+Do **not** write, edit, or revert **product code, tests, configs, or scripts**
+because something is **probable**, **likely**, **plausible**, or **might** fix
+the symptom — even as a “small try” or “while we’re here”.
+
+**Probabilistic reasoning is the user's job in this project, not yours.**
+
+## What you may implement without asking
+
+Only when the cause is **established**, not guessed:
+
+| Evidence type | Examples |
+| --- | --- |
+| **Code path** | Read call chain; behavior follows directly from current source |
+| **Logs / runtime** | This run shows `housing_proposal posted` / `imported` / error line |
+| **Repo state** | `git diff`, failing test output, CI artifact |
+| **Validated hypothesis** | Instrumentation or test added **in the same turn** confirms X → Y **before** the logic fix |
+
+If evidence is missing, **stop at analysis** — do not patch.
+
+## What you must submit to the user (no code)
+
+When diagnosis is still uncertain, deliver **only**:
+
+1. **Observed** — expected vs actual; what logs/code **show** (cite paths/lines)
+2. **Not observed** — what you checked and did **not** find
+3. **Hypotheses** — numbered, each falsifiable (“If X, then we would see Y in …”)
+4. **What would prove or kill each hypothesis** — grep pattern, log line, test to run, file to read
+5. **Blocked** — explicit: “No code change until …”
+
+Do **not** implement from that list unless the user confirms a hypothesis or
+new evidence arrives in a later message.
+
+## Forbidden patterns
+
+- “Cause probable”, “might be”, “likely”, “FCM could explain”, “perhaps stale data”
+  **as justification for a patch**
+- Fixing adjacent code “while we’re in the file” without proven link to the bug
+- Retest steps invented from habit without reading gates in code first
+- Presenting unverified theory as diagnosis, then shipping a fix in the same turn
+
+## Allowed without user approval
+
+- **Read-only** work: search, read files, run tests/analyze, grep logs, summarize
+- **Instrumentation only** when it **tests** a hypothesis the user already accepted
+  or that prior evidence already narrows to one branch
+- **Docs / rules** when the user explicitly asks (as in rule-creation requests)
+
+## When the user confirms a hypothesis
+
+Treat their confirmation as evidence for **that** hypothesis only. Implement the
+**smallest** change for that cause; verify with tests/logs; revert if validation
+fails.
+
+## Self-check before any edit under `mobile/`, `relay/`, etc.
+
+Ask: “Would I bet the user's time on this diff without citing a log line, test
+failure, or code path read **this turn**?” If no → **do not edit**; submit
+hypotheses instead.

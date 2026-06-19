@@ -278,18 +278,28 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
         }
       }
     }
-    if (planId == null || planId.isEmpty) return;
+    if (planId == null || planId.isEmpty) {
+      debugPrint('housing: notification tap but no pending proposal plan');
+      return;
+    }
+    final resolvedPlanId = planId;
 
-    final pendingId = await transport.resolvePendingRevisionIdForPlan(planId);
+    final pendingId = await transport.resolvePendingRevisionIdForPlan(resolvedPlanId);
     if (pendingId == null) {
-      debugPrint('housing: no pendingRevisionId on plan $planId');
+      final pkg = await (db.select(db.proposalPackages)
+            ..where((t) => t.planId.equals(resolvedPlanId)))
+          .getSingleOrNull();
+      debugPrint(
+        'housing: no pendingRevisionId on plan $planId '
+        '(proposalPackage=${pkg == null ? 'missing' : 'present'})',
+      );
       return;
     }
     if (!mounted) return;
     await openHousingPendingProposalOrAmendment(
       context,
       db: db,
-      planId: planId,
+      planId: resolvedPlanId,
       prefs: widget.prefs,
       revisionId: pendingId,
       isAmendment: false,

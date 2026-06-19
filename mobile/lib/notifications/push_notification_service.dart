@@ -786,13 +786,17 @@ class PushNotificationService {
   }
 
   static void _navigateToHousing() {
-    void attempt([int tries = 0]) {
+    Future<void> attempt([int tries = 0]) async {
       final ctx = appRootNavigatorKey.currentContext;
       if (ctx != null && ctx.mounted) {
-        unawaited(
-          HandshakeOrchestrator.maybeInstance?.pollSteadyStateInboxes(),
-        );
-        HousingNavigationIntent.remountHousingModule(ctx);
+        await HandshakeOrchestrator.maybeInstance
+            ?.pollSteadyStateInboxes()
+            .catchError((Object e, StackTrace st) {
+              debugPrint('PushNotificationService housing poll: $e\n$st');
+            });
+        if (ctx.mounted) {
+          HousingNavigationIntent.remountHousingModule(ctx);
+        }
         return;
       }
       if (tries >= 30) {
@@ -801,10 +805,12 @@ class PushNotificationService {
         );
         return;
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(attempt(tries + 1));
+      });
     }
 
-    attempt();
+    unawaited(attempt());
   }
 
   /// Notification tap: open housing module, then proposal screen above it.
