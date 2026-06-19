@@ -9,6 +9,10 @@ DebugWebDbWriteHook? debugWebDbWriteHook;
 /// could overwrite the host file with prefs that are not imported yet.
 bool suppressDevHostSessionWriteObserver = false;
 
+/// While > 0, [scheduleDevHostSessionSave] must not export (housing send flows
+/// flush once when the outermost defer scope completes).
+int devHostSessionSaveDeferDepth = 0;
+
 /// Open Drift transactions on the dev host database (web only).
 ///
 /// Snapshot export must wait until this reaches zero: Drift's web remote
@@ -63,6 +67,7 @@ final class _DevHostSessionWriteInterceptor extends QueryInterceptor {
 
   void _notifyWrite(String sql) {
     if (!kDebugMode || suppressDevHostSessionWriteObserver) return;
+    if (devHostSessionSaveDeferDepth > 0) return;
     final trimmed = sql.trimLeft().toUpperCase();
     if (trimmed.startsWith('INSERT') ||
         trimmed.startsWith('UPDATE') ||
@@ -78,7 +83,9 @@ final class _DevHostSessionWriteInterceptor extends QueryInterceptor {
     BatchedStatements statements,
   ) async {
     await super.runBatched(executor, statements);
-    if (kDebugMode && !suppressDevHostSessionWriteObserver) {
+    if (kDebugMode &&
+        !suppressDevHostSessionWriteObserver &&
+        devHostSessionSaveDeferDepth == 0) {
       debugWebDbWriteHook?.call();
     }
   }

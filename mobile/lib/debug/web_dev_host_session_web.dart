@@ -10,6 +10,7 @@ import '../prefs/app_preferences.dart';
 import '../relay/identity_keystore.dart';
 import 'web_dev_db_snapshot.dart';
 import 'web_dev_db_write_observer.dart' show
+    devHostSessionSaveDeferDepth,
     suppressDevHostSessionWriteObserver,
     waitForDevHostDriftTransactionsIdle;
 import 'web_dev_profile_recovery.dart';
@@ -120,10 +121,38 @@ Future<void> saveDevHostSessionNow(AppDatabase db) async {
   await _pushHostSessionSnapshot(db);
 }
 
+/// Runs [action] without debounced snapshot exports; flushes once at the end.
+///
+/// Used by housing proposal send flows so Drift web is idle before export.
+Future<T> runWithDeferredDevHostSessionSave<T>(
+  AppDatabase db,
+  Future<T> Function() action,
+) async {
+  if (!kDebugMode || _sessionUrlDefine.isEmpty) {
+    return action();
+  }
+
+  devHostSessionSaveDeferDepth++;
+  _saveDebounce?.cancel();
+  _saveDebounce = null;
+  try {
+    return await action();
+  } finally {
+    devHostSessionSaveDeferDepth--;
+    if (devHostSessionSaveDeferDepth == 0) {
+      await waitForDevHostDriftTransactionsIdle();
+      // Drift's web remote executor needs a tick after commit before reads.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await flushDevHostSessionSave(db);
+    }
+  }
+}
+
 /// Debounced push to the host session server (survives Ctrl+C on Flutter web).
 void scheduleDevHostSessionSave(AppDatabase db) {
   if (!kDebugMode) return;
   if (_sessionUrlDefine.isEmpty) return;
+  if (devHostSessionSaveDeferDepth > 0) return;
 
   _saveDebounce?.cancel();
   _saveDebounce = Timer(const Duration(milliseconds: 500), () {

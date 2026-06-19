@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../activity/relay_activity_log_service.dart';
+import '../../debug/web_dev_host_session.dart';
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
@@ -71,97 +72,99 @@ class HousingAmendmentProposalFlow {
           );
 
     final proposerId = '$planId:self';
-    late final String revisionId;
-    try {
-      revisionId = await PlanAgreementProposalService(_db)
-          .createRevisionFromCurrentDraft(
-            planId: planId,
-            proposerParticipantId: proposerId,
-            responseExpiresAt: DateTime.now().toUtc().add(selected),
-            forkedFromPackageId: fork?.packageId,
-            forkedFromRevisionId: fork?.revisionId,
-          );
-      await HousingProposalTransportService(_db).updateRevisionPayload(
-        revisionId: revisionId,
-        mutate: (payload) {
-          payload['amendmentType'] = amendmentType.wireValue;
-          if (targetLineId != null) {
-            payload['amendmentTargetLineId'] = targetLineId;
-          }
-          if (proposedPeriodEnd != null) {
-            final agr = payload['agreement'];
-            if (agr is Map) {
-              agr['periodEnd'] = proposedPeriodEnd.toIso8601String();
-            }
-          }
-          patchRevisionPayload?.call(payload);
-        },
-      );
-      if (fork != null) {
-        await RelayActivityLogService(_db).append(
-          kind: RelayActivityLogKinds.housingProposalForkCreated,
-          initiatorKind: RelayActivityLogService.initiatorSelf,
-          planId: planId,
+    return runWithDeferredDevHostSessionSave(_db, () async {
+      late final String revisionId;
+      try {
+        revisionId = await PlanAgreementProposalService(_db)
+            .createRevisionFromCurrentDraft(
+              planId: planId,
+              proposerParticipantId: proposerId,
+              responseExpiresAt: DateTime.now().toUtc().add(selected),
+              forkedFromPackageId: fork?.packageId,
+              forkedFromRevisionId: fork?.revisionId,
+            );
+        await HousingProposalTransportService(_db).updateRevisionPayload(
           revisionId: revisionId,
-          details: {
-            'forkedFromRevisionId': fork.revisionId,
-            'forkedFromPackageId': fork.packageId,
-            'amendment': true,
+          mutate: (payload) {
+            payload['amendmentType'] = amendmentType.wireValue;
+            if (targetLineId != null) {
+              payload['amendmentTargetLineId'] = targetLineId;
+            }
+            if (proposedPeriodEnd != null) {
+              final agr = payload['agreement'];
+              if (agr is Map) {
+                agr['periodEnd'] = proposedPeriodEnd.toIso8601String();
+              }
+            }
+            patchRevisionPayload?.call(payload);
           },
         );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
-        );
-      }
-      return false;
-    }
-
-    final orchestrator = HandshakeOrchestrator.maybeInstance;
-    if (orchestrator == null) {
-      await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.housingPlanCouldNotContinue('relay'))),
-        );
-      }
-      return false;
-    }
-
-    try {
-      final send = await orchestrator.sendHousingProposalToPlanParticipants(
-        planId: planId,
-        revisionId: revisionId,
-      );
-      if (send.sentCount == 0) {
-        debugPrint(
-          'housing_amendment: relay send failed for $planId revision=$revisionId '
-          '(failedParticipants=${send.failedParticipantIds.length})',
-        );
-        await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
+        if (fork != null) {
+          await RelayActivityLogService(_db).append(
+            kind: RelayActivityLogKinds.housingProposalForkCreated,
+            initiatorKind: RelayActivityLogService.initiatorSelf,
+            planId: planId,
+            revisionId: revisionId,
+            details: {
+              'forkedFromRevisionId': fork.revisionId,
+              'forkedFromPackageId': fork.packageId,
+              'amendment': true,
+            },
+          );
+        }
+      } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.housingInviteTransportFailed)),
+            SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
           );
         }
         return false;
       }
-      debugPrint(
-        'housing_amendment: relay sent to ${send.sentCount} target(s) '
-        'for $planId revision=$revisionId',
-      );
-    } catch (e) {
-      await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
-        );
-      }
-      return false;
-    }
 
-    return true;
+      final orchestrator = HandshakeOrchestrator.maybeInstance;
+      if (orchestrator == null) {
+        await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.housingPlanCouldNotContinue('relay'))),
+          );
+        }
+        return false;
+      }
+
+      try {
+        final send = await orchestrator.sendHousingProposalToPlanParticipants(
+          planId: planId,
+          revisionId: revisionId,
+        );
+        if (send.sentCount == 0) {
+          debugPrint(
+            'housing_amendment: relay send failed for $planId revision=$revisionId '
+            '(failedParticipants=${send.failedParticipantIds.length})',
+          );
+          await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.housingInviteTransportFailed)),
+            );
+          }
+          return false;
+        }
+        debugPrint(
+          'housing_amendment: relay sent to ${send.sentCount} target(s) '
+          'for $planId revision=$revisionId',
+        );
+      } catch (e) {
+        await PlanAgreementProposalService(_db).abandonPendingRevision(planId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+          );
+        }
+        return false;
+      }
+
+      return true;
+    });
   }
 }

@@ -24,6 +24,7 @@ import '../../housing/projection/plan_projection.dart';
 import '../../housing/housing_response_deadline_dialog.dart';
 import '../../housing/proposals/housing_agreement_period_conflict.dart';
 import '../../activity/relay_activity_log_service.dart';
+import '../../debug/web_dev_host_session.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
@@ -1208,52 +1209,54 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
 
     final proposerId = '$_planId:self';
-    late final String revisionId;
-    try {
-      await _sanitizeAndPersistAgreementRulesForBindingSubmission(l10n);
-      if (!mounted || !flowContext.mounted) return false;
-      final fork = await HousingProposalTransportService(
-        _db,
-      ).preparedForkLineage(_planId);
-      revisionId = await PlanAgreementProposalService(_db)
-          .createRevisionFromCurrentDraft(
+    return runWithDeferredDevHostSessionSave(_db, () async {
+      late final String revisionId;
+      try {
+        await _sanitizeAndPersistAgreementRulesForBindingSubmission(l10n);
+        if (!mounted || !flowContext.mounted) return false;
+        final fork = await HousingProposalTransportService(
+          _db,
+        ).preparedForkLineage(_planId);
+        revisionId = await PlanAgreementProposalService(_db)
+            .createRevisionFromCurrentDraft(
+              planId: _planId,
+              proposerParticipantId: proposerId,
+              responseExpiresAt: responseExpiresAt,
+              forkedFromPackageId: fork?.packageId,
+              forkedFromRevisionId: fork?.revisionId,
+            );
+        if (fork != null) {
+          await RelayActivityLogService(_db).append(
+            kind: RelayActivityLogKinds.housingProposalForkCreated,
+            initiatorKind: RelayActivityLogService.initiatorSelf,
             planId: _planId,
-            proposerParticipantId: proposerId,
-            responseExpiresAt: responseExpiresAt,
-            forkedFromPackageId: fork?.packageId,
-            forkedFromRevisionId: fork?.revisionId,
+            revisionId: revisionId,
+            details: {
+              'forkedFromRevisionId': fork.revisionId,
+              'forkedFromPackageId': fork.packageId,
+            },
           );
-      if (fork != null) {
-        await RelayActivityLogService(_db).append(
-          kind: RelayActivityLogKinds.housingProposalForkCreated,
-          initiatorKind: RelayActivityLogService.initiatorSelf,
-          planId: _planId,
-          revisionId: revisionId,
-          details: {
-            'forkedFromRevisionId': fork.revisionId,
-            'forkedFromPackageId': fork.packageId,
-          },
+        }
+      } catch (e, st) {
+        if (!mounted || !flowContext.mounted) return false;
+        debugPrintStack(stackTrace: st);
+        ScaffoldMessenger.of(flowContext).showSnackBar(
+          SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
         );
+        return false;
       }
-    } catch (e, st) {
+
       if (!mounted || !flowContext.mounted) return false;
-      debugPrintStack(stackTrace: st);
-      ScaffoldMessenger.of(flowContext).showSnackBar(
-        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+
+      final sent = await _deliverHousingProposalRevision(
+        flowContext: flowContext,
+        revisionId: revisionId,
+        rollbackPendingOnTotalFailure: true,
       );
-      return false;
-    }
-
-    if (!mounted || !flowContext.mounted) return false;
-
-    final sent = await _deliverHousingProposalRevision(
-      flowContext: flowContext,
-      revisionId: revisionId,
-      rollbackPendingOnTotalFailure: true,
-    );
-    if (!mounted) return sent;
-    _summaryViewKey.currentState?.reloadSnapshot();
-    return sent;
+      if (!mounted) return sent;
+      _summaryViewKey.currentState?.reloadSnapshot();
+      return sent;
+    });
   }
 
   Future<void> _resendPendingProposal() async {
@@ -1265,10 +1268,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _db,
     ).pendingRevisionIdForPlan(_planId);
     if (revisionId == null || !mounted) return;
-    final sent = await _deliverHousingProposalRevision(
-      flowContext: context,
-      revisionId: revisionId,
-      rollbackPendingOnTotalFailure: false,
+    final sent = await runWithDeferredDevHostSessionSave(
+      _db,
+      () => _deliverHousingProposalRevision(
+        flowContext: context,
+        revisionId: revisionId,
+        rollbackPendingOnTotalFailure: false,
+      ),
     );
     if (!mounted) return;
     if (sent) {
