@@ -1,7 +1,9 @@
 import 'package:compartarenta/config/app_config.dart';
 import 'package:compartarenta/entitlement/entitlement_coordinator.dart';
+import 'package:compartarenta/entitlement/entitlement_plan_id.dart';
 import 'package:compartarenta/entitlement/participant_installation_store.dart';
 import 'package:compartarenta/entitlement/plan_participant_installation_registry.dart';
+import 'package:compartarenta/relay/envelopes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -138,6 +140,25 @@ void main() {
           ],
         ),
         ['inst-author', 'inst-monica', 'inst-roberr'],
+      );
+    });
+
+    test('gateFor uses canonical plan id for author plan', () async {
+      const localPlanId = 'housing:default';
+      final gate = await coordinator.gateFor(
+        planId: localPlanId,
+        selfParticipantId: '$localPlanId:self',
+        kind: EnvelopeKind.housingRealizedExpensePropose,
+      );
+
+      expect(gate, isNotNull);
+      expect(
+        gate!.planId,
+        entitlementPlanIdForLocalPlan(localPlanId),
+      );
+      expect(
+        gate.toJson()['plan_id'],
+        'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA',
       );
     });
 

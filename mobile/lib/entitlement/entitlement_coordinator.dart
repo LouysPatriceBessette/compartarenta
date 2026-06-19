@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import 'entitlement_client.dart';
 import 'entitlement_gate.dart';
+import 'entitlement_plan_id.dart';
 import 'participant_installation_store.dart';
 import 'plan_participant_installation_registry.dart';
 
@@ -159,13 +160,16 @@ class EntitlementCoordinator {
       );
       return;
     }
+    final entitlementPlanId = entitlementPlanIdForLocalPlan(planId);
     try {
       await _client!.reportPlanRoster(
-        planId: planId,
+        planId: entitlementPlanId,
         revisionId: revisionId,
         participantInstallationIds: roster,
       );
-      debugPrint('entitlement: roster reported for $planId rev=$revisionId');
+      debugPrint(
+        'entitlement: roster reported for $entitlementPlanId rev=$revisionId',
+      );
     } on Object catch (e, st) {
       debugPrint('entitlement: roster report failed: $e\n$st');
     }
@@ -181,6 +185,7 @@ class EntitlementCoordinator {
   }) async {
     if (!gateEnabled || !EntitlementGate.isGatedKind(kind)) return null;
     await bindSelfParticipant(planId: planId, selfParticipantId: selfParticipantId);
+    final entitlementPlanId = entitlementPlanIdForLocalPlan(planId);
     final installationId = _registry.installationIdFor(
       planId: planId,
       participantId: selfParticipantId,
@@ -194,7 +199,7 @@ class EntitlementCoordinator {
       );
       return EntitlementGate.forHousing(
         participantInstallationId: fallback,
-        planId: planId,
+        planId: entitlementPlanId,
         kind: kind,
         expenseId: expenseId,
         revisionId: revisionId,
@@ -203,7 +208,7 @@ class EntitlementCoordinator {
     }
     return EntitlementGate.forHousing(
       participantInstallationId: installationId,
-      planId: planId,
+      planId: entitlementPlanId,
       kind: kind,
       expenseId: expenseId,
       revisionId: revisionId,
