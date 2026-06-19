@@ -401,12 +401,34 @@ push wake, reminder cron, etc.) behave as documented in
 
 ---
 
+## Public license sub-domain (client HTTP API)
+
+Operators may expose the entitlement **client** API on a dedicated sub-domain
+(for example `license.incoherences.org`) that proxies to `127.0.0.1:8081`.
+Reference vhost: [`entitlement/deploy/apache2/license-vhost.conf.template`](../entitlement/deploy/apache2/license-vhost.conf.template).
+
+| Path | Public? |
+|------|---------|
+| `/v1/installations/register`, `/v1/housing/*`, `/healthz`, `/readyz` | Yes (via vhost) |
+| `/v1/introspect/envelope` | **No** — relay only on Docker network |
+
+**Flutter web dev** (`run:dev:web` at `http://localhost:5001`) needs CORS on
+that vhost. The template includes a **dev-only** allow-list for that origin.
+Remove or replace it before shipping a production browser build (see
+`openspec/changes/repo-maintenance-backlog/tasks.md`).
+
+Changing dev CORS on the VPS touches **only the license Apache vhost** — not the
+entitlement container image, relay binary, or stack `.env` (unless you add a
+new public hostname for the first time).
+
+---
+
 ## What stays on the relay sub-domain
 
-Apache continues to proxy **only** the relay. Do **not** add a public
-vhost path for entitlement. The entitlement service holds licensing
-metadata; it is reachable from the relay container and from loopback on
-the VPS for operator smoke tests.
+Apache on the **sync** sub-domain continues to proxy **only** the relay.
+Entitlement introspection from the relay container uses
+`ENTITLEMENT_INTROSPECT_URL` on the private Docker network, not the public
+license vhost.
 
 ---
 

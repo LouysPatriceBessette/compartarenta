@@ -68,7 +68,7 @@ Read `mobile/tool/run_dev.sh`, `mobile/tool/run_dev_web.sh`, and `mobile/tool/en
 **Script defaults (current repo intent):**
 
 - **`run:dev` (Android/native):** `ENTITLEMENT_BASE_URL` defaults to `https://license.incoherences.org` when `API_BASE_URL` is prod sync.
-- **`run:dev:web`:** `ENTITLEMENT_BASE_URL` is **empty by default** (no browser HTTP to license unless explicitly set). Relay **gates** can still attach locally; CORS blocks direct browser calls to prod license unless the vhost allows localhost.
+- **`run:dev:web`:** `ENTITLEMENT_BASE_URL` defaults to `https://license.incoherences.org` when `API_BASE_URL` is prod sync (same as native). Requires CORS on the license vhost for `http://localhost:5001` — see `entitlement/deploy/apache2/license-vhost.conf.template`.
 
 **Forbidden without evidence:**
 

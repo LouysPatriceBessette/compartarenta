@@ -5,6 +5,15 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
+- [ ] **License vhost — remove dev CORS for `http://localhost:5001`** (ops, before production web).  
+  Dev QA added CORS on `license.incoherences.org` so Flutter web (`run:dev:web`)
+  can call `registerInstallation` / `reportPlanRoster` from the browser. **Remove
+  or replace** the `<LocationMatch "^/v1/">` CORS block in the deployed license
+  Apache vhost when shipping a real web origin (or when dev web no longer targets
+  prod license). Template:
+  `entitlement/deploy/apache2/license-vhost.conf.template`. **VPS scope:** virtual
+  host only — no entitlement container or relay release required.
+
 - [ ] **Relay `/healthz` — human-readable on mobile** (ops / QA prerequisite).  
   Today `GET /healthz` returns raw JSON only; on a phone browser it is tiny, top-left,
   and unusable for quick “is the relay up?” checks during multi-device manual QA

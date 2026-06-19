@@ -1,0 +1,76 @@
+# Apache reverse-proxy template for the Compartarenta entitlement HTTP API.
+#
+# Copy to /etc/apache2/sites-available/license.incoherences.org.conf and
+# enable the site. Requires: a2enmod proxy proxy_http headers rewrite ssl
+#
+# The entitlement container listens on 127.0.0.1:8081 only (see
+# deploy/compose.production-stack.yml). Native clients and Flutter web dev
+# (browser on the developer PC, not on the VPS) call this sub-domain.
+# Relay introspection uses the Docker network — block /v1/introspect/ here.
+#
+# --- DEV-ONLY CORS ---------------------------------------------------------
+# Allows run:dev:web at http://localhost:5001 on a developer machine to POST
+# register / plan-roster. Remove or replace before a production web origin.
+# Tracked: openspec/changes/repo-maintenance-backlog/tasks.md
+#
+# VPS scope for dev CORS: this virtual host only — no entitlement image or
+# relay release required.
+
+<VirtualHost *:80>
+    ServerName license.incoherences.org
+    Redirect permanent / https://license.incoherences.org/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName license.incoherences.org
+
+    SSLEngine on
+    SSLCertificateFile      /etc/letsencrypt/live/license.incoherences.org/fullchain.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/license.incoherences.org/privkey.pem
+    Protocols h2 http/1.1
+    IncludeOptional /etc/letsencrypt/options-ssl-apache.conf
+
+    # API-only sub-domain: no DocumentRoot (avoid reload errors when the path
+    # is missing and no static site is served). Unmatched paths fall through to
+    # 404 unless proxied below.
+
+    ProxyPreserveHost On
+    ProxyRequests Off
+
+    ProxyPass        /v1/      http://127.0.0.1:8081/v1/
+    ProxyPassReverse /v1/      http://127.0.0.1:8081/v1/
+
+    ProxyPass        /healthz  http://127.0.0.1:8081/healthz
+    ProxyPassReverse /healthz  http://127.0.0.1:8081/healthz
+
+    ProxyPass        /readyz   http://127.0.0.1:8081/readyz
+    ProxyPassReverse /readyz   http://127.0.0.1:8081/readyz
+
+    # Introspection is relay-internal (stack-net), not public Internet.
+    <LocationMatch "^/v1/introspect/">
+        Require all denied
+    </LocationMatch>
+
+    # DEV: Flutter web on http://localhost:5001 (developer laptop only).
+    <LocationMatch "^/v1/">
+        SetEnvIfNoCase Origin "^http://localhost:5001$" ALLOWED_ORIGIN=$0
+        Header always set Access-Control-Allow-Origin "%{ALLOWED_ORIGIN}e" env=ALLOWED_ORIGIN
+        Header always append Vary "Origin"
+        RewriteEngine On
+        RewriteCond %{REQUEST_METHOD} =OPTIONS
+        RewriteRule ^ - [R=204,L]
+        Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+        Header always set Access-Control-Allow-Headers "Content-Type" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+        Header always set Access-Control-Max-Age "600" "expr=%{REQUEST_METHOD} == 'OPTIONS'"
+    </LocationMatch>
+
+    # Security headers (keep in prod; compatible with the dev CORS block above).
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    LogLevel warn
+    ErrorLog  ${APACHE_LOG_DIR}/license-entitlement-error.log
+    CustomLog ${APACHE_LOG_DIR}/license-entitlement-access.log combined
+</VirtualHost>
