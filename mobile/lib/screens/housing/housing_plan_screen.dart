@@ -2624,8 +2624,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   }
 
   Future<void> _showCopyQuietDayDialog(AppLocalizations l10n) async {
+    final firstDayOfWeekIndex = widget.prefs.resolvedFirstDayOfWeekIndex(
+      Localizations.localeOf(context),
+    );
     final sourceUiDay = _quietUiDayIndex;
-    final sourceDayName = quietHoursUiDayDisplayName(context, sourceUiDay);
+    final sourceDayName = quietHoursUiDayDisplayName(
+      context,
+      sourceUiDay,
+      firstDayOfWeekIndex,
+    );
     final selected = <int>{};
 
     final copied = await showAppDialog<bool>(
@@ -2651,7 +2658,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(quietHoursUiDayDisplayName(ctx, uiDay)),
+                      title: Text(
+                        quietHoursUiDayDisplayName(
+                          ctx,
+                          uiDay,
+                          firstDayOfWeekIndex,
+                        ),
+                      ),
                       value: selected.contains(uiDay),
                       onChanged: (v) {
                         setLocal(() {

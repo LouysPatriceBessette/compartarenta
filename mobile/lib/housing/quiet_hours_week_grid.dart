@@ -167,19 +167,32 @@ int quietHoursCalendarWeekdayForUiColumn(
   return (firstDayOfWeekIndex + uiDayIndex) % 7;
 }
 
-/// Localized weekday name for a quiet-hours UI day column (locale week start).
-String quietHoursUiDayDisplayName(BuildContext context, int uiDayIndex) {
-  final mat = MaterialLocalizations.of(context);
+/// Localized weekday name for a quiet-hours UI day column.
+///
+/// [firstDayOfWeekIndex] must match [QuietHoursWeekDayEditor.firstDayOfWeekIndex]
+/// (user week-start preference), not [MaterialLocalizations.firstDayOfWeekIndex].
+String quietHoursUiDayDisplayName(
+  BuildContext context,
+  int uiDayIndex,
+  int firstDayOfWeekIndex,
+) {
   final locale = Localizations.localeOf(context);
-  final materialWeekday =
-      quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, uiDayIndex);
+  final materialWeekday = quietHoursCalendarWeekdayForUiColumn(
+    firstDayOfWeekIndex,
+    uiDayIndex,
+  );
   // 2024-01-07 is a Sunday (Material weekday index 0).
   final ref = DateTime(2024, 1, 7 + materialWeekday);
   return DateFormat.EEEE(locale.toString()).format(ref);
 }
 
 /// [startG] global half-hour index 0..335; [lengthSlots] along the circular week.
-String _formatArcRangeLabel(MaterialLocalizations mat, int startG, int lengthSlots) {
+String _formatArcRangeLabel(
+  MaterialLocalizations mat,
+  int firstDayOfWeekIndex,
+  int startG,
+  int lengthSlots,
+) {
   const slotsPerDay = kQuietHoursSlotsPerDay;
   const n = kQuietHoursDays * slotsPerDay;
   if (lengthSlots <= 0) return '';
@@ -193,8 +206,8 @@ String _formatArcRangeLabel(MaterialLocalizations mat, int startG, int lengthSlo
 
   final startMin = startSlot * 30;
   final endMinInclusive = (lastSlot + 1) * 30 - 1;
-  final d0 = quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, startUi);
-  final d1 = quietHoursCalendarWeekdayForUiColumn(mat.firstDayOfWeekIndex, lastUi);
+  final d0 = quietHoursCalendarWeekdayForUiColumn(firstDayOfWeekIndex, startUi);
+  final d1 = quietHoursCalendarWeekdayForUiColumn(firstDayOfWeekIndex, lastUi);
   final l0 = _narrowDayLetter(mat, d0);
   final l1 = _narrowDayLetter(mat, d1);
   final t0 = _formatHm24(startMin);
@@ -209,6 +222,7 @@ List<QuietHoursDaySegment> quietHoursSegmentsForUiDay({
   required List<List<int>> grid,
   required int uiDayIndex,
   required MaterialLocalizations mat,
+  required int firstDayOfWeekIndex,
   required String labelAbsolute,
   required String labelModerate,
 }) {
@@ -235,7 +249,12 @@ List<QuietHoursDaySegment> quietHoursSegmentsForUiDay({
         re = rowsThisDay[i];
       }
       final title = arc.state == 1 ? labelAbsolute : labelModerate;
-      final range = _formatArcRangeLabel(mat, arc.startG, arc.lengthSlots);
+      final range = _formatArcRangeLabel(
+        mat,
+        firstDayOfWeekIndex,
+        arc.startG,
+        arc.lengthSlots,
+      );
       segments.add(
         QuietHoursDaySegment(
           startRow: rs,
@@ -681,6 +700,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
       grid: grid,
       uiDayIndex: uiSelectedDayIndex,
       mat: mat,
+      firstDayOfWeekIndex: firstDayOfWeekIndex,
       labelAbsolute: labelAbsolute,
       labelModerate: labelModerate,
     );
