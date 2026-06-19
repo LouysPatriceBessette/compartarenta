@@ -6,6 +6,19 @@ import 'entitlement_gate.dart';
 import 'participant_installation_store.dart';
 import 'plan_participant_installation_registry.dart';
 
+/// Maps import tails (`self`, `p0`, …) to full participant ids used by the
+/// registry and roster reporting (`$planId:self`, `$planId:p0`, …).
+String resolvePlanParticipantId(String planId, String localParticipantId) {
+  if (localParticipantId.startsWith('$planId:')) {
+    return localParticipantId;
+  }
+  if (localParticipantId == 'self' ||
+      RegExp(r'^p\d+$').hasMatch(localParticipantId)) {
+    return '$planId:$localParticipantId';
+  }
+  return localParticipantId;
+}
+
 /// Wires local installation identity, roster metadata, and relay gates.
 class EntitlementCoordinator {
   EntitlementCoordinator({
@@ -70,13 +83,24 @@ class EntitlementCoordinator {
     required String planId,
     required String participantId,
   }) async {
+    final fullParticipantId = resolvePlanParticipantId(planId, participantId);
+    final existing = _registry.installationIdFor(
+      planId: planId,
+      participantId: fullParticipantId,
+    );
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    if (!fullParticipantId.endsWith(':self')) {
+      return '';
+    }
     await bindSelfParticipant(
       planId: planId,
-      selfParticipantId: participantId,
+      selfParticipantId: fullParticipantId,
     );
     return _registry.installationIdFor(
           planId: planId,
-          participantId: participantId,
+          participantId: fullParticipantId,
         ) ??
         await _installationStore.loadOrCreateId();
   }
@@ -112,7 +136,7 @@ class EntitlementCoordinator {
       final localPid = sourceToLocalParticipant[sourcePid] ?? sourcePid;
       await ingestParticipantSnapshot(
         planId: planId,
-        participantId: localPid,
+        participantId: resolvePlanParticipantId(planId, localPid),
         installationId: inst,
       );
     }

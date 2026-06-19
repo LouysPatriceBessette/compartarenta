@@ -84,19 +84,24 @@ class HousingProposalTransportService {
         reachable,
       );
       final peerB64 = connected?.peerPublicMaterial;
-      snapshots.add({
+      final snapshot = <String, Object?>{
         'id': p.id,
         'displayName': p.displayName,
         'avatarId': p.avatarId,
         if (p.contactId != null) 'contactId': p.contactId,
-        if (entitlement != null && entitlement.gateEnabled)
-          'participantInstallationId': await entitlement.installationIdForSnapshot(
-            planId: planId,
-            participantId: p.id,
-          ),
         if (peerB64 != null && peerB64.isNotEmpty)
           'peerPublicMaterialB64': peerB64,
-      });
+      };
+      if (entitlement != null && entitlement.gateEnabled) {
+        final installationId = await entitlement.installationIdForSnapshot(
+          planId: planId,
+          participantId: p.id,
+        );
+        if (installationId.isNotEmpty) {
+          snapshot['participantInstallationId'] = installationId;
+        }
+      }
+      snapshots.add(snapshot);
     }
     final enriched = Map<String, Object?>.from(payload)
       ..['targetParticipantId'] = targetParticipantId
