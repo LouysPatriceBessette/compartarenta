@@ -9,11 +9,58 @@ DebugWebDbWriteHook? debugWebDbWriteHook;
 /// could overwrite the host file with prefs that are not imported yet.
 bool suppressDevHostSessionWriteObserver = false;
 
+/// Open Drift transactions on the dev host database (web only).
+///
+/// Snapshot export must wait until this reaches zero: Drift's web remote
+/// executor rejects concurrent reads while a transaction is active.
+int devHostDriftOpenTransactions = 0;
+
+/// Waits until no Drift transaction is open on the dev host database.
+Future<void> waitForDevHostDriftTransactionsIdle({
+  Duration timeout = const Duration(seconds: 15),
+  Duration pollInterval = const Duration(milliseconds: 25),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (devHostDriftOpenTransactions > 0) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw StateError(
+        'Drift transaction still open after ${timeout.inMilliseconds}ms '
+        '(depth=$devHostDriftOpenTransactions)',
+      );
+    }
+    await Future<void>.delayed(pollInterval);
+  }
+}
+
 QueryExecutor devHostSessionWriteObserver(QueryExecutor inner) {
   return inner.interceptWith(_DevHostSessionWriteInterceptor());
 }
 
 final class _DevHostSessionWriteInterceptor extends QueryInterceptor {
+  @override
+  TransactionExecutor beginTransaction(QueryExecutor parent) {
+    devHostDriftOpenTransactions++;
+    return super.beginTransaction(parent);
+  }
+
+  @override
+  Future<void> commitTransaction(TransactionExecutor inner) async {
+    try {
+      await super.commitTransaction(inner);
+    } finally {
+      devHostDriftOpenTransactions--;
+    }
+  }
+
+  @override
+  Future<void> rollbackTransaction(TransactionExecutor inner) async {
+    try {
+      await super.rollbackTransaction(inner);
+    } finally {
+      devHostDriftOpenTransactions--;
+    }
+  }
+
   void _notifyWrite(String sql) {
     if (!kDebugMode || suppressDevHostSessionWriteObserver) return;
     final trimmed = sql.trimLeft().toUpperCase();

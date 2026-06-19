@@ -9,7 +9,9 @@ import '../db/db_reset.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/identity_keystore.dart';
 import 'web_dev_db_snapshot.dart';
-import 'web_dev_db_write_observer.dart';
+import 'web_dev_db_write_observer.dart' show
+    suppressDevHostSessionWriteObserver,
+    waitForDevHostDriftTransactionsIdle;
 import 'web_dev_profile_recovery.dart';
 
 /// Must match the Flutter web origin host (localhost vs 127.0.0.1) or the
@@ -124,7 +126,7 @@ void scheduleDevHostSessionSave(AppDatabase db) {
   if (_sessionUrlDefine.isEmpty) return;
 
   _saveDebounce?.cancel();
-  _saveDebounce = Timer(const Duration(milliseconds: 350), () {
+  _saveDebounce = Timer(const Duration(milliseconds: 500), () {
     unawaited(_pushHostSessionSnapshot(db));
   });
 }
@@ -202,15 +204,19 @@ Future<Map<String, dynamic>> _buildHostSnapshotWithRetry(
 ) async {
   Object? lastError;
   StackTrace? lastStack;
-  for (var attempt = 0; attempt < 3; attempt++) {
+  for (var attempt = 0; attempt < 5; attempt++) {
     if (attempt > 0) {
-      await Future<void>.delayed(Duration(milliseconds: 80 * attempt));
+      await Future<void>.delayed(Duration(milliseconds: 100 * (1 << (attempt - 1))));
     }
     try {
       return await _buildHostSnapshot(db, prefs);
     } catch (error, stack) {
       lastError = error;
       lastStack = stack;
+      final message = error.toString();
+      if (!message.contains('Transaction used after it was closed')) {
+        rethrow;
+      }
     }
   }
   Error.throwWithStackTrace(lastError!, lastStack ?? StackTrace.current);
@@ -220,6 +226,8 @@ Future<Map<String, dynamic>> _buildHostSnapshot(
   AppDatabase db,
   AppPreferences prefs,
 ) async {
+  await waitForDevHostDriftTransactionsIdle();
+  final tables = await exportDriftTablesSnapshot(db);
   final identityB64 =
       await IdentityKeystore.secureStorage().exportPrivateKeyB64ForDev();
   return {
@@ -227,7 +235,7 @@ Future<Map<String, dynamic>> _buildHostSnapshot(
     'savedAt': DateTime.now().toUtc().toIso8601String(),
     'prefs': prefs.exportDevHostSnapshot(),
     'identityPrivateKeyB64': identityB64,
-    'tables': await exportDriftTablesSnapshot(db),
+    'tables': tables,
   };
 }
 

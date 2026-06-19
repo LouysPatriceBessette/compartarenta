@@ -1,0 +1,92 @@
+---
+description: Session start — re-read binding rules and load the user's multi-machine QA test topology before sync/entitlement/deploy advice.
+alwaysApply: true
+---
+
+# Session test topology bootstrap
+
+`alwaysApply` on sibling rules is **not sufficient**. At the **first substantive turn** of every session — and again before any answer about **QA, housing sync, relay, entitlement, deploy, or multi-device behavior** — you **must** use the **Read** tool on **all** of these files (do not skip because they are also always-applied):
+
+| File | Why re-read |
+| --- | --- |
+| `.cursor/rules/conversation-test-context-discipline.mdc` | Whole thread + user test context; no refuted hypotheses |
+| `.cursor/rules/no-blind-patching-evidence-first.mdc` | Evidence before patches; verify UI gates before retest steps |
+| `.cursor/rules/melos-run-workflow.mdc` | How the user starts/stops apps (`./tool/melosw`, no `r`/`R`) |
+| `.cursor/rules/verify-state-before-claiming.mdc` | Git/deploy/VPS state from commands, not chat memory |
+| `.cursor/rules/agent-scope-discipline.mdc` | Multi-role / sync requests split by layer |
+| `.cursor/rules/relay-changes-minimize.mdc` | Relay vs client/ops trade-off before proposing Go changes |
+
+If the turn is **only** a narrow code edit unrelated to sync/QA/deploy, you may defer the re-read until the topic shifts — but you **must** load this topology section (below) before any operational or architectural statement about relay, entitlement, or test devices.
+
+After re-reading, **state internally** (do not paste a checklist to the user unless they ask): machines, roles, URLs, and what you still need to verify with tools.
+
+---
+
+## User's test topology (binding facts)
+
+Three machines. **Do not collapse them into one “dev machine”.**
+
+### PC #1 (two terminals)
+
+| Terminal | Command | QA persona | Platform |
+| --- | --- | --- | --- |
+| A | `./tool/melosw run run:dev:web` | **Monica** | Flutter **web** (Chrome) |
+| B | `./tool/melosw run run:dev` | **Louys** | Flutter **Android** |
+
+Each terminal is an independent app instance with its own local DB / web dev session backup.
+
+### PC #2 (one terminal)
+
+| Terminal | Command | QA persona | Platform |
+| --- | --- | --- | --- |
+| A | `./tool/melosw run run:dev:web` | **Roberr** | Flutter **web** (Chrome) |
+
+When the user names Monica, Louys, or Roberr, map them to this table — do not swap machines or platforms.
+
+### VPS (Chile — remote; not the developer's PC)
+
+Runs at least:
+
+- **Relay** (production stack)
+- **Entitlement** server
+- Other services (e.g. Node.js processes, additional Docker images)
+
+The developer's browsers and phones reach the VPS **over the internet**, not via `127.0.0.1` on the VPS from Canada.
+
+---
+
+## Public URLs vs local-only (verify scripts; do not invent)
+
+Read `mobile/tool/run_dev.sh`, `mobile/tool/run_dev_web.sh`, and `mobile/tool/entitlement_base_url_default.sh` when advising on env or URLs.
+
+| Service | Typical prod URL | Who calls it |
+| --- | --- | --- |
+| Relay | `https://sync.incoherences.org` | All clients (web + Android) |
+| Entitlement (HTTP API) | `https://license.incoherences.org` | Clients that perform register / roster / license calls |
+| Relay → entitlement introspection | Private Docker URL on VPS | **Relay only** — not the browser |
+
+**Script defaults (current repo intent):**
+
+- **`run:dev` (Android/native):** `ENTITLEMENT_BASE_URL` defaults to `https://license.incoherences.org` when `API_BASE_URL` is prod sync.
+- **`run:dev:web`:** `ENTITLEMENT_BASE_URL` is **empty by default** (no browser HTTP to license unless explicitly set). Relay **gates** can still attach locally; CORS blocks direct browser calls to prod license unless the vhost allows localhost.
+
+**Forbidden without evidence:**
+
+- Suggesting `http://127.0.0.1:8081` for entitlement when the user tests against the **VPS** stack (that port is for a **local** relay+entitlement stack on the same machine as the client).
+- Assuming web and Android share the same entitlement URL defaults.
+- Inferring VPS `.env` values (`ENTITLEMENT_ENABLED`, tags, etc.) from gitignored `dev-ideas/` files — **verify** or ask.
+
+---
+
+## Implications for answers
+
+1. **Multi-device sync** involves **Monica** (PC #1 web), **Louys** (PC #1 Android), and **Roberr** (PC #2 web), plus **relay on VPS**. A fix proven on Monica does not prove delivery to Louys or Roberr.
+2. **Forward-only transport fixes:** stale state on a peer that missed an envelope before deploy is not repaired by restart alone — see conversation-test-context-discipline.
+3. **Web + prod entitlement HTTP:** if register/roster must run from the browser, the problem is **CORS / public URL reachability**, not a USB cable to the VPS. Options: vhost CORS for localhost (dev), native client for those calls, or an explicit ops decision — not `127.0.0.1:8081` on the developer PC for Chile VPS.
+4. Before retest steps naming taps or roles, **grep/read** proposal gates in code (no-blind-patching-evidence-first).
+
+---
+
+## When this topology is wrong
+
+If the user says they changed machines, URLs, or scripts, **their message overrides this file**. Update your model for the session; do not argue from stale topology.

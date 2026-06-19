@@ -89,7 +89,7 @@ class HousingProposalTransportService {
         'displayName': p.displayName,
         'avatarId': p.avatarId,
         if (p.contactId != null) 'contactId': p.contactId,
-        if (entitlement != null && entitlement.enabled)
+        if (entitlement != null && entitlement.gateEnabled)
           'participantInstallationId': await entitlement.installationIdForSnapshot(
             planId: planId,
             participantId: p.id,

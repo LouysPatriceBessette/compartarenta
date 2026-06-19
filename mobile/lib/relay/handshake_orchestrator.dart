@@ -2538,7 +2538,7 @@ class HandshakeOrchestrator {
     required String revisionId,
   }) async {
     final entitlement = _entitlement;
-    if (entitlement == null || !entitlement.enabled) return;
+    if (entitlement == null || !entitlement.httpEnabled) return;
     final participants = (await _db.listParticipants())
         .where((p) => p.id.startsWith('$planId:p') || p.id == '$planId:self')
         .map((p) => p.id)

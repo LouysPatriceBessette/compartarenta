@@ -20,7 +20,13 @@ ensure_workspace_pub_get "${ROOT}"
 API_BASE_URL_VALUE="${API_BASE_URL:-https://sync.incoherences.org}"
 # shellcheck source=entitlement_base_url_default.sh
 source "${DIR}/tool/entitlement_base_url_default.sh"
-ENTITLEMENT_BASE_URL_VALUE="$(entitlement_base_url_default "${API_BASE_URL_VALUE}")"
+# Browsers cannot call prod license.incoherences.org (no CORS). Relay gates still
+# attach locally; set ENTITLEMENT_BASE_URL explicitly for local :8081 or tests.
+if [[ -n "${ENTITLEMENT_BASE_URL:-}" ]]; then
+  ENTITLEMENT_BASE_URL_VALUE="$(entitlement_base_url_default "${ENTITLEMENT_BASE_URL}")"
+else
+  ENTITLEMENT_BASE_URL_VALUE=""
+fi
 # Use localhost (not 127.0.0.1): Flutter web is served at http://localhost:WEB_PORT
 # and the browser blocks cross-origin calls to 127.0.0.1.
 WEB_DEV_SESSION_HOST="${WEB_DEV_SESSION_HOST:-localhost}"
@@ -274,6 +280,8 @@ fi
 echo "Web dev persistence: pass WEB_DEV_SESSION_URL=${WEB_DEV_SESSION_URL} to Flutter"
 if [[ -n "${ENTITLEMENT_BASE_URL_VALUE}" ]]; then
   echo "Entitlement client API: ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}"
+else
+  echo "Entitlement: relay gates only (no browser HTTP; export ENTITLEMENT_BASE_URL=http://127.0.0.1:8081 for local register/roster)"
 fi
 
 web_run_args=(

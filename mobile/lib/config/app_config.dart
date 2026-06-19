@@ -19,6 +19,9 @@ class AppConfig {
       entitlementBaseUrl != null &&
       entitlementBaseUrl!.host != 'example.invalid';
 
+  /// Relay `entitlement_gate` metadata when a live relay is configured.
+  bool get entitlementGateEnabled => apiBaseUrl.host != 'example.invalid';
+
   /// Short SHA of the commit the build was produced from, injected via
   /// `--dart-define=GIT_SHA=...` by `mobile/tool/compute_version.sh`. Empty
   /// string for unstamped `flutter run` development builds.

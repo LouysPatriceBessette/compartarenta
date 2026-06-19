@@ -1,0 +1,94 @@
+---
+description: Append each turn to dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_sessionId.jsonl (incremental agent log).
+alwaysApply: true
+---
+
+# Incremental agent transcript log
+
+Maintain a **project-local mirror** of the agent conversation, **one JSONL line per message**, updated **every turn** before finishing the assistant reply.
+
+User explicitly authorized writes under `dev-ideas/agent-transcripts/` (gitignored).
+
+## Path format
+
+```
+dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl
+```
+
+| Part | Rule |
+| --- | --- |
+| `YYYY-MM-DD` | Calendar date of the **current turn** (authoritative session date from the environment) |
+| `NNN` | Sequence for that date: `001`, `002`, … `999` (zero-padded). One file per **session id** per day. |
+| `<session-id>` | Cursor agent transcript UUID (e.g. `100f4394-bb18-46b3-8d97-7c1729567414`) |
+
+## Resolve session id (first turn, or if unknown)
+
+1. **`transcript_location`** in the system/context block → UUID in that path.
+2. Else **Read** the newest folder under `~/.cursor/projects/home-bvii-repos-Compartarenta/agent-transcripts/` if it matches this chat.
+3. Else **ask the user** once; store the id for the rest of the session.
+
+## Allocate `NNN` (first turn only)
+
+List `dev-ideas/agent-transcripts/YYYY-MM-DD/*.jsonl`:
+
+- If a file matching `*_<session-id>.jsonl` already exists → **reuse it** (append only).
+- Else `NNN` = one greater than the highest existing prefix for that date; if the directory is empty, use `001`.
+
+Create the directory if missing: `dev-ideas/agent-transcripts/YYYY-MM-DD/`.
+
+## When to write
+
+**Every turn**, after the substantive work and **before** the final user-visible reply:
+
+1. Append a **user** line for the current user message (verbatim text; strip only system wrappers if duplicated).
+2. Append an **assistant** line for the final reply you are about to send (full markdown/text).
+
+Do **not** skip because the turn was “small”, a save-only reply, or a path-only `Garde-moi cette réponse` answer — still append both lines.
+
+## JSONL line shape
+
+Match Cursor agent transcript style (one JSON object per line, no outer array):
+
+```json
+{"role":"user","message":{"content":[{"type":"text","text":"<verbatim user message>"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"<full assistant reply>"}]}}
+```
+
+- Escape JSON properly (prefer a short shell/Python one-liner; do not hand-escape multiline strings).
+- Optional: append extra assistant lines for **tool rounds** when useful, with `"type":"tool_use"` blocks mirroring Cursor — not required if only the final assistant text is logged.
+- Do **not** log secrets (`.env` values, tokens, private keys). Replace with `[REDACTED]`.
+
+## How to append
+
+Prefer appending without rewriting the whole file:
+
+```bash
+python3 -c 'import json,sys; ...' >> "dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl"
+```
+
+Or Read existing file + Write only when the file is small and append via shell is unavailable.
+
+## Backfill on first log in a long session
+
+If this is the **first append** in a session that already has many turns:
+
+1. **Read** `~/.cursor/projects/home-bvii-repos-Compartarenta/agent-transcripts/<session-id>/<session-id>.jsonl` when it exists.
+2. **Copy** it to the dev-ideas path (creates a full mirror), then append only **new** turns on subsequent steps.
+
+If the Cursor file is missing, start from the current turn and note in chat only if the user asks.
+
+## Internal state across turns
+
+Remember for the session (do not spam the user):
+
+- `session-id`
+- `dev-ideas/.../NNN_<session-id>.jsonl` path
+
+## Failure
+
+If append fails (permissions, invalid JSON), say so **once** briefly; retry next turn. Do not block the user's task on logging alone.
+
+## Relation to other rules
+
+- Complements `conversation-test-context-discipline.mdc` (thread memory) with a **durable file** the user can grep.
+- Does not replace reading the live thread or Cursor transcript when debugging.

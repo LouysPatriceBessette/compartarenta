@@ -39,10 +39,12 @@ class EntitlementCoordinator {
   final PlanParticipantInstallationRegistry _registry;
   final EntitlementClient? _client;
 
-  bool get enabled => _config.entitlementEnabled && _client != null;
+  bool get gateEnabled => _config.entitlementGateEnabled;
+
+  bool get httpEnabled => _config.entitlementEnabled && _client != null;
 
   Future<void> ensureRegistered() async {
-    if (!enabled) return;
+    if (!httpEnabled) return;
     try {
       final id = await _installationStore.loadOrCreateId();
       await _client!.registerInstallation(id);
@@ -55,7 +57,7 @@ class EntitlementCoordinator {
     required String planId,
     required String selfParticipantId,
   }) async {
-    if (!enabled) return;
+    if (!gateEnabled) return;
     final id = await _installationStore.loadOrCreateId();
     await _registry.setInstallationId(
       planId: planId,
@@ -84,7 +86,9 @@ class EntitlementCoordinator {
     required String participantId,
     required String? installationId,
   }) async {
-    if (!enabled || installationId == null || installationId.isEmpty) return;
+    if (!gateEnabled || installationId == null || installationId.isEmpty) {
+      return;
+    }
     await _registry.setInstallationId(
       planId: planId,
       participantId: participantId,
@@ -97,7 +101,7 @@ class EntitlementCoordinator {
     required Map<String, dynamic> payload,
     required Map<String, String> sourceToLocalParticipant,
   }) async {
-    if (!enabled) return;
+    if (!gateEnabled) return;
     final raw = payload['participantSnapshots'];
     if (raw is! List) return;
     for (final entry in raw) {
@@ -119,7 +123,7 @@ class EntitlementCoordinator {
     required String revisionId,
     required List<String> participantIds,
   }) async {
-    if (!enabled) return;
+    if (!httpEnabled) return;
     final roster = _registry.rosterInstallationIds(
       planId: planId,
       participantIds: participantIds,
@@ -151,7 +155,7 @@ class EntitlementCoordinator {
     String? revisionId,
     String? decisionKind,
   }) async {
-    if (!enabled || !EntitlementGate.isGatedKind(kind)) return null;
+    if (!gateEnabled || !EntitlementGate.isGatedKind(kind)) return null;
     await bindSelfParticipant(planId: planId, selfParticipantId: selfParticipantId);
     final installationId = _registry.installationIdFor(
       planId: planId,

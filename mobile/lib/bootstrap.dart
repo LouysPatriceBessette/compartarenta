@@ -92,7 +92,7 @@ Future<void> bootstrap() async {
           final identity = IdentityKeystore.secureStorage();
           final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
           EntitlementCoordinator? entitlementCoordinator;
-          if (config.entitlementEnabled) {
+          if (config.entitlementGateEnabled) {
             final registry = await PlanParticipantInstallationRegistry.load();
             entitlementCoordinator = EntitlementCoordinator(
               config: config,
@@ -100,7 +100,9 @@ Future<void> bootstrap() async {
               registry: registry,
             );
             EntitlementCoordinator.install(entitlementCoordinator);
-            unawaited(entitlementCoordinator.ensureRegistered());
+            if (config.entitlementEnabled) {
+              unawaited(entitlementCoordinator.ensureRegistered());
+            }
           }
           final orchestrator = HandshakeOrchestrator(
             db: appDb,
