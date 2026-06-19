@@ -383,6 +383,40 @@ void main() {
       expect(decoded.sourceParticipantId, 'plan:p0');
       expect(decoded.status, 'negotiate');
       expect(decoded.message, 'Please lower the rent.');
+      expect(decoded.participantInstallationId, isNull);
+    });
+
+    test('housing_proposal_response round-trips participant_installation_id',
+        () async {
+      final aliceKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      );
+      final bobKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i)),
+      );
+      final alicePriv = await aliceKeystore.loadOrCreatePrivateKey();
+      final alicePub = await aliceKeystore.publicKey();
+      final bobPriv = await bobKeystore.loadOrCreatePrivateKey();
+      final bobPub = await bobKeystore.publicKey();
+
+      final frame = await EnvelopeCodec.encryptHousingProposalResponse(
+        envelope: HousingProposalResponseEnvelope(
+          senderLongTermPublicKey: alicePub,
+          sourcePackageId: 'pkg:plan',
+          sourceRevisionId: 'rev:1',
+          sourceParticipantId: 'plan:p0',
+          status: 'accepted',
+          participantInstallationId: 'inst-responder-web',
+        ),
+        senderLongTermPrivateKey: alicePriv,
+        peerLongTermPublicKey: bobPub,
+      );
+      final decoded = await EnvelopeCodec.decryptHousingProposalResponse(
+        frame: frame,
+        receiverLongTermPrivateKey: bobPriv,
+      );
+
+      expect(decoded.participantInstallationId, 'inst-responder-web');
     });
   });
 }

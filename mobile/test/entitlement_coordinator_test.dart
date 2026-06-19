@@ -83,6 +83,64 @@ void main() {
       );
     });
 
+    test('ingestParticipantSnapshot uses full participant id keys', () async {
+      const planId = 'received:pkg-housing-default';
+      await coordinator.ingestParticipantSnapshot(
+        planId: planId,
+        participantId: '$planId:p1',
+        installationId: 'inst-roberr',
+      );
+
+      expect(
+        registry.installationIdFor(
+          planId: planId,
+          participantId: '$planId:p1',
+        ),
+        'inst-roberr',
+      );
+    });
+
+    test('proposal plus accept responses yield complete roster', () async {
+      const planId = 'received:pkg-housing-default';
+      await coordinator.ingestSnapshotsFromPayload(
+        planId: planId,
+        payload: {
+          'participantSnapshots': [
+            {
+              'id': 'housing:default:self',
+              'participantInstallationId': 'inst-monica',
+            },
+          ],
+        },
+        sourceToLocalParticipant: {
+          'housing:default:p1': 'self',
+          'housing:default:self': 'p0',
+          'housing:default:p0': 'p1',
+        },
+      );
+      await coordinator.ingestParticipantSnapshot(
+        planId: planId,
+        participantId: '$planId:p1',
+        installationId: 'inst-roberr',
+      );
+      await coordinator.bindSelfParticipant(
+        planId: planId,
+        selfParticipantId: '$planId:self',
+      );
+
+      expect(
+        registry.rosterInstallationIds(
+          planId: planId,
+          participantIds: [
+            '$planId:self',
+            '$planId:p0',
+            '$planId:p1',
+          ],
+        ),
+        ['inst-author', 'inst-monica', 'inst-roberr'],
+      );
+    });
+
     test('installationIdForSnapshot binds only self participant', () async {
       const planId = 'housing:default';
       final selfId = await coordinator.installationIdForSnapshot(

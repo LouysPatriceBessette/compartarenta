@@ -2596,6 +2596,18 @@ class HandshakeOrchestrator {
       localParticipantId: selfParticipantId,
     );
 
+    String? responderInstallationId;
+    final entitlement = _entitlement;
+    if (entitlement != null && entitlement.gateEnabled) {
+      final id = await entitlement.installationIdForSnapshot(
+        planId: planId,
+        participantId: selfParticipantId,
+      );
+      if (id.isNotEmpty) {
+        responderInstallationId = id;
+      }
+    }
+
     final response = HousingProposalResponseEnvelope(
       senderLongTermPublicKey: await _identity.publicKey(),
       sourcePackageId: sourcePackageId,
@@ -2603,6 +2615,7 @@ class HandshakeOrchestrator {
       sourceParticipantId: sourceParticipantId,
       status: status.name,
       message: message.trim(),
+      participantInstallationId: responderInstallationId,
     );
     final sendResult = await _broadcastHousingProposalResponse(
       planId: planId,
@@ -3298,6 +3311,17 @@ class HandshakeOrchestrator {
       sourceParticipantId: response.sourceParticipantId,
     );
     if (participantId == null) return;
+    final planId = pkgEarly?.planId;
+    final responderInstallationId = response.participantInstallationId;
+    if (planId != null &&
+        responderInstallationId != null &&
+        responderInstallationId.isNotEmpty) {
+      await EntitlementCoordinator.maybeInstance?.ingestParticipantSnapshot(
+        planId: planId,
+        participantId: participantId,
+        installationId: responderInstallationId,
+      );
+    }
     await PlanAgreementProposalService(_db).recordResponse(
       revisionId: revision.id,
       participantId: participantId,

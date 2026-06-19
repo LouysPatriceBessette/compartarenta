@@ -154,6 +154,7 @@ class HousingProposalResponseEnvelope {
     required this.sourceParticipantId,
     required this.status,
     this.message = '',
+    this.participantInstallationId,
   });
 
   final Uint8List senderLongTermPublicKey;
@@ -162,6 +163,9 @@ class HousingProposalResponseEnvelope {
   final String sourceParticipantId;
   final String status;
   final String message;
+
+  /// Responder entitlement installation id (exchanged for roster reporting).
+  final String? participantInstallationId;
 }
 
 /// Steady-state realized expense proposal (active agreement ledger).
@@ -746,6 +750,9 @@ class EnvelopeCodec {
         'source_participant_id': envelope.sourceParticipantId,
         'status': envelope.status,
         'message': envelope.message,
+        if (envelope.participantInstallationId != null &&
+            envelope.participantInstallationId!.isNotEmpty)
+          'participant_installation_id': envelope.participantInstallationId,
       }),
     );
     final aeadNonce = header.sublist(header.length - 12);
@@ -792,6 +799,8 @@ class EnvelopeCodec {
       sourceParticipantId: (json['source_participant_id'] as String?) ?? '',
       status: (json['status'] as String?) ?? '',
       message: (json['message'] as String?) ?? '',
+      participantInstallationId:
+          json['participant_installation_id'] as String?,
     );
   }
 
