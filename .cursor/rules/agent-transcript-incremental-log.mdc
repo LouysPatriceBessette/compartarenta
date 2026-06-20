@@ -60,13 +60,35 @@ Match Cursor agent transcript style (one JSON object per line, no outer array):
 
 ## How to append
 
-Prefer appending without rewriting the whole file:
+**Always** use the repository script — do **not** hand-roll `python3 -c` one-liners or
+leave placeholder bodies (`PLACEHOLDER`, `echo "skip"`, `if False`, etc.).
+
+From repo root, **turn mode** (preferred at end of each reply):
 
 ```bash
-python3 -c 'import json,sys; ...' >> "dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl"
+USER_MSG="$(mktemp)" ASSISTANT_MSG="$(mktemp)"
+trap 'rm -f "$USER_MSG" "$ASSISTANT_MSG"' EXIT
+printf '%s' '<verbatim user message>' >"$USER_MSG"
+printf '%s' '<full assistant reply>' >"$ASSISTANT_MSG"
+python3 tool/append_agent_transcript.py \
+  --session-id '<session-id>' \
+  --date 'YYYY-MM-DD' \
+  --user-file "$USER_MSG" \
+  --assistant-file "$ASSISTANT_MSG"
 ```
 
-Or Read existing file + Write only when the file is small and append via shell is unavailable.
+Single-line mode when only one role is needed:
+
+```bash
+printf '%s' '<message>' | python3 tool/append_agent_transcript.py \
+  --session-id '<session-id>' --date 'YYYY-MM-DD' --role user
+```
+
+The script resolves `NNN_<session-id>.jsonl`, creates directories, JSON-escapes
+text, and exits non-zero on failure. If it fails, say so once briefly and retry
+next turn — never silently skip logging.
+
+Or Read existing file + Write only when the shell is unavailable.
 
 ## Backfill on first log in a long session
 
