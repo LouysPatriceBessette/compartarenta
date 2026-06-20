@@ -13,6 +13,7 @@ import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
 import '../entitlement/entitlement_coordinator.dart';
+import '../relay/relay_http_policy.dart';
 import '../housing/housing_participant_profile_sync.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/housing_plan_peer_identity_reconcile.dart';
@@ -182,7 +183,7 @@ class HandshakeOrchestrator {
     EntitlementCoordinator? entitlement,
     ContactNotificationSink contactNotifications =
         const DefaultContactNotificationSink(),
-    Duration pollInterval = const Duration(seconds: 10),
+    Duration pollInterval = RelayHttpPolicy.pollInterval,
     Duration helloTtl = const Duration(hours: 24),
     Duration ackTtl = const Duration(hours: 24),
     Duration steadyTtl = const Duration(hours: 24),
@@ -276,7 +277,7 @@ class HandshakeOrchestrator {
     _instance = orchestrator;
   }
 
-  Timer? _pollTimer;
+  bool _pollLoopActive = false;
   bool _processing = false;
 
   /// Exposes the list of incoming handshakes awaiting accept / reject on
@@ -296,27 +297,35 @@ class HandshakeOrchestrator {
 
   /// Disposes timers + notifiers. Mostly useful in tests.
   void dispose() {
-    _pollTimer?.cancel();
+    stopPolling();
     incomingHandshakes.dispose();
     steadyStateInboxTick.dispose();
     profileLabelConflict.dispose();
   }
 
-  /// Starts the periodic polling timer. Safe to call multiple times.
+  /// Starts the periodic polling loop. Safe to call multiple times.
   ///
-  /// The first tick fires after [pollInterval]; callers that want an
-  /// immediate poll should `await processAllPendingHandshakes()` before
-  /// or after this call. Letting `Timer.periodic` own the first tick
-  /// avoids races between the unawaited startup poll and an explicit
-  /// caller (especially tests) running on the same orchestrator.
+  /// Each cycle waits [pollInterval] (30 s request budget + 1 s cooldown),
+  /// then runs [processAllPendingHandshakes] and steady inbox polling.
+  /// Callers that need an immediate poll should `await processAllPendingHandshakes()`
+  /// explicitly (bootstrap and UI do this before [startPolling]).
   void startPolling() {
-    _pollTimer ??= Timer.periodic(_pollInterval, (_) => unawaited(_safePoll()));
+    if (_pollLoopActive) return;
+    _pollLoopActive = true;
+    unawaited(_runPollLoop());
   }
 
-  /// Stops the periodic polling timer.
+  /// Stops the periodic polling loop.
   void stopPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
+    _pollLoopActive = false;
+  }
+
+  Future<void> _runPollLoop() async {
+    while (_pollLoopActive) {
+      await Future<void>.delayed(_pollInterval);
+      if (!_pollLoopActive) break;
+      await _safePoll();
+    }
   }
 
   /// Stops relay polling and closes the bootstrap-owned [AppDatabase] so the
@@ -432,6 +441,8 @@ class HandshakeOrchestrator {
       );
     } on RelayClientError catch (e) {
       throw HandshakeOrchestratorError('relay_error', e);
+    } on RelayUnreachableException catch (e) {
+      throw HandshakeOrchestratorError('relay_unavailable', e);
     } on TimeoutException catch (e) {
       throw HandshakeOrchestratorError('relay_unavailable', e);
     }
@@ -752,6 +763,12 @@ class HandshakeOrchestrator {
         e.isNoRouting ? 'expired_code' : 'relay_error',
         e,
       );
+    } on RelayUnreachableException catch (e) {
+      debugPrint(
+        'redeem hello relay unreachable for ${row.id} after '
+        '${RelayHttpPolicy.maxAttempts} attempts: $e',
+      );
+      throw HandshakeOrchestratorError('relay_unavailable', e);
     } on TimeoutException catch (e) {
       debugPrint(
         'redeem hello post timed out for ${row.id}; '
@@ -835,9 +852,11 @@ class HandshakeOrchestrator {
         await _processOne(row);
       } catch (e, st) {
         debugPrint('handshake row ${row.id} poll error: $e\n$st');
+        final code = e is HandshakeOrchestratorError ? e.code : 'unknown';
         await _markHandshake(
           row.id,
-          lastErrorCode: e is HandshakeOrchestratorError ? e.code : 'unknown',
+          state: code == 'relay_unavailable' ? HandshakeState.failed : null,
+          lastErrorCode: code,
         );
       }
     }
@@ -1000,6 +1019,11 @@ class HandshakeOrchestrator {
           'steady inbox fetch failed for $pollLabel: $e',
         );
         continue;
+      } on RelayUnreachableException catch (e) {
+        RelayDiagnostics.logSteadyInbox(
+          'steady inbox fetch timed out for $pollLabel: $e',
+        );
+        continue;
       } on TimeoutException catch (e) {
         RelayDiagnostics.logSteadyInbox(
           'steady inbox fetch timed out for $pollLabel: $e',
@@ -1140,39 +1164,7 @@ class HandshakeOrchestrator {
     }
   }
 
-  static const int _relayTransientRetryAttempts = 3;
-  static const Duration _relayTransientRetryBaseDelay = Duration(
-    milliseconds: 350,
-  );
-
-  /// Network/HTTP failures where the relay may still have accepted the request
-  /// or the envelope should remain in the inbox for a later poll.
-  bool _isTransientRelayFailure(Object e) {
-    if (e is TimeoutException) return true;
-    if (e is ClientException) return true;
-    return false;
-  }
-
-  /// Retries [operation] on transient relay/network failures (e.g. connection
-  /// closed before headers).
-  Future<T> _withTransientRelayRetries<T>(
-    String label,
-    Future<T> Function() operation,
-  ) async {
-    Object? lastError;
-    for (var attempt = 0; attempt < _relayTransientRetryAttempts; attempt++) {
-      if (attempt > 0) {
-        await Future<void>.delayed(_relayTransientRetryBaseDelay * attempt);
-      }
-      try {
-        return await operation();
-      } on Object catch (e) {
-        lastError = e;
-        debugPrint('$label attempt ${attempt + 1} failed: $e');
-      }
-    }
-    Error.throwWithStackTrace(lastError!, StackTrace.current);
-  }
+  bool _isTransientRelayFailure(Object e) => isRelayTransportFailure(e);
 
   /// Ensures the relay has an active steady-state row for [selfListenAddr] and
   /// [peerListenAddr]. Idempotent (re-register after relay wipe or reinstall).
@@ -1180,12 +1172,9 @@ class HandshakeOrchestrator {
     required Uint8List selfListenAddr,
     required Uint8List peerListenAddr,
   }) async {
-    await _withTransientRelayRetries(
-      'steady_routing_establish',
-      () => _relay.establishRouting(
-        selfIdentity: selfListenAddr,
-        peerIdentity: peerListenAddr,
-      ),
+    await _relay.establishRouting(
+      selfIdentity: selfListenAddr,
+      peerIdentity: peerListenAddr,
     );
   }
 
@@ -1288,6 +1277,8 @@ class HandshakeOrchestrator {
       );
     } on RelayClientError catch (e) {
       debugPrint('steady disconnectRouting failed: $e');
+    } on RelayUnreachableException catch (e) {
+      debugPrint('steady disconnectRouting timed out: $e');
     } on TimeoutException catch (e) {
       debugPrint('steady disconnectRouting timed out: $e');
     }
@@ -2015,6 +2006,9 @@ class HandshakeOrchestrator {
       // next tick.
       debugPrint('Handshake poll fetch failed for ${row.id}: $e');
       return;
+    } on RelayUnreachableException catch (e) {
+      debugPrint('Handshake poll fetch timed out for ${row.id}: $e');
+      return;
     } on TimeoutException catch (e) {
       debugPrint('Handshake poll fetch timed out for ${row.id}: $e');
       return;
@@ -2436,6 +2430,8 @@ class HandshakeOrchestrator {
         dispatched++;
       } on RelayClientError catch (e) {
         debugPrint('profile_update to ${contact.id} failed: $e');
+      } on RelayUnreachableException {
+        // Best-effort; updates flow on next change.
       } on TimeoutException {
         // Best-effort; updates flow on next change.
       }
@@ -2836,26 +2832,21 @@ class HandshakeOrchestrator {
             firstPub: peerPub,
             secondPub: selfPub,
           );
-          await _withTransientRelayRetries(
-            'housing_proposal_response to ${participant.id}/${target.id}',
-            () async {
-              await _ensureSteadyRoutingRegistered(
-                selfListenAddr: selfAddr,
-                peerListenAddr: peerAddr,
-              );
-              await _postGatedEnvelope(
-                senderIdentity: selfAddr,
-                recipientIdentity: peerAddr,
-                idempotencyKey: _randomBytes(16),
-                ciphertext: frame,
-                kind: EnvelopeKind.housingProposalResponse,
-                ttl: _steadyTtl,
-                planId: planId,
-                selfParticipantId: '$planId:self',
-                revisionId: revisionId,
-                decisionKind: status.name,
-              );
-            },
+          await _ensureSteadyRoutingRegistered(
+            selfListenAddr: selfAddr,
+            peerListenAddr: peerAddr,
+          );
+          await _postGatedEnvelope(
+            senderIdentity: selfAddr,
+            recipientIdentity: peerAddr,
+            idempotencyKey: _randomBytes(16),
+            ciphertext: frame,
+            kind: EnvelopeKind.housingProposalResponse,
+            ttl: _steadyTtl,
+            planId: planId,
+            selfParticipantId: '$planId:self',
+            revisionId: revisionId,
+            decisionKind: status.name,
           );
           debugPrint(
             'housing_proposal_response posted for ${participant.id} '
@@ -2971,14 +2962,14 @@ class HandshakeOrchestrator {
           selfParticipantId: '${expense.planId}:self',
           expenseId: expenseId,
         );
-          RelayDiagnostics.logHousingRealizedExpense(
-            'posted for ${expense.planId} to ${target.id}',
-          );
-        } on Object catch (e) {
-          debugPrint(
-            'housing_realized_expense propose to ${target.id} failed: $e',
-          );
-        }
+        RelayDiagnostics.logHousingRealizedExpense(
+          'posted for ${expense.planId} to ${target.id}',
+        );
+      } on Object catch (e) {
+        debugPrint(
+          'housing_realized_expense propose to ${target.id} failed: $e',
+        );
+      }
     }
     await RealizedExpenseLedgerService(
       _db,
@@ -3540,6 +3531,8 @@ class HandshakeOrchestrator {
       steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     } on RelayClientError catch (e) {
       debugPrint('profile_update (label) to $contactId failed: $e');
+    } on RelayUnreachableException {
+      // best-effort
     } on TimeoutException {
       // best-effort
     }
@@ -3591,6 +3584,8 @@ class HandshakeOrchestrator {
       );
     } on RelayClientError catch (e) {
       throw HandshakeOrchestratorError('relay_error', e);
+    } on RelayUnreachableException catch (e) {
+      throw HandshakeOrchestratorError('relay_unavailable', e);
     } on TimeoutException catch (e) {
       throw HandshakeOrchestratorError('relay_unavailable', e);
     }
