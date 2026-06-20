@@ -42,6 +42,9 @@ class FakeRelayClient implements RelayClient {
   /// Next [fetchInbox] calls throw [TimeoutException] (then decrement).
   int fetchInboxTimeoutsRemaining = 0;
 
+  /// Test hook: number of [fetchInbox] invocations.
+  int fetchInboxCallCount = 0;
+
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
   List<FakeRelayStoredEnvelope> get storedEnvelopes =>
@@ -132,6 +135,7 @@ class FakeRelayClient implements RelayClient {
     int limit = 32,
   }) async {
     _maybeThrowOnce();
+    fetchInboxCallCount++;
     if (fetchInboxTimeoutsRemaining > 0) {
       fetchInboxTimeoutsRemaining--;
       throw TimeoutException('injected fetchInbox');

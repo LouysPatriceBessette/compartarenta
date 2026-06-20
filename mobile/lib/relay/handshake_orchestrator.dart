@@ -277,6 +277,8 @@ class HandshakeOrchestrator {
 
   Timer? _pollTimer;
   bool _processing = false;
+  bool _pendingHandshakesPollInFlight = false;
+  bool _pendingHandshakesPollAgain = false;
 
   /// Exposes the list of incoming handshakes awaiting accept / reject on
   /// the inviter side. UI binds to this to show the confirmation card.
@@ -745,8 +747,29 @@ class HandshakeOrchestrator {
 
   /// Fetches each non-terminal handshake's inbox and processes any
   /// envelope it finds. Safe to call from a Timer or manually from a
-  /// pull-to-refresh action.
+  /// pull-to-refresh action. Concurrent callers coalesce into one run
+  /// (then at most one follow-up) so slow relay HTTP does not stack.
   Future<void> processAllPendingHandshakes() async {
+    if (_pendingHandshakesPollInFlight) {
+      _pendingHandshakesPollAgain = true;
+      return;
+    }
+    _pendingHandshakesPollInFlight = true;
+    try {
+      do {
+        _pendingHandshakesPollAgain = false;
+        await _processAllPendingHandshakesBody();
+      } while (_pendingHandshakesPollAgain);
+    } finally {
+      _pendingHandshakesPollInFlight = false;
+    }
+  }
+
+  /// One handshake poll now; see [processAllPendingHandshakes].
+  Future<void> requestImmediateHandshakePoll() =>
+      processAllPendingHandshakes();
+
+  Future<void> _processAllPendingHandshakesBody() async {
     final rows = await activePendingHandshakeRows();
     if (rows.isEmpty) {
       await refreshIncomingHandshakes();

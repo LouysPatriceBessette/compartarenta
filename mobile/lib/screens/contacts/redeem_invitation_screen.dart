@@ -159,11 +159,9 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
         selfDisplayName: selfName,
         selfAvatarId: selfAvatar,
       );
-      // Kick the poller immediately so the invitee sees the ack as soon
-      // as it lands. Errors here are swallowed and surfaced through
-      // the steady-state poller instead.
+      // Kick the poller once; further relay reads use the orchestrator timer.
       // ignore: unawaited_futures
-      orchestrator.processAllPendingHandshakes();
+      orchestrator.requestImmediateHandshakePoll();
       if (!mounted) return;
       setState(() {
         _dispatching = false;
@@ -204,7 +202,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     if (handshakeId == null) return;
     _outcomePollInFlight = true;
     try {
-      await orchestrator.processAllPendingHandshakes();
+      await orchestrator.requestImmediateHandshakePoll();
       final state = await orchestrator.pendingHandshakeState(handshakeId);
       if (!mounted || state == null) return;
       switch (state) {

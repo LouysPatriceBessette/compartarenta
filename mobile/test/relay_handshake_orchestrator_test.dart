@@ -240,6 +240,32 @@ void main() {
     expect(relay.routings.length, 2);
   });
 
+  test('concurrent handshake polls coalesce relay inbox fetches', () async {
+    final invite = await inviter.orchestrator.generateInvitation(
+      validFor: const Duration(hours: 1),
+      stubDisplayName: 'pending peer',
+      stubAvatarId: 'mdi:account',
+    );
+    final code =
+        (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+    await invitee.orchestrator.redeemInvitation(
+      code: code,
+      selfDisplayName: 'Invitee Self-Name',
+      selfAvatarId: 'mdi:invitee-avatar',
+    );
+
+    relay.fetchInboxCallCount = 0;
+    await Future.wait([
+      inviter.orchestrator.processAllPendingHandshakes(),
+      inviter.orchestrator.processAllPendingHandshakes(),
+      inviter.orchestrator.processAllPendingHandshakes(),
+    ]);
+
+    expect(relay.fetchInboxCallCount, lessThanOrEqualTo(2));
+    final inviterContact = await inviter.contacts.get(invite.localContactId);
+    expect(inviterContact?.kind, 'connected');
+  });
+
   test(
     'inviter polls hello after transient inbox fetch timeouts',
     () async {

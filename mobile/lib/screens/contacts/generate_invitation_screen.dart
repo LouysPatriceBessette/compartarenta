@@ -115,7 +115,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
     }
     _processingGeneratedPoll = true;
     try {
-      await orchestrator.processAllPendingHandshakes();
+      await orchestrator.requestImmediateHandshakePoll();
       await _completeIfInvitationRedeemed();
     } on HandshakeOrchestratorError catch (e) {
       debugPrint('Generated invitation polling failed: ${e.code}');
