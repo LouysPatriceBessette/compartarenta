@@ -43,10 +43,13 @@ import 'routing.dart';
 ///   awaitingHello -> helloReceived -> completed | rejected
 ///   (helloReceived is transient when [autoAcceptIncomingHandshakes] is true)
 /// Invitee timeline:
-///   awaitingAck   -> completed | rejected
+///   dispatchingHello -> awaitingAck -> completed | rejected
 /// Either side can transition to `failed` on unrecoverable error.
 class HandshakeState {
   static const String awaitingHello = 'awaiting_hello';
+
+  /// Invitee: hello not yet confirmed posted to the relay (poll retries POST).
+  static const String dispatchingHello = 'dispatching_hello';
   static const String awaitingAck = 'awaiting_ack';
 
   /// Inviter has validated the hello; the peer's profile is stashed on
@@ -609,9 +612,13 @@ class HandshakeOrchestrator {
     );
     final existing = await _db.getPendingHandshake(pendingId);
     if (existing != null) {
-      if (existing.state == HandshakeState.awaitingAck) {
-        // Resume polling after a prior dispatch (e.g. HTTP timeout while the
-        // hello was still accepted by the relay).
+      if (existing.state == HandshakeState.dispatchingHello ||
+          existing.state == HandshakeState.awaitingAck) {
+        if (existing.state == HandshakeState.dispatchingHello) {
+          await _ensureInviteeHelloPosted(existing);
+        } else {
+          await _retryUnconfirmedInviteeHello(existing);
+        }
         startPolling();
         requestClosedAppPushRegistrationSync();
         return RedeemHandshakeResult(
@@ -624,80 +631,14 @@ class HandshakeOrchestrator {
       }
     }
 
-    final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
-      invitationId: code.invitationId,
-      nonce: code.nonce,
-    );
-    final inviterHandshakePub = await RelayRouting.handshakePublicKey(
-      inviterHandshakePriv,
-    );
-
-    final inviteePriv = await _identity.loadOrCreatePrivateKey();
-    final inviteePub = await _identity.publicKey();
-
-    final addrInviter = await RelayRouting.inviterHandshakeAddress(
-      invitationId: code.invitationId,
-      nonce: code.nonce,
-    );
-    final addrInvitee = await RelayRouting.inviteeHandshakeAddress(
-      invitationId: code.invitationId,
-      nonce: code.nonce,
-    );
-
     // Local stub — replaced by the inviter's profile once we get the ack.
     await _contacts.upsertLocalOnly(
       id: stubContactId,
-      displayName: 'Pending handshake',
+      displayName: selfDisplayName,
       avatarId: selfAvatarId,
       createdAt: created,
       updatedAt: created,
     );
-
-    // Encrypt the hello envelope.
-    final helloFrame = await EnvelopeCodec.encryptHello(
-      envelope: HelloEnvelope(
-        invitationId: code.invitationId,
-        inviteeLongTermPublicKey: inviteePub,
-        displayName: selfDisplayName,
-        avatarId: selfAvatarId,
-        echoedNonce: code.nonce,
-      ),
-      invitationNonce: code.nonce,
-      inviteeLongTermPrivateKey: inviteePriv,
-      inviterHandshakePublicKey: inviterHandshakePub,
-    );
-
-    // Post the envelope. The inviter has already pre-registered the
-    // routing relationship at code-generation time.
-    try {
-      await _relay.postEnvelope(
-        senderIdentity: addrInvitee,
-        recipientIdentity: addrInviter,
-        idempotencyKey: _randomBytes(16),
-        ciphertext: helloFrame,
-        kind: EnvelopeKind.hello,
-        ttl: _helloTtl,
-      );
-      debugPrint(
-        'redeem hello posted invitation=$invitationIdHex '
-        'to=${RelayRouting.b64(addrInviter)}',
-      );
-    } on RelayClientError catch (e) {
-      // Roll back local stub so an unsuccessful retry doesn't leave
-      // orphaned rows behind.
-      await _contacts.deleteLocally(stubContactId);
-      throw HandshakeOrchestratorError(
-        e.isNoRouting ? 'expired_code' : 'relay_error',
-        e,
-      );
-    } on TimeoutException catch (e) {
-      // The relay may have stored the hello even when the HTTP client timed
-      // out waiting for the response (common on slow Wi‑Fi). Keep the stub
-      // and poll for the ack instead of reporting relay_unavailable.
-      debugPrint(
-        'redeem hello post timed out; continuing as awaiting_ack: $e',
-      );
-    }
 
     await _db.upsertPendingHandshake(
       PendingHandshakesCompanion.insert(
@@ -705,13 +646,25 @@ class HandshakeOrchestrator {
         invitationIdHex: invitationIdHex,
         nonceHex: code.nonceHex(),
         role: HandshakeRole.invitee,
-        state: HandshakeState.awaitingAck,
+        state: HandshakeState.dispatchingHello,
         contactStubId: stubContactId,
         createdAt: created,
         updatedAt: created,
         expiresAt: created.add(_helloTtl),
       ),
     );
+
+    final row = await _db.getPendingHandshake(pendingId);
+    if (row == null) {
+      throw HandshakeOrchestratorError('unknown');
+    }
+    try {
+      await _ensureInviteeHelloPosted(row);
+    } on HandshakeOrchestratorError {
+      await _contacts.deleteLocally(stubContactId);
+      await _db.deletePendingHandshake(pendingId);
+      rethrow;
+    }
 
     startPolling();
     requestClosedAppPushRegistrationSync();
@@ -720,6 +673,126 @@ class HandshakeOrchestrator {
       handshakeId: pendingId,
       localContactId: stubContactId,
     );
+  }
+
+  /// Posts the invitee `hello` once the row is in [HandshakeState.dispatchingHello].
+  /// Returns `true` when the relay HTTP call succeeded (or dispatch can be
+  /// treated as confirmed — see [allowDecommissionedRouting]).
+  Future<bool> _postInviteeHelloEnvelope(
+    PendingHandshake row, {
+    bool allowDecommissionedRouting = false,
+  }) async {
+    if (row.role != HandshakeRole.invitee) return false;
+
+    final invitationIdBytes = _hexDecode(row.invitationIdHex);
+    final nonceBytes = _hexDecode(row.nonceHex);
+    final contact = await _contacts.get(row.contactStubId);
+    if (contact == null) {
+      throw HandshakeOrchestratorError('unknown');
+    }
+
+    final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+    final inviterHandshakePub = await RelayRouting.handshakePublicKey(
+      inviterHandshakePriv,
+    );
+    final inviteePriv = await _identity.loadOrCreatePrivateKey();
+    final inviteePub = await _identity.publicKey();
+    final addrInviter = await RelayRouting.inviterHandshakeAddress(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+    final addrInvitee = await RelayRouting.inviteeHandshakeAddress(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+    final idempotencyKey = await RelayRouting.helloIdempotencyKey(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+
+    final helloFrame = await EnvelopeCodec.encryptHello(
+      envelope: HelloEnvelope(
+        invitationId: invitationIdBytes,
+        inviteeLongTermPublicKey: inviteePub,
+        displayName: contact.displayName,
+        avatarId: contact.avatarId,
+        echoedNonce: nonceBytes,
+      ),
+      invitationNonce: nonceBytes,
+      inviteeLongTermPrivateKey: inviteePriv,
+      inviterHandshakePublicKey: inviterHandshakePub,
+    );
+
+    try {
+      await _relay.postEnvelope(
+        senderIdentity: addrInvitee,
+        recipientIdentity: addrInviter,
+        idempotencyKey: idempotencyKey,
+        ciphertext: helloFrame,
+        kind: EnvelopeKind.hello,
+        ttl: _helloTtl,
+      );
+      debugPrint(
+        'redeem hello posted invitation=${row.invitationIdHex} '
+        'to=${RelayRouting.b64(addrInviter)}',
+      );
+      return true;
+    } on RelayClientError catch (e) {
+      if (e.isNoRouting && allowDecommissionedRouting) {
+        debugPrint(
+          'redeem hello post rejected (routing decommissioned) for ${row.id}; '
+          'assuming hello was delivered',
+        );
+        return true;
+      }
+      throw HandshakeOrchestratorError(
+        e.isNoRouting ? 'expired_code' : 'relay_error',
+        e,
+      );
+    } on TimeoutException catch (e) {
+      debugPrint(
+        'redeem hello post timed out for ${row.id}; '
+        'will retry on next poll: $e',
+      );
+      return false;
+    } on ClientException catch (e) {
+      debugPrint(
+        'redeem hello post failed for ${row.id}; '
+        'will retry on next poll: $e',
+      );
+      return false;
+    }
+  }
+
+  Future<void> _ensureInviteeHelloPosted(PendingHandshake row) async {
+    if (row.state != HandshakeState.dispatchingHello) return;
+    final posted = await _postInviteeHelloEnvelope(row);
+    if (posted) {
+      await _markHandshake(row.id, state: HandshakeState.awaitingAck);
+    }
+  }
+
+  /// Poll-time hello retry after a prior HTTP timeout left the row in
+  /// [HandshakeState.dispatchingHello].
+  Future<void> _retryInviteeHelloDispatch(PendingHandshake row) async {
+    if (row.state != HandshakeState.dispatchingHello) return;
+    final posted = await _postInviteeHelloEnvelope(
+      row,
+      allowDecommissionedRouting: true,
+    );
+    if (posted) {
+      await _markHandshake(row.id, state: HandshakeState.awaitingAck);
+    }
+  }
+
+  /// Idempotent hello re-post for legacy rows already in [HandshakeState.awaitingAck]
+  /// after a prior HTTP timeout before dispatch was confirmed.
+  Future<void> _retryUnconfirmedInviteeHello(PendingHandshake row) async {
+    if (row.state != HandshakeState.awaitingAck) return;
+    await _postInviteeHelloEnvelope(row);
   }
 
   // ---------------------------------------------------------------------
@@ -782,6 +855,7 @@ class HandshakeOrchestrator {
 
   bool _shouldPollHandshakeRow(PendingHandshake row) {
     if (row.state == HandshakeState.awaitingHello ||
+        row.state == HandshakeState.dispatchingHello ||
         row.state == HandshakeState.awaitingAck) {
       return true;
     }
@@ -1889,7 +1963,8 @@ class HandshakeOrchestrator {
     }
   }
 
-  Future<void> _processOne(PendingHandshake row) async {
+  Future<void> _processOne(PendingHandshake initialRow) async {
+    var row = initialRow;
     if (row.expiresAt.isBefore(_now().toUtc())) {
       await _markHandshake(
         row.id,
@@ -1903,6 +1978,16 @@ class HandshakeOrchestrator {
         autoAcceptIncomingHandshakes) {
       await _autoAcceptInviterHello(row);
       return;
+    }
+    if (row.role == HandshakeRole.invitee &&
+        row.state == HandshakeState.dispatchingHello) {
+      await _retryInviteeHelloDispatch(row);
+      final refreshed = await _db.getPendingHandshake(row.id);
+      if (refreshed == null ||
+          refreshed.state != HandshakeState.awaitingAck) {
+        return;
+      }
+      row = refreshed;
     }
     final invitationIdBytes = _hexDecode(row.invitationIdHex);
     final nonceBytes = _hexDecode(row.nonceHex);

@@ -241,6 +241,76 @@ void main() {
   });
 
   test(
+    'invitee retries hello post after transient post timeout',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+
+      relay.postEnvelopeTimeoutsRemaining = 1;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      expect(relay.envelopeCount, 0);
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.dispatchingHello,
+      );
+
+      await invitee.orchestrator.processAllPendingHandshakes();
+      expect(relay.envelopeCount, 1);
+      expect(relay.storedEnvelopes.single.kind, EnvelopeKind.hello);
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.awaitingAck,
+      );
+
+      await inviter.orchestrator.processAllPendingHandshakes();
+      await invitee.orchestrator.processAllPendingHandshakes();
+      final inviteeContact = await invitee.contacts.get(redeem.localContactId);
+      expect(inviteeContact?.kind, 'connected');
+    },
+  );
+
+  test(
+    'invitee hello post idempotent after timeout with stored envelope',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+
+      relay.timeoutAfterPostOnce = true;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      expect(relay.envelopeCount, 1);
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.dispatchingHello,
+      );
+
+      await invitee.orchestrator.processAllPendingHandshakes();
+      expect(relay.envelopeCount, 1, reason: 'idempotent retry must not duplicate');
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.awaitingAck,
+      );
+    },
+  );
+
+  test(
     'inviter polls hello after transient inbox fetch timeout',
     () async {
       final invite = await inviter.orchestrator.generateInvitation(
@@ -564,11 +634,31 @@ void main() {
         selfAvatarId: 'mdi:invitee-avatar',
       );
       expect(relay.envelopeCount, 1);
+      expect(relay.idempotentPostCount, 1);
+      expect(relay.postEnvelopeCallCount, 1);
       expect(invitee.notifications.addRequestFailures, isEmpty);
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.dispatchingHello,
+      );
 
       await inviter.orchestrator.processAllPendingHandshakes();
+      expect(relay.postEnvelopeCallCount, 2); // inviter ack
 
       await invitee.orchestrator.processAllPendingHandshakes();
+      expect(relay.postEnvelopeCallCount, 3); // idempotent hello retry
+      expect(relay.idempotentPostCount, 2); // hello + ack map entries
+      final stateAfterHelloRetry =
+          await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId);
+      // Ack may land in the same poll cycle once hello dispatch is confirmed.
+      expect(
+        stateAfterHelloRetry,
+        anyOf(HandshakeState.awaitingAck, HandshakeState.completed),
+      );
+
+      if (stateAfterHelloRetry != HandshakeState.completed) {
+        await invitee.orchestrator.processAllPendingHandshakes();
+      }
       expect(
         await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
         HandshakeState.completed,

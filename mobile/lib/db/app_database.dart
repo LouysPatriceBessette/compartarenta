@@ -300,10 +300,10 @@ class PendingHandshakes extends Table {
   /// `inviter` (we generated the code) | `invitee` (we received it).
   TextColumn get role => text()();
 
-  /// Lifecycle. `awaiting_hello` and `awaiting_ack` are the polling
-  /// states; the rest are terminal.
+  /// Lifecycle. `awaiting_hello`, `dispatching_hello`, and `awaiting_ack` are
+  /// the polling states; the rest are terminal.
   ///   * inviter: `awaiting_hello` → `accepted`|`rejected` → `completed`
-  ///   * invitee: `awaiting_ack`   → `accepted`|`rejected`
+  ///   * invitee: `dispatching_hello` → `awaiting_ack` → `completed`|`rejected`
   ///   * either:  `failed` on unrecoverable error (e.g., expired code).
   TextColumn get state => text()();
 
@@ -790,6 +790,7 @@ class AppDatabase extends _$AppDatabase {
                   WHERE ph.contact_stub_id = contacts.id
                     AND ph.state IN (
                       'awaiting_hello',
+                      'dispatching_hello',
                       'awaiting_ack',
                       'hello_received'
                     )
@@ -818,6 +819,7 @@ class AppDatabase extends _$AppDatabase {
                   WHERE ph.contact_stub_id = contacts.id
                     AND ph.state IN (
                       'awaiting_hello',
+                      'dispatching_hello',
                       'awaiting_ack',
                       'hello_received'
                     )

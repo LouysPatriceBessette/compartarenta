@@ -38,6 +38,8 @@ class RelayRouting {
       'compartarenta/handshake-v1/inviter-listen-addr';
   static const String _addrInviteeInfo =
       'compartarenta/handshake-v1/invitee-listen-addr';
+  static const String _helloIdempotencyInfo =
+      'compartarenta/handshake-v1/hello-idempotency';
   static const String _steadyStateInfo =
       'compartarenta/relay-routing/v1';
 
@@ -98,6 +100,21 @@ class RelayRouting {
       info: _addrInviteeInfo,
       salt: const <int>[],
       length: handshakeAddressBytes,
+    );
+  }
+
+  /// Stable idempotency key for the invitee's one-time `hello` POST. Both
+  /// sides derive the same value from the invitation code so retries after
+  /// a transient HTTP timeout do not create duplicate hellos on the relay.
+  static Future<Uint8List> helloIdempotencyKey({
+    required Uint8List invitationId,
+    required Uint8List nonce,
+  }) async {
+    return _hkdf(
+      ikm: _invitationSalt(invitationId, nonce),
+      info: _helloIdempotencyInfo,
+      salt: const <int>[],
+      length: 16,
     );
   }
 

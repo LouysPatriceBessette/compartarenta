@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../../entitlement/entitlement_gate.dart';
 import '../relay_client.dart';
 import '../relay_scheduling.dart';
+import '../routing.dart';
 
 /// In-memory implementation of [RelayClient] used by orchestrator tests
 /// and by the future end-to-end widget tests.
@@ -42,8 +43,22 @@ class FakeRelayClient implements RelayClient {
   /// Next [fetchInbox] calls throw [TimeoutException] (then decrement).
   int fetchInboxTimeoutsRemaining = 0;
 
+  /// Next [postEnvelope] calls throw [TimeoutException] before storing.
+  int postEnvelopeTimeoutsRemaining = 0;
+
   /// Test hook: number of [fetchInbox] invocations.
   int fetchInboxCallCount = 0;
+
+  /// Test hook: idempotent post registrations.
+  int get idempotentPostCount => _idempotentPostEnvelopeIds.length;
+
+  /// Test hook: total [postEnvelope] invocations (including idempotent replays).
+  int postEnvelopeCallCount = 0;
+
+  /// Test hook: last [postEnvelope] idempotency map key.
+  String? lastPostIdempotencyMapKey;
+
+  final Map<String, String> _idempotentPostEnvelopeIds = <String, String>{};
 
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
@@ -99,12 +114,37 @@ class FakeRelayClient implements RelayClient {
     EntitlementGate? entitlementGate,
   }) async {
     _maybeThrowOnce();
+    postEnvelopeCallCount++;
+    if (postEnvelopeTimeoutsRemaining > 0) {
+      postEnvelopeTimeoutsRemaining--;
+      throw TimeoutException('injected postEnvelope');
+    }
     if (!_hasRouting(senderIdentity, recipientIdentity)) {
       throw RelayClientError(
         endpoint: 'envelopes',
         statusCode: 400,
         code: 'bad_envelope',
         detail: 'no_routing_relationship',
+      );
+    }
+    final idempotencyMapKey =
+        '${RelayRouting.b64(senderIdentity)}:'
+        '${RelayRouting.b64(recipientIdentity)}:'
+        '${RelayRouting.b64(idempotencyKey)}';
+    lastPostIdempotencyMapKey = idempotencyMapKey;
+    final existingId = _idempotentPostEnvelopeIds[idempotencyMapKey];
+    if (existingId != null) {
+      DateTime ttlExpiresAt = DateTime.now().toUtc().add(ttl);
+      for (final e in _envelopes) {
+        if (e.envelopeId == existingId) {
+          ttlExpiresAt = e.ttlExpiresAt;
+          break;
+        }
+      }
+      return EnvelopeReceipt(
+        envelopeId: existingId,
+        ttlExpiresAt: ttlExpiresAt,
+        replay: true,
       );
     }
     final id = 'env-${_envelopeCounter++}';
@@ -118,6 +158,7 @@ class FakeRelayClient implements RelayClient {
       createdAt: now,
       ttlExpiresAt: now.add(ttl),
     ));
+    _idempotentPostEnvelopeIds[idempotencyMapKey] = id;
     if (timeoutAfterPostOnce) {
       timeoutAfterPostOnce = false;
       throw TimeoutException('injected after post');
