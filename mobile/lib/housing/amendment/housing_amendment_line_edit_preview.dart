@@ -19,6 +19,7 @@ import 'housing_amendment_summary.dart';
 import 'housing_amendment_type.dart';
 import 'housing_line_add_amendment_pending.dart';
 import 'housing_line_edit_amendment_pending.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class LineEditAmendmentPreviewPair {
   const LineEditAmendmentPreviewPair({
@@ -160,7 +161,7 @@ class HousingAmendmentLineEditComparisonSection extends StatelessWidget {
     LineEditAmendmentPreviewPair pair, {
     required bool showProposed,
   }) {
-    Navigator.of(context).push<void>(
+    navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentLineEditDetailScreen(
           planId: planId,

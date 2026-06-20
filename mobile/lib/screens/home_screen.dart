@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
-import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -22,7 +22,7 @@ class HomeScreen extends StatelessWidget {
         title: Text(l10n.appTitle),
         actions: [
           IconButton(
-            onPressed: () => context.push('/settings'),
+            onPressed: () => navigateTo(context, '/settings'),
             icon: const Icon(Icons.settings),
             tooltip: l10n.navSettings,
           ),
@@ -65,7 +65,7 @@ class HomeScreen extends StatelessWidget {
                   child: _HomeActionCard(
                     icon: MdiIcons.accountMultipleOutline,
                     label: l10n.homeModuleContacts,
-                    onTap: () => context.push('/contacts'),
+                    onTap: () => navigateTo(context, '/contacts'),
                   ),
                 ),
                 SizedBox(
@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                   child: _HomeActionCard(
                     icon: MdiIcons.homeCity,
                     label: l10n.homeModuleHousing,
-                    onTap: () => context.push('/housing'),
+                    onTap: () => navigateTo(context, '/housing'),
                   ),
                 ),
                 SizedBox(

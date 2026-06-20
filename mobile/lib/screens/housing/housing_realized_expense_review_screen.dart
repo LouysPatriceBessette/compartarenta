@@ -22,6 +22,7 @@ import '../../widgets/fullscreen_image_viewer_screen.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/local_file_image_provider.dart';
 import 'housing_realized_expense_form_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class _ReviewContext {
   const _ReviewContext({
@@ -155,8 +156,7 @@ class _HousingRealizedExpenseReviewScreenState
     }
     _openingPendingReview = true;
     unawaited(
-      Navigator.of(context)
-          .pushReplacement<void, void>(
+      navigateToRoute<void>(context, 
             MaterialPageRoute<void>(
               builder: (_) => HousingRealizedExpenseReviewScreen(
                 expenseId: expenseId,
@@ -545,7 +545,7 @@ class _HousingRealizedExpenseReviewScreenState
   Future<void> _resubmit(_ReviewContext ctx) async {
     final draft = await _repo.createResubmitDraftFromRejected(widget.expenseId);
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseFormScreen(
           planId: widget.planId,
@@ -641,7 +641,7 @@ class _HousingRealizedExpenseReviewScreenState
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.of(context).push(
+          navigateToRoute<void>(context, 
             MaterialPageRoute<void>(
               builder: (_) => FullscreenImageViewerScreen(
                 image: provider,

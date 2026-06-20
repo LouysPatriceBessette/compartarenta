@@ -4,8 +4,6 @@ import '../widgets/app_dialog.dart';
 import '../widgets/screen_body_padding.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:go_router/go_router.dart';
-
 import '../config/app_config.dart';
 import '../db/db_reset.dart';
 import '../debug/web_dev_host_session.dart';
@@ -15,6 +13,7 @@ import '../notifications/developer_test_notification_result.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import '../relay/identity_keystore.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.config, required this.prefs});
@@ -70,32 +69,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : widget.prefs.displayName,
             ),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/profile'),
+            onTap: () => navigateTo(context, '/settings/profile'),
           ),
           ListTile(
             title: Text(l10n.settingsNotificationsTitle),
             subtitle: Text(l10n.settingsNotificationsSubtitle),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/notifications'),
+            onTap: () => navigateTo(context, '/settings/notifications'),
           ),
           ListTile(
             title: Text(l10n.settingsUnitsTitle),
             subtitle: Text(l10n.settingsUnitsSubtitle),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/units'),
+            onTap: () => navigateTo(context, '/settings/units'),
           ),
           ListTile(
             title: Text(l10n.settingsActivityLogTitle),
             subtitle: Text(l10n.settingsActivityLogSubtitle),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/activity-log'),
+            onTap: () => navigateTo(context, '/settings/activity-log'),
           ),
           const Divider(),
           ListTile(
             title: Text(l10n.helpFaqTitle),
             subtitle: Text(l10n.helpFaqIntro),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/help/faq'),
+            onTap: () => navigateTo(context, '/help/faq'),
           ),
           ListTile(
             title: Text(l10n.settingsPrivacyPolicyTitle),
@@ -111,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(l10n.settingsAboutTitle),
             subtitle: Text(l10n.settingsAboutSubtitle),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/about'),
+            onTap: () => navigateTo(context, '/settings/about'),
           ),
           if (showDevTools) ...[
             const Divider(),

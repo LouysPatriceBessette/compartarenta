@@ -3,10 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
-import '../../debug/web_dev_host_session.dart';
-import '../../housing/housing_response_deadline_dialog.dart';
-import '../../housing/proposals/housing_proposal_transport_service.dart';
-import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -20,7 +16,6 @@ Future<void> showHousingInvitationStatusDialog(
   required String planId,
   required AppPreferences prefs,
   String? revisionId,
-  VoidCallback? onAfterResend,
 }) async {
   await DialogTapGuard.run<void>(
     DialogTapGuard.key('housingInvitationStatus', planId),
@@ -105,10 +100,6 @@ Future<void> showHousingInvitationStatusDialog(
               .toList()
             ..sort((a, b) => rosterOrder(a.id).compareTo(rosterOrder(b.id)));
 
-      final canResend = await PlanAgreementProposalService(
-        db,
-      ).canResendPendingProposal(planId);
-
       if (!context.mounted) return;
       final dateFmt = effectiveDateFormat(prefs);
       await showDialog<void>(
@@ -190,22 +181,6 @@ Future<void> showHousingInvitationStatusDialog(
               ),
             ),
             actions: [
-              if (canResend)
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    if (!context.mounted) return;
-                    await _resendPendingProposalDelivery(
-                      context,
-                      db: db,
-                      planId: planId,
-                      revisionId: selectedRevisionId,
-                      prefs: prefs,
-                    );
-                    onAfterResend?.call();
-                  },
-                  child: Text(l10n.housingInviteResendProposalAction),
-                ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx),
                 child: Text(l10n.onboardingOk),
@@ -216,70 +191,6 @@ Future<void> showHousingInvitationStatusDialog(
       );
     },
   );
-}
-
-Future<void> _resendPendingProposalDelivery(
-  BuildContext context, {
-  required AppDatabase db,
-  required String planId,
-  required String revisionId,
-  required AppPreferences prefs,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final duration = await showHousingResponseDeadlineDialog(context);
-  if (duration == null || !context.mounted) return;
-
-  final expiresAt = DateTime.now().toUtc().add(duration);
-  await runWithDeferredDevHostSessionSave(db, () async {
-    await HousingProposalTransportService(db).updateRevisionPayload(
-      revisionId: revisionId,
-      mutate: (payload) {
-        payload['responseExpiresAt'] = expiresAt.toIso8601String();
-        payload['lifecycleState'] = 'open';
-      },
-    );
-
-    try {
-      final orchestrator = HandshakeOrchestrator.maybeInstance;
-      if (orchestrator == null) {
-        throw HandshakeOrchestratorError('relay_unavailable');
-      }
-      final send = await orchestrator.sendHousingProposalToPlanParticipants(
-        planId: planId,
-        revisionId: revisionId,
-      );
-      if (send.relayStatusByParticipantId.isNotEmpty) {
-        await HousingProposalTransportService(db).updateRevisionPayload(
-          revisionId: revisionId,
-          mutate: (payload) {
-            payload['relaySendStatusByParticipantId'] =
-                send.relayStatusByParticipantId;
-          },
-        );
-      }
-      if (!context.mounted) return;
-      if (send.sentCount == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.housingInviteTransportFailed)),
-        );
-        return;
-      }
-      final message = send.failedParticipantIds.isEmpty
-          ? l10n.housingInviteTransportSent(send.sentCount)
-          : l10n.housingInviteTransportPartial(
-              send.sentCount,
-              send.failedParticipantIds.length,
-            );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
-      );
-    }
-  });
 }
 
 String _responseStatusLabel(AppLocalizations l10n, String? statusName) {

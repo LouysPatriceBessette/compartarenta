@@ -7,6 +7,7 @@ import '../../widgets/screen_body_padding.dart';
 import 'housing_amendment_journal_screen.dart';
 import 'housing_monthly_expenses_screen.dart';
 import 'housing_rejected_expenses_browse_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Hub submenu grouping expense and plan change journals.
 class HousingJournalsScreen extends StatelessWidget {
@@ -34,7 +35,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.check_circle_outline,
             label: l10n.housingMonthlyExpensesTitle,
             onTap: () {
-              Navigator.of(context).push<void>(
+              navigateToRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingMonthlyExpensesScreen(
                     packageId: packageId,
@@ -49,7 +50,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.cancel_outlined,
             label: l10n.housingRejectedExpensesTitle,
             onTap: () {
-              Navigator.of(context).push<void>(
+              navigateToRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingRejectedExpensesBrowseScreen(
                     packageId: packageId,
@@ -65,7 +66,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.history,
             label: l10n.housingAmendmentJournalTitle,
             onTap: () {
-              Navigator.of(context).push<void>(
+              navigateToRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingAmendmentJournalScreen(
                     planId: planId,

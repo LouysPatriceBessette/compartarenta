@@ -8,6 +8,7 @@ import '../../housing/amendment/housing_amendment_screen_padding.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import 'housing_agreement_rules_read_only.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Group cards for a rules amendment (preview, pending, or settled journal).
 class HousingAmendmentRulesChangeSection extends StatelessWidget {
@@ -65,7 +66,7 @@ class HousingAmendmentRulesChangeSection extends StatelessWidget {
     required int firstDayOfWeekIndex,
   }) {
     if (category == AgreementRulesChangeCategory.modified) {
-      Navigator.of(context).push<void>(
+      navigateToRoute<void>(context, 
         MaterialPageRoute<void>(
           builder: (_) => HousingAmendmentRulesModifiedGroupScreen(
             comparison: comparison,
@@ -75,7 +76,7 @@ class HousingAmendmentRulesChangeSection extends StatelessWidget {
       );
       return;
     }
-    Navigator.of(context).push<void>(
+    navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentRulesListGroupScreen(
           category: category,

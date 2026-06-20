@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app_root_navigator.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Pending navigation after a housing notification tap.
 class HousingNavigationIntent {
@@ -39,7 +40,7 @@ class HousingNavigationIntent {
   /// (e.g. user opened a new draft plan on the root navigator).
   static int _suppressProposalSettledRedirectDepth = 0;
 
-  /// [HousingPlanScreen] routes pushed with [pushPlanScreenRootOverlay].
+  /// [HousingPlanScreen] routes pushed with [navigateToPlanScreenRootOverlay].
   static int _rootOverlayPlanScreenDepth = 0;
 
   static bool get suppressProposalSettledRedirect =>
@@ -47,7 +48,7 @@ class HousingNavigationIntent {
 
   static bool get hasRootOverlayPlanScreen => _rootOverlayPlanScreenDepth > 0;
 
-  static void pushSuppressProposalSettledRedirect() {
+  static void navigateSuppressProposalSettledRedirect() {
     _suppressProposalSettledRedirectDepth++;
   }
 
@@ -62,13 +63,12 @@ class HousingNavigationIntent {
   }
 
   /// Opens [HousingPlanScreen] above the module (archive / workbench flows).
-  static Future<T?> pushPlanScreenRootOverlay<T>(
+  static Future<T?> navigateToPlanScreenRootOverlay<T>(
     BuildContext context,
     Route<T> route,
   ) {
     _rootOverlayPlanScreenDepth++;
-    return Navigator.of(context, rootNavigator: true)
-        .push(route)
+    return navigateToRoute<T>(context, route, rootNavigator: true)
         .whenComplete(() {
           if (_rootOverlayPlanScreenDepth > 0) {
             _rootOverlayPlanScreenDepth--;

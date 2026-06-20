@@ -11,6 +11,7 @@ import '../../widgets/screen_body_padding.dart';
 import 'housing_agreement_rules_read_only.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Read-only view of the in-force plan (active agreement snapshot on device).
 class HousingActivePlanReadOnlyScreen extends StatefulWidget {
@@ -116,7 +117,7 @@ class _HousingActivePlanReadOnlyScreenState
                 Center(
                   child: FilledButton.tonal(
                     onPressed: () {
-                      Navigator.of(context).push<void>(
+                      navigateToRoute<void>(context, 
                         MaterialPageRoute<void>(
                           builder: (_) => HousingProposalExpensesDetailScreen(
                             db: db,

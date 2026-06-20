@@ -10,6 +10,7 @@ import '../../util/display_date.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_plan_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Entry screen when the local user has departed but the housing plan remains
 /// in force on this device (past agreement hub + new plan).
@@ -26,7 +27,7 @@ class HousingPastAgreementEntryScreen extends StatelessWidget {
   final AppPreferences prefs;
 
   Future<void> _openPastAgreementHub(BuildContext context) async {
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingActivePlanScreen(
@@ -40,7 +41,7 @@ class HousingPastAgreementEntryScreen extends StatelessWidget {
 
   Future<void> _createNewPlan(BuildContext context) async {
     final id = 'housing:${DateTime.now().toUtc().microsecondsSinceEpoch}';
-    await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+    await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
       context,
       MaterialPageRoute<void>(
         builder:

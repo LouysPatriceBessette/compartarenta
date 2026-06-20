@@ -21,6 +21,7 @@ import 'expense_ratio_template_repository.dart';
 import 'expense_plan_line_form_snapshot.dart';
 import 'expense_split_grid_logic.dart';
 import 'plan_participant_dropdown_value.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Full-screen add/edit expense form (proposal draft and future in-force scope).
 class ExpensePlanLineFormScreen extends StatefulWidget {
@@ -309,7 +310,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
     );
 
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,
@@ -347,7 +348,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
       ),
     );
 
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,

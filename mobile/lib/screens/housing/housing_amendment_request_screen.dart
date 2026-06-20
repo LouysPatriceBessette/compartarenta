@@ -22,6 +22,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_amendment_submit_preview_screen.dart';
 import 'housing_plan_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 sealed class _AmendmentMenuEntry {
   const _AmendmentMenuEntry();
@@ -316,7 +317,7 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
     void Function(Map<String, dynamic> payload)? patchRevisionPayload,
   }) async {
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,

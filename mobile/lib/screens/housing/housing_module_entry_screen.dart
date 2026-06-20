@@ -22,6 +22,7 @@ import 'housing_participation_change_detail_screen.dart';
 import 'housing_workbench_screen.dart';
 import '../../housing/participation/housing_participation_change_service.dart';
 import '../../housing/participation/housing_participation_membership_service.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Housing [Plan] rows where this device has a `planId:self` participant.
 Future<List<Plan>> housingPlansWithSelfParticipant(AppDatabase db) async {
@@ -210,7 +211,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       return;
     }
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingPlanMissingContactsScreen(
           db: db,
@@ -255,7 +256,11 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
   }
 
   Future<void> _openPendingProposalFromNotificationIfAny() async {
-    var planId = HousingNavigationIntent.takePendingOpenProposalPlanId();
+    final planId = HousingNavigationIntent.takePendingOpenProposalPlanId();
+    if (planId == null || planId.isEmpty) {
+      // No notification intent — [build] already routes to the invite screen.
+      return;
+    }
     if (!mounted) return;
     final db = AppDatabase.processScope;
     final transport = HousingProposalTransportService(db);
@@ -265,34 +270,10 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
         debugPrint('housing proposal open poll: $e\n$st');
       });
     }
-    if (planId == null || planId.isEmpty) {
-      // Fallback: if any plan has a non-amendment pending revision, open it.
-      final plans = await housingPlansWithSelfParticipant(db);
-      for (final p in plans) {
-        final pendingId = await transport.resolvePendingRevisionIdForPlan(p.id);
-        if (pendingId == null) continue;
-        final isAmendment = await pendingRevisionIsAmendment(
-          db,
-          p.id,
-          revisionId: pendingId,
-          reconcileFirst: false,
-        );
-        if (!isAmendment) {
-          planId = p.id;
-          break;
-        }
-      }
-    }
-    if (planId == null || planId.isEmpty) {
-      debugPrint('housing: notification tap but no pending proposal plan');
-      return;
-    }
-    final resolvedPlanId = planId;
-
-    final pendingId = await transport.resolvePendingRevisionIdForPlan(resolvedPlanId);
+    final pendingId = await transport.resolvePendingRevisionIdForPlan(planId);
     if (pendingId == null) {
       final pkg = await (db.select(db.proposalPackages)
-            ..where((t) => t.planId.equals(resolvedPlanId)))
+            ..where((t) => t.planId.equals(planId)))
           .getSingleOrNull();
       debugPrint(
         'housing: no pendingRevisionId on plan $planId '
@@ -301,15 +282,38 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       return;
     }
     if (!mounted) return;
+    if (await _moduleEntryWouldShowPendingProposalInvite(db, planId)) {
+      return;
+    }
+    if (!mounted) return;
     await openHousingPendingProposalOrAmendment(
       context,
       db: db,
-      planId: resolvedPlanId,
+      planId: planId,
       prefs: widget.prefs,
       revisionId: pendingId,
       isAmendment: false,
     );
     if (mounted) _reloadEntry();
+  }
+
+  /// Whether [build] already embeds [HousingInviteProposalScreen] for [planId].
+  Future<bool> _moduleEntryWouldShowPendingProposalInvite(
+    AppDatabase db,
+    String planId,
+  ) async {
+    final plans = await housingPlansWithSelfParticipant(db);
+    if (plans.length != 1 || plans.single.id != planId) return false;
+    final transport = HousingProposalTransportService(db);
+    if (await transport.hasActiveRevision(planId)) return false;
+    final pendingId = await transport.resolvePendingRevisionIdForPlan(planId);
+    if (pendingId == null) return false;
+    return !(await pendingRevisionIsAmendment(
+      db,
+      planId,
+      revisionId: pendingId,
+      reconcileFirst: false,
+    ));
   }
 
   Future<void> _openParticipationChangeFromNotificationIfAny() async {
@@ -326,7 +330,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       pending.changeId,
     );
     if (change == null || !mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingParticipationChangeDetailScreen(

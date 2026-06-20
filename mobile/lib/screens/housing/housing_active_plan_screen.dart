@@ -33,6 +33,7 @@ import 'housing_realized_expense_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
 import 'housing_realized_expense_review_screen.dart';
 import 'widgets/housing_participation_change_banner.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Operational hub for an active housing agreement (menu of actions).
 class HousingActivePlanScreen extends StatefulWidget {
@@ -155,7 +156,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     _openingParticipationChange = true;
     try {
       if (!mounted) return;
-      await Navigator.of(context).push<void>(
+      await navigateToRoute<void>(context, 
         MaterialPageRoute<void>(
           builder:
               (_) => HousingParticipationChangeDetailScreen(
@@ -309,7 +310,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     BuildContext context,
     String changeId,
   ) async {
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingParticipationChangeDetailScreen(
@@ -327,7 +328,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<void> _openMajorChange(BuildContext context) async {
     final prefs = widget.prefs ?? await AppPreferences.load();
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingAgreementRenewalScreen(
@@ -360,7 +361,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         isAmendment: true,
       );
     } else {
-      await Navigator.of(context).push<void>(
+      await navigateToRoute<void>(context, 
         MaterialPageRoute<void>(
           builder: (_) => HousingAmendmentRequestScreen(
             planId: widget.planId,
@@ -375,7 +376,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<void> _openJournals(BuildContext context) async {
     final prefs = widget.prefs ?? await AppPreferences.load();
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingJournalsScreen(
           packageId: widget.packageId,
@@ -468,8 +469,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     final expenseId = HousingNavigationIntent.takePendingReview();
     if (expenseId == null || !mounted) return;
     _openingPendingReview = true;
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingRealizedExpenseReviewScreen(
               expenseId: expenseId,
@@ -489,7 +489,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   }
 
   void _openPlaceholder(BuildContext context, String title) {
-    Navigator.of(context).push<void>(
+    navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingActiveHubPlaceholderScreen(title: title),
       ),
@@ -497,7 +497,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   }
 
   Future<void> _openReviewList(BuildContext context) async {
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseReviewListScreen(
           planId: widget.planId,
@@ -538,7 +538,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         if (!context.mounted) return;
         final prefs = widget.prefs ?? await AppPreferences.load();
         if (!context.mounted) return;
-        await Navigator.of(context).push<void>(
+        await navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder:
                 (_) => HousingAgreementRenewalScreen(
@@ -552,7 +552,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       return;
     }
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseFormScreen(
           planId: widget.planId,
@@ -686,7 +686,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                 final prefs =
                                     widget.prefs ?? await AppPreferences.load();
                                 if (!context.mounted) return;
-                                await Navigator.of(context).push<void>(
+                                await navigateToRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingActivePlanReadOnlyScreen(
@@ -712,7 +712,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               label: l10n.housingActiveHubBalances,
                               onTap: () {
                                 if (header == null) return;
-                                Navigator.of(context).push<void>(
+                                navigateToRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingBalancesScreen(
@@ -727,7 +727,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               icon: Icons.bar_chart_outlined,
                               label: l10n.housingActiveHubPaymentStatus,
                               onTap: () {
-                                Navigator.of(context).push<void>(
+                                navigateToRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingExpensePaymentStatusScreen(

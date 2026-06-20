@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
@@ -8,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'contact_invitation_list_tile.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Sent invitations (pending / expired) with access to the shareable code.
 class OutstandingInvitationsScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _OutstandingInvitationsScreenState
   }
 
   Future<void> _openInvitationCode(ContactInvitation invitation) async {
-    await context.push('/contacts/invitations/code/${invitation.id}');
+    navigateTo(context, '/contacts/invitations/code/${invitation.id}');
     if (!mounted) return;
     _reload();
   }
@@ -62,8 +62,7 @@ class _OutstandingInvitationsScreenState
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add),
         label: Text(l10n.contactsAddContactAction),
-        onPressed: () =>
-            context.push('/contacts/invitations/new').then((_) => _reload()),
+        onPressed: () => navigateTo(context, '/contacts/invitations/new'),
       ),
       body: FutureBuilder<List<ContactInvitation>>(
         future: _future,

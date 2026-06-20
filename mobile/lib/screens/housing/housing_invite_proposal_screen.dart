@@ -18,6 +18,7 @@ import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import 'housing_agreement_rules_read_only.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
+import '../../housing/housing_module_exit.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../notifications/push_notification_service.dart';
@@ -28,6 +29,7 @@ import '../../util/format_money.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_active_plan_screen.dart';
 import 'housing_invitation_status_dialog.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Per-participant response to a housing proposal (local UI state until relay exists).
 enum HousingInviteParticipantUiStatus {
@@ -98,11 +100,15 @@ class _HousingInviteProposalScreenState
   bool get _isDraftSendPreview => widget.onSendProposal != null;
 
   void _goBack() {
+    if (_isDraftSendPreview && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
-    } else {
-      context.go('/');
+      return;
     }
+    exitHousingModule(context);
   }
 
   @override
@@ -151,8 +157,7 @@ class _HousingInviteProposalScreenState
   }
 
   void _openMissingContactsHub() {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingPlanMissingContactsScreen(
               db: widget.db,
@@ -518,7 +523,7 @@ class _HousingInviteProposalScreenState
             _redirectedToAmendment = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              Navigator.of(context).pushReplacement<void, void>(
+              navigateToRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingAmendmentDetailScreen(
                     db: widget.db,
@@ -725,7 +730,7 @@ class _HousingInviteProposalScreenState
                               widget.prefs,
                               lines,
                             );
-                            Navigator.of(context).push(
+                            navigateToRoute<void>(context, 
                               MaterialPageRoute<void>(
                                 builder: (context) =>
                                     HousingProposalExpensesDetailScreen(

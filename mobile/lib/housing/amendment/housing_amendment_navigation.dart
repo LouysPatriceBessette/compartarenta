@@ -8,6 +8,7 @@ import '../../screens/housing/housing_amendment_journal_screen.dart';
 import '../../screens/housing/housing_invite_proposal_screen.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import 'housing_amendment_summary.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Replaces the current route with the active-plan hub when [planId] is in force.
 ///
@@ -22,7 +23,7 @@ Future<bool> openHousingActivePlanHubIfActive(
   if (!await transport.hasActiveRevision(planId)) return false;
   final packageId = await transport.primaryPackageIdForPlan(planId);
   if (packageId == null || !context.mounted) return false;
-  await Navigator.of(context).pushReplacement<void, void>(
+  await navigateToRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => HousingActivePlanScreen(
         planId: planId,
@@ -65,7 +66,7 @@ Future<void> openHousingPendingProposalOrAmendment(
         revisionId: pendingId,
       );
   if (!context.mounted) return;
-  await Navigator.of(context).push<void>(
+  await navigateToRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => openAmendment
           ? HousingAmendmentDetailScreen(
@@ -92,7 +93,7 @@ Future<void> openHousingSettledAmendmentDetail(
   required AppPreferences prefs,
   required String revisionId,
 }) {
-  return Navigator.of(context).push<void>(
+  return navigateToRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => HousingAmendmentDetailScreen(
         db: db,
@@ -111,7 +112,7 @@ Future<void> openHousingAmendmentJournal(
   required String planId,
   required AppPreferences prefs,
 }) {
-  return Navigator.of(context).push<void>(
+  return navigateToRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => HousingAmendmentJournalScreen(
         planId: planId,

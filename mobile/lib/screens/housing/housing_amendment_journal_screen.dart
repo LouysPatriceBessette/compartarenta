@@ -10,6 +10,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_amendment_detail_screen.dart';
 import 'housing_participation_change_detail_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Chronological log of accepted and refused in-force plan changes and
 /// participation changes.
@@ -147,7 +148,7 @@ class _AmendmentCard extends StatelessWidget {
         isThreeLine: true,
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          await Navigator.of(context).push<void>(
+          await navigateToRoute<void>(context, 
             MaterialPageRoute<void>(
               builder: (_) => HousingAmendmentDetailScreen(
                 db: AppDatabase.processScope,
@@ -196,7 +197,7 @@ class _ParticipationCard extends StatelessWidget {
         isThreeLine: true,
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          await Navigator.of(context).push<void>(
+          await navigateToRoute<void>(context, 
             MaterialPageRoute<void>(
               builder: (_) => HousingParticipationChangeDetailScreen(
                 changeId: entry.changeId,

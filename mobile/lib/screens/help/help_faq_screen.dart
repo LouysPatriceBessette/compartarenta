@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/welcome_intro_content.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// FAQ anchor ids used by in-app links (fragment after `#`).
 abstract final class HelpFaqAnchors {
@@ -185,5 +185,5 @@ void openHelpFaq(BuildContext context, {String? anchor}) {
   final path = anchor == null || anchor.isEmpty
       ? '/help/faq'
       : '/help/faq#$anchor';
-  context.push(path);
+  navigateTo(context, path);
 }

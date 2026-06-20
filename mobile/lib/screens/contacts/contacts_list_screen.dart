@@ -11,6 +11,7 @@ import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Connected contacts first (A–Z), then other non-invitation rows (A–Z).
 List<Contact> sortContactsForMainList(List<Contact> contacts) {
@@ -67,10 +68,23 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   /// the screen.
   int _lastIncomingHandshakesCount = -1;
 
+  GoRouter? _router;
+
+  void _onRouterChanged() {
+    if (!mounted || _router == null) return;
+    final path = _router!.routerDelegate.currentConfiguration.uri.path;
+    if (path == '/contacts') _reload();
+  }
+
   @override
   void initState() {
     super.initState();
     _reload();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _router = GoRouter.of(context);
+      _router!.routerDelegate.addListener(_onRouterChanged);
+    });
     final orch = _orchestrator;
     if (orch != null) {
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
@@ -85,6 +99,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
 
   @override
   void dispose() {
+    _router?.routerDelegate.removeListener(_onRouterChanged);
     _orchestrator?.incomingHandshakes.removeListener(_onIncomingChanged);
     _orchestrator?.steadyStateInboxTick.removeListener(_onSteadyInboxTick);
     super.dispose();
@@ -124,19 +139,12 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     return sortContactsForMainList(contacts);
   }
 
-  Future<void> _openIncoming() async {
-    await context.push('/contacts/incoming');
-    if (!mounted) return;
-    _reload();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _reload();
-    });
+  void _openIncoming() {
+    navigateTo(context, '/contacts/incoming');
   }
 
-  Future<void> _openInviteContact() async {
-    await context.push('/contacts/invitations/new');
-    if (!mounted) return;
-    _reload();
+  void _openInviteContact() {
+    navigateTo(context, '/contacts/invitations/new');
   }
 
   Future<void> _refreshIncomingNow() async {
@@ -211,14 +219,12 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
           IconButton(
             tooltip: l10n.contactsInvitationsTitle,
             icon: const Icon(Icons.outgoing_mail),
-            onPressed: () =>
-                context.push('/contacts/invitations').then((_) => _reload()),
+            onPressed: () => navigateTo(context, '/contacts/invitations'),
           ),
           IconButton(
             tooltip: l10n.contactsEnterInviteCodeTitle,
             icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () =>
-                context.push('/contacts/redeem').then((_) => _reload()),
+            onPressed: () => navigateTo(context, '/contacts/redeem'),
           ),
           IconButton(
             tooltip: l10n.contactsRefreshIncomingTooltip,
@@ -259,9 +265,8 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                     final contact = items[index];
                     return _ContactTile(
                       contact: contact,
-                      onTap: () => context
-                          .push('/contacts/${contact.id}')
-                          .then((_) => _reload()),
+                      onTap: () =>
+                          navigateTo(context, '/contacts/${contact.id}'),
                     );
                   },
                 );

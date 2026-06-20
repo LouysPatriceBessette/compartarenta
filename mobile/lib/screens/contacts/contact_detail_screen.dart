@@ -11,6 +11,7 @@ import '../../contacts/contact_display.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../widgets/screen_body_padding.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Detail view for a Contact. Exposes edit, delete, block, and (when
 /// connected) disconnect actions.
@@ -71,17 +72,14 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                 onRejectIncoming: incomingSnapshot.data == null
                     ? null
                     : () => _rejectIncoming(incomingSnapshot.data!),
-                onEdit: () => context
-                    .push('/contacts/${contact.id}/edit')
-                    .then((_) => _reload()),
+                onEdit: () =>
+                    navigateTo(context, '/contacts/${contact.id}/edit'),
                 onReconnect: contact.showsDisconnectedStatus
-                    ? () async {
-                        await context.push(
+                    ? () => navigateTo(
+                          context,
                           '/contacts/invite/new',
                           extra: contact.id,
-                        );
-                        if (mounted) _reload();
-                      }
+                        )
                     : null,
                 onDelete: () => _confirmAndDelete(contact),
                 onToggleBlock: () => _confirmAndToggleBlock(contact),

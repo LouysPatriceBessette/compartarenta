@@ -9,6 +9,7 @@ import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_realized_expense_review_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Month-scoped browse entry for rejected expenses (from the journals hub).
 class HousingRejectedExpensesBrowseScreen extends StatefulWidget {
@@ -197,7 +198,7 @@ class _HousingRejectedExpensesBrowseScreenState
                                     : Text(subtitleParts.join(' · ')),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () async {
-                                  await Navigator.of(context).push<void>(
+                                  await navigateToRoute<void>(context, 
                                     MaterialPageRoute<void>(
                                       builder: (_) =>
                                           HousingRealizedExpenseReviewScreen(

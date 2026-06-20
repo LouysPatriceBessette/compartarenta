@@ -47,6 +47,7 @@ import 'housing_invite_proposal_screen.dart';
 import 'housing_invite_sunburst.dart';
 import 'housing_module_entry_screen.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Housing plan setup: vertical stepper (4 steps) then summary.
 class HousingPlanScreen extends StatefulWidget {
@@ -255,7 +256,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           action: SnackBarAction(
             label: l10n.housingInviteReceivedOpenAction,
             onPressed: () {
-              Navigator.of(context).push<void>(
+              navigateToRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingInviteProposalScreen(
                     db: _db,
@@ -1255,32 +1256,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
         rollbackPendingOnTotalFailure: true,
       );
       if (!mounted) return sent;
-      _summaryViewKey.currentState?.reloadSnapshot();
+      if (sent) {
+        HousingNavigationIntent.remountHousingModule(context);
+      }
       return sent;
     });
-  }
-
-  Future<void> _resendPendingProposal() async {
-    final canResend = await PlanAgreementProposalService(
-      _db,
-    ).canResendPendingProposal(_planId);
-    if (!canResend || !mounted) return;
-    final revisionId = await HousingProposalTransportService(
-      _db,
-    ).pendingRevisionIdForPlan(_planId);
-    if (revisionId == null || !mounted) return;
-    final sent = await runWithDeferredDevHostSessionSave(
-      _db,
-      () => _deliverHousingProposalRevision(
-        flowContext: context,
-        revisionId: revisionId,
-        rollbackPendingOnTotalFailure: false,
-      ),
-    );
-    if (!mounted) return;
-    if (sent) {
-      _summaryViewKey.currentState?.reloadSnapshot();
-    }
   }
 
   /// Posts the pending revision to invitees via the relay. When
@@ -1492,7 +1472,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
               avatarIcons: _avatarIcons,
               onEditPlan: _onEditPlanFromSummary,
               onInvite: _openInviteProposalFlow,
-              onResendProposal: _resendPendingProposal,
               onDestroy: _onDestroyPlan,
             );
           }
@@ -3407,7 +3386,6 @@ class _SummarySnapshot {
     required this.agr,
     required this.ratios,
     required this.proposalPkg,
-    required this.canResendPendingProposal,
     this.latestSentArchive,
     this.inForceRevisionId,
   });
@@ -3417,7 +3395,6 @@ class _SummarySnapshot {
   final Agreement? agr;
   final List<PlanRatio> ratios;
   final ProposalPackage? proposalPkg;
-  final bool canResendPendingProposal;
 
   /// Most recent submitted proposal (pending or archived), if any.
   final HousingProposalArchive? latestSentArchive;
@@ -3436,7 +3413,6 @@ class _SummaryView extends StatefulWidget {
     required this.avatarIcons,
     required this.onEditPlan,
     required this.onInvite,
-    required this.onResendProposal,
     required this.onDestroy,
   });
 
@@ -3448,7 +3424,6 @@ class _SummaryView extends StatefulWidget {
 
   final VoidCallback onEditPlan;
   final VoidCallback onInvite;
-  final VoidCallback onResendProposal;
   final VoidCallback onDestroy;
 
   @override
@@ -3460,6 +3435,7 @@ class _SummaryViewState extends State<_SummaryView> {
   int _focusedParticipantIndex = 0;
   bool _hadPendingProposal = false;
   bool _settlementRedirectScheduled = false;
+  bool _pendingInviteRedirectScheduled = false;
 
   @override
   void initState() {
@@ -3523,9 +3499,6 @@ class _SummaryViewState extends State<_SummaryView> {
         widget.db.proposalPackages,
       )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull(),
     ]);
-    final canResend = await PlanAgreementProposalService(
-      widget.db,
-    ).canResendPendingProposal(widget.planId);
     final transport = HousingProposalTransportService(widget.db);
     final inForceRevisionId =
         await transport.resolveActiveRevisionIdForPlan(widget.planId);
@@ -3542,7 +3515,6 @@ class _SummaryViewState extends State<_SummaryView> {
       agr: r[2] as Agreement?,
       ratios: r[3] as List<PlanRatio>,
       proposalPkg: r[4] as ProposalPackage?,
-      canResendPendingProposal: canResend,
       latestSentArchive: latestSent,
       inForceRevisionId: inForceRevisionId,
     );
@@ -3606,6 +3578,14 @@ class _SummaryViewState extends State<_SummaryView> {
         final isActive = data.inForceRevisionId != null;
         if (hasPending) {
           _hadPendingProposal = true;
+          if (!_pendingInviteRedirectScheduled) {
+            _pendingInviteRedirectScheduled = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              HousingNavigationIntent.remountHousingModule(context);
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         } else {
           final hadPending = _hadPendingProposal;
           if (hadPending) {
@@ -3769,7 +3749,7 @@ class _SummaryViewState extends State<_SummaryView> {
                               : () {
                                   final dateFmt =
                                       effectiveDateFormat(widget.prefs);
-                                  Navigator.of(context).push(
+                                  navigateToRoute<void>(context, 
                                     MaterialPageRoute<void>(
                                       builder: (context) =>
                                           HousingProposalExpensesDetailScreen(
@@ -3907,27 +3887,22 @@ class _SummaryViewState extends State<_SummaryView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (hasPending || hasSentProposal) ...[
+                  if (hasSentProposal) ...[
                     FilledButton.tonal(
                       onPressed: () => showHousingInvitationStatusDialog(
                         context,
                         db: widget.db,
                         planId: widget.planId,
                         prefs: widget.prefs,
-                        onAfterResend: () {
-                          if (!mounted) return;
-                          reloadSnapshot();
-                        },
                       ),
                       child: Text(l10n.housingInviteInvitationStatusAction),
                     ),
-                    if (hasSentProposal &&
-                        data.latestSentArchive?.revisionId != null) ...[
+                    if (data.latestSentArchive?.revisionId != null) ...[
                       const SizedBox(height: 8),
                       FilledButton(
                         onPressed: () {
                           final revId = data.latestSentArchive!.revisionId;
-                          Navigator.of(context).push<void>(
+                          navigateToRoute<void>(context, 
                             MaterialPageRoute<void>(
                               builder: (_) => HousingInviteProposalScreen(
                                 db: widget.db,
@@ -3939,13 +3914,6 @@ class _SummaryViewState extends State<_SummaryView> {
                           );
                         },
                         child: Text(l10n.housingInviteViewSentProposalAction),
-                      ),
-                    ],
-                    if (hasPending && data.canResendPendingProposal) ...[
-                      const SizedBox(height: 8),
-                      FilledButton(
-                        onPressed: widget.onResendProposal,
-                        child: Text(l10n.housingInviteResendProposalAction),
                       ),
                     ],
                   ] else ...[

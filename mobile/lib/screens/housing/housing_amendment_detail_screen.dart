@@ -27,6 +27,7 @@ import '../../util/display_date.dart';
 import 'housing_invitation_status_dialog.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_missing_contacts_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Focused view of a single in-force plan change awaiting unanimous response.
 class HousingAmendmentDetailScreen extends StatefulWidget {
@@ -80,8 +81,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
   }
 
   void _openMissingContactsHub() {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingPlanMissingContactsScreen(
               db: widget.db,
@@ -119,7 +119,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           revisionId: pendingId,
         )) {
       if (!mounted) return true;
-      await Navigator.of(context).pushReplacement<void, void>(
+      await navigateToRoute<void>(context, 
         MaterialPageRoute<void>(
           builder: (_) => HousingInviteProposalScreen(
             db: widget.db,

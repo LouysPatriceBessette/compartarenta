@@ -11,6 +11,7 @@ import '../../prefs/app_preferences.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class HousingArchiveEntryScreen extends StatefulWidget {
   const HousingArchiveEntryScreen({
@@ -46,7 +47,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
     setState(() => _creatingDerivedDraft = true);
     final id = newHousingPlanId();
     try {
-      HousingNavigationIntent.pushSuppressProposalSettledRedirect();
+      HousingNavigationIntent.navigateSuppressProposalSettledRedirect();
       try {
         await HousingProposalTransportService(_db).createForkDraftFromArchive(
           listPlanId: widget.planId,
@@ -58,7 +59,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
         HousingNavigationIntent.popSuppressProposalSettledRedirect();
       }
       if (!mounted) return;
-      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+      await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
         context,
         MaterialPageRoute<void>(
           builder: (_) => HousingPlanScreen(
@@ -80,7 +81,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   }
 
   Future<void> _editDraft(HousingProposalArchive archive) async {
-    await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+    await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
       context,
       MaterialPageRoute<void>(
         builder: (_) => HousingPlanScreen(
@@ -94,7 +95,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   }
 
   void _viewArchive(HousingProposalArchive archive) {
-    Navigator.of(context).push<void>(
+    navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingInviteProposalScreen(
           db: _db,
@@ -113,7 +114,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
     setState(() => _creatingDerivedDraft = true);
     final id = newHousingPlanId();
     try {
-      HousingNavigationIntent.pushSuppressProposalSettledRedirect();
+      HousingNavigationIntent.navigateSuppressProposalSettledRedirect();
       try {
         await HousingProposalTransportService(
           _db,
@@ -126,7 +127,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
         HousingNavigationIntent.popSuppressProposalSettledRedirect();
       }
       if (!mounted) return;
-      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+      await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
         context,
         MaterialPageRoute<void>(
           builder: (_) => HousingPlanScreen(

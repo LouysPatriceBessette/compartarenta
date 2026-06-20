@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import 'housing_amendment_detail_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Preview of a plan change before sending to the group (deadline asked on submit).
 class HousingAmendmentSubmitPreviewScreen extends StatefulWidget {
@@ -173,14 +174,7 @@ class _HousingAmendmentSubmitPreviewScreenState
         revisionId: pendingId,
       ),
     );
-    if (widget.type == HousingAmendmentType.lineEdit) {
-      await Navigator.of(context).pushAndRemoveUntil(
-        detailRoute,
-        (route) => route.isFirst,
-      );
-    } else {
-      await Navigator.of(context).pushReplacement(detailRoute);
-    }
+    await navigateToRoute<void>(context, detailRoute);
   }
 
   @override

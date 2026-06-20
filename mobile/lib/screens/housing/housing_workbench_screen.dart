@@ -14,6 +14,7 @@ import 'housing_active_plan_screen.dart';
 import 'housing_archive_entry_screen.dart';
 import 'housing_invite_proposal_screen.dart';
 import 'housing_plan_screen.dart';
+import 'package:compartarenta/navigation/app_navigation.dart';
 
 class _WorkbenchRow {
   const _WorkbenchRow({
@@ -205,8 +206,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
   }
 
   void _openPlanEditor(String planId) {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingPlanScreen(
               prefs: widget.prefs,
@@ -219,8 +219,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
   }
 
   void _openInvitePreview(String planId) {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingInviteProposalScreen(
               db: _db,
@@ -233,8 +232,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
   }
 
   void _openActivePlan(String planId, String packageId) {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingActivePlanScreen(
               planId: planId,
@@ -258,8 +256,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
   }
 
   void _openArchiveEntry(String planId) {
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) =>
                 HousingArchiveEntryScreen(prefs: widget.prefs, planId: planId),
@@ -274,8 +271,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
       _openArchiveEntry(row.plan.id);
       return;
     }
-    Navigator.of(context)
-        .push<void>(
+    navigateToRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingInviteProposalScreen(
               db: _db,
@@ -302,7 +298,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
       );
       await Future<void>.delayed(const Duration(milliseconds: 150));
       if (!mounted) return;
-      await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+      await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
         context,
         MaterialPageRoute<void>(
           builder: (_) => HousingPlanScreen(
@@ -325,7 +321,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
 
   Future<void> _newPlan() async {
     final id = newHousingPlanId();
-    await HousingNavigationIntent.pushPlanScreenRootOverlay<void>(
+    await HousingNavigationIntent.navigateToPlanScreenRootOverlay<void>(
       context,
       MaterialPageRoute<void>(
         builder: (_) => HousingPlanScreen(
