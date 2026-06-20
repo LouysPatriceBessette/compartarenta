@@ -241,6 +241,32 @@ void main() {
   });
 
   test(
+    'inviter polls hello after transient inbox fetch timeouts',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+      await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+      expect(relay.envelopeCount, 1);
+
+      relay.fetchInboxTimeoutsRemaining = 2;
+      await inviter.orchestrator.processAllPendingHandshakes();
+
+      final inviterContact = await inviter.contacts.get(invite.localContactId);
+      expect(inviterContact?.kind, 'connected');
+      expect(relay.storedEnvelopes.single.kind, EnvelopeKind.ack);
+    },
+  );
+
+  test(
     'invitee retries ack processing after transient establishRouting timeout',
     () async {
       final invite = await inviter.orchestrator.generateInvitation(

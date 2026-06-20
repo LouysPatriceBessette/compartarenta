@@ -39,6 +39,9 @@ class FakeRelayClient implements RelayClient {
   /// Next [establishRouting] calls throw [TimeoutException] (then decrement).
   int establishRoutingTimeoutsRemaining = 0;
 
+  /// Next [fetchInbox] calls throw [TimeoutException] (then decrement).
+  int fetchInboxTimeoutsRemaining = 0;
+
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
   List<FakeRelayStoredEnvelope> get storedEnvelopes =>
@@ -129,6 +132,10 @@ class FakeRelayClient implements RelayClient {
     int limit = 32,
   }) async {
     _maybeThrowOnce();
+    if (fetchInboxTimeoutsRemaining > 0) {
+      fetchInboxTimeoutsRemaining--;
+      throw TimeoutException('injected fetchInbox');
+    }
     final out = <RelayEnvelopeView>[];
     for (final env in _envelopes) {
       if (_eq(env.recipient, recipient)) {

@@ -179,6 +179,8 @@ class HandshakeOrchestrator {
     EntitlementCoordinator? entitlement,
     ContactNotificationSink contactNotifications =
         const DefaultContactNotificationSink(),
+    /// How often to poll relay inboxes while a handshake is pending. Not an
+    /// invitation expiry or a deadline to redeem a code (see invitation TTL).
     Duration pollInterval = const Duration(seconds: 10),
     Duration helloTtl = const Duration(hours: 24),
     Duration ackTtl = const Duration(hours: 24),
@@ -916,7 +918,7 @@ class HandshakeOrchestrator {
       );
       final List<RelayEnvelopeView> envs;
       try {
-        envs = await _relay.fetchInbox(recipient: myListen);
+        envs = await _fetchRelayInboxWithRetries(myListen);
       } on RelayClientError catch (e) {
         RelayDiagnostics.logSteadyInbox(
           'steady inbox fetch failed for $pollLabel: $e',
@@ -925,6 +927,11 @@ class HandshakeOrchestrator {
       } on TimeoutException catch (e) {
         RelayDiagnostics.logSteadyInbox(
           'steady inbox fetch timed out for $pollLabel: $e',
+        );
+        continue;
+      } on ClientException catch (e) {
+        RelayDiagnostics.logSteadyInbox(
+          'steady inbox fetch failed for $pollLabel: $e',
         );
         continue;
       }
@@ -1089,6 +1096,16 @@ class HandshakeOrchestrator {
     );
   }
 
+  /// Fetches a relay inbox with transient retries (slow links to the VPS).
+  Future<List<RelayEnvelopeView>> _fetchRelayInboxWithRetries(
+    Uint8List recipient,
+  ) {
+    return _withTransientRelayRetries(
+      'relay_inbox_fetch',
+      () => _relay.fetchInbox(recipient: recipient),
+    );
+  }
+
   /// Retries [operation] on transient relay/network failures (e.g. connection
   /// closed before headers).
   Future<T> _withTransientRelayRetries<T>(
@@ -1103,6 +1120,9 @@ class HandshakeOrchestrator {
       try {
         return await operation();
       } on Object catch (e) {
+        if (!_isTransientRelayFailure(e)) {
+          Error.throwWithStackTrace(e, StackTrace.current);
+        }
         lastError = e;
         debugPrint('$label attempt ${attempt + 1} failed: $e');
       }
@@ -1930,14 +1950,17 @@ class HandshakeOrchestrator {
         : addrInvitee;
     final List<RelayEnvelopeView> envs;
     try {
-      envs = await _relay.fetchInbox(recipient: listenAddr);
+      envs = await _fetchRelayInboxWithRetries(listenAddr);
     } on RelayClientError catch (e) {
       // Network issue / 5xx: leave the row alone and try again on the
       // next tick.
       debugPrint('Handshake poll fetch failed for ${row.id}: $e');
       return;
     } on TimeoutException catch (e) {
-      debugPrint('Handshake poll fetch timed out for ${row.id}: $e');
+      debugPrint('Handshake poll relay HTTP timed out for ${row.id}: $e');
+      return;
+    } on ClientException catch (e) {
+      debugPrint('Handshake poll fetch failed for ${row.id}: $e');
       return;
     }
     if (envs.isNotEmpty) {

@@ -111,10 +111,15 @@ abstract class RelayClient {
 }
 
 /// HTTP-backed implementation used in production.
+///
+/// Per-request [timeout] is how long a single HTTP call to the relay may wait
+/// for a response. It is unrelated to invitation validity (3 h–7 days) or to
+/// how long the user may wait before redeeming a code.
 class HttpRelayClient implements RelayClient {
   HttpRelayClient({
     required this.baseUrl,
     http.Client? httpClient,
+    /// Max wait for one relay HTTP round-trip (not invitation expiry).
     Duration timeout = const Duration(seconds: 10),
   })  : _client = httpClient ?? http.Client(),
         _timeout = timeout;
