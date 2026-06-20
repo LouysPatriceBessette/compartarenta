@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' show ClientException;
 
 import '../activity/relay_activity_log_service.dart';
 import '../contacts/contact_display.dart';
@@ -1046,13 +1047,15 @@ class HandshakeOrchestrator {
           }
         } catch (e, st) {
           debugPrint('steady inbox env ${env.envelopeId} failed: $e\n$st');
-          try {
-            await _relay.ackEnvelope(
-              envelopeId: env.envelopeId,
-              recipient: myListen,
-            );
-          } catch (_) {
-            // ignore
+          if (!_isTransientRelayFailure(e)) {
+            try {
+              await _relay.ackEnvelope(
+                envelopeId: env.envelopeId,
+                recipient: myListen,
+              );
+            } catch (_) {
+              // ignore
+            }
           }
         }
       }
@@ -1063,6 +1066,28 @@ class HandshakeOrchestrator {
   static const Duration _relayTransientRetryBaseDelay = Duration(
     milliseconds: 350,
   );
+
+  /// Network/HTTP failures where the relay may still have accepted the request
+  /// or the envelope should remain in the inbox for a later poll.
+  bool _isTransientRelayFailure(Object e) {
+    if (e is TimeoutException) return true;
+    if (e is ClientException) return true;
+    return false;
+  }
+
+  /// Removes [envelopeId] from the relay inbox after local processing succeeds.
+  Future<void> _ackRelayEnvelope({
+    required String envelopeId,
+    required Uint8List recipient,
+  }) {
+    return _withTransientRelayRetries(
+      'relay_ack',
+      () => _relay.ackEnvelope(
+        envelopeId: envelopeId,
+        recipient: recipient,
+      ),
+    );
+  }
 
   /// Retries [operation] on transient relay/network failures (e.g. connection
   /// closed before headers).
@@ -1953,10 +1978,16 @@ class HandshakeOrchestrator {
         }
       } catch (e, st) {
         debugPrint('envelope ${env.envelopeId} failed: $e\n$st');
-        await _relay.ackEnvelope(
-          envelopeId: env.envelopeId,
-          recipient: listenAddr,
-        );
+        if (!_isTransientRelayFailure(e)) {
+          try {
+            await _relay.ackEnvelope(
+              envelopeId: env.envelopeId,
+              recipient: listenAddr,
+            );
+          } catch (_) {
+            // ignore secondary ack failures
+          }
+        }
       }
     }
   }
@@ -2113,7 +2144,7 @@ class HandshakeOrchestrator {
       displayName: notificationDisplayName,
       accepted: ack.accepted,
     );
-    await _relay.ackEnvelope(
+    await _ackRelayEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: listenAddr,
     );
@@ -2121,6 +2152,17 @@ class HandshakeOrchestrator {
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
     );
+    if (ack.accepted) {
+      await _markHandshake(
+        row.id,
+        state: HandshakeState.completed,
+        peerLongTermPublicMaterialB64: RelayRouting.b64(
+          ack.inviterLongTermPublicKey,
+        ),
+      );
+      startPolling();
+      requestClosedAppPushRegistrationSync();
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -2179,6 +2221,9 @@ class HandshakeOrchestrator {
       );
     } on RelayClientError catch (e) {
       throw HandshakeOrchestratorError('relay_error', e);
+    } on TimeoutException catch (e) {
+      // The relay may have stored the ack even when the HTTP client timed out.
+      debugPrint('inviter ack post timed out; continuing local accept: $e');
     }
 
     // Register the steady-state routing on the relay.
@@ -2190,22 +2235,20 @@ class HandshakeOrchestrator {
       firstPub: peerPubBytes,
       secondPub: inviterLongTermPub,
     );
-    try {
-      await _relay.establishRouting(
-        selfIdentity: selfListenAddr,
-        peerIdentity: peerListenAddr,
-      );
-    } on RelayClientError catch (e) {
-      throw HandshakeOrchestratorError('relay_error', e);
-    }
 
-    // Promote the stub Contact and write peer material + routing.
+    // Promote locally before relay routing so a downstream timeout cannot
+    // leave the inviter disconnected while the invitee already received ack.
     await _contacts.promoteToConnected(
       id: handshakeRow.contactStubId,
       relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
       peerPublicMaterialB64: RelayRouting.b64(peerPubBytes),
       displayName: peerDisplayName,
       avatarId: peerAvatarId,
+    );
+
+    await _ensureSteadyRoutingRegistered(
+      selfListenAddr: selfListenAddr,
+      peerListenAddr: peerListenAddr,
     );
 
     await _markHandshake(handshakeRow.id, state: HandshakeState.completed);
@@ -2232,15 +2275,6 @@ class HandshakeOrchestrator {
       secondPub: ack.inviterLongTermPublicKey,
     );
 
-    try {
-      await _relay.establishRouting(
-        selfIdentity: selfListenAddr,
-        peerIdentity: peerListenAddr,
-      );
-    } on RelayClientError catch (e) {
-      throw HandshakeOrchestratorError('relay_error', e);
-    }
-
     final peerPublicMaterialB64 = RelayRouting.b64(
       ack.inviterLongTermPublicKey,
     );
@@ -2261,15 +2295,10 @@ class HandshakeOrchestrator {
       await _contacts.deleteLocally(row.contactStubId);
     }
 
-    await _markHandshake(
-      row.id,
-      state: HandshakeState.completed,
-      peerLongTermPublicMaterialB64: RelayRouting.b64(
-        ack.inviterLongTermPublicKey,
-      ),
+    await _ensureSteadyRoutingRegistered(
+      selfListenAddr: selfListenAddr,
+      peerListenAddr: peerListenAddr,
     );
-    startPolling();
-    requestClosedAppPushRegistrationSync();
   }
 
   // ---------------------------------------------------------------------
@@ -3747,24 +3776,19 @@ class HandshakeOrchestrator {
         receiverLongTermPrivateKey: selfPriv,
       );
     } on EnvelopeDecryptionError {
-      await _relay.ackEnvelope(
+      await _ackRelayEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
       );
       return;
     }
     if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
-      await _relay.ackEnvelope(
+      await _ackRelayEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
       );
       return;
     }
-
-    await _relay.ackEnvelope(
-      envelopeId: envelope.envelopeId,
-      recipient: myListenAddr,
-    );
 
     final peerB64 = RelayRouting.b64(peerPub);
     final service = PlanPeerEstablishmentService(_db);
@@ -3803,14 +3827,30 @@ class HandshakeOrchestrator {
         peerAvatarId: decrypted.requesterAvatarId,
       );
       steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+      await _ackRelayEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
       return;
     }
 
     if (row == null) {
       final planId = decrypted.receivedPlanId;
-      if (planId.isEmpty) return;
+      if (planId.isEmpty) {
+        await _ackRelayEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
       final participantId = await _participantIdForPeerOnPlan(planId, peerB64);
-      if (participantId == null) return;
+      if (participantId == null) {
+        await _ackRelayEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
       final rowId = '$planId:${participantId.split(':').last}';
       final now = DateTime.now().toUtc();
       await _db.upsertPlanPeerEstablishment(
@@ -3831,7 +3871,13 @@ class HandshakeOrchestrator {
       );
       row = await _db.getPlanPeerEstablishment(rowId);
     }
-    if (row == null) return;
+    if (row == null) {
+      await _ackRelayEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
 
     if (planMediatedPeerNameMismatch(
       storedName: row.peerDisplayName,
@@ -3846,7 +3892,13 @@ class HandshakeOrchestrator {
         participantId: row.participantId,
       );
       row = await _db.getPlanPeerEstablishment(row.id);
-      if (row == null) return;
+      if (row == null) {
+        await _ackRelayEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: myListenAddr,
+        );
+        return;
+      }
     }
 
     await service.markInboundPending(
@@ -3860,6 +3912,10 @@ class HandshakeOrchestrator {
       planId: row.planId,
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    await _ackRelayEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
   }
 
   Future<void> _handleInboundContactEstablishmentResponse({
@@ -3876,31 +3932,32 @@ class HandshakeOrchestrator {
         receiverLongTermPrivateKey: selfPriv,
       );
     } on EnvelopeDecryptionError {
-      await _relay.ackEnvelope(
+      await _ackRelayEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
       );
       return;
     }
     if (!_bytesEqual(decrypted.senderLongTermPublicKey, peerPub)) {
-      await _relay.ackEnvelope(
+      await _ackRelayEnvelope(
         envelopeId: envelope.envelopeId,
         recipient: myListenAddr,
       );
       return;
     }
 
-    await _relay.ackEnvelope(
-      envelopeId: envelope.envelopeId,
-      recipient: myListenAddr,
-    );
-
     final peerB64 = RelayRouting.b64(peerPub);
     final service = PlanPeerEstablishmentService(_db);
     var row =
         establishment ??
         await _db.getPlanPeerEstablishmentByPeer(peerB64);
-    if (row == null) return;
+    if (row == null) {
+      await _ackRelayEnvelope(
+        envelopeId: envelope.envelopeId,
+        recipient: myListenAddr,
+      );
+      return;
+    }
 
     await service.clearOutboundPending(row.id);
     if (decrypted.accepted) {
@@ -3923,7 +3980,13 @@ class HandshakeOrchestrator {
           participantId: row.participantId,
         );
         row = await _db.getPlanPeerEstablishment(row.id);
-        if (row == null) return;
+        if (row == null) {
+          await _ackRelayEnvelope(
+            envelopeId: envelope.envelopeId,
+            recipient: myListenAddr,
+          );
+          return;
+        }
       }
       await _promotePlanPeerContact(
         planId: row.planId,
@@ -3944,6 +4007,10 @@ class HandshakeOrchestrator {
       );
     }
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    await _ackRelayEnvelope(
+      envelopeId: envelope.envelopeId,
+      recipient: myListenAddr,
+    );
   }
 
   Future<void> _postContactEstablishmentResponse({

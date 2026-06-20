@@ -240,6 +240,49 @@ void main() {
     expect(relay.routings.length, 2);
   });
 
+  test(
+    'invitee retries ack processing after transient establishRouting timeout',
+    () async {
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'pending peer',
+        stubAvatarId: 'mdi:account',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+      final redeem = await invitee.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Invitee Self-Name',
+        selfAvatarId: 'mdi:invitee-avatar',
+      );
+
+      await inviter.orchestrator.processAllPendingHandshakes();
+      expect(relay.storedEnvelopes.single.kind, EnvelopeKind.ack);
+
+      relay.establishRoutingTimeoutsRemaining = 3;
+      await invitee.orchestrator.processAllPendingHandshakes();
+
+      expect(relay.envelopeCount, 1, reason: 'ack must stay until processing finishes');
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.awaitingAck,
+      );
+      final midContact = await invitee.contacts.get(redeem.localContactId);
+      expect(midContact?.kind, 'connected');
+
+      relay.establishRoutingTimeoutsRemaining = 0;
+      await invitee.orchestrator.processAllPendingHandshakes();
+
+      expect(relay.envelopeCount, 0);
+      expect(
+        await invitee.orchestrator.pendingHandshakeState(redeem.handshakeId),
+        HandshakeState.completed,
+      );
+      final inviteeContact = await invitee.contacts.get(redeem.localContactId);
+      expect(inviteeContact?.kind, 'connected');
+    },
+  );
+
   test('failed unknown inviter handshake remains pollable', () async {
     final invite = await inviter.orchestrator.generateInvitation(
       validFor: const Duration(hours: 1),

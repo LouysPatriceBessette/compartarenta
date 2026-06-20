@@ -36,6 +36,9 @@ class FakeRelayClient implements RelayClient {
   /// the relay accepting POST while the HTTP client times out).
   bool timeoutAfterPostOnce = false;
 
+  /// Next [establishRouting] calls throw [TimeoutException] (then decrement).
+  int establishRoutingTimeoutsRemaining = 0;
+
   /// Inspection helpers used by tests.
   int get envelopeCount => _envelopes.length;
   List<FakeRelayStoredEnvelope> get storedEnvelopes =>
@@ -70,6 +73,10 @@ class FakeRelayClient implements RelayClient {
     required Uint8List peerIdentity,
   }) async {
     _maybeThrowOnce();
+    if (establishRoutingTimeoutsRemaining > 0) {
+      establishRoutingTimeoutsRemaining--;
+      throw TimeoutException('injected establishRouting');
+    }
     if (!_hasRouting(selfIdentity, peerIdentity)) {
       _routings.add(FakeRelayRoutingPair(selfIdentity, peerIdentity));
     }
