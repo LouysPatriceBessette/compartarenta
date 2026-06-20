@@ -161,7 +161,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       );
       // Kick the poller once; further relay reads use the orchestrator timer.
       // ignore: unawaited_futures
-      orchestrator.requestImmediateHandshakePoll();
+      orchestrator.processAllPendingHandshakes();
       if (!mounted) return;
       setState(() {
         _dispatching = false;
@@ -202,7 +202,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
     if (handshakeId == null) return;
     _outcomePollInFlight = true;
     try {
-      await orchestrator.requestImmediateHandshakePoll();
+      await orchestrator.processAllPendingHandshakes();
       final state = await orchestrator.pendingHandshakeState(handshakeId);
       if (!mounted || state == null) return;
       switch (state) {
