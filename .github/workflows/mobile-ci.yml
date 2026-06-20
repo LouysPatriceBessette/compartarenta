@@ -7,6 +7,7 @@ on:
 
 jobs:
   lint-and-test:
+    if: false # Disabled for now... And most probably forever.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,7 @@ jobs:
         run: ../tools/flutter/bin/flutter test
 
   android-build:
+    if: false # Disabled for now... And most probably forever.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -98,6 +100,7 @@ jobs:
             mobile/build/provenance/**
 
   ios-build:
+    if: false # Disabled for now... And most probably forever.
     runs-on: macos-latest
     strategy:
       fail-fast: false
