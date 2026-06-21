@@ -117,7 +117,7 @@ class _HousingActivePlanReadOnlyScreenState
                 Center(
                   child: FilledButton.tonal(
                     onPressed: () {
-                      navigateToRoute<void>(context, 
+                      navigateToChildRoute<void>(context, 
                         MaterialPageRoute<void>(
                           builder: (_) => HousingProposalExpensesDetailScreen(
                             db: db,

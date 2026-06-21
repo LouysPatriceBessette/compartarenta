@@ -22,7 +22,7 @@ class HomeScreen extends StatelessWidget {
         title: Text(l10n.appTitle),
         actions: [
           IconButton(
-            onPressed: () => navigateTo(context, '/settings'),
+            onPressed: () => navigateToChild(context, '/settings'),
             icon: const Icon(Icons.settings),
             tooltip: l10n.navSettings,
           ),

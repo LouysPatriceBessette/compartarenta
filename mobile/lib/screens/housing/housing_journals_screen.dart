@@ -35,7 +35,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.check_circle_outline,
             label: l10n.housingMonthlyExpensesTitle,
             onTap: () {
-              navigateToRoute<void>(context, 
+              navigateToChildRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingMonthlyExpensesScreen(
                     packageId: packageId,
@@ -50,7 +50,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.cancel_outlined,
             label: l10n.housingRejectedExpensesTitle,
             onTap: () {
-              navigateToRoute<void>(context, 
+              navigateToChildRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingRejectedExpensesBrowseScreen(
                     packageId: packageId,
@@ -66,7 +66,7 @@ class HousingJournalsScreen extends StatelessWidget {
             icon: Icons.history,
             label: l10n.housingAmendmentJournalTitle,
             onTap: () {
-              navigateToRoute<void>(context, 
+              navigateToChildRoute<void>(context, 
                 MaterialPageRoute<void>(
                   builder: (_) => HousingAmendmentJournalScreen(
                     planId: planId,

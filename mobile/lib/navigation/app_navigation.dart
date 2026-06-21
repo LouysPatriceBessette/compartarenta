@@ -13,6 +13,15 @@ void navigateTo(BuildContext context, String location, {Object? extra}) {
   context.go(location, extra: extra);
 }
 
+/// Drill-down navigation (GoRouter [GoRouter.push]).
+///
+/// Use for child screens where the AppBar back affordance must return to the
+/// parent (e.g. Settings → Units). [navigateTo] replaces the stack and hides
+/// the automatic back button.
+void navigateToChild(BuildContext context, String location, {Object? extra}) {
+  context.push(location, extra: extra);
+}
+
 /// Push [location] when the user taps a notification.
 ///
 /// Unlike [navigateTo], keeps the previous route on the stack so the screen
@@ -81,4 +90,16 @@ Future<T?> navigateToRoute<T extends Object?>(
 }) {
   return Navigator.of(context, rootNavigator: rootNavigator)
       .pushReplacement(route);
+}
+
+/// Drill-down navigation with a custom [Route] (Navigator.push).
+///
+/// Prefer over [navigateToRoute] when the AppBar back button must return to
+/// the parent (e.g. housing hub → journals, settings → units).
+Future<T?> navigateToChildRoute<T extends Object?>(
+  BuildContext context,
+  Route<T> route, {
+  bool rootNavigator = false,
+}) {
+  return Navigator.of(context, rootNavigator: rootNavigator).push(route);
 }

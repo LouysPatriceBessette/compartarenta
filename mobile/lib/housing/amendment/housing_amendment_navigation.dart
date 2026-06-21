@@ -66,7 +66,7 @@ Future<void> openHousingPendingProposalOrAmendment(
         revisionId: pendingId,
       );
   if (!context.mounted) return;
-  await navigateToRoute<void>(context, 
+  await navigateToChildRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => openAmendment
           ? HousingAmendmentDetailScreen(
@@ -93,7 +93,7 @@ Future<void> openHousingSettledAmendmentDetail(
   required AppPreferences prefs,
   required String revisionId,
 }) {
-  return navigateToRoute<void>(context, 
+  return navigateToChildRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => HousingAmendmentDetailScreen(
         db: db,
@@ -112,7 +112,7 @@ Future<void> openHousingAmendmentJournal(
   required String planId,
   required AppPreferences prefs,
 }) {
-  return navigateToRoute<void>(context, 
+  return navigateToChildRoute<void>(context, 
     MaterialPageRoute<void>(
       builder: (_) => HousingAmendmentJournalScreen(
         planId: planId,

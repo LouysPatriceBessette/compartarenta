@@ -55,10 +55,11 @@ class _CompartarentaAppState extends State<CompartarentaApp>
   late Future<AppPreferences> _prefs = _loadPrefs();
   int _prefsLoadGeneration = 0;
 
-  /// Reused across [ListenableBuilder] rebuilds so navigation state is kept.
+  /// Reused across preference-driven rebuilds so navigation state is kept.
   GoRouter? _router;
 
   String _lastRoutingPushPrefsSig = '';
+  String? _lastMaterialAppLocaleOverride;
 
   void _retryPrefsLoad() {
     setState(() {
@@ -124,7 +125,20 @@ class _CompartarentaAppState extends State<CompartarentaApp>
     _wireProfileBroadcaster(prefs);
     _wireClosedAppPush(prefs);
     _wireHousingReminderTimezone(prefs);
+    _wireMaterialAppLocaleRebuild(prefs);
     return prefs;
+  }
+
+  /// Rebuild [MaterialApp.router] only when the language override changes — not
+  /// for unrelated prefs (timezone, units, …) which would lock the navigator.
+  void _wireMaterialAppLocaleRebuild(AppPreferences prefs) {
+    _lastMaterialAppLocaleOverride = prefs.languageCode;
+    prefs.addListener(() {
+      final next = prefs.languageCode;
+      if (next == _lastMaterialAppLocaleOverride) return;
+      _lastMaterialAppLocaleOverride = next;
+      if (mounted) setState(() {});
+    });
   }
 
   void _wireHousingReminderTimezone(AppPreferences prefs) {
@@ -339,44 +353,38 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         _router ??= _createRouter(widget.config, prefs);
         final router = _router!;
 
-        // Rebuild MaterialApp when preferences (e.g., language override) change.
-        return ListenableBuilder(
-          listenable: prefs,
-          builder: (context, _) {
-            final override = prefs.languageCode;
-            final locale = override == null ? null : Locale(override);
+        final override =
+            _lastMaterialAppLocaleOverride ?? prefs.languageCode;
+        final locale = override == null ? null : Locale(override);
 
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              onGenerateTitle: (context) =>
-                  AppLocalizations.of(context).appTitle,
-              theme: buildAppTheme(),
-              locale: locale,
-              supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-              ],
-              routerConfig: router,
-              builder: (context, child) => AppErrorBoundary(
-                child: ProfileLabelConflictHost(
-                  child: ConnectivityBanner(
-                    child: ContactInviteDeepLinkListener(
-                      router: router,
-                      prefs: prefs,
-                      child: SafeArea(
-                        top: false,
-                        bottom: false,
-                        child: child ?? const SizedBox.shrink(),
-                      ),
-                    ),
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          theme: buildAppTheme(),
+          locale: locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          routerConfig: router,
+          builder: (context, child) => AppErrorBoundary(
+            child: ProfileLabelConflictHost(
+              child: ConnectivityBanner(
+                child: ContactInviteDeepLinkListener(
+                  router: router,
+                  prefs: prefs,
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: child ?? const SizedBox.shrink(),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

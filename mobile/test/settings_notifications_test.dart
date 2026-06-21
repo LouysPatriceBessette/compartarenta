@@ -38,6 +38,7 @@ void main() {
     await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();
 
+    expect(find.byType(BackButton), findsOneWidget);
     expect(find.text('Not requested yet'), findsOneWidget);
     expect(permissionClient.getStatusCount, 0);
     expect(find.text('Contacts'), findsOneWidget);

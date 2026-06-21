@@ -156,7 +156,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     _openingParticipationChange = true;
     try {
       if (!mounted) return;
-      await navigateToRoute<void>(context, 
+      await navigateToChildRoute<void>(context, 
         MaterialPageRoute<void>(
           builder:
               (_) => HousingParticipationChangeDetailScreen(
@@ -310,7 +310,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     BuildContext context,
     String changeId,
   ) async {
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingParticipationChangeDetailScreen(
@@ -328,7 +328,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<void> _openMajorChange(BuildContext context) async {
     final prefs = widget.prefs ?? await AppPreferences.load();
     if (!context.mounted) return;
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(context, 
       MaterialPageRoute<void>(
         builder:
             (_) => HousingAgreementRenewalScreen(
@@ -361,7 +361,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         isAmendment: true,
       );
     } else {
-      await navigateToRoute<void>(context, 
+      await navigateToChildRoute<void>(context, 
         MaterialPageRoute<void>(
           builder: (_) => HousingAmendmentRequestScreen(
             planId: widget.planId,
@@ -376,7 +376,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<void> _openJournals(BuildContext context) async {
     final prefs = widget.prefs ?? await AppPreferences.load();
     if (!context.mounted) return;
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingJournalsScreen(
           packageId: widget.packageId,
@@ -469,7 +469,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     final expenseId = HousingNavigationIntent.takePendingReview();
     if (expenseId == null || !mounted) return;
     _openingPendingReview = true;
-    navigateToRoute<void>(context, 
+    navigateToChildRoute<void>(context, 
           MaterialPageRoute<void>(
             builder: (_) => HousingRealizedExpenseReviewScreen(
               expenseId: expenseId,
@@ -489,7 +489,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   }
 
   Future<void> _openReviewList(BuildContext context) async {
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseReviewListScreen(
           planId: widget.planId,
@@ -530,7 +530,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         if (!context.mounted) return;
         final prefs = widget.prefs ?? await AppPreferences.load();
         if (!context.mounted) return;
-        await navigateToRoute<void>(context, 
+        await navigateToChildRoute<void>(context, 
           MaterialPageRoute<void>(
             builder:
                 (_) => HousingAgreementRenewalScreen(
@@ -544,7 +544,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       return;
     }
     if (!context.mounted) return;
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(context, 
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseFormScreen(
           planId: widget.planId,
@@ -678,7 +678,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                 final prefs =
                                     widget.prefs ?? await AppPreferences.load();
                                 if (!context.mounted) return;
-                                await navigateToRoute<void>(context, 
+                                await navigateToChildRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingActivePlanReadOnlyScreen(
@@ -704,7 +704,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               label: l10n.housingActiveHubBalances,
                               onTap: () {
                                 if (header == null) return;
-                                navigateToRoute<void>(context, 
+                                navigateToChildRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingBalancesScreen(
@@ -719,7 +719,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               icon: Icons.bar_chart_outlined,
                               label: l10n.housingActiveHubPaymentStatus,
                               onTap: () {
-                                navigateToRoute<void>(context, 
+                                navigateToChildRoute<void>(context, 
                                   MaterialPageRoute<void>(
                                     builder:
                                         (_) => HousingExpensePaymentStatusScreen(
@@ -763,7 +763,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               icon: Icons.import_export_outlined,
                               label: l10n.housingActiveHubExportImport,
                               onTap: () {
-                                navigateToRoute<void>(
+                                navigateToChildRoute<void>(
                                   context,
                                   MaterialPageRoute<void>(
                                     builder:

@@ -20,13 +20,17 @@ extension TimeZonePreferenceDisplay on AppPreferences {
   }
 
   Future<void> setTimeZoneToDevice() async {
-    await setTimeZonePolicy(kTimeZonePolicyDevice);
-    await setTimeZoneId(null);
+    await applyTimeZonePreference(
+      policy: kTimeZonePolicyDevice,
+      ianaId: null,
+    );
   }
 
   Future<void> setTimeZoneExplicit(String ianaId) async {
-    await setTimeZonePolicy(kTimeZonePolicyExplicit);
-    await setTimeZoneId(ianaId);
+    await applyTimeZonePreference(
+      policy: kTimeZonePolicyExplicit,
+      ianaId: ianaId,
+    );
   }
 }
 

@@ -65,9 +65,30 @@ class HousingPaymentReminderService {
 
   /// Task 2.2b — Settings timezone change with an open agreement period.
   Future<void> onTimeZonePreferenceChanged() async {
-    if (kIsWeb) return;
-    if (!await _hasAnyOpenAgreementPeriodPlan()) return;
+    if (kIsWeb) {
+      if (kDebugMode) {
+        debugPrint(
+          'housingPaymentReminder: timezone upsert skipped (web out of scope)',
+        );
+      }
+      return;
+    }
+    if (!await _hasAnyOpenAgreementPeriodPlan()) {
+      if (kDebugMode) {
+        debugPrint(
+          'housingPaymentReminder: timezone upsert skipped (no open agreement period)',
+        );
+      }
+      return;
+    }
+    final tz = resolveIanaTimeZone(_prefs);
+    if (kDebugMode) {
+      debugPrint('housingPaymentReminder: upserting timezone $tz on relay');
+    }
     await upsertSelfTimezoneOnRelay();
+    if (kDebugMode) {
+      debugPrint('housingPaymentReminder: timezone upsert finished ($tz)');
+    }
   }
 
   Future<bool> _hasAnyOpenAgreementPeriodPlan() async {

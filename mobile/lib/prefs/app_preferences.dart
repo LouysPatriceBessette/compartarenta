@@ -214,6 +214,20 @@ class AppPreferences extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Persists policy + IANA id in one write and a single [notifyListeners].
+  Future<void> applyTimeZonePreference({
+    required String policy,
+    String? ianaId,
+  }) async {
+    await _prefs.setString(_kTimeZonePolicy, policy);
+    if (ianaId == null || ianaId.isEmpty) {
+      await _prefs.remove(_kTimeZoneId);
+    } else {
+      await _prefs.setString(_kTimeZoneId, ianaId);
+    }
+    notifyListeners();
+  }
+
   WeekStart? get weekStart =>
       weekStartFromStored(_prefs.getString(_kWeekStart));
 
