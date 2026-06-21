@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import '../firebase_options.dart';
 import 'push_notification_service.dart';
 import 'wake_inbox_background_poll.dart';
+import 'closed_app_push_background_sync.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -16,6 +17,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       );
     }
     await runWakeInboxPollOnce();
+    await runClosedAppPushRegistrationRefreshOnce();
     return;
   }
   if (!PushNotificationService.isHousingProposalRemoteMessage(message)) {

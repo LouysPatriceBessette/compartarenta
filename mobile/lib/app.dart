@@ -112,6 +112,11 @@ class _CompartarentaAppState extends State<CompartarentaApp>
       }
       return;
     }
+    if (state == AppLifecycleState.resumed) {
+      unawaited(
+        ClosedAppPushRegistrationService.maybeInstance?.syncIfNeeded(),
+      );
+    }
   }
 
   Future<AppPreferences> _loadPrefs() async {
@@ -134,12 +139,14 @@ class _CompartarentaAppState extends State<CompartarentaApp>
       prefs: prefs,
     );
     HandshakeOrchestrator.refreshClosedAppPushRegistration = () async {
-      await ClosedAppPushRegistrationService.maybeInstance?.sync();
+      await ClosedAppPushRegistrationService.maybeInstance?.sync(force: true);
     };
-    unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
+    unawaited(ClosedAppPushRegistrationService.maybeInstance?.syncIfNeeded());
 
     String routingPushSig() =>
         '${prefs.notificationsEnabled}|'
+        '${prefs.notificationContactAddRequests}|'
+        '${prefs.notificationHousingPaymentReminders}|'
         '${prefs.notificationCountryStatisticsEnabled}|'
         '${prefs.notificationCountryStatisticsCode ?? ''}';
     _lastRoutingPushPrefsSig = routingPushSig();
@@ -149,7 +156,9 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         return;
       }
       _lastRoutingPushPrefsSig = next;
-      HandshakeOrchestrator.requestClosedAppPushRegistrationSync();
+      unawaited(
+        ClosedAppPushRegistrationService.maybeInstance?.sync(force: true),
+      );
     });
   }
 

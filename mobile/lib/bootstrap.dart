@@ -21,6 +21,8 @@ import 'notifications/notification_permission_gate.dart';
 import 'notifications/push_notification_service.dart';
 import 'notifications/push_background_registration_stub.dart'
     if (dart.library.io) 'notifications/push_background_registration_io.dart';
+import 'notifications/closed_app_push_workmanager_stub.dart'
+    if (dart.library.io) 'notifications/closed_app_push_workmanager_io.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'relay/identity_keystore.dart';
 import 'relay/relay_client.dart';
@@ -67,6 +69,18 @@ Future<void> bootstrap() async {
       }
 
       unawaited(_initializePushIfAlreadyAuthorized());
+      if (!kIsWeb) {
+        unawaited(
+          scheduleClosedAppPushKeepAlive().catchError((
+            Object error,
+            StackTrace stack,
+          ) {
+            debugPrint(
+              'Closed-app push WorkManager schedule failed: $error\n$stack',
+            );
+          }),
+        );
+      }
 
       FlutterError.onError = (details) {
         FlutterError.presentError(details);

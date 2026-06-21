@@ -25,6 +25,7 @@ should cross-reference this document with
 | Environment template           | [`relay/.env.example`](../relay/.env.example) or [`deploy/env.stack.example`](../deploy/env.stack.example) |
 | Apache vhost template          | [`relay/deploy/apache2/relay-vhost.conf.template`](../relay/deploy/apache2/relay-vhost.conf.template) |
 | Audit checklist                | [`relay-audit-checklist.md`](./relay-audit-checklist.md)   |
+| Relay state schema (summary)   | [`relay-state-schema.md`](./relay-state-schema.md)         |
 | Audit log                      | [`relay-audit-log.md`](./relay-audit-log.md)               |
 | Topology spec                  | `openspec/changes/relay-server-infrastructure-and-audit/specs/relay-deployment-topology/spec.md` |
 
@@ -558,6 +559,9 @@ Mark them done in `tasks.md` once they're completed against the live
 deployment.
 
 ## Daily closed-app push statistics (loopback)
+
+See also [`relay-state-schema.md`](./relay-state-schema.md) for the
+`routing_push_tokens` table, TTL, and wake payload contract.
 
 The relay binary exposes a **second HTTP listener** for operator-only
 daily aggregates: `STATS_LISTEN_ADDR` (default `127.0.0.1:9091` inside

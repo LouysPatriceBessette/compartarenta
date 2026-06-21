@@ -54,4 +54,9 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = ios;
+
+  /// True while [firebase_options.dart] / `google-services.json` still ship
+  /// template values. FCM registration is skipped until `flutterfire configure`.
+  static bool get isPlaceholder =>
+      currentPlatform.apiKey.startsWith('REPLACE_WITH');
 }

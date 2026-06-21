@@ -56,6 +56,7 @@
   "settingsNotificationsRequestAction": "Autoriser",
   "settingsNotificationsGeneralSwitchTitle": "Autoriser les notifications de l’app",
   "settingsNotificationsGeneralSwitchBody": "Interrupteur principal pour les catégories de notification de cette app.",
+  "settingsNotificationsWakeFromSleepBody": "Si autorisé, l’app s’enregistre auprès du relais pour qu’une app fermée puisse se réveiller brièvement et vérifier les nouvelles demandes de contact ou rappels de paiement—sans afficher le contenu des messages dans la notification push.",
   "settingsNotificationsContactsSection": "Contacts",
   "settingsNotificationsContactAddRequest": "Demande/confirmation d’ajout",
   "settingsNotificationsContactDisconnection": "Avis de déconnexion",

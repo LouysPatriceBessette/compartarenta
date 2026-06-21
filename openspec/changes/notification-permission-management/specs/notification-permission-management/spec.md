@@ -105,6 +105,18 @@ The system SHALL generally associate notifications with peer-triggered events an
 - **WHEN** the app receives a notification-relevant event triggered by a peer
 - **THEN** the system can surface a notification according to system permission and app-level preferences
 
+### Requirement: Closed-app push registration follows app notification preferences
+When closed-app push delivery is enabled for the product, routing push token registration on the relay SHALL be conditional on the app-level master notification switch and on at least one wake-eligible category preference. Turning the master switch off or disabling every wake-eligible category SHALL trigger unregister and SHALL suppress future registration until the user re-enables a wake-eligible setting. Wake pushes remain transport-only; local notification builders continue to honor category and master switches before surfacing user-visible alerts.
+
+#### Scenario: Master switch off unregisters transport tokens
+- **WHEN** the user turns the app-level master notification switch off
+- **THEN** the client unregisters routing push tokens best-effort
+- **AND** the client does not register again until the master switch and a wake-eligible category are both enabled
+
+#### Scenario: All wake-eligible categories off prevents registration
+- **WHEN** the master switch is on but every wake-eligible category is off
+- **THEN** the client does not register routing push tokens on the relay
+
 ### Requirement: Developer Notification Diagnostics
 The system SHALL provide a developer-only action to send a test notification so developers can verify the effective notification permission path.
 

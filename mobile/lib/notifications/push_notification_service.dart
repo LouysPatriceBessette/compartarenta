@@ -111,7 +111,9 @@ class PushNotificationService {
         'PushNotificationService: FCM token refreshed (length '
         '${token.length})',
       );
-      unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
+      unawaited(
+        ClosedAppPushRegistrationService.maybeInstance?.onTokenRefreshed(token),
+      );
     });
 
     unawaited(ClosedAppPushRegistrationService.maybeInstance?.sync());
@@ -227,9 +229,14 @@ class PushNotificationService {
     }
   }
 
+  static Future<void> _handleWakeForegroundMessage() async {
+    await runWakeInboxPollOnce();
+    await ClosedAppPushRegistrationService.maybeInstance?.sync(force: true);
+  }
+
   static void _onForegroundMessage(RemoteMessage message) {
     if (isWakeForInboxRemoteMessage(message)) {
-      unawaited(runWakeInboxPollOnce());
+      unawaited(_handleWakeForegroundMessage());
       return;
     }
     if (!isHousingProposalRemoteMessage(message)) return;

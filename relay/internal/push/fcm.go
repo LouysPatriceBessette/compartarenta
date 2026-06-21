@@ -21,6 +21,8 @@ type FCMDataWake struct {
 	HTTPClient *http.Client
 	ProjectID  string
 	TokenSrc   oauth2.TokenSource
+	// APIBaseURL overrides the FCM host (tests only). Empty uses production.
+	APIBaseURL string
 }
 
 // NewFCMFromServiceAccountJSON loads a Google service account JSON file
@@ -90,6 +92,9 @@ func (f *FCMDataWake) SendWake(ctx context.Context, deviceToken string, recipien
 		return err
 	}
 	url := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", f.ProjectID)
+	if b := strings.TrimSpace(f.APIBaseURL); b != "" {
+		url = fmt.Sprintf("%s/v1/projects/%s/messages:send", strings.TrimSuffix(b, "/"), f.ProjectID)
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(raw))
 	if err != nil {
 		return err

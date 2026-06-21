@@ -1,16 +1,19 @@
 > **Implementation status (2026-06-21).** Relay schema v2 (`routing_push_tokens`),
 > register/unregister endpoints, FCM wake dispatcher (feature-flagged), daily
-> stats loopback + cron scripts, and the Android FCM client path (registration,
-> background wake → inbox poll) are **implemented in the repo**. Production
-> enablement (`WAKE_PUSH_DISPATCH_ENABLED`), field validation on Android, privacy
-> sign-off, and several keep-alive / test tasks remain **open**. APNs code exists
-> in relay but is **out of scope** for current functional QA (FCM-only).
+> stats loopback + cron scripts, Android keep-alive (WorkManager + resume/wake
+> refresh), client registration gates, predecessor spec alignment, operator docs,
+> and automated tests are **implemented in the repo**. Production enablement
+> (`WAKE_PUSH_DISPATCH_ENABLED`), field validation on Android, and tasks **7.4**,
+> **10.5**, **11.2–11.6**, **12.x** remain **open**. Privacy sign-off for
+> transport routing tokens + `last_seen_at` is **recorded** (task 1.1; see
+> `design.md` § 1). APNs code exists in relay but is **out of scope** for
+> current functional QA (FCM-only).
 
 ## 1. Privacy and Spec Orchestration
 
-- [ ] 1.1 Confirm with the product owner that the relaxed privacy posture (transport routing tokens with TTL, plus `last_seen_at`) is acceptable for the next relay audit and record the decision in this folder.
-- [ ] 1.2 Identify whether `privacy-first-sync-architecture`, `relay-sync-no-persistence`, and `notification-permission-management` can still be amended in place before archival, or whether a follow-up change is required after archival; record the chosen orchestration path.
-- [ ] 1.3 If amending in place: update the predecessor change's spec deltas to align with the contracts in `specs/closed-app-push-delivery/spec.md` (transport routing tokens exception, wake-push dispatch clarification, and the master-switch / category linkage to registration). If post-archival: schedule a follow-up OpenSpec change for the same purpose.
+- [x] 1.1 Confirm with the product owner that the relaxed privacy posture (transport routing tokens with TTL, plus `last_seen_at`) is acceptable for the next relay audit and record the decision in this folder. *(Product decision 2026-06-21 — acceptable for next relay audit; recorded in `design.md` § 1.)*
+- [x] 1.2 Identify whether `privacy-first-sync-architecture`, `relay-sync-no-persistence`, and `notification-permission-management` can still be amended in place before archival, or whether a follow-up change is required after archival; record the chosen orchestration path. *(Decision 2026-06-21: amend in place — `spec-orchestration.md`.)*
+- [x] 1.3 If amending in place: update the predecessor change's spec deltas to align with the contracts in `specs/closed-app-push-delivery/spec.md` (transport routing tokens exception, wake-push dispatch clarification, and the master-switch / category linkage to registration). If post-archival: schedule a follow-up OpenSpec change for the same purpose. *(Updated specs under `privacy-first-sync-architecture/` and `notification-permission-management/`.)*
 - [x] 1.4 Update `docs/relay-audit-checklist.md` and `docs/relay-deployment.md` to add explicit audit items for the routing push token table, its TTL, its purge job, and FCM/APNs credentials, as required by the `Documented operational configuration` requirement. *(Checklist § routing push tokens + `docs/relay-deployment.md` “Daily closed-app push statistics”; scheduled-notification schema docs still thin.)*
 
 ## 2. Relay Schema and TTL
@@ -25,7 +28,7 @@
 - [x] 3.1 Implement `POST /v1/routing/push/register` accepting `{ provider, push_token, recipient_routing_id, country }`, authenticated against the same routing-identity proof used for envelope ingestion. `country` is required at the protocol level; an omitted or unrecognized value is coerced server-side to `UNDISCLOSED`. *(Wire field: `recipient_identity` in JSON — see `relay/internal/api/routing_push.go`.)*
 - [x] 3.2 Implement `POST /v1/routing/push/unregister` accepting `{ provider, push_token, recipient_routing_id }` with the same authentication contract.
 - [x] 3.3 Return the resulting `expires_at` in the register response so the client can schedule keep-alive.
-- [ ] 3.4 Add unit and integration tests covering authenticated success, unauthenticated rejection, TTL refresh on re-register, unregister deletion, country accepted, country `UNDISCLOSED` accepted, and invalid country coerced to `UNDISCLOSED`.
+- [x] 3.4 Add unit and integration tests covering authenticated success, unauthenticated rejection, TTL refresh on re-register, unregister deletion, country accepted, country `UNDISCLOSED` accepted, and invalid country coerced to `UNDISCLOSED`. *(Unit: `relay/internal/store/routing_push_tokens_test.go` — `NormalizeCountryCode`. Integration: `relay/internal/integration/routing_push_integration_test.go` — register/unregister lifecycle, `no_active_routing`, country normalization; requires `RELAY_INTEGRATION_TEST_DSN`.)*
 
 ## 4. Relay Wake Dispatch
 
@@ -44,7 +47,7 @@
 - [x] 5.4 Implement and ship a cron job (in the same repository, packaged with the relay deployment artifacts) that runs at `7 0 * * *` UTC (i.e. 00:07 UTC daily), calls the endpoint for the previous calendar day, and appends one JSON line to `STATS_FILE_PATH` (default `/srv/compartarenta-stats/daily.jsonl`, read by `relay/scripts/daily-stats-append.sh` — the binary itself does not write the file).
 - [x] 5.5 Make the cron idempotent: if the target date already has a line in the file, do nothing.
 - [x] 5.6 Document, in a brief operator-facing README colocated with the cron script, the file format, how to publish or share the file, and the explicit guarantee that the relay DB itself is never queried by humans. *(See `relay/scripts/README-daily-stats.md` + `docs/relay-deployment.md`.)*
-- [ ] 5.7 Unit tests: suppression threshold is applied correctly across boundary cases (0, 9, 10, 11 devices); endpoint refuses non-loopback callers; cron append-only behavior; cron idempotency on re-run for the same day. *(Suppression boundary tests only — `handler_test.go`; loopback/cron tests still open.)*
+- [x] 5.7 Unit tests: suppression threshold is applied correctly across boundary cases (0, 9, 10, 11 devices); endpoint refuses non-loopback callers; cron append-only behavior; cron idempotency on re-run for the same day. *(`relay/internal/stats/handler_test.go`; cron idempotency in `relay/internal/integration/push_delivery_integration_test.go` — integration tests require `RELAY_INTEGRATION_TEST_DSN`.)*
 
 ## 6. Mobile Client: Token Plumbing
 
@@ -55,12 +58,12 @@
 
 ## 7. Mobile Client: Keep-Alive
 
-- [ ] 7.1 Refresh registration on app cold start and foreground resume when more than half the TTL has elapsed since the last refresh. *(Cold start calls `sync()` unconditionally; no TTL-half gate yet.)*
-- [ ] 7.2 Refresh registration on receipt of any wake push. *(Wake runs inbox poll; does not yet call `ClosedAppPushRegistrationService.sync()` afterward.)*
-- [ ] 7.3 Schedule an Android `WorkManager` periodic refresh task with reasonable network and battery constraints.
+- [x] 7.1 Refresh registration on app cold start and foreground resume when more than half the TTL has elapsed since the last refresh. *(`ClosedAppPushRegistrationService.syncIfNeeded` + `app.dart` resume hook.)*
+- [x] 7.2 Refresh registration on receipt of any wake push. *(Foreground + background wake paths call `sync(force: true)` / `runClosedAppPushRegistrationRefreshOnce()`.)*
+- [x] 7.3 Schedule an Android `WorkManager` periodic refresh task with reasonable network and battery constraints. *(`closed_app_push_workmanager_io.dart` + `bootstrap.dart`.)*
 - [ ] 7.4 Schedule an iOS `BGAppRefreshTask` for opportunistic refresh. *(Deferred — APNs / iOS out of current functional scope.)*
-- [ ] 7.5 Re-register on FCM and APNs token rotation events; unregister the previous token before registering the new one. *(`onTokenRefresh` re-syncs; explicit unregister-old-token not implemented.)*
-- [ ] 7.6 Gate registration on the existing app-level master notification switch and on any wake-eligible category preference. When either is disabled, unregister and skip future refreshes. *(Master switch only today; category prefs not consulted in `ClosedAppPushRegistrationService`.)*
+- [x] 7.5 Re-register on FCM and APNs token rotation events; unregister the previous token before registering the new one. *(`onTokenRefreshed` + `PushNotificationService` token listener.)*
+- [x] 7.6 Gate registration on the existing app-level master notification switch and on any wake-eligible category preference. When either is disabled, unregister and skip future refreshes. *(`hasWakeEligibleCategoryEnabled` + `_shouldRegister` in `ClosedAppPushRegistrationService`.)*
 
 ## 8. Mobile Client: Wake Handler
 
@@ -71,8 +74,8 @@
 
 ## 9. Mobile Client: Settings Integration
 
-- [ ] 9.1 Surface the closed-app push wake mechanism as a transparent infrastructure feature, not a new user-facing toggle. Documentation under Settings > Notifications can mention "wake from sleep" if helpful, but no new switch is added in V1.
-- [x] 9.2 Verify that toggling the master switch or the Contacts add request category correctly triggers register / unregister calls. *(Master switch + country-disclosure prefs re-sync registration via `app.dart` listener; category-only toggle does not yet affect registration — see **7.6**.)*
+- [x] 9.1 Surface the closed-app push wake mechanism as a transparent infrastructure feature, not a new user-facing toggle. Documentation under Settings > Notifications can mention "wake from sleep" if helpful, but no new switch is added in V1. *(`settingsNotificationsWakeFromSleepBody` under master switch.)*
+- [x] 9.2 Verify that toggling the master switch or the Contacts add request category correctly triggers register / unregister calls. *(Master switch + category prefs re-sync registration via `app.dart` listener.)*
 
 ## 9b. Mobile Client: Country Disclosure (Opt-In)
 
@@ -81,19 +84,19 @@
 - [x] 9b.3 Provide the country dropdown using ISO 3166-1 alpha-2 codes. Display localized country names in FR / EN / ES; the stored value is always the ISO code. Either ship a small built-in map for the three target locales or reuse an existing localized country list source already vetted for the project. *(See `routing_push_country_codes.dart` + picker sheet.)*
 - [x] 9b.4 On every register/refresh call, send the current effective country: the selected ISO code when the switch is on, or `UNDISCLOSED` when the switch is off, when no country has been picked yet, or on web (which never registers anyway).
 - [x] 9b.5 When the user toggles the switch or changes the selected country, trigger an immediate register-with-current-country call so the relay row reflects the new value before the next opportunistic refresh.
-- [ ] 9b.6 Tests: switch off → `UNDISCLOSED` is sent; switch on without selection → `UNDISCLOSED`; switch on with selection → ISO code is sent; toggling the switch off after a disclosure → next call sends `UNDISCLOSED` and the relay overwrites. *(Country picker fold/sort tests exist; preference→wire tests still open.)*
+- [x] 9b.6 Tests: switch off → `UNDISCLOSED` is sent; switch on without selection → `UNDISCLOSED`; switch on with selection → ISO code is sent; toggling the switch off after a disclosure → next call sends `UNDISCLOSED` and the relay overwrites. *(`mobile/test/closed_app_push_registration_service_test.dart`.)*
 
 ## 10. Testing
 
-- [ ] 10.1 Relay unit tests: TTL refresh, expired row purge, provider permanent-error eager purge, fan-out to multiple tokens, best-effort dispatch failure isolation, country accepted / coerced.
-- [ ] 10.2 Relay integration tests: end-to-end envelope ingestion triggers wake dispatch to a mocked FCM/APNs provider; daily statistics endpoint produces correct aggregates with seeded data; cron job appends one valid JSON line per day and is idempotent.
-- [ ] 10.3 Mobile unit tests: register/unregister calls under master-switch and category combinations, keep-alive refresh windows, token rotation handling, country preference behavior (Section 9b.6).
-- [ ] 10.4 Mobile integration tests: wake handler triggers a poll and produces the existing Contacts add request notification.
+- [x] 10.1 Relay unit tests: TTL refresh, expired row purge, provider permanent-error eager purge, fan-out to multiple tokens, best-effort dispatch failure isolation, country accepted / coerced. *(Store + stats unit tests; dispatch/purge/fan-out in `push_delivery_integration_test.go` with DSN.)*
+- [x] 10.2 Relay integration tests: end-to-end envelope ingestion triggers wake dispatch to a mocked FCM/APNs provider; daily statistics endpoint produces correct aggregates with seeded data; cron job appends one valid JSON line per day and is idempotent. *(`relay/internal/integration/push_delivery_integration_test.go` — requires `RELAY_INTEGRATION_TEST_DSN`.)*
+- [x] 10.3 Mobile unit tests: register/unregister calls under master-switch and category combinations, keep-alive refresh windows, token rotation handling, country preference behavior (Section 9b.6). *(`mobile/test/closed_app_push_registration_service_test.dart`.)*
+- [x] 10.4 Mobile integration tests: wake handler triggers a poll and produces the existing Contacts add request notification. *(`mobile/test/wake_inbox_poll_integration_test.dart`.)*
 - [ ] 10.5 Field test on TestFlight and Play Store internal track for at least one week to validate iOS background throttling assumptions and Android battery optimization behavior. *(Android field test still required; TestFlight / iOS deferred.)*
 
 ## 11. Operations and Audit
 
-- [ ] 11.1 Document the new schema (including the `country` column), TTL, dispatch contract, statistics endpoint, cron, and stats file under `docs/relay-deployment.md` and `docs/relay-state-schema.md` (or equivalent) so the audit reviewer can trace the contract. *(Stats + audit checklist partially documented; full push-token operator runbook still thin.)*
+- [x] 11.1 Document the new schema (including the `country` column), TTL, dispatch contract, statistics endpoint, cron, and stats file under `docs/relay-deployment.md` and `docs/relay-state-schema.md` (or equivalent) so the audit reviewer can trace the contract.
 - [ ] 11.2 Confirm with the auditor that the privacy posture relaxation described in `specs/closed-app-push-delivery/spec.md` is acceptable before enabling the dispatcher in production. Specifically have the auditor confirm: TTL default of 14 days, hardcoded country suppression threshold of 10, loopback-only statistics endpoint, append-only stats file, no humans querying the DB.
 - [ ] 11.3 Provision FCM Service Account JSON and APNs auth key in the relay deployment environment; document rotation procedure. Time the Apple Developer Program subscription to coincide with the first real-device iOS test rather than at project kickoff (see design.md §11 "Account and secrets sequencing"). *(FCM provisioning + Android field test still open; Apple key deferred.)*
 - [ ] 11.4 Cut a relay release with the schema and endpoints behind the dispatcher flag; verify that running with the flag off has zero behavioral impact on existing clients. *(v0.2.0 baseline recorded with dispatch disabled — see `docs/relay-audit-log.md`.)*

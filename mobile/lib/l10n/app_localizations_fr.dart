@@ -174,6 +174,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Interrupteur principal pour les catégories de notification de cette app.';
 
   @override
+  String get settingsNotificationsWakeFromSleepBody =>
+      'Si autorisé, l’app s’enregistre auprès du relais pour qu’une app fermée puisse se réveiller brièvement et vérifier les nouvelles demandes de contact ou rappels de paiement—sans afficher le contenu des messages dans la notification push.';
+
+  @override
   String get settingsNotificationsContactsSection => 'Contacts';
 
   @override

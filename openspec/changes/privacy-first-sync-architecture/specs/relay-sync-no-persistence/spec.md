@@ -45,3 +45,11 @@ The relay MAY use idempotency keys and deduplication structures to avoid double 
 #### Scenario: Duplicate submission does not create a second durable copy
 - **WHEN** the same idempotent send is retried by the client
 - **THEN** the relay does not create an additional durable ciphertext record beyond the semantics defined for that idempotency key
+
+### Requirement: Transport routing push tokens are out of band from envelope ciphertext
+The relay MAY durably store opaque transport routing push tokens for closed-app wake delivery, subject to the `closed-app-push-delivery` capability: strict TTL on every row, no coupling to envelope plaintext or business metadata, and wake push payloads limited to `{ v, kind, recipient }`. This table is transport routing material, not user operational payload storage.
+
+#### Scenario: Envelope persistence does not require push token plaintext
+- **WHEN** the relay persists an envelope for a recipient
+- **THEN** envelope storage semantics remain unchanged
+- **AND** optional wake dispatch reads only the routing push token table index, not envelope ciphertext content

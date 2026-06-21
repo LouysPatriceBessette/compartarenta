@@ -42,23 +42,35 @@ void main() {
     expect(permissionClient.getStatusCount, 0);
     expect(find.text('Contacts'), findsOneWidget);
     expect(find.text('Add requests/confirmations'), findsOneWidget);
+
+    final masterFinder = find.ancestor(
+      of: find.text('Allow app notifications'),
+      matching: find.byType(SwitchListTile),
+    );
+    expect(masterFinder, findsOneWidget);
+    final masterTile = tester.widget<SwitchListTile>(masterFinder);
+
     expect(find.text('Housing'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Plan submission received'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Plan submission received'), findsOneWidget);
     expect(prefs.notificationsEnabled, isFalse);
 
-    final masterTile = tester.widget<SwitchListTile>(
-      find.ancestor(
-        of: find.text('Allow app notifications'),
-        matching: find.byType(SwitchListTile),
-      ),
-    );
     masterTile.onChanged!(true);
     await tester.pumpAndSettle();
 
     expect(prefs.notificationsEnabled, isTrue);
     expect(permissionClient.getStatusCount, 1);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.scrollUntilVisible(
+      find.text('Sound'),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Sound'), findsOneWidget);

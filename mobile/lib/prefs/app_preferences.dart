@@ -336,6 +336,12 @@ class AppPreferences extends ChangeNotifier {
     return raw.toUpperCase();
   }
 
+  /// At least one category that uses closed-app wake delivery must be on
+  /// before the client registers routing push tokens on the relay.
+  bool get hasWakeEligibleCategoryEnabled =>
+      notificationContactAddRequests ||
+      notificationHousingPaymentReminders;
+
   bool get hasProfile => displayName.isNotEmpty && avatarId.isNotEmpty;
   bool get hasPlanSelection => planTypes.isNotEmpty;
 

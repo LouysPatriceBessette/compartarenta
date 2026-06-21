@@ -412,6 +412,12 @@ abstract class AppLocalizations {
   /// **'Master switch for notification categories in this app.'**
   String get settingsNotificationsGeneralSwitchBody;
 
+  /// No description provided for @settingsNotificationsWakeFromSleepBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When allowed, the app can register with the relay so a closed app may wake briefly to check for new contact or payment reminders—without showing message content in the push itself.'**
+  String get settingsNotificationsWakeFromSleepBody;
+
   /// No description provided for @settingsNotificationsContactsSection.
   ///
   /// In en, this message translates to:

@@ -162,6 +162,13 @@ class _NotificationSettingsScreenState
             value: notificationsEnabled,
             onChanged: _setNotificationsEnabled,
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              l10n.settingsNotificationsWakeFromSleepBody,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
           const Divider(),
           _SectionHeader(title: l10n.settingsNotificationsContactsSection),
           SwitchListTile(

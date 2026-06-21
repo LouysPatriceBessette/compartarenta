@@ -175,6 +175,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Master switch for notification categories in this app.';
 
   @override
+  String get settingsNotificationsWakeFromSleepBody =>
+      'When allowed, the app can register with the relay so a closed app may wake briefly to check for new contact or payment reminders—without showing message content in the push itself.';
+
+  @override
   String get settingsNotificationsContactsSection => 'Contacts';
 
   @override

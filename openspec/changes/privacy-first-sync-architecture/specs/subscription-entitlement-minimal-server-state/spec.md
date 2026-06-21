@@ -5,6 +5,8 @@ The server SHALL NOT durably store user operational payloads (calculation inputs
 
 Relay ciphertext MAY contain **ledger synchronization messages** (e.g., proposed expenses, accept/reject, amendments); those remain transport artifacts and SHALL NOT be copied into durable “user ledger” or analytics tables as part of core architecture. If any short-lived processing buffer holds them, retention SHALL follow `relay-sync-no-persistence`.
 
+Transport routing push tokens (`routing_push_tokens`) are an explicit exception: opaque FCM/APNs device tokens keyed by recipient routing id, bounded by strict TTL, with no message payload or business-domain fields. Aggregate operator statistics derived from `last_seen_at` and opt-in `country` are permitted; row-level export is not. The full contract lives in `closed-app-push-delivery`.
+
 #### Scenario: Schema review excludes user payload tables
 - **WHEN** the server database schema is defined or changed
 - **THEN** it does not include tables or columns intended to store user operational payloads for the core product

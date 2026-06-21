@@ -41,6 +41,8 @@ The privacy spec is amended to permit storing transport routing tokens. The exce
 - **No payload coupling**: the relay MUST NOT cross-reference this table with envelope contents, ciphertext bodies, or any other table beyond the index lookup required to fan out a wake push.
 - **No analytics coupling**: `last_seen_at` and `country` MAY be used to compute aggregate daily statistics (operator metric) but MUST NOT be exposed at row granularity, exported, or joined with any external user identifier.
 
+**Product decision (2026-06-21):** The product owner confirms the relaxed privacy posture is **acceptable for the next relay audit**: durable storage of transport routing tokens with strict TTL (`expires_at`), plus `last_seen_at` for aggregate daily operator statistics only (no row-level export), and optional `country` under the same suppression rules. The bounded exception above is approved; no additional columns or row-granularity exposure without a follow-up privacy spec change.
+
 Alternatives considered:
 
 - Stateless ephemeral webhook: too brittle; the device would have to be opened often enough that the device is effectively a foreground app. Rejected on UX grounds.

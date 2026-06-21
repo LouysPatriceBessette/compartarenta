@@ -175,6 +175,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Interruptor principal para las categorías de notificación de esta app.';
 
   @override
+  String get settingsNotificationsWakeFromSleepBody =>
+      'Si está permitido, la app se registra en el relé para que, estando cerrada, pueda despertarse brevemente y comprobar nuevas solicitudes de contacto o recordatorios de pago, sin mostrar el contenido del mensaje en la notificación push.';
+
+  @override
   String get settingsNotificationsContactsSection => 'Contactos';
 
   @override
