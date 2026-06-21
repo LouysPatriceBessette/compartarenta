@@ -5,8 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:go_router/go_router.dart';
-import '../app_root_navigator.dart';
+import '../navigation/app_navigation.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
 import '../housing/housing_navigation_intent.dart';
@@ -15,6 +14,7 @@ import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import 'closed_app_push_registration_service.dart';
 import 'notification_localizations.dart';
+import 'notification_qa_prefix.dart';
 import 'housing_browser_notification_stub.dart'
     if (dart.library.html) 'housing_browser_notification_web.dart'
     as housing_browser;
@@ -290,6 +290,9 @@ class PushNotificationService {
         message.notification?.body ??
         message.data['body'] as String? ??
         l10n.pushNotificationHousingProposalBody;
+    const qaNumber = 1;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     final plugin = isBackgroundIsolate
         ? FlutterLocalNotificationsPlugin()
@@ -334,8 +337,8 @@ class PushNotificationService {
 
     await plugin.show(
       id: id,
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: details,
       payload: _housingTapPayload,
     );
@@ -365,11 +368,14 @@ class PushNotificationService {
     final l10n = l10nForNotificationLocale(prefs: prefs);
     final title = l10n.pushNotificationHousingProposalTitle;
     final body = l10n.pushNotificationHousingProposalBody;
+    final qaNumber = openAsAmendment ? 3 : 2;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
         openProposalPlanId: !openAsAmendment ? planId : null,
         openAmendmentPlanId: openAsAmendment ? planId : null,
       );
@@ -381,8 +387,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -413,6 +419,9 @@ class PushNotificationService {
         : l10n.pushNotificationHousingRealizedExpenseBodyFrom(
             senderDisplayName.trim(),
           );
+    const qaNumber = 4;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     final tapPayload = expenseId == null || expenseId.isEmpty
         ? _housingTapPayload
@@ -420,8 +429,8 @@ class PushNotificationService {
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
         expenseId: expenseId,
       );
       return;
@@ -432,8 +441,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -467,6 +476,9 @@ class PushNotificationService {
     final body = reminderKind == 'overdue'
         ? l10n.pushNotificationHousingPaymentReminderOverdueBody(lineTitle)
         : l10n.pushNotificationHousingPaymentReminderBeforeDueBody(lineTitle);
+    final qaNumber = reminderKind == 'overdue' ? 11 : 10;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     var payload = _housingTapPayload;
     if (planId != null && planId.isNotEmpty) {
@@ -480,8 +492,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -512,6 +524,9 @@ class PushNotificationService {
         : l10n.pushNotificationHousingRealizedExpenseRejectedBodyFrom(
             senderDisplayName.trim(),
           );
+    const qaNumber = 5;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     final tapPayload = expenseId == null || expenseId.isEmpty
         ? _housingTapPayload
@@ -519,8 +534,8 @@ class PushNotificationService {
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
         expenseId: expenseId,
       );
       return;
@@ -531,8 +546,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -563,6 +578,9 @@ class PushNotificationService {
         : l10n.pushNotificationHousingRealizedExpenseAcceptedBodyFrom(
             senderDisplayName.trim(),
           );
+    const qaNumber = 6;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     final tapPayload = expenseId == null || expenseId.isEmpty
         ? _housingTapPayload
@@ -570,8 +588,8 @@ class PushNotificationService {
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
         expenseId: expenseId,
       );
       return;
@@ -582,8 +600,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -621,6 +639,9 @@ class PushNotificationService {
             : l10n.pushNotificationHousingParticipationChangeBodyFrom(
               senderDisplayName.trim(),
             );
+    const qaNumber = 9;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
 
     final tapPayload =
         changeId != null &&
@@ -632,8 +653,8 @@ class PushNotificationService {
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
         openParticipationChangePlanId: planId,
         openParticipationChangeId: changeId,
       );
@@ -645,8 +666,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -679,10 +700,15 @@ class PushNotificationService {
             senderDisplayName.trim(),
           );
 
-    final tapPayload = planId != null &&
-            planId.isNotEmpty &&
-            revisionId != null &&
-            revisionId.isNotEmpty
+    final hasSettledRevision = planId != null &&
+        planId.isNotEmpty &&
+        revisionId != null &&
+        revisionId.isNotEmpty;
+    final qaNumber = hasSettledRevision ? 7 : 8;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
+
+    final tapPayload = hasSettledRevision
         ? '$_housingDecisionPrefix$planId|$revisionId'
         : (planId != null && planId.isNotEmpty
             ? '$_housingAmendmentPrefix$planId'
@@ -690,8 +716,8 @@ class PushNotificationService {
 
     if (kIsWeb) {
       await housing_browser.showHousingBrowserNotification(
-        title: title,
-        body: body,
+        title: displayTitle,
+        body: displayBody,
       );
       return;
     }
@@ -701,8 +727,8 @@ class PushNotificationService {
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -736,13 +762,16 @@ class PushNotificationService {
         l10n.pushNotificationHousingResponseFailureLocalErrorBody,
       _ => l10n.pushNotificationHousingResponseFailureLocalErrorBody,
     };
+    const qaNumber = 12;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
     await _ensureLocalNotificationsInitialized(_plugin);
     final playSound = prefs.notificationSoundEnabled;
     final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
     await _plugin.show(
       id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
-      title: title,
-      body: body,
+      title: displayTitle,
+      body: displayBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           androidChannel.id,
@@ -759,58 +788,38 @@ class PushNotificationService {
     );
   }
 
-  /// Opens [/contacts] from a notification tap. Skips navigation when the user
-  /// is already in the contacts module so we do not stack a second
-  /// [ContactsListScreen] above an open contact detail route.
+  /// Opens [/contacts] from a notification tap.
   static void _navigateToContacts() {
-    void attempt([int tries = 0]) {
-      final ctx = appRootNavigatorKey.currentContext;
-      if (ctx != null && ctx.mounted) {
-        final router = GoRouter.of(ctx);
-        if (router.state.matchedLocation.startsWith('/contacts')) {
-          return;
-        }
-        router.go('/contacts');
-        return;
-      }
-      if (tries >= 30) {
-        debugPrint(
-          'PushNotificationService: navigate to /contacts skipped (no context)',
-        );
-        return;
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) => attempt(tries + 1));
-    }
+    pushFromNotificationTapWhenReady(
+      '/contacts',
+      skipPushWhenAlreadyAt: (location) => location.startsWith('/contacts'),
+    );
+  }
 
-    attempt();
+  static Future<void> _prepareHousingForNotificationTap(
+    BuildContext context,
+  ) async {
+    await HandshakeOrchestrator.maybeInstance
+        ?.pollSteadyStateInboxes()
+        .catchError((Object e, StackTrace st) {
+          debugPrint('PushNotificationService housing poll: $e\n$st');
+        });
+    if (!context.mounted) return;
+    if (HousingNavigationIntent.hasRootOverlayPlanScreen) {
+      final rootNav = Navigator.of(context, rootNavigator: true);
+      if (rootNav.canPop()) {
+        rootNav.pop();
+      }
+    }
+    HousingNavigationIntent.requestEntryReload();
   }
 
   static void _navigateToHousing() {
-    Future<void> attempt([int tries = 0]) async {
-      final ctx = appRootNavigatorKey.currentContext;
-      if (ctx != null && ctx.mounted) {
-        await HandshakeOrchestrator.maybeInstance
-            ?.pollSteadyStateInboxes()
-            .catchError((Object e, StackTrace st) {
-              debugPrint('PushNotificationService housing poll: $e\n$st');
-            });
-        if (ctx.mounted) {
-          HousingNavigationIntent.remountHousingModule(ctx);
-        }
-        return;
-      }
-      if (tries >= 30) {
-        debugPrint(
-          'PushNotificationService: navigate to /housing skipped (no context)',
-        );
-        return;
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        unawaited(attempt(tries + 1));
-      });
-    }
-
-    unawaited(attempt());
+    pushFromNotificationTapWhenReady(
+      '/housing',
+      skipPushWhenAlreadyAt: (location) => location.startsWith('/housing'),
+      beforeNavigate: _prepareHousingForNotificationTap,
+    );
   }
 
   /// Notification tap: open housing module, then proposal screen above it.

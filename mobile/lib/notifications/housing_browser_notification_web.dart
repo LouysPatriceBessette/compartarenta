@@ -6,6 +6,7 @@ import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 
 import '../housing/housing_navigation_intent.dart';
+import '../navigation/app_navigation.dart';
 import '../relay/handshake_orchestrator.dart';
 
 Future<void> showHousingBrowserNotification({
@@ -50,7 +51,13 @@ Future<void> showHousingBrowserNotification({
         changeId: openParticipationChangeId,
       );
     }
-    html.window.location.hash = '/housing';
+    pushFromNotificationTapWhenReady(
+      '/housing',
+      skipPushWhenAlreadyAt: (location) => location.startsWith('/housing'),
+      beforeNavigate: (_) async {
+        HousingNavigationIntent.requestEntryReload();
+      },
+    );
     notification.close();
   });
 }

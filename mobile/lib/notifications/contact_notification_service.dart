@@ -2,6 +2,7 @@ import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import 'notification_localizations.dart';
 import 'notification_permission_gate.dart';
+import 'notification_qa_prefix.dart';
 import 'contact_notification_service_stub.dart'
     if (dart.library.html) 'contact_notification_service_web.dart'
     if (dart.library.io) 'contact_notification_service_native.dart'
@@ -44,8 +45,11 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactAddRequestTitle,
-      body: l10n.pushNotificationContactAddRequestBody(displayName),
+      title: notificationQaPrefix(13, l10n.pushNotificationContactAddRequestTitle),
+      body: notificationQaPrefix(
+        13,
+        l10n.pushNotificationContactAddRequestBody(displayName),
+      ),
       playSound: prefs.notificationSoundEnabled,
     );
   }
@@ -60,8 +64,11 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactAddRequestTitle,
-      body: l10n.pushNotificationContactAddedViaInvitationBody(displayName),
+      title: notificationQaPrefix(14, l10n.pushNotificationContactAddRequestTitle),
+      body: notificationQaPrefix(
+        14,
+        l10n.pushNotificationContactAddedViaInvitationBody(displayName),
+      ),
       playSound: prefs.notificationSoundEnabled,
     );
   }
@@ -78,11 +85,12 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     if (!await _systemAllowsNotifications()) return;
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
+    final resolvedBody = accepted
+        ? l10n.pushNotificationContactAddRequestAcceptedBody(displayName)
+        : l10n.pushNotificationContactAddRequestRejectedBody(displayName);
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactAddRequestTitle,
-      body: accepted
-          ? l10n.pushNotificationContactAddRequestAcceptedBody(displayName)
-          : l10n.pushNotificationContactAddRequestRejectedBody(displayName),
+      title: notificationQaPrefix(15, l10n.pushNotificationContactAddRequestTitle),
+      body: notificationQaPrefix(15, resolvedBody),
       playSound: prefs.notificationSoundEnabled,
     );
   }
@@ -97,8 +105,11 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactAddRequestTitle,
-      body: _connectionRequestFailureBody(l10n, errorCode),
+      title: notificationQaPrefix(16, l10n.pushNotificationContactAddRequestTitle),
+      body: notificationQaPrefix(
+        16,
+        _connectionRequestFailureBody(l10n, errorCode),
+      ),
       playSound: prefs.notificationSoundEnabled,
     );
   }
@@ -114,8 +125,14 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactDisconnectionTitle,
-      body: l10n.pushNotificationContactDisconnectionBody(displayName),
+      title: notificationQaPrefix(
+        17,
+        l10n.pushNotificationContactDisconnectionTitle,
+      ),
+      body: notificationQaPrefix(
+        17,
+        l10n.pushNotificationContactDisconnectionBody(displayName),
+      ),
       playSound: prefs.notificationSoundEnabled,
     );
   }
@@ -135,10 +152,13 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
     final l10n = l10nForNotificationLocale(prefs: prefs);
     final trimmedPlanId = planId.trim();
     await impl.showContactNotification(
-      title: l10n.pushNotificationContactAddRequestTitle,
-      body: l10n.pushNotificationPlanPeerEstablishmentRequestBody(
-        requesterDisplayName,
-        proposerDisplayName,
+      title: notificationQaPrefix(18, l10n.pushNotificationContactAddRequestTitle),
+      body: notificationQaPrefix(
+        18,
+        l10n.pushNotificationPlanPeerEstablishmentRequestBody(
+          requesterDisplayName,
+          proposerDisplayName,
+        ),
       ),
       playSound: prefs.notificationSoundEnabled,
       payload: trimmedPlanId.isEmpty

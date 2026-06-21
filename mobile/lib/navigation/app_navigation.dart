@@ -1,5 +1,9 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../app_root_navigator.dart';
 
 /// Declarative navigation to [location] (GoRouter [GoRouter.go]).
 ///
@@ -7,6 +11,66 @@ import 'package:go_router/go_router.dart';
 /// destination and the system back button does not walk unrelated history.
 void navigateTo(BuildContext context, String location, {Object? extra}) {
   context.go(location, extra: extra);
+}
+
+/// Push [location] when the user taps a notification.
+///
+/// Unlike [navigateTo], keeps the previous route on the stack so the screen
+/// back button returns where the user was before opening the notification.
+void pushFromNotificationTap(
+  BuildContext context,
+  String location, {
+  Object? extra,
+}) {
+  context.push(location, extra: extra);
+}
+
+typedef NotificationTapSkipPredicate = bool Function(String matchedLocation);
+
+/// Waits for [appRootNavigatorKey], then [pushFromNotificationTap].
+///
+/// When [skipPushWhenAlreadyAt] matches the current location, runs
+/// [beforeNavigate] only (no stack push). Use this when the user is already
+/// inside the target module (e.g. [/housing]) but sub-screens must still open.
+void pushFromNotificationTapWhenReady(
+  String location, {
+  Object? extra,
+  NotificationTapSkipPredicate? skipPushWhenAlreadyAt,
+  Future<void> Function(BuildContext context)? beforeNavigate,
+  int maxTries = 30,
+}) {
+  Future<void> attempt([int tries = 0]) async {
+    final ctx = appRootNavigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      final router = GoRouter.of(ctx);
+      final skipPush =
+          skipPushWhenAlreadyAt != null &&
+          skipPushWhenAlreadyAt(router.state.matchedLocation);
+      if (beforeNavigate != null) {
+        await beforeNavigate(ctx).catchError((Object e, StackTrace st) {
+          debugPrint(
+            'pushFromNotificationTapWhenReady beforeNavigate: $e\n$st',
+          );
+        });
+      }
+      if (!skipPush && ctx.mounted) {
+        pushFromNotificationTap(ctx, location, extra: extra);
+      }
+      return;
+    }
+    if (tries >= maxTries) {
+      debugPrint(
+        'pushFromNotificationTapWhenReady: skipped (no context) '
+        'location=$location',
+      );
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(attempt(tries + 1));
+    });
+  }
+
+  unawaited(attempt());
 }
 
 /// Opens a full-screen [route] without growing the navigator stack.
