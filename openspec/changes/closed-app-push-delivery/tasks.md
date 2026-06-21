@@ -2,12 +2,13 @@
 > register/unregister endpoints, FCM wake dispatcher (feature-flagged), daily
 > stats loopback + cron scripts, Android keep-alive (WorkManager + resume/wake
 > refresh), client registration gates, predecessor spec alignment, operator docs,
-> and automated tests are **implemented in the repo**. Production enablement
+> automated tests, and client wake-eligible Housing plan categories (**12.1**,
+> **12.2**) are **implemented in the repo**. Production enablement
 > (`WAKE_PUSH_DISPATCH_ENABLED`), field validation on Android, and tasks **7.4**,
-> **10.5**, **11.2–11.6**, **12.x** remain **open**. Privacy sign-off for
-> transport routing tokens + `last_seen_at` is **recorded** (task 1.1; see
-> `design.md` § 1). APNs code exists in relay but is **out of scope** for
-> current functional QA (FCM-only).
+> **10.5**, **11.2–11.6** remain **open**. Privacy sign-off for transport routing
+> tokens + `last_seen_at` is **recorded** (task 1.1; see `design.md` § 1). APNs
+> code exists in relay but is **out of scope** for current functional QA
+> (FCM-only).
 
 ## 1. Privacy and Spec Orchestration
 
@@ -105,7 +106,7 @@
 
 ## 12. Follow-Up Scope (Out of V1, Tracked Here)
 
-- [ ] 12.1 After V1 stabilizes, opt the Contacts add request response notification into wake dispatch on the client side (no relay change required).
-- [ ] 12.2 After V1 stabilizes, opt Housing plan offer and response notifications into wake dispatch on the client side (no relay change required).
+- [x] 12.1 After V1 stabilizes, opt the Contacts add request response notification into wake dispatch on the client side (no relay change required). *(Contacts add request was already wake-eligible in V1; unchanged.)*
+- [x] 12.2 After V1 stabilizes, opt Housing plan offer and response notifications into wake dispatch on the client side (no relay change required). *(See `AppPreferences.hasWakeEligibleCategoryEnabled` — `notificationHousingPlanSubmission` + `notificationHousingDecisionChange`; test in `closed_app_push_registration_service_test.dart`.)*
 - [ ] 12.3 Reassess the TTL default after one quarter of production data on active-device counts.
 - [ ] 12.4 Decide whether iOS degraded-mode generic alert should ship by default based on field-test data.

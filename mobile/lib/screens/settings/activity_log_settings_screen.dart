@@ -106,6 +106,8 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
           l10n.activityLogKindHousingProposalExpired,
         RelayActivityLogKinds.housingProposalForkCreated =>
           l10n.activityLogKindHousingProposalForkCreated,
+        RelayActivityLogKinds.housingAgreementActivated =>
+          l10n.activityLogKindHousingAgreementActivated,
         _ => kind,
       };
 

@@ -203,4 +203,5 @@ abstract final class RelayActivityLogKinds {
   static const housingParticipationChangeAgreementExpired =
       'housing_participation_change_agreement_expired';
   static const housingProposalForkCreated = 'housing_proposal_fork_created';
+  static const housingAgreementActivated = 'housing_agreement_activated';
 }

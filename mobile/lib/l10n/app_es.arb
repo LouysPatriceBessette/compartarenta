@@ -247,6 +247,27 @@
   "housingActiveHubRequestAmendment": "Modificar el plan",
   "housingActiveHubJournals": "Diarios",
   "housingActiveHubExportImport": "Copia de seguridad",
+  "housingExportSecurityWarning": "El archivo exportado es JSON sin cifrar. Guárdelo de forma segura y no lo comparta por canales no confiables.",
+  "housingExportAction": "Exportar datos del acuerdo",
+  "housingExportCopiedToClipboard": "JSON exportado copiado al portapapeles.",
+  "housingExportSavedTo": "Exportación guardada en {path}",
+  "@housingExportSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "housingExportFailed": "Error de exportación: {error}",
+  "@housingExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "housingImportNotAvailableTitle": "Importación",
+  "housingImportNotAvailableBody": "La importación requiere un derecho de vivienda válido y se habilitará en una versión posterior.",
   "housingActiveHubPassPlaceholderTitle": "Próximamente",
   "housingActiveHubPassPlaceholderBody": "Esta pantalla estará disponible en la siguiente fase de implementación.",
   "housingRealizedExpenseTitle": "Enviar un gasto",
@@ -610,6 +631,7 @@
   "activityLogKindHousingProposalInvalidated": "Propuesta de vivienda cerrada",
   "activityLogKindHousingProposalExpired": "Propuesta de vivienda caducada",
   "activityLogKindHousingProposalForkCreated": "Versión derivada de vivienda iniciada",
+  "activityLogKindHousingAgreementActivated": "Acuerdo de vivienda activado",
   "housingInvitePlanActivating": "Todos los participantes han aceptado. Activando el acuerdo…",
   "housingInviteProposalAppBarTitle": "Propuesta de invitación",
   "housingInviteProposalIntroTitle": "Esta es la propuesta que se enviará a cada uno de tus participantes.",
@@ -722,6 +744,8 @@
   "housingInviteReceivedOpenAction": "Ver",
   "pushNotificationHousingProposalTitle": "Propuesta de vivienda",
   "pushNotificationHousingProposalBody": "Abra la aplicación para revisar la propuesta.",
+  "pushNotificationHousingAgreementActivatedTitle": "Acuerdo unánime",
+  "pushNotificationHousingAgreementActivatedBody": "Su grupo ha alcanzado un acuerdo de vivienda unánime.",
   "pushNotificationHousingRealizedExpenseTitle": "Gasto por revisar",
   "pushNotificationHousingRealizedExpenseBody": "Un participante envió un gasto para su acuerdo.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} envió un gasto por revisar.",

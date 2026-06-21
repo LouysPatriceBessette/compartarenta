@@ -1342,6 +1342,48 @@ abstract class AppLocalizations {
   /// **'Security backup'**
   String get housingActiveHubExportImport;
 
+  /// No description provided for @housingExportSecurityWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The export file is unencrypted JSON. Store it securely and do not share it over untrusted channels.'**
+  String get housingExportSecurityWarning;
+
+  /// No description provided for @housingExportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Export agreement data'**
+  String get housingExportAction;
+
+  /// No description provided for @housingExportCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Export JSON copied to clipboard.'**
+  String get housingExportCopiedToClipboard;
+
+  /// No description provided for @housingExportSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Export saved to {path}'**
+  String housingExportSavedTo(String path);
+
+  /// No description provided for @housingExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String housingExportFailed(String error);
+
+  /// No description provided for @housingImportNotAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get housingImportNotAvailableTitle;
+
+  /// No description provided for @housingImportNotAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Import requires a valid housing entitlement and will be enabled in a later release.'**
+  String get housingImportNotAvailableBody;
+
   /// No description provided for @housingActiveHubPassPlaceholderTitle.
   ///
   /// In en, this message translates to:
@@ -2843,6 +2885,12 @@ abstract class AppLocalizations {
   /// **'Derived housing proposal started'**
   String get activityLogKindHousingProposalForkCreated;
 
+  /// No description provided for @activityLogKindHousingAgreementActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing agreement activated'**
+  String get activityLogKindHousingAgreementActivated;
+
   /// No description provided for @housingInvitePlanActivating.
   ///
   /// In en, this message translates to:
@@ -3238,6 +3286,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the app to review the proposal.'**
   String get pushNotificationHousingProposalBody;
+
+  /// No description provided for @pushNotificationHousingAgreementActivatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unanimous agreement'**
+  String get pushNotificationHousingAgreementActivatedTitle;
+
+  /// No description provided for @pushNotificationHousingAgreementActivatedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group has reached a unanimous housing agreement.'**
+  String get pushNotificationHousingAgreementActivatedBody;
 
   /// No description provided for @pushNotificationHousingRealizedExpenseTitle.
   ///

@@ -41,13 +41,18 @@ void main() {
       expect(prefs.countryCodeForRoutingPushRegistration, 'UNDISCLOSED');
     });
 
-    test('wake-eligible requires contact add or payment reminders', () async {
+    test('wake-eligible requires contact add, payment, or housing plan categories',
+        () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await AppPreferences.load();
       expect(prefs.hasWakeEligibleCategoryEnabled, isTrue);
       await prefs.setNotificationContactAddRequests(false);
       await prefs.setNotificationHousingPaymentReminders(false);
+      await prefs.setNotificationHousingPlanSubmission(false);
+      await prefs.setNotificationHousingDecisionChange(false);
       expect(prefs.hasWakeEligibleCategoryEnabled, isFalse);
+      await prefs.setNotificationHousingPlanSubmission(true);
+      expect(prefs.hasWakeEligibleCategoryEnabled, isTrue);
     });
   });
 

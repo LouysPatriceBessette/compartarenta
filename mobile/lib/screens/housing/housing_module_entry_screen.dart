@@ -109,6 +109,9 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       HousingNavigationIntent.openMissingContactsTick.addListener(
         _onOpenMissingContactsIntent,
       );
+      HousingNavigationIntent.openActiveHubTick.addListener(
+        _onOpenActiveHubIntent,
+      );
       HousingNavigationIntent.entryReloadTick.addListener(_onEntryReloadIntent);
       HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
         _onSteadyInboxTick,
@@ -117,6 +120,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       _openPendingProposalFromNotificationIfAny();
       _openParticipationChangeFromNotificationIfAny();
       _openMissingContactsFromNotificationIfAny();
+      _openActiveHubFromNotificationIfAny();
     });
   }
 
@@ -133,6 +137,9 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
     );
     HousingNavigationIntent.openMissingContactsTick.removeListener(
       _onOpenMissingContactsIntent,
+    );
+    HousingNavigationIntent.openActiveHubTick.removeListener(
+      _onOpenActiveHubIntent,
     );
     HousingNavigationIntent.entryReloadTick.removeListener(
       _onEntryReloadIntent,
@@ -186,6 +193,41 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       if (!mounted) return;
       _openMissingContactsFromNotificationIfAny();
     });
+  }
+
+  void _onOpenActiveHubIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openActiveHubFromNotificationIfAny();
+    });
+  }
+
+  Future<void> _openActiveHubFromNotificationIfAny() async {
+    final planId = HousingNavigationIntent.takePendingOpenActiveHubPlanId();
+    if (planId == null || planId.isEmpty || !mounted) return;
+    final db = AppDatabase.processScope;
+    final transport = HousingProposalTransportService(db);
+    if (!await transport.hasActiveRevision(planId)) {
+      _reloadEntry();
+      return;
+    }
+    final pkg = await (db.select(db.proposalPackages)
+          ..where((t) => t.planId.equals(planId)))
+        .getSingleOrNull();
+    if (pkg == null || !mounted) return;
+    await navigateToRoute<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder:
+            (_) => HousingActivePlanScreen(
+              planId: planId,
+              packageId: pkg.id,
+              prefs: widget.prefs,
+            ),
+      ),
+    );
+    if (mounted) _reloadEntry();
   }
 
   Future<void> _openMissingContactsFromNotificationIfAny() async {

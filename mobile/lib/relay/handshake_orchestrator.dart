@@ -2751,6 +2751,10 @@ class HandshakeOrchestrator {
           planId: planId,
           revisionId: selectedRevisionId,
         );
+        await HousingProposalTransportService(_db).notifyAgreementActivatedIfNeeded(
+          planId: planId,
+          revisionId: selectedRevisionId,
+        );
       }
       await transport.reconcileStalePackagePending(planId);
     } else if (sendResult.sentCount > 0) {
@@ -3444,6 +3448,10 @@ class HandshakeOrchestrator {
             revisionId: revision.id,
           );
           await _reconcileHousingPaymentRemindersAfterActivation(
+            planId: pkg.planId,
+            revisionId: revision.id,
+          );
+          await transport.notifyAgreementActivatedIfNeeded(
             planId: pkg.planId,
             revisionId: revision.id,
           );
@@ -4256,5 +4264,16 @@ class HandshakeOrchestrator {
       revisionId: 'coverage:$expenseId',
       senderRoutingId: senderRouting,
     );
+  }
+
+  /// Task 2.2b — relay timezone upsert when user changes notification timezone.
+  Future<void> syncHousingPaymentReminderTimezone() async {
+    if (kIsWeb) return;
+    try {
+      final service = await _housingPaymentReminderService();
+      await service.onTimeZonePreferenceChanged();
+    } catch (e, st) {
+      debugPrint('syncHousingPaymentReminderTimezone: $e\n$st');
+    }
   }
 }

@@ -947,6 +947,12 @@ class _HousingUnanimousActiveGateState extends State<_HousingUnanimousActiveGate
       revisionId: widget.revisionId,
     );
     if (outcome == ProposalActivationOutcome.activated) {
+      await HousingProposalTransportService(
+        widget.db,
+      ).notifyAgreementActivatedIfNeeded(
+        planId: widget.planId,
+        revisionId: widget.revisionId,
+      );
       return (packageId: pkg.id, ready: true);
     }
 

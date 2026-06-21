@@ -11,9 +11,11 @@ import '../housing_plan_peer_contacts.dart';
 import '../housing_plan_id.dart';
 import '../plan_peer_establishment_service.dart';
 import '../agreement_rules_json.dart';
+import '../amendment/housing_agreement_start_date_policy.dart';
 import '../amendment/housing_amendment_type.dart';
 import '../expense_form/expense_ratio_template_repository.dart';
 import '../realized_expense/realized_expense_line_snapshot.dart';
+import 'housing_activation_notification_service.dart';
 import 'housing_proposal_revision_state.dart';
 import 'plan_agreement_proposal_service.dart';
 
@@ -509,6 +511,10 @@ class HousingProposalTransportService {
         debugPrint(
           'housing: repaired unanimous activation for pending $pendingId '
           'on $planId',
+        );
+        await notifyAgreementActivatedIfNeeded(
+          planId: planId,
+          revisionId: pendingId,
         );
       }
     }
@@ -1302,7 +1308,38 @@ class HousingProposalTransportService {
 
     await _upsertRatioTemplatesFromPayload(planId, payload, now);
     await _ensureRatioTemplatesFromAppliedLines(planId, now);
+
+    final existingAgreement = await _db.getAgreementForPlan(planId);
+    if (existingAgreement != null) {
+      final agr = _map(payload['agreement']);
+      final proposedStart = _date(agr['periodStart']);
+      if (proposedStart != null &&
+          await blocksAgreementStartDateChange(
+            db: _db,
+            planId: planId,
+            existingStart: existingAgreement.periodStart,
+            proposedStart: proposedStart,
+          )) {
+        agr['periodStart'] = existingAgreement.periodStart.toIso8601String();
+        payload['agreement'] = agr;
+      }
+    }
     await _upsertAgreement(planId, payload, now);
+  }
+
+  /// Task 1.23 — local activation notification (deduped per revision).
+  Future<void> notifyAgreementActivatedIfNeeded({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final rev = await (_db.select(_db.proposalRevisions)
+          ..where((t) => t.id.equals(revisionId)))
+        .getSingleOrNull();
+    await HousingActivationNotificationService(_db).maybeNotifyAgreementActivated(
+      planId: planId,
+      revisionId: revisionId,
+      packageId: rev?.packageId,
+    );
   }
 
   Future<void> _upsertRatioTemplatesFromPayload(

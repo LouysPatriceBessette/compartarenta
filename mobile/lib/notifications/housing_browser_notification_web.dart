@@ -17,6 +17,7 @@ Future<void> showHousingBrowserNotification({
   String? openAmendmentPlanId,
   String? openParticipationChangePlanId,
   String? openParticipationChangeId,
+  String? openActiveHubPlanId,
 }) async {
   if (!html.Notification.supported) return;
   if (html.Notification.permission != 'granted') return;
@@ -50,6 +51,8 @@ Future<void> showHousingBrowserNotification({
         planId: openParticipationChangePlanId,
         changeId: openParticipationChangeId,
       );
+    } else if (openActiveHubPlanId != null && openActiveHubPlanId.isNotEmpty) {
+      HousingNavigationIntent.requestOpenActiveHub(openActiveHubPlanId);
     }
     pushFromNotificationTapWhenReady(
       '/housing',

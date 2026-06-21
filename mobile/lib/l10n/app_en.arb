@@ -247,6 +247,27 @@
   "housingActiveHubRequestAmendment": "Modify plan",
   "housingActiveHubJournals": "Journals",
   "housingActiveHubExportImport": "Security backup",
+  "housingExportSecurityWarning": "The export file is unencrypted JSON. Store it securely and do not share it over untrusted channels.",
+  "housingExportAction": "Export agreement data",
+  "housingExportCopiedToClipboard": "Export JSON copied to clipboard.",
+  "housingExportSavedTo": "Export saved to {path}",
+  "@housingExportSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "housingExportFailed": "Export failed: {error}",
+  "@housingExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "housingImportNotAvailableTitle": "Import",
+  "housingImportNotAvailableBody": "Import requires a valid housing entitlement and will be enabled in a later release.",
   "housingActiveHubPassPlaceholderTitle": "Coming soon",
   "housingActiveHubPassPlaceholderBody": "This screen will be available in the next implementation pass.",
   "housingRealizedExpenseTitle": "Submit an expense",
@@ -719,6 +740,7 @@
   "activityLogKindHousingProposalInvalidated": "Housing proposal closed",
   "activityLogKindHousingProposalExpired": "Housing proposal expired",
   "activityLogKindHousingProposalForkCreated": "Derived housing proposal started",
+  "activityLogKindHousingAgreementActivated": "Housing agreement activated",
   "housingInvitePlanActivating": "All participants have accepted. Activating the agreement…",
   "housingInviteProposalAppBarTitle": "Invitation proposal",
   "housingInviteProposalIntroTitle": "Here is the proposal that will be sent to each of your participants.",
@@ -831,6 +853,8 @@
   "housingInviteReceivedOpenAction": "View",
   "pushNotificationHousingProposalTitle": "Housing proposal",
   "pushNotificationHousingProposalBody": "Open the app to review the proposal.",
+  "pushNotificationHousingAgreementActivatedTitle": "Unanimous agreement",
+  "pushNotificationHousingAgreementActivatedBody": "Your group has reached a unanimous housing agreement.",
   "pushNotificationHousingRealizedExpenseTitle": "Expense to review",
   "pushNotificationHousingRealizedExpenseBody": "A participant submitted an expense for your agreement.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} submitted an expense to review.",

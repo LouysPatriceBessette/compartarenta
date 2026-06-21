@@ -33,6 +33,10 @@ class HousingNavigationIntent {
   static String? pendingOpenMissingContactsPlanId;
   static final ValueNotifier<int> openMissingContactsTick = ValueNotifier<int>(0);
 
+  /// After unanimous activation notification tap: open active agreement hub.
+  static String? pendingOpenActiveHubPlanId;
+  static final ValueNotifier<int> openActiveHubTick = ValueNotifier<int>(0);
+
   /// Bumps when [HousingModuleEntryScreen] should re-resolve hub / archive / plan.
   static final ValueNotifier<int> entryReloadTick = ValueNotifier<int>(0);
 
@@ -144,6 +148,11 @@ class HousingNavigationIntent {
     openMissingContactsTick.value = openMissingContactsTick.value + 1;
   }
 
+  static void requestOpenActiveHub(String planId) {
+    pendingOpenActiveHubPlanId = planId;
+    openActiveHubTick.value = openActiveHubTick.value + 1;
+  }
+
   static String? takePendingReview() {
     final id = pendingRealizedExpenseReviewId;
     pendingRealizedExpenseReviewId = null;
@@ -193,6 +202,12 @@ class HousingNavigationIntent {
   static String? takePendingOpenMissingContactsPlanId() {
     final id = pendingOpenMissingContactsPlanId;
     pendingOpenMissingContactsPlanId = null;
+    return id;
+  }
+
+  static String? takePendingOpenActiveHubPlanId() {
+    final id = pendingOpenActiveHubPlanId;
+    pendingOpenActiveHubPlanId = null;
     return id;
   }
 }

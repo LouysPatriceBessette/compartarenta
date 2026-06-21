@@ -63,6 +63,25 @@ class HousingPaymentReminderService {
     }
   }
 
+  /// Task 2.2b — Settings timezone change with an open agreement period.
+  Future<void> onTimeZonePreferenceChanged() async {
+    if (kIsWeb) return;
+    if (!await _hasAnyOpenAgreementPeriodPlan()) return;
+    await upsertSelfTimezoneOnRelay();
+  }
+
+  Future<bool> _hasAnyOpenAgreementPeriodPlan() async {
+    final housing = await (_db.select(_db.plans)
+          ..where((t) => t.type.equals('housing')))
+        .get();
+    for (final plan in housing) {
+      if (await _agreements.isPlanAgreementPeriodOpen(plan.id)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Full plan reconciliation after E.1–E.4 (unanimity-establishing client only).
   Future<void> reconcilePlanSchedule({
     required String planId,

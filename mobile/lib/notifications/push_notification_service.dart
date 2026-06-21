@@ -57,6 +57,7 @@ class PushNotificationService {
   static const String _housingParticipationChangePrefix =
       'housing_participation_change:';
   static const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
+  static const String _housingActiveHubPrefix = 'housing_active_hub:';
   static const String _contactsPayload = 'contacts';
 
   static const List<String> _housingKinds = <String>[
@@ -220,6 +221,16 @@ class PushNotificationService {
       final planId = payload.substring(_planPeerEstablishmentPrefix.length);
       if (planId.isNotEmpty) {
         HousingNavigationIntent.requestOpenMissingContacts(planId);
+        _navigateToHousing();
+      }
+      return;
+    }
+    if (payload.startsWith(_housingActiveHubPrefix)) {
+      final planId = payload.substring(_housingActiveHubPrefix.length);
+      if (planId.isNotEmpty) {
+        HousingNavigationIntent.requestOpenActiveHub(planId);
+        _navigateToHousing();
+      } else {
         _navigateToHousing();
       }
       return;
@@ -664,6 +675,52 @@ class PushNotificationService {
         body: displayBody,
         openParticipationChangePlanId: planId,
         openParticipationChangeId: changeId,
+      );
+      return;
+    }
+
+    await _ensureLocalNotificationsInitialized(_plugin);
+    final playSound = prefs.notificationSoundEnabled;
+    final androidChannel = playSound ? _androidChannel : _androidSilentChannel;
+    await _plugin.show(
+      id: DateTime.now().millisecondsSinceEpoch.remainder(1 << 30),
+      title: displayTitle,
+      body: displayBody,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          androidChannel.id,
+          androidChannel.name,
+          channelDescription: androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          playSound: playSound,
+        ),
+        iOS: DarwinNotificationDetails(presentSound: playSound),
+      ),
+      payload: tapPayload,
+    );
+  }
+
+  static Future<void> showLocalHousingAgreementActivatedNotification({
+    required String planId,
+  }) async {
+    final prefs = await AppPreferences.load();
+    if (!shouldDisplayHousingProposalNotification(prefs)) return;
+
+    final l10n = l10nForNotificationLocale(prefs: prefs);
+    final title = l10n.pushNotificationHousingAgreementActivatedTitle;
+    final body = l10n.pushNotificationHousingAgreementActivatedBody;
+    const qaNumber = 9;
+    final displayTitle = notificationQaPrefix(qaNumber, title);
+    final displayBody = notificationQaPrefix(qaNumber, body);
+    final tapPayload = '$_housingActiveHubPrefix$planId';
+
+    if (kIsWeb) {
+      await housing_browser.showHousingBrowserNotification(
+        title: displayTitle,
+        body: displayBody,
+        openActiveHubPlanId: planId,
       );
       return;
     }

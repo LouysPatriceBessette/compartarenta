@@ -47,7 +47,7 @@
 - [x] 4.2 Amendment entry: one change type per proposal; wire to existing renegotiation / offer flow.
 - [x] 4.3 Enforce: roster changes require end + new agreement with fork.
 - [x] 4.4 Agreement end + fork plan for renewal.
-- [ ] 4.5 Prevent in-force agreement start-date changes once the first realized expense reaches unanimous published state.
+- [x] 4.5 Prevent in-force agreement start-date changes once the first realized expense reaches unanimous published state. *(See `housing_agreement_start_date_policy.dart`, `PlanAgreementProposalService.tryActivateIfUnanimous`, tests in `housing_ready_specs_tasks_test.dart`.)*
 
 ### Pass 4 — QA (May 2026 dev)
 
@@ -58,14 +58,14 @@
 
 ## Pass 5 — Portability (`housing-agreement-data-portability`)
 
-- [ ] 5.1 Export JSON: housing module, single agreement, revision chain, checksum.
+- [x] 5.1 Export JSON: housing module, single agreement, revision chain, checksum. *(See `housing_agreement_export_service.dart`; test in `housing_ready_specs_tasks_test.dart`.)*
 - [ ] 5.2 Import: validate checksum + format version; reject tampered payloads.
 - [ ] 5.3 Require valid housing entitlement for housing import while keeping housing export always available.
-- [ ] 5.4 Hub export/import screen + security copy (plaintext file).
+- [x] 5.4 Hub export/import screen + security copy (plaintext file). *(See `housing_agreement_export_import_screen.dart`, hub tile in `housing_active_plan_screen.dart`; import deferred pending **5.2–5.3** / entitlement.)*
 
 ## Pass 6 — Negotiation integration
 
-- [ ] 6.1 Implement offer-flow task **1.23** (activation notification → hub).
+- [x] 6.1 Implement offer-flow task **1.23** (activation notification → hub). *(See offer-flow **1.23**.)*
 - [ ] 6.2 Post-activation onboarding swiper (deferred — see `repo-maintenance-backlog`).
 
 ## Dependencies

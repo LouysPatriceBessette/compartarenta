@@ -27,7 +27,7 @@ import 'housing_balances_screen.dart';
 import 'housing_expense_payment_status_screen.dart';
 import '../../widgets/balanced_text.dart';
 import '../../widgets/screen_body_padding.dart';
-import 'housing_active_hub_placeholder_screen.dart';
+import 'housing_agreement_export_import_screen.dart';
 import 'housing_journals_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
@@ -488,14 +488,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         });
   }
 
-  void _openPlaceholder(BuildContext context, String title) {
-    navigateToRoute<void>(context, 
-      MaterialPageRoute<void>(
-        builder: (_) => HousingActiveHubPlaceholderScreen(title: title),
-      ),
-    );
-  }
-
   Future<void> _openReviewList(BuildContext context) async {
     await navigateToRoute<void>(context, 
       MaterialPageRoute<void>(
@@ -770,11 +762,19 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                             _HubTile(
                               icon: Icons.import_export_outlined,
                               label: l10n.housingActiveHubExportImport,
-                              onTap:
-                                  () => _openPlaceholder(
-                                    context,
-                                    l10n.housingActiveHubExportImport,
+                              onTap: () {
+                                navigateToRoute<void>(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder:
+                                        (_) =>
+                                            HousingAgreementExportImportScreen(
+                                              planId: widget.planId,
+                                              packageId: widget.packageId,
+                                            ),
                                   ),
+                                );
+                              },
                             ),
                           ],
                         );

@@ -340,7 +340,9 @@ class AppPreferences extends ChangeNotifier {
   /// before the client registers routing push tokens on the relay.
   bool get hasWakeEligibleCategoryEnabled =>
       notificationContactAddRequests ||
-      notificationHousingPaymentReminders;
+      notificationHousingPaymentReminders ||
+      notificationHousingPlanSubmission ||
+      notificationHousingDecisionChange;
 
   bool get hasProfile => displayName.isNotEmpty && avatarId.isNotEmpty;
   bool get hasPlanSelection => planTypes.isNotEmpty;

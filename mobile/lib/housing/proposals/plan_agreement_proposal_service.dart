@@ -7,6 +7,7 @@ import '../../db/app_database.dart';
 import '../agreement_rules_json.dart';
 import '../housing_plan_id.dart';
 import 'housing_agreement_overlap_withdrawal_exception.dart';
+import '../amendment/housing_agreement_start_date_policy.dart';
 import 'housing_agreement_period_conflict.dart';
 import 'housing_proposal_revision_state.dart';
 import 'housing_proposal_transport_service.dart';
@@ -334,6 +335,16 @@ class PlanAgreementProposalService {
       return ProposalActivationOutcome.missingAgreementPeriodInRevision;
     }
 
+    final existingAgreement = await _db.getAgreementForPlan(planId);
+    if (await blocksAgreementStartDateChange(
+      db: _db,
+      planId: planId,
+      existingStart: existingAgreement?.periodStart,
+      proposedStart: period.start,
+    )) {
+      return ProposalActivationOutcome.blockedAgreementStartDateChange;
+    }
+
     final blocking = await listBlockingAgreementDayRangesWithPlanIds(
       _db,
       excludePlanId: planId,
@@ -442,4 +453,7 @@ enum ProposalActivationOutcome {
 
   /// Would overlap another housing plan on this device by the day rule (≥2 shared days).
   blockedByOverlappingAgreementPeriod,
+
+  /// Agreement start date cannot change after published realized expenses exist.
+  blockedAgreementStartDateChange,
 }

@@ -247,6 +247,27 @@
   "housingActiveHubRequestAmendment": "Modifier le plan",
   "housingActiveHubJournals": "Journaux",
   "housingActiveHubExportImport": "Sauvegarde de sécurité",
+  "housingExportSecurityWarning": "Le fichier exporté est du JSON non chiffré. Conservez-le en lieu sûr et ne le partagez pas sur des canaux non fiables.",
+  "housingExportAction": "Exporter les données de l'entente",
+  "housingExportCopiedToClipboard": "JSON exporté copié dans le presse-papiers.",
+  "housingExportSavedTo": "Export enregistré dans {path}",
+  "@housingExportSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "housingExportFailed": "Échec de l'export : {error}",
+  "@housingExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "housingImportNotAvailableTitle": "Importation",
+  "housingImportNotAvailableBody": "L'importation exige un droit logement valide et sera activée dans une version ultérieure.",
   "housingActiveHubPassPlaceholderTitle": "Bientôt disponible",
   "housingActiveHubPassPlaceholderBody": "Cet écran sera disponible à la prochaine étape d'implémentation.",
   "housingRealizedExpenseTitle": "Soumettre une dépense",
@@ -627,6 +648,7 @@
   "activityLogKindHousingProposalInvalidated": "Proposition logement fermée",
   "activityLogKindHousingProposalExpired": "Proposition logement expirée",
   "activityLogKindHousingProposalForkCreated": "Version dérivée logement démarrée",
+  "activityLogKindHousingAgreementActivated": "Entente de logement activée",
   "housingInvitePlanActivating": "Tous les participants ont accepté. Activation de l'entente…",
   "housingInviteProposalAppBarTitle": "Proposition d'invitation",
   "housingInviteProposalIntroTitle": "Voici la proposition qui sera envoyée à chacun de vos participants.",
@@ -739,6 +761,8 @@
   "housingInviteReceivedOpenAction": "Voir",
   "pushNotificationHousingProposalTitle": "Proposition de logement",
   "pushNotificationHousingProposalBody": "Ouvrez l'application pour consulter la proposition.",
+  "pushNotificationHousingAgreementActivatedTitle": "Entente unanime",
+  "pushNotificationHousingAgreementActivatedBody": "Votre groupe a conclu une entente de logement unanime.",
   "pushNotificationHousingRealizedExpenseTitle": "Dépense à réviser",
   "pushNotificationHousingRealizedExpenseBody": "Un participant a soumis une dépense pour votre entente.",
   "pushNotificationHousingRealizedExpenseBodyFrom": "{name} a soumis une dépense à réviser.",

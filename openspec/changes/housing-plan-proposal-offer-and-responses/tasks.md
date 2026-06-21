@@ -47,11 +47,12 @@
 - [x] 1.19 Archive invalidated proposals with response summary messages; prompt Negotiate responders to fork; prevent Refuse responders from forking the refused revision.
 - [x] 1.20 Housing entry archive/new-plan page before step 1; eligible archive opens editable fork, ineligible archive opens read-only review.
 - [ ] 1.21 Wishlist: detect and retire stale connected contacts after a peer reinstalls / loses local data and reconnects under a new identity, so proposal sends do not need fallback fan-out.
-- [ ] 1.23 **Unanimous activation notification** (spec: `housing-plan-proposal-offer-flow` — *Unanimous activation notifies all participants from the last acceptor device*).
+- [x] 1.23 **Unanimous activation notification** (spec: `housing-plan-proposal-offer-flow` — *Unanimous activation notifies all participants from the last acceptor device*).
   - When the **last** non-author **Accept** completes unanimity on a `revisionId`, the accepting device notifies **all** roster participants (localized unanimous-agreement copy).
   - Deep-link / route to active agreement hub (`housing-active-agreement-operations`), not the closed offer screen.
   - Dedupe per `revisionId` on devices that already recorded activation locally.
   - Activity log: **agreement activated** on emitter.
+  - *(See `housing_activation_notification_service.dart`, hooks in `handshake_orchestrator.dart`, `housing_proposal_transport_service.dart`, `housing_invite_proposal_screen.dart`; test `housing_activation_notification_service_test.dart`.)*
 - [ ] 1.22 Bug: Housing proposal delivery/notification unreliable after identity drift (web resets, stale contacts, reconnects). **Not closed** — happy path validated May 2026; drift scenarios still open.
   - **Validated (May 2026, dev):** Fresh handshake on both sides (no stale/disconnected rows); same relay URL; web `housing_proposal posted` + `delivered`; Android `steady inbox fetched` + `housing_proposal imported` + local notification; proposal in a `received:…` plan (not the author’s `housing:default`). Web plan draft survives `CTRL+C` on `run:dev:web` (persistent Chrome profile + draft backup) — reduces how often step 2 below is needed.
   - **Validated (May 2026, dev):** In-force **amendment** send/accept across web (proposer) + Android (invitee): `housing_proposal_response` delivery, activation on proposer hub, decision notification on web; Android hub UX after accept. Export/import hub action not exercised.

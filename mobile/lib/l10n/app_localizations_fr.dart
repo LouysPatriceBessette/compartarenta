@@ -699,6 +699,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingActiveHubExportImport => 'Sauvegarde de sécurité';
 
   @override
+  String get housingExportSecurityWarning =>
+      'Le fichier exporté est du JSON non chiffré. Conservez-le en lieu sûr et ne le partagez pas sur des canaux non fiables.';
+
+  @override
+  String get housingExportAction => 'Exporter les données de l\'entente';
+
+  @override
+  String get housingExportCopiedToClipboard =>
+      'JSON exporté copié dans le presse-papiers.';
+
+  @override
+  String housingExportSavedTo(String path) {
+    return 'Export enregistré dans $path';
+  }
+
+  @override
+  String housingExportFailed(String error) {
+    return 'Échec de l\'export : $error';
+  }
+
+  @override
+  String get housingImportNotAvailableTitle => 'Importation';
+
+  @override
+  String get housingImportNotAvailableBody =>
+      'L\'importation exige un droit logement valide et sera activée dans une version ultérieure.';
+
+  @override
   String get housingActiveHubPassPlaceholderTitle => 'Bientôt disponible';
 
   @override
@@ -1650,6 +1678,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Version dérivée logement démarrée';
 
   @override
+  String get activityLogKindHousingAgreementActivated =>
+      'Entente de logement activée';
+
+  @override
   String get housingInvitePlanActivating =>
       'Tous les participants ont accepté. Activation de l\'entente…';
 
@@ -1882,6 +1914,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get pushNotificationHousingProposalBody =>
       'Ouvrez l\'application pour consulter la proposition.';
+
+  @override
+  String get pushNotificationHousingAgreementActivatedTitle =>
+      'Entente unanime';
+
+  @override
+  String get pushNotificationHousingAgreementActivatedBody =>
+      'Votre groupe a conclu une entente de logement unanime.';
 
   @override
   String get pushNotificationHousingRealizedExpenseTitle => 'Dépense à réviser';

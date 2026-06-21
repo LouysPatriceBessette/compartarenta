@@ -123,7 +123,21 @@ class _CompartarentaAppState extends State<CompartarentaApp>
     final prefs = await AppPreferences.load();
     _wireProfileBroadcaster(prefs);
     _wireClosedAppPush(prefs);
+    _wireHousingReminderTimezone(prefs);
     return prefs;
+  }
+
+  void _wireHousingReminderTimezone(AppPreferences prefs) {
+    String sig() => '${prefs.timeZonePolicy}|${prefs.timeZoneId}';
+    var last = sig();
+    prefs.addListener(() {
+      final next = sig();
+      if (next == last) return;
+      last = next;
+      unawaited(
+        HandshakeOrchestrator.maybeInstance?.syncHousingPaymentReminderTimezone(),
+      );
+    });
   }
 
   void _wireClosedAppPush(AppPreferences prefs) {
@@ -147,6 +161,8 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         '${prefs.notificationsEnabled}|'
         '${prefs.notificationContactAddRequests}|'
         '${prefs.notificationHousingPaymentReminders}|'
+        '${prefs.notificationHousingPlanSubmission}|'
+        '${prefs.notificationHousingDecisionChange}|'
         '${prefs.notificationCountryStatisticsEnabled}|'
         '${prefs.notificationCountryStatisticsCode ?? ''}';
     _lastRoutingPushPrefsSig = routingPushSig();

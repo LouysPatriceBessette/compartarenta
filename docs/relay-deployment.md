@@ -620,3 +620,9 @@ If the relay process runs **directly on the host** (not in Docker), cron
 [`daily-stats-append.sh`](../relay/scripts/daily-stats-append.sh) with
 `RELAY_STATS_URL=http://127.0.0.1:9091/internal/stats/daily`.
 
+## Scheduled notifications (housing payment reminders)
+
+See [`relay-deployment-scheduled-notifications.md`](./relay-deployment-scheduled-notifications.md)
+for `REMINDER_CRON_ENABLED`, scheduling HTTP endpoints, and operator verification
+steps for migration `0003_scheduled_notifications.sql`.
+
