@@ -10,13 +10,12 @@
 - [x] 1.4 Recipient: **inbox import** + **notification on offer receipt** (not deadline reminder).
   - **Local persistence:** after decrypt/validate, persist the offer locally (proposal package, `packageId` / `revisionId`, roster, `expiresAt`, pending response state) so the recipient can open it from Housing/workbench without re-fetching ciphertext from the relay.
   - **Notification on receipt:** when a new housing proposal envelope is imported, fire a **local notification** (and push when the platform and notification prefs allow — same category as “plan submission received”). This is **“you have a new offer to review”**, not “deadline approaching”.
-  - **Out of scope for 1.4:** reminders as the response deadline nears → **1.4b** (implement together with `contacts-module` **3.7**).
+  - **Out of scope for 1.4:** reminders as the response deadline nears → **1.4b**.
 - [ ] 1.4b **Deadline reminder** notifications (housing proposal response window).
-  - **Implement together with** [`contacts-module` **3.7**](../contacts-module/tasks.md) — shared local scheduling service, lead-time table, cancel/reschedule rules, and notification-prefs gating.
-  - For each **open** `revisionId` where the local user is still **pending** (recipient) or is the **author** awaiting peer responses (product decision per role), schedule one or more **local notifications** before `expiresAt` (from 1.2).
+  - For each **open** `revisionId` where the local user is still **pending** (recipient) or is the **author** awaiting peer responses (product decision per role), schedule one or more reminders before `expiresAt` (from 1.2) via relay scheduled notifications (domain `housing_proposal_deadline`).
   - **Lead times** depend on the deadline preset chosen at send (product table, e.g. 48 h → remind at 24 h + 6 h; 7 days → remind at 48 h + 24 h — document in spec or `design.md` when fixed).
   - **Cancel / reschedule** when the user submits a response, the revision is **invalidated** or **expired**, or `expiresAt` changes on resend.
-  - Respect app-level master notification switch and the Housing category used for plan proposals (or a dedicated “response deadline reminder” category if split in Settings).
+  - Respect app-level master notification switch and the Housing category for **offer expiration**.
   - **Not** the same as 1.4 receipt notification; copy MUST distinguish “new offer” vs “deadline approaching”.
   - Log reminder-fired events in the activity log (1.8) when that store exists.
 - [x] 1.5 Recipient: offer detail UI with **deadline** and **expiry** shown as `YYYY-MM-DD HH:MM` (timezone rule in spec).

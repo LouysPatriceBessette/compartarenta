@@ -34,8 +34,3 @@
 - [x] 4.7 Add Contacts fallback acceptance controls on a local-only contact when it has a pending incoming handshake.
 - [x] 4.8 Add an explicit Contacts refresh action and targeted handshake polling logs so manual testing can distinguish "no relay envelope received" from "pending request ready to accept".
 - [x] 4.9 Gate incoming Housing proposal FCM/local notifications behind the app-level notification switch and the Housing "Plan submission received" category switch.
-
-## Wish List
-
-- [ ] Implement notification for Contacts invitation expiration (`Expiration d’une invitation non-consommée`). This needs a reliable trigger for the expiration moment (for example a scheduled local notification or backend/push trigger), plus final notification copy. Until then, keep the Settings switch visible but disabled and off.
-- [ ] Implement true closed-app push delivery for incoming Contacts add requests. The current local notification can fire only after the app process receives the relay envelope through polling; waking a killed Android/iOS app when the invitee submits the request requires a server-side/relay push trigger, FCM/APNs token registration, and final operational/audit approval for the relay-facing change.
