@@ -1,5 +1,6 @@
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/amendment/housing_agreement_start_date_policy.dart';
+import 'package:compartarenta/housing/portability/housing_export_file_name.dart';
 import 'package:compartarenta/housing/portability/housing_agreement_export_service.dart';
 import 'package:compartarenta/housing/realized_expense/realized_expense_status.dart';
 import 'package:drift/drift.dart' as drift;
@@ -55,6 +56,24 @@ void main() {
           proposedStart: DateTime.utc(2026, 1, 1),
         ),
         isFalse,
+      );
+    });
+  });
+
+  group('housing_export_file_name', () {
+    test('uses locale-specific module slug', () {
+      final when = DateTime(2026, 6, 22, 10, 31, 13);
+      expect(
+        housingExportFileName(languageCode: 'fr', now: when),
+        '2026-06-22_10:31_Compartarenta-logement.json',
+      );
+      expect(
+        housingExportFileName(languageCode: 'en', now: when),
+        '2026-06-22_10:31_Compartarenta-housing.json',
+      );
+      expect(
+        housingExportFileName(languageCode: 'es', now: when),
+        '2026-06-22_10:31_Compartarenta-renta.json',
       );
     });
   });

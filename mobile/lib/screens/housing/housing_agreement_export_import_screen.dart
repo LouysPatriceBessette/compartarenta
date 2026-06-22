@@ -26,6 +26,7 @@ class HousingAgreementExportImportScreen extends StatefulWidget {
 class _HousingAgreementExportImportScreenState
     extends State<HousingAgreementExportImportScreen> {
   var _exporting = false;
+  String? _lastSavedLocation;
 
   Future<void> _export(BuildContext context) async {
     if (_exporting) return;
@@ -42,11 +43,10 @@ class _HousingAgreementExportImportScreenState
       final result = await export_sink.writeHousingExportJson(
         packageId: widget.packageId,
         json: json,
+        languageCode: Localizations.localeOf(context).languageCode,
       );
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message(l10n))),
-      );
+      setState(() => _lastSavedLocation = result.savedLocationLabel(l10n));
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,6 +81,18 @@ class _HousingAgreementExportImportScreenState
                 : const Icon(Icons.upload_file_outlined),
             label: Text(l10n.housingExportAction),
           ),
+          if (_lastSavedLocation != null) ...[
+            const SizedBox(height: 24),
+            Text(
+              l10n.housingExportLastSavedTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            SelectableText(
+              _lastSavedLocation!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
           const SizedBox(height: 24),
           Text(
             l10n.housingImportNotAvailableTitle,

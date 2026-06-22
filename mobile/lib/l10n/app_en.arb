@@ -250,10 +250,11 @@
   "housingExportSecurityWarning": "The export file is unencrypted JSON. Store it securely and do not share it over untrusted channels.",
   "housingExportAction": "Export agreement data",
   "housingExportCopiedToClipboard": "Export JSON copied to clipboard.",
-  "housingExportSavedTo": "Export saved to {path}",
-  "@housingExportSavedTo": {
+  "housingExportLastSavedTitle": "Saved file",
+  "housingExportSavedLocation": "Internal storage/Documents/Compartarenta/{fileName}",
+  "@housingExportSavedLocation": {
     "placeholders": {
-      "path": {
+      "fileName": {
         "type": "String"
       }
     }

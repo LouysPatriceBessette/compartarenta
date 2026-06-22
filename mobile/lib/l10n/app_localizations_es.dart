@@ -707,8 +707,11 @@ class AppLocalizationsEs extends AppLocalizations {
       'JSON exportado copiado al portapapeles.';
 
   @override
-  String housingExportSavedTo(String path) {
-    return 'Exportación guardada en $path';
+  String get housingExportLastSavedTitle => 'Archivo guardado';
+
+  @override
+  String housingExportSavedLocation(String fileName) {
+    return 'Almacenamiento interno/Documentos/Compartarenta/$fileName';
   }
 
   @override

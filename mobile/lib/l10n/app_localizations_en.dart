@@ -702,8 +702,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Export JSON copied to clipboard.';
 
   @override
-  String housingExportSavedTo(String path) {
-    return 'Export saved to $path';
+  String get housingExportLastSavedTitle => 'Saved file';
+
+  @override
+  String housingExportSavedLocation(String fileName) {
+    return 'Internal storage/Documents/Compartarenta/$fileName';
   }
 
   @override

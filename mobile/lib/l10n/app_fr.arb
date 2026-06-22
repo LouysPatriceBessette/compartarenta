@@ -250,10 +250,11 @@
   "housingExportSecurityWarning": "Le fichier exporté est du JSON non chiffré. Conservez-le en lieu sûr et ne le partagez pas sur des canaux non fiables.",
   "housingExportAction": "Exporter les données de l'entente",
   "housingExportCopiedToClipboard": "JSON exporté copié dans le presse-papiers.",
-  "housingExportSavedTo": "Export enregistré dans {path}",
-  "@housingExportSavedTo": {
+  "housingExportLastSavedTitle": "Fichier enregistré",
+  "housingExportSavedLocation": "Stockage interne/Documents/Compartarenta/{fileName}",
+  "@housingExportSavedLocation": {
     "placeholders": {
-      "path": {
+      "fileName": {
         "type": "String"
       }
     }

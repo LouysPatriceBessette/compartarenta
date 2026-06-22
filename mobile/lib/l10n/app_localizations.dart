@@ -1360,11 +1360,17 @@ abstract class AppLocalizations {
   /// **'Export JSON copied to clipboard.'**
   String get housingExportCopiedToClipboard;
 
-  /// No description provided for @housingExportSavedTo.
+  /// No description provided for @housingExportLastSavedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Export saved to {path}'**
-  String housingExportSavedTo(String path);
+  /// **'Saved file'**
+  String get housingExportLastSavedTitle;
+
+  /// No description provided for @housingExportSavedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal storage/Documents/Compartarenta/{fileName}'**
+  String housingExportSavedLocation(String fileName);
 
   /// No description provided for @housingExportFailed.
   ///

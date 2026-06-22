@@ -710,8 +710,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'JSON exporté copié dans le presse-papiers.';
 
   @override
-  String housingExportSavedTo(String path) {
-    return 'Export enregistré dans $path';
+  String get housingExportLastSavedTitle => 'Fichier enregistré';
+
+  @override
+  String housingExportSavedLocation(String fileName) {
+    return 'Stockage interne/Documents/Compartarenta/$fileName';
   }
 
   @override
