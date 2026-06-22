@@ -14,6 +14,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings/activity_log_settings_screen.dart';
 import 'screens/settings/about_settings_screen.dart';
+import 'screens/settings/device_data_export_import_screen.dart';
 import 'screens/settings/notification_settings_screen.dart';
 import 'screens/settings/profile_identity_settings_screen.dart';
 import 'screens/settings/units_settings_screen.dart';
@@ -436,6 +437,10 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
       GoRoute(
         path: '/settings/about',
         builder: (context, state) => AboutSettingsScreen(config: config),
+      ),
+      GoRoute(
+        path: '/settings/export-import',
+        builder: (context, state) => const DeviceDataExportImportScreen(),
       ),
       helpFaqRoute(),
       GoRoute(

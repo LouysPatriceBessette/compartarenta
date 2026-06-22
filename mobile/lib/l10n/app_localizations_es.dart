@@ -129,6 +129,95 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsAboutSubtitle => 'Entorno, URL de API y versión';
 
   @override
+  String get settingsExportImportTitle => 'Exportar / importar datos';
+
+  @override
+  String get settingsExportImportSubtitle =>
+      'Copia de seguridad y restauración completa del dispositivo';
+
+  @override
+  String get deviceDataExportSecurityWarning =>
+      'El archivo de copia de seguridad es JSON sin cifrar. Guárdelo de forma segura y no lo comparta por canales no confiables.';
+
+  @override
+  String get deviceDataExportAction => 'Exportar todos los datos';
+
+  @override
+  String get deviceDataImportAction => 'Importar copia de seguridad';
+
+  @override
+  String get deviceDataExportCopiedToClipboard =>
+      'JSON de copia de seguridad copiado al portapapeles.';
+
+  @override
+  String get deviceDataExportLastSavedTitle => 'Archivo guardado';
+
+  @override
+  String deviceDataExportSavedLocation(String fileName) {
+    return 'Documents/Compartarenta/$fileName';
+  }
+
+  @override
+  String deviceDataExportFailed(String error) {
+    return 'Error al exportar: $error';
+  }
+
+  @override
+  String get deviceDataImportDisabledNoSubscription =>
+      'La importación requiere una suscripción de vivienda activa y de pago en este dispositivo.';
+
+  @override
+  String get deviceDataImportDisabledWeb =>
+      'La importación no está disponible en la web (solo desarrollo).';
+
+  @override
+  String get deviceDataReplaceConfirmTitle =>
+      '¿Reemplazar todos los datos locales?';
+
+  @override
+  String get deviceDataReplaceConfirmBody =>
+      'Esta copia de seguridad reemplazará todos los datos operativos en este dispositivo. Está pensado principalmente para un cambio de dispositivo.';
+
+  @override
+  String get deviceDataImportSuccess =>
+      'Copia de seguridad restaurada. La sincronización relay vuelve a estar disponible.';
+
+  @override
+  String deviceDataImportFailed(String error) {
+    return 'Error al importar: $error';
+  }
+
+  @override
+  String deviceDataImportValidationFailed(String code) {
+    return 'Archivo de copia de seguridad no válido ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationNetworkFailure =>
+      'Los datos locales se restauraron pero no se pudo contactar el relay. Verifique su conexión y reintente la sincronización del servidor.';
+
+  @override
+  String deviceDataMigrationFailed(String code) {
+    return 'Error al actualizar la identidad del servidor ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationPendingTitle =>
+      'Sincronización del servidor pendiente';
+
+  @override
+  String get deviceDataMigrationPendingBody =>
+      'Sus datos están en este dispositivo pero el servidor aún debe vincular su nueva identidad de instalación.';
+
+  @override
+  String get deviceDataRetryMigrationAction =>
+      'Reintentar sincronización del servidor';
+
+  @override
+  String get deviceDataCanonicalRestoreTitle =>
+      '¿Restaurar datos para qué participante?';
+
+  @override
   String get settingsNotificationsGeneralSection => 'Permiso general';
 
   @override

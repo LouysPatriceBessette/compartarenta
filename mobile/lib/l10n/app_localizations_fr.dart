@@ -129,6 +129,93 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsAboutSubtitle => 'Environnement, URL API et version';
 
   @override
+  String get settingsExportImportTitle => 'Exporter / importer des données';
+
+  @override
+  String get settingsExportImportSubtitle =>
+      'Sauvegarde et restauration complètes de l\'appareil';
+
+  @override
+  String get deviceDataExportSecurityWarning =>
+      'Le fichier de sauvegarde est du JSON non chiffré. Conservez-le en lieu sûr et ne le partagez pas sur des canaux non fiables.';
+
+  @override
+  String get deviceDataExportAction => 'Exporter toutes les données';
+
+  @override
+  String get deviceDataImportAction => 'Importer une sauvegarde';
+
+  @override
+  String get deviceDataExportCopiedToClipboard =>
+      'JSON de sauvegarde copié dans le presse-papiers.';
+
+  @override
+  String get deviceDataExportLastSavedTitle => 'Fichier enregistré';
+
+  @override
+  String deviceDataExportSavedLocation(String fileName) {
+    return 'Documents/Compartarenta/$fileName';
+  }
+
+  @override
+  String deviceDataExportFailed(String error) {
+    return 'Échec de l\'export : $error';
+  }
+
+  @override
+  String get deviceDataImportDisabledNoSubscription =>
+      'L\'import exige un abonnement logement actif et payé sur cet appareil.';
+
+  @override
+  String get deviceDataImportDisabledWeb =>
+      'L\'import n\'est pas disponible sur le web (développement seulement).';
+
+  @override
+  String get deviceDataReplaceConfirmTitle =>
+      'Remplacer toutes les données locales ?';
+
+  @override
+  String get deviceDataReplaceConfirmBody =>
+      'Cette sauvegarde remplacera toutes les données opérationnelles sur cet appareil. C\'est surtout prévu pour un changement d\'appareil.';
+
+  @override
+  String get deviceDataImportSuccess =>
+      'Sauvegarde restaurée. La sync relay est de nouveau disponible.';
+
+  @override
+  String deviceDataImportFailed(String error) {
+    return 'Échec de l\'import : $error';
+  }
+
+  @override
+  String deviceDataImportValidationFailed(String code) {
+    return 'Fichier de sauvegarde invalide ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationNetworkFailure =>
+      'Les données locales sont restaurées mais le relay est injoignable. Vérifiez votre connexion et réessayez la sync serveur.';
+
+  @override
+  String deviceDataMigrationFailed(String code) {
+    return 'Échec de la mise à jour d\'identité serveur ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationPendingTitle => 'Sync serveur en attente';
+
+  @override
+  String get deviceDataMigrationPendingBody =>
+      'Vos données sont sur cet appareil mais le serveur doit encore lier votre nouvelle identité d\'installation.';
+
+  @override
+  String get deviceDataRetryMigrationAction => 'Réessayer la sync serveur';
+
+  @override
+  String get deviceDataCanonicalRestoreTitle =>
+      'Restaurer les données pour quel participant ?';
+
+  @override
   String get settingsNotificationsGeneralSection => 'Permission générale';
 
   @override

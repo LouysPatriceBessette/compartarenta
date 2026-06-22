@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -31,6 +32,7 @@ func NewServer(cfg config.Config, st *store.Store) *Server {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/installations/register", s.handleRegisterInstallation)
+	mux.HandleFunc("/v1/installations/migrate", s.handleMigrateInstallation)
 	mux.HandleFunc("/v1/housing/plan-roster", s.handlePlanRoster)
 	mux.HandleFunc("/v1/housing/license-status", s.handleLicenseStatus)
 	mux.HandleFunc("/v1/housing/expense-decision", s.handleExpenseDecision)
@@ -41,6 +43,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/readyz", s.handleReadyz)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/introspect/envelope" && !s.authorizeInternal(r) {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "missing or invalid internal token")
+			return
+		}
+		if r.URL.Path == "/v1/installations/migrate" && !s.authorizeInternal(r) {
 			writeError(w, http.StatusUnauthorized, "unauthorized", "missing or invalid internal token")
 			return
 		}
@@ -73,6 +79,45 @@ func (s *Server) handleRegisterInstallation(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if err := s.housing.RegisterInstallation(r.Context(), id); err != nil {
+		writeInternal(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleMigrateInstallation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "POST only")
+		return
+	}
+	var req struct {
+		PlanID                        string `json:"plan_id"`
+		OldParticipantInstallationID  string `json:"old_participant_installation_id"`
+		NewParticipantInstallationID  string `json:"new_participant_installation_id"`
+		EnvelopeKind                  int    `json:"envelope_kind"`
+	}
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if req.EnvelopeKind != 15 {
+		writeError(w, http.StatusBadRequest, "invalid_envelope_kind", "unsupported envelope kind")
+		return
+	}
+	oldID, ok := validateID(req.OldParticipantInstallationID, s.cfg.IDMinLen, s.cfg.IDMaxLen)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_installation_id", "old installation id invalid")
+		return
+	}
+	newID, ok := validateID(req.NewParticipantInstallationID, s.cfg.IDMinLen, s.cfg.IDMaxLen)
+	if !ok || req.PlanID == "" {
+		writeError(w, http.StatusBadRequest, "invalid_request", "plan_id and new installation id required")
+		return
+	}
+	if err := s.housing.MigrateInstallation(r.Context(), req.PlanID, oldID, newID); err != nil {
+		if errors.Is(err, store.ErrOldInstallationNotFound) {
+			writeError(w, http.StatusNotFound, "old_installation_not_found", "old installation id not found for plan")
+			return
+		}
 		writeInternal(w, err)
 		return
 	}

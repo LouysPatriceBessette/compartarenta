@@ -27,7 +27,6 @@ import 'housing_balances_screen.dart';
 import 'housing_expense_payment_status_screen.dart';
 import '../../widgets/balanced_text.dart';
 import '../../widgets/screen_body_padding.dart';
-import 'housing_agreement_export_import_screen.dart';
 import 'housing_journals_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
@@ -758,23 +757,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               icon: Icons.menu_book_outlined,
                               label: l10n.housingActiveHubJournals,
                               onTap: () => _openJournals(context),
-                            ),
-                            _HubTile(
-                              icon: Icons.import_export_outlined,
-                              label: l10n.housingActiveHubExportImport,
-                              onTap: () {
-                                navigateToChildRoute<void>(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder:
-                                        (_) =>
-                                            HousingAgreementExportImportScreen(
-                                              planId: widget.planId,
-                                              packageId: widget.packageId,
-                                            ),
-                                  ),
-                                );
-                              },
                             ),
                           ],
                         );

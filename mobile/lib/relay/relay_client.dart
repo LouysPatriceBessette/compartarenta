@@ -128,6 +128,15 @@ abstract class RelayClient {
     required Uint8List fireId,
   });
 
+  /// Rebinds entitlement-server state from [oldParticipantInstallationId] to
+  /// [newParticipantInstallationId] after device backup restore (kind 15).
+  Future<void> migrateParticipantInstallation({
+    required String planId,
+    required String oldParticipantInstallationId,
+    required String newParticipantInstallationId,
+    required int envelopeKind,
+  });
+
   void close();
 }
 
@@ -473,6 +482,32 @@ class HttpRelayClient implements RelayClient {
       throw RelayClientError._fromResponse('scheduling_ack', res);
     }
   }
+
+  @override
+  Future<void> migrateParticipantInstallation({
+    required String planId,
+    required String oldParticipantInstallationId,
+    required String newParticipantInstallationId,
+    required int envelopeKind,
+  }) async {
+    final uri = baseUrl.resolve('/v1/participant-installation-migrate');
+    final res = await _post(
+      'participant_installation_migrate',
+      uri,
+      body: jsonEncode({
+        'envelope_kind': envelopeKind,
+        'plan_id': planId,
+        'old_participant_installation_id': oldParticipantInstallationId,
+        'new_participant_installation_id': newParticipantInstallationId,
+      }),
+    );
+    if (res.statusCode != 204) {
+      throw RelayClientError._fromResponse(
+        'participant_installation_migrate',
+        res,
+      );
+    }
+  }
 }
 
 class EnvelopeReceipt {
@@ -538,8 +573,12 @@ class RelayClientError implements Exception {
     String detail = res.reasonPhrase ?? '';
     try {
       final body = jsonDecode(res.body) as Map<String, dynamic>;
-      code = (body['code'] as String?) ?? code;
-      detail = (body['detail'] as String?) ?? detail;
+      code = (body['error'] as String?) ??
+          (body['code'] as String?) ??
+          code;
+      detail = (body['message'] as String?) ??
+          (body['detail'] as String?) ??
+          detail;
     } catch (_) {
       // Body wasn't JSON; keep the HTTP status as the code.
     }

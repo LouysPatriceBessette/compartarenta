@@ -130,6 +130,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutSubtitle => 'Environment, API URL, and app version';
 
   @override
+  String get settingsExportImportTitle => 'Export / import data';
+
+  @override
+  String get settingsExportImportSubtitle =>
+      'Full-device security backup and restore';
+
+  @override
+  String get deviceDataExportSecurityWarning =>
+      'The backup file is unencrypted JSON. Store it securely and do not share it over untrusted channels.';
+
+  @override
+  String get deviceDataExportAction => 'Export all data';
+
+  @override
+  String get deviceDataImportAction => 'Import backup';
+
+  @override
+  String get deviceDataExportCopiedToClipboard =>
+      'Backup JSON copied to clipboard.';
+
+  @override
+  String get deviceDataExportLastSavedTitle => 'Saved file';
+
+  @override
+  String deviceDataExportSavedLocation(String fileName) {
+    return 'Documents/Compartarenta/$fileName';
+  }
+
+  @override
+  String deviceDataExportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get deviceDataImportDisabledNoSubscription =>
+      'Import requires an active paid housing subscription on this device.';
+
+  @override
+  String get deviceDataImportDisabledWeb =>
+      'Import is not available on web (development only).';
+
+  @override
+  String get deviceDataReplaceConfirmTitle => 'Replace all local data?';
+
+  @override
+  String get deviceDataReplaceConfirmBody =>
+      'This backup will replace every piece of operational data on this device. This is intended mainly for device replacement.';
+
+  @override
+  String get deviceDataImportSuccess =>
+      'Backup restored. Relay sync is available again.';
+
+  @override
+  String deviceDataImportFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String deviceDataImportValidationFailed(String code) {
+    return 'Invalid backup file ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationNetworkFailure =>
+      'Local data was restored but the relay could not be reached. Check your connection and retry migration.';
+
+  @override
+  String deviceDataMigrationFailed(String code) {
+    return 'Server identity update failed ($code).';
+  }
+
+  @override
+  String get deviceDataMigrationPendingTitle => 'Server sync pending';
+
+  @override
+  String get deviceDataMigrationPendingBody =>
+      'Your data is on this device but the server still needs to link your new installation identity.';
+
+  @override
+  String get deviceDataRetryMigrationAction => 'Retry server sync';
+
+  @override
+  String get deviceDataCanonicalRestoreTitle =>
+      'Restore data for which participant?';
+
+  @override
   String get settingsNotificationsGeneralSection => 'General permission';
 
   @override

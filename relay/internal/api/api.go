@@ -85,6 +85,7 @@ func (s *Server) PublicHandler() http.Handler {
 	mux.HandleFunc("/v1/inbox/", s.handleInbox)
 	mux.HandleFunc("/v1/disconnect", s.handleDisconnect)
 	mux.HandleFunc("/v1/handshake/establish", s.handleEstablishRouting)
+	mux.HandleFunc("/v1/participant-installation-migrate", s.handleParticipantInstallationMigrate)
 	mux.HandleFunc("/healthz", s.handleHealthz)
 	mux.HandleFunc("/readyz", s.handleReadyz)
 	mux.HandleFunc("/", s.handleNotFound)
@@ -233,6 +234,70 @@ func (s *Server) checkEntitlement(w http.ResponseWriter, r *http.Request, kind i
 }
 
 var errEntitlementDenied = errors.New("entitlement denied")
+
+// ---------------------------------------------------------------------------
+// POST /v1/participant-installation-migrate
+// ---------------------------------------------------------------------------
+
+type participantInstallationMigrateRequest struct {
+	EnvelopeKind                  int    `json:"envelope_kind"`
+	PlanID                        string `json:"plan_id"`
+	OldParticipantInstallationID  string `json:"old_participant_installation_id"`
+	NewParticipantInstallationID  string `json:"new_participant_installation_id"`
+}
+
+func (s *Server) handleParticipantInstallationMigrate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "POST only")
+		return
+	}
+	if !s.cfg.EntitlementEnabled || s.entitlement == nil {
+		writeError(w, http.StatusServiceUnavailable, "entitlement_disabled", "entitlement integration disabled")
+		return
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
+	if err != nil {
+		writeError(w, http.StatusRequestEntityTooLarge, "oversize", "request too large")
+		return
+	}
+	var req participantInstallationMigrateRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "malformed_json", "malformed JSON body")
+		return
+	}
+	if req.EnvelopeKind != entitlement.KindParticipantInstallationMigration {
+		writeError(w, http.StatusBadRequest, "invalid_envelope_kind", "unsupported envelope kind")
+		return
+	}
+	oldID, ok1 := decodeInstallationID(req.OldParticipantInstallationID, s.idMinLen, s.idMaxLen)
+	newID, ok2 := decodeInstallationID(req.NewParticipantInstallationID, s.idMinLen, s.idMaxLen)
+	if !ok1 || !ok2 || req.PlanID == "" {
+		writeError(w, http.StatusBadRequest, "invalid_request", "plan_id and installation ids required")
+		return
+	}
+	code, err := s.entitlement.MigrateInstallation(r.Context(), req.PlanID, oldID, newID, req.EnvelopeKind)
+	if err != nil {
+		s.writeInternal(w, r, "participant_installation_migrate", err)
+		return
+	}
+	if code != "" {
+		status := http.StatusBadRequest
+		if code == "old_installation_not_found" {
+			status = http.StatusNotFound
+		}
+		writeError(w, status, code, "installation migration refused")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func decodeInstallationID(id string, minLen, maxLen int) (string, bool) {
+	id = strings.TrimSpace(id)
+	if len(id) < minLen || len(id) > maxLen {
+		return "", false
+	}
+	return id, true
+}
 
 // ---------------------------------------------------------------------------
 // POST /v1/envelopes

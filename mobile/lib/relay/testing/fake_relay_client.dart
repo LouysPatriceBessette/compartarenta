@@ -33,6 +33,9 @@ class FakeRelayClient implements RelayClient {
   /// One-shot timeout to inject on the next call to any endpoint.
   bool timeoutOnce = false;
 
+  /// One-shot: [migrateParticipantInstallation] throws [RelayUnreachableException].
+  bool migrationUnreachableOnce = false;
+
   /// One-shot: store the envelope, then throw [TimeoutException] (simulates
   /// the relay accepting POST while the HTTP client times out).
   bool timeoutAfterPostOnce = false;
@@ -317,8 +320,50 @@ class FakeRelayClient implements RelayClient {
     pendingReminderDeliveries.removeWhere((d) => _eq(d.fireId, fireId));
   }
 
+  final List<FakeInstallationMigrationRequest> installationMigrations =
+      <FakeInstallationMigrationRequest>[];
+
+  @override
+  Future<void> migrateParticipantInstallation({
+    required String planId,
+    required String oldParticipantInstallationId,
+    required String newParticipantInstallationId,
+    required int envelopeKind,
+  }) async {
+    _maybeThrowOnce();
+    if (migrationUnreachableOnce) {
+      migrationUnreachableOnce = false;
+      throw RelayUnreachableException(
+        'participant_installation_migrate',
+        TimeoutException('injected'),
+      );
+    }
+    installationMigrations.add(
+      FakeInstallationMigrationRequest(
+        planId: planId,
+        oldParticipantInstallationId: oldParticipantInstallationId,
+        newParticipantInstallationId: newParticipantInstallationId,
+        envelopeKind: envelopeKind,
+      ),
+    );
+  }
+
   @override
   void close() {}
+}
+
+class FakeInstallationMigrationRequest {
+  FakeInstallationMigrationRequest({
+    required this.planId,
+    required this.oldParticipantInstallationId,
+    required this.newParticipantInstallationId,
+    required this.envelopeKind,
+  });
+
+  final String planId;
+  final String oldParticipantInstallationId;
+  final String newParticipantInstallationId;
+  final int envelopeKind;
 }
 
 class FakeRoutingPushRegistration {

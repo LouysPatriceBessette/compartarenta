@@ -51,6 +51,10 @@ func (h *Housing) RegisterInstallation(ctx context.Context, id string) error {
 	return h.st.RegisterInstallation(ctx, id)
 }
 
+func (h *Housing) MigrateInstallation(ctx context.Context, planID, oldID, newID string) error {
+	return h.st.MigrateInstallation(ctx, planID, oldID, newID)
+}
+
 func (h *Housing) SetActiveRoster(ctx context.Context, planID, revisionID string, participants []string) error {
 	now := h.now()
 	if err := h.st.SetActiveRoster(ctx, planID, revisionID, participants, now); err != nil {

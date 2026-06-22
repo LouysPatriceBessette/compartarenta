@@ -56,12 +56,12 @@
 - [x] Q.4.3 Invitee hub banner/navigation after accept (snackbar, no stale “new request” form).
 - [ ] Q.4.4 Web hub live refresh without user interaction (Chrome may still throttle timers until tab focus).
 
-## Pass 5 — Portability (`housing-agreement-data-portability`)
+## Pass 5 — Portability (superseded by `device-data-import-restore`)
 
-- [x] 5.1 Export JSON: housing module, single agreement, revision chain, checksum. *(See `housing_agreement_export_service.dart`; test in `housing_ready_specs_tasks_test.dart`.)*
-- [ ] 5.2 Import: validate checksum + format version; reject tampered payloads.
-- [ ] 5.3 Require valid housing entitlement for housing import while keeping housing export always available.
-- [x] 5.4 Hub export/import screen + security copy (plaintext file). *(See `housing_agreement_export_import_screen.dart`, hub tile in `housing_active_plan_screen.dart`; import deferred pending **5.2–5.3** / entitlement.)*
+- [x] 5.1 Export JSON: housing module, single agreement, revision chain, checksum. *(Prototype; full-device export replaces scope — see `device-data-import-restore`.)*
+- [ ] 5.2 **Moved** to `device-data-import-restore`: full-device import, checksum, wipe-on-replace.
+- [ ] 5.3 **Moved** to `device-data-import-restore`: import gated by active store subscription only (not entitlement).
+- [x] 5.4 Hub export/import screen *(interim)* — **move to Settings** when `device-data-import-restore` ships; remove hub tile.
 
 ## Pass 6 — Negotiation integration
 

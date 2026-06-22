@@ -17,6 +17,8 @@ import (
 	"github.com/compartarenta/entitlement/internal/version"
 )
 
+var ErrOldInstallationNotFound = errors.New("old installation not found for plan")
+
 //go:embed schema/*.sql
 var schemaFS embed.FS
 
@@ -246,6 +248,90 @@ func (s *Store) StoreReceipt(ctx context.Context, installationID, module, platfo
 		INSERT INTO license_receipts (installation_id, module, platform, receipt_blob, validation_state)
 		VALUES ($1,$2,$3,$4,'pending')`, installationID, module, platform, blob)
 	return err
+}
+
+func (s *Store) MigrateInstallation(ctx context.Context, planID, oldID, newID string) error {
+	roster, err := s.ActiveRoster(ctx, planID)
+	if err != nil {
+		return err
+	}
+	if !containsString(roster, oldID) {
+		if containsString(roster, newID) {
+			return nil
+		}
+		return ErrOldInstallationNotFound
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
+		UPDATE housing_plan_rosters
+		SET participant_installation_id = $3
+		WHERE plan_id = $1 AND participant_installation_id = $2`,
+		planID, oldID, newID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE housing_expense_decisions
+		SET participant_installation_id = $3
+		WHERE plan_id = $1 AND participant_installation_id = $2`,
+		planID, oldID, newID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE housing_plan_licenses
+		SET participant_installation_id = $3
+		WHERE plan_id = $1 AND participant_installation_id = $2`,
+		planID, oldID, newID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE license_receipts
+		SET installation_id = $2
+		WHERE installation_id = $1`, oldID, newID)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, `
+		INSERT INTO installations (installation_id)
+		VALUES ($1)
+		ON CONFLICT (installation_id) DO NOTHING`, newID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE installations AS new
+		SET trial_housing_consumed = new.trial_housing_consumed OR old.trial_housing_consumed,
+		    trial_housing_consumed_at = COALESCE(new.trial_housing_consumed_at, old.trial_housing_consumed_at)
+		FROM installations AS old
+		WHERE new.installation_id = $1 AND old.installation_id = $2`,
+		newID, oldID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `DELETE FROM installations WHERE installation_id = $1`, oldID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func containsString(list []string, target string) bool {
+	for _, v := range list {
+		if v == target {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Store) applyMigrations(ctx context.Context) error {

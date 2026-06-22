@@ -22,11 +22,11 @@
 
 - [ ] 4.1 Implement export flows that remain available in read-only mode so participants can always retrieve their history.
 - [ ] 4.2 Add a legal/disclosures document describing dispute-limited behavior and that the app is not legal advice.
-- [ ] 4.3 Guard housing data import behind valid housing entitlement while keeping housing export always available.
+- [ ] 4.3 Import gate: active store subscription (housing standalone or bundle) per `device-data-import-restore`; export always available. Entitlement server does not gate import.
 
 ## 5. Tests
 
 - [ ] 5.1 Unit tests for state machine transitions and time-based reminders.
 - [ ] 5.2 Integration tests: active use triggers trial; trial expiry gating; delinquency grace then read-only; export available when read-only.
-- [ ] 5.3 Integration tests: a new accepted housing plan with any `trial_consumed` installation identity receives no new trial; housing import is refused without housing entitlement.
+- [ ] 5.3 Integration tests: a new accepted housing plan with any `trial_consumed` installation identity receives no new trial; import refused without active paid store subscription (trial/grace/expired).
 

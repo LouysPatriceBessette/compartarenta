@@ -25,6 +25,7 @@ class EnvelopeKind {
   static const int housingParticipationChangeNotify = 12;
   static const int contactEstablishmentRequest = 13;
   static const int contactEstablishmentResponse = 14;
+  static const int participantInstallationMigration = 15;
 }
 
 /// One byte at the start of every envelope frame so we can evolve the

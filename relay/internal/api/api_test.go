@@ -200,6 +200,18 @@ func TestCORSWildcardAllowsAny(t *testing.T) {
 	}
 }
 
+func TestParticipantInstallationMigrateDisabledWhenEntitlementOff(t *testing.T) {
+	s := &Server{cfg: config.Config{EntitlementEnabled: false}}
+	body := `{"envelope_kind":15,"plan_id":"plan:a","old_participant_installation_id":"inst-old-device","new_participant_installation_id":"inst-new-device"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/participant-installation-migrate", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rr := httptest.NewRecorder()
+	s.handleParticipantInstallationMigrate(rr, req)
+	if rr.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+}
+
 func TestCORSPreflightShortCircuits(t *testing.T) {
 	s := &Server{cfg: config.Config{
 		CORSAllowedOrigins: []string{"http://localhost:5001"},

@@ -7,6 +7,7 @@ const (
 	KindHousingRealizedExpensePropose   = 7
 	KindHousingRealizedExpenseAccept    = 8
 	KindHousingRealizedExpenseReject    = 9
+	KindParticipantInstallationMigration = 15
 )
 
 // Gate is minimal metadata the relay forwards to the entitlement service.

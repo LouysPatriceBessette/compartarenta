@@ -340,6 +340,138 @@ abstract class AppLocalizations {
   /// **'Environment, API URL, and app version'**
   String get settingsAboutSubtitle;
 
+  /// No description provided for @settingsExportImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export / import data'**
+  String get settingsExportImportTitle;
+
+  /// No description provided for @settingsExportImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full-device security backup and restore'**
+  String get settingsExportImportSubtitle;
+
+  /// No description provided for @deviceDataExportSecurityWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup file is unencrypted JSON. Store it securely and do not share it over untrusted channels.'**
+  String get deviceDataExportSecurityWarning;
+
+  /// No description provided for @deviceDataExportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all data'**
+  String get deviceDataExportAction;
+
+  /// No description provided for @deviceDataImportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import backup'**
+  String get deviceDataImportAction;
+
+  /// No description provided for @deviceDataExportCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup JSON copied to clipboard.'**
+  String get deviceDataExportCopiedToClipboard;
+
+  /// No description provided for @deviceDataExportLastSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved file'**
+  String get deviceDataExportLastSavedTitle;
+
+  /// No description provided for @deviceDataExportSavedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents/Compartarenta/{fileName}'**
+  String deviceDataExportSavedLocation(String fileName);
+
+  /// No description provided for @deviceDataExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String deviceDataExportFailed(String error);
+
+  /// No description provided for @deviceDataImportDisabledNoSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Import requires an active paid housing subscription on this device.'**
+  String get deviceDataImportDisabledNoSubscription;
+
+  /// No description provided for @deviceDataImportDisabledWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Import is not available on web (development only).'**
+  String get deviceDataImportDisabledWeb;
+
+  /// No description provided for @deviceDataReplaceConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all local data?'**
+  String get deviceDataReplaceConfirmTitle;
+
+  /// No description provided for @deviceDataReplaceConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup will replace every piece of operational data on this device. This is intended mainly for device replacement.'**
+  String get deviceDataReplaceConfirmBody;
+
+  /// No description provided for @deviceDataImportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored. Relay sync is available again.'**
+  String get deviceDataImportSuccess;
+
+  /// No description provided for @deviceDataImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String deviceDataImportFailed(String error);
+
+  /// No description provided for @deviceDataImportValidationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid backup file ({code}).'**
+  String deviceDataImportValidationFailed(String code);
+
+  /// No description provided for @deviceDataMigrationNetworkFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data was restored but the relay could not be reached. Check your connection and retry migration.'**
+  String get deviceDataMigrationNetworkFailure;
+
+  /// No description provided for @deviceDataMigrationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Server identity update failed ({code}).'**
+  String deviceDataMigrationFailed(String code);
+
+  /// No description provided for @deviceDataMigrationPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server sync pending'**
+  String get deviceDataMigrationPendingTitle;
+
+  /// No description provided for @deviceDataMigrationPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is on this device but the server still needs to link your new installation identity.'**
+  String get deviceDataMigrationPendingBody;
+
+  /// No description provided for @deviceDataRetryMigrationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry server sync'**
+  String get deviceDataRetryMigrationAction;
+
+  /// No description provided for @deviceDataCanonicalRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore data for which participant?'**
+  String get deviceDataCanonicalRestoreTitle;
+
   /// No description provided for @settingsNotificationsGeneralSection.
   ///
   /// In en, this message translates to:

@@ -1,0 +1,39 @@
+---
+description: Mobile-only product; Android and iOS share the same spec behavior; iOS implementation without local test hardware.
+alwaysApply: true
+---
+
+# Mobile platform parity (Android + iOS)
+
+## Product scope
+
+- Compartarenta is **mobile-only in production**. Flutter **web** is a **development surface only** — not a production target.
+- Specs, OpenSpec requirements, and agent answers MUST describe **the same application behavior on Android and iOS** unless a platform literally cannot support a capability (document that exception once, in implementation notes — not as a permanent spec fork).
+
+## Store billing parity
+
+When a feature gates on **active paid subscription** (e.g. data import):
+
+| Platform | Mechanism |
+| --- | --- |
+| **Android** | Google Play Billing — e.g. `queryPurchasesAsync()` (or successor API) against the device's Google account |
+| **iOS** | StoreKit equivalent — query active subscriptions for the device's Apple ID |
+| **Web (dev)** | Out of scope for production gating; dev builds MAY use a documented fake/stub |
+
+Do **not** ask whether iOS should be mentioned in each change. **Always** spec both platforms with equivalent behavior.
+
+## iOS testing reality (binding)
+
+- **iOS implementation** MUST be done **to the best of current ability** in code (StoreKit APIs, platform channels, parity with Android paths).
+- **iOS automated and manual QA are deferred** — no Apple test hardware or App Store sandbox runs are available in the current dev setup.
+- **Android** remains the primary verification platform until iOS testing becomes possible.
+- Do **not** block spec updates or Android implementation waiting for iOS test confirmation.
+- Do **not** re-ask the user "Android-only or also iOS?" on every feature — this rule is the answer.
+
+## Agent discipline
+
+Before shipping spec or code guidance that touches billing, import/export, or store products:
+
+1. State Android **and** iOS behavior in one breath.
+2. Note iOS tests deferred only when delivery mentions verification — not as a scope question.
+3. Never treat web dev builds as a third production platform for licensing or import gates.

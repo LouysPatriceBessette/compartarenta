@@ -32,8 +32,7 @@ void main() {
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
     expect(find.text('Units'), findsOneWidget);
-    expect(find.text('About'), findsOneWidget);
-    expect(find.text('Privacy policy'), findsOneWidget);
+    expect(find.text('Export / import data'), findsOneWidget);
 
     await tester.tap(find.text('Notifications'));
     await tester.pumpAndSettle();

@@ -44,6 +44,63 @@
   "settingsUnitsSubtitle": "Various unit formats",
   "settingsAboutTitle": "About",
   "settingsAboutSubtitle": "Environment, API URL, and app version",
+  "settingsExportImportTitle": "Export / import data",
+  "settingsExportImportSubtitle": "Full-device security backup and restore",
+  "deviceDataExportSecurityWarning": "The backup file is unencrypted JSON. Store it securely and do not share it over untrusted channels.",
+  "deviceDataExportAction": "Export all data",
+  "deviceDataImportAction": "Import backup",
+  "deviceDataExportCopiedToClipboard": "Backup JSON copied to clipboard.",
+  "deviceDataExportLastSavedTitle": "Saved file",
+  "deviceDataExportSavedLocation": "Documents/Compartarenta/{fileName}",
+  "@deviceDataExportSavedLocation": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceDataExportFailed": "Export failed: {error}",
+  "@deviceDataExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceDataImportDisabledNoSubscription": "Import requires an active paid housing subscription on this device.",
+  "deviceDataImportDisabledWeb": "Import is not available on web (development only).",
+  "deviceDataReplaceConfirmTitle": "Replace all local data?",
+  "deviceDataReplaceConfirmBody": "This backup will replace every piece of operational data on this device. This is intended mainly for device replacement.",
+  "deviceDataImportSuccess": "Backup restored. Relay sync is available again.",
+  "deviceDataImportFailed": "Import failed: {error}",
+  "@deviceDataImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceDataImportValidationFailed": "Invalid backup file ({code}).",
+  "@deviceDataImportValidationFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceDataMigrationNetworkFailure": "Local data was restored but the relay could not be reached. Check your connection and retry migration.",
+  "deviceDataMigrationFailed": "Server identity update failed ({code}).",
+  "@deviceDataMigrationFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceDataMigrationPendingTitle": "Server sync pending",
+  "deviceDataMigrationPendingBody": "Your data is on this device but the server still needs to link your new installation identity.",
+  "deviceDataRetryMigrationAction": "Retry server sync",
+  "deviceDataCanonicalRestoreTitle": "Restore data for which participant?",
   "settingsNotificationsGeneralSection": "General permission",
   "settingsNotificationsSystemPermissionTitle": "System permission",
   "settingsNotificationsSystemPermissionBody": "The app will ask after a relevant action, such as inviting someone.",
