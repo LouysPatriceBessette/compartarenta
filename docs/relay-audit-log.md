@@ -25,6 +25,7 @@ deployment happens.
 | v0.2.0 | sha256:b5967deacc70d3b19cd2e31a12f294898a7549951779a8b92ba9a81d63cc010d | 2026-05-19T21:58Z | operator-on-call | Closed-app push delivery (schema v2). Wake dispatch disabled (WAKE_PUSH_DISPATCH_ENABLED=false). Stats cron via daily-stats-append-via-docker.sh. |
 | v0.2.1 | sha256:1c826875efb8c73a96676d82c0fabcbb3e0f3849167d79bf3c831b773ddc653e | 2026-05-26T00:23Z | operator-on-call | Raised ENVELOPE_MAX_BYTES to 262144 (256 KiB) for proof-bearing envelopes. Built from commit b69d4bfb2ed0c5b9bb6d5acae04cbdbffebd4567. |
 | v0.3.0 | sha256:5055f30f74eb18e9616086ad9be5c5469090d4ea2e99081baa75d713e581e1ff | 2026-06-18T16:54Z | operator-on-call | Added cron notifications capability to the Relay server and first deployed the Entitlement server. Built from commit 5abd13e1970a50143776b248af37f8d7673261dc. |
+| v0.3.1 | sha256:f01a7f7c30436e8aae806724187841edfa704d3ccd9ffe2cd08f1e68af9fffde | 2026-06-23T13:21Z | operator-on-call | Updated the Relay server and the Entitlement server in order to allow an installation ID to be updated on mobile device data import. Built from commit 0e334a44d8908748da1d366dbfc7efcd23ea40de. |
 
 When a new image goes live:
 
@@ -86,6 +87,16 @@ first day of public traffic.
 - **Checklist version:** [`relay-audit-checklist.md`](./relay-audit-checklist.md)
   as of 5abd13e1970a50143776b248af37f8d7673261dc
 - **Summary:** Added cron notifications capability to the Relay server and first deployed the Entitlement server.
+- **Findings:** None.
+
+### Self-audit — v0.3.1 cron notifications and entitlement server
+
+- **Date:** 2026-06-23T13:21Z
+- **Operator:** operator-on-call
+- **Image digest:** sha256:f01a7f7c30436e8aae806724187841edfa704d3ccd9ffe2cd08f1e68af9fffde
+- **Checklist version:** [`relay-audit-checklist.md`](./relay-audit-checklist.md)
+  as of 0e334a44d8908748da1d366dbfc7efcd23ea40de
+- **Summary:** Updated the Relay server and the Entitlement server in order to allow an installation ID to be updated on mobile device data import.
 - **Findings:** None.
 
 ### Audit cadence
