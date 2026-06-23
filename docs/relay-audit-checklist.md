@@ -18,6 +18,12 @@ Tools assumed available on the auditor's machine: `curl`, `dig`,
 
 ## A. DNS, TLS, and public surface
 
+Define `$RELAY_HOST` with your VPS url.
+
+```bash
+RELAY_HOST=sub.domain.tld
+```
+
 ### A.1 The relay sub-domain resolves to a single A/AAAA record
 
 ```bash
@@ -240,9 +246,8 @@ git grep -nE '(POSTGRES_PASSWORD|DATABASE_URL)=[^$]' \
   ':!**/.env.example' || echo "clean"
 ```
 
-**Expected:** prints `clean` and nothing else. The repository contains
-placeholder values in `.env.example` and documentation only. Required
-by `relay-security-baseline` /
+**Expected:** only prints the repository placeholder values which are in `env.stack.example`: **"change-me-from-secret-store"**. \
+Required by `relay-security-baseline` /
 "Secrets are managed by an explicit secret store".
 
 > The `clean` fallback is reached when `git grep` exits non-zero. The
@@ -392,7 +397,7 @@ From schema version 2 onward, `routing_push_tokens` and `relay_day_metrics`
 are expected in addition to the v0.1.0 tables:
 
 ```bash
-expected="envelopes idempotency_entries operator_actions relay_day_metrics routing_push_tokens routing_relationships schema_version sweeper_checkpoint"
+expected="envelopes housing_reminder_plan_generation idempotency_entries operator_actions recipient_notification_timezone relay_day_metrics routing_push_tokens routing_relationships scheduled_notification_fires scheduled_notification_targets schema_version sweeper_checkpoint"
 actual=$(psql_q -At -c \
   "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;" \
   | tr -d '\r' | tr '\n' ' ' | sed 's/ $//')
@@ -425,7 +430,7 @@ psql_q -c "
   ORDER BY table_name, column_name;
 "
 
-expected_cols="operator_actions.action operator_actions.actor operator_actions.reason operator_actions.target_kind routing_push_tokens.country routing_push_tokens.provider routing_push_tokens.push_token routing_relationships.status"
+expected_cols="operator_actions.action operator_actions.actor operator_actions.reason operator_actions.target_kind recipient_notification_timezone.iana_timezone routing_push_tokens.country routing_push_tokens.provider routing_push_tokens.push_token routing_relationships.status scheduled_notification_fires.status scheduled_notification_targets.domain scheduled_notification_targets.reminder_kind"
 actual_cols=$(psql_q -At -c "
   SELECT table_name||'.'||column_name
   FROM information_schema.columns
