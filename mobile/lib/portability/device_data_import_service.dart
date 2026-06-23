@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../db/app_database.dart';
+import '../housing/housing_plan_id.dart';
 import '../relay/envelopes.dart';
 import '../relay/relay_client.dart';
 import 'device_data_export_service.dart';
@@ -96,7 +97,7 @@ class DeviceDataImportService {
   String primaryHousingPlanIdFromBundle(Map<String, Object?> bundle) {
     final migration = bundle['migration']! as Map;
     final planIds = migration['housingPlanIds'] as List;
-    return planIds.first as String;
+    return entitlementPlanIdForLocalPlan(planIds.first as String);
   }
 
   List<CanonicalRestoreChoice> canonicalRestoreChoices(
@@ -138,9 +139,10 @@ class DeviceDataImportService {
     required String newParticipantInstallationId,
     required String planId,
   }) async {
+    final entitlementPlanId = entitlementPlanIdForLocalPlan(planId);
     try {
       await _relay.migrateParticipantInstallation(
-        planId: planId,
+        planId: entitlementPlanId,
         oldParticipantInstallationId: oldParticipantInstallationId,
         newParticipantInstallationId: newParticipantInstallationId,
         envelopeKind: EnvelopeKind.participantInstallationMigration,

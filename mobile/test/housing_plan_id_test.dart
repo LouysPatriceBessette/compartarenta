@@ -12,59 +12,55 @@ void main() {
   });
 
   group('entitlementPlanIdForLocalPlan', () {
-    const authorId = 'housing:11111111-1111-4111-8111-111111111111';
-    const peerId = 'received:11111111-1111-4111-8111-111111111111';
+    const uuid = '11111111-1111-4111-8111-111111111111';
+    const authorId = 'housing:$uuid';
+    const peerId = 'received:$uuid';
 
-    test('uses author plan id as-is', () {
-      expect(entitlementPlanIdForLocalPlan(authorId), authorId);
+    test('strips housing prefix to bare uuid', () {
+      expect(entitlementPlanIdForLocalPlan(authorId), uuid);
     });
 
-    test('maps received uuid suffix to author plan id', () {
-      expect(entitlementPlanIdForLocalPlan(peerId), authorId);
-    });
-
-    test('legacy housing:default keeps derived received token', () {
-      expect(
-        entitlementPlanIdForLocalPlan('housing:default'),
-        'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA',
-      );
+    test('strips received prefix to bare uuid', () {
+      expect(entitlementPlanIdForLocalPlan(peerId), uuid);
     });
   });
 
   group('receivedPlanIdForAuthorPlan', () {
     test('uses uuid suffix without hashing', () {
-      const authorId = 'housing:22222222-2222-4222-8222-222222222222';
+      const uuid = '22222222-2222-4222-8222-222222222222';
       expect(
-        receivedPlanIdForAuthorPlan(authorId),
-        'received:22222222-2222-4222-8222-222222222222',
+        receivedPlanIdForAuthorPlan('housing:$uuid'),
+        'received:$uuid',
       );
     });
 
-    test('legacy author id keeps token derivation', () {
+    test('accepts bare uuid author id', () {
+      const uuid = '22222222-2222-4222-8222-222222222222';
       expect(
-        receivedPlanIdForAuthorPlan('housing:default'),
-        'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA',
+        receivedPlanIdForAuthorPlan(uuid),
+        'received:$uuid',
       );
     });
   });
 
   group('authorPlanIdFromProposalPayload', () {
-    test('reads explicit entitlementPlanId', () {
+    test('reads bare entitlementPlanId as local author row id', () {
+      const uuid = '33333333-3333-4333-8333-333333333333';
       expect(
         authorPlanIdFromProposalPayload({
-          'entitlementPlanId': 'housing:33333333-3333-4333-8333-333333333333',
+          'entitlementPlanId': uuid,
         }),
-        'housing:33333333-3333-4333-8333-333333333333',
+        'housing:$uuid',
       );
     });
 
     test('derives from participant ids', () {
+      const uuid = '44444444-4444-4444-8444-444444444444';
       expect(
         authorPlanIdFromProposalPayload({
-          'proposerParticipantId':
-              'housing:44444444-4444-4444-8444-444444444444:self',
+          'proposerParticipantId': 'housing:$uuid:self',
         }),
-        'housing:44444444-4444-4444-8444-444444444444',
+        'housing:$uuid',
       );
     });
   });

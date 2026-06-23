@@ -152,11 +152,11 @@ void main() {
       );
 
       expect(gate, isNotNull);
-      expect(gate!.planId, localPlanId);
-      expect(gate.toJson()['plan_id'], localPlanId);
+      expect(gate!.planId, '66666666-6666-4666-8666-666666666666');
+      expect(gate.toJson()['plan_id'], '66666666-6666-4666-8666-666666666666');
     });
 
-    test('gateFor keeps legacy derived id for housing:default', () async {
+    test('gateFor passes through non-uuid local plan id', () async {
       const localPlanId = 'housing:default';
       final gate = await coordinator.gateFor(
         planId: localPlanId,
@@ -171,7 +171,7 @@ void main() {
       );
       expect(
         gate.toJson()['plan_id'],
-        'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA',
+        'housing:default',
       );
     });
 

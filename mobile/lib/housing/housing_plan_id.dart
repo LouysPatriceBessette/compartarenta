@@ -1,52 +1,59 @@
-import 'dart:convert';
 import 'dart:math';
 
 /// Housing plan identifiers: opaque UUID assigned at draft creation.
 ///
-/// Author devices store `housing:<uuid>`. Peers store `received:<uuid>` with the
-/// same uuid suffix. Entitlement and relay gates use `housing:<uuid>` on every
-/// device — transmitted as-is in proposal payloads, without hashing or
-/// base64 derivation.
+/// **Local** Drift rows use role prefixes (`housing:<uuid>` author,
+/// `received:<uuid>` invitee) so two representations of the same agreement can
+/// coexist in import/remap logic.
+///
+/// **Server** entitlement and relay gates use the bare UUID only. Module scope
+/// is carried separately (`module=housing` on introspection), not in `plan_id`.
 const String kHousingPlanIdPrefix = 'housing:';
 const String kReceivedPlanIdPrefix = 'received:';
 
 /// Generates `housing:<uuid-v4>` for a new draft plan row.
 String newHousingPlanId() => '$kHousingPlanIdPrefix${newUuidV4()}';
 
-/// Stable entitlement [`plan_id`] for relay gates and roster HTTP.
+/// Bare plan UUID for entitlement roster, relay gates, and migration HTTP.
 String entitlementPlanIdForLocalPlan(String localPlanId) {
-  if (localPlanId.startsWith(kHousingPlanIdPrefix)) {
-    final suffix = localPlanId.substring(kHousingPlanIdPrefix.length);
-    if (looksLikeUuid(suffix)) {
-      return localPlanId;
+  return barePlanUuidFromLocalPlanId(localPlanId) ?? localPlanId;
+}
+
+/// Extracts a UUID v4 from a bare, `housing:`, or `received:` plan row id.
+String? barePlanUuidFromLocalPlanId(String localPlanId) {
+  if (looksLikeUuid(localPlanId)) return localPlanId;
+  for (final prefix in [kHousingPlanIdPrefix, kReceivedPlanIdPrefix]) {
+    if (localPlanId.startsWith(prefix)) {
+      final suffix = localPlanId.substring(prefix.length);
+      if (looksLikeUuid(suffix)) return suffix;
     }
-    return _legacyEntitlementPlanId(localPlanId);
   }
-  if (localPlanId.startsWith(kReceivedPlanIdPrefix)) {
-    final suffix = localPlanId.substring(kReceivedPlanIdPrefix.length);
-    if (looksLikeUuid(suffix)) {
-      return '$kHousingPlanIdPrefix$suffix';
-    }
-  }
-  return _legacyEntitlementPlanId(localPlanId);
+  return null;
+}
+
+/// Author-side local plan row id for any local or wire plan identifier.
+String localAuthorPlanId(String planId) {
+  final bare = barePlanUuidFromLocalPlanId(planId);
+  if (bare != null) return '$kHousingPlanIdPrefix$bare';
+  if (planId.startsWith(kHousingPlanIdPrefix)) return planId;
+  return planId;
 }
 
 /// Local peer plan row id for a proposal authored on another device.
 String receivedPlanIdForAuthorPlan(String authorPlanId) {
+  final bare = barePlanUuidFromLocalPlanId(authorPlanId);
+  if (bare != null) return '$kReceivedPlanIdPrefix$bare';
   if (authorPlanId.startsWith(kHousingPlanIdPrefix)) {
-    final suffix = authorPlanId.substring(kHousingPlanIdPrefix.length);
-    if (looksLikeUuid(suffix)) {
-      return '$kReceivedPlanIdPrefix$suffix';
-    }
+    return '$kReceivedPlanIdPrefix${authorPlanId.substring(kHousingPlanIdPrefix.length)}';
   }
-  return '$kReceivedPlanIdPrefix${_legacyReceivedToken(authorPlanId)}';
+  return '$kReceivedPlanIdPrefix$authorPlanId';
 }
 
-/// Reads the author's plan id from a proposal payload (export or relay body).
+/// Reads the author's local plan id from a proposal payload (export or relay).
 String? authorPlanIdFromProposalPayload(Map<String, dynamic> payload) {
   final explicit = payload['entitlementPlanId'];
-  if (explicit is String && explicit.startsWith(kHousingPlanIdPrefix)) {
-    return explicit;
+  if (explicit is String && explicit.isNotEmpty) {
+    return localAuthorPlanId(explicit);
   }
 
   for (final id in _participantSourceIds(payload)) {
@@ -58,6 +65,11 @@ String? authorPlanIdFromProposalPayload(Map<String, dynamic> payload) {
   if (packageId is String && packageId.startsWith('pkg:$kHousingPlanIdPrefix')) {
     return packageId.substring('pkg:'.length);
   }
+  if (packageId is String && packageId.startsWith('pkg:')) {
+    final tail = packageId.substring('pkg:'.length);
+    final bare = barePlanUuidFromLocalPlanId(tail);
+    if (bare != null) return '$kHousingPlanIdPrefix$bare';
+  }
   return null;
 }
 
@@ -67,9 +79,7 @@ String? planIdPrefixFromParticipantId(String participantId) {
   final prefix = participantId.substring(0, idx);
   if (prefix.startsWith(kHousingPlanIdPrefix) ||
       prefix.startsWith(kReceivedPlanIdPrefix)) {
-    return prefix.startsWith(kReceivedPlanIdPrefix)
-        ? entitlementPlanIdForLocalPlan(prefix)
-        : prefix;
+    return localAuthorPlanId(prefix);
   }
   return null;
 }
@@ -115,20 +125,4 @@ Iterable<String> _participantSourceIds(Map<String, dynamic> payload) sync* {
       if (id is String && id.isNotEmpty) yield id;
     }
   }
-}
-
-/// Pre-UUID plans (`housing:default`, microsecond drafts): keep prior token so
-/// existing rows and tests still resolve consistently.
-String _legacyEntitlementPlanId(String localPlanId) {
-  if (localPlanId.startsWith(kReceivedPlanIdPrefix)) {
-    return localPlanId;
-  }
-  final packageId = 'pkg:$localPlanId';
-  final token = base64Url.encode(utf8.encode(packageId)).replaceAll('=', '');
-  return '$kReceivedPlanIdPrefix$token';
-}
-
-String _legacyReceivedToken(String authorPlanId) {
-  final packageId = 'pkg:$authorPlanId';
-  return base64Url.encode(utf8.encode(packageId)).replaceAll('=', '');
 }

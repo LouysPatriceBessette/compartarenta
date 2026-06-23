@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cryptography_plus/cryptography_plus.dart';
 
 import '../db/app_database.dart';
+import '../housing/housing_plan_id.dart';
 import 'device_data_snapshot_codec.dart';
 
 /// Full-device operational export (`device-data-import-restore`).
@@ -18,10 +19,13 @@ class DeviceDataExportService {
     required String participantInstallationId,
   }) async {
     final tables = await exportDeviceDataTables(_db);
-    final housingPlanIds = (tables['plans'] ?? const <Map<String, dynamic>>[])
-        .map((row) => row['id'] as String?)
-        .whereType<String>()
-        .toList();
+    final housingPlanIds = <String>[];
+    for (final row in (tables['plans'] ?? const <Map<String, dynamic>>[])) {
+      if (row['type'] != 'housing') continue;
+      final id = row['id'] as String?;
+      if (id == null || id.isEmpty) continue;
+      housingPlanIds.add(entitlementPlanIdForLocalPlan(id));
+    }
 
     final payload = <String, Object?>{
       'formatVersion': formatVersion,

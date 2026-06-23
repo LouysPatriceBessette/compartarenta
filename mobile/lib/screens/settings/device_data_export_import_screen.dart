@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +110,7 @@ class _DeviceDataExportImportScreenState
     if (pick == null || pick.files.isEmpty) return;
     final bytes = pick.files.single.bytes;
     if (bytes == null) return;
-    final jsonText = String.fromCharCodes(bytes);
+    final jsonText = utf8.decode(bytes);
 
     setState(() => _importing = true);
     try {

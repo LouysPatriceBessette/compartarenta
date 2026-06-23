@@ -10,6 +10,7 @@ export '../housing/housing_plan_id.dart'
         planIdPrefixFromParticipantId,
         receivedPlanIdForAuthorPlan;
 
-/// Stable entitlement [`plan_id`] shared across author and received devices.
+/// Stable bare [`plan_id`] shared across author and received devices on
+/// entitlement and relay (module=`housing` elsewhere).
 ///
 /// See [entitlementPlanIdForLocalPlan] in `housing_plan_id.dart`.

@@ -16,7 +16,7 @@ new installation id.
 | `formatVersion` | Integer; current `1` |
 | `exportedAt` | ISO-8601 UTC timestamp |
 | `bundleKind` | `device_full` |
-| `migration` | `participantInstallationId`, `housingPlanIds` |
+| `migration` | `participantInstallationId`, `housingPlanIds` (bare UUID per housing plan; module is implicit) |
 | `tables` | Map of Drift table key → array of row JSON objects |
 | `checksum` | SHA-256 hex of canonical `jsonEncode` of payload **excluding** `checksum` |
 

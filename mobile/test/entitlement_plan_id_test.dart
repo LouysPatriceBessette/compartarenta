@@ -3,30 +3,29 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('entitlementPlanIdForLocalPlan', () {
-    test('author uuid plan id is used as-is', () {
-      const authorId = 'housing:55555555-5555-4555-8555-555555555555';
-      expect(entitlementPlanIdForLocalPlan(authorId), authorId);
-    });
-
-    test('received uuid maps to author plan id', () {
+    test('author local id maps to bare uuid', () {
+      const uuid = '55555555-5555-4555-8555-555555555555';
       expect(
-        entitlementPlanIdForLocalPlan(
-          'received:55555555-5555-4555-8555-555555555555',
-        ),
-        'housing:55555555-5555-4555-8555-555555555555',
+        entitlementPlanIdForLocalPlan('housing:$uuid'),
+        uuid,
       );
     });
 
-    test('legacy housing:default keeps derived token', () {
+    test('received local id maps to same bare uuid', () {
+      const uuid = '55555555-5555-4555-8555-555555555555';
       expect(
-        entitlementPlanIdForLocalPlan('housing:default'),
-        'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA',
+        entitlementPlanIdForLocalPlan('received:$uuid'),
+        uuid,
       );
     });
 
-    test('leaves legacy received token unchanged', () {
-      const received = 'received:cGtnOmhvdXNpbmc6ZGVmYXVsdA';
-      expect(entitlementPlanIdForLocalPlan(received), received);
+    test('bare uuid passes through', () {
+      const uuid = '55555555-5555-4555-8555-555555555555';
+      expect(entitlementPlanIdForLocalPlan(uuid), uuid);
+    });
+
+    test('non-uuid local id passes through unchanged', () {
+      expect(entitlementPlanIdForLocalPlan('housing:default'), 'housing:default');
     });
   });
 }

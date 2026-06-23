@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:compartarenta/db/app_database.dart';
+import 'package:compartarenta/housing/housing_plan_id.dart';
 import 'package:compartarenta/portability/device_data_export_service.dart';
 import 'package:compartarenta/portability/device_data_import_service.dart';
 import 'package:compartarenta/portability/device_data_snapshot_codec.dart';
@@ -54,10 +57,85 @@ void main() {
       expect(bundle['bundleKind'], DeviceDataExportService.bundleKind);
       final migration = bundle['migration']! as Map;
       expect(migration['participantInstallationId'], 'inst-export-test');
-      expect(migration['housingPlanIds'], ['plan:a']);
+      expect(migration['housingPlanIds'], [entitlementPlanIdForLocalPlan('plan:a')]);
       expect(await DeviceDataExportService.verifyChecksum(bundle), isTrue);
       bundle['tables'] = <String, dynamic>{};
       expect(await DeviceDataExportService.verifyChecksum(bundle), isFalse);
+    });
+
+    test('pretty-printed export file verifies checksum', () async {
+      final db = _DbForTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      await _seedPlan(db);
+      await db.into(db.participants).insert(
+            ParticipantsCompanion.insert(
+              id: 'participant:self',
+              displayName: 'Louÿs',
+              avatarId: 'avatar:1',
+              createdAt: DateTime.utc(2026, 1, 1),
+            ),
+          );
+      final service = DeviceDataExportService(db);
+      final jsonText = await service.exportJsonString(
+        participantInstallationId: 'inst-export-test',
+      );
+      final decoded = jsonDecode(jsonText) as Map<String, dynamic>;
+      final bundle = Map<String, Object?>.from(decoded);
+      expect(await DeviceDataExportService.verifyChecksum(bundle), isTrue);
+    });
+
+    test('maps received local plan id to entitlement housing plan id', () async {
+      const uuid = '613fc48d-6d8b-4055-8fee-1eace9e92678';
+      final localPlanId = 'received:$uuid';
+      final db = _DbForTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: localPlanId,
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      final bundle = await DeviceDataExportService(db).buildExportBundle(
+        participantInstallationId: 'inst-export-test',
+      );
+      final migration = bundle['migration']! as Map;
+      expect(migration['housingPlanIds'], ['613fc48d-6d8b-4055-8fee-1eace9e92678']);
+    });
+
+    test('import migration uses entitlement plan id from received backup', () async {
+      const uuid = '613fc48d-6d8b-4055-8fee-1eace9e92678';
+      SharedPreferences.setMockInitialValues({});
+      final db = _DbForTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.upsertPlan(
+        PlansCompanion.insert(
+          id: 'received:$uuid',
+          type: 'housing',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      final relay = FakeRelayClient();
+      final pending = await PendingInstallationMigrationStore.load();
+      final service = DeviceDataImportService(
+        db: db,
+        relay: relay,
+        pendingStore: pending,
+      );
+      final json = await DeviceDataExportService(db).exportJsonString(
+        participantInstallationId: 'inst-old',
+      );
+      final parsed = await service.parseAndValidateBundle(json);
+      expect(
+        service.primaryHousingPlanIdFromBundle(parsed),
+        uuid,
+      );
+      await service.requestInstallationMigration(
+        oldParticipantInstallationId: 'inst-old',
+        newParticipantInstallationId: 'inst-new123456',
+        planId: 'received:$uuid',
+      );
+      expect(relay.installationMigrations.single.planId, uuid);
     });
   });
 
