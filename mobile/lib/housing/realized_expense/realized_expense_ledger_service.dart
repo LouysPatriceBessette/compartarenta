@@ -307,6 +307,11 @@ class RealizedExpenseLedgerService {
     return data.optimizedMode.edges;
   }
 
+  Future<bool> hasNonZeroOptimizedBalances(String planId) async {
+    final data = await balanceDataForPlan(planId);
+    return data.optimizedMode.edges.any((e) => e.amountMinor > 0);
+  }
+
   Future<HousingBalanceData> balanceDataForPlan(String planId) async {
     await HousingInactiveParticipantService(
       _db,

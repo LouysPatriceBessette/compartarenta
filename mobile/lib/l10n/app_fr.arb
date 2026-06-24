@@ -252,6 +252,13 @@
   "housingWorkbenchPendingSection": "En attente",
   "housingWorkbenchArchivedSection": "Archivée(s)",
   "housingWorkbenchActiveSection": "Plans actifs",
+  "housingWorkbenchSettlementSection": "Règlement en cours",
+  "housingWorkbenchSettlementOpenLabel": "{planTitle} — règlement",
+  "@housingWorkbenchSettlementOpenLabel": {
+    "placeholders": {
+      "planTitle": { "type": "String" }
+    }
+  },
   "housingWorkbenchOpenPlan": "Ouvrir",
   "housingWorkbenchEmpty": "Aucun plan logement avec votre profil sur cet appareil.",
   "housingActiveHubTitle": "Entente active",
@@ -262,6 +269,18 @@
     }
   },
   "housingActiveHubEnterExpense": "Soumettre une dépense",
+  "housingActiveHubEnterSettlementDue": "Entrer un règlement de dû",
+  "housingActiveHubSettlementAvailableUntil": "Fonctionnalité disponible jusqu'au {date}",
+  "@housingActiveHubSettlementAvailableUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "housingSettlementDueTitle": "Règlement de dû",
+  "housingSettlementDueSubmit": "Proposer le règlement",
+  "housingSettlementDueSuccess": "Règlement proposé.",
+  "housingSettlementDueTransferDescription": "Règlement de fin d'entente",
+  "housingSettlementDueNoCounterparties": "Aucun solde en cours avec les autres participants.",
   "housingActiveHubMonthlyExpenses": "Dépenses acceptées",
   "housingActiveHubBalances": "Dûs entre participants",
   "housingActiveHubPaymentStatus": "Dépenses courantes",

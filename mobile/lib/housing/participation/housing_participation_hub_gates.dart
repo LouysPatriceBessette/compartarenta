@@ -1,4 +1,5 @@
 import '../../db/app_database.dart';
+import '../amendment/housing_active_agreement_service.dart';
 import '../proposals/housing_proposal_transport_service.dart';
 import '../proposals/housing_agreement_expiration_vote_settlement.dart';
 import '../realized_expense/realized_expense_participants.dart';
@@ -77,6 +78,9 @@ class HousingParticipationHubGates {
     final appliedChangeId =
         await changeSvc.applyDueVoluntaryWithdrawalsReturningId(planId);
     await settleExpiredAgreementVotes(db);
+    final agreement = await db.getAgreementForPlan(planId);
+    final periodOpen = agreement != null &&
+        HousingActiveAgreementService(db).isAgreementPeriodOpen(agreement);
     final pending = await changeSvc.pendingForPlan(planId);
     final amendmentPending =
         await HousingProposalTransportService(db).hasPendingAmendmentForUi(
@@ -88,8 +92,8 @@ class HousingParticipationHubGates {
         gates: HousingParticipationHubGates(
           showParticipationBanner: false,
           enterExpenseEnabled: true,
-          requestAmendmentEnabled: !amendmentPending,
-          majorChangeEnabled: !amendmentPending,
+          requestAmendmentEnabled: periodOpen && !amendmentPending,
+          majorChangeEnabled: periodOpen && !amendmentPending,
           isPastAgreementForSelf: false,
           pendingChangeId: null,
           isEjectionCandidate: false,
@@ -125,7 +129,7 @@ class HousingParticipationHubGates {
           showParticipationBanner: true,
           participationBannerText: bannerText,
           enterExpenseEnabled: true,
-          requestAmendmentEnabled: true,
+          requestAmendmentEnabled: periodOpen,
           majorChangeEnabled: false,
           isPastAgreementForSelf: false,
           pendingChangeId: pending.id,
@@ -136,8 +140,8 @@ class HousingParticipationHubGates {
         showParticipationBanner: true,
         participationBannerText: bannerText,
         enterExpenseEnabled: !isCandidate,
-        requestAmendmentEnabled: !isCandidate,
-        majorChangeEnabled: !isCandidate,
+        requestAmendmentEnabled: periodOpen && !isCandidate,
+        majorChangeEnabled: periodOpen && !isCandidate,
         majorChangeSubtitle: isCandidate ? ejectionCandidateSubtitle : null,
         isPastAgreementForSelf: false,
         pendingChangeId: pending.id,
@@ -147,8 +151,8 @@ class HousingParticipationHubGates {
       null => HousingParticipationHubGates(
         showParticipationBanner: false,
         enterExpenseEnabled: true,
-        requestAmendmentEnabled: !amendmentPending,
-        majorChangeEnabled: !amendmentPending,
+        requestAmendmentEnabled: periodOpen && !amendmentPending,
+        majorChangeEnabled: periodOpen && !amendmentPending,
         isPastAgreementForSelf: false,
         pendingChangeId: null,
         isEjectionCandidate: false,

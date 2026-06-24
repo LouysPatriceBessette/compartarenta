@@ -1402,6 +1402,18 @@ abstract class AppLocalizations {
   /// **'Active plans'**
   String get housingWorkbenchActiveSection;
 
+  /// No description provided for @housingWorkbenchSettlementSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement in progress'**
+  String get housingWorkbenchSettlementSection;
+
+  /// No description provided for @housingWorkbenchSettlementOpenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{planTitle} — settlement'**
+  String housingWorkbenchSettlementOpenLabel(String planTitle);
+
   /// No description provided for @housingWorkbenchOpenPlan.
   ///
   /// In en, this message translates to:
@@ -1431,6 +1443,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submit an expense'**
   String get housingActiveHubEnterExpense;
+
+  /// No description provided for @housingActiveHubEnterSettlementDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit a due settlement'**
+  String get housingActiveHubEnterSettlementDue;
+
+  /// No description provided for @housingActiveHubSettlementAvailableUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Available until {date}'**
+  String housingActiveHubSettlementAvailableUntil(String date);
+
+  /// No description provided for @housingSettlementDueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Due settlement'**
+  String get housingSettlementDueTitle;
+
+  /// No description provided for @housingSettlementDueSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Propose settlement transfer'**
+  String get housingSettlementDueSubmit;
+
+  /// No description provided for @housingSettlementDueSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement transfer proposed.'**
+  String get housingSettlementDueSuccess;
+
+  /// No description provided for @housingSettlementDueTransferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'End-of-agreement settlement'**
+  String get housingSettlementDueTransferDescription;
+
+  /// No description provided for @housingSettlementDueNoCounterparties.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding balance with other participants.'**
+  String get housingSettlementDueNoCounterparties;
 
   /// No description provided for @housingActiveHubMonthlyExpenses.
   ///

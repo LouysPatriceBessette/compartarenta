@@ -746,6 +746,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingWorkbenchActiveSection => 'Planes activos';
 
   @override
+  String get housingWorkbenchSettlementSection => 'Liquidación en curso';
+
+  @override
+  String housingWorkbenchSettlementOpenLabel(String planTitle) {
+    return '$planTitle — liquidación';
+  }
+
+  @override
   String get housingWorkbenchOpenPlan => 'Abrir';
 
   @override
@@ -762,6 +770,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingActiveHubEnterExpense => 'Enviar un gasto';
+
+  @override
+  String get housingActiveHubEnterSettlementDue => 'Registrar un pago de deuda';
+
+  @override
+  String housingActiveHubSettlementAvailableUntil(String date) {
+    return 'Disponible hasta el $date';
+  }
+
+  @override
+  String get housingSettlementDueTitle => 'Pago de deuda';
+
+  @override
+  String get housingSettlementDueSubmit =>
+      'Proponer transferencia de liquidación';
+
+  @override
+  String get housingSettlementDueSuccess =>
+      'Transferencia de liquidación propuesta.';
+
+  @override
+  String get housingSettlementDueTransferDescription =>
+      'Liquidación al fin del acuerdo';
+
+  @override
+  String get housingSettlementDueNoCounterparties =>
+      'No hay saldo pendiente con otros participantes.';
 
   @override
   String get housingActiveHubMonthlyExpenses => 'Gastos aceptados';

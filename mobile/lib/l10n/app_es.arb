@@ -252,6 +252,13 @@
   "housingWorkbenchPendingSection": "Pendiente",
   "housingWorkbenchArchivedSection": "Archivada(s)",
   "housingWorkbenchActiveSection": "Planes activos",
+  "housingWorkbenchSettlementSection": "Liquidación en curso",
+  "housingWorkbenchSettlementOpenLabel": "{planTitle} — liquidación",
+  "@housingWorkbenchSettlementOpenLabel": {
+    "placeholders": {
+      "planTitle": { "type": "String" }
+    }
+  },
   "housingWorkbenchOpenPlan": "Abrir",
   "housingWorkbenchEmpty": "No hay planes de vivienda con su perfil en este dispositivo.",
   "housingActiveHubTitle": "Acuerdo activo",
@@ -262,6 +269,18 @@
     }
   },
   "housingActiveHubEnterExpense": "Enviar un gasto",
+  "housingActiveHubEnterSettlementDue": "Registrar un pago de deuda",
+  "housingActiveHubSettlementAvailableUntil": "Disponible hasta el {date}",
+  "@housingActiveHubSettlementAvailableUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "housingSettlementDueTitle": "Pago de deuda",
+  "housingSettlementDueSubmit": "Proponer transferencia de liquidación",
+  "housingSettlementDueSuccess": "Transferencia de liquidación propuesta.",
+  "housingSettlementDueTransferDescription": "Liquidación al fin del acuerdo",
+  "housingSettlementDueNoCounterparties": "No hay saldo pendiente con otros participantes.",
   "housingActiveHubMonthlyExpenses": "Gastos aceptados",
   "housingActiveHubBalances": "Deudas entre participantes",
   "housingActiveHubPaymentStatus": "Gastos corrientes",

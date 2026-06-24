@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../housing/settlement/housing_agreement_month_window.dart';
 import '../../housing/realized_expense/realized_expense_description_display.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -32,7 +33,7 @@ class HousingRejectedExpensesBrowseScreen extends StatefulWidget {
 class _HousingRejectedExpensesBrowseScreenState
     extends State<HousingRejectedExpensesBrowseScreen> {
   late DateTime _month;
-  late Future<_MonthWindow?> _windowFuture;
+  late Future<HousingAgreementMonthWindow?> _windowFuture;
 
   @override
   void initState() {
@@ -42,37 +43,13 @@ class _HousingRejectedExpensesBrowseScreenState
     _windowFuture = _loadWindow();
   }
 
-  Future<_MonthWindow?> _loadWindow() async {
-    final agreement = await AppDatabase.processScope.getAgreementForPlan(
-      widget.planId,
-    );
-    if (agreement == null) return null;
-    final startMonth = DateTime(
-      agreement.periodStart.year,
-      agreement.periodStart.month,
-    );
-    final endMonth = DateTime(
-      agreement.periodEnd.year,
-      agreement.periodEnd.month,
-    );
-    final monthEnd = DateTime(
-      agreement.periodEnd.year,
-      agreement.periodEnd.month + 1,
-      0,
-    );
-    final endDay = DateTime(
-      agreement.periodEnd.year,
-      agreement.periodEnd.month,
-      agreement.periodEnd.day,
-    );
-    final extendToNextMonth = monthEnd.difference(endDay).inDays.abs() <= 5;
-    final lastMonth = extendToNextMonth
-        ? DateTime(agreement.periodEnd.year, agreement.periodEnd.month + 1)
-        : endMonth;
-    return _MonthWindow(firstMonth: startMonth, lastMonth: lastMonth);
-  }
+  Future<HousingAgreementMonthWindow?> _loadWindow() =>
+      HousingAgreementMonthWindow.forPlan(
+        AppDatabase.processScope,
+        widget.planId,
+      );
 
-  void _shiftMonth(_MonthWindow window, int delta) {
+  void _shiftMonth(HousingAgreementMonthWindow window, int delta) {
     setState(() {
       final current = window.clamp(_month);
       _month = window.clamp(DateTime(current.year, current.month + delta));
@@ -86,7 +63,7 @@ class _HousingRejectedExpensesBrowseScreenState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingRejectedExpensesTitle)),
-      body: FutureBuilder<_MonthWindow?>(
+      body: FutureBuilder<HousingAgreementMonthWindow?>(
         future: _windowFuture,
         builder: (context, windowSnap) {
           if (windowSnap.connectionState != ConnectionState.done) {
@@ -225,19 +202,5 @@ class _HousingRejectedExpensesBrowseScreenState
         },
       ),
     );
-  }
-}
-
-class _MonthWindow {
-  const _MonthWindow({required this.firstMonth, required this.lastMonth});
-
-  final DateTime firstMonth;
-  final DateTime lastMonth;
-
-  DateTime clamp(DateTime month) {
-    final normalized = DateTime(month.year, month.month);
-    if (normalized.isBefore(firstMonth)) return firstMonth;
-    if (normalized.isAfter(lastMonth)) return lastMonth;
-    return normalized;
   }
 }

@@ -287,6 +287,13 @@
   "housingWorkbenchPendingSection": "Pending",
   "housingWorkbenchArchivedSection": "Archived",
   "housingWorkbenchActiveSection": "Active plans",
+  "housingWorkbenchSettlementSection": "Settlement in progress",
+  "housingWorkbenchSettlementOpenLabel": "{planTitle} — settlement",
+  "@housingWorkbenchSettlementOpenLabel": {
+    "placeholders": {
+      "planTitle": { "type": "String" }
+    }
+  },
   "housingWorkbenchOpenPlan": "Open",
   "housingWorkbenchEmpty": "No housing plans with your profile on this device.",
   "housingActiveHubTitle": "Active agreement",
@@ -297,6 +304,18 @@
     }
   },
   "housingActiveHubEnterExpense": "Submit an expense",
+  "housingActiveHubEnterSettlementDue": "Submit a due settlement",
+  "housingActiveHubSettlementAvailableUntil": "Available until {date}",
+  "@housingActiveHubSettlementAvailableUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "housingSettlementDueTitle": "Due settlement",
+  "housingSettlementDueSubmit": "Propose settlement transfer",
+  "housingSettlementDueSuccess": "Settlement transfer proposed.",
+  "housingSettlementDueTransferDescription": "End-of-agreement settlement",
+  "housingSettlementDueNoCounterparties": "No outstanding balance with other participants.",
   "housingActiveHubMonthlyExpenses": "Accepted expenses",
   "housingActiveHubBalances": "Balances between participants",
   "housingActiveHubPaymentStatus": "Current expenses",

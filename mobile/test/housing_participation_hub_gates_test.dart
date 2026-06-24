@@ -32,6 +32,22 @@ void main() {
         createdAt: DateTime.utc(2026),
       ),
     );
+    await db.upsertAgreement(
+      AgreementsCompanion.insert(
+        id: 'agr:withdraw',
+        planId: planId,
+        periodStart: DateTime.utc(2026, 1, 1),
+        periodEnd: DateTime.utc(2026, 12, 31),
+        minNoticeDays: const drift.Value(0),
+        penaltyMinor: const drift.Value(0),
+        clauses: const drift.Value(''),
+        withdrawalSameForAll: const drift.Value('true'),
+        withdrawalPerParticipantJson: const drift.Value('{}'),
+        agreementRulesJson: const drift.Value('{}'),
+        version: const drift.Value(1),
+        createdAt: DateTime.utc(2026),
+      ),
+    );
     await db.into(db.housingParticipationChanges).insert(
       HousingParticipationChangesCompanion.insert(
         id: 'pc:2',
@@ -94,6 +110,22 @@ void main() {
         id: pkgId,
         planId: planId,
         activeRevisionId: const drift.Value('rev:3'),
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+    await db.upsertAgreement(
+      AgreementsCompanion.insert(
+        id: 'agr:eject',
+        planId: planId,
+        periodStart: DateTime.utc(2026, 1, 1),
+        periodEnd: DateTime.utc(2026, 12, 31),
+        minNoticeDays: const drift.Value(0),
+        penaltyMinor: const drift.Value(0),
+        clauses: const drift.Value(''),
+        withdrawalSameForAll: const drift.Value('true'),
+        withdrawalPerParticipantJson: const drift.Value('{}'),
+        agreementRulesJson: const drift.Value('{}'),
+        version: const drift.Value(1),
         createdAt: DateTime.utc(2026),
       ),
     );

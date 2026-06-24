@@ -747,6 +747,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingWorkbenchActiveSection => 'Plans actifs';
 
   @override
+  String get housingWorkbenchSettlementSection => 'Règlement en cours';
+
+  @override
+  String housingWorkbenchSettlementOpenLabel(String planTitle) {
+    return '$planTitle — règlement';
+  }
+
+  @override
   String get housingWorkbenchOpenPlan => 'Ouvrir';
 
   @override
@@ -763,6 +771,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingActiveHubEnterExpense => 'Soumettre une dépense';
+
+  @override
+  String get housingActiveHubEnterSettlementDue => 'Entrer un règlement de dû';
+
+  @override
+  String housingActiveHubSettlementAvailableUntil(String date) {
+    return 'Fonctionnalité disponible jusqu\'au $date';
+  }
+
+  @override
+  String get housingSettlementDueTitle => 'Règlement de dû';
+
+  @override
+  String get housingSettlementDueSubmit => 'Proposer le règlement';
+
+  @override
+  String get housingSettlementDueSuccess => 'Règlement proposé.';
+
+  @override
+  String get housingSettlementDueTransferDescription =>
+      'Règlement de fin d\'entente';
+
+  @override
+  String get housingSettlementDueNoCounterparties =>
+      'Aucun solde en cours avec les autres participants.';
 
   @override
   String get housingActiveHubMonthlyExpenses => 'Dépenses acceptées';

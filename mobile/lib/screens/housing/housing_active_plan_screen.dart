@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../widgets/app_dialog.dart';
 import '../../db/app_database.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/amendment/housing_amendment_ui_gates.dart';
-import '../../housing/amendment/housing_active_agreement_service.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
+import '../../housing/settlement/housing_hub_expense_entry.dart';
 import '../../housing/participation/housing_participation_change_kind.dart';
 import '../../housing/participation/housing_participation_hub_gates.dart';
 import '../../housing/participation/housing_participation_membership_service.dart';
@@ -29,6 +28,7 @@ import '../../widgets/balanced_text.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_journals_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
+import 'housing_settlement_due_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
 import 'housing_realized_expense_review_screen.dart';
 import 'widgets/housing_participation_change_banner.dart';
@@ -59,6 +59,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<RealizedExpensePendingSummary>? _pendingExpenseFuture;
   Future<bool>? _pendingAmendmentFuture;
   Future<HousingParticipationHubGates>? _hubGatesFuture;
+  Future<HousingHubExpenseEntry>? _hubExpenseEntryFuture;
   /// Last resolved banner value; only updated when [_amendmentBannerGeneration] matches.
   bool _hubShowsPendingAmendment = false;
   int _amendmentBannerGeneration = 0;
@@ -250,6 +251,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       ).shouldShowPendingAmendmentHubBanner(widget.planId);
       _pendingAmendmentFuture = amendmentBannerFuture;
       _hubGatesFuture = _loadHubGates();
+      _hubExpenseEntryFuture = _loadHubExpenseEntry();
       unawaited(
         amendmentBannerFuture.then((show) {
           if (!mounted || generation != _amendmentBannerGeneration) return;
@@ -303,6 +305,15 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       }
     }
     return result.gates;
+  }
+
+  Future<HousingHubExpenseEntry> _loadHubExpenseEntry() async {
+    final gates = await (_hubGatesFuture ?? _loadHubGates());
+    return resolveHubExpenseEntry(
+      AppDatabase.processScope,
+      widget.planId,
+      participationEnterEnabled: gates.enterExpenseEnabled,
+    );
   }
 
   Future<void> _openParticipationChangeDetail(
@@ -501,57 +512,32 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   }
 
   Future<void> _openEnterExpense(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final open = await HousingActiveAgreementService(
-      AppDatabase.processScope,
-    ).isPlanAgreementPeriodOpen(widget.planId);
-    if (!open) {
-      if (!context.mounted) return;
-      final goRenew = await showAppDialog<bool>(
-        context: context,
-        guardKey: 'housingActivePlan.agreementExpired',
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.housingAgreementExpiredTitle),
-          content: Text(l10n.housingAgreementExpiredBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.housingAgreementRenewalFork),
-            ),
-          ],
-        ),
-      );
-      if (goRenew == true) {
-        if (!context.mounted) return;
-        final prefs = widget.prefs ?? await AppPreferences.load();
-        if (!context.mounted) return;
-        await navigateToChildRoute<void>(context, 
+    final entry = await (_hubExpenseEntryFuture ?? _loadHubExpenseEntry());
+    if (!context.mounted) return;
+    switch (entry.mode) {
+      case HousingHubExpenseEntryMode.enterExpense:
+        await navigateToChildRoute<void>(context,
           MaterialPageRoute<void>(
-            builder:
-                (_) => HousingAgreementRenewalScreen(
-                  planId: widget.planId,
-                  packageId: widget.packageId,
-                  prefs: prefs,
-                ),
+            builder: (_) => HousingRealizedExpenseFormScreen(
+              planId: widget.planId,
+              packageId: widget.packageId,
+              prefs: widget.prefs,
+            ),
           ),
         );
-      }
-      return;
+      case HousingHubExpenseEntryMode.settlementDue:
+        await navigateToChildRoute<void>(context,
+          MaterialPageRoute<void>(
+            builder: (_) => HousingSettlementDueFormScreen(
+              planId: widget.planId,
+              packageId: widget.packageId,
+              prefs: widget.prefs,
+            ),
+          ),
+        );
+      case HousingHubExpenseEntryMode.disabled:
+        return;
     }
-    if (!context.mounted) return;
-    await navigateToChildRoute<void>(context, 
-      MaterialPageRoute<void>(
-        builder: (_) => HousingRealizedExpenseFormScreen(
-          planId: widget.planId,
-          packageId: widget.packageId,
-          prefs: widget.prefs,
-        ),
-      ),
-    );
     if (mounted) _reload();
   }
 
@@ -689,13 +675,54 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               },
                             ),
                             const _HubSectionDivider(),
-                            _HubTile(
-                              icon: Icons.add_card_outlined,
-                              label: l10n.housingActiveHubEnterExpense,
-                              enabled: gates.enterExpenseEnabled,
-                              subtitle: ejectionCandidateSubtitle,
-                              subtitleColor: Colors.red.shade700,
-                              onTap: () => _openEnterExpense(context),
+                            FutureBuilder<HousingHubExpenseEntry>(
+                              future: _hubExpenseEntryFuture,
+                              builder: (context, expenseEntrySnap) {
+                                final entry =
+                                    expenseEntrySnap.data ??
+                                    const HousingHubExpenseEntry(
+                                      mode: HousingHubExpenseEntryMode.disabled,
+                                    );
+                                final expenseLabel = switch (entry.mode) {
+                                  HousingHubExpenseEntryMode.settlementDue =>
+                                    l10n.housingActiveHubEnterSettlementDue,
+                                  _ => l10n.housingActiveHubEnterExpense,
+                                };
+                                final expenseEnabled =
+                                    entry.mode !=
+                                        HousingHubExpenseEntryMode.disabled &&
+                                    gates.enterExpenseEnabled;
+                                final prefs = widget.prefs;
+                                String? settlementSubtitle;
+                                if (entry.mode ==
+                                        HousingHubExpenseEntryMode.settlementDue &&
+                                    entry.settlementWindowEnd != null &&
+                                    prefs != null) {
+                                  settlementSubtitle =
+                                      l10n.housingActiveHubSettlementAvailableUntil(
+                                        formatPreferenceDate(
+                                          entry.settlementWindowEnd!,
+                                          effectiveDateFormat(prefs),
+                                        ),
+                                      );
+                                }
+                                final expenseSubtitle =
+                                    settlementSubtitle ?? ejectionCandidateSubtitle;
+                                final expenseSubtitleColor =
+                                    settlementSubtitle != null
+                                        ? null
+                                        : (ejectionCandidateSubtitle != null
+                                            ? Colors.red.shade700
+                                            : null);
+                                return _HubTile(
+                                  icon: Icons.add_card_outlined,
+                                  label: expenseLabel,
+                                  enabled: expenseEnabled,
+                                  subtitle: expenseSubtitle,
+                                  subtitleColor: expenseSubtitleColor,
+                                  onTap: () => _openEnterExpense(context),
+                                );
+                              },
                             ),
                             const _HubSectionDivider(),
                             _HubTile(

@@ -738,6 +738,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingWorkbenchActiveSection => 'Active plans';
 
   @override
+  String get housingWorkbenchSettlementSection => 'Settlement in progress';
+
+  @override
+  String housingWorkbenchSettlementOpenLabel(String planTitle) {
+    return '$planTitle — settlement';
+  }
+
+  @override
   String get housingWorkbenchOpenPlan => 'Open';
 
   @override
@@ -754,6 +762,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingActiveHubEnterExpense => 'Submit an expense';
+
+  @override
+  String get housingActiveHubEnterSettlementDue => 'Submit a due settlement';
+
+  @override
+  String housingActiveHubSettlementAvailableUntil(String date) {
+    return 'Available until $date';
+  }
+
+  @override
+  String get housingSettlementDueTitle => 'Due settlement';
+
+  @override
+  String get housingSettlementDueSubmit => 'Propose settlement transfer';
+
+  @override
+  String get housingSettlementDueSuccess => 'Settlement transfer proposed.';
+
+  @override
+  String get housingSettlementDueTransferDescription =>
+      'End-of-agreement settlement';
+
+  @override
+  String get housingSettlementDueNoCounterparties =>
+      'No outstanding balance with other participants.';
 
   @override
   String get housingActiveHubMonthlyExpenses => 'Accepted expenses';

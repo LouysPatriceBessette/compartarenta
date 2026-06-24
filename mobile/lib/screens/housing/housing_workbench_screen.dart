@@ -5,6 +5,8 @@ import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/housing_plan_id.dart';
+import '../../housing/settlement/housing_settlement_window.dart';
+import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,6 +30,7 @@ class _WorkbenchRow {
     required this.participantCount,
     this.packageId,
     this.archive,
+    this.isSettlementOpen = false,
   });
 
   final Plan plan;
@@ -40,6 +43,7 @@ class _WorkbenchRow {
   final int participantCount;
   final String? packageId;
   final HousingProposalArchive? archive;
+  final bool isSettlementOpen;
 }
 
 /// Lists housing plans on this device where the user has a `planId:self` row.
@@ -127,6 +131,19 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
       final archive = archivedRows.isNotEmpty;
       archivedRows.sort((a, b) => b.invalidatedAt.compareTo(a.invalidatedAt));
       final latestArchive = archivedRows.isEmpty ? null : archivedRows.first;
+      var isSettlementOpen = false;
+      if (active) {
+        final agreement = await _db.getAgreementForPlan(p.id);
+        if (agreement != null) {
+          final ledger = RealizedExpenseLedgerService(_db);
+          final hasNonZero = await ledger.hasNonZeroOptimizedBalances(p.id);
+          isSettlementOpen = resolveAgreementOperationalState(
+                agreement: agreement,
+                hasNonZeroOptimizedBalances: hasNonZero,
+              ) ==
+              AgreementOperationalState.settlementOpen;
+        }
+      }
       DateTime? pendingDate;
       var pendingResponseCount = 0;
       if (pending) {
@@ -150,6 +167,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
           participantCount: await _participantCountForPlan(p.id),
           packageId: packageId,
           archive: latestArchive,
+          isSettlementOpen: isSettlementOpen,
         ),
       );
     }
@@ -366,6 +384,10 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
               .toList();
           final pending = rows.where((r) => r.hasPending).toList();
           final active = rows.where((r) => r.hasActive).toList();
+          final inForceActive =
+              active.where((r) => !r.isSettlementOpen).toList();
+          final settlementActive =
+              active.where((r) => r.isSettlementOpen).toList();
           final archives = rows
               .where((r) => r.hasArchive && !r.hasPending && !r.hasActive)
               .toList();
@@ -425,13 +447,23 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
                   ),
                 const SizedBox(height: 24),
               ],
-              if (active.isNotEmpty) ...[
+              if (inForceActive.isNotEmpty) ...[
                 Text(
                   l10n.housingWorkbenchActiveSection,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                for (final r in active)
+                for (final r in inForceActive)
+                  _activePlanCard(context, l10n, r),
+                const SizedBox(height: 24),
+              ],
+              if (settlementActive.isNotEmpty) ...[
+                Text(
+                  l10n.housingWorkbenchSettlementSection,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final r in settlementActive)
                   _activePlanCard(context, l10n, r),
                 const SizedBox(height: 24),
               ],
@@ -487,7 +519,11 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _rowTitle(row.plan),
+                          row.isSettlementOpen
+                              ? l10n.housingWorkbenchSettlementOpenLabel(
+                                  _rowTitle(row.plan),
+                                )
+                              : _rowTitle(row.plan),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium,
