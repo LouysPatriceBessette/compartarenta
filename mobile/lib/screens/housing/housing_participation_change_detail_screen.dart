@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../db/app_database.dart';
 import '../../housing/participation/housing_participation_change_kind.dart';
 import '../../housing/participation/housing_participation_change_service.dart';
+import '../../housing/participation/housing_voluntary_withdrawal_ack.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -78,8 +79,17 @@ class _HousingParticipationChangeDetailScreenState
     final change = _change;
     if (change == null) return true;
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    return kind == HousingParticipationChangeKind.voluntaryWithdrawal ||
-        _isEjectionCandidate;
+    if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+      return change.initiatorParticipantId == _selfId;
+    }
+    return _isEjectionCandidate;
+  }
+
+  bool get _canAcknowledge {
+    if (_change == null || _selfAlreadyDecided) return false;
+    final kind = HousingParticipationChangeKind.fromWire(_change!.kind);
+    if (kind != HousingParticipationChangeKind.voluntaryWithdrawal) return false;
+    return _deciders.any((p) => p.id == _selfId);
   }
 
   bool get _isEjectionCandidate {
@@ -107,6 +117,7 @@ class _HousingParticipationChangeDetailScreenState
 
   bool get _canVote {
     if (_isReadOnly || _selfAlreadyDecided || _change == null) return false;
+    if (_canAcknowledge) return false;
     return _deciders.any((p) => p.id == _selfId);
   }
 
@@ -146,6 +157,32 @@ class _HousingParticipationChangeDetailScreenState
         await HousingParticipationChangeService(
           AppDatabase.processScope,
         ).cancelVoluntaryWithdrawal(
+          changeId: _change!.id,
+          participantId: _selfId,
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _acknowledge() async {
+    if (_working || _change == null) return;
+    setState(() => _working = true);
+    try {
+      final orch = HandshakeOrchestrator.maybeInstance;
+      if (orch != null) {
+        await orch.sendParticipationChangeDecision(
+          changeId: _change!.id,
+          participantId: _selfId,
+          accepted: true,
+        );
+      } else {
+        await HousingParticipationChangeService(
+          AppDatabase.processScope,
+        ).recordAcknowledgement(
           changeId: _change!.id,
           participantId: _selfId,
         );
@@ -202,8 +239,6 @@ class _HousingParticipationChangeDetailScreenState
             : displayNameForParticipant(change.targetParticipantId!, _roster);
 
     final bodyText = switch (kind) {
-      HousingParticipationChangeKind.immediateTermination =>
-        l10n.housingParticipationChangeDetailTerminationBody(initiatorName),
       HousingParticipationChangeKind.voluntaryWithdrawal =>
         l10n.housingParticipationChangeDetailWithdrawalBody(
           initiatorName,
@@ -228,6 +263,27 @@ class _HousingParticipationChangeDetailScreenState
         padding: screenBodyScrollPadding(context),
         children: [
           Text(bodyText),
+          if (kind == HousingParticipationChangeKind.voluntaryWithdrawal &&
+              _canAcknowledge &&
+              _prefs != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.housingParticipationChangeWithdrawalPeerNotice(
+                change.departureDate != null
+                    ? formatPreferenceDate(
+                        change.departureDate!.toLocal(),
+                        effectiveDateFormat(_prefs!),
+                      )
+                    : '—',
+                formatPreferenceDate(
+                  voluntaryWithdrawalAckLastDayInclusive(
+                    voluntaryWithdrawalNoticeDateLocal(change.createdAt),
+                  ),
+                  effectiveDateFormat(_prefs!),
+                ),
+              ),
+            ),
+          ],
           if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) ...[
             const SizedBox(height: 16),
             FutureBuilder<bool>(
@@ -263,7 +319,9 @@ class _HousingParticipationChangeDetailScreenState
           if (_deciders.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text(
-              l10n.housingParticipationChangeDecisionStatusTitle,
+              kind == HousingParticipationChangeKind.voluntaryWithdrawal
+                  ? l10n.housingParticipationChangeAcknowledgementStatusTitle
+                  : l10n.housingParticipationChangeDecisionStatusTitle,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -274,6 +332,13 @@ class _HousingParticipationChangeDetailScreenState
                   _decisionStatusLabel(l10n, p),
                 ),
               ),
+          ],
+          if (_canAcknowledge) ...[
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _working ? null : _acknowledge,
+              child: Text(l10n.housingParticipationChangeAcknowledge),
+            ),
           ],
           if (_canVote) ...[
             const SizedBox(height: 24),

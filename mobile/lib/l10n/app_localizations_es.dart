@@ -3051,10 +3051,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Todas las opciones terminan el plan actual para quien se va.';
 
   @override
-  String get housingParticipationChangeTerminationAction =>
-      'Terminar el acuerdo de inmediato';
-
-  @override
   String get housingParticipationChangeWithdrawalAction =>
       'Quiero retirarme del acuerdo';
 
@@ -3110,20 +3106,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingParticipationChangeConfirmAction => 'Sí';
 
   @override
-  String get housingParticipationChangeTerminationConfirmTitle =>
-      '¿Terminar el acuerdo de inmediato?';
-
-  @override
-  String get housingParticipationChangeTerminationConfirmBody =>
-      'Todos los participantes deben aceptar. El acuerdo se cierra para todos si se acepta por unanimidad.';
-
-  @override
   String get housingParticipationChangeWithdrawalConfirmTitle =>
       '¿Confirmar su retiro?';
 
   @override
   String housingParticipationChangeWithdrawalConfirmBody(String date) {
-    return 'Fecha de salida prevista: $date. Se informará a los demás participantes.';
+    return 'Fecha de salida prevista: $date. Los demás participantes deben acusar recibo del aviso en un plazo de cinco días naturales. La salida surte efecto en esa fecha una vez que todos hayan acusado recibo.';
   }
 
   @override
@@ -3152,11 +3140,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get housingParticipationChangeDetailTitle => 'Cambio mayor';
 
   @override
-  String housingParticipationChangeDetailTerminationBody(String name) {
-    return '$name solicita terminar el acuerdo de inmediato.';
-  }
-
-  @override
   String housingParticipationChangeDetailWithdrawalBody(
     String name,
     String date,
@@ -3177,6 +3160,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingParticipationChangeReject => 'Rechazar';
+
+  @override
+  String get housingParticipationChangeAcknowledge => 'Acusar recibo';
+
+  @override
+  String get housingParticipationChangeAcknowledgementStatusTitle =>
+      'Acuses de recibo';
+
+  @override
+  String housingParticipationChangeWithdrawalPeerNotice(
+    String departureDate,
+    String ackDeadline,
+  ) {
+    return 'Introduzca los gastos útiles antes del $departureDate. Puede acusar recibo de este aviso hasta el $ackDeadline.';
+  }
 
   @override
   String get housingParticipationChangeEjectionCandidateNotice =>
@@ -3209,11 +3207,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se aplicará penalización por retiro anticipado.';
 
   @override
-  String housingParticipationChangeBannerTermination(String name) {
-    return '$name solicita terminar el acuerdo de inmediato.';
-  }
-
-  @override
   String housingParticipationChangeBannerWithdrawal(String name) {
     return '$name se retira del acuerdo';
   }
@@ -3241,10 +3234,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String pushNotificationHousingParticipationChangeBodyFrom(String name) {
     return '$name solicitó un cambio mayor.';
   }
-
-  @override
-  String get housingParticipationJournalSubjectTermination =>
-      'Terminación inmediata';
 
   @override
   String get housingParticipationJournalSubjectWithdrawal =>

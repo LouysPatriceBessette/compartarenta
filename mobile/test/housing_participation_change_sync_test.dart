@@ -584,15 +584,16 @@ void main() {
   );
 
   test(
-    'importDecisionFromPeer maps sender :self and settles pending termination',
+    'importDecisionFromPeer maps sender :self and settles pending ejection',
     () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
 
-      const planId = 'plan:term-decision';
+      const planId = 'plan:eject-decision';
       const louysId = '$planId:self';
       const monicaId = '$planId:p1';
-      const changeId = 'pc:term-decision';
+      const roberrId = '$planId:p2';
+      const changeId = 'pc:eject-decision';
 
       await db.upsertPlan(
         PlansCompanion.insert(
@@ -618,6 +619,14 @@ void main() {
           createdAt: DateTime.utc(2026, 1, 1),
         ),
       );
+      await db.upsertParticipant(
+        ParticipantsCompanion.insert(
+          id: roberrId,
+          displayName: 'Roberr',
+          avatarId: 'av-r',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
       await db.into(db.proposalPackages).insert(
         ProposalPackagesCompanion.insert(
           id: 'pkg:$planId',
@@ -634,8 +643,9 @@ void main() {
           id: changeId,
           planId: planId,
           packageId: 'pkg:$planId',
-          kind: HousingParticipationChangeKind.immediateTermination.wireValue,
+          kind: HousingParticipationChangeKind.ejection.wireValue,
           initiatorParticipantId: louysId,
+          targetParticipantId: const drift.Value(roberrId),
           status: HousingParticipationChangeStatus.pending.wireValue,
           createdAt: DateTime.utc(2026, 6, 13),
         ),
@@ -686,10 +696,10 @@ void main() {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
 
-      const planId = 'plan:term-race';
+      const planId = 'plan:eject-race';
       const louysId = '$planId:self';
       const monicaId = '$planId:p1';
-      const changeId = 'pc:term-race';
+      const changeId = 'pc:eject-race';
 
       await db.upsertPlan(
         PlansCompanion.insert(
@@ -731,8 +741,9 @@ void main() {
           id: changeId,
           planId: planId,
           packageId: 'pkg:$planId',
-          kind: HousingParticipationChangeKind.immediateTermination.wireValue,
+          kind: HousingParticipationChangeKind.ejection.wireValue,
           initiatorParticipantId: louysId,
+          targetParticipantId: const drift.Value('$planId:p2'),
           status: HousingParticipationChangeStatus.effective.wireValue,
           createdAt: DateTime.utc(2026, 6, 13),
         ),

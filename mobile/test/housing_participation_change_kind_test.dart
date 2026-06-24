@@ -2,19 +2,22 @@ import 'package:compartarenta/housing/participation/housing_participation_change
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('immediate termination limits relay to active members only', () {
+  test('voluntary withdrawal requires peer acknowledgement', () {
     expect(
-      HousingParticipationChangeKind.immediateTermination
-          .relayBroadcastLimitedToActiveMembers,
+      HousingParticipationChangeKind.voluntaryWithdrawal
+          .requiresPeerAcknowledgement,
       isTrue,
     );
     expect(
-      HousingParticipationChangeKind.ejection.relayBroadcastLimitedToActiveMembers,
+      HousingParticipationChangeKind.ejection.requiresPeerAcknowledgement,
       isFalse,
     );
+  });
+
+  test('ejection requires unanimous vote', () {
+    expect(HousingParticipationChangeKind.ejection.requiresUnanimousVote, isTrue);
     expect(
-      HousingParticipationChangeKind.voluntaryWithdrawal
-          .relayBroadcastLimitedToActiveMembers,
+      HousingParticipationChangeKind.voluntaryWithdrawal.requiresUnanimousVote,
       isFalse,
     );
   });

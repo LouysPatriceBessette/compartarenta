@@ -3053,10 +3053,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Toutes ces options mènent à la terminaison du plan actuel pour celui ou ceux qui quittent.';
 
   @override
-  String get housingParticipationChangeTerminationAction =>
-      'Mettre un terme à l\'entente immédiatement';
-
-  @override
   String get housingParticipationChangeWithdrawalAction =>
       'Je veux me retirer de l\'entente';
 
@@ -3112,20 +3108,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingParticipationChangeConfirmAction => 'Oui';
 
   @override
-  String get housingParticipationChangeTerminationConfirmTitle =>
-      'Terminer l\'entente immédiatement ?';
-
-  @override
-  String get housingParticipationChangeTerminationConfirmBody =>
-      'Tous les participants devront accepter. L\'entente sera close pour tous si la demande est acceptée à l\'unanimité.';
-
-  @override
   String get housingParticipationChangeWithdrawalConfirmTitle =>
       'Confirmer votre retrait ?';
 
   @override
   String housingParticipationChangeWithdrawalConfirmBody(String date) {
-    return 'Date de départ prévue : $date. Les autres participants seront informés.';
+    return 'Date de départ prévue : $date. Les autres participants doivent accuser réception de l\'avis dans les cinq jours civils. Le départ prend effet à cette date une fois que tout le monde a accusé réception.';
   }
 
   @override
@@ -3154,11 +3142,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingParticipationChangeDetailTitle => 'Changement majeur';
 
   @override
-  String housingParticipationChangeDetailTerminationBody(String name) {
-    return '$name demande la fin immédiate de l\'entente.';
-  }
-
-  @override
   String housingParticipationChangeDetailWithdrawalBody(
     String name,
     String date,
@@ -3179,6 +3162,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingParticipationChangeReject => 'Refuser';
+
+  @override
+  String get housingParticipationChangeAcknowledge => 'Accuser réception';
+
+  @override
+  String get housingParticipationChangeAcknowledgementStatusTitle =>
+      'Accusés de réception';
+
+  @override
+  String housingParticipationChangeWithdrawalPeerNotice(
+    String departureDate,
+    String ackDeadline,
+  ) {
+    return 'Entrez les dépenses utiles avant le $departureDate. Vous pouvez accuser réception de cet avis jusqu\'au $ackDeadline.';
+  }
 
   @override
   String get housingParticipationChangeEjectionCandidateNotice =>
@@ -3211,11 +3209,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune pénalité de retrait anticipé ne s\'appliquera.';
 
   @override
-  String housingParticipationChangeBannerTermination(String name) {
-    return '$name demande la fin immédiate de l\'entente.';
-  }
-
-  @override
   String housingParticipationChangeBannerWithdrawal(String name) {
     return '$name se retire de l\'entente';
   }
@@ -3244,10 +3237,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String pushNotificationHousingParticipationChangeBodyFrom(String name) {
     return '$name a demandé un changement majeur.';
   }
-
-  @override
-  String get housingParticipationJournalSubjectTermination =>
-      'Fin immédiate de l\'entente';
 
   @override
   String get housingParticipationJournalSubjectWithdrawal =>

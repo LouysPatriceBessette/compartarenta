@@ -18,71 +18,7 @@ void main() {
   });
 
   test(
-    'immediate termination unanimous accept reaches all three devices',
-    () async {
-      final ctx = await setUpParticipationChangeMesh(
-        authorPlanId: 'housing:pc-term',
-        louysPlanId: 'received:pc-term-louys',
-        roberrPlanId: 'received:pc-term-roberr',
-      );
-      addTearDown(ctx.dispose);
-
-      final monicaPlan = ctx.plans.authorPlanId;
-      final monicaSelf = '$monicaPlan:self';
-
-      final change = await HousingParticipationChangeService(ctx.monica.db)
-          .proposeImmediateTermination(
-        planId: monicaPlan,
-        initiatorParticipantId: monicaSelf,
-      );
-      await ctx.monica.orchestrator.sendParticipationChangePropose(
-        changeId: change.id,
-      );
-      await ctx.pollAll();
-
-      await expectChangeStatusOnAllSides(
-        ctx: ctx,
-        changeId: change.id,
-        status: HousingParticipationChangeStatus.pending,
-      );
-
-      final louysPlan = ctx.plans.louysPlanId;
-      final louysSelf = await lookupParticipantId(
-        db: ctx.louys.db,
-        planId: louysPlan,
-        displayName: 'Louys',
-      );
-      await ctx.louys.orchestrator.sendParticipationChangeDecision(
-        changeId: change.id,
-        participantId: louysSelf,
-        accepted: true,
-      );
-      await ctx.pollAll();
-
-      final roberrPlan = ctx.plans.roberrPlanId;
-      final roberrSelf = await lookupParticipantId(
-        db: ctx.roberr.db,
-        planId: roberrPlan,
-        displayName: 'Roberr',
-      );
-      await ctx.roberr.orchestrator.sendParticipationChangeDecision(
-        changeId: change.id,
-        participantId: roberrSelf,
-        accepted: true,
-      );
-      await ctx.pollAll();
-
-      await expectChangeStatusOnAllSides(
-        ctx: ctx,
-        changeId: change.id,
-        status: HousingParticipationChangeStatus.effective,
-      );
-      await expectAllDeparted(ctx: ctx);
-    },
-  );
-
-  test(
-    'voluntary withdrawal notify and due-date settlement reach all three devices',
+    'voluntary withdrawal propose, peer acks, and due-date settlement reach all three devices',
     () async {
       final ctx = await setUpParticipationChangeMesh(
         authorPlanId: 'housing:pc-withdraw',
@@ -105,7 +41,7 @@ void main() {
         initiatorParticipantId: roberrSelf,
         departureDate: departure,
       );
-      await ctx.roberr.orchestrator.sendParticipationChangeNotify(
+      await ctx.roberr.orchestrator.sendParticipationChangePropose(
         changeId: change.id,
       );
       await ctx.pollAll();
@@ -116,14 +52,25 @@ void main() {
         status: HousingParticipationChangeStatus.pending,
       );
 
-      final appliedId = await HousingParticipationChangeService(ctx.roberr.db)
-          .applyDueVoluntaryWithdrawalsReturningId(roberrPlan);
-      expect(appliedId, change.id);
-
-      await ctx.roberr.orchestrator.sendParticipationChangeNotify(
+      final monicaPlan = ctx.plans.authorPlanId;
+      final monicaSelf = '$monicaPlan:self';
+      await ctx.monica.orchestrator.sendParticipationChangeDecision(
         changeId: change.id,
-        statusWireOverride:
-            HousingParticipationChangeStatus.effective.wireValue,
+        participantId: monicaSelf,
+        accepted: true,
+      );
+      await ctx.pollAll();
+
+      final louysPlan = ctx.plans.louysPlanId;
+      final louysSelf = await lookupParticipantId(
+        db: ctx.louys.db,
+        planId: louysPlan,
+        displayName: 'Louys',
+      );
+      await ctx.louys.orchestrator.sendParticipationChangeDecision(
+        changeId: change.id,
+        participantId: louysSelf,
+        accepted: true,
       );
       await ctx.pollAll();
 
@@ -132,6 +79,8 @@ void main() {
         changeId: change.id,
         status: HousingParticipationChangeStatus.effective,
       );
+
+      await ctx.pollAll();
       await expectParticipantDepartedOnAllSides(
         ctx: ctx,
         displayName: 'Roberr',

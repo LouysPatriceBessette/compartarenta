@@ -13,8 +13,7 @@ import '../../util/format_money.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../help/help_faq_screen.dart';
 
-/// Major change: immediate termination, voluntary withdrawal, ejection, or
-/// invite-participant guidance.
+/// Major change: voluntary withdrawal, ejection, or invite-participant guidance.
 class HousingAgreementRenewalScreen extends StatefulWidget {
   const HousingAgreementRenewalScreen({
     super.key,
@@ -94,39 +93,6 @@ class _HousingAgreementRenewalScreenState
     }
   }
 
-  Future<void> _confirmImmediateTermination() async {
-    final l10n = AppLocalizations.of(context);
-    final ok = await showAppDialog<bool>(
-      context: context,
-      guardKey: 'housingAgreementRenewal.immediateTermination',
-      builder:
-          (ctx) => AlertDialog(
-            title: Text(l10n.housingParticipationChangeTerminationConfirmTitle),
-            content: Text(l10n.housingParticipationChangeTerminationConfirmBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(l10n.commonCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.housingParticipationChangeConfirmAction),
-              ),
-            ],
-          ),
-    );
-    if (ok != true || !mounted) return;
-    await _proposeAndBroadcast(
-      () => HousingParticipationChangeService(
-        AppDatabase.processScope,
-      ).proposeImmediateTermination(
-        planId: widget.planId,
-        initiatorParticipantId: _selfId,
-      ),
-      useNotifyKind: false,
-    );
-  }
-
   Future<void> _confirmVoluntaryWithdrawal() async {
     final l10n = AppLocalizations.of(context);
     final svc = HousingParticipationChangeService(AppDatabase.processScope);
@@ -191,7 +157,7 @@ class _HousingAgreementRenewalScreenState
         initiatorParticipantId: _selfId,
         departureDate: picked,
       ),
-      useNotifyKind: true,
+      useNotifyKind: false,
     );
   }
 
@@ -306,7 +272,8 @@ class _HousingAgreementRenewalScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final canUseWithdrawalOrEjection = _activeCount > 2;
+    final canUseWithdrawal = _activeCount >= 2;
+    final canUseEjection = _activeCount > 2;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingAmendmentRosterChangeTitle)),
@@ -319,25 +286,13 @@ class _HousingAgreementRenewalScreenState
           const SizedBox(height: 24),
           FilledButton(
             onPressed:
-                _working || _activeCount < 2
-                    ? null
-                    : _confirmImmediateTermination,
-            child: Text(l10n.housingParticipationChangeTerminationAction),
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed:
-                _working || !canUseWithdrawalOrEjection
-                    ? null
-                    : _confirmVoluntaryWithdrawal,
+                _working || !canUseWithdrawal ? null : _confirmVoluntaryWithdrawal,
             child: Text(l10n.housingParticipationChangeWithdrawalAction),
           ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed:
-                _working || !canUseWithdrawalOrEjection
-                    ? null
-                    : _confirmEjection,
+                _working || !canUseEjection ? null : _confirmEjection,
             child: Text(l10n.housingParticipationChangeEjectionAction),
           ),
           const SizedBox(height: 12),

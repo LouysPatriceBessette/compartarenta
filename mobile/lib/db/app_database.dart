@@ -476,13 +476,13 @@ class RealizedExpenseAcceptances extends Table {
   Set<Column> get primaryKey => {expenseId, participantId};
 }
 
-/// Participation change request (immediate termination, withdrawal, ejection).
+/// Participation change request (voluntary withdrawal, ejection).
 class HousingParticipationChanges extends Table {
   TextColumn get id => text()();
   TextColumn get planId => text()();
   TextColumn get packageId => text()();
 
-  /// `immediate_termination` | `voluntary_withdrawal` | `ejection`
+  /// `voluntary_withdrawal` | `ejection`
   TextColumn get kind => text()();
   TextColumn get initiatorParticipantId => text()();
   TextColumn get targetParticipantId => text().nullable()();

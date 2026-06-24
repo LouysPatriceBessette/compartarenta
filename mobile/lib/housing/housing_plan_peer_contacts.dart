@@ -76,7 +76,7 @@ List<Contact> relayContactsExcludingDepartedPlanMembers({
   ];
 }
 
-/// Resolves relay targets for [HousingParticipationChangeKind.immediateTermination].
+/// Resolves relay targets limited to active plan members.
 Future<List<Contact>> relayContactsForActivePlanMembers({
   required AppDatabase db,
   required String planId,

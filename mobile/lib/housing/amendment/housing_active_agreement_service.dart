@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart' show DateUtils;
 
 import '../../db/app_database.dart';
@@ -24,15 +23,4 @@ class HousingActiveAgreementService {
 
   Future<Agreement?> agreementForPlan(String planId) =>
       _db.getAgreementForPlan(planId);
-
-  /// Sets agreement end to today (local calendar), closing new expense entry.
-  Future<void> closeAgreementAtToday(String planId) async {
-    final agr = await _db.getAgreementForPlan(planId);
-    if (agr == null) return;
-    final today = DateUtils.dateOnly(DateTime.now());
-    await (_db.update(_db.agreements)..where((t) => t.planId.equals(planId)))
-        .write(
-      AgreementsCompanion(periodEnd: drift.Value(today)),
-    );
-  }
 }

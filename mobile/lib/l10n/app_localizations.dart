@@ -5145,12 +5145,6 @@ abstract class AppLocalizations {
   /// **'All options end the current plan for those who leave.'**
   String get housingParticipationChangeIntroLine2;
 
-  /// No description provided for @housingParticipationChangeTerminationAction.
-  ///
-  /// In en, this message translates to:
-  /// **'End the agreement immediately'**
-  String get housingParticipationChangeTerminationAction;
-
   /// No description provided for @housingParticipationChangeWithdrawalAction.
   ///
   /// In en, this message translates to:
@@ -5208,7 +5202,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpFaqHousingInviteParticipantBody.
   ///
   /// In en, this message translates to:
-  /// **'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.'**
+  /// **'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.'**
   String get helpFaqHousingInviteParticipantBody;
 
   /// No description provided for @housingVoteRefusedByAgreementExpiration.
@@ -5235,18 +5229,6 @@ abstract class AppLocalizations {
   /// **'Yes'**
   String get housingParticipationChangeConfirmAction;
 
-  /// No description provided for @housingParticipationChangeTerminationConfirmTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'End the agreement immediately?'**
-  String get housingParticipationChangeTerminationConfirmTitle;
-
-  /// No description provided for @housingParticipationChangeTerminationConfirmBody.
-  ///
-  /// In en, this message translates to:
-  /// **'All participants must accept. The agreement closes for everyone if accepted unanimously.'**
-  String get housingParticipationChangeTerminationConfirmBody;
-
   /// No description provided for @housingParticipationChangeWithdrawalConfirmTitle.
   ///
   /// In en, this message translates to:
@@ -5256,7 +5238,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingParticipationChangeWithdrawalConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'Planned departure date: {date}. Other participants will be notified.'**
+  /// **'Planned departure date: {date}. Other participants must acknowledge your notice within five calendar days. Your departure takes effect on that date once everyone has acknowledged.'**
   String housingParticipationChangeWithdrawalConfirmBody(String date);
 
   /// No description provided for @housingParticipationChangeWithdrawalPenaltyHint.
@@ -5295,12 +5277,6 @@ abstract class AppLocalizations {
   /// **'Major change'**
   String get housingParticipationChangeDetailTitle;
 
-  /// No description provided for @housingParticipationChangeDetailTerminationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} requests to end the agreement immediately.'**
-  String housingParticipationChangeDetailTerminationBody(String name);
-
   /// No description provided for @housingParticipationChangeDetailWithdrawalBody.
   ///
   /// In en, this message translates to:
@@ -5330,6 +5306,27 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reject'**
   String get housingParticipationChangeReject;
+
+  /// No description provided for @housingParticipationChangeAcknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledge'**
+  String get housingParticipationChangeAcknowledge;
+
+  /// No description provided for @housingParticipationChangeAcknowledgementStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledgements'**
+  String get housingParticipationChangeAcknowledgementStatusTitle;
+
+  /// No description provided for @housingParticipationChangeWithdrawalPeerNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter any useful expenses before {departureDate}. You may acknowledge this notice until {ackDeadline}.'**
+  String housingParticipationChangeWithdrawalPeerNotice(
+    String departureDate,
+    String ackDeadline,
+  );
 
   /// No description provided for @housingParticipationChangeEjectionCandidateNotice.
   ///
@@ -5373,12 +5370,6 @@ abstract class AppLocalizations {
   /// **'No early withdrawal penalty will apply.'**
   String get housingParticipationChangePenaltyDoesNotApply;
 
-  /// No description provided for @housingParticipationChangeBannerTermination.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} requests to end the agreement immediately.'**
-  String housingParticipationChangeBannerTermination(String name);
-
   /// No description provided for @housingParticipationChangeBannerWithdrawal.
   ///
   /// In en, this message translates to:
@@ -5417,12 +5408,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} requested a major change.'**
   String pushNotificationHousingParticipationChangeBodyFrom(String name);
-
-  /// No description provided for @housingParticipationJournalSubjectTermination.
-  ///
-  /// In en, this message translates to:
-  /// **'Immediate termination'**
-  String get housingParticipationJournalSubjectTermination;
 
   /// No description provided for @housingParticipationJournalSubjectWithdrawal.
   ///

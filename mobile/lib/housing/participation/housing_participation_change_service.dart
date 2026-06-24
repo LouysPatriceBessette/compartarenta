@@ -6,12 +6,11 @@ import 'package:flutter/material.dart' show DateUtils;
 
 import '../../db/app_database.dart';
 import '../agreement_rules_diff.dart';
-import '../amendment/housing_active_agreement_service.dart';
-import '../realized_expense/realized_expense_participants.dart';
 import 'housing_inactive_participant_service.dart';
 import 'housing_participation_change_kind.dart';
 import 'housing_participation_membership_service.dart';
 import 'housing_ratio_redistribution.dart';
+import 'housing_voluntary_withdrawal_ack.dart';
 import 'housing_withdrawal_penalty_ledger.dart';
 
 /// CRUD and state transitions for participation change requests.
@@ -67,16 +66,19 @@ class HousingParticipationChangeService {
     required HousingParticipationChangeKind kind,
     required List<Participant> activeRoster,
     required String? targetParticipantId,
+    required String initiatorParticipantId,
   }) {
     return switch (kind) {
-      HousingParticipationChangeKind.immediateTermination =>
-        activeRoster.map((p) => p.id).toList(),
       HousingParticipationChangeKind.ejection =>
         activeRoster
             .where((p) => p.id != targetParticipantId)
             .map((p) => p.id)
             .toList(),
-      HousingParticipationChangeKind.voluntaryWithdrawal => const [],
+      HousingParticipationChangeKind.voluntaryWithdrawal =>
+        activeRoster
+            .where((p) => p.id != initiatorParticipantId)
+            .map((p) => p.id)
+            .toList(),
     };
   }
 
@@ -122,35 +124,6 @@ class HousingParticipationChangeService {
         );
   }
 
-  Future<HousingParticipationChange> proposeImmediateTermination({
-    required String planId,
-    required String initiatorParticipantId,
-  }) async {
-    await _assertNoPending(planId);
-    final membership = membershipService;
-    await membership.ensureMembershipsForPlan(planId);
-    if (await membership.activeParticipantCount(planId) < 2) {
-      throw StateError('insufficient_participants');
-    }
-    final packageId = await packageIdForPlan(planId);
-    if (packageId == null) throw StateError('no_active_package');
-
-    final change = await _insertChange(
-      planId: planId,
-      packageId: packageId,
-      kind: HousingParticipationChangeKind.immediateTermination,
-      initiatorParticipantId: initiatorParticipantId,
-      targetParticipantId: null,
-    );
-    await _recordDecision(
-      changeId: change.id,
-      participantId: initiatorParticipantId,
-      status: HousingParticipationDecisionStatus.accepted,
-    );
-    await _evaluateSettlement(change.id);
-    return (await getById(change.id))!;
-  }
-
   /// Cancels a pending voluntary withdrawal when [participantId] is the initiator.
   Future<bool> cancelVoluntaryWithdrawal({
     required String changeId,
@@ -188,7 +161,7 @@ class HousingParticipationChangeService {
     await _assertNoPending(planId);
     final membership = membershipService;
     await membership.ensureMembershipsForPlan(planId);
-    if (await membership.activeParticipantCount(planId) <= 2) {
+    if (await membership.activeParticipantCount(planId) < 2) {
       throw StateError('insufficient_participants');
     }
     final packageId = await packageIdForPlan(planId);
@@ -243,15 +216,12 @@ class HousingParticipationChangeService {
     return (await getById(change.id))!;
   }
 
-  /// Active participants who must vote on [change] (empty for voluntary withdrawal).
+  /// Active participants who must vote or acknowledge on [change].
   Future<List<Participant>> deciderParticipantsFor(
     HousingParticipationChange change,
   ) async {
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    if (kind == null ||
-        kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
-      return const [];
-    }
+    if (kind == null) return const [];
     final activeRoster = await membershipService.activeParticipantsForPlan(
       change.planId,
     );
@@ -259,10 +229,22 @@ class HousingParticipationChangeService {
       kind: kind,
       activeRoster: activeRoster,
       targetParticipantId: change.targetParticipantId,
+      initiatorParticipantId: change.initiatorParticipantId,
     ).toSet();
     return activeRoster
         .where((p) => deciderIdSet.contains(p.id))
         .toList(growable: false);
+  }
+
+  Future<void> recordAcknowledgement({
+    required String changeId,
+    required String participantId,
+  }) async {
+    await recordDecision(
+      changeId: changeId,
+      participantId: participantId,
+      accepted: true,
+    );
   }
 
   Future<void> recordDecision({
@@ -292,7 +274,12 @@ class HousingParticipationChangeService {
       return false;
     }
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    if (kind == null || !kind.requiresUnanimousVote) return false;
+    if (kind == null) return false;
+    if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+      if (!accepted) return false;
+    } else if (!kind.requiresUnanimousVote) {
+      return false;
+    }
     if (!await membershipService.isActiveMember(change.planId, participantId)) {
       return false;
     }
@@ -302,6 +289,7 @@ class HousingParticipationChangeService {
         change.planId,
       ),
       targetParticipantId: change.targetParticipantId,
+      initiatorParticipantId: change.initiatorParticipantId,
     );
     if (!deciders.contains(participantId)) return false;
 
@@ -329,7 +317,9 @@ class HousingParticipationChangeService {
       return false;
     }
     final kind = HousingParticipationChangeKind.fromWire(change.kind);
-    if (kind == null || kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+    if (kind == null) return false;
+    if (kind != HousingParticipationChangeKind.voluntaryWithdrawal &&
+        !kind.requiresUnanimousVote) {
       return false;
     }
 
@@ -338,6 +328,7 @@ class HousingParticipationChangeService {
       kind: kind,
       activeRoster: roster,
       targetParticipantId: change.targetParticipantId,
+      initiatorParticipantId: change.initiatorParticipantId,
     );
     final decisions = await decisionsFor(changeId);
     if (decisions.any(
@@ -378,6 +369,7 @@ class HousingParticipationChangeService {
       kind: kind,
       activeRoster: roster,
       targetParticipantId: change.targetParticipantId,
+      initiatorParticipantId: change.initiatorParticipantId,
     );
     final decisions = await decisionsFor(changeId);
     if (decisions.any(
@@ -400,6 +392,51 @@ class HousingParticipationChangeService {
     await _applyEffective(change);
   }
 
+  Future<void> _applyDefaultAcknowledgementsIfExpired(
+    HousingParticipationChange change,
+  ) async {
+    final notice = voluntaryWithdrawalNoticeDateLocal(change.createdAt);
+    if (!voluntaryWithdrawalAckExpiryApplies(
+      noticeLocal: notice,
+      now: DateTime.now(),
+    )) {
+      return;
+    }
+    final deciders = await deciderParticipantsFor(change);
+    final decisions = await decisionsFor(change.id);
+    final acknowledged = decisions
+        .where(
+          (d) => d.status == HousingParticipationDecisionStatus.accepted.wireValue,
+        )
+        .map((d) => d.participantId)
+        .toSet();
+    for (final participant in deciders) {
+      if (acknowledged.contains(participant.id)) continue;
+      await _recordDecision(
+        changeId: change.id,
+        participantId: participant.id,
+        status: HousingParticipationDecisionStatus.accepted,
+      );
+    }
+  }
+
+  /// Whether voluntary withdrawal side effects may run now.
+  ///
+  /// Departure date must be today or past. Every peer must have acknowledged,
+  /// explicitly or by default after the 5-day notice period.
+  Future<bool> _voluntaryWithdrawalReadyToApply(
+    HousingParticipationChange change,
+  ) async {
+    await _applyDefaultAcknowledgementsIfExpired(change);
+    if (!await allDecidersHaveAccepted(change.id)) return false;
+
+    final departure = change.departureDate;
+    if (departure == null) return false;
+    final today = DateUtils.dateOnly(DateTime.now());
+    final depDay = DateUtils.dateOnly(departure.toLocal());
+    return !today.isBefore(depDay);
+  }
+
   Future<void> applyDueVoluntaryWithdrawals(String planId) async {
     await applyDueVoluntaryWithdrawalsReturningId(planId);
   }
@@ -411,11 +448,7 @@ class HousingParticipationChangeService {
     final kind = HousingParticipationChangeKind.fromWire(pending.kind);
     if (kind != HousingParticipationChangeKind.voluntaryWithdrawal) return null;
 
-    final departure = pending.departureDate;
-    if (departure == null) return null;
-    final today = DateUtils.dateOnly(DateTime.now());
-    final depDay = DateUtils.dateOnly(departure.toLocal());
-    if (today.isBefore(depDay)) return null;
+    if (!await _voluntaryWithdrawalReadyToApply(pending)) return null;
 
     if (await departureSideEffectsApplied(pending)) {
       if (pending.status == HousingParticipationChangeStatus.pending.wireValue) {
@@ -433,17 +466,9 @@ class HousingParticipationChangeService {
     if (kind == null) return;
     final membership = membershipService;
     final inactiveSvc = HousingInactiveParticipantService(_db);
-    final agreementSvc = HousingActiveAgreementService(_db);
     final penaltySvc = HousingWithdrawalPenaltyLedger(_db);
 
     switch (kind) {
-      case HousingParticipationChangeKind.immediateTermination:
-        await agreementSvc.closeAgreementAtToday(change.planId);
-        await membership.markAllDeparted(
-          planId: change.planId,
-          departureKind: kind,
-          changeId: change.id,
-        );
       case HousingParticipationChangeKind.voluntaryWithdrawal:
         final leaverId = participationChangeDepartureParticipantId(
           kind: kind,
@@ -516,18 +541,6 @@ class HousingParticipationChangeService {
     if (kind == null) return true;
 
     return switch (kind) {
-      HousingParticipationChangeKind.immediateTermination => () async {
-        final roster = await participantsForPlan(_db, change.planId);
-        for (final participant in roster) {
-          if (await membershipService.isActiveMember(
-            change.planId,
-            participant.id,
-          )) {
-            return false;
-          }
-        }
-        return true;
-      }(),
       HousingParticipationChangeKind.voluntaryWithdrawal => () async {
         final leaverId = participationChangeDepartureParticipantId(
           kind: kind,

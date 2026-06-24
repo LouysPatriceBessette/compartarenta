@@ -3020,10 +3020,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'All options end the current plan for those who leave.';
 
   @override
-  String get housingParticipationChangeTerminationAction =>
-      'End the agreement immediately';
-
-  @override
   String get housingParticipationChangeWithdrawalAction =>
       'I want to withdraw from the agreement';
 
@@ -3060,7 +3056,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFaqHousingInviteParticipantBody =>
-      'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.';
+      'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.';
 
   @override
   String get housingVoteRefusedByAgreementExpiration =>
@@ -3079,20 +3075,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingParticipationChangeConfirmAction => 'Yes';
 
   @override
-  String get housingParticipationChangeTerminationConfirmTitle =>
-      'End the agreement immediately?';
-
-  @override
-  String get housingParticipationChangeTerminationConfirmBody =>
-      'All participants must accept. The agreement closes for everyone if accepted unanimously.';
-
-  @override
   String get housingParticipationChangeWithdrawalConfirmTitle =>
       'Confirm your withdrawal?';
 
   @override
   String housingParticipationChangeWithdrawalConfirmBody(String date) {
-    return 'Planned departure date: $date. Other participants will be notified.';
+    return 'Planned departure date: $date. Other participants must acknowledge your notice within five calendar days. Your departure takes effect on that date once everyone has acknowledged.';
   }
 
   @override
@@ -3121,11 +3109,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingParticipationChangeDetailTitle => 'Major change';
 
   @override
-  String housingParticipationChangeDetailTerminationBody(String name) {
-    return '$name requests to end the agreement immediately.';
-  }
-
-  @override
   String housingParticipationChangeDetailWithdrawalBody(
     String name,
     String date,
@@ -3146,6 +3129,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get housingParticipationChangeReject => 'Reject';
+
+  @override
+  String get housingParticipationChangeAcknowledge => 'Acknowledge';
+
+  @override
+  String get housingParticipationChangeAcknowledgementStatusTitle =>
+      'Acknowledgements';
+
+  @override
+  String housingParticipationChangeWithdrawalPeerNotice(
+    String departureDate,
+    String ackDeadline,
+  ) {
+    return 'Enter any useful expenses before $departureDate. You may acknowledge this notice until $ackDeadline.';
+  }
 
   @override
   String get housingParticipationChangeEjectionCandidateNotice =>
@@ -3178,11 +3176,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'No early withdrawal penalty will apply.';
 
   @override
-  String housingParticipationChangeBannerTermination(String name) {
-    return '$name requests to end the agreement immediately.';
-  }
-
-  @override
   String housingParticipationChangeBannerWithdrawal(String name) {
     return '$name is leaving the agreement';
   }
@@ -3210,10 +3203,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String pushNotificationHousingParticipationChangeBodyFrom(String name) {
     return '$name requested a major change.';
   }
-
-  @override
-  String get housingParticipationJournalSubjectTermination =>
-      'Immediate termination';
 
   @override
   String get housingParticipationJournalSubjectWithdrawal =>

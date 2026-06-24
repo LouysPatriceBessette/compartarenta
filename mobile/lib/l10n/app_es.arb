@@ -1191,7 +1191,6 @@
   "housingPastHubTitle": "Acuerdo pasado",
   "housingParticipationChangeIntroLine1": "Un cambio de participante no es una simple modificación del acuerdo en vigor.",
   "housingParticipationChangeIntroLine2": "Todas las opciones terminan el plan actual para quien se va.",
-  "housingParticipationChangeTerminationAction": "Terminar el acuerdo de inmediato",
   "housingParticipationChangeWithdrawalAction": "Quiero retirarme del acuerdo",
   "housingParticipationChangeEjectionAction": "Quiero expulsar a un participante",
   "housingParticipationChangeInviteParticipantAction": "Quiero invitar a un participante",
@@ -1211,10 +1210,8 @@
     }
   },
   "housingParticipationChangeConfirmAction": "Sí",
-  "housingParticipationChangeTerminationConfirmTitle": "¿Terminar el acuerdo de inmediato?",
-  "housingParticipationChangeTerminationConfirmBody": "Todos los participantes deben aceptar. El acuerdo se cierra para todos si se acepta por unanimidad.",
   "housingParticipationChangeWithdrawalConfirmTitle": "¿Confirmar su retiro?",
-  "housingParticipationChangeWithdrawalConfirmBody": "Fecha de salida prevista: {date}. Se informará a los demás participantes.",
+  "housingParticipationChangeWithdrawalConfirmBody": "Fecha de salida prevista: {date}. Los demás participantes deben acusar recibo del aviso en un plazo de cinco días naturales. La salida surte efecto en esa fecha una vez que todos hayan acusado recibo.",
   "@housingParticipationChangeWithdrawalConfirmBody": {
     "placeholders": { "date": { "type": "String" } }
   },
@@ -1230,10 +1227,6 @@
   "housingParticipationChangeEjectionConfirmTitle": "¿Expulsar a un participante?",
   "housingParticipationChangeEjectionConfirmBody": "Los demás participantes deben aceptar. El candidato se elimina si se acepta por unanimidad.",
   "housingParticipationChangeDetailTitle": "Cambio mayor",
-  "housingParticipationChangeDetailTerminationBody": "{name} solicita terminar el acuerdo de inmediato.",
-  "@housingParticipationChangeDetailTerminationBody": {
-    "placeholders": { "name": { "type": "String" } }
-  },
   "housingParticipationChangeDetailWithdrawalBody": "{name} se retira del acuerdo el {date}.",
   "@housingParticipationChangeDetailWithdrawalBody": {
     "placeholders": { "name": { "type": "String" }, "date": { "type": "String" } }
@@ -1244,6 +1237,15 @@
   },
   "housingParticipationChangeAccept": "Aceptar",
   "housingParticipationChangeReject": "Rechazar",
+  "housingParticipationChangeAcknowledge": "Acusar recibo",
+  "housingParticipationChangeAcknowledgementStatusTitle": "Acuses de recibo",
+  "housingParticipationChangeWithdrawalPeerNotice": "Introduzca los gastos útiles antes del {departureDate}. Puede acusar recibo de este aviso hasta el {ackDeadline}.",
+  "@housingParticipationChangeWithdrawalPeerNotice": {
+    "placeholders": {
+      "departureDate": { "type": "String" },
+      "ackDeadline": { "type": "String" }
+    }
+  },
   "housingParticipationChangeEjectionCandidateNotice": "Usted es la persona objetivo de esta solicitud de expulsión. Los demás participantes deben votar; no puede aceptar ni rechazar aquí.",
   "housingParticipationChangeDecisionStatusTitle": "Votos",
   "housingParticipationChangeDecisionPending": "{name}: pendiente",
@@ -1251,10 +1253,6 @@
   "housingParticipationChangeDecisionRejected": "{name}: rechazado",
   "housingParticipationChangePenaltyApplies": "Se aplicará una penalización por retiro anticipado.",
   "housingParticipationChangePenaltyDoesNotApply": "No se aplicará penalización por retiro anticipado.",
-  "housingParticipationChangeBannerTermination": "{name} solicita terminar el acuerdo de inmediato.",
-  "@housingParticipationChangeBannerTermination": {
-    "placeholders": { "name": { "type": "String" } }
-  },
   "housingParticipationChangeBannerWithdrawal": "{name} se retira del acuerdo",
   "@housingParticipationChangeBannerWithdrawal": {
     "placeholders": { "name": { "type": "String" } }
@@ -1270,7 +1268,6 @@
   "@pushNotificationHousingParticipationChangeBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "housingParticipationJournalSubjectTermination": "Terminación inmediata",
   "housingParticipationJournalSubjectWithdrawal": "Retiro voluntario",
   "housingParticipationJournalSubjectEjection": "Expulsión de participante",
   "housingParticipationJournalProposed": "Propuesto",

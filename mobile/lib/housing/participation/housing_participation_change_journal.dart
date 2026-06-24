@@ -37,8 +37,6 @@ class HousingParticipationChangeJournalEntry {
 
   String subject(AppLocalizations l10n) {
     final kindLabel = switch (kind) {
-      HousingParticipationChangeKind.immediateTermination =>
-        l10n.housingParticipationJournalSubjectTermination,
       HousingParticipationChangeKind.voluntaryWithdrawal =>
         l10n.housingParticipationJournalSubjectWithdrawal,
       HousingParticipationChangeKind.ejection =>

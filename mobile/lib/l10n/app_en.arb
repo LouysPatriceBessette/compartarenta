@@ -1363,7 +1363,6 @@
   "housingPastHubTitle": "Past agreement",
   "housingParticipationChangeIntroLine1": "A participant change is not a simple in-force amendment.",
   "housingParticipationChangeIntroLine2": "All options end the current plan for those who leave.",
-  "housingParticipationChangeTerminationAction": "End the agreement immediately",
   "housingParticipationChangeWithdrawalAction": "I want to withdraw from the agreement",
   "housingParticipationChangeEjectionAction": "I want to eject a participant",
   "housingParticipationChangeInviteParticipantAction": "I want to invite a participant",
@@ -1373,7 +1372,7 @@
   "helpFaqTitle": "Frequently asked questions",
   "helpFaqIntro": "Answers to common questions about how Compartarenta works.",
   "helpFaqHousingInviteParticipantTitle": "Why can’t I invite someone to the current plan?",
-  "helpFaqHousingInviteParticipantBody": "An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal or termination, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.",
+  "helpFaqHousingInviteParticipantBody": "An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.",
   "housingVoteRefusedByAgreementExpiration": "Refused — agreement expired",
   "contactsDisconnectBlockedByPlansTitle": "Can't disconnect this contact yet",
   "contactsDisconnectBlockedByPlansBody": "This contact is part of an active housing agreement or an open vote on this device: {plans}. Finish or resolve that plan activity before disconnecting.",
@@ -1383,10 +1382,8 @@
     }
   },
   "housingParticipationChangeConfirmAction": "Yes",
-  "housingParticipationChangeTerminationConfirmTitle": "End the agreement immediately?",
-  "housingParticipationChangeTerminationConfirmBody": "All participants must accept. The agreement closes for everyone if accepted unanimously.",
   "housingParticipationChangeWithdrawalConfirmTitle": "Confirm your withdrawal?",
-  "housingParticipationChangeWithdrawalConfirmBody": "Planned departure date: {date}. Other participants will be notified.",
+  "housingParticipationChangeWithdrawalConfirmBody": "Planned departure date: {date}. Other participants must acknowledge your notice within five calendar days. Your departure takes effect on that date once everyone has acknowledged.",
   "@housingParticipationChangeWithdrawalConfirmBody": {
     "placeholders": { "date": { "type": "String" } }
   },
@@ -1402,10 +1399,6 @@
   "housingParticipationChangeEjectionConfirmTitle": "Eject a participant?",
   "housingParticipationChangeEjectionConfirmBody": "Other participants must accept. The candidate is removed if accepted unanimously.",
   "housingParticipationChangeDetailTitle": "Major change",
-  "housingParticipationChangeDetailTerminationBody": "{name} requests to end the agreement immediately.",
-  "@housingParticipationChangeDetailTerminationBody": {
-    "placeholders": { "name": { "type": "String" } }
-  },
   "housingParticipationChangeDetailWithdrawalBody": "{name} will leave the agreement on {date}.",
   "@housingParticipationChangeDetailWithdrawalBody": {
     "placeholders": { "name": { "type": "String" }, "date": { "type": "String" } }
@@ -1416,6 +1409,15 @@
   },
   "housingParticipationChangeAccept": "Accept",
   "housingParticipationChangeReject": "Reject",
+  "housingParticipationChangeAcknowledge": "Acknowledge",
+  "housingParticipationChangeAcknowledgementStatusTitle": "Acknowledgements",
+  "housingParticipationChangeWithdrawalPeerNotice": "Enter any useful expenses before {departureDate}. You may acknowledge this notice until {ackDeadline}.",
+  "@housingParticipationChangeWithdrawalPeerNotice": {
+    "placeholders": {
+      "departureDate": { "type": "String" },
+      "ackDeadline": { "type": "String" }
+    }
+  },
   "housingParticipationChangeEjectionCandidateNotice": "You are the participant named in this ejection request. The remaining participants must vote; you cannot accept or reject here.",
   "housingParticipationChangeDecisionStatusTitle": "Votes",
   "housingParticipationChangeDecisionPending": "{name}: pending",
@@ -1432,10 +1434,6 @@
   },
   "housingParticipationChangePenaltyApplies": "An early withdrawal penalty will apply.",
   "housingParticipationChangePenaltyDoesNotApply": "No early withdrawal penalty will apply.",
-  "housingParticipationChangeBannerTermination": "{name} requests to end the agreement immediately.",
-  "@housingParticipationChangeBannerTermination": {
-    "placeholders": { "name": { "type": "String" } }
-  },
   "housingParticipationChangeBannerWithdrawal": "{name} is leaving the agreement",
   "@housingParticipationChangeBannerWithdrawal": {
     "placeholders": { "name": { "type": "String" } }
@@ -1451,7 +1449,6 @@
   "@pushNotificationHousingParticipationChangeBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
-  "housingParticipationJournalSubjectTermination": "Immediate termination",
   "housingParticipationJournalSubjectWithdrawal": "Voluntary withdrawal",
   "housingParticipationJournalSubjectEjection": "Participant ejection",
   "housingParticipationJournalProposed": "Proposed",

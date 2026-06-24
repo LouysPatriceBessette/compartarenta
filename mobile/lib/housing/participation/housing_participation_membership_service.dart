@@ -63,9 +63,7 @@ class HousingParticipationMembershipService {
         .get();
     for (final change in changes) {
       final kind = HousingParticipationChangeKind.fromWire(change.kind);
-      if (kind == null || kind == HousingParticipationChangeKind.immediateTermination) {
-        continue;
-      }
+      if (kind == null) continue;
       final target = participationChangeDepartureParticipantId(
         kind: kind,
         initiatorParticipantId: change.initiatorParticipantId,
@@ -124,24 +122,6 @@ class HousingParticipationMembershipService {
             changeId: drift.Value(changeId),
           ),
         );
-  }
-
-  Future<void> markAllDeparted({
-    required String planId,
-    required HousingParticipationChangeKind departureKind,
-    required String changeId,
-  }) async {
-    final roster = await participantsForPlan(_db, planId);
-    final now = DateTime.now().toUtc();
-    for (final p in roster) {
-      await markDeparted(
-        planId: planId,
-        participantId: p.id,
-        departureKind: departureKind,
-        changeId: changeId,
-        departedAt: now,
-      );
-    }
   }
 
   /// Hub title suffix: active range or past agreement with departure date.

@@ -286,7 +286,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                 pending,
               );
             }
-            return l10n.housingParticipationChangeBannerTermination(
+            return l10n.pushNotificationHousingParticipationChangeBodyFrom(
               initiatorName,
             );
           },

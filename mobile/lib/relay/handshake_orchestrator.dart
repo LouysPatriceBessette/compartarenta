@@ -23,7 +23,6 @@ import '../housing/proposals/plan_agreement_proposal_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
 import '../housing/participation/housing_participation_change_sync_service.dart';
-import '../housing/participation/housing_participation_membership_service.dart';
 import '../housing/reminders/housing_payment_reminder_service.dart';
 import '../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
@@ -1933,13 +1932,6 @@ class HandshakeOrchestrator {
     required String? planId,
     required HousingParticipationChangeKind? kind,
   }) async {
-    if (planId == null || planId.isEmpty) return true;
-    if (kind?.relayBroadcastLimitedToActiveMembers == true) {
-      return HousingParticipationMembershipService(_db).isActiveMember(
-        planId,
-        '$planId:self',
-      );
-    }
     return true;
   }
 
@@ -3240,15 +3232,17 @@ class HandshakeOrchestrator {
       decisionJson: decisionJson,
     );
 
-    if (await changeSvc.allDecidersHaveAccepted(changeId)) {
+    await changeSvc.evaluatePendingSettlement(changeId);
+    // Notify peers only after the change actually becomes effective (e.g.
+    // voluntary withdrawal: departure date reached + ack conditions met).
+    final updated = await changeSvc.getById(changeId);
+    if (updated?.status == HousingParticipationChangeStatus.effective.wireValue) {
       await sendParticipationChangeNotify(
         changeId: changeId,
         statusWireOverride:
             HousingParticipationChangeStatus.effective.wireValue,
       );
     }
-
-    await changeSvc.evaluatePendingSettlement(changeId);
   }
 
   Future<void> _broadcastParticipationChange({
@@ -3364,18 +3358,6 @@ class HandshakeOrchestrator {
       } on Object catch (e) {
         debugPrint('housing_participation_change post failed: $e');
       }
-    }
-
-    if (participationChangeKind?.relayBroadcastLimitedToActiveMembers == true) {
-      final targets = await relayContactsForActivePlanMembers(
-        db: _db,
-        planId: planId,
-        relayReachableContacts: relayReachableContacts,
-      );
-      for (final target in targets) {
-        await postToContact(target);
-      }
-      return;
     }
 
     for (final target in relayReachableContacts) {

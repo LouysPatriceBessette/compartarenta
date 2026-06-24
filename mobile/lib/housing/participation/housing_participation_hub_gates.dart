@@ -120,18 +120,6 @@ class HousingParticipationHubGates {
     );
 
     final gates = switch (kind) {
-      HousingParticipationChangeKind.immediateTermination =>
-        HousingParticipationHubGates(
-          showParticipationBanner: true,
-          participationBannerText: bannerText,
-          enterExpenseEnabled: true,
-          requestAmendmentEnabled: false,
-          majorChangeEnabled: false,
-          isPastAgreementForSelf: false,
-          pendingChangeId: pending.id,
-          pendingChangeKind: kind,
-          isEjectionCandidate: false,
-        ),
       HousingParticipationChangeKind.voluntaryWithdrawal =>
         HousingParticipationHubGates(
           showParticipationBanner: true,

@@ -1,6 +1,5 @@
 /// Kind of major participation change.
 enum HousingParticipationChangeKind {
-  immediateTermination('immediate_termination'),
   voluntaryWithdrawal('voluntary_withdrawal'),
   ejection('ejection');
 
@@ -16,15 +15,11 @@ enum HousingParticipationChangeKind {
     return null;
   }
 
-  bool get requiresUnanimousVote =>
-      this == immediateTermination || this == ejection;
+  bool get requiresUnanimousVote => this == ejection;
 
-  /// Relay propose/decision/notify reaches every connected contact unless true.
-  ///
-  /// Only post-ejection major changes (e.g. immediate termination) exclude
-  /// departed members; ejection itself must still reach the target.
-  bool get relayBroadcastLimitedToActiveMembers =>
-      this == immediateTermination;
+  /// Voluntary withdrawal: peers acknowledge notice (no reject); not a vote.
+  bool get requiresPeerAcknowledgement =>
+      this == HousingParticipationChangeKind.voluntaryWithdrawal;
 }
 
 /// Roster participant who leaves the plan for [kind], when applicable.
@@ -36,7 +31,6 @@ String? participationChangeDepartureParticipantId({
   return switch (kind) {
     HousingParticipationChangeKind.ejection => targetParticipantId,
     HousingParticipationChangeKind.voluntaryWithdrawal => initiatorParticipantId,
-    HousingParticipationChangeKind.immediateTermination => null,
     null => null,
   };
 }
