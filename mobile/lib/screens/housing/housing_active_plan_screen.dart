@@ -8,6 +8,8 @@ import '../../housing/amendment/housing_amendment_ui_gates.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
+import '../../housing/renewal/housing_renewal_fork_availability.dart';
+import '../../housing/renewal/housing_renewal_fork_navigation.dart';
 import '../../housing/settlement/housing_hub_expense_entry.dart';
 import '../../housing/participation/housing_participation_change_kind.dart';
 import '../../housing/participation/housing_participation_hub_gates.dart';
@@ -60,6 +62,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   Future<bool>? _pendingAmendmentFuture;
   Future<HousingParticipationHubGates>? _hubGatesFuture;
   Future<HousingHubExpenseEntry>? _hubExpenseEntryFuture;
+  Future<bool>? _hubRenewalForkFuture;
+  bool _renewalForkInProgress = false;
   /// Last resolved banner value; only updated when [_amendmentBannerGeneration] matches.
   bool _hubShowsPendingAmendment = false;
   int _amendmentBannerGeneration = 0;
@@ -252,6 +256,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       _pendingAmendmentFuture = amendmentBannerFuture;
       _hubGatesFuture = _loadHubGates();
       _hubExpenseEntryFuture = _loadHubExpenseEntry();
+      _hubRenewalForkFuture = _loadRenewalForkAvailable();
       unawaited(
         amendmentBannerFuture.then((show) {
           if (!mounted || generation != _amendmentBannerGeneration) return;
@@ -314,6 +319,12 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       widget.planId,
       participationEnterEnabled: gates.enterExpenseEnabled,
     );
+  }
+
+  Future<bool> _loadRenewalForkAvailable() async {
+    final gates = await (_hubGatesFuture ?? _loadHubGates());
+    if (gates.isPastAgreementForSelf) return false;
+    return hubRenewalForkAvailable(AppDatabase.processScope, widget.planId);
   }
 
   Future<void> _openParticipationChangeDetail(
@@ -541,6 +552,26 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     if (mounted) _reload();
   }
 
+  Future<void> _startRenewalFork(BuildContext context) async {
+    if (_renewalForkInProgress) return;
+    setState(() => _renewalForkInProgress = true);
+    try {
+      final prefs = widget.prefs ?? await AppPreferences.load();
+      if (!context.mounted) return;
+      await startHousingRenewalForkFromActiveRevision(
+        context: context,
+        db: AppDatabase.processScope,
+        listPlanId: widget.planId,
+        prefs: prefs,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _renewalForkInProgress = false);
+        _reload();
+      }
+    }
+  }
+
   void _handleHubBack(BuildContext context) => exitHousingModule(context);
 
   @override
@@ -721,6 +752,25 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                   subtitle: expenseSubtitle,
                                   subtitleColor: expenseSubtitleColor,
                                   onTap: () => _openEnterExpense(context),
+                                );
+                              },
+                            ),
+                            FutureBuilder<bool>(
+                              future: _hubRenewalForkFuture,
+                              builder: (context, forkSnap) {
+                                if (forkSnap.data != true) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Column(
+                                  children: [
+                                    const _HubSectionDivider(),
+                                    _HubTile(
+                                      icon: Icons.fork_right_outlined,
+                                      label: l10n.housingAgreementRenewalFork,
+                                      enabled: !_renewalForkInProgress,
+                                      onTap: () => _startRenewalFork(context),
+                                    ),
+                                  ],
                                 );
                               },
                             ),

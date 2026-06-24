@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:flutter/foundation.dart';
 
 import '../../db/app_database.dart';
 import '../../housing/participation/housing_inactive_participant_service.dart';
 import '../../housing/participation/housing_participation_membership_service.dart';
+import '../../entitlement/entitlement_coordinator.dart';
+import '../../entitlement/housing_trial_consumption_store.dart';
 import '../../prefs/app_preferences.dart';
 import 'realized_expense_balance.dart';
 import 'realized_expense_line_snapshot.dart';
@@ -395,6 +398,28 @@ class RealizedExpenseLedgerService {
 
   Future<void> markPlanActiveUseIfNeeded(String planId) async {
     final prefs = await AppPreferences.load();
+    if (prefs.isHousingPlanActiveUseStarted(planId)) return;
     await prefs.markHousingPlanActiveUseStarted(planId);
+
+    try {
+      final trialStore = await HousingTrialConsumptionStore.load();
+      final coordinator = EntitlementCoordinator.maybeInstance;
+      final selfInstallation =
+          coordinator != null
+              ? await coordinator.installationIdForSnapshot(
+                planId: planId,
+                participantId: selfIdForPlan(planId),
+              )
+              : '';
+      if (selfInstallation.isNotEmpty) {
+        await trialStore.markConsumed(selfInstallation);
+      }
+
+      if (coordinator != null) {
+        await coordinator.reportActiveUse(planId: planId);
+      }
+    } on Object catch (e, st) {
+      debugPrint('housing: trial consumption on active use skipped: $e\n$st');
+    }
   }
 }

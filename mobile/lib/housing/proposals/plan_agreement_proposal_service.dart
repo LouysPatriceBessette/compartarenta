@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../db/app_database.dart';
+import '../../entitlement/entitlement_coordinator.dart';
+import '../../entitlement/housing_trial_consumption_store.dart';
+import '../../entitlement/housing_trial_eligibility.dart';
 import '../agreement_rules_json.dart';
 import '../housing_plan_id.dart';
 import 'housing_agreement_overlap_withdrawal_exception.dart';
@@ -415,6 +418,25 @@ class PlanAgreementProposalService {
     await HousingProposalTransportService(_db).reconcileStalePackagePending(
       planId,
     );
+    try {
+      final trialStore = await HousingTrialConsumptionStore.load();
+      final trialEligible = await housingRosterMayReceiveTrial(
+        planId: planId,
+        participantIds: participantIds,
+        trialStore: trialStore,
+      );
+      await trialStore.setPlanTrialEligible(planId, trialEligible);
+    } on Object catch (e, st) {
+      debugPrint('housing: trial eligibility evaluation skipped: $e\n$st');
+    }
+    final coordinator = EntitlementCoordinator.maybeInstance;
+    if (coordinator != null) {
+      await coordinator.reportRosterIfComplete(
+        planId: planId,
+        revisionId: revisionId,
+        participantIds: participantIds,
+      );
+    }
     return ProposalActivationOutcome.activated;
   }
 

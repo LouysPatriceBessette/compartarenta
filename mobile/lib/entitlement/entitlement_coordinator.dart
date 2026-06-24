@@ -175,6 +175,17 @@ class EntitlementCoordinator {
     }
   }
 
+  Future<void> reportActiveUse({required String planId}) async {
+    if (!httpEnabled) return;
+    final entitlementPlanId = entitlementPlanIdForLocalPlan(planId);
+    try {
+      await _client!.reportActiveUse(planId: entitlementPlanId);
+      debugPrint('entitlement: active-use reported for $entitlementPlanId');
+    } on Object catch (e, st) {
+      debugPrint('entitlement: active-use report failed: $e\n$st');
+    }
+  }
+
   Future<EntitlementGate?> gateFor({
     required String planId,
     required String selfParticipantId,
