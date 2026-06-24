@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
+import '../housing/contacts/housing_contact_disconnect_policy.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
@@ -13,6 +14,7 @@ enum ContactAnchorBlockKind {
   activeAgreement,
   pendingProposalVote,
   pendingParticipationChange,
+  unpublishedRealizedExpense,
 }
 
 /// A plan that blocks disconnecting a contact referenced on its roster.
@@ -34,17 +36,26 @@ class ContactAnchorBlock {
 /// proposal / participation vote MUST NOT be disconnected.
 Future<List<ContactAnchorBlock>> listContactDisconnectBlocks(
   AppDatabase db,
-  String contactId,
-) async {
+  String contactId, {
+  DateTime? now,
+}) async {
   final blocks = <ContactAnchorBlock>[];
   final plans = await db.listPlansContainingContact(contactId);
   final changeSvc = HousingParticipationChangeService(db);
+  final clock = now ?? DateTime.now();
 
   for (final plan in plans) {
     final title = plan.title.trim().isEmpty ? plan.id : plan.title.trim();
+    final agreement = await db.getAgreementForPlan(plan.id);
+    final votesExpiredByAgreementEnd = agreement != null &&
+        agreementVoteExpiryApplies(periodEnd: agreement.periodEnd, now: clock);
 
-    final hasActive = await db.planHasActiveAcceptedProposal(plan.id);
-    if (hasActive) {
+    if (await housingInForceAgreementBlocksContactDisconnect(
+      db: db,
+      planId: plan.id,
+      contactId: contactId,
+      now: clock,
+    )) {
       blocks.add(
         ContactAnchorBlock(
           kind: ContactAnchorBlockKind.activeAgreement,
@@ -58,18 +69,10 @@ Future<List<ContactAnchorBlock>> listContactDisconnectBlocks(
     final pendingChange = await changeSvc.pendingForPlan(plan.id);
     if (pendingChange != null) {
       final kind = HousingParticipationChangeKind.fromWire(pendingChange.kind);
+      final voluntaryWithdrawal =
+          kind == HousingParticipationChangeKind.voluntaryWithdrawal;
       if (kind != null &&
-          kind != HousingParticipationChangeKind.voluntaryWithdrawal) {
-        blocks.add(
-          ContactAnchorBlock(
-            kind: ContactAnchorBlockKind.pendingParticipationChange,
-            planId: plan.id,
-            planTitle: title,
-          ),
-        );
-        continue;
-      }
-      if (kind == HousingParticipationChangeKind.voluntaryWithdrawal) {
+          (voluntaryWithdrawal || !votesExpiredByAgreementEnd)) {
         blocks.add(
           ContactAnchorBlock(
             kind: ContactAnchorBlockKind.pendingParticipationChange,
@@ -81,31 +84,48 @@ Future<List<ContactAnchorBlock>> listContactDisconnectBlocks(
       }
     }
 
-    final pkg = await (db.select(db.proposalPackages)
-          ..where((t) => t.planId.equals(plan.id)))
-        .getSingleOrNull();
-    final pendingRevisionId = pkg?.pendingRevisionId;
-    if (pendingRevisionId == null || pendingRevisionId.isEmpty) continue;
-
-    final rev = await (db.select(db.proposalRevisions)
-          ..where((t) => t.id.equals(pendingRevisionId)))
-        .getSingleOrNull();
-    if (rev == null) continue;
-
-    try {
-      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
-      final state = HousingProposalRevisionState.fromPayload(payload);
-      if (state.isOpen && !state.isExpiredByClock) {
-        blocks.add(
-          ContactAnchorBlock(
-            kind: ContactAnchorBlockKind.pendingProposalVote,
-            planId: plan.id,
-            planTitle: title,
-          ),
-        );
+    if (!votesExpiredByAgreementEnd) {
+      final pkg = await (db.select(db.proposalPackages)
+            ..where((t) => t.planId.equals(plan.id)))
+          .getSingleOrNull();
+      final pendingRevisionId = pkg?.pendingRevisionId;
+      if (pendingRevisionId != null && pendingRevisionId.isNotEmpty) {
+        final rev = await (db.select(db.proposalRevisions)
+              ..where((t) => t.id.equals(pendingRevisionId)))
+            .getSingleOrNull();
+        if (rev != null) {
+          try {
+            final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+            final state = HousingProposalRevisionState.fromPayload(payload);
+            if (state.isOpen && !state.isExpiredByClock) {
+              blocks.add(
+                ContactAnchorBlock(
+                  kind: ContactAnchorBlockKind.pendingProposalVote,
+                  planId: plan.id,
+                  planTitle: title,
+                ),
+              );
+              continue;
+            }
+          } catch (_) {
+            // Ignore unparsable revision payloads.
+          }
+        }
       }
-    } catch (_) {
-      // Ignore unparsable revision payloads.
+    }
+
+    if (await housingUnpublishedExpenseBlocksContactDisconnect(
+      db: db,
+      planId: plan.id,
+      contactId: contactId,
+    )) {
+      blocks.add(
+        ContactAnchorBlock(
+          kind: ContactAnchorBlockKind.unpublishedRealizedExpense,
+          planId: plan.id,
+          planTitle: title,
+        ),
+      );
     }
   }
 

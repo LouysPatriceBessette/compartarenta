@@ -113,15 +113,45 @@ Future<AppDatabase> _activePlanWithOpenAmendment() async {
 }
 
 void main() {
-  test('listContactDisconnectBlocks active agreement and open votes', () async {
+  test('listContactDisconnectBlocks open votes while period in force', () async {
     final db = await _activePlanWithOpenAmendment();
     addTearDown(db.close);
 
-    final blocks = await listContactDisconnectBlocks(db, 'contact:peer');
+    final blocks = await listContactDisconnectBlocks(
+      db,
+      'contact:peer',
+      now: DateTime.utc(2026, 1, 15),
+    );
     expect(blocks, isNotEmpty);
     expect(
       blocks.any((b) => b.kind == ContactAnchorBlockKind.activeAgreement),
       isTrue,
+    );
+  });
+
+  test('listContactDisconnectBlocks allows after period end once votes expire',
+      () async {
+    final db = await _activePlanWithOpenAmendment();
+    addTearDown(db.close);
+
+    final blocks = await listContactDisconnectBlocks(
+      db,
+      'contact:peer',
+      now: DateTime.utc(2026, 6, 15),
+    );
+    expect(
+      blocks.any((b) => b.kind == ContactAnchorBlockKind.activeAgreement),
+      isFalse,
+    );
+    expect(
+      blocks.any((b) => b.kind == ContactAnchorBlockKind.pendingProposalVote),
+      isFalse,
+    );
+    expect(
+      blocks.any(
+        (b) => b.kind == ContactAnchorBlockKind.pendingParticipationChange,
+      ),
+      isFalse,
     );
   });
 
