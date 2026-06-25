@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# Shared constants and helpers for manual Android QA / E2E tooling.
+# Source from repo-root scripts: source "$(dirname "$0")/qa_env.sh"
+
+if [[ -z "${COMPARTARENTA_ROOT:-}" ]]; then
+  _qa_env_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  COMPARTARENTA_ROOT="$(cd "${_qa_env_script_dir}/.." && pwd)"
+fi
+
+export COMPARTARENTA_ROOT
+
+# --- Defaults (override via env before calling scripts) -----------------------
+
+export COMPARTARENTA_QA_AVD_NAME="${COMPARTARENTA_QA_AVD_NAME:-Compartarenta-QA}"
+export COMPARTARENTA_QA_APP_ID="${COMPARTARENTA_QA_APP_ID:-com.compartarenta.compartarenta.dev}"
+export COMPARTARENTA_QA_SYSTEM_IMAGE="${COMPARTARENTA_QA_SYSTEM_IMAGE:-system-images;android-34;google_apis;x86_64}"
+export COMPARTARENTA_QA_DEVICE_PROFILE="${COMPARTARENTA_QA_DEVICE_PROFILE:-pixel_7}"
+export COMPARTARENTA_QA_API_BASE_URL="${COMPARTARENTA_QA_API_BASE_URL:-https://sync.incoherences.org}"
+export COMPARTARENTA_QA_DEFAULT_TIMEZONE="${COMPARTARENTA_QA_DEFAULT_TIMEZONE:-America/Toronto}"
+
+export COMPARTARENTA_QA_LOCAL_DIR="${COMPARTARENTA_ROOT}/qa/.local"
+export COMPARTARENTA_QA_CLOCK_STATE="${COMPARTARENTA_QA_LOCAL_DIR}/clock-restore.env"
+export COMPARTARENTA_QA_APK_PATH="${COMPARTARENTA_QA_APK_PATH:-${COMPARTARENTA_ROOT}/mobile/build/app/outputs/flutter-apk/app-dev-debug.apk}"
+
+# --- Android SDK resolution -------------------------------------------------
+
+qa_resolve_android_sdk_root() {
+  if [[ -n "${ANDROID_SDK_ROOT:-}" && -d "${ANDROID_SDK_ROOT}" ]]; then
+    echo "${ANDROID_SDK_ROOT}"
+    return 0
+  fi
+  if [[ -n "${ANDROID_HOME:-}" && -d "${ANDROID_HOME}" ]]; then
+    echo "${ANDROID_HOME}"
+    return 0
+  fi
+  if [[ -d "${HOME}/Android/Sdk" ]]; then
+    echo "${HOME}/Android/Sdk"
+    return 0
+  fi
+  return 1
+}
+
+qa_export_android_sdk_paths() {
+  local sdk_root
+  sdk_root="$(qa_resolve_android_sdk_root)" || {
+    echo "Android SDK not found. Set ANDROID_SDK_ROOT or install the SDK." >&2
+    return 1
+  }
+  export ANDROID_SDK_ROOT="${sdk_root}"
+  export ANDROID_HOME="${sdk_root}"
+  export PATH="${sdk_root}/platform-tools:${sdk_root}/emulator:${sdk_root}/cmdline-tools/latest/bin:${PATH}"
+}
+
+qa_require_command() {
+  local name="$1"
+  if ! command -v "${name}" >/dev/null 2>&1; then
+    echo "Required command not found on PATH: ${name}" >&2
+    return 1
+  fi
+}
+
+qa_ensure_local_dir() {
+  mkdir -p "${COMPARTARENTA_QA_LOCAL_DIR}"
+}
+
+qa_wait_for_boot_completed() {
+  local serial="${1:-}"
+  local adb_args=()
+  if [[ -n "${serial}" ]]; then
+    adb_args=(-s "${serial}")
+  fi
+  adb "${adb_args[@]}" wait-for-device
+  local boot_completed=""
+  local attempts=0
+  while [[ "${boot_completed}" != "1" && "${attempts}" -lt 120 ]]; do
+    boot_completed="$(adb "${adb_args[@]}" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
+    if [[ "${boot_completed}" == "1" ]]; then
+      break
+    fi
+    sleep 2
+    attempts=$((attempts + 1))
+  done
+  if [[ "${boot_completed}" != "1" ]]; then
+    echo "Timed out waiting for emulator boot (sys.boot_completed)." >&2
+    return 1
+  fi
+}
+
+qa_wait_for_emulator_serial() {
+  local serial=""
+  local attempts=0
+  while [[ -z "${serial}" && "${attempts}" -lt 120 ]]; do
+    serial="$(adb devices | awk '/^emulator-[0-9]+\tdevice$/{print $1; exit}')"
+    if [[ -n "${serial}" ]]; then
+      echo "${serial}"
+      return 0
+    fi
+    sleep 2
+    attempts=$((attempts + 1))
+  done
+  echo "Timed out waiting for an emulator in 'device' state (adb devices)." >&2
+  adb devices >&2 || true
+  return 1
+}
+
+qa_adb_target_serial() {
+  # Prefer an emulator when several devices are connected.
+  local serial
+  serial="$(adb devices | awk '/^emulator-[0-9]+\tdevice$/{print $1; exit}')"
+  if [[ -n "${serial}" ]]; then
+    echo "${serial}"
+    return 0
+  fi
+  serial="$(adb devices | awk '/\tdevice$/{print $1; exit}')"
+  if [[ -n "${serial}" ]]; then
+    echo "${serial}"
+    return 0
+  fi
+  return 1
+}
+
+qa_require_emulator_target() {
+  local serial
+  serial="$(qa_adb_target_serial)" || {
+    echo "No adb device in 'device' state. Start the QA emulator first." >&2
+    return 1
+  }
+  if [[ "${serial}" != emulator-* ]]; then
+    echo "Refusing to change the system clock on a non-emulator device (${serial})." >&2
+    return 1
+  fi
+  echo "${serial}"
+}

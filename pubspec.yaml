@@ -118,3 +118,33 @@ melos:
     apk:list:
       description: List APK outputs (from repo root; run a build:apk:* script first)
       run: ls -lah mobile/build/app/outputs/flutter-apk/ || true
+
+    qa:create-avd:
+      description: |
+        Create the Compartarenta-QA Android emulator (phase 0). Installs the
+        pinned system image when missing. Idempotent.
+      run: chmod +x ./tool/create_qa_avd.sh && ./tool/create_qa_avd.sh
+
+    qa:start-emulator:
+      description: |
+        Start the Compartarenta-QA emulator (cold boot). Pass -- --quick to
+        resume from a snapshot instead of -no-snapshot-load.
+      run: chmod +x ./tool/start_qa_emulator.sh && ./tool/start_qa_emulator.sh
+
+    qa:install-maestro:
+      description: Install the Maestro CLI locally (~/.maestro/bin) for manual E2E runs
+      run: chmod +x ./tool/install_maestro.sh && ./tool/install_maestro.sh
+
+    qa:build-apk:
+      description: |
+        Build a dev-flavor debug APK for manual QA on the emulator
+        (mobile/build/app/outputs/flutter-apk/app-dev-debug.apk).
+      run: chmod +x ./tool/build_qa_apk.sh && ./tool/build_qa_apk.sh
+
+    qa:install-apk:
+      description: Install the QA debug APK on the running emulator via adb
+      run: chmod +x ./tool/install_qa_apk.sh && ./tool/install_qa_apk.sh
+
+    qa:verify:
+      description: Verify phase-0 QA prerequisites (AVD, Maestro, optional APK/emulator)
+      run: chmod +x ./tool/verify_qa_phase0.sh && ./tool/verify_qa_phase0.sh
