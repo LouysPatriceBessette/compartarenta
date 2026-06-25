@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
@@ -577,7 +578,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return PopScope(
+    final hub = PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _handleHubBack(context);
@@ -751,6 +752,20 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                   enabled: expenseEnabled,
                                   subtitle: expenseSubtitle,
                                   subtitleColor: expenseSubtitleColor,
+                                  semanticsIdentifier:
+                                      kDebugMode
+                                          ? switch (entry.mode) {
+                                            HousingHubExpenseEntryMode
+                                                .settlementDue =>
+                                              'qa-housing-hub-settlement-due',
+                                            HousingHubExpenseEntryMode
+                                                .enterExpense =>
+                                              'qa-housing-hub-enter-expense',
+                                            HousingHubExpenseEntryMode
+                                                .disabled =>
+                                              null,
+                                          }
+                                          : null,
                                   onTap: () => _openEnterExpense(context),
                                 );
                               },
@@ -847,6 +862,13 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         ),
       ),
     );
+
+    if (!kDebugMode) return hub;
+    return Semantics(
+      identifier: 'qa-housing-active-hub',
+      container: true,
+      child: hub,
+    );
   }
 }
 
@@ -882,6 +904,7 @@ class _HubTile extends StatelessWidget {
     this.enabled = true,
     this.subtitle,
     this.subtitleColor,
+    this.semanticsIdentifier,
   });
 
   final IconData icon;
@@ -890,10 +913,11 @@ class _HubTile extends StatelessWidget {
   final bool enabled;
   final String? subtitle;
   final Color? subtitleColor;
+  final String? semanticsIdentifier;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final tile = Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon),
@@ -909,6 +933,13 @@ class _HubTile extends StatelessWidget {
         enabled: enabled,
         onTap: enabled ? onTap : null,
       ),
+    );
+    if (semanticsIdentifier == null) return tile;
+    return Semantics(
+      identifier: semanticsIdentifier,
+      button: true,
+      label: label,
+      child: tile,
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
 import 'config/app_config.dart';
 import 'debug/local_storage_startup_log.dart';
+import 'debug/qa_scenario_seed.dart';
 import 'debug/web_dev_db_write_observer.dart';
 import 'debug/web_dev_host_session.dart';
 import 'entitlement/entitlement_coordinator.dart';
@@ -56,6 +57,9 @@ Future<void> bootstrap() async {
       installWebStorageFlushOnPageHide();
       try {
         await appDb.warmUpStorage();
+        if (kDebugMode && !kIsWeb) {
+          await maybeApplyQaAndroidSeed(appDb);
+        }
         if (kDebugMode && kIsWeb) {
           await restoreDevSessionFromHostIfNeeded(appDb);
           await reconcileDevOnboardingIfNeeded(appDb);

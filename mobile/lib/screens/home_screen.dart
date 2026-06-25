@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -74,6 +75,8 @@ class HomeScreen extends StatelessWidget {
                     icon: MdiIcons.homeCity,
                     label: l10n.homeModuleHousing,
                     onTap: () => navigateTo(context, '/housing'),
+                    semanticsIdentifier:
+                        kDebugMode ? 'qa-home-housing' : null,
                   ),
                 ),
                 SizedBox(
@@ -109,11 +112,13 @@ class _HomeActionCard extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.enabled = true,
+    this.semanticsIdentifier,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? semanticsIdentifier;
 
   /// When false, card uses muted colors (Material disabled-style) but [onTap] still runs.
   final bool enabled;
@@ -125,7 +130,7 @@ class _HomeActionCard extends StatelessWidget {
         ? scheme.onSurface
         : scheme.onSurface.withValues(alpha: 0.38);
 
-    return InkWell(
+    final card = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: DecoratedBox(
@@ -151,6 +156,14 @@ class _HomeActionCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (semanticsIdentifier == null) return card;
+    return Semantics(
+      identifier: semanticsIdentifier,
+      button: true,
+      label: label,
+      child: card,
     );
   }
 }

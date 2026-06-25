@@ -103,6 +103,13 @@ qa_wait_for_emulator_serial() {
   return 1
 }
 
+qa_use_emulator_adb_serial() {
+  local serial
+  serial="$(qa_wait_for_emulator_serial)"
+  export ANDROID_SERIAL="${serial}"
+  echo "${serial}"
+}
+
 qa_adb_target_serial() {
   # Prefer an emulator when several devices are connected.
   local serial

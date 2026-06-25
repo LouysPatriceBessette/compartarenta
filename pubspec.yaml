@@ -148,3 +148,15 @@ melos:
     qa:verify:
       description: Verify phase-0 QA prerequisites (AVD, Maestro, optional APK/emulator)
       run: chmod +x ./tool/verify_qa_phase0.sh && ./tool/verify_qa_phase0.sh
+
+    qa:seed:
+      description: |
+        Seed a QA scenario on the emulator (clears app data, cold-starts once).
+        Example: dart run melos run qa:seed -- settlement_window_open
+      run: chmod +x ./tool/seed_qa_scenario.sh && ./tool/seed_qa_scenario.sh "$@"
+
+    qa:run-scenario:
+      description: |
+        Run a full manual QA scenario (date, seed, Maestro flow, artifacts).
+        Example: dart run melos run qa:run-scenario -- settlement_window_open
+      run: chmod +x ./tool/run_scenario.sh && ./tool/run_scenario.sh "$@"

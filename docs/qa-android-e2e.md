@@ -98,6 +98,40 @@ When writing Maestro flows (phase 1), use the **dev** application id:
 appId: com.compartarenta.compartarenta.dev
 ```
 
+## Phase 1 — first scenario (settlement window open)
+
+Manual POC for « day after `periodEnd` → settlement button visible ».
+
+### Layout
+
+| Path | Role |
+| --- | --- |
+| `qa/scenarios/settlement_window_open.yaml` | Manifest (date, timezone, seed id, Maestro flow) |
+| `qa/flows/settlement_window_open.yaml` | Maestro flow (4 screenshots + assertions) |
+| `mobile/lib/debug/qa_scenario_seed.dart` | Programmatic Drift + prefs seed (debug Android) |
+| `tool/seed_qa_scenario.sh` | Push marker, cold-start app once to seed |
+| `tool/run_scenario.sh` | Full orchestrator (emulator, date, seed, Maestro, artifacts) |
+
+### Run
+
+```bash
+./tool/melosw run qa:run-scenario -- settlement_window_open
+```
+
+Or: `./tool/run_scenario.sh settlement_window_open`
+
+Artifacts land under `qa/artifacts/<scenario-id>/<UTC-timestamp>/` (screenshots + Maestro output).
+
+### Semantics identifiers (debug builds)
+
+| Id | Surface |
+| --- | --- |
+| `qa-home-housing` | Home → Logement tile |
+| `qa-housing-active-hub` | Active agreement hub |
+| `qa-housing-hub-settlement-due` | « Entrer un règlement de dû » tile |
+
+Seed sets French UI (`prefs.languageCode=fr`) to match Maestro text assertions.
+
 ## Safety notes
 
 - When a **physical Android device** is also plugged in, QA scripts target the

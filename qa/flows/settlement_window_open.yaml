@@ -1,0 +1,24 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# POC phase 1 — lendemain de periodEnd, fenêtre de règlement ouverte.
+# Prérequis : ./tool/run_scenario.sh settlement_window_open (seed + date + ce flow)
+
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Logement"
+    timeout: 90000
+- takeScreenshot: 01_home
+- tapOn: "Logement"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-active-hub"
+    timeout: 90000
+- takeScreenshot: 02_housing_hub
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-hub-settlement-due"
+    timeout: 30000
+- takeScreenshot: 03_settlement_tile
+- assertVisible: "Entrer un règlement de dû"
+- takeScreenshot: 04_settlement_assertions

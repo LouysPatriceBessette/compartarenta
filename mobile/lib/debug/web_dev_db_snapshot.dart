@@ -157,6 +157,15 @@ Future<void> importDriftTablesSnapshot(
   await db.syncWebStorageToDisk();
 }
 
+/// Wipes operational Drift tables (debug / QA seeding only).
+Future<void> clearDevOperationalTables(AppDatabase db) async {
+  if (!kDebugMode) return;
+  await db.transaction(() async {
+    await _clearAllDevTables(db);
+  });
+  await db.syncWebStorageToDisk();
+}
+
 Future<void> _clearAllDevTables(AppDatabase db) async {
   await db.delete(db.realizedExpenseAcceptances).go();
   await db.delete(db.realizedExpenseAttachments).go();
