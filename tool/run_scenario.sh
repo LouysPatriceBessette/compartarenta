@@ -3,9 +3,10 @@
 #
 # Usage: ./tool/run_scenario.sh settlement_window_open
 # Options:
-#   --skip-build     reuse existing debug APK
-#   --skip-install   do not adb install
-#   --skip-restore   keep emulator clock after the run
+#   --skip-build       reuse existing debug APK
+#   --skip-install     do not adb install
+#   --skip-restore     keep emulator clock after the run
+#   --artifact-dir DIR write Maestro output to DIR (created if missing)
 
 set -euo pipefail
 
@@ -22,11 +23,20 @@ shift || true
 SKIP_BUILD=0
 SKIP_INSTALL=0
 SKIP_RESTORE=0
+ARTIFACT_DIR_OVERRIDE=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --skip-build) SKIP_BUILD=1 ;;
     --skip-install) SKIP_INSTALL=1 ;;
     --skip-restore) SKIP_RESTORE=1 ;;
+    --artifact-dir)
+      ARTIFACT_DIR_OVERRIDE="${2:-}"
+      if [[ -z "${ARTIFACT_DIR_OVERRIDE}" ]]; then
+        echo "--artifact-dir requires a path" >&2
+        exit 1
+      fi
+      shift
+      ;;
     *)
       echo "Unknown option: $1" >&2
       exit 1
@@ -36,7 +46,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "${SCENARIO_ID}" ]]; then
-  echo "Usage: $0 <scenario-id> [--skip-build] [--skip-install] [--skip-restore]" >&2
+  echo "Usage: $0 <scenario-id> [--skip-build] [--skip-install] [--skip-restore] [--artifact-dir DIR]" >&2
   exit 1
 fi
 
@@ -79,9 +89,14 @@ fi
 "${ROOT}/tool/set_android_date.sh" "${DEVICE_DATE}" "${TIMEZONE}"
 "${ROOT}/tool/seed_qa_scenario.sh" "${SCENARIO_ID}"
 
-STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-ARTIFACT_DIR="${ROOT}/qa/artifacts/${SCENARIO_ID}/${STAMP}"
-mkdir -p "${ARTIFACT_DIR}"
+if [[ -n "${ARTIFACT_DIR_OVERRIDE}" ]]; then
+  ARTIFACT_DIR="${ARTIFACT_DIR_OVERRIDE}"
+  mkdir -p "${ARTIFACT_DIR}"
+else
+  STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+  ARTIFACT_DIR="${ROOT}/qa/artifacts/${SCENARIO_ID}/${STAMP}"
+  mkdir -p "${ARTIFACT_DIR}"
+fi
 
 echo "Running Maestro flow ${FLOW_REL} on ${EMULATOR_SERIAL}"
 maestro test --udid "${EMULATOR_SERIAL}" "${FLOW_PATH}" --test-output-dir "${ARTIFACT_DIR}"

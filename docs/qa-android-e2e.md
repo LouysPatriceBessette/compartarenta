@@ -86,12 +86,16 @@ want a faster resume.
 | `tool/build_qa_apk.sh` | Build `app-dev-debug.apk` |
 | `tool/install_qa_apk.sh` | `adb install -r` the QA APK |
 | `tool/run_scenario.sh` | Full orchestrator (emulator, date, seed, Maestro, artifacts) |
-| `tool/run_all_scenarios.sh` | Run all phase-2 scenarios in sequence |
+| `tool/run_all_scenarios.sh` | Discover and run all `qa/scenarios/*.yaml`; aggregated HTML report |
 | `tool/seed_qa_scenario.sh` | Push marker, cold-start app once to seed |
+| `tool/verify_qa.sh` | Full QA verification (phase 0 + manifests + semantics) |
+| `tool/verify_qa_semantics.py` | Maestro `qa-*` flow ids ↔ Dart `Semantics.identifier` |
+| `tool/qa_run_report.py` | Build `index.html` for a `run-<timestamp>` directory |
+| `tool/qa_scenario_manifest.py` | Parse manifests; `--list` / `--validate` |
 
 Melos wrappers: `qa:create-avd`, `qa:start-emulator`, `qa:install-maestro`,
-`qa:build-apk`, `qa:install-apk`, `qa:verify`, `qa:seed`, `qa:run-scenario`,
-`qa:run-all-scenarios`.
+`qa:build-apk`, `qa:install-apk`, `qa:verify`, `qa:validate-scenarios`,
+`qa:verify-semantics`, `qa:seed`, `qa:run-scenario`, `qa:run-all-scenarios`.
 
 ## Maestro app id
 
@@ -175,6 +179,70 @@ Eight scenarios aligned with the housing QA arc (manual runs only, no CI).
 | `qa-housing-archive-expired` | Expired proposal archive card |
 
 Unit tests: `mobile/test/qa_scenario_seed_test.dart`.
+
+## Phase 3 — industrialisation (manual)
+
+Phase 3 adds orchestration and guardrails (still **no CI**).
+
+### Scenario discovery
+
+`run_all_scenarios.sh` discovers scenarios from `qa/scenarios/*.yaml` (sorted by
+`id`). Adding a scenario no longer requires editing the shell script.
+
+Validate manifests before a run:
+
+```bash
+./tool/melosw run qa:validate-scenarios
+# or full verify:
+./tool/melosw run qa:verify
+```
+
+Checks: required manifest keys, `seed` ∈ `kQaScenarioIds`, flow file exists,
+filename stem matches `id`.
+
+### Maestro ↔ Dart semantics guardrail
+
+Flows reference stable accessibility ids (`id: "qa-…"` in Maestro YAML). Dart
+exposes them via `Semantics(identifier: …)` (debug builds). The verifier ensures
+every Maestro `qa-*` id exists in `mobile/lib/**/*.dart`, excluding the immature
+vehicle module (`screens/car_sharing/`).
+
+```bash
+./tool/melosw run qa:verify-semantics
+```
+
+Unused Dart identifiers (defined but not referenced in flows) emit **warnings**
+only (e.g. `qa-home-housing` reserved for future flows).
+
+When adding a new flow assertion on a custom control, add the matching
+`qa-<module>-<surface>-<state>` identifier in Dart first, then reference it in
+the YAML.
+
+### Aggregated HTML report
+
+`qa:run-all-scenarios` writes a unified run directory:
+
+```
+qa/artifacts/run-<UTC-timestamp>/
+  index.html           ← open in a browser
+  results.json
+  <scenario-id>/       ← Maestro output + screenshots
+```
+
+The clock is restored **once** after the full run (not after each scenario).
+
+```bash
+./tool/melosw run qa:run-all-scenarios
+```
+
+Single-scenario runs still use `qa/artifacts/<scenario-id>/<timestamp>/` unless
+you pass `--artifact-dir` to `run_scenario.sh`.
+
+### Tooling tests
+
+```bash
+python3 tool/qa_tools_test.py -v
+```
 
 ## Safety notes
 

@@ -146,8 +146,18 @@ melos:
       run: chmod +x ./tool/install_qa_apk.sh && ./tool/install_qa_apk.sh
 
     qa:verify:
-      description: Verify phase-0 QA prerequisites (AVD, Maestro, optional APK/emulator)
-      run: chmod +x ./tool/verify_qa_phase0.sh && ./tool/verify_qa_phase0.sh
+      description: |
+        Verify QA toolchain (phase-0 prerequisites, scenario manifests,
+        Maestro ↔ Dart semantics alignment).
+      run: chmod +x ./tool/verify_qa.sh && ./tool/verify_qa.sh
+
+    qa:validate-scenarios:
+      description: Validate qa/scenarios/*.yaml manifests, seeds, and flows
+      run: python3 ./tool/qa_scenario_manifest.py --validate
+
+    qa:verify-semantics:
+      description: Verify Maestro qa-* ids in flows match Dart Semantics identifiers
+      run: python3 ./tool/verify_qa_semantics.py
 
     qa:seed:
       description: |
@@ -163,6 +173,7 @@ melos:
 
     qa:run-all-scenarios:
       description: |
-        Run all phase-2 housing end-of-agreement QA scenarios sequentially.
+        Discover and run all qa/scenarios/*.yaml on the emulator; writes
+        qa/artifacts/run-<timestamp>/index.html aggregated report.
         Example: dart run melos run qa:run-all-scenarios
       run: chmod +x ./tool/run_all_scenarios.sh && ./tool/run_all_scenarios.sh "$@"
