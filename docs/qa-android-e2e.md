@@ -85,10 +85,13 @@ want a faster resume.
 | `tool/install_maestro.sh` | Install Maestro CLI to `~/.maestro/bin` |
 | `tool/build_qa_apk.sh` | Build `app-dev-debug.apk` |
 | `tool/install_qa_apk.sh` | `adb install -r` the QA APK |
-| `tool/verify_qa_phase0.sh` | Check phase-0 prerequisites |
+| `tool/run_scenario.sh` | Full orchestrator (emulator, date, seed, Maestro, artifacts) |
+| `tool/run_all_scenarios.sh` | Run all phase-2 scenarios in sequence |
+| `tool/seed_qa_scenario.sh` | Push marker, cold-start app once to seed |
 
 Melos wrappers: `qa:create-avd`, `qa:start-emulator`, `qa:install-maestro`,
-`qa:build-apk`, `qa:install-apk`, `qa:verify`.
+`qa:build-apk`, `qa:install-apk`, `qa:verify`, `qa:seed`, `qa:run-scenario`,
+`qa:run-all-scenarios`.
 
 ## Maestro app id
 
@@ -132,6 +135,47 @@ Artifacts land under `qa/artifacts/<scenario-id>/<UTC-timestamp>/` (screenshots 
 
 Seed sets French UI (`prefs.languageCode=fr`) to match Maestro text assertions.
 
+## Phase 2 — end-of-agreement scenario library
+
+Eight scenarios aligned with the housing QA arc (manual runs only, no CI).
+
+| Scenario id | Device date | Expectation |
+| --- | --- | --- |
+| `period_end_day` | 2027-08-11 | Expense tile disabled (zero balances) |
+| `settlement_open` | 2027-08-11 | Settlement tile visible |
+| `settlement_last_day` | 2027-09-10 | Settlement tile + « jusqu'au » subtitle |
+| `settlement_closed` | 2027-09-11 | Expense and settlement closed |
+| `renewal_fork_visible` | 2027-08-15 | « Nouvelle période à partir du plan actuel » |
+| `voluntary_withdrawal_ack_j5` | 2027-08-11 | Participation banner (last ack day) |
+| `voluntary_withdrawal_effective` | 2027-08-11 | Withdrawal applied, no banner |
+| `proposal_response_expired` | 2027-08-11 | Archive list shows « Proposition expirée » |
+
+`settlement_window_open` (phase 1 POC) remains an alias of `settlement_open`.
+
+### Run one scenario
+
+```bash
+./tool/melosw run qa:run-scenario -- settlement_open
+```
+
+### Run all phase-2 scenarios
+
+```bash
+./tool/melosw run qa:run-all-scenarios
+```
+
+### Additional semantics identifiers (debug builds)
+
+| Id | Surface |
+| --- | --- |
+| `qa-housing-hub-expense-disabled` | Disabled expense tile |
+| `qa-housing-hub-enter-expense` | Active-period expense entry |
+| `qa-housing-hub-renewal-fork` | Renewal fork tile |
+| `qa-housing-participation-banner` | Voluntary withdrawal / ejection banner |
+| `qa-housing-archive-expired` | Expired proposal archive card |
+
+Unit tests: `mobile/test/qa_scenario_seed_test.dart`.
+
 ## Safety notes
 
 - When a **physical Android device** is also plugged in, QA scripts target the
@@ -141,14 +185,7 @@ Seed sets French UI (`prefs.languageCode=fr`) to match Maestro text assertions.
   a physical phone's clock.
 - Always run `restore_android_date.sh` after a dated scenario, or delete
   `qa/.local/clock-restore.env` only if you accept leaving auto-time disabled.
-- Phase 0 does not seed the database or run Maestro flows — that is phase 1+.
-
-## Out of scope (phase 0)
-
-- Scenario library (`qa/scenarios/`), fixtures, orchestrator
-- Screenshots and `run_scenario.sh`
-- CI / GitHub Actions
-- Web (Monica / Roberr) or multi-device sync
+- Phase 0 does not seed the database or run Maestro flows — see phase 1+ above.
 
 See `dev-ideas/2026-06-24-Comment-tester-E2E-à-implémenter.md` for the full
 roadmap (personal notes, gitignored).

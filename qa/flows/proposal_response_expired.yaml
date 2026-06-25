@@ -1,0 +1,20 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Logement"
+    timeout: 90000
+- takeScreenshot: 01_home
+- tapOn: "Logement"
+- extendedWaitUntil:
+    visible: "Proposition expirée"
+    timeout: 90000
+- takeScreenshot: 02_archive_list
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-archive-expired"
+    timeout: 30000
+- takeScreenshot: 03_expired_card
+- assertVisible: "Proposition expirée"
+- takeScreenshot: 04_assertions

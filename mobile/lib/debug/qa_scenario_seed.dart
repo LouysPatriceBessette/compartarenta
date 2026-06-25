@@ -1,27 +1,38 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
-import '../housing/proposals/plan_agreement_proposal_service.dart';
-import '../housing/realized_expense/realized_expense_ledger_service.dart';
-import '../housing/realized_expense/realized_expense_status.dart';
+import '../housing/amendment/housing_active_agreement_service.dart';
+import '../housing/participation/housing_participation_change_kind.dart';
+import '../housing/participation/housing_participation_change_service.dart';
+import '../housing/participation/housing_participation_hub_gates.dart';
+import '../housing/participation/housing_voluntary_withdrawal_ack.dart';
+import '../housing/proposals/housing_proposal_revision_state.dart';
+import '../housing/proposals/housing_proposal_transport_service.dart';
+import '../housing/settlement/housing_hub_expense_entry.dart';
 import '../housing/settlement/housing_settlement_window.dart';
+import 'qa_scenario_seed_helpers.dart';
 import 'web_dev_db_snapshot.dart';
+
+export 'qa_scenario_seed_helpers.dart' show kQaSettlementOpenPlanId;
 
 /// File name under the app documents directory, written by [tool/seed_qa_scenario.sh].
 const kQaAndroidSeedMarkerFileName = 'compartarenta_qa_seed';
 
-/// Fixed plan id for the settlement-window-open POC scenario.
-const kQaSettlementOpenPlanId = 'housing:qa-settlement-open';
-
 /// Scenario ids supported by [applyQaScenario].
 const kQaScenarioIds = <String>{
+  'period_end_day',
+  'settlement_open',
   'settlement_window_open',
+  'settlement_last_day',
+  'settlement_closed',
+  'renewal_fork_visible',
+  'voluntary_withdrawal_ack_j5',
+  'voluntary_withdrawal_effective',
+  'proposal_response_expired',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -72,147 +83,118 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
   await prefs.setStringList('plans.enabled', const ['housing']);
   await prefs.setBool('notifications.enabled', false);
   await prefs.setBool('housing.defaultPlanSummaryReached', true);
-
-  switch (scenarioId) {
-    case 'settlement_window_open':
-      await prefs.setString('prefs.languageCode', 'fr');
-      break;
-  }
+  await prefs.setString('prefs.languageCode', 'fr');
 }
 
 Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
   switch (scenarioId) {
+    case 'period_end_day':
+      await _seedPeriodEndDay(db);
+    case 'settlement_open':
     case 'settlement_window_open':
-      await _seedSettlementWindowOpen(db);
-      break;
+      await _seedSettlementOpen(db);
+    case 'settlement_last_day':
+      await _seedSettlementLastDay(db);
+    case 'settlement_closed':
+      await _seedSettlementClosed(db);
+    case 'renewal_fork_visible':
+      await _seedRenewalForkVisible(db);
+    case 'voluntary_withdrawal_ack_j5':
+      await _seedVoluntaryWithdrawalAckJ5(db);
+    case 'voluntary_withdrawal_effective':
+      await _seedVoluntaryWithdrawalEffective(db);
+    case 'proposal_response_expired':
+      await _seedProposalResponseExpired(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
 }
 
-Future<void> _seedSettlementWindowOpen(AppDatabase db) async {
-  const planId = kQaSettlementOpenPlanId;
-  const packageId = 'pkg:qa-settlement-open';
-  const revisionId = 'rev:qa-settlement-open:active';
-  const lineId = 'line:qa-settlement-open:rent';
-  const selfId = '$planId:self';
-  const coId = '$planId:p0';
-  final periodStart = DateTime.utc(2027, 1, 1, 12);
-  final periodEnd = DateTime.utc(2027, 8, 10, 12);
-  final createdAt = DateTime.utc(2027, 1, 1);
+Future<void> _seedPeriodEndDay(AppDatabase db) async {
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: qaPlanIdForScenario('period_end_day'),
+    title: 'Entente QA fin de période',
+  );
+}
 
-  await db.upsertPlan(
-    PlansCompanion.insert(
-      id: planId,
-      type: 'housing',
-      createdAt: createdAt,
-      title: const drift.Value('Entente QA règlement'),
-      currency: const drift.Value('CAD'),
-      notes: const drift.Value.absent(),
-    ),
+Future<void> _seedSettlementOpen(AppDatabase db) async {
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: kQaSettlementOpenPlanId,
+    title: 'Entente QA règlement',
+    withPublishedExpense: true,
   );
-  await db.upsertParticipant(
-    ParticipantsCompanion.insert(
-      id: selfId,
-      displayName: 'Monica QA',
-      avatarId: 'mdi:0',
-      createdAt: createdAt,
-    ),
-  );
-  await db.upsertParticipant(
-    ParticipantsCompanion.insert(
-      id: coId,
-      displayName: 'Louys QA',
-      avatarId: 'mdi:1',
-      createdAt: createdAt,
-    ),
-  );
-  await db.upsertAgreement(
-    AgreementsCompanion.insert(
-      id: 'agreement:$planId',
-      planId: planId,
-      periodStart: periodStart,
-      periodEnd: periodEnd,
-      minNoticeDays: const drift.Value(30),
-      penaltyMinor: const drift.Value(0),
-      clauses: const drift.Value(''),
-      withdrawalSameForAll: const drift.Value('true'),
-      withdrawalPerParticipantJson: const drift.Value('{}'),
-      agreementRulesJson: const drift.Value('{}'),
-      version: const drift.Value(1),
-      createdAt: createdAt,
-    ),
-  );
-  await db.upsertPlanLine(
-    PlanLinesCompanion.insert(
-      id: lineId,
-      planId: planId,
-      isRecurring: true,
-      title: 'Loyer',
-      currency: 'CAD',
-      amountMinor: const drift.Value(100000),
-      recurrenceDayOfMonth: const drift.Value(1),
-      sortOrder: const drift.Value(0),
-      createdAt: createdAt,
-    ),
-  );
-  for (final pid in [selfId, coId]) {
-    await db.upsertPlanRatio(
-      PlanRatiosCompanion.insert(
-        id: 'ratio:$lineId:$pid',
-        planId: planId,
-        lineId: drift.Value(lineId),
-        participantId: pid,
-        weight: 5000,
-        createdAt: createdAt,
-      ),
-    );
-  }
+}
 
-  final payload = <String, Object?>{
-    'kind': PlanAgreementProposalService.kind,
-    'lifecycleState': 'archived',
-    'agreement': {
-      'periodStart': periodStart.toUtc().toIso8601String(),
-      'periodEnd': periodEnd.toUtc().toIso8601String(),
-    },
-  };
-  await db.into(db.proposalPackages).insertOnConflictUpdate(
-    ProposalPackagesCompanion.insert(
-      id: packageId,
-      planId: planId,
-      createdAt: createdAt,
-      activeRevisionId: drift.Value(revisionId),
-      pendingRevisionId: const drift.Value.absent(),
-    ),
+Future<void> _seedSettlementLastDay(AppDatabase db) async {
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: qaPlanIdForScenario('settlement_last_day'),
+    title: 'Entente QA dernier jour règlement',
+    withPublishedExpense: true,
   );
-  await db.into(db.proposalRevisions).insert(
-    ProposalRevisionsCompanion.insert(
-      id: revisionId,
-      packageId: packageId,
-      contentHash: 'qa:$revisionId',
-      proposerParticipantId: selfId,
-      payloadJson: jsonEncode(payload),
-      createdAt: createdAt,
-    ),
-  );
+}
 
-  final expenseAt = DateTime.utc(2027, 7, 1);
-  await db.into(db.realizedExpenses).insert(
-    RealizedExpensesCompanion.insert(
-      id: 'expense:qa-settlement-open:1',
-      packageId: packageId,
-      planId: planId,
-      planLineId: lineId,
-      amountMinor: 20000,
-      currency: 'CAD',
-      paymentDate: expenseAt,
-      payerParticipantId: selfId,
-      kind: RealizedExpenseKind.normal,
-      status: RealizedExpenseStatus.published,
-      createdAt: expenseAt,
-      updatedAt: expenseAt,
-    ),
+Future<void> _seedSettlementClosed(AppDatabase db) async {
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: qaPlanIdForScenario('settlement_closed'),
+    title: 'Entente QA règlement fermé',
+    withPublishedExpense: true,
+  );
+}
+
+Future<void> _seedRenewalForkVisible(AppDatabase db) async {
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: qaPlanIdForScenario('renewal_fork_visible'),
+    title: 'Entente QA renouvellement',
+  );
+}
+
+Future<void> _seedVoluntaryWithdrawalAckJ5(AppDatabase db) async {
+  const scenarioId = 'voluntary_withdrawal_ack_j5';
+  final planId = qaPlanIdForScenario(scenarioId);
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: planId,
+    title: 'Entente QA retrait ack',
+  );
+  await seedQaVoluntaryWithdrawal(
+    db: db,
+    planId: planId,
+    changeId: 'pc:qa-withdraw-ack',
+    noticeAt: DateTime.utc(2027, 8, 6, 12),
+    departureDate: DateTime.utc(2027, 8, 25, 12),
+    monicaAcknowledged: false,
+  );
+}
+
+Future<void> _seedVoluntaryWithdrawalEffective(AppDatabase db) async {
+  const scenarioId = 'voluntary_withdrawal_effective';
+  final planId = qaPlanIdForScenario(scenarioId);
+  await seedQaInForceHousingPlan(
+    db: db,
+    planId: planId,
+    title: 'Entente QA retrait effectif',
+  );
+  await seedQaVoluntaryWithdrawal(
+    db: db,
+    planId: planId,
+    changeId: 'pc:qa-withdraw-effective',
+    noticeAt: DateTime.utc(2027, 8, 1, 12),
+    departureDate: DateTime.utc(2027, 8, 11, 12),
+    monicaAcknowledged: true,
+  );
+}
+
+Future<void> _seedProposalResponseExpired(AppDatabase db) async {
+  await seedQaExpiredPendingProposal(
+    db: db,
+    planId: qaPlanIdForScenario('proposal_response_expired'),
+    title: 'Proposition QA expirée',
+    responseExpiresAt: DateTime.utc(2027, 8, 10, 12),
   );
 }
 
@@ -223,26 +205,267 @@ Future<void> assertQaScenarioPostconditions({
   required DateTime now,
 }) async {
   switch (scenarioId) {
+    case 'period_end_day':
+      await _assertPeriodEndDay(db, now);
+    case 'settlement_open':
     case 'settlement_window_open':
-      final agreement = await db.getAgreementForPlan(kQaSettlementOpenPlanId);
-      if (agreement == null) {
-        throw StateError('missing agreement for $kQaSettlementOpenPlanId');
-      }
-      final ledger = RealizedExpenseLedgerService(db);
-      final hasNonZero = await ledger.hasNonZeroOptimizedBalances(
-        kQaSettlementOpenPlanId,
-      );
-      if (!isSettlementOpen(
-        agreement: agreement,
-        hasNonZeroOptimizedBalances: hasNonZero,
-        now: now,
-      )) {
-        throw StateError(
-          'settlement_window_open: expected settlement open at $now',
-        );
-      }
-      break;
+      await _assertSettlementOpen(db, now);
+    case 'settlement_last_day':
+      await _assertSettlementLastDay(db, now);
+    case 'settlement_closed':
+      await _assertSettlementClosed(db, now);
+    case 'renewal_fork_visible':
+      await _assertRenewalForkVisible(db, now);
+    case 'voluntary_withdrawal_ack_j5':
+      await _assertVoluntaryWithdrawalAckJ5(db, now);
+    case 'voluntary_withdrawal_effective':
+      await _assertVoluntaryWithdrawalEffective(db, now);
+    case 'proposal_response_expired':
+      await _assertProposalResponseExpired(db, now);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
+  }
+}
+
+/// Resolves hub expense mode using [now] (for QA postconditions; mirrors [resolveHubExpenseEntry]).
+HousingHubExpenseEntryMode qaExpectedHubExpenseMode({
+  required AppDatabase db,
+  required Agreement agreement,
+  required bool hasNonZeroOptimizedBalances,
+  required DateTime now,
+  bool participationEnterEnabled = true,
+}) {
+  if (!participationEnterEnabled) {
+    return HousingHubExpenseEntryMode.disabled;
+  }
+  if (HousingActiveAgreementService(db).isAgreementPeriodOpen(
+    agreement,
+    now: now,
+  )) {
+    return HousingHubExpenseEntryMode.enterExpense;
+  }
+  if (isSettlementOpen(
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZeroOptimizedBalances,
+    now: now,
+  )) {
+    return HousingHubExpenseEntryMode.settlementDue;
+  }
+  return HousingHubExpenseEntryMode.disabled;
+}
+
+/// Whether renewal fork should show at [now] (mirrors [hubRenewalForkAvailable]).
+Future<bool> qaRenewalForkAvailableAt(
+  AppDatabase db,
+  String planId,
+  DateTime now,
+) async {
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) return false;
+  if (HousingActiveAgreementService(db).isAgreementPeriodOpen(
+    agreement,
+    now: now,
+  )) {
+    return false;
+  }
+  final pkg = await (db.select(db.proposalPackages)
+        ..where((t) => t.planId.equals(planId)))
+      .getSingleOrNull();
+  return pkg?.activeRevisionId != null;
+}
+
+Future<void> _assertPeriodEndDay(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('period_end_day');
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) {
+    throw StateError('missing agreement for $planId');
+  }
+  final hasNonZero = await qaPlanHasNonZeroBalances(db, planId);
+  if (hasNonZero) {
+    throw StateError('period_end_day: expected zero balances');
+  }
+  if (isSettlementOpen(
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  )) {
+    throw StateError('period_end_day: settlement must not be open at $now');
+  }
+  final mode = qaExpectedHubExpenseMode(
+    db: db,
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  );
+  if (mode != HousingHubExpenseEntryMode.disabled) {
+    throw StateError(
+      'period_end_day: expected disabled expense tile, got $mode',
+    );
+  }
+}
+
+Future<void> _assertSettlementOpen(AppDatabase db, DateTime now) async {
+  final agreement = await db.getAgreementForPlan(kQaSettlementOpenPlanId);
+  if (agreement == null) {
+    throw StateError('missing agreement for $kQaSettlementOpenPlanId');
+  }
+  final hasNonZero = await qaPlanHasNonZeroBalances(db, kQaSettlementOpenPlanId);
+  if (!isSettlementOpen(
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  )) {
+    throw StateError('settlement_open: expected settlement open at $now');
+  }
+}
+
+Future<void> _assertSettlementLastDay(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('settlement_last_day');
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) {
+    throw StateError('missing agreement for $planId');
+  }
+  final hasNonZero = await qaPlanHasNonZeroBalances(db, planId);
+  if (!isSettlementOpen(
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  )) {
+    throw StateError('settlement_last_day: expected settlement open at $now');
+  }
+  final lastDay = settlementWindowLastDayInclusive(agreement.periodEnd);
+  if (now.toLocal().day != lastDay.day ||
+      now.toLocal().month != lastDay.month) {
+    throw StateError(
+      'settlement_last_day: expected last window day $lastDay at $now',
+    );
+  }
+}
+
+Future<void> _assertSettlementClosed(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('settlement_closed');
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) {
+    throw StateError('missing agreement for $planId');
+  }
+  final hasNonZero = await qaPlanHasNonZeroBalances(db, planId);
+  if (isSettlementOpen(
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  )) {
+    throw StateError('settlement_closed: settlement must be closed at $now');
+  }
+  final mode = qaExpectedHubExpenseMode(
+    db: db,
+    agreement: agreement,
+    hasNonZeroOptimizedBalances: hasNonZero,
+    now: now,
+  );
+  if (mode != HousingHubExpenseEntryMode.disabled) {
+    throw StateError(
+      'settlement_closed: expected disabled expense tile, got $mode',
+    );
+  }
+}
+
+Future<void> _assertRenewalForkVisible(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('renewal_fork_visible');
+  if (!await qaRenewalForkAvailableAt(db, planId, now)) {
+    throw StateError('renewal_fork_visible: fork tile must be available at $now');
+  }
+}
+
+Future<void> _assertVoluntaryWithdrawalAckJ5(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('voluntary_withdrawal_ack_j5');
+  final change = await HousingParticipationChangeService(db).pendingForPlan(
+    planId,
+  );
+  if (change == null) {
+    throw StateError('voluntary_withdrawal_ack_j5: expected pending change');
+  }
+  final notice = voluntaryWithdrawalNoticeDateLocal(change.createdAt);
+  final lastAckDay = voluntaryWithdrawalAckLastDayInclusive(notice);
+  final today = DateTime(now.year, now.month, now.day);
+  if (today != lastAckDay) {
+    throw StateError(
+      'voluntary_withdrawal_ack_j5: expected last ack day $lastAckDay at $now',
+    );
+  }
+  final gates = await HousingParticipationHubGates.compute(
+    db: db,
+    planId: planId,
+    selfParticipantId: '$planId:self',
+    bannerTextBuilder:
+        ({
+          required String initiatorName,
+          required String? targetName,
+          required DateTime? departureDate,
+        }) => 'banner',
+    ejectionCandidateSubtitle: '',
+  );
+  if (!gates.gates.showParticipationBanner) {
+    throw StateError('voluntary_withdrawal_ack_j5: expected participation banner');
+  }
+}
+
+Future<void> _assertVoluntaryWithdrawalEffective(
+  AppDatabase db,
+  DateTime now,
+) async {
+  final planId = qaPlanIdForScenario('voluntary_withdrawal_effective');
+  final changeSvc = HousingParticipationChangeService(db);
+  final change = await changeSvc.getById('pc:qa-withdraw-effective');
+  if (change == null) {
+    throw StateError('voluntary_withdrawal_effective: missing change row');
+  }
+  if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
+    throw StateError('voluntary_withdrawal_effective: expected pending before apply');
+  }
+  if (!await changeSvc.allDecidersHaveAccepted(change.id)) {
+    throw StateError('voluntary_withdrawal_effective: all deciders must have accepted');
+  }
+  final departure = change.departureDate;
+  if (departure == null) {
+    throw StateError('voluntary_withdrawal_effective: missing departure date');
+  }
+  final today = DateTime(now.year, now.month, now.day);
+  final depDay = DateTime(
+    departure.toLocal().year,
+    departure.toLocal().month,
+    departure.toLocal().day,
+  );
+  if (today.isBefore(depDay)) {
+    throw StateError(
+      'voluntary_withdrawal_effective: departure $depDay must be reached at $now',
+    );
+  }
+}
+
+Future<void> _assertProposalResponseExpired(AppDatabase db, DateTime now) async {
+  final planId = qaPlanIdForScenario('proposal_response_expired');
+  final transport = HousingProposalTransportService(db);
+  if (await transport.hasActiveRevision(planId)) {
+    throw StateError('proposal_response_expired: must not have active revision');
+  }
+  final pkg = await (db.select(db.proposalPackages)
+        ..where((t) => t.planId.equals(planId)))
+      .getSingleOrNull();
+  final pendingId = pkg?.pendingRevisionId;
+  if (pendingId == null) {
+    throw StateError('proposal_response_expired: expected pending revision');
+  }
+  final rev = await (db.select(db.proposalRevisions)
+        ..where((t) => t.id.equals(pendingId)))
+      .getSingleOrNull();
+  if (rev == null) {
+    throw StateError('proposal_response_expired: missing revision row');
+  }
+  final state = HousingProposalRevisionState.fromJson(rev.payloadJson);
+  final expires = state.responseExpiresAtUtc;
+  if (expires == null || !now.toUtc().isAfter(expires)) {
+    throw StateError(
+      'proposal_response_expired: responseExpiresAt $expires must be before $now',
+    );
   }
 }

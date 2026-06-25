@@ -1,0 +1,7 @@
+id: settlement_open
+description: Jour après periodEnd, soldes ≠ 0 — règlement ouvert
+device_date: "2027-08-11T09:00:00"
+timezone: America/Toronto
+seed: settlement_open
+flow: qa/flows/settlement_open.yaml
+screenshot_prefix: settlement_open

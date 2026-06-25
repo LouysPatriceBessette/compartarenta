@@ -1,0 +1,11 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: qa/flows/_enter_housing_hub.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-participation-banner"
+    timeout: 30000
+- takeScreenshot: 03_participation_banner
+- assertVisible: "se retire de l'entente"
+- takeScreenshot: 04_assertions

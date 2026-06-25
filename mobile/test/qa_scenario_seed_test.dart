@@ -7,19 +7,39 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('settlement_window_open seed opens settlement hub tile', () async {
-    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
+  final scenarios = <String, DateTime>{
+    'period_end_day': DateTime(2027, 8, 11, 9),
+    'settlement_open': DateTime(2027, 8, 11, 9),
+    'settlement_window_open': DateTime(2027, 8, 11, 9),
+    'settlement_last_day': DateTime(2027, 9, 10, 9),
+    'settlement_closed': DateTime(2027, 9, 11, 9),
+    'renewal_fork_visible': DateTime(2027, 8, 15, 9),
+    'voluntary_withdrawal_ack_j5': DateTime(2027, 8, 11, 9),
+    'voluntary_withdrawal_effective': DateTime(2027, 8, 11, 9),
+    'proposal_response_expired': DateTime(2027, 8, 11, 9),
+  };
+
+  for (final entry in scenarios.entries) {
+    test('${entry.key} seed satisfies postconditions', () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      await applyQaScenario(db, entry.key);
+      await assertQaScenarioPostconditions(
+        db: db,
+        scenarioId: entry.key,
+        now: entry.value,
+      );
+    });
+  }
+
+  test('settlement_open has non-zero balances and window end 2027-09-10', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    await applyQaScenario(db, 'settlement_window_open');
-
-    final deviceNow = DateTime(2027, 8, 11, 9);
-    await assertQaScenarioPostconditions(
-      db: db,
-      scenarioId: 'settlement_window_open',
-      now: deviceNow,
-    );
+    await applyQaScenario(db, 'settlement_open');
 
     final agreement = await db.getAgreementForPlan(kQaSettlementOpenPlanId);
     expect(agreement, isNotNull);
@@ -29,16 +49,12 @@ void main() {
       isTrue,
     );
     expect(
-      isSettlementOpen(
-        agreement: agreement!,
-        hasNonZeroOptimizedBalances: true,
-        now: deviceNow,
-      ),
-      isTrue,
-    );
-    expect(
-      settlementWindowLastDayInclusive(agreement.periodEnd),
+      settlementWindowLastDayInclusive(agreement!.periodEnd),
       DateTime(2027, 9, 10),
     );
+  });
+
+  test('all scenario ids have manifests in kQaScenarioIds', () {
+    expect(kQaScenarioIds, containsAll(scenarios.keys));
   });
 }

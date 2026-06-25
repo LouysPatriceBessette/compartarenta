@@ -763,7 +763,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                               'qa-housing-hub-enter-expense',
                                             HousingHubExpenseEntryMode
                                                 .disabled =>
-                                              null,
+                                              'qa-housing-hub-expense-disabled',
                                           }
                                           : null,
                                   onTap: () => _openEnterExpense(context),
@@ -783,6 +783,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                       icon: Icons.fork_right_outlined,
                                       label: l10n.housingAgreementRenewalFork,
                                       enabled: !_renewalForkInProgress,
+                                      semanticsIdentifier:
+                                          kDebugMode
+                                              ? 'qa-housing-hub-renewal-fork'
+                                              : null,
                                       onTap: () => _startRenewalFork(context),
                                     ),
                                   ],

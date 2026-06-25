@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
@@ -149,6 +150,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
   }
 
   String _archiveTitle(AppLocalizations l10n, HousingProposalArchive archive) {
+    if (archive.isExpired) return l10n.housingArchiveExpiredTitle;
     if (archive.isDraft) {
       return archive.participantCount > 0
           ? l10n.housingArchiveDraftParticipantsTitle(archive.participantCount)
@@ -253,7 +255,7 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
 
   Widget _archiveCard(BuildContext context, HousingProposalArchive archive) {
     final l10n = AppLocalizations.of(context);
-    return Card(
+    final card = Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () =>
@@ -313,6 +315,12 @@ class _HousingArchiveEntryScreenState extends State<HousingArchiveEntryScreen> {
           ),
         ),
       ),
+    );
+    if (!kDebugMode || !archive.isExpired) return card;
+    return Semantics(
+      identifier: 'qa-housing-archive-expired',
+      label: l10n.housingArchiveExpiredTitle,
+      child: card,
     );
   }
 }

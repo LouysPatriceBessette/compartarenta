@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Logement"
+    timeout: 90000
+- takeScreenshot: 01_home
+- tapOn: "Logement"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-active-hub"
+    timeout: 90000
+- takeScreenshot: 02_housing_hub

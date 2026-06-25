@@ -160,3 +160,9 @@ melos:
         Run a full manual QA scenario (date, seed, Maestro flow, artifacts).
         Example: dart run melos run qa:run-scenario -- settlement_window_open
       run: chmod +x ./tool/run_scenario.sh && ./tool/run_scenario.sh "$@"
+
+    qa:run-all-scenarios:
+      description: |
+        Run all phase-2 housing end-of-agreement QA scenarios sequentially.
+        Example: dart run melos run qa:run-all-scenarios
+      run: chmod +x ./tool/run_all_scenarios.sh && ./tool/run_all_scenarios.sh "$@"

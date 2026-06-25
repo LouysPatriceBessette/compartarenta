@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Dark red banner for pending participation changes (distinct from amendment/expense).
@@ -15,7 +16,7 @@ class HousingParticipationChangeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final card = Card(
       color: bannerColor,
       margin: const EdgeInsets.only(bottom: 16),
       child: ListTile(
@@ -30,6 +31,12 @@ class HousingParticipationChangeBanner extends StatelessWidget {
                 : null,
         onTap: onTap,
       ),
+    );
+    if (!kDebugMode) return card;
+    return Semantics(
+      identifier: 'qa-housing-participation-banner',
+      label: text,
+      child: card,
     );
   }
 }
