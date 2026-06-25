@@ -1,12 +1,6 @@
 appId: com.compartarenta.compartarenta.dev
 ---
 - runFlow:
-    file: qa/flows/_enter_housing_hub.yaml
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-active-hub"
-    timeout: 30000
-- takeScreenshot: 03_hub_loaded
+    file: _enter_housing_hub.yaml
 - assertNotVisible:
     id: "qa-housing-participation-banner"
-- takeScreenshot: 04_assertions

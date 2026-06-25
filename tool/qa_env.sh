@@ -138,3 +138,35 @@ qa_require_emulator_target() {
   fi
   echo "${serial}"
 }
+
+# Recover from "System UI keeps stopping" on the QA emulator (manual clock jumps and
+# repeated pm clear + cold start can destabilize com.android.systemui).
+# Last resort only — do not call routinely before Maestro (can hang launchApp).
+qa_recover_system_ui() {
+  local serial="${1:-}"
+  if [[ -n "${serial}" && "${serial}" != emulator-* ]]; then
+    return 0
+  fi
+  local adb_args=()
+  if [[ -n "${serial}" ]]; then
+    adb_args=(-s "${serial}")
+  fi
+  adb "${adb_args[@]}" root >/dev/null 2>&1 || true
+  adb "${adb_args[@]}" shell input keyevent KEYCODE_BACK >/dev/null 2>&1 || true
+  sleep 1
+  adb "${adb_args[@]}" shell killall com.android.systemui >/dev/null 2>&1 || true
+  qa_wait_for_boot_completed "${serial}"
+  sleep 2
+}
+
+# Light prep after seed / before Maestro — no System UI restart.
+qa_prepare_for_maestro() {
+  local serial="${1:-}"
+  local adb_args=()
+  if [[ -n "${serial}" ]]; then
+    adb_args=(-s "${serial}")
+  fi
+  adb "${adb_args[@]}" shell am force-stop "${COMPARTARENTA_QA_APP_ID}" >/dev/null 2>&1 || true
+  adb "${adb_args[@]}" shell input keyevent KEYCODE_BACK >/dev/null 2>&1 || true
+  sleep 1
+}

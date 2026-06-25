@@ -88,6 +88,7 @@ fi
 
 "${ROOT}/tool/set_android_date.sh" "${DEVICE_DATE}" "${TIMEZONE}"
 "${ROOT}/tool/seed_qa_scenario.sh" "${SCENARIO_ID}"
+qa_prepare_for_maestro "${EMULATOR_SERIAL}"
 
 if [[ -n "${ARTIFACT_DIR_OVERRIDE}" ]]; then
   ARTIFACT_DIR="${ARTIFACT_DIR_OVERRIDE}"

@@ -67,6 +67,9 @@ fi
 "${ADB[@]}" shell am broadcast -a android.intent.action.TIME_SET >/dev/null 2>&1 || true
 "${ADB[@]}" shell am broadcast -a android.intent.action.TIMEZONE_CHANGED >/dev/null 2>&1 || true
 
+# Manual clock jumps can destabilize System UI; allow broadcasts to settle.
+sleep 2
+
 CURRENT="$("${ADB[@]}" shell date | tr -d '\r')"
 echo "Emulator ${SERIAL} clock set to ${TARGET_WALL} (${TIMEZONE})."
 echo "Device reports: ${CURRENT}"

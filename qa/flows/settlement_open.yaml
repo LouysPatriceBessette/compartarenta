@@ -1,11 +1,9 @@
 appId: com.compartarenta.compartarenta.dev
 ---
 - runFlow:
-    file: qa/flows/_enter_housing_hub.yaml
+    file: _enter_housing_hub.yaml
 - extendedWaitUntil:
     visible:
       id: "qa-housing-hub-settlement-due"
     timeout: 30000
-- takeScreenshot: 03_settlement_tile
 - assertVisible: "Entrer un règlement de dû"
-- takeScreenshot: 04_assertions

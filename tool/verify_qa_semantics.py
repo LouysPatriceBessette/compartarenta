@@ -103,7 +103,7 @@ def main() -> int:
     dart_count = len(collect_dart_ids(root / "mobile" / "lib", root))
 
     for warning in warnings:
-        print(f"WARN: {warning}", file=sys.stderr)
+        print(f"WARN: {warning}")
 
     if errors:
         for err in errors:
