@@ -17,4 +17,4 @@
 ## 3. Quality
 
 - [x] 3.1 Add widget/integration tests for: cold start → onboarding → main shell; kill mid-flow → resume.
-- [ ] 3.2 Add tests for permission request timing (requested only when needed).
+- [x] 3.2 Add tests for permission request timing (requested only when needed). *(Covered by `notification-permission-management`: reusable gate + widget tests in `notification_permission_gate_test.dart`; onboarding no longer requests at cold start.)*

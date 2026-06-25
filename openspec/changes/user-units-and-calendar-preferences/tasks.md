@@ -6,7 +6,7 @@
 - [x] 1.2 Onboarding preferences step: segmented control « Semaine débute le » + persist
 - [x] 1.3 Units settings: same control, editable
 - [x] 1.4 Pass week-start into `showDateRangePicker` / plan date pickers / recurrence flow
-- [ ] 1.5 Manual QA: same June 2026 range with Sunday vs Monday column headers
+- [ ] 1.5 Manual QA: same June 2026 range with Sunday vs Monday column headers *(not covered by Android E2E Maestro; calendar week-start only)*.
 
 ## Editable units (non-currency)
 

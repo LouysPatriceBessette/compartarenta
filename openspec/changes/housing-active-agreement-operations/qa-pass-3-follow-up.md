@@ -1,7 +1,7 @@
 # Pass 3 — final QA notes and follow-up backlog
 
 **Scope:** `housing-realized-expense-ledger` (pass 3), validated 2026-05-23.  
-**Status:** Pass 3 shipped; items below are **deferred** to detailed QA or later passes unless noted.
+**Status:** Pass 3 shipped. Items 1–5 below were **implemented** (see `tasks.md` Q.1–Q.5). Items 6–7 were **decided: will not implement** (2026-06-16).
 
 ## Validated (no action required for pass 3 commit)
 
@@ -16,34 +16,26 @@
 
 ### UX and visibility
 
-1. **Submitter pending visibility** — After proposing, the payer has no hub trace until the expense is `published` (monthly list is published-only). Add a surface for in-flight proposals (e.g. review list with “Waiting for others”, or a hub section).
-
-2. **Monthly expenses detail** — List shows amount and date only; add line title, payer, status, and navigation to review/detail.
-
-3. **Proof viewer** — Proofs are stored locally; relay carries metadata only. No UI to open/view attachments on submit or review screens.
-
-4. **Optional notification on accept** — Spec today: notify on propose (review) and on reject (originator). Consider “{name} accepted expense E” if product wants parity.
-
-5. **Document picker QA** — Camera and gallery exercised; file/document picker path not fully regression-tested.
+1. ~~**Submitter pending visibility**~~ — **Done** (Q.1): in-flight proposals surfaced for submitter.
+2. ~~**Monthly expenses detail**~~ — **Done** (Q.2): drill-down row.
+3. ~~**Proof viewer**~~ — **Done** (Q.3): local attachment viewer.
+4. ~~**Optional notification on accept**~~ — **Done** (Q.4): peer accept notification when prefs allow.
+5. ~~**Document picker QA**~~ — **Done** (Q.5): regression exercised.
 
 ### Rejection and resubmit policy
 
-6. **Abandon rejected expense** — ~~Allow the originator to **drop** a rejected proposal~~ **Decided 2026-06-16: will not implement.** Keep correct-and-resubmit only; rejected rows stay in audit history.
+6. **Abandon rejected expense** — **Decided 2026-06-16: will not implement.** Keep correct-and-resubmit only; rejected rows stay in audit history.
 
-7. **Resubmit requires changes** — ~~Block resubmit when nothing changed vs. the rejected version~~ **Decided 2026-06-16: will not implement.** Unchanged resubmit remains allowed (new proposal id, peers review again).
+7. **Resubmit requires changes** — **Decided 2026-06-16: will not implement.** Unchanged resubmit remains allowed (new proposal id, peers review again).
 
-## Suggested ordering (non-binding)
+## Android E2E (Maestro)
 
-| Priority | Item | Rationale |
-|----------|------|-----------|
-| P1 | 7 | Prevents noise and duplicate ledger rows |
-| P1 | 6 | Completes rejection lifecycle |
-| P2 | 1 | Submitter confidence after submit |
-| P2 | 3 | Trust in proof-based rejections |
-| P3 | 2, 4, 5 | Polish and optional notifications |
+Settlement-window hub gating is covered by Maestro scenarios under
+`housing-post-agreement-settlement-window` / Pass 7 in `tasks.md`.
+Realized-expense entry, review queue, and publish flows are **not** yet Maestro scenarios.
 
 ## Out of scope for this list
 
-- Pass 4+ hub placeholders (view plan, amendment, export/import).
+- Pass 4+ hub placeholders (view plan, amendment, export/import) — Pass 4 landed separately.
 - Proof file sync to peers (protocol / relay; larger than UI-only viewer).
-- Payment-responsible reminders (ledger spec D.3, optional).
+- Payment-responsible reminders (ledger spec D.3) — tracked in `housing-scheduled-payment-reminders`.

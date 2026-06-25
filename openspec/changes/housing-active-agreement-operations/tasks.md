@@ -68,6 +68,17 @@
 - [x] 6.1 Implement offer-flow task **1.23** (activation notification → hub). *(See offer-flow **1.23**.)*
 - [ ] 6.2 Post-activation onboarding swiper (deferred — see `repo-maintenance-backlog`).
 
+## Pass 7 — Android E2E QA (Maestro, debug Android)
+
+Single-device hub assertions after seed + clock push. Does **not** replace
+multi-device manual QA (Monica / Louys / Roberr). See `docs/qa-android-e2e.md`.
+
+- [x] E2E.1 Hub expense tile modes: `period_end_day`, `settlement_open`, `settlement_last_day`, `settlement_closed` *(settlement window — spec: `housing-post-agreement-settlement-window`)*.
+- [x] E2E.2 Renewal fork tile visible: `renewal_fork_visible`.
+- [x] E2E.3 Participation-change banner / withdrawal applied: `voluntary_withdrawal_ack_j5`, `voluntary_withdrawal_effective`.
+- [ ] E2E.4 Realized expense entry, review queue, and ledger publish flows.
+- [ ] E2E.5 Amendment send/accept and multi-device proposal delivery (still manual / integration harness).
+
 ## Dependencies
 
 - Stable unanimous activation (`housing-plan-proposal-offer-and-responses`).

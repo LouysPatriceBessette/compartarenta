@@ -17,3 +17,13 @@
 - [x] Inactive settlement transfer UI + balance graph extension
 - [x] Integration harness (3-participant happy paths)
 - [x] Penalty ledger system expense publishing
+
+## Android E2E QA (Maestro)
+
+Partial coverage via programmatic seed + hub assertions (not full vote/sync flows):
+
+- [x] E2E.1 Participation banner on last ack day: scenario `voluntary_withdrawal_ack_j5` (`qa-housing-participation-banner`).
+- [x] E2E.2 Withdrawal effective, no banner: scenario `voluntary_withdrawal_effective`.
+
+See `docs/qa-android-e2e.md`. Multi-participant relay mesh remains in
+`relay_housing_participation_change_mesh_test.dart` and manual QA.

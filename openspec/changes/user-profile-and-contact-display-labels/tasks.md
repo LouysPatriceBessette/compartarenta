@@ -1,4 +1,4 @@
-> **Status:** Specification drafted for review; no implementation tasks completed yet.
+> **Status:** Client-side implementation largely complete (Sections 1–3, 5). Relay appearance-notice envelopes (Section 6) and peer-appearance matrix UI (4.1) remain open.
 
 ## 1. Data model
 

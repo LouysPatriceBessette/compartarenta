@@ -38,6 +38,16 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Done
 
+- [x] **Android local E2E QA toolchain (Maestro + emulator + seed + orchestrator)** — Phases 0–3 (2026-06).
+  Pinned AVD, programmable clock (`set_android_date.sh`), debug-Android DB seed
+  (`qa_scenario_seed.dart`), nine housing end-of-agreement Maestro scenarios,
+  `Semantics.identifier` (`qa-*`) guardrails, `run_all_scenarios.sh` with
+  manifest discovery + aggregated HTML report (`qa_run_report.py`), Melos scripts
+  (`qa:run-scenario`, `qa:run-all-scenarios`, `qa:verify`). User guide:
+  `docs/qa-android-e2e.md`. **No CI** (manual runs only). Covers hub gating for
+  settlement window, renewal fork, participation-change banner, and expired proposal
+  archive — not multi-device relay, web, entitlement VPS clock, or push cron.
+
 - [x] **Housing — active plan in-force implementation** (spec: `housing-active-agreement-operations`).  
   Hub, realized expense entry/ledger, and amendment passes landed (2026); export/import (pass 5) remains open in that change’s `tasks.md`.
 
