@@ -9,7 +9,7 @@ The application and its maintainers do not provide legal advice. You are respons
 ## Licensing and payment failure behavior
 
 - **Free until active plan use**: the app remains free and unlimited until a plan is actively in use (see OpenSpec change `licensing-trial-and-plan-entitlement`).
-- **Trial**: once a plan becomes actively used, a 6-week trial begins with reminders (2 weeks remaining, 1 week remaining, then daily for the last 4 days).
+- **Trial**: once a plan becomes actively used, a 2-week trial begins with reminders (1 week remaining, then daily for the last 3 days).
 - **Individual licenses**: each participant must have a valid license for the plan to operate fully.
 - **Grace period**: if a required license becomes unpaid, the plan enters a 1-week grace period with daily notifications to all participants.
 - **Read-only mode**: after grace expiry, the plan is restricted to viewing past data only.

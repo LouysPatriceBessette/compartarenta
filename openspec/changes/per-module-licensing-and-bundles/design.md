@@ -1,6 +1,6 @@
 ## Context
 
-The product began as a single shared-housing experience. The roadmap now defines clearly separate functional modules (housing, vehicle, future), and users will be able to subscribe to any subset of them. The existing change `licensing-trial-and-plan-entitlement` already specifies a detailed entitlement lifecycle (free → trial → active-paid → grace → read-only) but is scoped to a single "plan" notion that effectively maps to housing. Rather than retrofit that change, this design introduces a **module-aware** entitlement layer that the housing rules become one instance of, and that future modules (starting with vehicle) will adopt as their own instance.
+The product began as a single shared-housing experience. The roadmap now defines clearly separate functional modules (housing, `vehicle`, `vehicle-sharing`, future), and users will be able to subscribe to any subset subject to `module-subscription-dependencies`. The existing change `licensing-trial-and-plan-entitlement` already specifies a detailed entitlement lifecycle (free → trial → active-paid → grace → read-only) but is scoped to a single "plan" notion that effectively maps to housing. Rather than retrofit that change, this design introduces a **module-aware** entitlement layer that the housing rules become one instance of, and that future modules (starting with vehicle) will adopt as their own instance.
 
 The platform stores impose specific constraints that drive the design:
 
@@ -22,7 +22,7 @@ These two store models do not natively converge on a "feature toggles inside one
 **Non-Goals:**
 
 - Pricing decisions (numeric prices and currency tiers are commercial, not specification).
-- Defining vehicle-specific licensing rules in this change (vehicle module work is deferred per roadmap).
+- Defining vehicle-specific licensing rules in this change (detailed triggers live in `vehicle-module` / `vehicle-sharing-module` when those modules ship).
 - Cross-platform price parity rules beyond what each store enforces.
 - Refund mechanics beyond what the stores expose.
 - Server-side entitlement verification beyond what `subscription-entitlement-minimal-server-state` already permits.
@@ -117,12 +117,12 @@ Rationale:
 
 This change is **additive** at the spec level and does not modify any existing capability. There is no migration of already-shipped paying users because no paying users exist yet (the housing licensing change has not been implemented at the time this design lands). When the housing licensing change is implemented, the per-module model defined here becomes its container.
 
-When vehicle eventually ships (deferred per roadmap), the steps are:
+When vehicle modules ship (deferred per roadmap), the steps are:
 
-1. Author a vehicle licensing change that defines vehicle-specific "active use" triggers and any vehicle-specific deviations from the housing lifecycle template.
-2. Provision a vehicle subscription group on Apple and a vehicle subscription product on Play.
-3. Provision a "Housing + Vehicle" bundle group + product if the bundle offer is to be enabled.
-4. Add the vehicle module to the on-device entitlement view, computing its effective state by the rule defined above.
+1. Author module-specific licensing changes if needed for "active use" triggers on `vehicle` and `vehicle-sharing`.
+2. Provision Apple subscription groups and Google Play products for **`vehicle`** and **`vehicle-sharing`** (separate groups/products).
+3. Provision bundle SKUs documented in the bundle policy (e.g., "Vehicle + Vehicle sharing", "Housing + Vehicle + Vehicle sharing").
+4. Add both modules to the on-device entitlement view, enforcing `module-subscription-dependencies` for owners who share out.
 
 ## Open Questions
 

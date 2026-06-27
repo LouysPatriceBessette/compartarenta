@@ -15,12 +15,16 @@ Before finishing onboarding, the user MUST select an avatar image to represent t
 - **THEN** the app shows 20 selectable avatar icons
 - **THEN** the user must choose exactly one to continue
 
-### Requirement: Initial configuration sets which plan(s) the user is configuring
-The app MUST support configuring shared housing plans only, car-sharing plans only, or both. During initial configuration, the user SHALL choose which plan types they want to set up now, with the ability to add the other later.
+### Requirement: Initial configuration sets which module(s) the user is configuring
+The app MUST support configuring shared housing only, owned vehicles only (`vehicle`), vehicle sharing only (`vehicle-sharing`), or any combination. During initial configuration, the user SHALL choose which areas they want to set up now, with the ability to add others later.
 
-#### Scenario: User chooses car sharing only
-- **WHEN** the user selects “Car sharing only” during initial configuration
-- **THEN** the app proceeds to car-sharing plan setup steps and does not require housing plan setup
+#### Scenario: User chooses vehicle sharing only
+- **WHEN** the user selects vehicle sharing only during initial configuration
+- **THEN** the app proceeds to sharing setup (borrow or accept invites) and does not require housing or owned-vehicle setup
+
+#### Scenario: User chooses owned vehicles only
+- **WHEN** the user selects owned vehicles only during initial configuration
+- **THEN** the app proceeds to `vehicle` setup and does not require `vehicle-sharing` or housing setup
 
 ### Requirement: Initial configuration establishes measurement and regional defaults
 During initial configuration, the app MUST establish defaults for:

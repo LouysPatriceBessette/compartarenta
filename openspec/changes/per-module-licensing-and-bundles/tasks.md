@@ -1,6 +1,6 @@
 ## 1. Specification and store-mapping reference
 
-- [ ] 1.1 Confirm the canonical module identifier list at launch (e.g., `housing`, `vehicle`) and document the rule for adding new modules.
+- [ ] 1.1 Confirm the canonical module identifier list at launch (e.g., `housing`, `vehicle`, `vehicle-sharing`) and document the rule for adding new modules.
 - [ ] 1.2 Author a `docs/store-mapping.md` reference that lists module → Apple subscription group identifier and module → Google Play subscription product identifier (placeholders until products are created).
 - [ ] 1.3 Document the bundle policy (which combinations are sold) and define the bundle product identifiers per platform.
 - [ ] 1.4 Cross-link this change with `licensing-trial-and-plan-entitlement` so the housing lifecycle remains the canonical instance of the per-module model.
@@ -12,6 +12,7 @@
 - [ ] 2.3 Implement the "most favorable source wins" rule combining per-module receipts, bundle receipt projection, and local lifecycle, with a documented deterministic evaluation order.
 - [ ] 2.4 Implement receipt validation paths that route per-module and bundle receipts into the correct module's effective state.
 - [ ] 2.5 Persist captured receipt metadata per module (Apple identifiers, Google Play identifiers) consistent with `store-product-mapping-per-module`.
+- [ ] 2.6 Implement `module-subscription-dependencies` (block owner-side sharing unless both `vehicle` and `vehicle-sharing` are entitled).
 
 ## 3. Module enable/disable and isolation
 

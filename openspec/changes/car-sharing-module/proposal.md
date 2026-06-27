@@ -1,39 +1,27 @@
-## Why
+## Superseded
 
-Compartarenta currently targets equitable shared apartment expenses, but many households also need a privacy-first, error-resistant way to share a car. Adding a dedicated car-sharing module enables accurate tracking (usage, fuel, maintenance, violations) and fair cost allocation driven by real usage.
+This change is **superseded** as of 2026-06-27. Do not implement against these specs.
 
-## What Changes
+| Former capability | Successor |
+| --- | --- |
+| `car-sharing-domain-model` | `vehicle-domain-model` + `vehicle-sharing-domain-model` |
+| `odometer-logging` | `vehicle-module` → `odometer-logging` |
+| `fuel-purchase-tracking` | `vehicle-module` → `fuel-purchase-tracking` |
+| `consumption-and-usage-metrics` | `vehicle-module` → `vehicle-consumption-metrics` + `vehicle-sharing-module` → `vehicle-sharing-usage-metrics` |
+| `car-expense-sharing` | `vehicle-sharing-module` → `vehicle-expense-sharing` |
+| `maintenance-and-repairs-log` | `vehicle-module` → `maintenance-and-repairs-log` |
+| `traffic-violations-log` | `vehicle-module` → `traffic-violations-log` |
+| `car-reservations` | **Deferred** — see `dev-ideas/2026-06-27-wish-list.md` § Vehicle reservations |
 
-- Add a second module for **car sharing** alongside the existing shared-expenses (apartment) context.
-- Introduce vehicle-specific tracking:
-  - odometer logs (before/after each use)
-  - fuel purchases and derived consumption metrics
-  - maintenance expenses
-  - traffic tickets / violations log
-- Calculate usage ratios (per person) and consumption-per-km to support fair cost sharing.
-- Add a reservation/booking capability to reserve the car in advance.
-- Keep the product oriented to equitable sharing with minimal manual errors, consistent with the project’s privacy-first direction.
+**New changes:**
 
-## Capabilities
+- `openspec/changes/vehicle-module/`
+- `openspec/changes/vehicle-sharing-module/`
 
-### New Capabilities
+**Licensing:** two modules — `vehicle` (owner) and `vehicle-sharing` (collaboration / borrow). See `per-module-licensing-and-bundles` → `module-subscription-dependencies`.
 
-- `car-sharing-domain-model`: Data model for vehicles, participants, trips/uses, expenses, and allocations in the car-sharing context.
-- `odometer-logging`: Capture odometer readings (before/after) per car use, validate monotonicity, and derive distance traveled.
-- `fuel-purchase-tracking`: Record fuel purchases (amount, cost, date, optional liters/volume) and link to usage windows for consumption calculations.
-- `consumption-and-usage-metrics`: Compute consumption per km and per-user usage ratio; expose these as inputs to allocation rules.
-- `car-expense-sharing`: Allocate fuel, maintenance, and other shared car expenses using configurable rules (equal split, usage-weighted, fixed ratios with adjustment suggestions).
-- `maintenance-and-repairs-log`: Track maintenance events/expenses (category, vendor, notes, receipts metadata) and share them across participants.
-- `traffic-violations-log`: Record tickets/infractions (date, type, amount, responsible user if known) and include in settlement.
-- `car-reservations`: Reserve the vehicle for a time range; prevent conflicts; support basic recurring rules later.
+## Original intent (historical)
 
-### Modified Capabilities
+The original proposal introduced a monolithic "car sharing" module with reservations. Product direction now splits **owner** (`vehicle`) and **sharing** (`vehicle-sharing`) licenses, defers reservations, and uses "vehicle" terminology for all conveyance kinds (car, truck, motorcycle, boat).
 
-<!-- None yet: this change introduces a new module rather than modifying existing spec-level behaviors. -->
-
-## Impact
-
-- **Mobile app UX**: New navigation entries/screens for car sharing (vehicle list, usage log, expenses, reservations, metrics).
-- **Data storage**: New local entities and derived/calculated fields; indexing for date-based queries.
-- **Business rules**: Validation (odometer monotonicity), conflict handling (reservations), and allocation computations.
-- **Future sync**: Car-sharing data should align with privacy-first sync constraints (local-first, verifiable derivations) but this change focuses on app-level capabilities/specs first.
+See the superseding proposals for current requirements.

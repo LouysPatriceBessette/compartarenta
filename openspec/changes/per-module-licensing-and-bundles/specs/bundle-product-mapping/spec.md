@@ -1,16 +1,21 @@
 ## ADDED Requirements
 
 ### Requirement: Combined bundles are modeled as their own subscription product
-A combined bundle offer (e.g., "Housing + Vehicle") SHALL be modeled as **its own subscription product** on each platform:
+A combined bundle offer (e.g., "Housing + Vehicle", "Vehicle + Vehicle sharing", "Housing + Vehicle + Vehicle sharing") SHALL be modeled as **its own subscription product** on each platform:
 - On Apple, the bundle product SHALL live in its **own dedicated subscription group**, separate from any single-module group.
 - On Google Play, the bundle SHALL be its **own subscription product** identifier, separate from any single-module product.
 
 A valid bundle receipt SHALL project effective per-module entitlement for every module the bundle includes (per `module-entitlement-model`).
 
-#### Scenario: Buying the bundle grants both included modules
-- **WHEN** a user purchases a valid "housing + vehicle" bundle subscription
-- **THEN** the effective entitlement for `housing` is at least `active-paid` (subject to bundle validity)
+#### Scenario: Buying the bundle grants all included modules
+- **WHEN** a user purchases a valid bundle subscription that lists `housing` and `vehicle` as included modules
+- **THEN** the effective entitlement for each included module is at least `active-paid` (subject to bundle validity)
+
+#### Scenario: Vehicle owner bundle grants both vehicle modules
+- **WHEN** a user purchases a valid "vehicle + vehicle-sharing" bundle subscription
 - **THEN** the effective entitlement for `vehicle` is at least `active-paid` (subject to bundle validity)
+- **THEN** the effective entitlement for `vehicle-sharing` is at least `active-paid` (subject to bundle validity)
+- **THEN** the user may offer their vehicles for sharing per `module-subscription-dependencies`
 
 #### Scenario: Bundle group is dedicated on Apple
 - **WHEN** a bundle product exists on Apple
@@ -32,8 +37,20 @@ The team SHALL maintain a documented **bundle policy** stating which module comb
 - **THEN** the bundle policy is updated explicitly to list which new combinations (if any) are added as bundle SKUs
 - **THEN** no undocumented bundle SKU appears on either store
 
-### Requirement: Switching between per-module subscriptions and a bundle does not double-bill
-The product flow for switching from per-module subscriptions to a bundle SHALL rely on the platform's own subscription change mechanisms (upgrade/cancel paths), and the app SHALL surface clear guidance so the user does not end up paying for both per-module subscriptions and the bundle simultaneously due to misunderstanding.
+### Requirement: Store upgrade paths follow platform rules only
+The product SHALL offer **`vehicle`** and **`vehicle-sharing`** as separate subscriptions **and** as documented bundle SKUs (e.g., "Vehicle + Vehicle sharing"). Users MAY purchase modules independently or upgrade from `vehicle` to a bundle that adds sharing, using **only** the subscription change mechanisms provided by Apple and Google.
+
+The app MUST NOT impose additional artificial restrictions beyond what the stores already enforce (e.g., the app must not block a store-valid upgrade from standalone `vehicle` to a `vehicle` + `vehicle-sharing` bundle).
+
+#### Scenario: User upgrades from vehicle to vehicle-plus-sharing bundle
+- **WHEN** a user with an active standalone `vehicle` subscription initiates a store-supported upgrade to a bundle that includes `vehicle-sharing`
+- **THEN** the app surfaces store-native upgrade guidance without extra gating
+- **THEN** effective entitlement for both modules follows receipt projection rules after the store confirms the purchase
+
+#### Scenario: User buys modules separately
+- **WHEN** a user purchases `vehicle` and later purchases `vehicle-sharing` as separate products
+- **THEN** both subscriptions can remain active simultaneously per platform rules
+- **THEN** PP/PE features unlock when both are entitled on the Propriétaire device
 
 #### Scenario: Switch guidance is shown
 - **WHEN** a user with at least one per-module subscription opens the bundle purchase flow

@@ -17,7 +17,7 @@ Notifications **not** fired directly by a peer envelope arriving in the inbox (t
 | 7 | Same | Trial **one-week** reminder | Relevant participants | Trial has **7 days** remaining | Once at −7d | **Defined** |
 | 8 | Same | Trial **final three days** | Relevant participants | Days 3, 2, 1 remaining inclusive | Daily | **Defined** |
 | 9 | `delinquency-grace-readonly-and-export` | Delinquency **daily** grace | **All** participants | Plan in grace for unpaid required license | Daily until restored or grace ends | **Defined** (1-week grace) |
-| 10 | `car-sharing-module` `consumption-and-usage-metrics` | Full-tank **suggestion** | User who recorded fuel | Non-full entry **and** last full-tank anchor **> 1 month** | On entry (not periodic) | Client schedules/shows at event |
+| 10 | `vehicle-module` `vehicle-consumption-metrics` | Full-tank **suggestion** | Owner who recorded fuel | Non-full entry **and** last full-tank anchor **> 1 month** | On entry (not periodic) | Client schedules/shows at event |
 | 11 | `housing-active-agreement-operations` qa-pass-3 | Payment-responsible reminders (D.3) | Per #1–2 | Not implemented | — | Marked done for peer-submit only; D.3 still **deferred** |
 
 ### Constraints
@@ -41,7 +41,7 @@ Notifications **not** fired directly by a peer envelope arriving in the inbox (t
 **Non-Goals:**
 
 - Budget-cap and one-off housing lines.
-- Trial / licensing / car-sharing schedulers.
+- Trial / licensing / vehicle module schedulers.
 - **Web** closed-app scheduled delivery.
 - Plaintext expense titles, amounts, or payer names on the relay.
 

@@ -1,10 +1,13 @@
 ## Why
 
-Currently the app assumes a single, monolithic subscription that gates "the plan". The product is evolving to support **multiple independent modules** (housing, vehicle, and others later). Users will want to subscribe to just one module, or to several, and may eventually be offered a combined bundle at a reduced price. The existing change `licensing-trial-and-plan-entitlement` covers the housing-plan licensing rules and stays scoped to housing. We need a **separate, module-aware licensing capability** that defines how per-module subscriptions are modeled in the platform stores (Google Play, Apple App Store), how the app enforces per-module entitlement on-device, and how future combined bundle offers can be introduced without re-architecting.
+Currently the app assumes a single, monolithic subscription that gates "the plan". The product is evolving to support **multiple independent modules** (housing, `vehicle`, `vehicle-sharing`, and others later). Users will want to subscribe to just one module, or to several, and may eventually be offered a combined bundle at a reduced price.
+
+The **`vehicle`** and **`vehicle-sharing`** modules are separate subscriptions with a **dependency**: owners who share their vehicles need both; borrowers may use **`vehicle-sharing`** alone to participate on someone else's vehicle (see `module-subscription-dependencies`). The existing change `licensing-trial-and-plan-entitlement` covers the housing-plan licensing rules and stays scoped to housing. We need a **separate, module-aware licensing capability** that defines how per-module subscriptions are modeled in the platform stores (Google Play, Apple App Store), how the app enforces per-module entitlement on-device, and how future combined bundle offers can be introduced without re-architecting.
 
 ## What Changes
 
-- Introduce a **module entitlement model**: each functional module (`housing`, `vehicle`, future modules) is gated by its own independently-purchasable subscription.
+- Introduce a **module entitlement model**: each functional module (`housing`, `vehicle`, `vehicle-sharing`, future modules) is gated by its own independently-purchasable subscription where applicable.
+- Define **module subscription dependencies** between `vehicle` and `vehicle-sharing` (owners who share need both; borrowers may hold `vehicle-sharing` only).
 - Define **store product mapping**:
   - **Apple App Store**: one **subscription group per module** (so users can hold simultaneous active subscriptions across modules; App Store enforces "one active per group" within each group).
   - **Google Play**: one **subscription product per module**, optionally exposing multiple base plans per module (e.g., monthly, prepaid, annual). Combined offers MAY later use Play's "Subscription with add-ons" capability (auto-renewing only, same billing period, regional limits).
@@ -20,6 +23,7 @@ Currently the app assumes a single, monolithic subscription that gates "the plan
 ### New Capabilities
 
 - `module-entitlement-model`: Define what a "module" is in the product, how entitlement is represented in-app, and how modules are isolated from one another.
+- `module-subscription-dependencies`: Define which module pairs have entitlement dependencies (notably `vehicle` + `vehicle-sharing` for owners who share out).
 - `store-product-mapping-per-module`: Define how each module maps to a Google Play subscription product and an Apple App Store subscription group, including constraints from each platform.
 - `bundle-product-mapping`: Define how optional combined offers (e.g., "Housing + Vehicle") are modeled on each platform without preventing future modules from being added.
 - `module-enable-disable-and-data-isolation`: Define enable/disable behavior, per-module data isolation, and per-module export independent from other modules' entitlement state.

@@ -3,6 +3,11 @@
 ### Requirement: Each module maps to its own Apple subscription group
 On the Apple App Store, each module SHALL be sold as a subscription in **its own subscription group**, separate from any other module's group. This isolation ensures that purchasing or upgrading within one module's group does not auto-terminate a subscription belonging to a different module (Apple enforces "one active subscription per group at a time").
 
+#### Scenario: Buying vehicle-sharing does not cancel housing or vehicle on Apple
+- **WHEN** a user with active `housing` and `vehicle` subscriptions purchases `vehicle-sharing` on iOS
+- **THEN** the existing subscriptions remain active
+- **THEN** the user may use borrower features per `module-subscription-dependencies`
+
 #### Scenario: Buying vehicle does not cancel housing on Apple
 - **WHEN** a user with an active `housing` subscription purchases a `vehicle` subscription on iOS
 - **THEN** the `housing` subscription remains active and unmodified

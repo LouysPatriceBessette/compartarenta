@@ -12,7 +12,7 @@ Three things shifted the order:
 2. Participants will be modeled as **Contacts** in a new top-level area. Modules will reference Contacts rather than author inline temporary participant rows. This becomes the first product feature that requires the encrypted relay to actually be running end-to-end.
 3. The relay (already specified at the product-semantics level in `privacy-first-sync-architecture`) needs its concrete deployment plus a public audit posture before any feature can use it. That work is captured in the new `relay-server-infrastructure-and-audit` change.
 
-The vehicle module is **not advanced enough** to spend time renaming or restructuring now; renaming "car" → "vehicle" is deferred and will happen alongside the vehicle module's actual implementation work, after the housing module is complete.
+The vehicle modules are **not advanced enough** to spend time on implementation now; **spec restructuring** (split into `vehicle-module` and `vehicle-sharing-module`, terminology `vehicle` / `vehicle-sharing`) landed in 2026-06-27. Code implementation remains deferred until after the housing module is complete.
 
 ## Sequence
 
@@ -35,14 +35,21 @@ Depends on (will require, at the time the handshake actually runs):
 - Add per-module display alias and historical display snapshots where useful.
 - Track this in a follow-up housing-adoption change (to be created when this step starts). That change references `contacts-module-integration` rather than redefining what a Contact is.
 
-### Step 3 — Vehicle module adopts Contacts and is renamed to "vehicle"
+### Step 3 — Vehicle modules (`vehicle-module`, `vehicle-sharing-module`)
 
-**Deferred until the vehicle module is actually advanced enough to spend time on.** No work is scheduled now.
+**Deferred for implementation** until the vehicle domain is ready to ship. **Specs are split** (2026-06-27):
 
-When this step is started, it will:
-- Rename existing `car-sharing-*` capability identifiers to `vehicle-*`.
-- Route vehicle participants through the Contacts picker.
-- Drop inline temporary participant authoring from vehicle flows.
+| Module | Identifier | Role |
+| --- | --- | --- |
+| **Véhicule** | `vehicle` | Owner: register vehicles (car, truck, motorcycle, boat, …), full history, maintenance reminders, export on sale |
+| **Partage de véhicule** | `vehicle-sharing` | Collaboration: owners who share need `vehicle` + `vehicle-sharing`; borrowers may hold `vehicle-sharing` only |
+
+When this step starts:
+
+- Implement `vehicle-module` and `vehicle-sharing-module` (supersede `car-sharing-module`).
+- Route participants through the Contacts picker (`contacts-module-integration`).
+- Enforce `module-subscription-dependencies` from `per-module-licensing-and-bundles`.
+- Reservations remain wish-list only.
 
 ### Step 4 — Relay server infrastructure and audit (`relay-server-infrastructure-and-audit`)
 
@@ -91,7 +98,9 @@ After Steps 1 and 2 land, attention focuses on completing housing:
 | `mobile-app-store-release`                        | Continues to apply. Per-module subscriptions will reference its release process.                                                                                 | Not impacted by this roadmap |
 | `expense-plan-contract-model`                     | Belongs to Step 5 (complete housing).                                                                                                                            | In progress |
 | `licensing-trial-and-plan-entitlement`            | Belongs to Step 5 (complete housing). Now treated as the housing **instance** of the per-module model.                                                          | Not started |
-| `car-sharing-module`                              | Belongs to Step 3, which is deferred. No work scheduled until vehicle is ready.                                                                                  | Specified, not implemented |
+| `car-sharing-module`                              | **Superseded** by `vehicle-module` + `vehicle-sharing-module`. Spec only; not implemented.                                                                       | Superseded (2026-06-27) |
+| `vehicle-module`                                  | Step 3 — owner-side vehicle domain.                                                                                                                              | Specified, not implemented |
+| `vehicle-sharing-module`                          | Step 3 — sharing, borrower usage, allocations.                                                                                                                   | Specified, not implemented |
 | `ui-localization-fr-en-es`                        | Cross-cutting; tracked separately.                                                                                                                                | In progress |
 | **NEW** `contacts-module`                         | Step 1.                                                                                                                                                          | Proposed |
 | **NEW** `relay-server-infrastructure-and-audit`   | Step 4 (with dev-environment deployment in parallel with Step 1).                                                                                                | Proposed |
@@ -104,7 +113,7 @@ After Steps 1 and 2 land, attention focuses on completing housing:
 ## What this roadmap deliberately does NOT do
 
 - It does not change the product-level semantics of the relay (those live in `privacy-first-sync-architecture` and stay as-is).
-- It does not rename the existing `car-sharing-module` change or its capabilities. That work is part of Step 3 when Step 3 actually starts.
+- It does not rename or implement the superseded `car-sharing-module` change. Owner/sharing split lives in `vehicle-module` and `vehicle-sharing-module`.
 - It does not lock in pricing decisions. Per-module and bundle prices are commercial decisions made before each module ships.
 - It does not commit to specific dates. Sequencing is a partial order with named gates, not a schedule.
 

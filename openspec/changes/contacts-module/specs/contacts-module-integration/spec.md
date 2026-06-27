@@ -25,9 +25,9 @@ After a module has adopted Contacts, the flow for adding a participant to that m
 A Contact whose kind is `connected` SHALL be eligible to be referenced as a participant by any module the local user enables. Eligibility is not module-specific.
 
 #### Scenario: Same connected contact appears in housing and vehicle pickers
-- **WHEN** the user has a connected Contact and both `housing` and `vehicle` are enabled
-- **THEN** that Contact is selectable in both modules' participant pickers
-- **THEN** picking the Contact in one module does not enroll the Contact in the other module
+- **WHEN** the user has a connected Contact and `housing`, `vehicle`, and/or `vehicle-sharing` are enabled as applicable
+- **THEN** that Contact is selectable in each enabled module's participant pickers
+- **THEN** picking the Contact in one module does not enroll the Contact in another module
 
 ### Requirement: Local-only contacts MUST NOT be selected as module co-participants
 A Contact whose kind is `local-only` SHALL NOT appear in module participant pickers and SHALL NOT be accepted when persisting new co-participant rows for relay-backed collaboration. **Rationale (commercial):** every co-participant is expected to use the app on their own account with a valid entitlement; connection proves the relationship and supplies routing material for encrypted relay traffic.
@@ -71,9 +71,9 @@ The Contact remains the **authoritative** source for current peer identity; part
 ### Requirement: Modules MAY define a per-module display alias
 A module MAY allow the user to set a per-module display alias for a participant (e.g., a nickname used only inside that module's UI). The alias SHALL be stored on the module participant row, not on the Contact. The alias SHALL NOT override the Contact's authoritative display name elsewhere in the app.
 
-#### Scenario: Vehicle alias does not leak into housing
-- **WHEN** the user sets a vehicle-specific alias for a Contact
-- **THEN** the vehicle UI shows the alias for that participant
+#### Scenario: Vehicle-sharing alias does not leak into housing
+- **WHEN** the user sets a vehicle-sharing-specific alias for a Contact
+- **THEN** the vehicle-sharing UI shows the alias for that participant
 - **THEN** the housing UI continues to show the Contact's authoritative display name
 
 ### Requirement: Connection state in module pickers

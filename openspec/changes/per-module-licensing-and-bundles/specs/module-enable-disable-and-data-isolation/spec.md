@@ -3,10 +3,11 @@
 ### Requirement: Each module can be enabled or disabled by the user independently
 The app SHALL expose a **per-module enable/disable toggle** in settings (or an equivalent product surface). The toggle SHALL operate independently per module: enabling or disabling one module SHALL NOT change the enable/disable state of any other module.
 
-#### Scenario: User disables vehicle but keeps housing enabled
-- **WHEN** a user toggles `vehicle` off in settings
-- **THEN** the `vehicle` UI is removed from the main shell
-- **THEN** the `housing` UI remains unchanged and fully usable
+#### Scenario: User disables vehicle-sharing but keeps housing and vehicle enabled
+- **WHEN** a user toggles `vehicle-sharing` off in settings
+- **THEN** the `vehicle-sharing` UI is removed from the main shell
+- **THEN** the user cannot invite borrowers or log usage as a borrower until re-enabled
+- **THEN** owned `vehicle` data remains on device unchanged
 
 ### Requirement: Disabling a module retains its local data
 Disabling a module SHALL NOT delete or alter the module's on-device data. Re-enabling the module SHALL restore access to all of that data without loss, consistent with `data-locality-and-client-storage`.
@@ -18,10 +19,10 @@ Disabling a module SHALL NOT delete or alter the module's on-device data. Re-ena
 ### Requirement: Disabling a module stops outbound relay traffic for that module
 While a module is disabled, the app SHALL stop sending and accepting **module-scoped** relay traffic for that module (proposals, accept/reject, amendments). Relay traffic belonging to other modules and to non-module concerns (e.g., contact handshake) SHALL be unaffected.
 
-#### Scenario: Disabled vehicle does not emit vehicle-scoped proposals
-- **WHEN** `vehicle` is disabled on a user's device
-- **THEN** the device does not send new vehicle proposals over the relay
-- **THEN** inbound vehicle proposals received on this device are not surfaced to the user until vehicle is re-enabled
+#### Scenario: Disabled vehicle-sharing does not emit sharing-scoped proposals
+- **WHEN** `vehicle-sharing` is disabled on a user's device
+- **THEN** the device does not send new vehicle-sharing proposals over the relay
+- **THEN** inbound vehicle-sharing proposals are not surfaced until `vehicle-sharing` is re-enabled
 
 ### Requirement: Disabling a module does not cancel its store subscription
 The in-app enable/disable toggle SHALL NOT cancel the user's subscription on the platform store. The app SHALL communicate this explicitly in the toggle copy and link to the platform's subscription management UI when relevant.

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: The product is organized into independently-purchasable modules
-The product SHALL be organized as a set of named **modules** (e.g., `housing`, `vehicle`, and future modules). Each module SHALL be independently purchasable through the platform stores and SHALL have its own entitlement state on-device, evaluated independently from other modules.
+The product SHALL be organized as a set of named **modules** (e.g., `housing`, `vehicle`, `vehicle-sharing`, and future modules). Each module SHALL have its own entitlement state on-device, evaluated independently from other modules. Modules SHALL be independently purchasable through the platform stores **except where `module-subscription-dependencies` defines a functional dependency** (e.g., sharing out a vehicle requires both `vehicle` and `vehicle-sharing`).
 
 #### Scenario: A user holds entitlement on one module without holding entitlement on another
 - **WHEN** a user has an active paid subscription for `housing` and no subscription for `vehicle`
