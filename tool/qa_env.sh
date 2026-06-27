@@ -126,6 +126,51 @@ qa_adb_target_serial() {
   return 1
 }
 
+qa_apk_contains_libflutter_for_abi() {
+  local apk="$1"
+  local lib_abi="$2"
+  unzip -Z1 "${apk}" "lib/${lib_abi}/libflutter.so" 2>/dev/null \
+    | grep -Fxq "lib/${lib_abi}/libflutter.so"
+}
+
+# Install the QA debug APK on one emulator. Uninstalls first so a prior
+# `flutter run` on another ABI cannot leave arm64 libflutter.so in app_lib/.
+qa_install_qa_apk_on_serial() {
+  local serial="$1"
+  local apk="${2:-${COMPARTARENTA_QA_APK_PATH}}"
+
+  if [[ "${serial}" != emulator-* ]]; then
+    echo "Refusing to install QA APK on a non-emulator device (${serial})." >&2
+    return 1
+  fi
+  if [[ ! -f "${apk}" ]]; then
+    echo "APK not found: ${apk}" >&2
+    echo "Build first: ./tool/melosw run qa:build-apk" >&2
+    return 1
+  fi
+
+  qa_wait_for_boot_completed "${serial}"
+
+  local lib_abi
+  lib_abi="$(adb -s "${serial}" shell getprop ro.product.cpu.abi | tr -d '\r')"
+  if [[ -z "${lib_abi}" ]]; then
+    echo "Could not read ro.product.cpu.abi from ${serial}." >&2
+    return 1
+  fi
+  if ! qa_apk_contains_libflutter_for_abi "${apk}" "${lib_abi}"; then
+    echo "APK missing lib/${lib_abi}/libflutter.so required by ${serial}." >&2
+    echo "Rebuild: ./tool/melosw run qa:build-apk" >&2
+    echo "(QA APK targets android-x64 for x86_64 emulators.)" >&2
+    return 1
+  fi
+
+  echo "Uninstalling prior ${COMPARTARENTA_QA_APP_ID} on ${serial}..."
+  adb -s "${serial}" uninstall "${COMPARTARENTA_QA_APP_ID}" >/dev/null 2>&1 || true
+
+  echo "Installing ${apk} on ${serial} (ABI ${lib_abi})..."
+  adb -s "${serial}" install -r "${apk}"
+}
+
 qa_require_emulator_target() {
   local serial
   serial="$(qa_adb_target_serial)" || {

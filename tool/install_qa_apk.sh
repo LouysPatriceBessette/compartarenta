@@ -4,6 +4,7 @@
 # Usage:
 #   ./tool/install_qa_apk.sh
 #   ./tool/install_qa_apk.sh /path/to/custom.apk
+#   COMPARTARENTA_QA_ADB_SERIAL=emulator-5554 ./tool/install_qa_apk.sh
 
 set -euo pipefail
 
@@ -15,25 +16,14 @@ qa_export_android_sdk_paths
 qa_require_command adb
 
 APK="${1:-${COMPARTARENTA_QA_APK_PATH}}"
-if [[ ! -f "${APK}" ]]; then
-  echo "APK not found: ${APK}" >&2
-  echo "Run ./tool/build_qa_apk.sh first." >&2
-  exit 1
+
+SERIAL="${COMPARTARENTA_QA_ADB_SERIAL:-}"
+if [[ -z "${SERIAL}" ]]; then
+  SERIAL="$(qa_adb_target_serial)" || {
+    echo "No adb device in 'device' state. Start the emulator first." >&2
+    exit 1
+  }
 fi
 
-SERIAL="$(qa_adb_target_serial)" || {
-  echo "No adb device in 'device' state. Start the emulator first." >&2
-  exit 1
-}
-
-if [[ "${SERIAL}" != emulator-* ]]; then
-  echo "Refusing to install on a non-emulator device (${SERIAL})." >&2
-  echo "Disconnect the physical device or stop it from claiming adb default." >&2
-  exit 1
-fi
-
-qa_wait_for_boot_completed "${SERIAL}"
-
-echo "Installing ${APK} on ${SERIAL} (${COMPARTARENTA_QA_APP_ID})"
-adb -s "${SERIAL}" install -r "${APK}"
+qa_install_qa_apk_on_serial "${SERIAL}" "${APK}"
 echo "Install complete."

@@ -32,8 +32,8 @@ if adb devices | awk '/^emulator-[0-9]+\tdevice$/{found=1} END{exit !found}'; th
   exit 0
 fi
 
-if adb devices | awk '/^emulator-[0-9]+\t/{print $1; exit}'; then
-  PENDING="$(adb devices | awk '/^emulator-[0-9]+\t/{print $1; exit}')"
+PENDING="$(adb devices | awk '/^emulator-[0-9]+\t/{print $1; exit}')"
+if [[ -n "${PENDING}" ]]; then
   echo "Waiting for existing emulator ${PENDING} to become ready..."
   SERIAL="$(qa_wait_for_emulator_serial)"
   qa_wait_for_boot_completed "${SERIAL}"
