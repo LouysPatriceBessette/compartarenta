@@ -8,6 +8,7 @@ import '../../housing/expense_form/expense_amount_parse.dart';
 import '../../housing/realized_expense/expense_payment_chart_carry.dart';
 import '../../housing/realized_expense/proof_attachment_export.dart';
 import '../../housing/realized_expense/proof_attachment_storage.dart';
+import '../../housing/realized_expense/proof_expense_file_name.dart';
 import '../../housing/realized_expense/proof_pick_flow.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../relay/handshake_orchestrator.dart';
@@ -179,8 +180,12 @@ class _HousingRealizedExpenseFormScreenState
     }
   }
 
-  Future<void> _addProof() async {
-    final stored = await pickAndStoreProof(context);
+  Future<void> _addProof(_FormContext ctx) async {
+    final scope = HousingProofStorageScope(
+      agreementPeriodStart: ctx.periodStart,
+      agreementPeriodEnd: ctx.periodEnd,
+    );
+    final stored = await pickAndStoreProof(context, scope: scope);
     if (stored == null || !mounted) return;
     setState(() => _attachments.add(_AttachmentUi(stored: stored)));
   }
@@ -420,6 +425,39 @@ class _HousingRealizedExpenseFormScreenState
     setState(() => _submitting = true);
     try {
       final selfId = selfParticipantIdForPlan(widget.planId);
+      final proofScope = HousingProofStorageScope(
+        agreementPeriodStart: ctx.periodStart,
+        agreementPeriodEnd: ctx.periodEnd,
+      );
+      PlanLine? selectedLine;
+      if (RealizedExpenseKind.usesPlanLine(_kind)) {
+        for (final line in ctx.planLines) {
+          if (line.id == _planLineId) {
+            selectedLine = line;
+            break;
+          }
+        }
+      }
+      final lineTitle = lineLabelForProofFileName(
+        kind: _kind,
+        planLineTitle: selectedLine?.title,
+        description: _descriptionController.text,
+      );
+      final submittedAt = DateTime.now();
+      final finalizedProofs =
+          await ProofAttachmentStorage.finalizeProofsForSubmission(
+            proofs: [for (final a in _attachments) a.stored],
+            scope: proofScope,
+            paymentDate: _paymentDate!,
+            submittedAt: submittedAt,
+            lineTitleLabel: lineTitle,
+            amountMinor: minor,
+          );
+      _attachments
+        ..clear()
+        ..addAll(
+          finalizedProofs.map((stored) => _AttachmentUi(stored: stored)),
+        );
       final saved = await _repo.saveDraft(
         packageId: widget.packageId,
         planId: widget.planId,
@@ -648,7 +686,7 @@ class _HousingRealizedExpenseFormScreenState
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: _submitting ? null : _addProof,
+                  onPressed: _submitting ? null : () => _addProof(ctx),
                   icon: const Icon(Icons.add_photo_alternate_outlined),
                   label: Text(l10n.housingRealizedExpenseAddProof),
                 ),

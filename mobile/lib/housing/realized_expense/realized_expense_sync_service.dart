@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import '../../db/app_database.dart';
 import '../housing_participant_snapshot_map.dart';
 import '../housing_plan_peer_contacts.dart';
+import 'proof_attachment_storage.dart';
 import 'proof_transport_payload.dart';
 import 'realized_expense_line_snapshot.dart';
 import 'realized_expense_participants.dart';
@@ -286,10 +287,19 @@ class RealizedExpenseSyncService {
     final repo = RealizedExpenseRepository(_db);
     final attachments = payload['attachments'];
     if (attachments is List) {
+      final agreement = await _db.getAgreementForPlan(target.planId);
+      final proofScope = agreement == null
+          ? null
+          : HousingProofStorageScope(
+              agreementPeriodStart: agreement.periodStart,
+              agreementPeriodEnd: agreement.periodEnd,
+            );
       for (final raw in attachments) {
         if (raw is! Map) continue;
         final name = raw['display_file_name'] as String? ?? 'proof';
-        final persistedPath = await importSyncedProofAttachmentPath(raw);
+        final persistedPath = proofScope == null
+            ? null
+            : await importSyncedProofAttachmentPath(raw, scope: proofScope);
         await _db.into(_db.realizedExpenseAttachments).insert(
               RealizedExpenseAttachmentsCompanion.insert(
                 id: repo.newAttachmentId(),

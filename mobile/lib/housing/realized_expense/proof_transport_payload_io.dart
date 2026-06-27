@@ -15,24 +15,37 @@ Future<Map<String, dynamic>> buildSyncedProofAttachmentPayload(
   };
   final path = attachment.filePath.trim();
   if (path.isEmpty) return out;
-  final file = File(path);
-  if (!await file.exists()) return out;
-  final bytes = await file.readAsBytes();
-  if (bytes.isEmpty) return out;
-  out['bytes_b64'] = base64Encode(bytes);
-  final mediaType = _mediaTypeForName(attachment.displayFileName);
-  out['media_type'] = mediaType;
+  if (path.startsWith('data:')) return out;
+  try {
+    final List<int> bytes;
+    if (path.startsWith('content://')) {
+      bytes = await ProofAttachmentStorage.readProofBytes(path);
+    } else {
+      final file = File(path);
+      if (!await file.exists()) return out;
+      bytes = await file.readAsBytes();
+    }
+    if (bytes.isEmpty) return out;
+    out['bytes_b64'] = base64Encode(bytes);
+    out['media_type'] = _mediaTypeForName(attachment.displayFileName);
+  } on Object {
+    return out;
+  }
   return out;
 }
 
-Future<String?> importSyncedProofAttachmentPath(Map<dynamic, dynamic> raw) async {
+Future<String?> importSyncedProofAttachmentPath(
+  Map<dynamic, dynamic> raw, {
+  required HousingProofStorageScope scope,
+}) async {
   final bytesBase64 = raw['bytes_b64'] as String?;
   if (bytesBase64 == null || bytesBase64.isEmpty) return null;
   final displayFileName = raw['display_file_name'] as String? ?? 'proof';
   try {
-    final stored = await ProofAttachmentStorage.persistFromBytes(
+    final stored = await ProofAttachmentStorage.persistImportedSubmittedProof(
       bytes: base64Decode(bytesBase64),
-      displayFileName: displayFileName,
+      scope: scope,
+      submittedFileName: displayFileName,
     );
     return stored.filePath;
   } on Object {

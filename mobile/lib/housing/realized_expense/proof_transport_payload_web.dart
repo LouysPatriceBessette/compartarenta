@@ -1,4 +1,5 @@
 import '../../db/app_database.dart';
+import 'proof_attachment_storage.dart';
 
 Future<Map<String, dynamic>> buildSyncedProofAttachmentPayload(
   RealizedExpenseAttachment attachment,
@@ -20,8 +21,9 @@ Future<Map<String, dynamic>> buildSyncedProofAttachmentPayload(
 }
 
 Future<String?> importSyncedProofAttachmentPath(
-  Map<dynamic, dynamic> raw,
-) async {
+  Map<dynamic, dynamic> raw, {
+  HousingProofStorageScope? scope,
+}) async {
   final bytesBase64 = raw['bytes_b64'] as String?;
   if (bytesBase64 == null || bytesBase64.isEmpty) return null;
   final mediaType = raw['media_type'] as String?;

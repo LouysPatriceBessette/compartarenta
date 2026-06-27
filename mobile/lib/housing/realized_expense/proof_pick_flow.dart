@@ -11,6 +11,7 @@ import '../../widgets/app_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../screens/housing/housing_proof_crop_screen.dart';
 import 'proof_attachment_storage.dart';
+import 'proof_expense_file_name.dart';
 import 'proof_camera_capture.dart';
 import 'proof_camera_permission.dart';
 
@@ -20,7 +21,10 @@ enum _ProofSource { camera, gallery, document }
 const int _kWebImageSelectionAbsoluteLimitBytes = 20 * 1024 * 1024;
 
 /// Picks a proof (camera, gallery, or document), crops images, compresses, and stores.
-Future<StoredProof?> pickAndStoreProof(BuildContext context) async {
+Future<StoredProof?> pickAndStoreProof(
+  BuildContext context, {
+  required HousingProofStorageScope scope,
+}) async {
   final l10n = AppLocalizations.of(context);
   final cameraOptionState = await proofCameraOptionState();
   if (!context.mounted) return null;
@@ -57,15 +61,18 @@ Future<StoredProof?> pickAndStoreProof(BuildContext context) async {
 
   switch (source) {
     case _ProofSource.camera:
-      return _pickCameraImage(context);
+      return _pickCameraImage(context, scope: scope);
     case _ProofSource.gallery:
-      return _pickGalleryImage(context);
+      return _pickGalleryImage(context, scope: scope);
     case _ProofSource.document:
-      return _pickDocument(context);
+      return _pickDocument(context, scope: scope);
   }
 }
 
-Future<StoredProof?> _pickCameraImage(BuildContext context) async {
+Future<StoredProof?> _pickCameraImage(
+  BuildContext context, {
+  required HousingProofStorageScope scope,
+}) async {
   if (kIsWeb) {
     if (await proofCameraOptionState() == ProofCameraOptionState.unavailable) {
       return null;
@@ -91,10 +98,13 @@ Future<StoredProof?> _pickCameraImage(BuildContext context) async {
   final granted = await ensureProofCameraPermission();
   if (!granted) return null;
   if (!context.mounted) return null;
-  return _pickImageWithPicker(context, fromCamera: true);
+  return _pickImageWithPicker(context, fromCamera: true, scope: scope);
 }
 
-Future<StoredProof?> _pickGalleryImage(BuildContext context) async {
+Future<StoredProof?> _pickGalleryImage(
+  BuildContext context, {
+  required HousingProofStorageScope scope,
+}) async {
   if (kIsWeb) {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -129,12 +139,13 @@ Future<StoredProof?> _pickGalleryImage(BuildContext context) async {
       displayFileName: name,
     );
   }
-  return _pickImageWithPicker(context, fromCamera: false);
+  return _pickImageWithPicker(context, fromCamera: false, scope: scope);
 }
 
 Future<StoredProof?> _pickImageWithPicker(
   BuildContext context, {
   required bool fromCamera,
+  required HousingProofStorageScope scope,
 }) async {
   final picker = ImagePicker();
   final file = await picker.pickImage(
@@ -172,7 +183,7 @@ Future<StoredProof?> _pickImageWithPicker(
   }
   return ProofAttachmentStorage.persistPickedImageBytes(
     bytes: cropped,
-    displayFileName: name,
+    scope: scope,
   );
 }
 
@@ -188,7 +199,10 @@ Future<Uint8List?> _cropImageBytes(
   );
 }
 
-Future<StoredProof?> _pickDocument(BuildContext context) async {
+Future<StoredProof?> _pickDocument(
+  BuildContext context, {
+  required HousingProofStorageScope scope,
+}) async {
   final result = await FilePicker.platform.pickFiles(
     allowMultiple: false,
     withData: kIsWeb,
@@ -211,13 +225,15 @@ Future<StoredProof?> _pickDocument(BuildContext context) async {
     if (bytes == null || bytes.isEmpty) return null;
     return ProofAttachmentStorage.persistFromBytes(
       bytes: bytes,
-      displayFileName: name,
+      scope: scope,
+      sourceExtension: extensionFromProofFileName(name),
     );
   }
   final file = File(path);
   return ProofAttachmentStorage.persistFromFile(
     source: file,
     displayFileName: name,
+    scope: scope,
     compressImage: true,
   );
 }
