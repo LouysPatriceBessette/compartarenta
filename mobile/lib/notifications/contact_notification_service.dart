@@ -70,6 +70,7 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
         l10n.pushNotificationContactAddedViaInvitationBody(displayName),
       ),
       playSound: prefs.notificationSoundEnabled,
+      payload: 'contacts',
     );
   }
 

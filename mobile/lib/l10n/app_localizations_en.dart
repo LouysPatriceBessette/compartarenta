@@ -1358,7 +1358,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'When your agreement period ends or your group changes, start a new unanimous proposal. You can derive it from the current plan to avoid retyping everything.';
 
   @override
-  String get housingAgreementRenewalFork => 'Start new term from current plan';
+  String get housingAgreementRenewalFork => 'Start new term from this plan';
 
   @override
   String get housingAgreementEndNow => 'End agreement today';
@@ -1779,6 +1779,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get activityLogKindHousingAgreementActivated =>
       'Housing agreement activated';
+
+  @override
+  String get activityLogKindHousingProposalAgreementExpired =>
+      'Plan amendment vote abandoned (agreement ended)';
+
+  @override
+  String get activityLogKindHousingParticipationChangeAgreementExpired =>
+      'Ejection vote abandoned (agreement ended)';
 
   @override
   String get housingInvitePlanActivating =>

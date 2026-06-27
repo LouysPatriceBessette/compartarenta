@@ -269,7 +269,7 @@
     }
   },
   "housingActiveHubEnterExpense": "Soumettre une dépense",
-  "housingActiveHubEnterSettlementDue": "Entrer un règlement de dû",
+  "housingActiveHubEnterSettlementDue": "Régler un dû",
   "housingActiveHubSettlementAvailableUntil": "Fonctionnalité disponible jusqu'au {date}",
   "@housingActiveHubSettlementAvailableUntil": {
     "placeholders": {
@@ -500,7 +500,7 @@
   "housingAmendmentRosterChangeBody": "Les changements de participants ne sont pas une modification en cours d'entente. Terminez l'entente ou démarrez une nouvelle période à partir du plan actuel.",
   "housingAgreementRenewalTitle": "Nouvelle période d'entente",
   "housingAgreementRenewalIntro": "À la fin de la période ou pour un changement de groupe, démarrez une nouvelle proposition unanime. Vous pouvez la dériver du plan actuel.",
-  "housingAgreementRenewalFork": "Nouvelle période à partir du plan actuel",
+  "housingAgreementRenewalFork": "Nouvelle période à partir de ce plan",
   "housingAgreementEndNow": "Terminer l'entente aujourd'hui",
   "housingAgreementEndConfirmTitle": "Terminer l'entente ?",
   "housingAgreementEndConfirmBody": "Aucune nouvelle dépense réalisée après aujourd'hui. Vous pourrez démarrer une nouvelle période plus tard.",
@@ -691,6 +691,8 @@
   "activityLogKindHousingProposalExpired": "Proposition logement expirée",
   "activityLogKindHousingProposalForkCreated": "Version dérivée logement démarrée",
   "activityLogKindHousingAgreementActivated": "Entente de logement activée",
+  "activityLogKindHousingProposalAgreementExpired": "Vote sur modification de plan abandonné (Entente terminée)",
+  "activityLogKindHousingParticipationChangeAgreementExpired": "Vote sur éjection abandonné (Entente terminée)",
   "housingInvitePlanActivating": "Tous les participants ont accepté. Activation de l'entente…",
   "housingInviteProposalAppBarTitle": "Proposition d'invitation",
   "housingInviteProposalIntroTitle": "Voici la proposition qui sera envoyée à chacun de vos participants.",
@@ -1091,8 +1093,8 @@
   "contactsInviteDeadlineTitle": "Fin de validité du code :",
   "contactsInvitationStubTitle": "Code d'invitation",
   "contactsInviteRevokeAction": "Révoquer",
-  "contactsInvitationsTitle": "Invitations envoyées",
-  "contactsInvitationsEmpty": "Aucune invitation envoyée pour l’instant.",
+  "contactsInvitationsTitle": "Codes d'invitation",
+  "contactsInvitationsEmpty": "Aucun code généré.",
   "contactsInvitationsItemTitle": "Invitation · {createdAt}",
   "@contactsInvitationsItemTitle": {
     "placeholders": { "createdAt": { "type": "String" } }

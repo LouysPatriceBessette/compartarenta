@@ -1,3 +1,4 @@
+import 'package:compartarenta/activity/relay_activity_log_service.dart';
 import 'package:compartarenta/contacts/contact_module_anchor.dart';
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/housing/participation/housing_participation_change_kind.dart';
@@ -172,5 +173,14 @@ void main() {
           ..where((t) => t.id.equals('pc:term')))
         .getSingle();
     expect(change.status, HousingParticipationChangeStatus.aborted.wireValue);
+
+    final logs = await db.select(db.relayActivityLogEntries).get();
+    expect(
+      logs.map((e) => e.kind),
+      containsAll([
+        RelayActivityLogKinds.housingProposalAgreementExpired,
+        RelayActivityLogKinds.housingParticipationChangeAgreementExpired,
+      ]),
+    );
   });
 }

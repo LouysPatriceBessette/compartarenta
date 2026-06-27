@@ -6,5 +6,5 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-housing-hub-settlement-due"
     timeout: 30000
-- assertVisible: "Entrer un règlement de dû"
+- assertVisible: "Régler un dû"
 - assertVisible: ".*Fonctionnalité disponible jusqu'au.*"

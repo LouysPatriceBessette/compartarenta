@@ -83,17 +83,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => navigateToChild(context, '/settings/units'),
           ),
-          ListTile(
-            title: Text(l10n.settingsExportImportTitle),
-            subtitle: Text(l10n.settingsExportImportSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => navigateToChild(context, '/settings/export-import'),
-          ),
+          const Divider(),
           ListTile(
             title: Text(l10n.settingsActivityLogTitle),
             subtitle: Text(l10n.settingsActivityLogSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => navigateToChild(context, '/settings/activity-log'),
+          ),
+          ListTile(
+            title: Text(l10n.settingsExportImportTitle),
+            subtitle: Text(l10n.settingsExportImportSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => navigateToChild(context, '/settings/export-import'),
           ),
           const Divider(),
           ListTile(

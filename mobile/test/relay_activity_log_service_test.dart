@@ -104,4 +104,19 @@ void main() {
       containsAll(['All', 'System', 'Alice', 'Bob']),
     );
   });
+
+  test('contactDeleted is stored with self initiator', () async {
+    final service = RelayActivityLogService(db);
+    await service.append(
+      kind: RelayActivityLogKinds.contactDeleted,
+      initiatorKind: RelayActivityLogService.initiatorSelf,
+      initiatorDisplayName: 'Monica',
+      details: {'contactId': 'contact:1'},
+    );
+
+    final rows = await db.select(db.relayActivityLogEntries).get();
+    expect(rows.single.kind, RelayActivityLogKinds.contactDeleted);
+    expect(rows.single.initiatorKind, RelayActivityLogService.initiatorSelf);
+    expect(rows.single.initiatorDisplayName, 'Monica');
+  });
 }

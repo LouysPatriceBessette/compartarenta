@@ -1325,6 +1325,12 @@ class HandshakeOrchestrator {
       );
     }
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.contactDisconnected,
+      initiatorKind: RelayActivityLogService.initiatorContact,
+      initiatorContactId: contact.id,
+      initiatorDisplayName: contact.displayName,
+    );
     await _contactNotifications.contactDisconnected(
       displayName: contact.displayName,
     );
@@ -2125,6 +2131,13 @@ class HandshakeOrchestrator {
     if (autoAcceptIncomingHandshakes) {
       await _autoAcceptInviterHello(updatedRow);
     } else {
+      await RelayActivityLogService(_db).append(
+        kind: RelayActivityLogKinds.contactHandshakeReceived,
+        initiatorKind: RelayActivityLogService.initiatorContact,
+        initiatorContactId: updatedRow.contactStubId,
+        initiatorDisplayName: hello.displayName,
+        details: {'handshakeId': updatedRow.id},
+      );
       await _contactNotifications.contactAddRequestReceived(
         displayName: hello.displayName,
       );

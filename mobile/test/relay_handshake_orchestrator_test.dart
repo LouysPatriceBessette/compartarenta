@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:compartarenta/activity/relay_activity_log_service.dart';
 import 'package:compartarenta/contacts/contact_invitations_repository.dart';
 import 'package:compartarenta/contacts/invitation_code.dart';
 import 'package:compartarenta/db/app_database.dart';
@@ -442,6 +443,11 @@ void main() {
       final inviterContact = await inviter.contacts.get(invite.localContactId);
       expect(inviterContact?.kind, 'local-only');
       expect(inviterContact?.disconnectedAt, isNotNull);
+      final logs = await inviter.db.select(inviter.db.relayActivityLogEntries).get();
+      expect(
+        logs.any((e) => e.kind == RelayActivityLogKinds.contactDisconnected),
+        isTrue,
+      );
     },
   );
 
@@ -520,6 +526,14 @@ void main() {
     );
     await inviter.orchestrator.processAllPendingHandshakes();
     final incoming = inviter.orchestrator.incomingHandshakes.value.single;
+    final handshakeLogs =
+        await inviter.db.select(inviter.db.relayActivityLogEntries).get();
+    expect(
+      handshakeLogs.any(
+        (e) => e.kind == RelayActivityLogKinds.contactHandshakeReceived,
+      ),
+      isTrue,
+    );
 
     await inviter.orchestrator.rejectIncoming(
       incoming.handshakeId,

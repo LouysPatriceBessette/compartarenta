@@ -70,6 +70,15 @@ Future<void> _ensureInitialized() async {
     },
   );
 
+  final launch = await _plugin.getNotificationAppLaunchDetails();
+  final response = launch?.notificationResponse;
+  final payload = response?.payload;
+  if (launch?.didNotificationLaunchApp == true &&
+      payload != null &&
+      payload.isNotEmpty) {
+    PushNotificationService.dispatchLocalNotificationTap(response!);
+  }
+
   final android = _plugin
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin

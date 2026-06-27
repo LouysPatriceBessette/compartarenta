@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../activity/relay_activity_log_service.dart';
 import '../../widgets/app_dialog.dart';
 import '../../contacts/contact_module_anchor.dart';
 import '../../db/app_database.dart';
@@ -252,6 +253,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     );
     if (confirmed != true) return;
     await _repo.deleteLocally(contact.id);
+    await RelayActivityLogService(_db).append(
+      kind: RelayActivityLogKinds.contactDeleted,
+      initiatorKind: RelayActivityLogService.initiatorSelf,
+      initiatorDisplayName: contact.displayName,
+      details: {'contactId': contact.id},
+    );
     if (!mounted) return;
     context.pop();
   }

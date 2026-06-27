@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import '../navigation/app_navigation.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
@@ -145,8 +146,10 @@ class PushNotificationService {
       _localStarted = true;
       final launch = await plugin.getNotificationAppLaunchDetails();
       final response = launch?.notificationResponse;
+      final payload = response?.payload;
       if (launch?.didNotificationLaunchApp == true &&
-          response?.payload == _housingTapPayload) {
+          payload != null &&
+          payload.isNotEmpty) {
         dispatchLocalNotificationTap(response!);
       }
     }
@@ -853,11 +856,31 @@ class PushNotificationService {
   }
 
   /// Opens [/contacts] from a notification tap.
+  static void openContactsFromNotificationTap() {
+    _navigateToContacts();
+  }
+
   static void _navigateToContacts() {
     pushFromNotificationTapWhenReady(
       '/contacts',
       skipPushWhenAlreadyAt: (location) => location.startsWith('/contacts'),
+      beforeNavigate: _prepareContactsForNotificationTap,
     );
+  }
+
+  static Future<void> _prepareContactsForNotificationTap(
+    BuildContext context,
+  ) async {
+    await HandshakeOrchestrator.maybeInstance
+        ?.pollSteadyStateInboxes()
+        .catchError((Object e, StackTrace st) {
+          debugPrint('PushNotificationService contacts poll: $e\n$st');
+        });
+    if (!context.mounted) return;
+    final location = GoRouter.of(context).state.matchedLocation;
+    if (location.startsWith('/contacts') && location != '/contacts') {
+      context.go('/contacts');
+    }
   }
 
   static Future<void> _prepareHousingForNotificationTap(

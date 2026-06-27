@@ -2438,7 +2438,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAgreementRenewalFork.
   ///
   /// In en, this message translates to:
-  /// **'Start new term from current plan'**
+  /// **'Start new term from this plan'**
   String get housingAgreementRenewalFork;
 
   /// No description provided for @housingAgreementEndNow.
@@ -3082,6 +3082,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Housing agreement activated'**
   String get activityLogKindHousingAgreementActivated;
+
+  /// No description provided for @activityLogKindHousingProposalAgreementExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan amendment vote abandoned (agreement ended)'**
+  String get activityLogKindHousingProposalAgreementExpired;
+
+  /// No description provided for @activityLogKindHousingParticipationChangeAgreementExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Ejection vote abandoned (agreement ended)'**
+  String get activityLogKindHousingParticipationChangeAgreementExpired;
 
   /// No description provided for @housingInvitePlanActivating.
   ///

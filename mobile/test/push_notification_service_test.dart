@@ -1,9 +1,12 @@
 import 'package:compartarenta/notifications/push_notification_service.dart';
 import 'package:compartarenta/prefs/app_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('PushNotificationService', () {
     test(
       'should gate housing proposal notifications with app preferences',
@@ -39,5 +42,18 @@ void main() {
         );
       },
     );
+
+    test('dispatchLocalNotificationTap handles contacts payload', () {
+      expect(
+        () => PushNotificationService.dispatchLocalNotificationTap(
+          const NotificationResponse(
+            notificationResponseType:
+                NotificationResponseType.selectedNotification,
+            payload: 'contacts',
+          ),
+        ),
+        returnsNormally,
+      );
+    });
   });
 }

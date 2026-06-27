@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart' show DateUtils;
 
 import '../../db/app_database.dart';
+import '../amendment/housing_active_agreement_service.dart';
 import '../realized_expense/realized_expense_participants.dart';
 import 'housing_participation_change_kind.dart';
 
@@ -124,13 +125,14 @@ class HousingParticipationMembershipService {
         );
   }
 
-  /// Hub title suffix: active range or past agreement with departure date.
+  /// Hub title suffix: active range or past agreement (departure or period end).
   Future<({String titlePrefix, String periodRange})> hubTitleParts({
     required String planId,
     required String selfParticipantId,
     required String activeHubTitleL10n,
     required String pastHubTitleL10n,
     required String Function(DateTime) formatDate,
+    DateTime? now,
   }) async {
     final agreement = await _db.getAgreementForPlan(planId);
     if (agreement == null) {
@@ -153,8 +155,14 @@ class HousingParticipationMembershipService {
       final dep =
           departedAt != null
               ? formatDate(departedAt.toLocal())
-              : formatDate(DateUtils.dateOnly(DateTime.now()));
+              : formatDate(DateUtils.dateOnly(now ?? DateTime.now()));
       return (titlePrefix: pastHubTitleL10n, periodRange: '$start - $dep');
+    }
+    final periodOpen = HousingActiveAgreementService(
+      _db,
+    ).isAgreementPeriodOpen(agreement, now: now);
+    if (!periodOpen) {
+      return (titlePrefix: pastHubTitleL10n, periodRange: range);
     }
     return (titlePrefix: activeHubTitleL10n, periodRange: range);
   }

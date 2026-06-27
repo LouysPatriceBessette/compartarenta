@@ -773,7 +773,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get housingActiveHubEnterExpense => 'Soumettre une dépense';
 
   @override
-  String get housingActiveHubEnterSettlementDue => 'Entrer un règlement de dû';
+  String get housingActiveHubEnterSettlementDue => 'Régler un dû';
 
   @override
   String housingActiveHubSettlementAvailableUntil(String date) {
@@ -1375,7 +1375,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get housingAgreementRenewalFork =>
-      'Nouvelle période à partir du plan actuel';
+      'Nouvelle période à partir de ce plan';
 
   @override
   String get housingAgreementEndNow => 'Terminer l\'entente aujourd\'hui';
@@ -1803,6 +1803,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get activityLogKindHousingAgreementActivated =>
       'Entente de logement activée';
+
+  @override
+  String get activityLogKindHousingProposalAgreementExpired =>
+      'Vote sur modification de plan abandonné (Entente terminée)';
+
+  @override
+  String get activityLogKindHousingParticipationChangeAgreementExpired =>
+      'Vote sur éjection abandonné (Entente terminée)';
 
   @override
   String get housingInvitePlanActivating =>
@@ -2743,11 +2751,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsInviteRevokeAction => 'Révoquer';
 
   @override
-  String get contactsInvitationsTitle => 'Invitations envoyées';
+  String get contactsInvitationsTitle => 'Codes d\'invitation';
 
   @override
-  String get contactsInvitationsEmpty =>
-      'Aucune invitation envoyée pour l’instant.';
+  String get contactsInvitationsEmpty => 'Aucun code généré.';
 
   @override
   String contactsInvitationsItemTitle(String createdAt) {

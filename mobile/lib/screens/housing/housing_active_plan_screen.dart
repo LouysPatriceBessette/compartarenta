@@ -706,6 +706,24 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                 );
                               },
                             ),
+                            FutureBuilder<bool>(
+                              future: _hubRenewalForkFuture,
+                              builder: (context, forkSnap) {
+                                if (forkSnap.data != true) {
+                                  return const SizedBox.shrink();
+                                }
+                                return _HubTile(
+                                  icon: Icons.fork_right_outlined,
+                                  label: l10n.housingAgreementRenewalFork,
+                                  enabled: !_renewalForkInProgress,
+                                  semanticsIdentifier:
+                                      kDebugMode
+                                          ? 'qa-housing-hub-renewal-fork'
+                                          : null,
+                                  onTap: () => _startRenewalFork(context),
+                                );
+                              },
+                            ),
                             const _HubSectionDivider(),
                             FutureBuilder<HousingHubExpenseEntry>(
                               future: _hubExpenseEntryFuture,
@@ -767,29 +785,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                           }
                                           : null,
                                   onTap: () => _openEnterExpense(context),
-                                );
-                              },
-                            ),
-                            FutureBuilder<bool>(
-                              future: _hubRenewalForkFuture,
-                              builder: (context, forkSnap) {
-                                if (forkSnap.data != true) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Column(
-                                  children: [
-                                    const _HubSectionDivider(),
-                                    _HubTile(
-                                      icon: Icons.fork_right_outlined,
-                                      label: l10n.housingAgreementRenewalFork,
-                                      enabled: !_renewalForkInProgress,
-                                      semanticsIdentifier:
-                                          kDebugMode
-                                              ? 'qa-housing-hub-renewal-fork'
-                                              : null,
-                                      onTap: () => _startRenewalFork(context),
-                                    ),
-                                  ],
                                 );
                               },
                             ),

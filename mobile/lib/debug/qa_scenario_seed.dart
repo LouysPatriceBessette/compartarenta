@@ -9,6 +9,7 @@ import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
 import '../housing/participation/housing_participation_hub_gates.dart';
+import '../housing/participation/housing_participation_membership_service.dart';
 import '../housing/participation/housing_voluntary_withdrawal_ack.dart';
 import '../housing/proposals/housing_proposal_revision_state.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
@@ -204,6 +205,7 @@ Future<void> assertQaScenarioPostconditions({
   required String scenarioId,
   required DateTime now,
 }) async {
+  await _assertPastHubTitleWhenPeriodClosed(db, scenarioId, now);
   switch (scenarioId) {
     case 'period_end_day':
       await _assertPeriodEndDay(db, now);
@@ -272,6 +274,38 @@ Future<bool> qaRenewalForkAvailableAt(
         ..where((t) => t.planId.equals(planId)))
       .getSingleOrNull();
   return pkg?.activeRevisionId != null;
+}
+
+Future<void> _assertPastHubTitleWhenPeriodClosed(
+  AppDatabase db,
+  String scenarioId,
+  DateTime now,
+) async {
+  if (scenarioId == 'proposal_response_expired') return;
+  final planId = qaPlanIdForScenario(scenarioId);
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) return;
+  if (HousingActiveAgreementService(db).isAgreementPeriodOpen(
+    agreement,
+    now: now,
+  )) {
+    return;
+  }
+  const activeTitle = 'ACTIVE';
+  const pastTitle = 'PAST';
+  final parts = await HousingParticipationMembershipService(db).hubTitleParts(
+    planId: planId,
+    selfParticipantId: '$planId:self',
+    activeHubTitleL10n: activeTitle,
+    pastHubTitleL10n: pastTitle,
+    formatDate: (d) => d.toIso8601String().substring(0, 10),
+    now: now,
+  );
+  if (parts.titlePrefix != pastTitle) {
+    throw StateError(
+      '$scenarioId: expected past hub title when period closed, got ${parts.titlePrefix}',
+    );
+  }
 }
 
 Future<void> _assertPeriodEndDay(AppDatabase db, DateTime now) async {
@@ -418,6 +452,11 @@ Future<void> _assertVoluntaryWithdrawalEffective(
   final change = await changeSvc.getById('pc:qa-withdraw-effective');
   if (change == null) {
     throw StateError('voluntary_withdrawal_effective: missing change row');
+  }
+  if (change.planId != planId) {
+    throw StateError(
+      'voluntary_withdrawal_effective: change planId mismatch ($planId)',
+    );
   }
   if (change.status != HousingParticipationChangeStatus.pending.wireValue) {
     throw StateError('voluntary_withdrawal_effective: expected pending before apply');

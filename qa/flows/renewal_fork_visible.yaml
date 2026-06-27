@@ -6,4 +6,4 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-housing-hub-renewal-fork"
     timeout: 30000
-- assertVisible: "Nouvelle période à partir du plan actuel"
+- assertVisible: "Nouvelle période à partir de ce plan"
