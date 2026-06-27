@@ -1,0 +1,173 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: 01_home
+- tapOn:
+    id: "qa-home-housing"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: 02_wizard_expenses_step
+# --- Expense 1: equal parts (default grid), non-recurring ---
+- tapOn:
+    id: "qa-housing-wizard-add-expense"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-form"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-name"
+- inputText: "Loyer"
+- tapOn:
+    id: "qa-housing-expense-amount"
+- inputText: "1000"
+- runFlow:
+    file: _save_expense_line.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 30000
+# --- Expense 2: custom split + recurrence confirm ---
+- tapOn:
+    id: "qa-housing-wizard-add-expense"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-form"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-name"
+- inputText: "Electricite"
+- tapOn:
+    id: "qa-housing-expense-amount"
+- inputText: "200"
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-expense-split-pct-0"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-split-pct-0"
+- inputText: "70"
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- tapOn:
+    id: "qa-housing-expense-split-pct-1"
+- inputText: "30"
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-expense-recurring-switch"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-recurring-switch"
+    checked: false
+- scrollUntilVisible:
+    element: "Définir la récurrence"
+    direction: DOWN
+    timeout: 30000
+- tapOn: "Définir la récurrence"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-recurrence-day-2027-06-15"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-recurrence-day-2027-06-15"
+- tapOn:
+    id: "qa-housing-expense-recurrence-day-2027-06-20"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-recurrence-range-save"
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-recurrence-range-save"
+    enabled: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-recurrence-confirm"
+    timeout: 30000
+- tapOn: ".*de chaque mois.*"
+- tapOn: "Enregistrer"
+- runFlow:
+    file: _save_expense_line.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 30000
+# --- Expense 3: Like template from expense 2 ---
+- tapOn:
+    id: "qa-housing-wizard-add-expense"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-form"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-name"
+- inputText: "Internet"
+- tapOn:
+    id: "qa-housing-expense-amount"
+- inputText: "80"
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-expense-like-template"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-like-template"
+- tapOn:
+    id: "qa-housing-expense-like-option-electricite"
+- runFlow:
+    file: _save_expense_line.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expense-loyer"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expense-electricite"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expense-internet"
+    timeout: 30000
+- takeScreenshot: 03_three_expenses
+# --- Agreement rules → summary ---
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible: "Règles de l'accord"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-summary"
+    timeout: 30000
+- takeScreenshot: 04_summary
+# --- Submit plan opens response deadline (payload build path) ---
+- tapOn: "Soumettre mon plan"
+- extendedWaitUntil:
+    visible: "Délai de réponse"
+    timeout: 30000
+- takeScreenshot: 05_response_deadline
+- tapOn: "Annuler"

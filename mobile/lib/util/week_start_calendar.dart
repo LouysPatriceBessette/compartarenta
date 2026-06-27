@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../debug/qa_date_range_picker_dialog.dart';
 import '../prefs/app_preferences.dart';
 import '../prefs/week_start.dart';
 
@@ -78,14 +80,25 @@ Future<DateTimeRange?> showAppDateRangePicker({
   required DateTime lastDate,
   String? saveText,
 }) {
+  final first = DateUtils.dateOnly(firstDate);
+  final last = DateUtils.dateOnly(lastDate);
+  if (kDebugMode) {
+    return showQaDateRangePickerDialog(
+      context: context,
+      prefs: prefs,
+      firstDate: first,
+      lastDate: last,
+      saveText: saveText,
+    );
+  }
   final appLocale = Localizations.localeOf(context);
   final weekStart = prefs.resolveWeekStart(appLocale);
   final calLocale = calendarMaterialLocaleForWeekStart(appLocale, weekStart);
   return showDateRangePicker(
     context: context,
     locale: calLocale,
-    firstDate: firstDate,
-    lastDate: lastDate,
+    firstDate: first,
+    lastDate: last,
     saveText: saveText,
     builder: (ctx, pickerChild) {
       if (pickerChild == null) return const SizedBox.shrink();

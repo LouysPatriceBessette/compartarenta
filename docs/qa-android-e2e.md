@@ -198,7 +198,7 @@ Seeds set **French UI** (`prefs.languageCode=fr`) so Maestro text assertions mat
 
 ## Scenario catalog
 
-Nine manifests ship today (housing end-of-agreement arc). Anchor agreement
+Ten manifests ship today (housing hub + plan-draft wizard). Anchor agreement
 `periodEnd`: **2027-08-10** (noon UTC in seed data).
 
 | Scenario id | Device date | Expected UI |
@@ -212,6 +212,7 @@ Nine manifests ship today (housing end-of-agreement arc). Anchor agreement
 | `voluntary_withdrawal_ack_j5` | 2027-08-11 | Participation banner (last ack day) |
 | `voluntary_withdrawal_effective` | 2027-08-11 | Withdrawal applied; no banner |
 | `proposal_response_expired` | 2027-08-11 | Archive list shows expired proposal |
+| `proposal_wizard_expenses` | 2027-06-15 | Plan-draft wizard: 3 expenses (equal / custom / Like), summary + response deadline |
 
 List manifests from the shell:
 
@@ -315,11 +316,46 @@ driven by mistake.
 must match the **entire** accessibility label of a node. Use `.*substring.*` for
 partial matches (e.g. a subtitle with a date, or a banner prefixed with a name).
 
+**`inputText`** (Maestro CLI) accepts **ASCII only** — no accented letters (see
+[mobile-dev-inc/maestro#146](https://github.com/mobile-dev-inc/maestro/issues/146)).
+Use unaccented QA fixture strings in flows (e.g. `Electricite`); keep French
+**UI labels** in `tapOn` / `assertVisible` where Maestro reads rendered text, not
+keyboard input.
+
+Split grid **amount** and **percent** fields clear their text on focus so a new
+value replaces the equal-share default (Maestro and manual entry).
+
+Like-template dropdown: `qa-housing-expense-like-template`; menu options
+`qa-housing-expense-like-option-<slug>` (e.g. `…-electricite` in
+`proposal_wizard_expenses`).
+
+Wizard expense rows: `qa-housing-wizard-expense-<slug>` (e.g. `…-loyer`,
+`…-electricite`, `…-internet` in `proposal_wizard_expenses`). Prefer ids over
+`assertVisible` on titles — list row text is not always exposed to Maestro.
+
+Recurrence date range (debug builds): `showAppDateRangePicker` uses a Maestro-aware
+picker with one semantics id per day (`qa-housing-expense-recurrence-day-YYYY-MM-DD`)
+so day numbers are unambiguous when several months are visible. Flow: start day,
+end day, then **`qa-housing-expense-recurrence-range-save`** (`enabled: true`) —
+the picker does not auto-close after the end date.
+
 ### Shared subflow
 
 `qa/flows/_enter_housing_hub.yaml` — launch app, tap housing tile (`qa-home-housing`),
 wait for `qa-housing-active-hub`. Reused by most housing hub scenarios via `runFlow`
 (`file: _enter_housing_hub.yaml`, path relative to the calling flow).
+
+`_dismiss_ime_done.yaml` — tap Gboard's IME checkmark (bottom-right) to dismiss the
+soft keyboard after `inputText`. Used by `proposal_wizard_expenses` on the pinned
+Pixel 7 QA AVD; prefer this over `hideKeyboard` when the keyboard covers form actions.
+
+`_save_expense_line.yaml` — dismiss IME (`_dismiss_ime_done.yaml`), wait until
+`qa-housing-expense-form-save` is **visible**, then tap it (form
+`bottomNavigationBar`; do not `scrollUntilVisible` for this id; do not refocus
+text fields before save — that reopens the keyboard and hides the bar).
+
+`qa-housing-expense-form` wraps the scrollable **body** only; the save id is a
+sibling in `bottomNavigationBar` (not nested under the form container).
 
 Prefer `id: "qa-home-housing"` over tapping `"Logement"` text: the home tile wraps
 `Semantics(identifier: …)`, which is not always exposed as a plain text node to Maestro.
@@ -336,6 +372,7 @@ frames hurt visual QA review.
 | --- | --- |
 | Hub scenarios (`runFlow: _enter_housing_hub.yaml`) | `01_home` (settled home), `02_housing_hub` (after Logement tap) |
 | `proposal_response_expired` | `01_home`, `02_expired_archive` (archive list) |
+| `proposal_wizard_expenses` | `01_home`, `02_wizard_expenses_step`, `03_three_expenses`, `04_summary`, `05_response_deadline` |
 | Scenario-specific asserts | No extra PNG after assertions on the same screen |
 
 Before `01_home`, flows call `waitForAnimationToEnd` so the native Android splash
@@ -364,6 +401,17 @@ from flows as:
 | `qa-housing-hub-renewal-fork` | Renewal fork tile |
 | `qa-housing-participation-banner` | Participation change banner |
 | `qa-housing-archive-expired` | Expired proposal archive card |
+| `qa-housing-wizard-expenses-step` | Plan-draft wizard — expenses step header |
+| `qa-housing-wizard-add-expense` | Wizard — add expense (+) |
+| `qa-housing-wizard-next` | Wizard — Next / Finish footer |
+| `qa-housing-wizard-summary` | Plan summary after wizard |
+| `qa-housing-expense-form` | Full-screen expense line form |
+| `qa-housing-expense-form-save` | Expense form — Enregistrer |
+| `qa-housing-expense-name` | Expense form — name field |
+| `qa-housing-expense-amount` | Expense form — amount field |
+| `qa-housing-expense-split-pct-0` / `-1` | Split grid — percent row (0-based) |
+| `qa-housing-expense-recurrence-confirm` | Recurrence confirm dialog |
+| `qa-housing-expense-recurring-switch` | Expense form — Récurrent toggle |
 
 **Verifier** (`verify_qa_semantics.py`):
 

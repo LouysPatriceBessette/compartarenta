@@ -48,6 +48,7 @@
 - [x] 1.20 Housing entry archive/new-plan page before step 1; eligible archive opens editable fork, ineligible archive opens read-only review.
 - [x] 1.20b **Android E2E (partial):** expired proposal visible in archive list — Maestro scenario `proposal_response_expired` (`qa-housing-archive-expired`). Does **not** cover send/receive, multi-device sync, or drift cases (**1.22**).
 - [ ] 1.21 Wishlist: detect and retire stale connected contacts after a peer reinstalls / loses local data and reconnects under a new identity, so proposal sends do not need fallback fan-out.
+- [ ] 1.25 Wishlist: revisit the order of the 4 plan-draft wizard steps to add entry for pre-existing inter-participant debt before activation.
 - [x] 1.23 **Unanimous activation notification** (spec: `housing-plan-proposal-offer-flow` — *Unanimous activation notifies all participants from the last acceptor device*).
   - When the **last** non-author **Accept** completes unanimity on a `revisionId`, the accepting device notifies **all** roster participants (localized unanimous-agreement copy).
   - Deep-link / route to active agreement hub (`housing-active-agreement-operations`), not the closed offer screen.

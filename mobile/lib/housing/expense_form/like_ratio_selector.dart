@@ -1,9 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_numbers.dart';
 import 'expense_ratio_template_repository.dart';
+
+const kQaExpenseLikeTemplate = 'qa-housing-expense-like-template';
+
+/// Fixture option id for `proposal_wizard_expenses` (template title Electricite).
+const kQaExpenseLikeOptionElectricite = 'qa-housing-expense-like-option-electricite';
+
+String qaExpenseLikeOptionSemanticsId(String displayTitle) {
+  final slug = displayTitle
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-|-$'), '');
+  return 'qa-housing-expense-like-option-$slug';
+}
 
 /// Two-line dropdown for ratio templates ("Like").
 class LikeRatioSelector extends StatelessWidget {
@@ -32,7 +46,12 @@ class LikeRatioSelector extends StatelessWidget {
         ? selectedTemplateId
         : null;
 
-    return DropdownButtonFormField<String?>(
+    return Semantics(
+      identifier: kDebugMode ? kQaExpenseLikeTemplate : null,
+      button: true,
+      label: l10n.housingExpenseLikeLabel,
+      excludeSemantics: true,
+      child: DropdownButtonFormField<String?>(
       key: ValueKey<String?>(resolvedId),
       initialValue: resolvedId ?? blankValue,
       isExpanded: true,
@@ -69,12 +88,20 @@ class LikeRatioSelector extends StatelessWidget {
         for (final t in templates)
           DropdownMenuItem(
             value: t.id,
-            child: _TwoLineTemplateItem(
-              title: t.displayTitle,
-              weights: ExpenseRatioTemplateRepository.decodeWeights(
-                t.weightsJson,
+            child: Semantics(
+              identifier: kDebugMode
+                  ? qaExpenseLikeOptionSemanticsId(t.displayTitle)
+                  : null,
+              button: true,
+              label: t.displayTitle,
+              excludeSemantics: true,
+              child: _TwoLineTemplateItem(
+                title: t.displayTitle,
+                weights: ExpenseRatioTemplateRepository.decodeWeights(
+                  t.weightsJson,
+                ),
+                participantIds: participantIds,
               ),
-              participantIds: participantIds,
             ),
           ),
       ],
@@ -82,6 +109,7 @@ class LikeRatioSelector extends StatelessWidget {
         if (v == null || v == blankValue) return;
         onSelected(v);
       },
+    ),
     );
   }
 }

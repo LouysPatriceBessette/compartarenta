@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
@@ -68,7 +69,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   final _descCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
 
-  bool _isRecurring = true;
+  bool _isRecurring = false;
   bool _amountIsBudgetCap = false;
   ExpenseRecurrenceSpec? _recurrence;
   String? _paymentResponsibleId;
@@ -89,6 +90,8 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
   @override
   void initState() {
     super.initState();
+    _amountCtrl.addListener(_refreshAmountDependentUi);
+    _titleCtrl.addListener(_notifyFormChanged);
     _boot();
   }
 
@@ -194,6 +197,8 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
 
   @override
   void dispose() {
+    _amountCtrl.removeListener(_refreshAmountDependentUi);
+    _titleCtrl.removeListener(_notifyFormChanged);
     _splitRevision.dispose();
     _titleCtrl.dispose();
     _descCtrl.dispose();
@@ -468,7 +473,10 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
               : l10n.housingPlanEditExpenseTitle,
         ),
       ),
-      body: ListView(
+      body: Semantics(
+        identifier: kDebugMode ? 'qa-housing-expense-form' : null,
+        container: true,
+        child: ListView(
         padding: screenBodyScrollPadding(context),
         children: [
           ExpensePlanLineFormBody.edit(
@@ -545,6 +553,7 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             splitRevision: _splitRevision,
           ),
         ],
+        ),
       ),
       bottomNavigationBar: ListenableBuilder(
         listenable: Listenable.merge([
@@ -554,15 +563,24 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
           _amountCtrl,
         ]),
         builder: (context, _) {
+          _syncSplitFromAmount();
+          final canContinue = _canContinue;
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: FilledButton(
-                onPressed: _canContinue && !_saving ? _save : null,
-                child: Text(
-                  widget.amendmentSubmitToGroup
-                      ? l10n.commonContinue
-                      : l10n.housingPlanSave,
+              child: Semantics(
+                identifier: kDebugMode ? 'qa-housing-expense-form-save' : null,
+                button: true,
+                label: l10n.housingPlanSave,
+                enabled: canContinue && !_saving,
+                excludeSemantics: true,
+                child: FilledButton(
+                  onPressed: canContinue && !_saving ? _save : null,
+                  child: Text(
+                    widget.amendmentSubmitToGroup
+                        ? l10n.commonContinue
+                        : l10n.housingPlanSave,
+                  ),
                 ),
               ),
             ),

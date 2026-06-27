@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -76,7 +77,12 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setDialogState) {
-          return AlertDialog(
+          return Semantics(
+            identifier: kDebugMode
+                ? 'qa-housing-expense-recurrence-confirm'
+                : null,
+            container: true,
+            child: AlertDialog(
             title: Text(l10n.housingExpenseRecurrenceConfirmTitle),
             content: SingleChildScrollView(
               child: Column(
@@ -106,6 +112,7 @@ Future<ExpenseRecurrenceSpec?> showExpenseRecurrenceFlow({
                 child: Text(l10n.housingPlanSave),
               ),
             ],
+            ),
           );
         },
       );

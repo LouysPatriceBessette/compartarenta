@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_decimal_text_field.dart';
 import '../../widgets/app_text_field.dart';
@@ -139,12 +140,16 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        AppTextField(
+        Semantics(
+          identifier: kDebugMode ? 'qa-housing-expense-name' : null,
+          textField: true,
+          child: AppTextField(
           controller: titleController,
           decoration: InputDecoration(
             labelText: l10n.housingExpenseNameLabel,
           ),
           onChanged: (_) => onTitleChanged?.call(),
+        ),
         ),
       const SizedBox(height: 8),
       if (readOnly)
@@ -184,10 +189,22 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SwitchListTile(
-                title: Text(l10n.housingPlanRecurringSwitch),
-                value: isRecurring,
-                onChanged: lockRecurrenceAndSplit ? null : onRecurringChanged,
+              Semantics(
+                identifier: kDebugMode
+                    ? 'qa-housing-expense-recurring-switch'
+                    : null,
+                button: true,
+                toggled: isRecurring,
+                label: l10n.housingPlanRecurringSwitch,
+                onTap: lockRecurrenceAndSplit || onRecurringChanged == null
+                    ? null
+                    : () => onRecurringChanged!(!isRecurring),
+                excludeSemantics: true,
+                child: SwitchListTile(
+                  title: Text(l10n.housingPlanRecurringSwitch),
+                  value: isRecurring,
+                  onChanged: lockRecurrenceAndSplit ? null : onRecurringChanged,
+                ),
               ),
               if (isRecurring)
                 ListTile(
@@ -212,13 +229,17 @@ class ExpensePlanLineFormBody extends StatelessWidget {
           ),
         )
       else
-        AppDecimalTextField(
+        Semantics(
+          identifier: kDebugMode ? 'qa-housing-expense-amount' : null,
+          textField: true,
+          child: AppDecimalTextField(
           controller: amountController!,
           fractionDigits: 2,
           decoration: InputDecoration(
             labelText: l10n.housingPlanAmountLabel,
           ),
           onChanged: (_) => onAmountChanged?.call(),
+        ),
         ),
       const SizedBox(height: 8),
       Text(

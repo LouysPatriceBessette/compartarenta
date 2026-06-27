@@ -19,6 +19,7 @@ void main() {
     'voluntary_withdrawal_ack_j5': DateTime(2027, 8, 11, 9),
     'voluntary_withdrawal_effective': DateTime(2027, 8, 11, 9),
     'proposal_response_expired': DateTime(2027, 8, 11, 9),
+    'proposal_wizard_expenses': DateTime(2027, 6, 15, 9),
   };
 
   for (final entry in scenarios.entries) {

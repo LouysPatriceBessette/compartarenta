@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_text_field.dart';
 import 'package:flutter/services.dart';
@@ -87,6 +88,7 @@ class ExpenseSplitGrid extends StatelessWidget {
                 )
               : _SplitRow(
                   key: ValueKey(state.rows[i].participantId),
+                  rowIndex: i,
                   displayName: state.rows[i].displayName,
                   amountMinor: state.rows[i].amountMinor,
                   totalMinor: state.totalMinor,
@@ -183,6 +185,7 @@ class _ReadOnlySplitRow extends StatelessWidget {
 class _SplitRow extends StatefulWidget {
   const _SplitRow({
     super.key,
+    required this.rowIndex,
     required this.displayName,
     required this.amountMinor,
     required this.totalMinor,
@@ -191,6 +194,7 @@ class _SplitRow extends StatefulWidget {
     required this.onChanged,
   });
 
+  final int rowIndex;
   final String displayName;
   final int amountMinor;
   final int totalMinor;
@@ -205,6 +209,8 @@ class _SplitRow extends StatefulWidget {
 class _SplitRowState extends State<_SplitRow> {
   late final TextEditingController _amountCtrl;
   late final TextEditingController _pctCtrl;
+  late final FocusNode _amountFocusNode;
+  late final FocusNode _pctFocusNode;
 
   @override
   void initState() {
@@ -214,6 +220,34 @@ class _SplitRowState extends State<_SplitRow> {
     );
     // Percent text needs [Localizations]; do not read [context] in [initState].
     _pctCtrl = TextEditingController();
+    _amountFocusNode = FocusNode();
+    _amountFocusNode.addListener(_handleAmountFocusChange);
+    _pctFocusNode = FocusNode();
+    _pctFocusNode.addListener(_handlePctFocusChange);
+  }
+
+  void _handleAmountFocusChange() {
+    if (!_amountFocusNode.hasFocus) return;
+    _beginAmountEntry();
+  }
+
+  void _beginAmountEntry() {
+    setState(() => _amountFocused = true);
+    if (_amountCtrl.text.isNotEmpty) {
+      _amountCtrl.clear();
+    }
+  }
+
+  void _handlePctFocusChange() {
+    if (!_pctFocusNode.hasFocus) return;
+    _beginPercentEntry();
+  }
+
+  void _beginPercentEntry() {
+    setState(() => _pctFocused = true);
+    if (_pctCtrl.text.isNotEmpty) {
+      _pctCtrl.clear();
+    }
   }
 
   @override
@@ -294,6 +328,10 @@ class _SplitRowState extends State<_SplitRow> {
 
   @override
   void dispose() {
+    _amountFocusNode.removeListener(_handleAmountFocusChange);
+    _amountFocusNode.dispose();
+    _pctFocusNode.removeListener(_handlePctFocusChange);
+    _pctFocusNode.dispose();
     _amountCtrl.dispose();
     _pctCtrl.dispose();
     super.dispose();
@@ -305,6 +343,13 @@ class _SplitRowState extends State<_SplitRow> {
     final nameStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
     );
+    final pctSemanticsId = kDebugMode
+        ? switch (widget.rowIndex) {
+            0 => 'qa-housing-expense-split-pct-0',
+            1 => 'qa-housing-expense-split-pct-1',
+            _ => null,
+          }
+        : null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -314,13 +359,14 @@ class _SplitRowState extends State<_SplitRow> {
             flex: 2,
             child: AppTextField(
               controller: _amountCtrl,
+              focusNode: _amountFocusNode,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
               ],
               decoration: const InputDecoration(isDense: true),
-              onTap: () => setState(() => _amountFocused = true),
+              onTap: _beginAmountEntry,
               onEditingComplete: _releaseAmountFocus,
               onSubmitted: (_) => _releaseAmountFocus(),
               onTapOutside: (_) => _releaseAmountFocus(),
@@ -350,8 +396,12 @@ class _SplitRowState extends State<_SplitRow> {
           const SizedBox(width: 8),
           Expanded(
             flex: 2,
-            child: AppTextField(
+            child: Semantics(
+              identifier: pctSemanticsId,
+              textField: true,
+              child: AppTextField(
               controller: _pctCtrl,
+              focusNode: _pctFocusNode,
               textAlign: TextAlign.end,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,
@@ -359,7 +409,7 @@ class _SplitRowState extends State<_SplitRow> {
                 isDense: true,
                 suffixText: '%',
               ),
-              onTap: () => setState(() => _pctFocused = true),
+              onTap: _beginPercentEntry,
               onEditingComplete: _releasePercentFocus,
               onSubmitted: (_) => _releasePercentFocus(),
               onTapOutside: (_) => _releasePercentFocus(),
@@ -375,6 +425,7 @@ class _SplitRowState extends State<_SplitRow> {
                   _applyAmountText(_amountMinorFromPercentTenths(tenths));
                 }
               },
+            ),
             ),
           ),
         ],

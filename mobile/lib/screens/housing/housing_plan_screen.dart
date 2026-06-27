@@ -25,6 +25,7 @@ import '../../housing/housing_response_deadline_dialog.dart';
 import '../../housing/proposals/housing_agreement_period_conflict.dart';
 import '../../activity/relay_activity_log_service.dart';
 import '../../debug/web_dev_host_session.dart';
+import '../../debug/qa_wizard_expense_semantics.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
 import '../../housing/expense_form/expense_recurrence_spec.dart';
@@ -1528,21 +1529,33 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                             )
                           else
                             Expanded(
-                              child: Text(
+                              child: Semantics(
+                                identifier: kDebugMode && _stepIndex == 2
+                                    ? 'qa-housing-wizard-expenses-step'
+                                    : null,
+                                header: true,
+                                child: Text(
                                 _housingStepTitles(l10n)[_stepIndex],
                                 style: Theme.of(
                                   context,
                                 ).textTheme.headlineSmall,
                               ),
+                              ),
                             ),
                           if (_stepIndex == 2)
-                            IconButton.filledTonal(
+                            Semantics(
+                              identifier: kDebugMode
+                                  ? 'qa-housing-wizard-add-expense'
+                                  : null,
+                              button: true,
+                              child: IconButton.filledTonal(
                               tooltip: l10n.housingPlanAddExpenseTooltip,
                               onPressed: () async {
                                 await _editLine(null);
                                 if (mounted) setState(() => _linesEpoch++);
                               },
                               icon: const Icon(Icons.add),
+                            ),
                             ),
                         ],
                       ),
@@ -1618,7 +1631,12 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                   : () => setState(() => _stepIndex--),
                               child: Text(l10n.housingPlanBack),
                             ),
-                          FilledButton(
+                          Semantics(
+                            identifier: kDebugMode
+                                ? 'qa-housing-wizard-next'
+                                : null,
+                            button: true,
+                            child: FilledButton(
                             onPressed: _agreementRulesStepFooterLocked
                                 ? null
                                 : (_validateStep(_stepIndex)
@@ -1724,6 +1742,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                       : l10n.housingPlanFinish)
                                   : l10n.housingPlanNext,
                             ),
+                          ),
                           ),
                         ],
                       ),
@@ -2043,8 +2062,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                       },
                       itemBuilder: (context, index) {
                         final line = lines[index];
-                        return Card(
+                        return Semantics(
                           key: ValueKey(line.id),
+                          identifier: kDebugMode
+                              ? qaWizardExpenseSemanticsId(line.title)
+                              : null,
+                          container: true,
+                          explicitChildNodes: true,
+                          child: Card(
                           child: InkWell(
                             onTap: () async {
                               await _editLine(line);
@@ -2139,6 +2164,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                 ],
                               ),
                             ),
+                          ),
                           ),
                         );
                       },
@@ -3659,7 +3685,10 @@ class _SummaryViewState extends State<_SummaryView> {
         final dateRangeLine =
             '${formatPreferenceDate(agr.periodStart, dateFmt)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateFmt)}';
 
-        return Column(
+        return Semantics(
+          identifier: kDebugMode ? 'qa-housing-wizard-summary' : null,
+          container: true,
+          child: Column(
           children: [
             Expanded(
               child: ListView(
@@ -3936,6 +3965,7 @@ class _SummaryViewState extends State<_SummaryView> {
               ),
             ),
           ],
+        ),
         );
       },
     );

@@ -50,7 +50,7 @@
 - [x] 4.1 Stop writing `amountUsesRange`, `minAmountMinor`, `maxAmountMinor` on new saves
 - [x] 4.2 Local DB: migrate or strip orphan **group-level** `PlanRatio` rows (draft plans on device only)
 - [x] 4.3 Update `housing-plan-entry-spec-conformance-checklist.md` rows E1, E3, E7, E8
-- [ ] 4.4 Manual QA: add 3 expenses (equal, custom, Like), recurring confirm dialog, proposal payload fields on send *(not covered by Android E2E Maestro today; future proposal-wizard scenario)*.
+- [x] 4.4 Manual QA: add 3 expenses (equal, custom, Like), recurring confirm dialog, proposal payload fields on send — Maestro scenario `proposal_wizard_expenses` (`qa/flows/proposal_wizard_expenses.yaml`; seed `proposal_wizard_expenses`).
 - [x] 4.5 Note notification + budget-threshold follow-up in `repo-maintenance-backlog` (active in-force flow)
 
 ---

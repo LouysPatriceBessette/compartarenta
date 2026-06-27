@@ -27,8 +27,76 @@ String qaPlanIdForScenario(String scenarioId) {
     'voluntary_withdrawal_ack_j5' => 'housing:qa-withdraw-ack',
     'voluntary_withdrawal_effective' => 'housing:qa-withdraw-effective',
     'proposal_response_expired' => 'housing:qa-proposal-expired',
+    'proposal_wizard_expenses' => 'housing:qa-proposal-wizard',
     _ => throw ArgumentError('Unknown QA scenario: $scenarioId'),
   };
+}
+
+/// Orphan housing draft: participants + agreement dates, no expenses yet (wizard step 2).
+Future<void> seedQaProposalWizardDraft({
+  required AppDatabase db,
+  required String planId,
+}) async {
+  const coContactId = 'contact:qa:wizard-co';
+  final createdAt = kQaSeedCreatedAt;
+  final periodStart = kQaAnchorPeriodStart;
+  final periodEnd = kQaAnchorPeriodEnd;
+  final selfId = '$planId:self';
+  final coId = '$planId:p0';
+
+  await db.upsertContact(
+    ContactsCompanion.insert(
+      id: coContactId,
+      kind: 'connected',
+      displayName: 'Louys QA',
+      avatarId: 'mdi:1',
+      createdAt: createdAt,
+      updatedAt: createdAt,
+    ),
+  );
+  await db.upsertPlan(
+    PlansCompanion.insert(
+      id: planId,
+      type: 'housing',
+      createdAt: createdAt,
+      title: const drift.Value('Entente QA wizard dépenses'),
+      currency: const drift.Value('CAD'),
+      notes: const drift.Value.absent(),
+    ),
+  );
+  await db.upsertParticipant(
+    ParticipantsCompanion.insert(
+      id: selfId,
+      displayName: 'Monica QA',
+      avatarId: 'mdi:0',
+      createdAt: createdAt,
+    ),
+  );
+  await db.upsertParticipant(
+    ParticipantsCompanion.insert(
+      id: coId,
+      displayName: 'Louys QA',
+      avatarId: 'mdi:1',
+      contactId: const drift.Value(coContactId),
+      createdAt: createdAt,
+    ),
+  );
+  await db.upsertAgreement(
+    AgreementsCompanion.insert(
+      id: 'agreement:$planId',
+      planId: planId,
+      periodStart: periodStart,
+      periodEnd: periodEnd,
+      minNoticeDays: const drift.Value(30),
+      penaltyMinor: const drift.Value(0),
+      clauses: const drift.Value(''),
+      withdrawalSameForAll: const drift.Value('true'),
+      withdrawalPerParticipantJson: const drift.Value('{}'),
+      agreementRulesJson: const drift.Value('{}'),
+      version: const drift.Value(1),
+      createdAt: createdAt,
+    ),
+  );
 }
 
 /// Seeds Monica (self) + Louys with an in-force housing plan and optional expense.

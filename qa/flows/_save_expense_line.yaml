@@ -1,0 +1,13 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Dismiss soft keyboard so bottomNavigationBar save is in the a11y tree.
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-form-save"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-form-save"

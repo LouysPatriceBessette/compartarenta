@@ -34,6 +34,7 @@ const kQaScenarioIds = <String>{
   'voluntary_withdrawal_ack_j5',
   'voluntary_withdrawal_effective',
   'proposal_response_expired',
+  'proposal_wizard_expenses',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -83,7 +84,10 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
   await prefs.setString('prefs.distanceUnit', 'km');
   await prefs.setStringList('plans.enabled', const ['housing']);
   await prefs.setBool('notifications.enabled', false);
-  await prefs.setBool('housing.defaultPlanSummaryReached', true);
+  await prefs.setBool(
+    'housing.defaultPlanSummaryReached',
+    scenarioId != 'proposal_wizard_expenses',
+  );
   await prefs.setString('prefs.languageCode', 'fr');
 }
 
@@ -106,6 +110,8 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
       await _seedVoluntaryWithdrawalEffective(db);
     case 'proposal_response_expired':
       await _seedProposalResponseExpired(db);
+    case 'proposal_wizard_expenses':
+      await _seedProposalWizardExpenses(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -190,6 +196,13 @@ Future<void> _seedVoluntaryWithdrawalEffective(AppDatabase db) async {
   );
 }
 
+Future<void> _seedProposalWizardExpenses(AppDatabase db) async {
+  await seedQaProposalWizardDraft(
+    db: db,
+    planId: qaPlanIdForScenario('proposal_wizard_expenses'),
+  );
+}
+
 Future<void> _seedProposalResponseExpired(AppDatabase db) async {
   await seedQaExpiredPendingProposal(
     db: db,
@@ -224,6 +237,8 @@ Future<void> assertQaScenarioPostconditions({
       await _assertVoluntaryWithdrawalEffective(db, now);
     case 'proposal_response_expired':
       await _assertProposalResponseExpired(db, now);
+    case 'proposal_wizard_expenses':
+      await _assertProposalWizardExpenses(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -281,7 +296,10 @@ Future<void> _assertPastHubTitleWhenPeriodClosed(
   String scenarioId,
   DateTime now,
 ) async {
-  if (scenarioId == 'proposal_response_expired') return;
+  if (scenarioId == 'proposal_response_expired' ||
+      scenarioId == 'proposal_wizard_expenses') {
+    return;
+  }
   final planId = qaPlanIdForScenario(scenarioId);
   final agreement = await db.getAgreementForPlan(planId);
   if (agreement == null) return;
@@ -506,5 +524,27 @@ Future<void> _assertProposalResponseExpired(AppDatabase db, DateTime now) async 
     throw StateError(
       'proposal_response_expired: responseExpiresAt $expires must be before $now',
     );
+  }
+}
+
+Future<void> _assertProposalWizardExpenses(AppDatabase db) async {
+  final planId = qaPlanIdForScenario('proposal_wizard_expenses');
+  final transport = HousingProposalTransportService(db);
+  if (await transport.hasActiveRevision(planId)) {
+    throw StateError('proposal_wizard_expenses: must not have active revision');
+  }
+  final agreement = await db.getAgreementForPlan(planId);
+  if (agreement == null) {
+    throw StateError('proposal_wizard_expenses: missing agreement');
+  }
+  final lines = await db.listPlanLines(planId);
+  if (lines.isNotEmpty) {
+    throw StateError('proposal_wizard_expenses: seed must start with no expenses');
+  }
+  final co = await (db.select(db.participants)
+        ..where((t) => t.id.equals('$planId:p0')))
+      .getSingleOrNull();
+  if (co?.contactId == null || co!.contactId!.isEmpty) {
+    throw StateError('proposal_wizard_expenses: co-participant needs contactId');
   }
 }
