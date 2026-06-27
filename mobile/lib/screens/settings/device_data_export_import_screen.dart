@@ -37,6 +37,7 @@ class _DeviceDataExportImportScreenState
   var _migrating = false;
   var _importAllowed = false;
   String? _lastSavedLocation;
+  String? _importSuccessMessage;
   PendingInstallationMigration? _pendingMigration;
 
   @override
@@ -100,7 +101,7 @@ class _DeviceDataExportImportScreenState
   }
 
   Future<void> _import(BuildContext context) async {
-    if (_importing || !_importAllowed) return;
+    if (_importing || _importDisabled) return;
     final l10n = AppLocalizations.of(context);
     final pick = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -161,9 +162,7 @@ class _DeviceDataExportImportScreenState
           planId: planId,
         );
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.deviceDataImportSuccess)),
-        );
+        setState(() => _importSuccessMessage = l10n.deviceDataImportSuccess);
       } on DeviceDataMigrationException catch (e) {
         if (!context.mounted) return;
         final message = e.isTransportFailure
@@ -222,9 +221,7 @@ class _DeviceDataExportImportScreenState
       final newId = await _installationStore.loadOrCreateId();
       await service.retryPendingMigration(newId);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deviceDataImportSuccess)),
-      );
+      setState(() => _importSuccessMessage = l10n.deviceDataImportSuccess);
       await _refreshState();
     } on DeviceDataMigrationException catch (e) {
       if (!context.mounted) return;
@@ -238,6 +235,9 @@ class _DeviceDataExportImportScreenState
       if (mounted) setState(() => _migrating = false);
     }
   }
+
+  bool get _importDisabled =>
+      _importSuccessMessage != null || !_importAllowed;
 
   @override
   Widget build(BuildContext context) {
@@ -266,7 +266,9 @@ class _DeviceDataExportImportScreenState
           ),
           const SizedBox(height: 12),
           FilledButton.tonalIcon(
-            onPressed: busy || !_importAllowed ? null : () => _import(context),
+            onPressed: busy || _importDisabled
+                ? null
+                : () => _import(context),
             icon: _importing
                 ? const SizedBox(
                     width: 18,
@@ -276,13 +278,20 @@ class _DeviceDataExportImportScreenState
                 : const Icon(Icons.download_outlined),
             label: Text(l10n.deviceDataImportAction),
           ),
+          if (_importSuccessMessage != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _importSuccessMessage!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
           if (kIsWeb) ...[
             const SizedBox(height: 12),
             Text(
               l10n.deviceDataImportDisabledWeb,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-          ] else if (!_importAllowed) ...[
+          ] else if (!_importAllowed && _importSuccessMessage == null) ...[
             const SizedBox(height: 12),
             Text(
               l10n.deviceDataImportDisabledNoSubscription,
