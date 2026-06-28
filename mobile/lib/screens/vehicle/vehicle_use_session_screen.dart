@@ -71,7 +71,10 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final path = await pickAndStoreVehicleMeterPhoto(context);
+    final path = await pickAndStoreVehicleMeterPhoto(
+      context,
+      vehicleId: widget.vehicleId,
+    );
     if (path != null && mounted) setState(() => _photoPath = path);
   }
 
@@ -239,7 +242,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                           icon: const Icon(Icons.photo_camera_outlined),
                           label: Text(
                             _photoPath == null
-                                ? l10n.vehicleMeterPhotoAdd
+                                ? l10n.vehicleOdometerPhotoLabel
                                 : l10n.vehicleMeterPhotoAttached,
                           ),
                         ),

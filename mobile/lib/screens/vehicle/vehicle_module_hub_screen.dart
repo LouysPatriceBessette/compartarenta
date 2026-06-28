@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_kind.dart';
+import '../../vehicle/vehicle_maintenance_category_label.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
 import '../../vehicle/vehicle_module_exit.dart';
@@ -263,19 +264,17 @@ class _VehicleCardState extends State<_VehicleCard> {
                   ),
                   const SizedBox(height: 4),
                   if (snap.hasError)
-                    Text(
-                      l10n.vehicleConsumptionInsufficient,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    )
+                    const SizedBox.shrink()
                   else if (data != null) ...[
                     Text(
                       '$meterLabel: ${data.meterDisplay}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    Text(
-                      data.consumptionLabel(l10n),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    if (data.consumptionLabel(l10n).isNotEmpty)
+                      Text(
+                        data.consumptionLabel(l10n),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     if (data.alerts.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Wrap(
@@ -291,7 +290,10 @@ class _VehicleCardState extends State<_VehicleCard> {
                                     : Colors.orange.shade100,
                                 label: Text(
                                   l10n.vehicleMaintenanceAlertTile(
-                                    a.category,
+                                    vehicleMaintenanceCategoryLabel(
+                                      l10n,
+                                      a.category,
+                                    ),
                                     a.remainingAmount,
                                   ),
                                 ),
@@ -349,15 +351,15 @@ class _VehicleCardData {
 
   String consumptionLabel(AppLocalizations l10n) {
     if (!consumption.hasSufficientData) {
-      return l10n.vehicleConsumptionInsufficient;
+      return '';
     }
     if (kind?.usesHorometer ?? false) {
       final v = consumption.litersPerHour;
-      if (v == null) return l10n.vehicleConsumptionInsufficient;
+      if (v == null) return '';
       return l10n.vehicleConsumptionPerHour(v.toStringAsFixed(2));
     }
     final v = consumption.litersPer100Km;
-    if (v == null) return l10n.vehicleConsumptionInsufficient;
+    if (v == null) return '';
     return l10n.vehicleConsumptionPer100Km(v.toStringAsFixed(1));
   }
 }

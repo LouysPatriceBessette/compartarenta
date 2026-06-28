@@ -1,8 +1,9 @@
 /// User-visible folder layout under `<Documents>/Compartarenta/`.
 ///
-/// Reserved for future modules (spec refactor pending):
-/// - [carModuleFolderName]
-/// - [carSharingModuleFolderName]
+/// **Policy:** all durable user-captured images MUST be written here via
+/// [public_documents_file_sink_io.dart] — see OpenSpec
+/// `user-owned-media-storage`. App-private paths (e.g. legacy
+/// `vehicle_meter_photos/`) MUST NOT receive new media writes.
 class CompartarentaDocumentsLayout {
   CompartarentaDocumentsLayout._();
 
@@ -11,8 +12,24 @@ class CompartarentaDocumentsLayout {
   static const String expenseProofsFolderName = 'ExpenseProofs';
   static const String backupsFolderName = 'Backups';
 
-  /// Future: single-car module exports and artifacts.
+  /// Single-vehicle module artifacts (galleries, future exports).
   static const String carModuleFolderName = 'Car';
+
+  /// `Compartarenta/Car/<vehicleId>/Odometer`
+  static String vehicleOdometerPhotosRelativeSubDir({
+    required String vehicleId,
+  }) {
+    return '$rootFolderName/$carModuleFolderName/$vehicleId/Odometer';
+  }
+
+  /// `Compartarenta/Car/<vehicleId>/Gallery_<nnn>`
+  static String vehicleGalleryRelativeSubDir({
+    required String vehicleId,
+    required int galleryIndex,
+  }) {
+    final folder = 'Gallery_${galleryIndex.toString().padLeft(3, '0')}';
+    return '$rootFolderName/$carModuleFolderName/$vehicleId/$folder';
+  }
 
   /// Future: car-sharing module (split from legacy car module spec).
   static const String carSharingModuleFolderName = 'Car_sharing';

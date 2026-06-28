@@ -610,6 +610,8 @@ class PlanPeerEstablishments extends Table {
     VehicleMaintenanceRules,
     TrafficViolations,
     VehicleSharingLinks,
+    VehiclePhotoGalleries,
+    VehicleGalleryPhotos,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -709,7 +711,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -931,6 +933,14 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(vehicleMaintenanceRules);
         await m.createTable(trafficViolations);
         await m.createTable(vehicleSharingLinks);
+      }
+      if (from < 25) {
+        await _migrateAddColumn(m, vehicles, vehicles.color);
+        await _migrateAddColumn(m, vehicles, vehicles.modelYear);
+        await _migrateAddColumn(m, vehicles, vehicles.licensePlate);
+        await _migrateAddColumn(m, vehicles, vehicles.vin);
+        await m.createTable(vehiclePhotoGalleries);
+        await m.createTable(vehicleGalleryPhotos);
       }
     },
     beforeOpen: (details) async {

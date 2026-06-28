@@ -7,6 +7,10 @@ class Vehicles extends Table {
   TextColumn get displayLabel => text()();
   TextColumn get make => text().withDefault(const Constant(''))();
   TextColumn get model => text().withDefault(const Constant(''))();
+  TextColumn get color => text().withDefault(const Constant(''))();
+  IntColumn get modelYear => integer().nullable()();
+  TextColumn get licensePlate => text().withDefault(const Constant(''))();
+  TextColumn get vin => text().withDefault(const Constant(''))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -132,6 +136,29 @@ class VehicleSharingLinks extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get acceptedAt => dateTime().nullable()();
   DateTimeColumn get revokedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class VehiclePhotoGalleries extends Table {
+  TextColumn get id => text()();
+  TextColumn get vehicleId => text()();
+  IntColumn get galleryIndex => integer()();
+  TextColumn get relativeDirectory => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class VehicleGalleryPhotos extends Table {
+  TextColumn get id => text()();
+  TextColumn get galleryId => text()();
+  TextColumn get relativeFilePath => text()();
+  TextColumn get description => text().withDefault(const Constant(''))();
+  DateTimeColumn get capturedAt => dateTime()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};

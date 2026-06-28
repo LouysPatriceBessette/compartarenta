@@ -26,6 +26,8 @@ import 'screens/vehicle/vehicle_module_hub_screen.dart';
 import 'screens/vehicle/vehicle_add_screen.dart';
 import 'screens/vehicle/vehicle_detail_screen.dart';
 import 'screens/vehicle/vehicle_statistics_screen.dart';
+import 'screens/vehicle/vehicle_edit_details_screen.dart';
+import 'screens/vehicle/vehicle_entry_log_screens.dart';
 import 'screens/vehicle/vehicle_use_session_screen.dart';
 import 'screens/vehicle/vehicle_quick_action_screens.dart';
 import 'screens/vehicle_sharing/vehicle_sharing_hub_screen.dart';
@@ -474,6 +476,73 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
               vehicleId: state.pathParameters['vehicleId']!,
             ),
             routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => VehicleEditDetailsScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+              ),
+              GoRoute(
+                path: 'meter-log',
+                builder: (context, state) => VehicleMeterLogScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':readingId',
+                    builder: (context, state) => VehicleMeterReadingDetailScreen(
+                      vehicleId: state.pathParameters['vehicleId']!,
+                      readingId: state.pathParameters['readingId']!,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'fuel-log',
+                builder: (context, state) => VehicleFuelLogScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':purchaseId',
+                    builder: (context, state) =>
+                        VehicleFuelPurchaseDetailScreen(
+                      vehicleId: state.pathParameters['vehicleId']!,
+                      purchaseId: state.pathParameters['purchaseId']!,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'maintenance-log',
+                builder: (context, state) => VehicleMaintenanceLogScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':eventId',
+                    builder: (context, state) => VehicleMaintenanceDetailScreen(
+                      vehicleId: state.pathParameters['vehicleId']!,
+                      eventId: state.pathParameters['eventId']!,
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'violation-log',
+                builder: (context, state) => VehicleViolationLogScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':violationId',
+                    builder: (context, state) => VehicleViolationDetailScreen(
+                      vehicleId: state.pathParameters['vehicleId']!,
+                      violationId: state.pathParameters['violationId']!,
+                    ),
+                  ),
+                ],
+              ),
               GoRoute(
                 path: 'use',
                 builder: (context, state) => VehicleUseSessionScreen(

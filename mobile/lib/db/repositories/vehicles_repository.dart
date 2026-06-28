@@ -4,11 +4,30 @@ import 'dart:math';
 import 'package:drift/drift.dart' as drift;
 
 import '../app_database.dart';
+import '../../vehicle/vehicle_gallery_storage.dart';
+import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
 
 const String kVehicleGapAttributionUnknown = 'unknown';
+
+class VehicleGalleryPhotoDraft {
+  VehicleGalleryPhotoDraft({
+    required this.sourcePath,
+    this.description = '',
+  });
+
+  final String sourcePath;
+  String description;
+}
+
+class VehicleGalleryDraft {
+  VehicleGalleryDraft({List<VehicleGalleryPhotoDraft>? photos})
+      : photos = photos ?? <VehicleGalleryPhotoDraft>[];
+
+  final List<VehicleGalleryPhotoDraft> photos;
+}
 
 String _newVehicleId(String prefix) {
   final bytes = List<int>.generate(12, (_) => Random.secure().nextInt(256));
@@ -69,8 +88,15 @@ class VehiclesRepository {
   Future<Vehicle> createVehicle({
     required VehicleKind kind,
     required String displayLabel,
-    String make = '',
-    String model = '',
+    required String make,
+    required String model,
+    required String color,
+    required int modelYear,
+    String licensePlate = '',
+    String vin = '',
+    required int initialMeterValue,
+    required String initialMeterPhotoPath,
+    List<VehicleGalleryDraft> galleries = const [],
   }) async {
     final now = DateTime.now().toUtc();
     final id = _newVehicleId('vehicle:');
@@ -82,6 +108,10 @@ class VehiclesRepository {
             displayLabel: displayLabel.trim(),
             make: drift.Value(make.trim()),
             model: drift.Value(model.trim()),
+            color: drift.Value(color.trim()),
+            modelYear: drift.Value(modelYear),
+            licensePlate: drift.Value(licensePlate.trim()),
+            vin: drift.Value(vin.trim()),
             createdAt: now,
             updatedAt: now,
           ),
@@ -98,7 +128,145 @@ class VehiclesRepository {
             ),
           );
     }
+    await saveMeterReading(
+      vehicleId: id,
+      value: initialMeterValue,
+      unit: meterUnitForKind(kind),
+      photoPath: await storeVehicleMeterPhotoFromSource(
+        vehicleId: id,
+        sourcePath: initialMeterPhotoPath,
+      ),
+      recordedByContactId: kVehicleOwnerSelfContactId,
+      role: MeterReadingRole.standalone,
+    );
+    await _persistGalleryDrafts(id, galleries);
     return (await getVehicle(id)) ?? (throw StateError('vehicle missing after insert'));
+  }
+
+  String meterUnitForKind(VehicleKind kind) {
+    return kind.usesHorometer ? 'horometer_tenths' : 'odometer_km';
+  }
+
+  Future<void> _persistGalleryDrafts(
+    String vehicleId,
+    List<VehicleGalleryDraft> galleries,
+  ) async {
+    var nextIndex = await _nextGalleryIndex(vehicleId);
+    for (final draft in galleries) {
+      if (draft.photos.isEmpty) continue;
+      final relativeDirectory = vehicleGalleryRelativeSubDir(
+        vehicleId: vehicleId,
+        galleryIndex: nextIndex,
+      );
+      final galleryId = _newVehicleId('vgal:');
+      final now = DateTime.now().toUtc();
+      await _db.into(_db.vehiclePhotoGalleries).insert(
+            VehiclePhotoGalleriesCompanion.insert(
+              id: galleryId,
+              vehicleId: vehicleId,
+              galleryIndex: nextIndex,
+              relativeDirectory: relativeDirectory,
+              createdAt: now,
+            ),
+          );
+      var sortOrder = 0;
+      for (final photo in draft.photos) {
+        final storageKey = await storeVehicleGalleryPhotoFromSource(
+          vehicleId: vehicleId,
+          galleryIndex: nextIndex,
+          sourcePath: photo.sourcePath,
+        );
+        await _db.into(_db.vehicleGalleryPhotos).insert(
+              VehicleGalleryPhotosCompanion.insert(
+                id: _newVehicleId('vphoto:'),
+                galleryId: galleryId,
+                relativeFilePath: storageKey,
+                description: drift.Value(photo.description.trim()),
+                capturedAt: now,
+                sortOrder: drift.Value(sortOrder),
+              ),
+            );
+        sortOrder++;
+      }
+      nextIndex++;
+    }
+  }
+
+  Future<void> addGalleryDrafts(
+    String vehicleId,
+    List<VehicleGalleryDraft> galleries,
+  ) {
+    return _persistGalleryDrafts(vehicleId, galleries);
+  }
+
+  Future<Vehicle> updateVehicleEditableDetails({
+    required String vehicleId,
+    required String color,
+    String licensePlate = '',
+  }) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId))).write(
+          VehiclesCompanion(
+            color: drift.Value(color.trim()),
+            licensePlate: drift.Value(licensePlate.trim()),
+            updatedAt: drift.Value(now),
+          ),
+        );
+    return (await getVehicle(vehicleId)) ??
+        (throw StateError('vehicle missing after update'));
+  }
+
+  Future<List<VehicleMeterReading>> listMeterReadings(String vehicleId) {
+    return (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.recordedAt)]))
+        .get();
+  }
+
+  Future<VehicleMeterReading?> getMeterReading(String id) =>
+      (_db.select(_db.vehicleMeterReadings)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<FuelPurchase?> getFuelPurchase(String id) =>
+      (_db.select(_db.fuelPurchases)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<MaintenanceEvent?> getMaintenanceEvent(String id) =>
+      (_db.select(_db.maintenanceEvents)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<TrafficViolation?> getTrafficViolation(String id) =>
+      (_db.select(_db.trafficViolations)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
+  Future<int?> initialMeterBaseline(String vehicleId) async {
+    final row = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => drift.OrderingTerm.asc(t.recordedAt)]))
+        .getSingleOrNull();
+    return row?.value;
+  }
+
+  Future<int> _nextGalleryIndex(String vehicleId) async {
+    final rows = await (_db.select(_db.vehiclePhotoGalleries)
+          ..where((t) => t.vehicleId.equals(vehicleId)))
+        .get();
+    if (rows.isEmpty) return 1;
+    return rows.map((r) => r.galleryIndex).reduce(max) + 1;
+  }
+
+  Future<List<VehiclePhotoGallery>> listPhotoGalleries(String vehicleId) {
+    return (_db.select(_db.vehiclePhotoGalleries)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => drift.OrderingTerm.asc(t.galleryIndex)]))
+        .get();
+  }
+
+  Future<List<VehicleGalleryPhoto>> listGalleryPhotos(String galleryId) {
+    return (_db.select(_db.vehicleGalleryPhotos)
+          ..where((t) => t.galleryId.equals(galleryId))
+          ..orderBy([(t) => drift.OrderingTerm.asc(t.sortOrder)]))
+        .get();
   }
 
   Future<int?> latestMeterValue(String vehicleId) async {
@@ -499,6 +667,6 @@ class VehiclesRepository {
 
   String meterUnitForVehicle(Vehicle vehicle) {
     final kind = VehicleKind.fromWire(vehicle.vehicleKind);
-    return kind?.usesHorometer ?? false ? 'horometer_tenths' : 'odometer_km';
+    return meterUnitForKind(kind ?? VehicleKind.car);
   }
 }

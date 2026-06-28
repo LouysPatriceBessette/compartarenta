@@ -166,6 +166,18 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get commonDelete;
 
+  /// No description provided for @commonYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get commonYes;
+
+  /// No description provided for @commonNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get commonNo;
+
   /// No description provided for @commonEdit.
   ///
   /// In en, this message translates to:
@@ -5673,6 +5685,216 @@ abstract class AppLocalizations {
   /// **'Model'**
   String get vehicleFieldModel;
 
+  /// No description provided for @vehicleFieldColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get vehicleFieldColor;
+
+  /// No description provided for @vehicleFieldYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get vehicleFieldYear;
+
+  /// No description provided for @vehicleFieldInitialOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial odometer'**
+  String get vehicleFieldInitialOdometer;
+
+  /// No description provided for @vehicleFieldInitialHorometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial engine hour meter'**
+  String get vehicleFieldInitialHorometer;
+
+  /// No description provided for @vehicleFieldLicensePlate.
+  ///
+  /// In en, this message translates to:
+  /// **'License plate'**
+  String get vehicleFieldLicensePlate;
+
+  /// No description provided for @vehicleFieldVin.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle identification number (VIN)'**
+  String get vehicleFieldVin;
+
+  /// No description provided for @vehicleFieldOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get vehicleFieldOptional;
+
+  /// No description provided for @vehicleAddPhotosSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get vehicleAddPhotosSection;
+
+  /// No description provided for @vehicleAddPhotosOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual archive of the vehicle\'s condition (optional).'**
+  String get vehicleAddPhotosOptionalHint;
+
+  /// No description provided for @vehicleAddGalleryStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a gallery'**
+  String get vehicleAddGalleryStart;
+
+  /// No description provided for @vehicleAddGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery {index}'**
+  String vehicleAddGalleryTitle(int index);
+
+  /// No description provided for @vehicleAddGalleryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos in this gallery yet.'**
+  String get vehicleAddGalleryEmpty;
+
+  /// No description provided for @vehicleAddGalleryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get vehicleAddGalleryDescription;
+
+  /// No description provided for @vehicleAddGalleryAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get vehicleAddGalleryAddPhoto;
+
+  /// No description provided for @vehicleAddGalleryAddGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another gallery'**
+  String get vehicleAddGalleryAddGallery;
+
+  /// No description provided for @vehicleAddValidationLabelRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name is required.'**
+  String get vehicleAddValidationLabelRequired;
+
+  /// No description provided for @vehicleAddValidationMakeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Make is required.'**
+  String get vehicleAddValidationMakeRequired;
+
+  /// No description provided for @vehicleAddValidationModelRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Model is required.'**
+  String get vehicleAddValidationModelRequired;
+
+  /// No description provided for @vehicleAddValidationColorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Color is required.'**
+  String get vehicleAddValidationColorRequired;
+
+  /// No description provided for @vehicleAddValidationYearInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Year must be a valid four-digit value.'**
+  String get vehicleAddValidationYearInvalid;
+
+  /// No description provided for @vehicleAddValidationMeterRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial meter reading is required.'**
+  String get vehicleAddValidationMeterRequired;
+
+  /// No description provided for @vehicleAddValidationRequiredFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all required fields, including the odometer photo.'**
+  String get vehicleAddValidationRequiredFields;
+
+  /// No description provided for @vehicleOdometerPhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer photo'**
+  String get vehicleOdometerPhotoLabel;
+
+  /// No description provided for @vehicleEditDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get vehicleEditDetailsTitle;
+
+  /// No description provided for @vehicleJournalEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet.'**
+  String get vehicleJournalEmpty;
+
+  /// No description provided for @vehicleLogRecordedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded on'**
+  String get vehicleLogRecordedAt;
+
+  /// No description provided for @vehicleLogReadingRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading type'**
+  String get vehicleLogReadingRole;
+
+  /// No description provided for @vehicleLogMeterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log — odometer'**
+  String get vehicleLogMeterTitle;
+
+  /// No description provided for @vehicleLogMeterDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading details'**
+  String get vehicleLogMeterDetailTitle;
+
+  /// No description provided for @vehicleLogFuelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log — fuel'**
+  String get vehicleLogFuelTitle;
+
+  /// No description provided for @vehicleLogFuelDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase details'**
+  String get vehicleLogFuelDetailTitle;
+
+  /// No description provided for @vehicleLogMaintenanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log — maintenance'**
+  String get vehicleLogMaintenanceTitle;
+
+  /// No description provided for @vehicleLogMaintenanceDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance details'**
+  String get vehicleLogMaintenanceDetailTitle;
+
+  /// No description provided for @vehicleLogViolationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log — damage and violations'**
+  String get vehicleLogViolationTitle;
+
+  /// No description provided for @vehicleLogViolationDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Violation details'**
+  String get vehicleLogViolationDetailTitle;
+
   /// No description provided for @vehicleKindCar.
   ///
   /// In en, this message translates to:
@@ -5870,6 +6092,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category'**
   String get vehicleMaintenanceCategory;
+
+  /// No description provided for @vehicleMaintenanceCategoryOil.
+  ///
+  /// In en, this message translates to:
+  /// **'Oil'**
+  String get vehicleMaintenanceCategoryOil;
 
   /// No description provided for @vehicleMaintenanceCost.
   ///

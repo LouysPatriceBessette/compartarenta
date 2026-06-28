@@ -42,6 +42,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonDelete => 'Eliminar';
 
   @override
+  String get commonYes => 'Sí';
+
+  @override
+  String get commonNo => 'No';
+
+  @override
   String get commonEdit => 'Editar';
 
   @override
@@ -3400,6 +3406,117 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleFieldModel => 'Modelo';
 
   @override
+  String get vehicleFieldColor => 'Color';
+
+  @override
+  String get vehicleFieldYear => 'Año';
+
+  @override
+  String get vehicleFieldInitialOdometer => 'Odómetro inicial';
+
+  @override
+  String get vehicleFieldInitialHorometer => 'Cronómetro del motor inicial';
+
+  @override
+  String get vehicleFieldLicensePlate => 'Matrícula';
+
+  @override
+  String get vehicleFieldVin => 'Número de identificación del vehículo (VIN)';
+
+  @override
+  String get vehicleFieldOptional => 'Opcional';
+
+  @override
+  String get vehicleAddPhotosSection => 'Fotos';
+
+  @override
+  String get vehicleAddPhotosOptionalHint =>
+      'Archivo visual del estado del vehículo (opcional).';
+
+  @override
+  String get vehicleAddGalleryStart => 'Añadir una galería';
+
+  @override
+  String vehicleAddGalleryTitle(int index) {
+    return 'Galería $index';
+  }
+
+  @override
+  String get vehicleAddGalleryEmpty => 'Sin fotos en esta galería.';
+
+  @override
+  String get vehicleAddGalleryDescription => 'Descripción';
+
+  @override
+  String get vehicleAddGalleryAddPhoto => 'Añadir foto';
+
+  @override
+  String get vehicleAddGalleryAddGallery => 'Añadir otra galería';
+
+  @override
+  String get vehicleAddValidationLabelRequired => 'El nombre es obligatorio.';
+
+  @override
+  String get vehicleAddValidationMakeRequired => 'La marca es obligatoria.';
+
+  @override
+  String get vehicleAddValidationModelRequired => 'El modelo es obligatorio.';
+
+  @override
+  String get vehicleAddValidationColorRequired => 'El color es obligatorio.';
+
+  @override
+  String get vehicleAddValidationYearInvalid =>
+      'El año debe ser un valor válido de cuatro dígitos.';
+
+  @override
+  String get vehicleAddValidationMeterRequired =>
+      'La lectura inicial del cuentakilómetros es obligatoria.';
+
+  @override
+  String get vehicleAddValidationRequiredFields =>
+      'Complete todos los campos obligatorios, incluida la foto del odómetro.';
+
+  @override
+  String get vehicleOdometerPhotoLabel => 'Foto del odómetro';
+
+  @override
+  String get vehicleEditDetailsTitle => 'Editar detalles';
+
+  @override
+  String get vehicleJournalEmpty => 'Sin entradas por ahora.';
+
+  @override
+  String get vehicleLogRecordedAt => 'Registrado el';
+
+  @override
+  String get vehicleLogReadingRole => 'Tipo de lectura';
+
+  @override
+  String get vehicleLogMeterTitle => 'Registro — odómetro';
+
+  @override
+  String get vehicleLogMeterDetailTitle => 'Detalle de la lectura';
+
+  @override
+  String get vehicleLogFuelTitle => 'Registro — combustible';
+
+  @override
+  String get vehicleLogFuelDetailTitle => 'Detalle de la compra';
+
+  @override
+  String get vehicleLogMaintenanceTitle => 'Registro — mantenimiento';
+
+  @override
+  String get vehicleLogMaintenanceDetailTitle => 'Detalle del mantenimiento';
+
+  @override
+  String get vehicleLogViolationTitle => 'Registro — daños e infracciones';
+
+  @override
+  String get vehicleLogViolationDetailTitle => 'Detalle de la infracción';
+
+  @override
   String get vehicleKindCar => 'Coche';
 
   @override
@@ -3504,6 +3621,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get vehicleMaintenanceCategory => 'Categoría';
+
+  @override
+  String get vehicleMaintenanceCategoryOil => 'Aceite';
 
   @override
   String get vehicleMaintenanceCost => 'Coste';

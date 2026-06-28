@@ -57,26 +57,39 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             title: Text(l10n.vehicleFieldKind),
             subtitle: Text(_kindLabel(l10n, kind)),
           ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () async {
+                final updated = await context.push<bool>(
+                  '/vehicle/${v.id}/edit',
+                );
+                if (updated == true) _load();
+              },
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(l10n.vehicleEditDetailsTitle),
+            ),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.speed_outlined),
             title: Text(l10n.vehicleQuickActionOdometer),
-            onTap: () => context.push('/vehicle/${v.id}/use'),
+            onTap: () => context.push('/vehicle/${v.id}/meter-log'),
           ),
           ListTile(
             leading: const Icon(Icons.local_gas_station_outlined),
             title: Text(l10n.vehicleQuickActionFuel),
-            onTap: () => context.push('/vehicle/${v.id}/fuel'),
+            onTap: () => context.push('/vehicle/${v.id}/fuel-log'),
           ),
           ListTile(
             leading: const Icon(Icons.build_outlined),
             title: Text(l10n.vehicleQuickActionMaintenance),
-            onTap: () => context.push('/vehicle/${v.id}/maintenance'),
+            onTap: () => context.push('/vehicle/${v.id}/maintenance-log'),
           ),
           ListTile(
             leading: const Icon(Icons.report_outlined),
             title: Text(l10n.vehicleQuickActionViolation),
-            onTap: () => context.push('/vehicle/${v.id}/violation'),
+            onTap: () => context.push('/vehicle/${v.id}/violation-log'),
           ),
           const Divider(),
           FutureBuilder<VehicleConsumptionSnapshot>(
@@ -84,20 +97,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 .forVehicle(v.id),
             builder: (context, snap) {
               final c = snap.data;
-              if (c == null) return const SizedBox.shrink();
+              if (c == null || !c.hasSufficientData) {
+                return const SizedBox.shrink();
+              }
+              final text = kind?.usesHorometer ?? false
+                  ? l10n.vehicleConsumptionPerHour(
+                      c.litersPerHour!.toStringAsFixed(2),
+                    )
+                  : l10n.vehicleConsumptionPer100Km(
+                      c.litersPer100Km!.toStringAsFixed(1),
+                    );
               return ListTile(
                 title: Text(l10n.vehicleConsumptionTitle),
-                subtitle: Text(
-                  c.hasSufficientData
-                      ? (kind?.usesHorometer ?? false
-                          ? l10n.vehicleConsumptionPerHour(
-                              c.litersPerHour!.toStringAsFixed(2),
-                            )
-                          : l10n.vehicleConsumptionPer100Km(
-                              c.litersPer100Km!.toStringAsFixed(1),
-                            ))
-                      : l10n.vehicleConsumptionInsufficient,
-                ),
+                subtitle: Text(text),
               );
             },
           ),

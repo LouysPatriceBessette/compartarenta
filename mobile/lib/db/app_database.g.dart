@@ -13530,6 +13530,49 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _modelYearMeta = const VerificationMeta(
+    'modelYear',
+  );
+  @override
+  late final GeneratedColumn<int> modelYear = GeneratedColumn<int>(
+    'model_year',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _licensePlateMeta = const VerificationMeta(
+    'licensePlate',
+  );
+  @override
+  late final GeneratedColumn<String> licensePlate = GeneratedColumn<String>(
+    'license_plate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _vinMeta = const VerificationMeta('vin');
+  @override
+  late final GeneratedColumn<String> vin = GeneratedColumn<String>(
+    'vin',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -13560,6 +13603,10 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     displayLabel,
     make,
     model,
+    color,
+    modelYear,
+    licensePlate,
+    vin,
     createdAt,
     updatedAt,
   ];
@@ -13625,6 +13672,33 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         model.isAcceptableOrUnknown(data['model']!, _modelMeta),
       );
     }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    if (data.containsKey('model_year')) {
+      context.handle(
+        _modelYearMeta,
+        modelYear.isAcceptableOrUnknown(data['model_year']!, _modelYearMeta),
+      );
+    }
+    if (data.containsKey('license_plate')) {
+      context.handle(
+        _licensePlateMeta,
+        licensePlate.isAcceptableOrUnknown(
+          data['license_plate']!,
+          _licensePlateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('vin')) {
+      context.handle(
+        _vinMeta,
+        vin.isAcceptableOrUnknown(data['vin']!, _vinMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -13674,6 +13748,22 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.string,
         data['${effectivePrefix}model'],
       )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color'],
+      )!,
+      modelYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}model_year'],
+      ),
+      licensePlate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}license_plate'],
+      )!,
+      vin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vin'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -13698,6 +13788,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
   final String displayLabel;
   final String make;
   final String model;
+  final String color;
+  final int? modelYear;
+  final String licensePlate;
+  final String vin;
   final DateTime createdAt;
   final DateTime updatedAt;
   const Vehicle({
@@ -13707,6 +13801,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     required this.displayLabel,
     required this.make,
     required this.model,
+    required this.color,
+    this.modelYear,
+    required this.licensePlate,
+    required this.vin,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -13719,6 +13817,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     map['display_label'] = Variable<String>(displayLabel);
     map['make'] = Variable<String>(make);
     map['model'] = Variable<String>(model);
+    map['color'] = Variable<String>(color);
+    if (!nullToAbsent || modelYear != null) {
+      map['model_year'] = Variable<int>(modelYear);
+    }
+    map['license_plate'] = Variable<String>(licensePlate);
+    map['vin'] = Variable<String>(vin);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -13732,6 +13836,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       displayLabel: Value(displayLabel),
       make: Value(make),
       model: Value(model),
+      color: Value(color),
+      modelYear: modelYear == null && nullToAbsent
+          ? const Value.absent()
+          : Value(modelYear),
+      licensePlate: Value(licensePlate),
+      vin: Value(vin),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -13749,6 +13859,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       displayLabel: serializer.fromJson<String>(json['displayLabel']),
       make: serializer.fromJson<String>(json['make']),
       model: serializer.fromJson<String>(json['model']),
+      color: serializer.fromJson<String>(json['color']),
+      modelYear: serializer.fromJson<int?>(json['modelYear']),
+      licensePlate: serializer.fromJson<String>(json['licensePlate']),
+      vin: serializer.fromJson<String>(json['vin']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -13763,6 +13877,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       'displayLabel': serializer.toJson<String>(displayLabel),
       'make': serializer.toJson<String>(make),
       'model': serializer.toJson<String>(model),
+      'color': serializer.toJson<String>(color),
+      'modelYear': serializer.toJson<int?>(modelYear),
+      'licensePlate': serializer.toJson<String>(licensePlate),
+      'vin': serializer.toJson<String>(vin),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -13775,6 +13893,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     String? displayLabel,
     String? make,
     String? model,
+    String? color,
+    Value<int?> modelYear = const Value.absent(),
+    String? licensePlate,
+    String? vin,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => Vehicle(
@@ -13784,6 +13906,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     displayLabel: displayLabel ?? this.displayLabel,
     make: make ?? this.make,
     model: model ?? this.model,
+    color: color ?? this.color,
+    modelYear: modelYear.present ? modelYear.value : this.modelYear,
+    licensePlate: licensePlate ?? this.licensePlate,
+    vin: vin ?? this.vin,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -13801,6 +13927,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           : this.displayLabel,
       make: data.make.present ? data.make.value : this.make,
       model: data.model.present ? data.model.value : this.model,
+      color: data.color.present ? data.color.value : this.color,
+      modelYear: data.modelYear.present ? data.modelYear.value : this.modelYear,
+      licensePlate: data.licensePlate.present
+          ? data.licensePlate.value
+          : this.licensePlate,
+      vin: data.vin.present ? data.vin.value : this.vin,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -13815,6 +13947,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           ..write('displayLabel: $displayLabel, ')
           ..write('make: $make, ')
           ..write('model: $model, ')
+          ..write('color: $color, ')
+          ..write('modelYear: $modelYear, ')
+          ..write('licensePlate: $licensePlate, ')
+          ..write('vin: $vin, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -13829,6 +13965,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     displayLabel,
     make,
     model,
+    color,
+    modelYear,
+    licensePlate,
+    vin,
     createdAt,
     updatedAt,
   );
@@ -13842,6 +13982,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           other.displayLabel == this.displayLabel &&
           other.make == this.make &&
           other.model == this.model &&
+          other.color == this.color &&
+          other.modelYear == this.modelYear &&
+          other.licensePlate == this.licensePlate &&
+          other.vin == this.vin &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -13853,6 +13997,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<String> displayLabel;
   final Value<String> make;
   final Value<String> model;
+  final Value<String> color;
+  final Value<int?> modelYear;
+  final Value<String> licensePlate;
+  final Value<String> vin;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -13863,6 +14011,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.displayLabel = const Value.absent(),
     this.make = const Value.absent(),
     this.model = const Value.absent(),
+    this.color = const Value.absent(),
+    this.modelYear = const Value.absent(),
+    this.licensePlate = const Value.absent(),
+    this.vin = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -13874,6 +14026,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     required String displayLabel,
     this.make = const Value.absent(),
     this.model = const Value.absent(),
+    this.color = const Value.absent(),
+    this.modelYear = const Value.absent(),
+    this.licensePlate = const Value.absent(),
+    this.vin = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -13890,6 +14046,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<String>? displayLabel,
     Expression<String>? make,
     Expression<String>? model,
+    Expression<String>? color,
+    Expression<int>? modelYear,
+    Expression<String>? licensePlate,
+    Expression<String>? vin,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -13901,6 +14061,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       if (displayLabel != null) 'display_label': displayLabel,
       if (make != null) 'make': make,
       if (model != null) 'model': model,
+      if (color != null) 'color': color,
+      if (modelYear != null) 'model_year': modelYear,
+      if (licensePlate != null) 'license_plate': licensePlate,
+      if (vin != null) 'vin': vin,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -13914,6 +14078,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<String>? displayLabel,
     Value<String>? make,
     Value<String>? model,
+    Value<String>? color,
+    Value<int?>? modelYear,
+    Value<String>? licensePlate,
+    Value<String>? vin,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -13925,6 +14093,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       displayLabel: displayLabel ?? this.displayLabel,
       make: make ?? this.make,
       model: model ?? this.model,
+      color: color ?? this.color,
+      modelYear: modelYear ?? this.modelYear,
+      licensePlate: licensePlate ?? this.licensePlate,
+      vin: vin ?? this.vin,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -13952,6 +14124,18 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     if (model.present) {
       map['model'] = Variable<String>(model.value);
     }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (modelYear.present) {
+      map['model_year'] = Variable<int>(modelYear.value);
+    }
+    if (licensePlate.present) {
+      map['license_plate'] = Variable<String>(licensePlate.value);
+    }
+    if (vin.present) {
+      map['vin'] = Variable<String>(vin.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -13973,6 +14157,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           ..write('displayLabel: $displayLabel, ')
           ..write('make: $make, ')
           ..write('model: $model, ')
+          ..write('color: $color, ')
+          ..write('modelYear: $modelYear, ')
+          ..write('licensePlate: $licensePlate, ')
+          ..write('vin: $vin, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -18665,6 +18853,808 @@ class VehicleSharingLinksCompanion extends UpdateCompanion<VehicleSharingLink> {
   }
 }
 
+class $VehiclePhotoGalleriesTable extends VehiclePhotoGalleries
+    with TableInfo<$VehiclePhotoGalleriesTable, VehiclePhotoGallery> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehiclePhotoGalleriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _galleryIndexMeta = const VerificationMeta(
+    'galleryIndex',
+  );
+  @override
+  late final GeneratedColumn<int> galleryIndex = GeneratedColumn<int>(
+    'gallery_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _relativeDirectoryMeta = const VerificationMeta(
+    'relativeDirectory',
+  );
+  @override
+  late final GeneratedColumn<String> relativeDirectory =
+      GeneratedColumn<String>(
+        'relative_directory',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    galleryIndex,
+    relativeDirectory,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_photo_galleries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehiclePhotoGallery> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('gallery_index')) {
+      context.handle(
+        _galleryIndexMeta,
+        galleryIndex.isAcceptableOrUnknown(
+          data['gallery_index']!,
+          _galleryIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_galleryIndexMeta);
+    }
+    if (data.containsKey('relative_directory')) {
+      context.handle(
+        _relativeDirectoryMeta,
+        relativeDirectory.isAcceptableOrUnknown(
+          data['relative_directory']!,
+          _relativeDirectoryMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_relativeDirectoryMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehiclePhotoGallery map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehiclePhotoGallery(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      galleryIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}gallery_index'],
+      )!,
+      relativeDirectory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relative_directory'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $VehiclePhotoGalleriesTable createAlias(String alias) {
+    return $VehiclePhotoGalleriesTable(attachedDatabase, alias);
+  }
+}
+
+class VehiclePhotoGallery extends DataClass
+    implements Insertable<VehiclePhotoGallery> {
+  final String id;
+  final String vehicleId;
+  final int galleryIndex;
+  final String relativeDirectory;
+  final DateTime createdAt;
+  const VehiclePhotoGallery({
+    required this.id,
+    required this.vehicleId,
+    required this.galleryIndex,
+    required this.relativeDirectory,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['gallery_index'] = Variable<int>(galleryIndex);
+    map['relative_directory'] = Variable<String>(relativeDirectory);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  VehiclePhotoGalleriesCompanion toCompanion(bool nullToAbsent) {
+    return VehiclePhotoGalleriesCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      galleryIndex: Value(galleryIndex),
+      relativeDirectory: Value(relativeDirectory),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory VehiclePhotoGallery.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehiclePhotoGallery(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      galleryIndex: serializer.fromJson<int>(json['galleryIndex']),
+      relativeDirectory: serializer.fromJson<String>(json['relativeDirectory']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'galleryIndex': serializer.toJson<int>(galleryIndex),
+      'relativeDirectory': serializer.toJson<String>(relativeDirectory),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  VehiclePhotoGallery copyWith({
+    String? id,
+    String? vehicleId,
+    int? galleryIndex,
+    String? relativeDirectory,
+    DateTime? createdAt,
+  }) => VehiclePhotoGallery(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    galleryIndex: galleryIndex ?? this.galleryIndex,
+    relativeDirectory: relativeDirectory ?? this.relativeDirectory,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  VehiclePhotoGallery copyWithCompanion(VehiclePhotoGalleriesCompanion data) {
+    return VehiclePhotoGallery(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      galleryIndex: data.galleryIndex.present
+          ? data.galleryIndex.value
+          : this.galleryIndex,
+      relativeDirectory: data.relativeDirectory.present
+          ? data.relativeDirectory.value
+          : this.relativeDirectory,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehiclePhotoGallery(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('galleryIndex: $galleryIndex, ')
+          ..write('relativeDirectory: $relativeDirectory, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, vehicleId, galleryIndex, relativeDirectory, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehiclePhotoGallery &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.galleryIndex == this.galleryIndex &&
+          other.relativeDirectory == this.relativeDirectory &&
+          other.createdAt == this.createdAt);
+}
+
+class VehiclePhotoGalleriesCompanion
+    extends UpdateCompanion<VehiclePhotoGallery> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<int> galleryIndex;
+  final Value<String> relativeDirectory;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const VehiclePhotoGalleriesCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.galleryIndex = const Value.absent(),
+    this.relativeDirectory = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehiclePhotoGalleriesCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required int galleryIndex,
+    required String relativeDirectory,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       galleryIndex = Value(galleryIndex),
+       relativeDirectory = Value(relativeDirectory),
+       createdAt = Value(createdAt);
+  static Insertable<VehiclePhotoGallery> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<int>? galleryIndex,
+    Expression<String>? relativeDirectory,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (galleryIndex != null) 'gallery_index': galleryIndex,
+      if (relativeDirectory != null) 'relative_directory': relativeDirectory,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehiclePhotoGalleriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<int>? galleryIndex,
+    Value<String>? relativeDirectory,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return VehiclePhotoGalleriesCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      galleryIndex: galleryIndex ?? this.galleryIndex,
+      relativeDirectory: relativeDirectory ?? this.relativeDirectory,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (galleryIndex.present) {
+      map['gallery_index'] = Variable<int>(galleryIndex.value);
+    }
+    if (relativeDirectory.present) {
+      map['relative_directory'] = Variable<String>(relativeDirectory.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehiclePhotoGalleriesCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('galleryIndex: $galleryIndex, ')
+          ..write('relativeDirectory: $relativeDirectory, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleGalleryPhotosTable extends VehicleGalleryPhotos
+    with TableInfo<$VehicleGalleryPhotosTable, VehicleGalleryPhoto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleGalleryPhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _galleryIdMeta = const VerificationMeta(
+    'galleryId',
+  );
+  @override
+  late final GeneratedColumn<String> galleryId = GeneratedColumn<String>(
+    'gallery_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _relativeFilePathMeta = const VerificationMeta(
+    'relativeFilePath',
+  );
+  @override
+  late final GeneratedColumn<String> relativeFilePath = GeneratedColumn<String>(
+    'relative_file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _capturedAtMeta = const VerificationMeta(
+    'capturedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> capturedAt = GeneratedColumn<DateTime>(
+    'captured_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    galleryId,
+    relativeFilePath,
+    description,
+    capturedAt,
+    sortOrder,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_gallery_photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleGalleryPhoto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('gallery_id')) {
+      context.handle(
+        _galleryIdMeta,
+        galleryId.isAcceptableOrUnknown(data['gallery_id']!, _galleryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_galleryIdMeta);
+    }
+    if (data.containsKey('relative_file_path')) {
+      context.handle(
+        _relativeFilePathMeta,
+        relativeFilePath.isAcceptableOrUnknown(
+          data['relative_file_path']!,
+          _relativeFilePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_relativeFilePathMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('captured_at')) {
+      context.handle(
+        _capturedAtMeta,
+        capturedAt.isAcceptableOrUnknown(data['captured_at']!, _capturedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_capturedAtMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleGalleryPhoto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleGalleryPhoto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      galleryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gallery_id'],
+      )!,
+      relativeFilePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relative_file_path'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      capturedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}captured_at'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+    );
+  }
+
+  @override
+  $VehicleGalleryPhotosTable createAlias(String alias) {
+    return $VehicleGalleryPhotosTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleGalleryPhoto extends DataClass
+    implements Insertable<VehicleGalleryPhoto> {
+  final String id;
+  final String galleryId;
+  final String relativeFilePath;
+  final String description;
+  final DateTime capturedAt;
+  final int sortOrder;
+  const VehicleGalleryPhoto({
+    required this.id,
+    required this.galleryId,
+    required this.relativeFilePath,
+    required this.description,
+    required this.capturedAt,
+    required this.sortOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['gallery_id'] = Variable<String>(galleryId);
+    map['relative_file_path'] = Variable<String>(relativeFilePath);
+    map['description'] = Variable<String>(description);
+    map['captured_at'] = Variable<DateTime>(capturedAt);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  VehicleGalleryPhotosCompanion toCompanion(bool nullToAbsent) {
+    return VehicleGalleryPhotosCompanion(
+      id: Value(id),
+      galleryId: Value(galleryId),
+      relativeFilePath: Value(relativeFilePath),
+      description: Value(description),
+      capturedAt: Value(capturedAt),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory VehicleGalleryPhoto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleGalleryPhoto(
+      id: serializer.fromJson<String>(json['id']),
+      galleryId: serializer.fromJson<String>(json['galleryId']),
+      relativeFilePath: serializer.fromJson<String>(json['relativeFilePath']),
+      description: serializer.fromJson<String>(json['description']),
+      capturedAt: serializer.fromJson<DateTime>(json['capturedAt']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'galleryId': serializer.toJson<String>(galleryId),
+      'relativeFilePath': serializer.toJson<String>(relativeFilePath),
+      'description': serializer.toJson<String>(description),
+      'capturedAt': serializer.toJson<DateTime>(capturedAt),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  VehicleGalleryPhoto copyWith({
+    String? id,
+    String? galleryId,
+    String? relativeFilePath,
+    String? description,
+    DateTime? capturedAt,
+    int? sortOrder,
+  }) => VehicleGalleryPhoto(
+    id: id ?? this.id,
+    galleryId: galleryId ?? this.galleryId,
+    relativeFilePath: relativeFilePath ?? this.relativeFilePath,
+    description: description ?? this.description,
+    capturedAt: capturedAt ?? this.capturedAt,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
+  VehicleGalleryPhoto copyWithCompanion(VehicleGalleryPhotosCompanion data) {
+    return VehicleGalleryPhoto(
+      id: data.id.present ? data.id.value : this.id,
+      galleryId: data.galleryId.present ? data.galleryId.value : this.galleryId,
+      relativeFilePath: data.relativeFilePath.present
+          ? data.relativeFilePath.value
+          : this.relativeFilePath,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      capturedAt: data.capturedAt.present
+          ? data.capturedAt.value
+          : this.capturedAt,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleGalleryPhoto(')
+          ..write('id: $id, ')
+          ..write('galleryId: $galleryId, ')
+          ..write('relativeFilePath: $relativeFilePath, ')
+          ..write('description: $description, ')
+          ..write('capturedAt: $capturedAt, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    galleryId,
+    relativeFilePath,
+    description,
+    capturedAt,
+    sortOrder,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleGalleryPhoto &&
+          other.id == this.id &&
+          other.galleryId == this.galleryId &&
+          other.relativeFilePath == this.relativeFilePath &&
+          other.description == this.description &&
+          other.capturedAt == this.capturedAt &&
+          other.sortOrder == this.sortOrder);
+}
+
+class VehicleGalleryPhotosCompanion
+    extends UpdateCompanion<VehicleGalleryPhoto> {
+  final Value<String> id;
+  final Value<String> galleryId;
+  final Value<String> relativeFilePath;
+  final Value<String> description;
+  final Value<DateTime> capturedAt;
+  final Value<int> sortOrder;
+  final Value<int> rowid;
+  const VehicleGalleryPhotosCompanion({
+    this.id = const Value.absent(),
+    this.galleryId = const Value.absent(),
+    this.relativeFilePath = const Value.absent(),
+    this.description = const Value.absent(),
+    this.capturedAt = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleGalleryPhotosCompanion.insert({
+    required String id,
+    required String galleryId,
+    required String relativeFilePath,
+    this.description = const Value.absent(),
+    required DateTime capturedAt,
+    this.sortOrder = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       galleryId = Value(galleryId),
+       relativeFilePath = Value(relativeFilePath),
+       capturedAt = Value(capturedAt);
+  static Insertable<VehicleGalleryPhoto> custom({
+    Expression<String>? id,
+    Expression<String>? galleryId,
+    Expression<String>? relativeFilePath,
+    Expression<String>? description,
+    Expression<DateTime>? capturedAt,
+    Expression<int>? sortOrder,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (galleryId != null) 'gallery_id': galleryId,
+      if (relativeFilePath != null) 'relative_file_path': relativeFilePath,
+      if (description != null) 'description': description,
+      if (capturedAt != null) 'captured_at': capturedAt,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleGalleryPhotosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? galleryId,
+    Value<String>? relativeFilePath,
+    Value<String>? description,
+    Value<DateTime>? capturedAt,
+    Value<int>? sortOrder,
+    Value<int>? rowid,
+  }) {
+    return VehicleGalleryPhotosCompanion(
+      id: id ?? this.id,
+      galleryId: galleryId ?? this.galleryId,
+      relativeFilePath: relativeFilePath ?? this.relativeFilePath,
+      description: description ?? this.description,
+      capturedAt: capturedAt ?? this.capturedAt,
+      sortOrder: sortOrder ?? this.sortOrder,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (galleryId.present) {
+      map['gallery_id'] = Variable<String>(galleryId.value);
+    }
+    if (relativeFilePath.present) {
+      map['relative_file_path'] = Variable<String>(relativeFilePath.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (capturedAt.present) {
+      map['captured_at'] = Variable<DateTime>(capturedAt.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleGalleryPhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('galleryId: $galleryId, ')
+          ..write('relativeFilePath: $relativeFilePath, ')
+          ..write('description: $description, ')
+          ..write('capturedAt: $capturedAt, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -18727,6 +19717,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $TrafficViolationsTable(this);
   late final $VehicleSharingLinksTable vehicleSharingLinks =
       $VehicleSharingLinksTable(this);
+  late final $VehiclePhotoGalleriesTable vehiclePhotoGalleries =
+      $VehiclePhotoGalleriesTable(this);
+  late final $VehicleGalleryPhotosTable vehicleGalleryPhotos =
+      $VehicleGalleryPhotosTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -18765,6 +19759,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     vehicleMaintenanceRules,
     trafficViolations,
     vehicleSharingLinks,
+    vehiclePhotoGalleries,
+    vehicleGalleryPhotos,
   ];
 }
 
@@ -25528,6 +26524,10 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       required String displayLabel,
       Value<String> make,
       Value<String> model,
+      Value<String> color,
+      Value<int?> modelYear,
+      Value<String> licensePlate,
+      Value<String> vin,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -25540,6 +26540,10 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<String> displayLabel,
       Value<String> make,
       Value<String> model,
+      Value<String> color,
+      Value<int?> modelYear,
+      Value<String> licensePlate,
+      Value<String> vin,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -25581,6 +26585,26 @@ class $$VehiclesTableFilterComposer
 
   ColumnFilters<String> get model => $composableBuilder(
     column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get modelYear => $composableBuilder(
+    column: $table.modelYear,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get licensePlate => $composableBuilder(
+    column: $table.licensePlate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vin => $composableBuilder(
+    column: $table.vin,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25634,6 +26658,26 @@ class $$VehiclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get modelYear => $composableBuilder(
+    column: $table.modelYear,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get licensePlate => $composableBuilder(
+    column: $table.licensePlate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vin => $composableBuilder(
+    column: $table.vin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -25678,6 +26722,20 @@ class $$VehiclesTableAnnotationComposer
   GeneratedColumn<String> get model =>
       $composableBuilder(column: $table.model, builder: (column) => column);
 
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<int> get modelYear =>
+      $composableBuilder(column: $table.modelYear, builder: (column) => column);
+
+  GeneratedColumn<String> get licensePlate => $composableBuilder(
+    column: $table.licensePlate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get vin =>
+      $composableBuilder(column: $table.vin, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -25719,6 +26777,10 @@ class $$VehiclesTableTableManager
                 Value<String> displayLabel = const Value.absent(),
                 Value<String> make = const Value.absent(),
                 Value<String> model = const Value.absent(),
+                Value<String> color = const Value.absent(),
+                Value<int?> modelYear = const Value.absent(),
+                Value<String> licensePlate = const Value.absent(),
+                Value<String> vin = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -25729,6 +26791,10 @@ class $$VehiclesTableTableManager
                 displayLabel: displayLabel,
                 make: make,
                 model: model,
+                color: color,
+                modelYear: modelYear,
+                licensePlate: licensePlate,
+                vin: vin,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -25741,6 +26807,10 @@ class $$VehiclesTableTableManager
                 required String displayLabel,
                 Value<String> make = const Value.absent(),
                 Value<String> model = const Value.absent(),
+                Value<String> color = const Value.absent(),
+                Value<int?> modelYear = const Value.absent(),
+                Value<String> licensePlate = const Value.absent(),
+                Value<String> vin = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -25751,6 +26821,10 @@ class $$VehiclesTableTableManager
                 displayLabel: displayLabel,
                 make: make,
                 model: model,
+                color: color,
+                modelYear: modelYear,
+                licensePlate: licensePlate,
+                vin: vin,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -28133,6 +29207,470 @@ typedef $$VehicleSharingLinksTableProcessedTableManager =
       VehicleSharingLink,
       PrefetchHooks Function()
     >;
+typedef $$VehiclePhotoGalleriesTableCreateCompanionBuilder =
+    VehiclePhotoGalleriesCompanion Function({
+      required String id,
+      required String vehicleId,
+      required int galleryIndex,
+      required String relativeDirectory,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$VehiclePhotoGalleriesTableUpdateCompanionBuilder =
+    VehiclePhotoGalleriesCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<int> galleryIndex,
+      Value<String> relativeDirectory,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$VehiclePhotoGalleriesTableFilterComposer
+    extends Composer<_$AppDatabase, $VehiclePhotoGalleriesTable> {
+  $$VehiclePhotoGalleriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get galleryIndex => $composableBuilder(
+    column: $table.galleryIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relativeDirectory => $composableBuilder(
+    column: $table.relativeDirectory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehiclePhotoGalleriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehiclePhotoGalleriesTable> {
+  $$VehiclePhotoGalleriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get galleryIndex => $composableBuilder(
+    column: $table.galleryIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relativeDirectory => $composableBuilder(
+    column: $table.relativeDirectory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehiclePhotoGalleriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehiclePhotoGalleriesTable> {
+  $$VehiclePhotoGalleriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<int> get galleryIndex => $composableBuilder(
+    column: $table.galleryIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get relativeDirectory => $composableBuilder(
+    column: $table.relativeDirectory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$VehiclePhotoGalleriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehiclePhotoGalleriesTable,
+          VehiclePhotoGallery,
+          $$VehiclePhotoGalleriesTableFilterComposer,
+          $$VehiclePhotoGalleriesTableOrderingComposer,
+          $$VehiclePhotoGalleriesTableAnnotationComposer,
+          $$VehiclePhotoGalleriesTableCreateCompanionBuilder,
+          $$VehiclePhotoGalleriesTableUpdateCompanionBuilder,
+          (
+            VehiclePhotoGallery,
+            BaseReferences<
+              _$AppDatabase,
+              $VehiclePhotoGalleriesTable,
+              VehiclePhotoGallery
+            >,
+          ),
+          VehiclePhotoGallery,
+          PrefetchHooks Function()
+        > {
+  $$VehiclePhotoGalleriesTableTableManager(
+    _$AppDatabase db,
+    $VehiclePhotoGalleriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehiclePhotoGalleriesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$VehiclePhotoGalleriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehiclePhotoGalleriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<int> galleryIndex = const Value.absent(),
+                Value<String> relativeDirectory = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehiclePhotoGalleriesCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                galleryIndex: galleryIndex,
+                relativeDirectory: relativeDirectory,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required int galleryIndex,
+                required String relativeDirectory,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => VehiclePhotoGalleriesCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                galleryIndex: galleryIndex,
+                relativeDirectory: relativeDirectory,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehiclePhotoGalleriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehiclePhotoGalleriesTable,
+      VehiclePhotoGallery,
+      $$VehiclePhotoGalleriesTableFilterComposer,
+      $$VehiclePhotoGalleriesTableOrderingComposer,
+      $$VehiclePhotoGalleriesTableAnnotationComposer,
+      $$VehiclePhotoGalleriesTableCreateCompanionBuilder,
+      $$VehiclePhotoGalleriesTableUpdateCompanionBuilder,
+      (
+        VehiclePhotoGallery,
+        BaseReferences<
+          _$AppDatabase,
+          $VehiclePhotoGalleriesTable,
+          VehiclePhotoGallery
+        >,
+      ),
+      VehiclePhotoGallery,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleGalleryPhotosTableCreateCompanionBuilder =
+    VehicleGalleryPhotosCompanion Function({
+      required String id,
+      required String galleryId,
+      required String relativeFilePath,
+      Value<String> description,
+      required DateTime capturedAt,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+typedef $$VehicleGalleryPhotosTableUpdateCompanionBuilder =
+    VehicleGalleryPhotosCompanion Function({
+      Value<String> id,
+      Value<String> galleryId,
+      Value<String> relativeFilePath,
+      Value<String> description,
+      Value<DateTime> capturedAt,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+
+class $$VehicleGalleryPhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleGalleryPhotosTable> {
+  $$VehicleGalleryPhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get galleryId => $composableBuilder(
+    column: $table.galleryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relativeFilePath => $composableBuilder(
+    column: $table.relativeFilePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleGalleryPhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleGalleryPhotosTable> {
+  $$VehicleGalleryPhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get galleryId => $composableBuilder(
+    column: $table.galleryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relativeFilePath => $composableBuilder(
+    column: $table.relativeFilePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleGalleryPhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleGalleryPhotosTable> {
+  $$VehicleGalleryPhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get galleryId =>
+      $composableBuilder(column: $table.galleryId, builder: (column) => column);
+
+  GeneratedColumn<String> get relativeFilePath => $composableBuilder(
+    column: $table.relativeFilePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get capturedAt => $composableBuilder(
+    column: $table.capturedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$VehicleGalleryPhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleGalleryPhotosTable,
+          VehicleGalleryPhoto,
+          $$VehicleGalleryPhotosTableFilterComposer,
+          $$VehicleGalleryPhotosTableOrderingComposer,
+          $$VehicleGalleryPhotosTableAnnotationComposer,
+          $$VehicleGalleryPhotosTableCreateCompanionBuilder,
+          $$VehicleGalleryPhotosTableUpdateCompanionBuilder,
+          (
+            VehicleGalleryPhoto,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleGalleryPhotosTable,
+              VehicleGalleryPhoto
+            >,
+          ),
+          VehicleGalleryPhoto,
+          PrefetchHooks Function()
+        > {
+  $$VehicleGalleryPhotosTableTableManager(
+    _$AppDatabase db,
+    $VehicleGalleryPhotosTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleGalleryPhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleGalleryPhotosTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleGalleryPhotosTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> galleryId = const Value.absent(),
+                Value<String> relativeFilePath = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<DateTime> capturedAt = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleGalleryPhotosCompanion(
+                id: id,
+                galleryId: galleryId,
+                relativeFilePath: relativeFilePath,
+                description: description,
+                capturedAt: capturedAt,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String galleryId,
+                required String relativeFilePath,
+                Value<String> description = const Value.absent(),
+                required DateTime capturedAt,
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleGalleryPhotosCompanion.insert(
+                id: id,
+                galleryId: galleryId,
+                relativeFilePath: relativeFilePath,
+                description: description,
+                capturedAt: capturedAt,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleGalleryPhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleGalleryPhotosTable,
+      VehicleGalleryPhoto,
+      $$VehicleGalleryPhotosTableFilterComposer,
+      $$VehicleGalleryPhotosTableOrderingComposer,
+      $$VehicleGalleryPhotosTableAnnotationComposer,
+      $$VehicleGalleryPhotosTableCreateCompanionBuilder,
+      $$VehicleGalleryPhotosTableUpdateCompanionBuilder,
+      (
+        VehicleGalleryPhoto,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleGalleryPhotosTable,
+          VehicleGalleryPhoto
+        >,
+      ),
+      VehicleGalleryPhoto,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -28242,4 +29780,8 @@ class $AppDatabaseManager {
       $$TrafficViolationsTableTableManager(_db, _db.trafficViolations);
   $$VehicleSharingLinksTableTableManager get vehicleSharingLinks =>
       $$VehicleSharingLinksTableTableManager(_db, _db.vehicleSharingLinks);
+  $$VehiclePhotoGalleriesTableTableManager get vehiclePhotoGalleries =>
+      $$VehiclePhotoGalleriesTableTableManager(_db, _db.vehiclePhotoGalleries);
+  $$VehicleGalleryPhotosTableTableManager get vehicleGalleryPhotos =>
+      $$VehicleGalleryPhotosTableTableManager(_db, _db.vehicleGalleryPhotos);
 }

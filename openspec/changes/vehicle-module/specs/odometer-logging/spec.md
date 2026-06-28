@@ -15,6 +15,8 @@ User-facing labels (per locale):
 
 Land vehicles continue to use **odomètre** / odometer per existing product terminology.
 
+Meter reading photos MUST be persisted under `Documents/Compartarenta/Car/<vehicleId>/Odometer/` per `user-owned-media-storage`.
+
 #### Scenario: Reading rejected without photo
 - **WHEN** a user attempts to save a meter reading without an odometer/horometer photo
 - **THEN** the system rejects the save and prompts for a photo

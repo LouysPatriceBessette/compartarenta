@@ -29,6 +29,9 @@ class VehicleMaintenanceAlerts {
         .get();
     if (rules.isEmpty) return const [];
 
+    final initialBaseline = await _initialMeterBaseline(vehicleId);
+    if (initialBaseline == null) return const [];
+
     final events = await (_db.select(_db.maintenanceEvents)
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([(t) => OrderingTerm.desc(t.servicedAt)]))
@@ -41,7 +44,7 @@ class VehicleMaintenanceAlerts {
           .map((e) => e.meterAtService)
           .whereType<int>()
           .fold<int?>(null, (prev, v) => prev == null || v > prev ? v : prev);
-      final baseline = lastForCategory ?? 0;
+      final baseline = lastForCategory ?? initialBaseline;
       final dueAt = baseline + rule.intervalAmount;
       final remaining = dueAt - currentMeter;
       if (remaining > rule.previewWindowAmount) continue;
@@ -54,6 +57,14 @@ class VehicleMaintenanceAlerts {
       );
     }
     return out;
+  }
+
+  Future<int?> _initialMeterBaseline(String vehicleId) async {
+    final row = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+        .getSingleOrNull();
+    return row?.value;
   }
 
   static List<VehicleMaintenanceRule> defaultRulesForKind(

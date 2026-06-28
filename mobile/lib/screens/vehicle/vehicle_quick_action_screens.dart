@@ -134,13 +134,16 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                     ),
                     OutlinedButton.icon(
                       onPressed: () async {
-                        final path = await pickAndStoreVehicleMeterPhoto(context);
+                        final path = await pickAndStoreVehicleMeterPhoto(
+                          context,
+                          vehicleId: widget.vehicleId,
+                        );
                         if (path != null && mounted) {
                           setState(() => _photoPath = path);
                         }
                       },
                       icon: const Icon(Icons.photo_camera_outlined),
-                      label: Text(l10n.vehicleMeterPhotoAdd),
+                      label: Text(l10n.vehicleOdometerPhotoLabel),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(

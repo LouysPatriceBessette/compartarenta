@@ -41,3 +41,4 @@
 
 - [x] 7.1 Vehicle sharing hub shell (`vehicle-sharing-hub-ui`) wired to same quick-action forms (forward routing)
 - [x] 7.2 Remove prototype: `/car` route, `CarSharingPlanScreen`, `CarSharingPlanDraft` prefs (`vehicle-legacy-code-removal`)
+- [ ] 7.3 Migrate legacy app-private odometer photos; enforce `user-owned-media-storage` on all new writes
