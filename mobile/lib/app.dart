@@ -30,6 +30,7 @@ import 'screens/vehicle/vehicle_use_session_screen.dart';
 import 'screens/vehicle/vehicle_quick_action_screens.dart';
 import 'screens/vehicle_sharing/vehicle_sharing_hub_screen.dart';
 import 'screens/vehicle_sharing/vehicle_sharing_offer_screen.dart';
+import 'vehicle/vehicle_usage_context.dart';
 import 'screens/contacts/contact_detail_screen.dart';
 import 'screens/contacts/contact_edit_route_screen.dart';
 import 'screens/contacts/contacts_list_screen.dart';
@@ -477,6 +478,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                 path: 'use',
                 builder: (context, state) => VehicleUseSessionScreen(
                   vehicleId: state.pathParameters['vehicleId']!,
+                  usageContext: const VehicleUsageContext.owner(),
                 ),
               ),
               GoRoute(
@@ -518,23 +520,25 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
           GoRoute(
             path: ':vehicleId/use',
             builder: (context, state) {
-              final q = state.uri.queryParameters;
+              final borrower = state.uri.queryParameters['borrower'] ?? '';
               return VehicleUseSessionScreen(
                 vehicleId: state.pathParameters['vehicleId']!,
-                actingContactId: q['acting'] ?? '',
-                forwardToOwner: q['forward'] == 'true',
+                usageContext: VehicleUsageContext.borrower(
+                  actingContactId: borrower,
+                ),
               );
             },
           ),
           GoRoute(
             path: ':vehicleId/fuel',
             builder: (context, state) {
-              final q = state.uri.queryParameters;
+              final borrower = state.uri.queryParameters['borrower'] ?? '';
               return VehicleFuelPurchaseScreen(
                 vehicleId: state.pathParameters['vehicleId']!,
                 prefs: prefs,
-                actingContactId: q['acting'] ?? '',
-                forwardToOwner: q['forward'] == 'true',
+                usageContext: VehicleUsageContext.borrower(
+                  actingContactId: borrower,
+                ),
               );
             },
           ),

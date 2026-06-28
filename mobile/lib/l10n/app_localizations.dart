@@ -6038,6 +6038,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Owner: {name}'**
   String vehicleSharingOwnerLabel(String name);
+
+  /// No description provided for @vehicleUsageBlockedOwnOnBorrowerPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This vehicle is yours. Use the Vehicle module to record owner usage — not Vehicle sharing.'**
+  String get vehicleUsageBlockedOwnOnBorrowerPath;
+
+  /// No description provided for @vehicleUsageBlockedNotOwnedOnOwnerPath.
+  ///
+  /// In en, this message translates to:
+  /// **'This vehicle is not in your owned list. Use Vehicle sharing for a vehicle shared with you.'**
+  String get vehicleUsageBlockedNotOwnedOnOwnerPath;
+
+  /// No description provided for @vehicleUsageBlockedMissingBorrowerIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrower identity is missing for this form.'**
+  String get vehicleUsageBlockedMissingBorrowerIdentity;
+
+  /// No description provided for @vehicleUsageBlockedVehicleNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle not found.'**
+  String get vehicleUsageBlockedVehicleNotFound;
 }
 
 class _AppLocalizationsDelegate

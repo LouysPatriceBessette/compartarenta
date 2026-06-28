@@ -8,7 +8,8 @@ import '../../l10n/app_localizations.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
-import '../../vehicle/vehicle_owner_contact.dart';
+import '../../vehicle/vehicle_usage_context.dart';
+import '../../vehicle/vehicle_usage_denial_ui.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 
@@ -17,13 +18,11 @@ class VehicleUseSessionScreen extends StatefulWidget {
   const VehicleUseSessionScreen({
     super.key,
     required this.vehicleId,
-    this.actingContactId = kVehicleOwnerSelfContactId,
-    this.forwardToOwner = false,
+    this.usageContext = const VehicleUsageContext.owner(),
   });
 
   final String vehicleId;
-  final String actingContactId;
-  final bool forwardToOwner;
+  final VehicleUsageContext usageContext;
 
   @override
   State<VehicleUseSessionScreen> createState() =>
@@ -35,6 +34,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   String? _photoPath;
   Vehicle? _vehicle;
   VehicleUse? _openUse;
+  VehicleUsageAccessDenial? _denial;
   bool _loading = true;
   bool _saving = false;
 
@@ -53,10 +53,18 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   Future<void> _load() async {
     final repo = VehiclesRepository(AppDatabase.processScope);
     final v = await repo.getVehicle(widget.vehicleId);
-    final open = await repo.openUseForVehicle(widget.vehicleId);
+    final denial = denyVehicleUsageAccess(
+      vehicle: v,
+      context: widget.usageContext,
+    );
+    VehicleUse? open;
+    if (denial == null && v != null) {
+      open = await repo.openUseForVehicle(widget.vehicleId);
+    }
     if (!mounted) return;
     setState(() {
       _vehicle = v;
+      _denial = denial;
       _openUse = open;
       _loading = false;
     });
@@ -70,7 +78,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final v = _vehicle;
-    if (v == null) return;
+    if (v == null || _denial != null) return;
     final parsed = int.tryParse(_reading.text.trim());
     if (parsed == null) return;
     if (_photoPath == null || _photoPath!.isEmpty) {
@@ -85,9 +93,10 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     final kind = VehicleKind.fromWire(v.vehicleKind);
     final unitLabel = kind?.usesHorometer ?? false ? 'h' : 'km';
     final latest = await repo.latestMeterValue(v.id);
+    final actingId = widget.usageContext.actingContactId;
 
     if (latest != null && parsed < latest) {
-      if (vehicleContactIsOwnerSelf(widget.actingContactId)) {
+      if (widget.usageContext.isOwner) {
         if (!mounted) return;
         final choice = await showNegativeGapDialog(
           context,
@@ -119,7 +128,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         unitLabel: unitLabel,
         participants: gapAttributionParticipants(
           l10n: l10n,
-          actingContactId: widget.actingContactId,
+          actingContactId: actingId,
           ownerContactId: v.ownerContactId,
           activeBorrowerContactIds: borrowerIds,
           contactLabels: labels,
@@ -134,11 +143,11 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         latestBefore: latest,
         startAfter: parsed,
         attributedContactId: attributed,
-        recordedByContactId: widget.actingContactId,
+        recordedByContactId: actingId,
       );
       if (gapRequiresOwnerNotification(
         attributedContactId: attributed,
-        recordedByContactId: widget.actingContactId,
+        recordedByContactId: actingId,
       )) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,18 +161,17 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       value: parsed,
       unit: unit,
       photoPath: _photoPath!,
-      recordedByContactId: widget.actingContactId,
+      recordedByContactId: actingId,
       role: _openUse == null
           ? MeterReadingRole.sessionStart
           : MeterReadingRole.sessionEnd,
-      negativeGapAcknowledged:
-          latest != null && parsed < latest,
+      negativeGapAcknowledged: latest != null && parsed < latest,
     );
 
     if (_openUse == null) {
       await repo.openUseSession(
         vehicleId: v.id,
-        attributedContactId: widget.actingContactId,
+        attributedContactId: actingId,
         startReadingId: reading.id,
       );
       if (!mounted) return;
@@ -179,7 +187,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       endReadingId: reading.id,
     );
     if (!mounted) return;
-    if (widget.forwardToOwner) {
+    if (widget.usageContext.forwardsToOwner) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.vehicleSharingForwarded)),
       );
@@ -203,35 +211,45 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
               : l10n.vehicleUseSessionEnd,
         ),
       ),
-      body: _loading || v == null
+      body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: screenBodyScrollPadding(context),
-              children: [
-                Text(v.displayLabel, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _reading,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: meterLabel),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _pickPhoto,
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(
-                    _photoPath == null
-                        ? l10n.vehicleMeterPhotoAdd
-                        : l10n.vehicleMeterPhotoAttached,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Text(l10n.commonSave),
-                ),
-              ],
-            ),
+          : _denial != null
+              ? vehicleUsageDenialBody(context, _denial!)
+              : v == null
+                  ? vehicleUsageDenialBody(
+                      context,
+                      VehicleUsageAccessDenial.vehicleNotFound,
+                    )
+                  : ListView(
+                      padding: screenBodyScrollPadding(context),
+                      children: [
+                        Text(
+                          v.displayLabel,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextField(
+                          controller: _reading,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: meterLabel),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _pickPhoto,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: Text(
+                            _photoPath == null
+                                ? l10n.vehicleMeterPhotoAdd
+                                : l10n.vehicleMeterPhotoAttached,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: _saving ? null : _save,
+                          child: Text(l10n.commonSave),
+                        ),
+                      ],
+                    ),
     );
   }
 }

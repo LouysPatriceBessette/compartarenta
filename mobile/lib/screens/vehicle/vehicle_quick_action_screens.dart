@@ -6,7 +6,8 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
-import '../../vehicle/vehicle_owner_contact.dart';
+import '../../vehicle/vehicle_usage_context.dart';
+import '../../vehicle/vehicle_usage_denial_ui.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 
@@ -15,14 +16,12 @@ class VehicleFuelPurchaseScreen extends StatefulWidget {
     super.key,
     required this.vehicleId,
     required this.prefs,
-    this.actingContactId = kVehicleOwnerSelfContactId,
-    this.forwardToOwner = false,
+    this.usageContext = const VehicleUsageContext.owner(),
   });
 
   final String vehicleId;
   final AppPreferences prefs;
-  final String actingContactId;
-  final bool forwardToOwner;
+  final VehicleUsageContext usageContext;
 
   @override
   State<VehicleFuelPurchaseScreen> createState() =>
@@ -35,6 +34,14 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   final _meter = TextEditingController();
   bool _fullTank = false;
   String? _photoPath;
+  VehicleUsageAccessDenial? _denial;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
@@ -44,7 +51,21 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     super.dispose();
   }
 
+  Future<void> _load() async {
+    final v = await VehiclesRepository(AppDatabase.processScope)
+        .getVehicle(widget.vehicleId);
+    if (!mounted) return;
+    setState(() {
+      _denial = denyVehicleUsageAccess(
+        vehicle: v,
+        context: widget.usageContext,
+      );
+      _loading = false;
+    });
+  }
+
   Future<void> _save() async {
+    if (_denial != null) return;
     final l10n = AppLocalizations.of(context);
     final costMajor = double.tryParse(_cost.text.replaceAll(',', '.'));
     if (costMajor == null) return;
@@ -58,14 +79,14 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
       costMinor: (costMajor * 100).round(),
       currency: widget.prefs.currency,
       isFullTank: _fullTank,
-      recordedByContactId: widget.actingContactId,
+      recordedByContactId: widget.usageContext.actingContactId,
       volumeLiters: double.tryParse(_volume.text.replaceAll(',', '.')),
       meterReadingValue: int.tryParse(_meter.text.trim()),
       meterPhotoPath: _photoPath,
     );
 
     if (!mounted) return;
-    if (widget.forwardToOwner) {
+    if (widget.usageContext.forwardsToOwner) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.vehicleSharingForwarded)),
       );
@@ -78,47 +99,56 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleQuickActionFuel)),
-      body: ListView(
-        padding: screenBodyScrollPadding(context),
-        children: [
-          AppTextField(
-            controller: _cost,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l10n.vehicleFuelCost),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _volume,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l10n.vehicleFuelVolume),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _meter,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
-          ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: Text(l10n.vehicleFuelFullTank),
-            value: _fullTank,
-            onChanged: (v) => setState(() => _fullTank = v),
-          ),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final path = await pickAndStoreVehicleMeterPhoto(context);
-              if (path != null && mounted) setState(() => _photoPath = path);
-            },
-            icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(l10n.vehicleMeterPhotoAdd),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _save,
-            child: Text(l10n.commonSave),
-          ),
-        ],
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _denial != null
+              ? vehicleUsageDenialBody(context, _denial!)
+              : ListView(
+                  padding: screenBodyScrollPadding(context),
+                  children: [
+                    AppTextField(
+                      controller: _cost,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(labelText: l10n.vehicleFuelCost),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _volume,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleFuelVolume),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _meter,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      title: Text(l10n.vehicleFuelFullTank),
+                      value: _fullTank,
+                      onChanged: (v) => setState(() => _fullTank = v),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final path = await pickAndStoreVehicleMeterPhoto(context);
+                        if (path != null && mounted) {
+                          setState(() => _photoPath = path);
+                        }
+                      },
+                      icon: const Icon(Icons.photo_camera_outlined),
+                      label: Text(l10n.vehicleMeterPhotoAdd),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _save,
+                      child: Text(l10n.commonSave),
+                    ),
+                  ],
+                ),
     );
   }
 }
@@ -128,14 +158,12 @@ class VehicleMaintenanceFormScreen extends StatefulWidget {
     super.key,
     required this.vehicleId,
     required this.prefs,
-    this.actingContactId = kVehicleOwnerSelfContactId,
-    this.forwardToOwner = false,
+    this.usageContext = const VehicleUsageContext.owner(),
   });
 
   final String vehicleId;
   final AppPreferences prefs;
-  final String actingContactId;
-  final bool forwardToOwner;
+  final VehicleUsageContext usageContext;
 
   @override
   State<VehicleMaintenanceFormScreen> createState() =>
@@ -148,6 +176,14 @@ class _VehicleMaintenanceFormScreenState
   final _cost = TextEditingController();
   final _notes = TextEditingController();
   final _meter = TextEditingController();
+  VehicleUsageAccessDenial? _denial;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
@@ -158,7 +194,21 @@ class _VehicleMaintenanceFormScreenState
     super.dispose();
   }
 
+  Future<void> _load() async {
+    final v = await VehiclesRepository(AppDatabase.processScope)
+        .getVehicle(widget.vehicleId);
+    if (!mounted) return;
+    setState(() {
+      _denial = denyVehicleUsageAccess(
+        vehicle: v,
+        context: widget.usageContext,
+      );
+      _loading = false;
+    });
+  }
+
   Future<void> _save() async {
+    if (_denial != null) return;
     final costMajor = double.tryParse(_cost.text.replaceAll(',', '.'));
     if (costMajor == null) return;
     final repo = VehiclesRepository(AppDatabase.processScope);
@@ -168,12 +218,12 @@ class _VehicleMaintenanceFormScreenState
       category: _category.text.trim(),
       costMinor: (costMajor * 100).round(),
       currency: widget.prefs.currency,
-      recordedByContactId: widget.actingContactId,
+      recordedByContactId: widget.usageContext.actingContactId,
       notes: _notes.text.trim(),
       meterAtService: int.tryParse(_meter.text.trim()),
     );
     if (!mounted) return;
-    if (widget.forwardToOwner) {
+    if (widget.usageContext.forwardsToOwner) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).vehicleSharingForwarded),
@@ -188,38 +238,46 @@ class _VehicleMaintenanceFormScreenState
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleQuickActionMaintenance)),
-      body: ListView(
-        padding: screenBodyScrollPadding(context),
-        children: [
-          AppTextField(
-            controller: _category,
-            decoration: InputDecoration(labelText: l10n.vehicleMaintenanceCategory),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _cost,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l10n.vehicleMaintenanceCost),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _meter,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _notes,
-            maxLines: 3,
-            decoration: InputDecoration(labelText: l10n.vehicleMaintenanceNotes),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _save,
-            child: Text(l10n.commonSave),
-          ),
-        ],
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _denial != null
+              ? vehicleUsageDenialBody(context, _denial!)
+              : ListView(
+                  padding: screenBodyScrollPadding(context),
+                  children: [
+                    AppTextField(
+                      controller: _category,
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleMaintenanceCategory),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _cost,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleMaintenanceCost),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _meter,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _notes,
+                      maxLines: 3,
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleMaintenanceNotes),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _save,
+                      child: Text(l10n.commonSave),
+                    ),
+                  ],
+                ),
     );
   }
 }
@@ -229,14 +287,12 @@ class VehicleViolationFormScreen extends StatefulWidget {
     super.key,
     required this.vehicleId,
     required this.prefs,
-    this.actingContactId = kVehicleOwnerSelfContactId,
-    this.forwardToOwner = false,
+    this.usageContext = const VehicleUsageContext.owner(),
   });
 
   final String vehicleId;
   final AppPreferences prefs;
-  final String actingContactId;
-  final bool forwardToOwner;
+  final VehicleUsageContext usageContext;
 
   @override
   State<VehicleViolationFormScreen> createState() =>
@@ -247,6 +303,14 @@ class _VehicleViolationFormScreenState extends State<VehicleViolationFormScreen>
   final _type = TextEditingController();
   final _amount = TextEditingController();
   final _notes = TextEditingController();
+  VehicleUsageAccessDenial? _denial;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
@@ -256,7 +320,21 @@ class _VehicleViolationFormScreenState extends State<VehicleViolationFormScreen>
     super.dispose();
   }
 
+  Future<void> _load() async {
+    final v = await VehiclesRepository(AppDatabase.processScope)
+        .getVehicle(widget.vehicleId);
+    if (!mounted) return;
+    setState(() {
+      _denial = denyVehicleUsageAccess(
+        vehicle: v,
+        context: widget.usageContext,
+      );
+      _loading = false;
+    });
+  }
+
   Future<void> _save() async {
+    if (_denial != null) return;
     final amountMajor = double.tryParse(_amount.text.replaceAll(',', '.'));
     if (amountMajor == null || _type.text.trim().isEmpty) return;
     final repo = VehiclesRepository(AppDatabase.processScope);
@@ -266,11 +344,11 @@ class _VehicleViolationFormScreenState extends State<VehicleViolationFormScreen>
       violationType: _type.text.trim(),
       amountMinor: (amountMajor * 100).round(),
       currency: widget.prefs.currency,
-      recordedByContactId: widget.actingContactId,
+      recordedByContactId: widget.usageContext.actingContactId,
       notes: _notes.text.trim(),
     );
     if (!mounted) return;
-    if (widget.forwardToOwner) {
+    if (widget.usageContext.forwardsToOwner) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).vehicleSharingForwarded),
@@ -285,32 +363,39 @@ class _VehicleViolationFormScreenState extends State<VehicleViolationFormScreen>
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleQuickActionViolation)),
-      body: ListView(
-        padding: screenBodyScrollPadding(context),
-        children: [
-          AppTextField(
-            controller: _type,
-            decoration: InputDecoration(labelText: l10n.vehicleViolationType),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _amount,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l10n.vehicleViolationAmount),
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _notes,
-            maxLines: 3,
-            decoration: InputDecoration(labelText: l10n.vehicleMaintenanceNotes),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _save,
-            child: Text(l10n.commonSave),
-          ),
-        ],
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _denial != null
+              ? vehicleUsageDenialBody(context, _denial!)
+              : ListView(
+                  padding: screenBodyScrollPadding(context),
+                  children: [
+                    AppTextField(
+                      controller: _type,
+                      decoration: InputDecoration(labelText: l10n.vehicleViolationType),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _amount,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleViolationAmount),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: _notes,
+                      maxLines: 3,
+                      decoration:
+                          InputDecoration(labelText: l10n.vehicleMaintenanceNotes),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _save,
+                      child: Text(l10n.commonSave),
+                    ),
+                  ],
+                ),
     );
   }
 }

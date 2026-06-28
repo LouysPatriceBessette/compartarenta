@@ -3602,4 +3602,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String vehicleSharingOwnerLabel(String name) {
     return 'Propietario: $name';
   }
+
+  @override
+  String get vehicleUsageBlockedOwnOnBorrowerPath =>
+      'Este vehículo es suyo. Use el módulo Vehículo para registrar su uso — no Uso compartido.';
+
+  @override
+  String get vehicleUsageBlockedNotOwnedOnOwnerPath =>
+      'Este vehículo no está en su lista de vehículos propios. Use Uso compartido para un vehículo compartido con usted.';
+
+  @override
+  String get vehicleUsageBlockedMissingBorrowerIdentity =>
+      'Falta la identidad del prestatario para este formulario.';
+
+  @override
+  String get vehicleUsageBlockedVehicleNotFound => 'Vehículo no encontrado.';
 }

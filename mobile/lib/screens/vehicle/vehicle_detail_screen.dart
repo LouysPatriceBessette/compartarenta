@@ -6,7 +6,6 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_kind.dart';
-import '../../vehicle/vehicle_module_access.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class VehicleDetailScreen extends StatefulWidget {
@@ -49,7 +48,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       );
     }
     final kind = VehicleKind.fromWire(v.vehicleKind);
-    final access = const VehicleModuleAccess();
     return Scaffold(
       appBar: AppBar(title: Text(v.displayLabel)),
       body: ListView(
@@ -59,14 +57,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             title: Text(l10n.vehicleFieldKind),
             subtitle: Text(_kindLabel(l10n, kind)),
           ),
-          if (access.canOfferSharing)
-            ListTile(
-              leading: const Icon(Icons.person_add_outlined),
-              title: Text(l10n.vehicleSharingOffer),
-              onTap: () => context.push(
-                '/vehicle-sharing/offer?vehicleId=${Uri.encodeComponent(v.id)}',
-              ),
-            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.speed_outlined),

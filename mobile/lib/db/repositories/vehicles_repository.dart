@@ -406,8 +406,8 @@ class VehiclesRepository {
 
   Future<List<VehicleSharingLink>> listPendingOffersForBorrower(
     String borrowerContactId,
-  ) {
-    return (_db.select(_db.vehicleSharingLinks)
+  ) async {
+    final rows = await (_db.select(_db.vehicleSharingLinks)
           ..where(
             (t) =>
                 t.borrowerContactId.equals(borrowerContactId) &
@@ -415,6 +415,17 @@ class VehiclesRepository {
           )
           ..orderBy([(t) => drift.OrderingTerm.desc(t.createdAt)]))
         .get();
+    return _linksOnExternalOwnedVehicles(rows);
+  }
+
+  Future<List<VehicleSharingLink>> listPendingBorrowerOffers() async {
+    final rows = await (_db.select(_db.vehicleSharingLinks)
+          ..where(
+            (t) => t.status.equals(VehicleSharingLinkStatus.pending.wire),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.createdAt)]))
+        .get();
+    return _linksOnExternalOwnedVehicles(rows);
   }
 
   Future<List<VehicleSharingLink>> listActiveLinksAsBorrower(
@@ -429,6 +440,26 @@ class VehiclesRepository {
         .get();
   }
 
+  /// Active sharing links on vehicles **not** owned on this device (Emprunteur
+  /// accessible vehicles — typically synced from another owner's instance).
+  Future<List<({Vehicle vehicle, VehicleSharingLink link})>>
+      listBorrowerAccessibleEntries() async {
+    final rows = await (_db.select(_db.vehicleSharingLinks)
+          ..where(
+            (t) => t.status.equals(VehicleSharingLinkStatus.active.wire),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.createdAt)]))
+        .get();
+    final out = <({Vehicle vehicle, VehicleSharingLink link})>[];
+    for (final link in rows) {
+      final v = await getVehicle(link.vehicleId);
+      if (v == null) continue;
+      if (v.ownerContactId == kVehicleOwnerSelfContactId) continue;
+      out.add((vehicle: v, link: link));
+    }
+    return out;
+  }
+
   Future<List<Vehicle>> listAccessibleVehiclesAsBorrower(
     String borrowerContactId,
   ) async {
@@ -436,7 +467,22 @@ class VehiclesRepository {
     final out = <Vehicle>[];
     for (final link in links) {
       final v = await getVehicle(link.vehicleId);
-      if (v != null) out.add(v);
+      if (v == null) continue;
+      if (v.ownerContactId == kVehicleOwnerSelfContactId) continue;
+      out.add(v);
+    }
+    return out;
+  }
+
+  Future<List<VehicleSharingLink>> _linksOnExternalOwnedVehicles(
+    List<VehicleSharingLink> links,
+  ) async {
+    final out = <VehicleSharingLink>[];
+    for (final link in links) {
+      final v = await getVehicle(link.vehicleId);
+      if (v == null) continue;
+      if (v.ownerContactId == kVehicleOwnerSelfContactId) continue;
+      out.add(link);
     }
     return out;
   }

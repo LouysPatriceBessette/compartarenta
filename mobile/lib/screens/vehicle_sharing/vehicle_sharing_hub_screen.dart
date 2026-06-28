@@ -7,6 +7,9 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../vehicle/vehicle_module_access.dart';
+import '../../vehicle/vehicle_module_exit.dart';
+import '../../vehicle/vehicle_owner_contact.dart';
+import '../../vehicle/vehicle_usage_context.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class VehicleSharingHubScreen extends StatefulWidget {
@@ -21,8 +24,9 @@ class VehicleSharingHubScreen extends StatefulWidget {
 
 class _VehicleSharingHubScreenState extends State<VehicleSharingHubScreen> {
   final _access = const VehicleModuleAccess();
-  List<_AccessibleVehicleRow> _rows = const [];
+  List<({Vehicle vehicle, VehicleSharingLink link})> _accessible = const [];
   List<VehicleSharingLink> _pendingOffers = const [];
+  Map<String, String> _contactLabels = const {};
   bool _loading = true;
 
   @override
@@ -36,47 +40,14 @@ class _VehicleSharingHubScreenState extends State<VehicleSharingHubScreen> {
     final contacts = await ContactsRepository(AppDatabase.processScope).list();
     final labels = {for (final c in contacts) c.id: c.displayName};
 
-    final ownerLinks = await repo.listActiveLinksAsOwner();
-    final ownerRows = <_AccessibleVehicleRow>[];
-    for (final link in ownerLinks) {
-      final v = await repo.getVehicle(link.vehicleId);
-      if (v == null) continue;
-      ownerRows.add(
-        _AccessibleVehicleRow(
-          vehicle: v,
-          subtitle: labels[link.borrowerContactId] ?? link.borrowerContactId,
-          isOwnerContext: true,
-          borrowerContactId: link.borrowerContactId,
-        ),
-      );
-    }
-
-  // Borrower view: for dev, use first connected contact as borrower persona
-    // when testing on one device — real PE uses installation-bound contact id.
-    final borrowerContactId = contacts.isNotEmpty ? contacts.first.id : '';
-    final borrowerVehicles = borrowerContactId.isEmpty
-        ? <Vehicle>[]
-        : await repo.listAccessibleVehiclesAsBorrower(borrowerContactId);
-    final borrowerRows = <_AccessibleVehicleRow>[];
-    for (final v in borrowerVehicles) {
-      borrowerRows.add(
-        _AccessibleVehicleRow(
-          vehicle: v,
-          subtitle: labels[v.ownerContactId] ?? v.ownerContactId,
-          isOwnerContext: false,
-          borrowerContactId: borrowerContactId,
-        ),
-      );
-    }
-
-    final pending = borrowerContactId.isEmpty
-        ? <VehicleSharingLink>[]
-        : await repo.listPendingOffersForBorrower(borrowerContactId);
+    final accessible = await repo.listBorrowerAccessibleEntries();
+    final pending = await repo.listPendingBorrowerOffers();
 
     if (!mounted) return;
     setState(() {
-      _rows = [...borrowerRows, ...ownerRows];
+      _accessible = accessible;
       _pendingOffers = pending;
+      _contactLabels = labels;
       _loading = false;
     });
   }
@@ -86,12 +57,22 @@ class _VehicleSharingHubScreenState extends State<VehicleSharingHubScreen> {
     final l10n = AppLocalizations.of(context);
     if (!_access.hasVehicleSharingEntitlement) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.homeModuleVehicleSharing)),
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () => exitVehicleSharingModule(context),
+          ),
+          title: Text(l10n.homeModuleVehicleSharing),
+        ),
         body: Center(child: Text(l10n.vehicleSharingLicensingRequired)),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.homeModuleVehicleSharing)),
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () => exitVehicleSharingModule(context),
+        ),
+        title: Text(l10n.homeModuleVehicleSharing),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -124,44 +105,55 @@ class _VehicleSharingHubScreenState extends State<VehicleSharingHubScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  if (_rows.isEmpty)
+                  if (_accessible.isEmpty)
                     Text(l10n.vehicleSharingAccessibleEmpty)
                   else
-                    ..._rows.map((row) => _AccessibleCard(row: row, prefs: widget.prefs)),
+                    ..._accessible.map(
+                      (entry) => _AccessibleCard(
+                        vehicle: entry.vehicle,
+                        link: entry.link,
+                        ownerLabel: _ownerLabel(entry.vehicle, _contactLabels, l10n),
+                        prefs: widget.prefs,
+                      ),
+                    ),
                 ],
               ),
             ),
     );
   }
-}
 
-class _AccessibleVehicleRow {
-  const _AccessibleVehicleRow({
-    required this.vehicle,
-    required this.subtitle,
-    required this.isOwnerContext,
-    required this.borrowerContactId,
-  });
-
-  final Vehicle vehicle;
-  final String subtitle;
-  final bool isOwnerContext;
-  final String borrowerContactId;
+  String _ownerLabel(
+    Vehicle vehicle,
+    Map<String, String> labels,
+    AppLocalizations l10n,
+  ) {
+    final id = vehicle.ownerContactId;
+    if (id == kVehicleOwnerSelfContactId) {
+      return l10n.vehicleRoleOwner;
+    }
+    return labels[id] ?? id;
+  }
 }
 
 class _AccessibleCard extends StatelessWidget {
-  const _AccessibleCard({required this.row, required this.prefs});
+  const _AccessibleCard({
+    required this.vehicle,
+    required this.link,
+    required this.ownerLabel,
+    required this.prefs,
+  });
 
-  final _AccessibleVehicleRow row;
+  final Vehicle vehicle;
+  final VehicleSharingLink link;
+  final String ownerLabel;
   final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final v = row.vehicle;
-    final forward = !row.isOwnerContext;
-    final actingId =
-        forward ? row.borrowerContactId : v.ownerContactId;
+    final usageContext = VehicleUsageContext.borrower(
+      actingContactId: link.borrowerContactId,
+    );
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -169,26 +161,26 @@ class _AccessibleCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(v.displayLabel, style: Theme.of(context).textTheme.titleMedium),
-            Text(
-              row.isOwnerContext
-                  ? l10n.vehicleSharingBorrowerLabel(row.subtitle)
-                  : l10n.vehicleSharingOwnerLabel(row.subtitle),
-            ),
+            Text(vehicle.displayLabel, style: Theme.of(context).textTheme.titleMedium),
+            Text(l10n.vehicleSharingOwnerLabel(ownerLabel)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               children: [
                 ActionChip(
                   label: Text(l10n.vehicleQuickActionOdometer),
-                  onPressed: () => context.push(
-                    '/vehicle-sharing/${v.id}/use?acting=${Uri.encodeComponent(actingId)}&forward=$forward',
+                  onPressed: () => _openForm(
+                    context,
+                    'use',
+                    usageContext,
                   ),
                 ),
                 ActionChip(
                   label: Text(l10n.vehicleQuickActionFuel),
-                  onPressed: () => context.push(
-                    '/vehicle-sharing/${v.id}/fuel?acting=${Uri.encodeComponent(actingId)}&forward=$forward',
+                  onPressed: () => _openForm(
+                    context,
+                    'fuel',
+                    usageContext,
                   ),
                 ),
               ],
@@ -197,5 +189,17 @@ class _AccessibleCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openForm(
+    BuildContext context,
+    String kind,
+    VehicleUsageContext usageContext,
+  ) {
+    final borrower = Uri.encodeComponent(usageContext.actingContactId);
+    final path = kind == 'use'
+        ? '/vehicle-sharing/${vehicle.id}/use?borrower=$borrower'
+        : '/vehicle-sharing/${vehicle.id}/fuel?borrower=$borrower';
+    context.push(path);
   }
 }

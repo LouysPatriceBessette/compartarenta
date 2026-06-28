@@ -9,6 +9,7 @@ import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
+import '../../vehicle/vehicle_module_exit.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class VehicleModuleHubScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
       VehiclesRepository(AppDatabase.processScope);
   List<Vehicle> _vehicles = const [];
   bool _loading = true;
+  int _cardReloadToken = 0;
 
   @override
   void initState() {
@@ -40,6 +42,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
     setState(() {
       _vehicles = vehicles;
       _loading = false;
+      _cardReloadToken++;
     });
   }
 
@@ -54,6 +57,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
     }
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: () => exitVehicleModule(context)),
         title: Text(l10n.homeModuleVehicle),
         actions: [
           IconButton(
@@ -103,6 +107,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
                   else
                     ..._vehicles.map(
                       (v) => _VehicleCard(
+                        key: ValueKey('${v.id}-$_cardReloadToken'),
                         vehicle: v,
                         repo: _repo,
                         onTap: () async {
@@ -197,8 +202,9 @@ class _QuickActionsRow extends StatelessWidget {
   }
 }
 
-class _VehicleCard extends StatelessWidget {
+class _VehicleCard extends StatefulWidget {
   const _VehicleCard({
+    super.key,
     required this.vehicle,
     required this.repo,
     required this.onTap,
@@ -209,20 +215,42 @@ class _VehicleCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_VehicleCard> createState() => _VehicleCardState();
+}
+
+class _VehicleCardState extends State<_VehicleCard> {
+  late Future<_VehicleCardData> _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataFuture = _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VehicleCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicle.id != widget.vehicle.id ||
+        oldWidget.repo != widget.repo) {
+      _dataFuture = _load();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<_VehicleCardData>(
-      future: _load(),
+      future: _dataFuture,
       builder: (context, snap) {
         final data = snap.data;
         final l10n = AppLocalizations.of(context);
-        final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+        final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
         final meterLabel = kind?.usesHorometer ?? false
             ? l10n.vehicleHorometerLabel
             : l10n.vehicleOdometerLabel;
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
-            onTap: onTap,
+            onTap: widget.onTap,
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -230,11 +258,16 @@ class _VehicleCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    vehicle.displayLabel,
+                    widget.vehicle.displayLabel,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
-                  if (data != null) ...[
+                  if (snap.hasError)
+                    Text(
+                      l10n.vehicleConsumptionInsufficient,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  else if (data != null) ...[
                     Text(
                       '$meterLabel: ${data.meterDisplay}',
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -268,7 +301,10 @@ class _VehicleCard extends StatelessWidget {
                       ),
                     ],
                   ] else
-                    const LinearProgressIndicator(),
+                    const SizedBox(
+                      height: 4,
+                      child: LinearProgressIndicator(),
+                    ),
                 ],
               ),
             ),
@@ -280,11 +316,12 @@ class _VehicleCard extends StatelessWidget {
 
   Future<_VehicleCardData> _load() async {
     final metrics = VehicleConsumptionMetrics(AppDatabase.processScope);
-    final consumption = await metrics.forVehicle(vehicle.id);
-    final meter = await repo.latestMeterValue(vehicle.id) ?? 0;
+    final consumption = await metrics.forVehicle(widget.vehicle.id);
+    final meter =
+        await widget.repo.latestMeterValue(widget.vehicle.id) ?? 0;
     final alerts = await VehicleMaintenanceAlerts(AppDatabase.processScope)
-        .alertsForVehicle(vehicle.id, currentMeter: meter);
-    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+        .alertsForVehicle(widget.vehicle.id, currentMeter: meter);
+    final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
     final meterDisplay = kind?.usesHorometer ?? false
         ? '${(meter / 10).toStringAsFixed(1)} h'
         : '$meter km';

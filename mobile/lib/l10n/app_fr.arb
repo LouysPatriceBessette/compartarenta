@@ -1409,6 +1409,11 @@
   "vehicleSharingOfferBlocked": "Le partage nécessite les abonnements Véhicule et Partage de véhicule.",
   "vehicleSharingForwarded": "Enregistré sur le véhicule du propriétaire.",
   "vehicleSharingBorrowerLabel": "Emprunteur : {name}",
-  "vehicleSharingOwnerLabel": "Propriétaire : {name}"
+  "vehicleSharingOwnerLabel": "Propriétaire : {name}",
+
+  "vehicleUsageBlockedOwnOnBorrowerPath": "Ce véhicule est le vôtre. Utilisez le module Véhicule pour enregistrer votre usage — pas Partage de véhicule.",
+  "vehicleUsageBlockedNotOwnedOnOwnerPath": "Ce véhicule n'est pas dans vos véhicules possédés. Utilisez Partage de véhicule pour un véhicule partagé avec vous.",
+  "vehicleUsageBlockedMissingBorrowerIdentity": "Identité emprunteur manquante pour ce formulaire.",
+  "vehicleUsageBlockedVehicleNotFound": "Véhicule introuvable."
 }
 

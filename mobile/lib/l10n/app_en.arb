@@ -1595,6 +1595,11 @@
   "vehicleSharingBorrowerLabel": "Borrower: {name}",
   "@vehicleSharingBorrowerLabel": { "placeholders": { "name": { "type": "String" } } },
   "vehicleSharingOwnerLabel": "Owner: {name}",
-  "@vehicleSharingOwnerLabel": { "placeholders": { "name": { "type": "String" } } }
+  "@vehicleSharingOwnerLabel": { "placeholders": { "name": { "type": "String" } } },
+
+  "vehicleUsageBlockedOwnOnBorrowerPath": "This vehicle is yours. Use the Vehicle module to record owner usage — not Vehicle sharing.",
+  "vehicleUsageBlockedNotOwnedOnOwnerPath": "This vehicle is not in your owned list. Use Vehicle sharing for a vehicle shared with you.",
+  "vehicleUsageBlockedMissingBorrowerIdentity": "Borrower identity is missing for this form.",
+  "vehicleUsageBlockedVehicleNotFound": "Vehicle not found."
 }
 
