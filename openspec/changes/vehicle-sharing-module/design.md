@@ -52,3 +52,7 @@ See `vehicle-sharing-licensing-and-delinquency` for EV/PP/PE delinquency rules a
 
 - **[Emprunteur submits while Propriétaire PP disabled]** → Mitigation: clear error to Emprunteur; local queue may hold until restored or fail fast per spec.
 - **[Borrower logs without owner online]** → Mitigation: local-first queue + relay sync; monotonic meter rules on merge.
+
+## UI architecture (first-pass guide)
+
+Parallel hub to `vehicle-hub-ui`. Separate **Vehicle sharing** affordance on app home per `vehicle-app-home-navigation`. See `vehicle-sharing-hub-ui` and shared `vehicle-quick-actions-ui`.

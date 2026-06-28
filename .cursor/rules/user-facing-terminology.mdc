@@ -23,6 +23,8 @@ the developer.
 | owner (sharing) | Prefer product role name in UI. | **FR:** Propriétaire; use locale-appropriate equivalent elsewhere. |
 | borrower (sharing) | Prefer product role name in UI. | **FR:** Emprunteur; use locale-appropriate equivalent elsewhere. |
 | engine hour meter (boat) | Do not treat **horomètre** as jargon or invent alternate FR labels. Use the official user-facing term per locale. | **FR:** Horomètre (official term, [OQLF GDT](https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/2076698/horometre)); **FR (France, if regional copy is offered):** Horamètre; **EN:** Engine hour meter; **ES:** Cronómetro del motor |
+| odometer gap / differential | Do not use developer jargon in the prompt; no in-app dispute workflow. | **FR:** « À qui le différentiel de {amount} est-il attribuable ? »; **Unknown:** **Inconnu** / **Je ne sais pas**; **EN/ES:** locale-appropriate equivalent |
+| meter reading photo | Required for every reading; supports negative-gap verification. | **FR:** Photo de l'odomètre (or **Horomètre** for boats) — required, not optional |
 
 ## Rule Of Thumb
 

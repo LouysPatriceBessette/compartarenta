@@ -23,6 +23,14 @@ The owner SHALL see reconciliation and usage ratio inputs across **all** sharers
 - **WHEN** the owner computes usage ratios for a window
 - **THEN** distances include owner uses and all approved borrowers' uses in that window
 
+### Requirement: Unknown-attributed gaps excluded from borrower owed inputs
+Distance from gap records attributed to **Unknown** MUST NOT be included when computing an Emprunteur's attributed usage or owed share for reconciliation. The Propriétaire effectively carries Unknown usage in allocation math until they revise attribution to a named participant (see `vehicle-odometer-gap-attribution`).
+
+#### Scenario: Borrower reconciliation ignores Unknown gaps
+- **WHEN** borrower B opens reconciliation for a window containing an Unknown-attributed gap
+- **THEN** that gap distance is excluded from B's attributed totals
+- **THEN** the breakdown explains that Unknown gaps are Propriétaire-side until revised
+
 ### Requirement: Handle insufficient borrower data
 The system MUST handle insufficient borrower-scoped data without showing misleading metrics.
 

@@ -7,9 +7,10 @@
 
 ## 2. Borrower usage
 
-- [ ] 2.1 Borrower use session UI on shared vehicles
-- [ ] 2.2 Usage-scoped fuel facts linked to borrower sessions
-- [ ] 2.3 Block borrower from owner-only actions (maintenance, full-tank anchors)
+- [ ] 2.1 Borrower use session UI on shared vehicles (start/end readings)
+- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`)
+- [ ] 2.3 Quick-action forward path (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui`
+- [ ] 2.4 Emprunteur hub does not show Propriétaire-only alert tiles or lifetime owner metrics
 
 ## 3. Metrics & reconciliation
 
@@ -29,3 +30,5 @@
 - [ ] 5.1 Contacts picker for invite (connected Contacts only)
 - [ ] 5.2 Relay sync for sharing links and usage facts
 - [ ] 5.3 Gate borrowing on `vehicle-sharing`; gate sharing out on both modules
+- [ ] 5.4 Vehicle sharing hub (`vehicle-sharing-hub-ui`): accessible vehicles, statistics, quick actions
+- [ ] 5.5 Remove any sharing-side dependencies on prototype `car_sharing` screens (`vehicle-legacy-code-removal`)

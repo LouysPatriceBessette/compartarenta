@@ -7,9 +7,10 @@
 
 ## 2. Odometer & distance
 
-- [ ] 2.1 Owner use flow: before/after odometer, distance derivation
-- [ ] 2.2 Monotonic odometer validation per vehicle
-- [ ] 2.3 Attribute uses to owner or borrower Contact (borrower path wired with sharing module)
+- [ ] 2.1 Owner use flow: start/end odometer with required photo, distance derivation
+- [ ] 2.2 Monotonic / negative-gap flow per `vehicle-odometer-gap-attribution`
+- [ ] 2.3 Attribute uses to Propriétaire or Emprunteur Contact (sharing path)
+- [ ] 2.4 Gap attribution at session start (`vehicle-odometer-gap-attribution`)
 
 ## 3. Fuel & owner metrics
 
@@ -28,7 +29,15 @@
 - [ ] 5.1 Single-vehicle export (factual snapshot, module manifest)
 - [ ] 5.2 Import as new owned vehicle on buyer device
 
-## 6. Navigation & licensing
+## 6. Navigation, hubs & licensing
 
-- [ ] 6.1 Vehicle module shell (owned vehicles list, owner metrics)
-- [ ] 6.2 Gate owner features on effective `vehicle` entitlement
+- [ ] 6.1 Wire existing home tiles (`homeModuleVehicle`, `homeModuleVehicleSharing`) to hubs; replace coming-soon stub (`vehicle-app-home-navigation`)
+- [ ] 6.2 Vehicle module hub (`vehicle-hub-ui`): My vehicles cards, statistics entry, quick actions
+- [ ] 6.3 Maintenance alert tiles on owned vehicle cards (`vehicle-maintenance-alert-tiles`)
+- [ ] 6.4 Shared quick-action forms with local persist (`vehicle-quick-actions-ui`)
+- [ ] 6.5 Gate owner features on effective `vehicle` entitlement
+
+## 7. Vehicle sharing hub & legacy cleanup
+
+- [ ] 7.1 Vehicle sharing hub shell (`vehicle-sharing-hub-ui`) wired to same quick-action forms (forward routing)
+- [ ] 7.2 Remove prototype: `/car` route, `CarSharingPlanScreen`, `CarSharingPlanDraft` prefs (`vehicle-legacy-code-removal`)

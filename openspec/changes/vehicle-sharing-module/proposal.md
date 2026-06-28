@@ -22,10 +22,11 @@ This change **supersedes** the sharing, allocation, and group semantics of `car-
 ### New Capabilities
 
 - `vehicle-sharing-domain-model`: Sharing links, owner/borrower roles, acceptance, multi-vehicle / multi-borrower rules.
-- `vehicle-sharing-usage-logging`: Borrower (and owner) use sessions on a shared vehicle; attribution to borrower Contact.
+- `vehicle-sharing-usage-logging`: Borrower (and owner) use sessions on a shared vehicle; attribution to borrower Contact; gap attribution notifications and Propriétaire revision per `vehicle-odometer-gap-attribution`.
 - `vehicle-sharing-usage-metrics`: Borrower-scoped distance and fuel statistics; reconciliation windows.
 - `vehicle-expense-sharing`: Category-based allocation (fuel, maintenance, violations, payments), proposals and acceptance.
 - `vehicle-sharing-licensing-and-delinquency`: EV/PP/PE entitlement roles, 1-week grace, delinquency effects per role.
+- `vehicle-sharing-hub-ui`: Accessible vehicles, statistics, quick actions (forward routing), offer path.
 
 ### Modified Capabilities
 

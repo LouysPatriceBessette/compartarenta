@@ -31,6 +31,7 @@ Constraints:
 - Expense allocation and sharing ratios (see `vehicle-sharing-module`).
 - Telematics (OBD-II, GPS auto-trip detection).
 - In-app ownership transfer (sale = export + new owner import).
+- **Backward compatibility** with the early `car_sharing` prototype (`CarSharingPlanScreen`, `/car`, draft prefs) — see `vehicle-legacy-code-removal`.
 
 ## Decisions
 
@@ -59,3 +60,32 @@ Constraints:
 - **[Odometer conflicts when owner and borrower both log]** → Mitigation: monotonic validation with explicit correction flag; attribution on each reading (owner vs borrower session).
 - **[Large export on old vehicles]** → Mitigation: export is explicit user action; format documented in `vehicle-data-portability`.
 - **[Buyer import without seller relay history]** → Mitigation: export is factual snapshot; sharing relationships are not assumed to transfer unless specified in sharing module.
+
+## UI architecture (first-pass guide)
+
+Parallel **hubs**, each with its **own app home affordance** — same scrollable-menu *pattern* as `housing-active-agreement-operations`.
+
+```mermaid
+flowchart TD
+  Home[App home]
+  Veh[Vehicle affordance]
+  Share[Vehicle sharing affordance]
+  HubV[Vehicle module hub]
+  HubS[Vehicle sharing hub]
+  QA[Shared quick-action forms]
+  Home --> Veh
+  Home --> Share
+  Veh --> HubV
+  Share --> HubS
+  HubV --> QA
+  HubS --> QA
+  HubV -->|local persist| Owned[(Owned vehicle facts)]
+  HubS -->|forward| Owned
+```
+
+| App home | Hub | Primary section | Quick actions |
+| --- | --- | --- | --- |
+| **Vehicle** (`homeModuleVehicle`) | Vehicle module | My vehicles + alert tiles + statistics | Save locally |
+| **Vehicle sharing** (`homeModuleVehicleSharing`) | Vehicle sharing | Accessible vehicles + statistics | Forward to Propriétaire |
+
+Tiles already exist on `HomeScreen`; implementation wires routes and entitlement gating. Remove prototype `/car` and `CarSharingPlanScreen` per `vehicle-legacy-code-removal`.

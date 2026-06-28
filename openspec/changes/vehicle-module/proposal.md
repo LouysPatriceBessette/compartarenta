@@ -11,7 +11,7 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 - Support **multiple vehicles per owner**.
 - Owner-side tracking:
   - fuel purchases and full-tank–anchored consumption (both Propriétaire and Emprunteur may mark full-tank anchors on shared vehicles — see `vehicle-sharing-module`)
-  - odometer or **horometer** (boats) logs and monotonic validation
+  - odometer or **horometer** (boats) logs with **required photo per reading**, monotonic validation, positive/negative gap attribution
   - maintenance / repairs log with **owner-only** service reminders (e.g., oil change at N km)
   - traffic violations log
   - lifetime vehicle metrics (total distance, consumption history)
@@ -24,11 +24,17 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 
 - `vehicle-domain-model`: Vehicles, fixed owner, vehicle kind (car, truck, motorcycle, boat, …), owner use sessions, owner-side expenses, facts vs derived metrics.
 - `odometer-logging`: Odometer before/after per use; monotonic validation per vehicle; distance derivation.
+- `vehicle-odometer-gap-attribution`: Positive gap prompt; Unknown durable + Propriétaire notify; negative gap + photo verify; Propriétaire-only revision (informational notifications).
 - `fuel-purchase-tracking`: Fuel purchase facts linked to the vehicle; full-tank anchors for consumption.
 - `vehicle-consumption-metrics`: Owner-visible consumption per km and total distance over the vehicle lifetime (and selectable windows).
 - `maintenance-and-repairs-log`: Maintenance events, costs, owner-only scheduled reminders.
 - `traffic-violations-log`: Violations linked to the vehicle with responsibility state.
 - `vehicle-data-portability`: Sale export (factual history only, no sharing metadata) and buyer import.
+- `vehicle-legacy-code-removal`: Delete prototype `car_sharing` UI/routes/prefs; no backward compatibility.
+- `vehicle-app-home-navigation`: Wire existing home tiles; sibling entries, not nested.
+- `vehicle-hub-ui`: Propriétaire operations hub (My vehicles, statistics, quick actions).
+- `vehicle-quick-actions-ui`: Shared quick forms; local save vs forward-to-Propriétaire routing.
+- `vehicle-maintenance-alert-tiles`: Orange preview tiles; notification on threshold odometer read.
 - `vehicle-module-licensing`: 2-week trial on `vehicle` only; sharing free during vehicle trial; no standalone `vehicle-sharing` trial.
 
 ### Modified Capabilities
@@ -38,6 +44,6 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 ## Impact
 
 - **Licensing**: requires the `vehicle` subscription for owners; see `per-module-licensing-and-bundles` and `vehicle-sharing-module` for the paired sharing license.
-- **Mobile UX**: vehicle list, owner use log, fuel/maintenance/violation entry, owner metrics, export.
+- **Mobile UX**: Vehicle module hub, alert tiles, shared quick actions, statistics, export.
 - **Data storage**: vehicle-scoped tables keyed by owner; no mixing across owners.
 - **Contacts**: participants for sharing are specified in `vehicle-sharing-module`; owner identity uses the self Contact.
