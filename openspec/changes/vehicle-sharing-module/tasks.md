@@ -1,16 +1,16 @@
 ## 1. Sharing domain
 
-- [ ] 1.1 Define VehicleSharingLink (vehicle, owner, borrower, status)
-- [ ] 1.2 Owner invite flow (requires `vehicle` + `vehicle-sharing`)
-- [ ] 1.3 Borrower accept / owner revoke flows
-- [ ] 1.4 Multi-vehicle and multi-borrower list surfaces
+- [x] 1.1 Define VehicleSharingLink (vehicle, owner, borrower, status)
+- [x] 1.2 Owner invite flow (requires `vehicle` + `vehicle-sharing`)
+- [x] 1.3 Borrower accept / owner revoke flows (accept + local revoke API; revoke UI deferred)
+- [x] 1.4 Multi-vehicle and multi-borrower list surfaces (basic hub lists)
 
 ## 2. Borrower usage
 
-- [ ] 2.1 Borrower use session UI on shared vehicles (start/end readings)
-- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`)
-- [ ] 2.3 Quick-action forward path (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui`
-- [ ] 2.4 Emprunteur hub does not show Propriétaire-only alert tiles or lifetime owner metrics
+- [x] 2.1 Borrower use session UI on shared vehicles (start/end readings)
+- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`) — in-app snackbar only; relay/push deferred
+- [x] 2.3 Quick-action forward path (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui` (local same-device; relay forward deferred)
+- [x] 2.4 Emprunteur hub does not show Propriétaire-only alert tiles or lifetime owner metrics
 
 ## 3. Metrics & reconciliation
 
@@ -27,8 +27,8 @@
 
 ## 5. Integration
 
-- [ ] 5.1 Contacts picker for invite (connected Contacts only)
+- [x] 5.1 Contacts picker for invite (connected Contacts only)
 - [ ] 5.2 Relay sync for sharing links and usage facts
-- [ ] 5.3 Gate borrowing on `vehicle-sharing`; gate sharing out on both modules
-- [ ] 5.4 Vehicle sharing hub (`vehicle-sharing-hub-ui`): accessible vehicles, statistics, quick actions
-- [ ] 5.5 Remove any sharing-side dependencies on prototype `car_sharing` screens (`vehicle-legacy-code-removal`)
+- [ ] 5.3 Gate borrowing on `vehicle-sharing`; gate sharing out on both modules (debug-only stub)
+- [x] 5.4 Vehicle sharing hub (`vehicle-sharing-hub-ui`): accessible vehicles, statistics, quick actions
+- [x] 5.5 Remove any sharing-side dependencies on prototype `car_sharing` screens (`vehicle-legacy-code-removal`)

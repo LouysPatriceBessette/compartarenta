@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 import '../l10n/app_localizations.dart';
+import '../vehicle/vehicle_module_access.dart';
 import 'package:compartarenta/navigation/app_navigation.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,12 +12,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-
-    void showComingSoon() {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.commonComingSoon)),
-      );
-    }
+    final access = const VehicleModuleAccess();
 
     return Scaffold(
       appBar: AppBar(
@@ -37,9 +33,6 @@ class HomeScreen extends StatelessWidget {
           const contentInset = 16.0;
           const gap = 12.0;
 
-          // Usable width for Wrap children: [LayoutBuilder] can report maxWidth==0
-          // briefly (e.g. cold start / activity teardown), which must not become a
-          // negative SizedBox width (BoxConstraints w=-32 when only insets apply).
           final rawContentW = constraints.maxWidth -
               2 * contentInset -
               viewPadding.left -
@@ -49,6 +42,56 @@ class HomeScreen extends StatelessWidget {
               ? ((contentW - gap) / 2).clamp(0.0, double.infinity)
               : contentW;
 
+          final tiles = <Widget>[
+            SizedBox(
+              width: contentW,
+              child: _HomeActionCard(
+                icon: MdiIcons.accountMultipleOutline,
+                label: l10n.homeModuleContacts,
+                onTap: () => navigateTo(context, '/contacts'),
+              ),
+            ),
+            SizedBox(
+              width: moduleTileW,
+              child: _HomeActionCard(
+                icon: MdiIcons.homeCity,
+                label: l10n.homeModuleHousing,
+                onTap: () => navigateTo(context, '/housing'),
+                semanticsIdentifier:
+                    kDebugMode ? 'qa-home-housing' : null,
+              ),
+            ),
+          ];
+
+          if (access.showVehicleHomeTile) {
+            tiles.add(
+              SizedBox(
+                width: moduleTileW,
+                child: _HomeActionCard(
+                  icon: MdiIcons.carSide,
+                  label: l10n.homeModuleVehicle,
+                  onTap: () => navigateTo(context, '/vehicle'),
+                  semanticsIdentifier:
+                      kDebugMode ? 'qa-home-vehicle' : null,
+                ),
+              ),
+            );
+          }
+
+          if (access.showVehicleSharingHomeTile) {
+            tiles.add(
+              SizedBox(
+                width: moduleTileW,
+                child: _HomeActionCard(
+                  icon: Icons.car_rental,
+                  label: l10n.homeModuleVehicleSharing,
+                  onTap: () => navigateTo(context, '/vehicle-sharing'),
+                  semanticsIdentifier:
+                      kDebugMode ? 'qa-home-vehicle-sharing' : null,
+                ),
+              ),
+            );
+          }
 
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
@@ -60,44 +103,7 @@ class HomeScreen extends StatelessWidget {
             child: Wrap(
               spacing: gap,
               runSpacing: gap,
-              children: [
-                SizedBox(
-                  width: contentW,
-                  child: _HomeActionCard(
-                    icon: MdiIcons.accountMultipleOutline,
-                    label: l10n.homeModuleContacts,
-                    onTap: () => navigateTo(context, '/contacts'),
-                  ),
-                ),
-                SizedBox(
-                  width: moduleTileW,
-                  child: _HomeActionCard(
-                    icon: MdiIcons.homeCity,
-                    label: l10n.homeModuleHousing,
-                    onTap: () => navigateTo(context, '/housing'),
-                    semanticsIdentifier:
-                        kDebugMode ? 'qa-home-housing' : null,
-                  ),
-                ),
-                SizedBox(
-                  width: moduleTileW,
-                  child: _HomeActionCard(
-                    icon: MdiIcons.carSide,
-                    label: l10n.homeModuleVehicle,
-                    onTap: showComingSoon,
-                    enabled: false,
-                  ),
-                ),
-                SizedBox(
-                  width: moduleTileW,
-                  child: _HomeActionCard(
-                    icon: Icons.car_rental,
-                    label: l10n.homeModuleVehicleSharing,
-                    onTap: showComingSoon,
-                    enabled: false,
-                  ),
-                ),
-              ],
+              children: tiles,
             ),
           );
         },
@@ -111,7 +117,6 @@ class _HomeActionCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.enabled = true,
     this.semanticsIdentifier,
   });
 
@@ -120,15 +125,10 @@ class _HomeActionCard extends StatelessWidget {
   final VoidCallback onTap;
   final String? semanticsIdentifier;
 
-  /// When false, card uses muted colors (Material disabled-style) but [onTap] still runs.
-  final bool enabled;
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final foreground = enabled
-        ? scheme.onSurface
-        : scheme.onSurface.withValues(alpha: 0.38);
+    final foreground = scheme.onSurface;
 
     final card = InkWell(
       onTap: onTap,

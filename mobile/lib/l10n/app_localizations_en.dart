@@ -3327,4 +3327,240 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get housingInactiveSettlementErrorExceedsCredit =>
       'Amount exceeds what is owed to them.';
+
+  @override
+  String get vehicleLicensingRequired =>
+      'Vehicle module requires an active subscription.';
+
+  @override
+  String get vehicleSharingLicensingRequired =>
+      'Vehicle sharing requires an active subscription.';
+
+  @override
+  String get vehicleQuickActionsTitle => 'Quick actions';
+
+  @override
+  String get vehicleMyVehiclesTitle => 'My vehicles';
+
+  @override
+  String get vehicleMyVehiclesEmpty => 'No vehicles yet. Tap + to add one.';
+
+  @override
+  String get vehicleAddVehicle => 'Add vehicle';
+
+  @override
+  String get vehicleAddFirst => 'Add a vehicle first.';
+
+  @override
+  String get vehicleFieldLabel => 'Display name';
+
+  @override
+  String get vehicleFieldKind => 'Vehicle kind';
+
+  @override
+  String get vehicleFieldMake => 'Make';
+
+  @override
+  String get vehicleFieldModel => 'Model';
+
+  @override
+  String get vehicleKindCar => 'Car';
+
+  @override
+  String get vehicleKindTruck => 'Truck';
+
+  @override
+  String get vehicleKindMotorcycle => 'Motorcycle';
+
+  @override
+  String get vehicleKindBoat => 'Boat';
+
+  @override
+  String get vehicleQuickActionOdometer => 'Odometer reading';
+
+  @override
+  String get vehicleQuickActionFuel => 'Fuel purchase';
+
+  @override
+  String get vehicleQuickActionMaintenance => 'Maintenance performed';
+
+  @override
+  String get vehicleQuickActionViolation => 'Damage or violation';
+
+  @override
+  String get vehicleOdometerLabel => 'Odometer';
+
+  @override
+  String get vehicleHorometerLabel => 'Engine hour meter';
+
+  @override
+  String get vehicleMeterPhotoRequired => 'A meter photo is required.';
+
+  @override
+  String get vehicleMeterPhotoAdd => 'Add meter photo';
+
+  @override
+  String get vehicleMeterPhotoAttached => 'Photo attached';
+
+  @override
+  String get vehicleMeterPhotoCamera => 'Camera';
+
+  @override
+  String get vehicleMeterPhotoGallery => 'Gallery';
+
+  @override
+  String get vehicleUseSessionStart => 'Start use session';
+
+  @override
+  String get vehicleUseSessionEnd => 'End use session';
+
+  @override
+  String get vehicleUseSessionStarted =>
+      'Session started. End it when you finish driving.';
+
+  @override
+  String get vehicleConsumptionTitle => 'Consumption';
+
+  @override
+  String get vehicleConsumptionInsufficient =>
+      'Insufficient data for consumption';
+
+  @override
+  String vehicleConsumptionPer100Km(String value) {
+    return '$value L/100 km';
+  }
+
+  @override
+  String vehicleConsumptionPerHour(String value) {
+    return '$value L/h';
+  }
+
+  @override
+  String get vehicleStatisticsTitle => 'Statistics';
+
+  @override
+  String get vehicleStatisticsMileageTitle => 'My mileage';
+
+  @override
+  String get vehicleStatisticsExpensesTitle => 'My expenses';
+
+  @override
+  String get vehicleExpenseFuel => 'Fuel';
+
+  @override
+  String get vehicleExpenseMaintenance => 'Maintenance';
+
+  @override
+  String get vehicleExpenseViolations => 'Violations';
+
+  @override
+  String get vehicleFuelCost => 'Total cost';
+
+  @override
+  String get vehicleFuelVolume => 'Volume (L, optional)';
+
+  @override
+  String get vehicleFuelMeter => 'Meter reading';
+
+  @override
+  String get vehicleFuelFullTank => 'Full tank';
+
+  @override
+  String get vehicleMaintenanceCategory => 'Category';
+
+  @override
+  String get vehicleMaintenanceCost => 'Cost';
+
+  @override
+  String get vehicleMaintenanceNotes => 'Notes';
+
+  @override
+  String get vehicleViolationType => 'Violation type';
+
+  @override
+  String get vehicleViolationAmount => 'Amount';
+
+  @override
+  String vehicleMaintenanceAlertTile(String category, int remaining) {
+    return '$category: $remaining remaining';
+  }
+
+  @override
+  String get vehicleGapAttributionTitle => 'Unlogged usage';
+
+  @override
+  String vehicleGapAttributionPrompt(int amount, String unit) {
+    return 'Who is the $amount $unit difference attributable to?';
+  }
+
+  @override
+  String get vehicleGapAttributionUnknown => 'I don\'t know';
+
+  @override
+  String get vehicleGapAttributionSelf => 'Myself';
+
+  @override
+  String get vehicleGapOwnerNotified => 'The owner will be notified.';
+
+  @override
+  String get vehicleNegativeGapTitle => 'Reading decreased';
+
+  @override
+  String vehicleNegativeGapBody(int amount, String unit) {
+    return 'The new reading is $amount $unit lower than the last stored reading.';
+  }
+
+  @override
+  String get vehicleNegativeGapMaintain =>
+      'Maintain reading, investigate later';
+
+  @override
+  String get vehicleNegativeGapCancel => 'Cancel entry';
+
+  @override
+  String get vehicleRoleOwner => 'Owner';
+
+  @override
+  String get vehicleRoleBorrower => 'Borrower';
+
+  @override
+  String get vehicleSharingAccessibleTitle => 'Accessible vehicles';
+
+  @override
+  String get vehicleSharingAccessibleEmpty => 'No shared vehicles yet.';
+
+  @override
+  String get vehicleSharingPendingOffers => 'Pending offers';
+
+  @override
+  String get vehicleSharingAccept => 'Accept';
+
+  @override
+  String get vehicleSharingOffer => 'Offer sharing';
+
+  @override
+  String get vehicleSharingOfferPickContact => 'Select a connected contact';
+
+  @override
+  String get vehicleSharingNoContacts => 'Add a connected contact first.';
+
+  @override
+  String get vehicleSharingOfferSent => 'Offer sent.';
+
+  @override
+  String get vehicleSharingOfferBlocked =>
+      'Sharing requires vehicle and vehicle-sharing subscriptions.';
+
+  @override
+  String get vehicleSharingForwarded => 'Recorded on the owner\'s vehicle.';
+
+  @override
+  String vehicleSharingBorrowerLabel(String name) {
+    return 'Borrower: $name';
+  }
+
+  @override
+  String vehicleSharingOwnerLabel(String name) {
+    return 'Owner: $name';
+  }
 }

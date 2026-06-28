@@ -14,7 +14,7 @@ import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
 
-enum PlanType { housing, carSharing }
+enum PlanType { housing }
 
 class AppPreferences extends ChangeNotifier {
   AppPreferences._(this._prefs);
@@ -67,7 +67,6 @@ class AppPreferences extends ChangeNotifier {
   /// Legacy single-plan backup key (v1); migrated on read for [housing:default].
   static const _kHousingDefaultPlanDraftBackupLegacy =
       'housing.default.planDraftBackupJson';
-  static const _kCarSharingPlanDraft = 'carSharing.planDraftJson';
 
   static String _housingPlanDraftBackupKey(String planId) =>
       'housing.planDraftBackup.$planId';
@@ -428,17 +427,6 @@ class AppPreferences extends ChangeNotifier {
     }
   }
 
-  String get carSharingPlanDraftJson =>
-      _prefs.getString(_kCarSharingPlanDraft) ?? '';
-
-  Future<void> setCarSharingPlanDraftJson(
-    String value, {
-    bool notify = true,
-  }) async {
-    await _prefs.setString(_kCarSharingPlanDraft, value);
-    if (notify) notifyListeners();
-  }
-
   Future<void> completeOnboarding() async {
     await applyDefaultRegionalPrefsIfUnset();
     await _prefs.setBool(_kOnboardingComplete, true);
@@ -568,7 +556,6 @@ class AppPreferences extends ChangeNotifier {
     await _prefs.remove(_kNotificationsCountryStatsCode);
 
     await _prefs.remove(_kHousingDefaultSummaryReached);
-    await _prefs.remove(_kCarSharingPlanDraft);
 
     notifyListeners();
   }

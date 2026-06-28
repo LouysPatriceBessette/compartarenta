@@ -7437,10 +7437,10 @@ class PendingHandshake extends DataClass
   /// `inviter` (we generated the code) | `invitee` (we received it).
   final String role;
 
-  /// Lifecycle. `awaiting_hello` and `awaiting_ack` are the polling
-  /// states; the rest are terminal.
+  /// Lifecycle. `awaiting_hello`, `dispatching_hello`, and `awaiting_ack` are
+  /// the polling states; the rest are terminal.
   ///   * inviter: `awaiting_hello` → `accepted`|`rejected` → `completed`
-  ///   * invitee: `awaiting_ack`   → `accepted`|`rejected`
+  ///   * invitee: `dispatching_hello` → `awaiting_ack` → `completed`|`rejected`
   ///   * either:  `failed` on unrecoverable error (e.g., expired code).
   final String state;
 
@@ -10486,7 +10486,7 @@ class HousingParticipationChange extends DataClass
   final String planId;
   final String packageId;
 
-  /// `immediate_termination` | `voluntary_withdrawal` | `ejection`
+  /// `voluntary_withdrawal` | `ejection`
   final String kind;
   final String initiatorParticipantId;
   final String? targetParticipantId;
@@ -13463,6 +13463,5208 @@ class PlanPeerEstablishmentsCompanion
   }
 }
 
+class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehiclesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerContactIdMeta = const VerificationMeta(
+    'ownerContactId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerContactId = GeneratedColumn<String>(
+    'owner_contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleKindMeta = const VerificationMeta(
+    'vehicleKind',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleKind = GeneratedColumn<String>(
+    'vehicle_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayLabelMeta = const VerificationMeta(
+    'displayLabel',
+  );
+  @override
+  late final GeneratedColumn<String> displayLabel = GeneratedColumn<String>(
+    'display_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _makeMeta = const VerificationMeta('make');
+  @override
+  late final GeneratedColumn<String> make = GeneratedColumn<String>(
+    'make',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _modelMeta = const VerificationMeta('model');
+  @override
+  late final GeneratedColumn<String> model = GeneratedColumn<String>(
+    'model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ownerContactId,
+    vehicleKind,
+    displayLabel,
+    make,
+    model,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Vehicle> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('owner_contact_id')) {
+      context.handle(
+        _ownerContactIdMeta,
+        ownerContactId.isAcceptableOrUnknown(
+          data['owner_contact_id']!,
+          _ownerContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerContactIdMeta);
+    }
+    if (data.containsKey('vehicle_kind')) {
+      context.handle(
+        _vehicleKindMeta,
+        vehicleKind.isAcceptableOrUnknown(
+          data['vehicle_kind']!,
+          _vehicleKindMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleKindMeta);
+    }
+    if (data.containsKey('display_label')) {
+      context.handle(
+        _displayLabelMeta,
+        displayLabel.isAcceptableOrUnknown(
+          data['display_label']!,
+          _displayLabelMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayLabelMeta);
+    }
+    if (data.containsKey('make')) {
+      context.handle(
+        _makeMeta,
+        make.isAcceptableOrUnknown(data['make']!, _makeMeta),
+      );
+    }
+    if (data.containsKey('model')) {
+      context.handle(
+        _modelMeta,
+        model.isAcceptableOrUnknown(data['model']!, _modelMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Vehicle map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Vehicle(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ownerContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_contact_id'],
+      )!,
+      vehicleKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_kind'],
+      )!,
+      displayLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_label'],
+      )!,
+      make: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}make'],
+      )!,
+      model: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}model'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $VehiclesTable createAlias(String alias) {
+    return $VehiclesTable(attachedDatabase, alias);
+  }
+}
+
+class Vehicle extends DataClass implements Insertable<Vehicle> {
+  final String id;
+  final String ownerContactId;
+  final String vehicleKind;
+  final String displayLabel;
+  final String make;
+  final String model;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Vehicle({
+    required this.id,
+    required this.ownerContactId,
+    required this.vehicleKind,
+    required this.displayLabel,
+    required this.make,
+    required this.model,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['owner_contact_id'] = Variable<String>(ownerContactId);
+    map['vehicle_kind'] = Variable<String>(vehicleKind);
+    map['display_label'] = Variable<String>(displayLabel);
+    map['make'] = Variable<String>(make);
+    map['model'] = Variable<String>(model);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  VehiclesCompanion toCompanion(bool nullToAbsent) {
+    return VehiclesCompanion(
+      id: Value(id),
+      ownerContactId: Value(ownerContactId),
+      vehicleKind: Value(vehicleKind),
+      displayLabel: Value(displayLabel),
+      make: Value(make),
+      model: Value(model),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Vehicle.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Vehicle(
+      id: serializer.fromJson<String>(json['id']),
+      ownerContactId: serializer.fromJson<String>(json['ownerContactId']),
+      vehicleKind: serializer.fromJson<String>(json['vehicleKind']),
+      displayLabel: serializer.fromJson<String>(json['displayLabel']),
+      make: serializer.fromJson<String>(json['make']),
+      model: serializer.fromJson<String>(json['model']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ownerContactId': serializer.toJson<String>(ownerContactId),
+      'vehicleKind': serializer.toJson<String>(vehicleKind),
+      'displayLabel': serializer.toJson<String>(displayLabel),
+      'make': serializer.toJson<String>(make),
+      'model': serializer.toJson<String>(model),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Vehicle copyWith({
+    String? id,
+    String? ownerContactId,
+    String? vehicleKind,
+    String? displayLabel,
+    String? make,
+    String? model,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => Vehicle(
+    id: id ?? this.id,
+    ownerContactId: ownerContactId ?? this.ownerContactId,
+    vehicleKind: vehicleKind ?? this.vehicleKind,
+    displayLabel: displayLabel ?? this.displayLabel,
+    make: make ?? this.make,
+    model: model ?? this.model,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  Vehicle copyWithCompanion(VehiclesCompanion data) {
+    return Vehicle(
+      id: data.id.present ? data.id.value : this.id,
+      ownerContactId: data.ownerContactId.present
+          ? data.ownerContactId.value
+          : this.ownerContactId,
+      vehicleKind: data.vehicleKind.present
+          ? data.vehicleKind.value
+          : this.vehicleKind,
+      displayLabel: data.displayLabel.present
+          ? data.displayLabel.value
+          : this.displayLabel,
+      make: data.make.present ? data.make.value : this.make,
+      model: data.model.present ? data.model.value : this.model,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Vehicle(')
+          ..write('id: $id, ')
+          ..write('ownerContactId: $ownerContactId, ')
+          ..write('vehicleKind: $vehicleKind, ')
+          ..write('displayLabel: $displayLabel, ')
+          ..write('make: $make, ')
+          ..write('model: $model, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ownerContactId,
+    vehicleKind,
+    displayLabel,
+    make,
+    model,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Vehicle &&
+          other.id == this.id &&
+          other.ownerContactId == this.ownerContactId &&
+          other.vehicleKind == this.vehicleKind &&
+          other.displayLabel == this.displayLabel &&
+          other.make == this.make &&
+          other.model == this.model &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class VehiclesCompanion extends UpdateCompanion<Vehicle> {
+  final Value<String> id;
+  final Value<String> ownerContactId;
+  final Value<String> vehicleKind;
+  final Value<String> displayLabel;
+  final Value<String> make;
+  final Value<String> model;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const VehiclesCompanion({
+    this.id = const Value.absent(),
+    this.ownerContactId = const Value.absent(),
+    this.vehicleKind = const Value.absent(),
+    this.displayLabel = const Value.absent(),
+    this.make = const Value.absent(),
+    this.model = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehiclesCompanion.insert({
+    required String id,
+    required String ownerContactId,
+    required String vehicleKind,
+    required String displayLabel,
+    this.make = const Value.absent(),
+    this.model = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ownerContactId = Value(ownerContactId),
+       vehicleKind = Value(vehicleKind),
+       displayLabel = Value(displayLabel),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Vehicle> custom({
+    Expression<String>? id,
+    Expression<String>? ownerContactId,
+    Expression<String>? vehicleKind,
+    Expression<String>? displayLabel,
+    Expression<String>? make,
+    Expression<String>? model,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ownerContactId != null) 'owner_contact_id': ownerContactId,
+      if (vehicleKind != null) 'vehicle_kind': vehicleKind,
+      if (displayLabel != null) 'display_label': displayLabel,
+      if (make != null) 'make': make,
+      if (model != null) 'model': model,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehiclesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ownerContactId,
+    Value<String>? vehicleKind,
+    Value<String>? displayLabel,
+    Value<String>? make,
+    Value<String>? model,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return VehiclesCompanion(
+      id: id ?? this.id,
+      ownerContactId: ownerContactId ?? this.ownerContactId,
+      vehicleKind: vehicleKind ?? this.vehicleKind,
+      displayLabel: displayLabel ?? this.displayLabel,
+      make: make ?? this.make,
+      model: model ?? this.model,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ownerContactId.present) {
+      map['owner_contact_id'] = Variable<String>(ownerContactId.value);
+    }
+    if (vehicleKind.present) {
+      map['vehicle_kind'] = Variable<String>(vehicleKind.value);
+    }
+    if (displayLabel.present) {
+      map['display_label'] = Variable<String>(displayLabel.value);
+    }
+    if (make.present) {
+      map['make'] = Variable<String>(make.value);
+    }
+    if (model.present) {
+      map['model'] = Variable<String>(model.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehiclesCompanion(')
+          ..write('id: $id, ')
+          ..write('ownerContactId: $ownerContactId, ')
+          ..write('vehicleKind: $vehicleKind, ')
+          ..write('displayLabel: $displayLabel, ')
+          ..write('make: $make, ')
+          ..write('model: $model, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleMeterReadingsTable extends VehicleMeterReadings
+    with TableInfo<$VehicleMeterReadingsTable, VehicleMeterReading> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleMeterReadingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<int> value = GeneratedColumn<int>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _photoPathMeta = const VerificationMeta(
+    'photoPath',
+  );
+  @override
+  late final GeneratedColumn<String> photoPath = GeneratedColumn<String>(
+    'photo_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedByContactIdMeta =
+      const VerificationMeta('recordedByContactId');
+  @override
+  late final GeneratedColumn<String> recordedByContactId =
+      GeneratedColumn<String>(
+        'recorded_by_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _vehicleUseIdMeta = const VerificationMeta(
+    'vehicleUseId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleUseId = GeneratedColumn<String>(
+    'vehicle_use_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _readingRoleMeta = const VerificationMeta(
+    'readingRole',
+  );
+  @override
+  late final GeneratedColumn<String> readingRole = GeneratedColumn<String>(
+    'reading_role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isCorrectionMeta = const VerificationMeta(
+    'isCorrection',
+  );
+  @override
+  late final GeneratedColumn<bool> isCorrection = GeneratedColumn<bool>(
+    'is_correction',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_correction" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _correctionNoteMeta = const VerificationMeta(
+    'correctionNote',
+  );
+  @override
+  late final GeneratedColumn<String> correctionNote = GeneratedColumn<String>(
+    'correction_note',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _negativeGapAcknowledgedMeta =
+      const VerificationMeta('negativeGapAcknowledged');
+  @override
+  late final GeneratedColumn<bool> negativeGapAcknowledged =
+      GeneratedColumn<bool>(
+        'negative_gap_acknowledged',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("negative_gap_acknowledged" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    value,
+    unit,
+    photoPath,
+    recordedAt,
+    recordedByContactId,
+    vehicleUseId,
+    readingRole,
+    isCorrection,
+    correctionNote,
+    negativeGapAcknowledged,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_meter_readings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleMeterReading> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('photo_path')) {
+      context.handle(
+        _photoPathMeta,
+        photoPath.isAcceptableOrUnknown(data['photo_path']!, _photoPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_photoPathMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    if (data.containsKey('recorded_by_contact_id')) {
+      context.handle(
+        _recordedByContactIdMeta,
+        recordedByContactId.isAcceptableOrUnknown(
+          data['recorded_by_contact_id']!,
+          _recordedByContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByContactIdMeta);
+    }
+    if (data.containsKey('vehicle_use_id')) {
+      context.handle(
+        _vehicleUseIdMeta,
+        vehicleUseId.isAcceptableOrUnknown(
+          data['vehicle_use_id']!,
+          _vehicleUseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reading_role')) {
+      context.handle(
+        _readingRoleMeta,
+        readingRole.isAcceptableOrUnknown(
+          data['reading_role']!,
+          _readingRoleMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_readingRoleMeta);
+    }
+    if (data.containsKey('is_correction')) {
+      context.handle(
+        _isCorrectionMeta,
+        isCorrection.isAcceptableOrUnknown(
+          data['is_correction']!,
+          _isCorrectionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('correction_note')) {
+      context.handle(
+        _correctionNoteMeta,
+        correctionNote.isAcceptableOrUnknown(
+          data['correction_note']!,
+          _correctionNoteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('negative_gap_acknowledged')) {
+      context.handle(
+        _negativeGapAcknowledgedMeta,
+        negativeGapAcknowledged.isAcceptableOrUnknown(
+          data['negative_gap_acknowledged']!,
+          _negativeGapAcknowledgedMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleMeterReading map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleMeterReading(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}value'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      photoPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_path'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      recordedByContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_contact_id'],
+      )!,
+      vehicleUseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_use_id'],
+      ),
+      readingRole: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reading_role'],
+      )!,
+      isCorrection: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_correction'],
+      )!,
+      correctionNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}correction_note'],
+      )!,
+      negativeGapAcknowledged: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}negative_gap_acknowledged'],
+      )!,
+    );
+  }
+
+  @override
+  $VehicleMeterReadingsTable createAlias(String alias) {
+    return $VehicleMeterReadingsTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleMeterReading extends DataClass
+    implements Insertable<VehicleMeterReading> {
+  final String id;
+  final String vehicleId;
+  final int value;
+  final String unit;
+  final String photoPath;
+  final DateTime recordedAt;
+  final String recordedByContactId;
+  final String? vehicleUseId;
+  final String readingRole;
+  final bool isCorrection;
+  final String correctionNote;
+  final bool negativeGapAcknowledged;
+  const VehicleMeterReading({
+    required this.id,
+    required this.vehicleId,
+    required this.value,
+    required this.unit,
+    required this.photoPath,
+    required this.recordedAt,
+    required this.recordedByContactId,
+    this.vehicleUseId,
+    required this.readingRole,
+    required this.isCorrection,
+    required this.correctionNote,
+    required this.negativeGapAcknowledged,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['value'] = Variable<int>(value);
+    map['unit'] = Variable<String>(unit);
+    map['photo_path'] = Variable<String>(photoPath);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
+    if (!nullToAbsent || vehicleUseId != null) {
+      map['vehicle_use_id'] = Variable<String>(vehicleUseId);
+    }
+    map['reading_role'] = Variable<String>(readingRole);
+    map['is_correction'] = Variable<bool>(isCorrection);
+    map['correction_note'] = Variable<String>(correctionNote);
+    map['negative_gap_acknowledged'] = Variable<bool>(negativeGapAcknowledged);
+    return map;
+  }
+
+  VehicleMeterReadingsCompanion toCompanion(bool nullToAbsent) {
+    return VehicleMeterReadingsCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      value: Value(value),
+      unit: Value(unit),
+      photoPath: Value(photoPath),
+      recordedAt: Value(recordedAt),
+      recordedByContactId: Value(recordedByContactId),
+      vehicleUseId: vehicleUseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(vehicleUseId),
+      readingRole: Value(readingRole),
+      isCorrection: Value(isCorrection),
+      correctionNote: Value(correctionNote),
+      negativeGapAcknowledged: Value(negativeGapAcknowledged),
+    );
+  }
+
+  factory VehicleMeterReading.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleMeterReading(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      value: serializer.fromJson<int>(json['value']),
+      unit: serializer.fromJson<String>(json['unit']),
+      photoPath: serializer.fromJson<String>(json['photoPath']),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+      recordedByContactId: serializer.fromJson<String>(
+        json['recordedByContactId'],
+      ),
+      vehicleUseId: serializer.fromJson<String?>(json['vehicleUseId']),
+      readingRole: serializer.fromJson<String>(json['readingRole']),
+      isCorrection: serializer.fromJson<bool>(json['isCorrection']),
+      correctionNote: serializer.fromJson<String>(json['correctionNote']),
+      negativeGapAcknowledged: serializer.fromJson<bool>(
+        json['negativeGapAcknowledged'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'value': serializer.toJson<int>(value),
+      'unit': serializer.toJson<String>(unit),
+      'photoPath': serializer.toJson<String>(photoPath),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+      'recordedByContactId': serializer.toJson<String>(recordedByContactId),
+      'vehicleUseId': serializer.toJson<String?>(vehicleUseId),
+      'readingRole': serializer.toJson<String>(readingRole),
+      'isCorrection': serializer.toJson<bool>(isCorrection),
+      'correctionNote': serializer.toJson<String>(correctionNote),
+      'negativeGapAcknowledged': serializer.toJson<bool>(
+        negativeGapAcknowledged,
+      ),
+    };
+  }
+
+  VehicleMeterReading copyWith({
+    String? id,
+    String? vehicleId,
+    int? value,
+    String? unit,
+    String? photoPath,
+    DateTime? recordedAt,
+    String? recordedByContactId,
+    Value<String?> vehicleUseId = const Value.absent(),
+    String? readingRole,
+    bool? isCorrection,
+    String? correctionNote,
+    bool? negativeGapAcknowledged,
+  }) => VehicleMeterReading(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    value: value ?? this.value,
+    unit: unit ?? this.unit,
+    photoPath: photoPath ?? this.photoPath,
+    recordedAt: recordedAt ?? this.recordedAt,
+    recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+    vehicleUseId: vehicleUseId.present ? vehicleUseId.value : this.vehicleUseId,
+    readingRole: readingRole ?? this.readingRole,
+    isCorrection: isCorrection ?? this.isCorrection,
+    correctionNote: correctionNote ?? this.correctionNote,
+    negativeGapAcknowledged:
+        negativeGapAcknowledged ?? this.negativeGapAcknowledged,
+  );
+  VehicleMeterReading copyWithCompanion(VehicleMeterReadingsCompanion data) {
+    return VehicleMeterReading(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      value: data.value.present ? data.value.value : this.value,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      recordedByContactId: data.recordedByContactId.present
+          ? data.recordedByContactId.value
+          : this.recordedByContactId,
+      vehicleUseId: data.vehicleUseId.present
+          ? data.vehicleUseId.value
+          : this.vehicleUseId,
+      readingRole: data.readingRole.present
+          ? data.readingRole.value
+          : this.readingRole,
+      isCorrection: data.isCorrection.present
+          ? data.isCorrection.value
+          : this.isCorrection,
+      correctionNote: data.correctionNote.present
+          ? data.correctionNote.value
+          : this.correctionNote,
+      negativeGapAcknowledged: data.negativeGapAcknowledged.present
+          ? data.negativeGapAcknowledged.value
+          : this.negativeGapAcknowledged,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMeterReading(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('photoPath: $photoPath, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('vehicleUseId: $vehicleUseId, ')
+          ..write('readingRole: $readingRole, ')
+          ..write('isCorrection: $isCorrection, ')
+          ..write('correctionNote: $correctionNote, ')
+          ..write('negativeGapAcknowledged: $negativeGapAcknowledged')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    value,
+    unit,
+    photoPath,
+    recordedAt,
+    recordedByContactId,
+    vehicleUseId,
+    readingRole,
+    isCorrection,
+    correctionNote,
+    negativeGapAcknowledged,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleMeterReading &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.value == this.value &&
+          other.unit == this.unit &&
+          other.photoPath == this.photoPath &&
+          other.recordedAt == this.recordedAt &&
+          other.recordedByContactId == this.recordedByContactId &&
+          other.vehicleUseId == this.vehicleUseId &&
+          other.readingRole == this.readingRole &&
+          other.isCorrection == this.isCorrection &&
+          other.correctionNote == this.correctionNote &&
+          other.negativeGapAcknowledged == this.negativeGapAcknowledged);
+}
+
+class VehicleMeterReadingsCompanion
+    extends UpdateCompanion<VehicleMeterReading> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<int> value;
+  final Value<String> unit;
+  final Value<String> photoPath;
+  final Value<DateTime> recordedAt;
+  final Value<String> recordedByContactId;
+  final Value<String?> vehicleUseId;
+  final Value<String> readingRole;
+  final Value<bool> isCorrection;
+  final Value<String> correctionNote;
+  final Value<bool> negativeGapAcknowledged;
+  final Value<int> rowid;
+  const VehicleMeterReadingsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.value = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.photoPath = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.recordedByContactId = const Value.absent(),
+    this.vehicleUseId = const Value.absent(),
+    this.readingRole = const Value.absent(),
+    this.isCorrection = const Value.absent(),
+    this.correctionNote = const Value.absent(),
+    this.negativeGapAcknowledged = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleMeterReadingsCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required int value,
+    required String unit,
+    required String photoPath,
+    required DateTime recordedAt,
+    required String recordedByContactId,
+    this.vehicleUseId = const Value.absent(),
+    required String readingRole,
+    this.isCorrection = const Value.absent(),
+    this.correctionNote = const Value.absent(),
+    this.negativeGapAcknowledged = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       value = Value(value),
+       unit = Value(unit),
+       photoPath = Value(photoPath),
+       recordedAt = Value(recordedAt),
+       recordedByContactId = Value(recordedByContactId),
+       readingRole = Value(readingRole);
+  static Insertable<VehicleMeterReading> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<int>? value,
+    Expression<String>? unit,
+    Expression<String>? photoPath,
+    Expression<DateTime>? recordedAt,
+    Expression<String>? recordedByContactId,
+    Expression<String>? vehicleUseId,
+    Expression<String>? readingRole,
+    Expression<bool>? isCorrection,
+    Expression<String>? correctionNote,
+    Expression<bool>? negativeGapAcknowledged,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (value != null) 'value': value,
+      if (unit != null) 'unit': unit,
+      if (photoPath != null) 'photo_path': photoPath,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (recordedByContactId != null)
+        'recorded_by_contact_id': recordedByContactId,
+      if (vehicleUseId != null) 'vehicle_use_id': vehicleUseId,
+      if (readingRole != null) 'reading_role': readingRole,
+      if (isCorrection != null) 'is_correction': isCorrection,
+      if (correctionNote != null) 'correction_note': correctionNote,
+      if (negativeGapAcknowledged != null)
+        'negative_gap_acknowledged': negativeGapAcknowledged,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleMeterReadingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<int>? value,
+    Value<String>? unit,
+    Value<String>? photoPath,
+    Value<DateTime>? recordedAt,
+    Value<String>? recordedByContactId,
+    Value<String?>? vehicleUseId,
+    Value<String>? readingRole,
+    Value<bool>? isCorrection,
+    Value<String>? correctionNote,
+    Value<bool>? negativeGapAcknowledged,
+    Value<int>? rowid,
+  }) {
+    return VehicleMeterReadingsCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      value: value ?? this.value,
+      unit: unit ?? this.unit,
+      photoPath: photoPath ?? this.photoPath,
+      recordedAt: recordedAt ?? this.recordedAt,
+      recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+      vehicleUseId: vehicleUseId ?? this.vehicleUseId,
+      readingRole: readingRole ?? this.readingRole,
+      isCorrection: isCorrection ?? this.isCorrection,
+      correctionNote: correctionNote ?? this.correctionNote,
+      negativeGapAcknowledged:
+          negativeGapAcknowledged ?? this.negativeGapAcknowledged,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<int>(value.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (photoPath.present) {
+      map['photo_path'] = Variable<String>(photoPath.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    if (recordedByContactId.present) {
+      map['recorded_by_contact_id'] = Variable<String>(
+        recordedByContactId.value,
+      );
+    }
+    if (vehicleUseId.present) {
+      map['vehicle_use_id'] = Variable<String>(vehicleUseId.value);
+    }
+    if (readingRole.present) {
+      map['reading_role'] = Variable<String>(readingRole.value);
+    }
+    if (isCorrection.present) {
+      map['is_correction'] = Variable<bool>(isCorrection.value);
+    }
+    if (correctionNote.present) {
+      map['correction_note'] = Variable<String>(correctionNote.value);
+    }
+    if (negativeGapAcknowledged.present) {
+      map['negative_gap_acknowledged'] = Variable<bool>(
+        negativeGapAcknowledged.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMeterReadingsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('photoPath: $photoPath, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('vehicleUseId: $vehicleUseId, ')
+          ..write('readingRole: $readingRole, ')
+          ..write('isCorrection: $isCorrection, ')
+          ..write('correctionNote: $correctionNote, ')
+          ..write('negativeGapAcknowledged: $negativeGapAcknowledged, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleUsesTable extends VehicleUses
+    with TableInfo<$VehicleUsesTable, VehicleUse> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleUsesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _attributedContactIdMeta =
+      const VerificationMeta('attributedContactId');
+  @override
+  late final GeneratedColumn<String> attributedContactId =
+      GeneratedColumn<String>(
+        'attributed_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endedAt = GeneratedColumn<DateTime>(
+    'ended_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startReadingIdMeta = const VerificationMeta(
+    'startReadingId',
+  );
+  @override
+  late final GeneratedColumn<String> startReadingId = GeneratedColumn<String>(
+    'start_reading_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endReadingIdMeta = const VerificationMeta(
+    'endReadingId',
+  );
+  @override
+  late final GeneratedColumn<String> endReadingId = GeneratedColumn<String>(
+    'end_reading_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _usageAmountMeta = const VerificationMeta(
+    'usageAmount',
+  );
+  @override
+  late final GeneratedColumn<int> usageAmount = GeneratedColumn<int>(
+    'usage_amount',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    attributedContactId,
+    startedAt,
+    endedAt,
+    startReadingId,
+    endReadingId,
+    usageAmount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_uses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleUse> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('attributed_contact_id')) {
+      context.handle(
+        _attributedContactIdMeta,
+        attributedContactId.isAcceptableOrUnknown(
+          data['attributed_contact_id']!,
+          _attributedContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_attributedContactIdMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('ended_at')) {
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
+    }
+    if (data.containsKey('start_reading_id')) {
+      context.handle(
+        _startReadingIdMeta,
+        startReadingId.isAcceptableOrUnknown(
+          data['start_reading_id']!,
+          _startReadingIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startReadingIdMeta);
+    }
+    if (data.containsKey('end_reading_id')) {
+      context.handle(
+        _endReadingIdMeta,
+        endReadingId.isAcceptableOrUnknown(
+          data['end_reading_id']!,
+          _endReadingIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('usage_amount')) {
+      context.handle(
+        _usageAmountMeta,
+        usageAmount.isAcceptableOrUnknown(
+          data['usage_amount']!,
+          _usageAmountMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleUse map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleUse(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      attributedContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attributed_contact_id'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      endedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ended_at'],
+      ),
+      startReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_reading_id'],
+      )!,
+      endReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_reading_id'],
+      ),
+      usageAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_amount'],
+      ),
+    );
+  }
+
+  @override
+  $VehicleUsesTable createAlias(String alias) {
+    return $VehicleUsesTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleUse extends DataClass implements Insertable<VehicleUse> {
+  final String id;
+  final String vehicleId;
+  final String attributedContactId;
+  final DateTime startedAt;
+  final DateTime? endedAt;
+  final String startReadingId;
+  final String? endReadingId;
+  final int? usageAmount;
+  const VehicleUse({
+    required this.id,
+    required this.vehicleId,
+    required this.attributedContactId,
+    required this.startedAt,
+    this.endedAt,
+    required this.startReadingId,
+    this.endReadingId,
+    this.usageAmount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['attributed_contact_id'] = Variable<String>(attributedContactId);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    if (!nullToAbsent || endedAt != null) {
+      map['ended_at'] = Variable<DateTime>(endedAt);
+    }
+    map['start_reading_id'] = Variable<String>(startReadingId);
+    if (!nullToAbsent || endReadingId != null) {
+      map['end_reading_id'] = Variable<String>(endReadingId);
+    }
+    if (!nullToAbsent || usageAmount != null) {
+      map['usage_amount'] = Variable<int>(usageAmount);
+    }
+    return map;
+  }
+
+  VehicleUsesCompanion toCompanion(bool nullToAbsent) {
+    return VehicleUsesCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      attributedContactId: Value(attributedContactId),
+      startedAt: Value(startedAt),
+      endedAt: endedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedAt),
+      startReadingId: Value(startReadingId),
+      endReadingId: endReadingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endReadingId),
+      usageAmount: usageAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(usageAmount),
+    );
+  }
+
+  factory VehicleUse.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleUse(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      attributedContactId: serializer.fromJson<String>(
+        json['attributedContactId'],
+      ),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      endedAt: serializer.fromJson<DateTime?>(json['endedAt']),
+      startReadingId: serializer.fromJson<String>(json['startReadingId']),
+      endReadingId: serializer.fromJson<String?>(json['endReadingId']),
+      usageAmount: serializer.fromJson<int?>(json['usageAmount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'attributedContactId': serializer.toJson<String>(attributedContactId),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'endedAt': serializer.toJson<DateTime?>(endedAt),
+      'startReadingId': serializer.toJson<String>(startReadingId),
+      'endReadingId': serializer.toJson<String?>(endReadingId),
+      'usageAmount': serializer.toJson<int?>(usageAmount),
+    };
+  }
+
+  VehicleUse copyWith({
+    String? id,
+    String? vehicleId,
+    String? attributedContactId,
+    DateTime? startedAt,
+    Value<DateTime?> endedAt = const Value.absent(),
+    String? startReadingId,
+    Value<String?> endReadingId = const Value.absent(),
+    Value<int?> usageAmount = const Value.absent(),
+  }) => VehicleUse(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    attributedContactId: attributedContactId ?? this.attributedContactId,
+    startedAt: startedAt ?? this.startedAt,
+    endedAt: endedAt.present ? endedAt.value : this.endedAt,
+    startReadingId: startReadingId ?? this.startReadingId,
+    endReadingId: endReadingId.present ? endReadingId.value : this.endReadingId,
+    usageAmount: usageAmount.present ? usageAmount.value : this.usageAmount,
+  );
+  VehicleUse copyWithCompanion(VehicleUsesCompanion data) {
+    return VehicleUse(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      attributedContactId: data.attributedContactId.present
+          ? data.attributedContactId.value
+          : this.attributedContactId,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+      startReadingId: data.startReadingId.present
+          ? data.startReadingId.value
+          : this.startReadingId,
+      endReadingId: data.endReadingId.present
+          ? data.endReadingId.value
+          : this.endReadingId,
+      usageAmount: data.usageAmount.present
+          ? data.usageAmount.value
+          : this.usageAmount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleUse(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('attributedContactId: $attributedContactId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('startReadingId: $startReadingId, ')
+          ..write('endReadingId: $endReadingId, ')
+          ..write('usageAmount: $usageAmount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    attributedContactId,
+    startedAt,
+    endedAt,
+    startReadingId,
+    endReadingId,
+    usageAmount,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleUse &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.attributedContactId == this.attributedContactId &&
+          other.startedAt == this.startedAt &&
+          other.endedAt == this.endedAt &&
+          other.startReadingId == this.startReadingId &&
+          other.endReadingId == this.endReadingId &&
+          other.usageAmount == this.usageAmount);
+}
+
+class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<String> attributedContactId;
+  final Value<DateTime> startedAt;
+  final Value<DateTime?> endedAt;
+  final Value<String> startReadingId;
+  final Value<String?> endReadingId;
+  final Value<int?> usageAmount;
+  final Value<int> rowid;
+  const VehicleUsesCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.attributedContactId = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.startReadingId = const Value.absent(),
+    this.endReadingId = const Value.absent(),
+    this.usageAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleUsesCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required String attributedContactId,
+    required DateTime startedAt,
+    this.endedAt = const Value.absent(),
+    required String startReadingId,
+    this.endReadingId = const Value.absent(),
+    this.usageAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       attributedContactId = Value(attributedContactId),
+       startedAt = Value(startedAt),
+       startReadingId = Value(startReadingId);
+  static Insertable<VehicleUse> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<String>? attributedContactId,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? endedAt,
+    Expression<String>? startReadingId,
+    Expression<String>? endReadingId,
+    Expression<int>? usageAmount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (attributedContactId != null)
+        'attributed_contact_id': attributedContactId,
+      if (startedAt != null) 'started_at': startedAt,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (startReadingId != null) 'start_reading_id': startReadingId,
+      if (endReadingId != null) 'end_reading_id': endReadingId,
+      if (usageAmount != null) 'usage_amount': usageAmount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleUsesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<String>? attributedContactId,
+    Value<DateTime>? startedAt,
+    Value<DateTime?>? endedAt,
+    Value<String>? startReadingId,
+    Value<String?>? endReadingId,
+    Value<int?>? usageAmount,
+    Value<int>? rowid,
+  }) {
+    return VehicleUsesCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      attributedContactId: attributedContactId ?? this.attributedContactId,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      startReadingId: startReadingId ?? this.startReadingId,
+      endReadingId: endReadingId ?? this.endReadingId,
+      usageAmount: usageAmount ?? this.usageAmount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (attributedContactId.present) {
+      map['attributed_contact_id'] = Variable<String>(
+        attributedContactId.value,
+      );
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<DateTime>(endedAt.value);
+    }
+    if (startReadingId.present) {
+      map['start_reading_id'] = Variable<String>(startReadingId.value);
+    }
+    if (endReadingId.present) {
+      map['end_reading_id'] = Variable<String>(endReadingId.value);
+    }
+    if (usageAmount.present) {
+      map['usage_amount'] = Variable<int>(usageAmount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleUsesCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('attributedContactId: $attributedContactId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('startReadingId: $startReadingId, ')
+          ..write('endReadingId: $endReadingId, ')
+          ..write('usageAmount: $usageAmount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleOdometerGapsTable extends VehicleOdometerGaps
+    with TableInfo<$VehicleOdometerGapsTable, VehicleOdometerGap> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleOdometerGapsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latestReadingBeforeGapMeta =
+      const VerificationMeta('latestReadingBeforeGap');
+  @override
+  late final GeneratedColumn<int> latestReadingBeforeGap = GeneratedColumn<int>(
+    'latest_reading_before_gap',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startReadingAfterGapMeta =
+      const VerificationMeta('startReadingAfterGap');
+  @override
+  late final GeneratedColumn<int> startReadingAfterGap = GeneratedColumn<int>(
+    'start_reading_after_gap',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _gapAmountMeta = const VerificationMeta(
+    'gapAmount',
+  );
+  @override
+  late final GeneratedColumn<int> gapAmount = GeneratedColumn<int>(
+    'gap_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _attributedContactIdMeta =
+      const VerificationMeta('attributedContactId');
+  @override
+  late final GeneratedColumn<String> attributedContactId =
+      GeneratedColumn<String>(
+        'attributed_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _recordedByContactIdMeta =
+      const VerificationMeta('recordedByContactId');
+  @override
+  late final GeneratedColumn<String> recordedByContactId =
+      GeneratedColumn<String>(
+        'recorded_by_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleUseIdMeta = const VerificationMeta(
+    'vehicleUseId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleUseId = GeneratedColumn<String>(
+    'vehicle_use_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    latestReadingBeforeGap,
+    startReadingAfterGap,
+    gapAmount,
+    attributedContactId,
+    recordedByContactId,
+    recordedAt,
+    vehicleUseId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_odometer_gaps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleOdometerGap> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('latest_reading_before_gap')) {
+      context.handle(
+        _latestReadingBeforeGapMeta,
+        latestReadingBeforeGap.isAcceptableOrUnknown(
+          data['latest_reading_before_gap']!,
+          _latestReadingBeforeGapMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_latestReadingBeforeGapMeta);
+    }
+    if (data.containsKey('start_reading_after_gap')) {
+      context.handle(
+        _startReadingAfterGapMeta,
+        startReadingAfterGap.isAcceptableOrUnknown(
+          data['start_reading_after_gap']!,
+          _startReadingAfterGapMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startReadingAfterGapMeta);
+    }
+    if (data.containsKey('gap_amount')) {
+      context.handle(
+        _gapAmountMeta,
+        gapAmount.isAcceptableOrUnknown(data['gap_amount']!, _gapAmountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_gapAmountMeta);
+    }
+    if (data.containsKey('attributed_contact_id')) {
+      context.handle(
+        _attributedContactIdMeta,
+        attributedContactId.isAcceptableOrUnknown(
+          data['attributed_contact_id']!,
+          _attributedContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_attributedContactIdMeta);
+    }
+    if (data.containsKey('recorded_by_contact_id')) {
+      context.handle(
+        _recordedByContactIdMeta,
+        recordedByContactId.isAcceptableOrUnknown(
+          data['recorded_by_contact_id']!,
+          _recordedByContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByContactIdMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    if (data.containsKey('vehicle_use_id')) {
+      context.handle(
+        _vehicleUseIdMeta,
+        vehicleUseId.isAcceptableOrUnknown(
+          data['vehicle_use_id']!,
+          _vehicleUseIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleOdometerGap map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleOdometerGap(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      latestReadingBeforeGap: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}latest_reading_before_gap'],
+      )!,
+      startReadingAfterGap: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_reading_after_gap'],
+      )!,
+      gapAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}gap_amount'],
+      )!,
+      attributedContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attributed_contact_id'],
+      )!,
+      recordedByContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_contact_id'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      vehicleUseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_use_id'],
+      ),
+    );
+  }
+
+  @override
+  $VehicleOdometerGapsTable createAlias(String alias) {
+    return $VehicleOdometerGapsTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleOdometerGap extends DataClass
+    implements Insertable<VehicleOdometerGap> {
+  final String id;
+  final String vehicleId;
+  final int latestReadingBeforeGap;
+  final int startReadingAfterGap;
+  final int gapAmount;
+  final String attributedContactId;
+  final String recordedByContactId;
+  final DateTime recordedAt;
+  final String? vehicleUseId;
+  const VehicleOdometerGap({
+    required this.id,
+    required this.vehicleId,
+    required this.latestReadingBeforeGap,
+    required this.startReadingAfterGap,
+    required this.gapAmount,
+    required this.attributedContactId,
+    required this.recordedByContactId,
+    required this.recordedAt,
+    this.vehicleUseId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['latest_reading_before_gap'] = Variable<int>(latestReadingBeforeGap);
+    map['start_reading_after_gap'] = Variable<int>(startReadingAfterGap);
+    map['gap_amount'] = Variable<int>(gapAmount);
+    map['attributed_contact_id'] = Variable<String>(attributedContactId);
+    map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    if (!nullToAbsent || vehicleUseId != null) {
+      map['vehicle_use_id'] = Variable<String>(vehicleUseId);
+    }
+    return map;
+  }
+
+  VehicleOdometerGapsCompanion toCompanion(bool nullToAbsent) {
+    return VehicleOdometerGapsCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      latestReadingBeforeGap: Value(latestReadingBeforeGap),
+      startReadingAfterGap: Value(startReadingAfterGap),
+      gapAmount: Value(gapAmount),
+      attributedContactId: Value(attributedContactId),
+      recordedByContactId: Value(recordedByContactId),
+      recordedAt: Value(recordedAt),
+      vehicleUseId: vehicleUseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(vehicleUseId),
+    );
+  }
+
+  factory VehicleOdometerGap.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleOdometerGap(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      latestReadingBeforeGap: serializer.fromJson<int>(
+        json['latestReadingBeforeGap'],
+      ),
+      startReadingAfterGap: serializer.fromJson<int>(
+        json['startReadingAfterGap'],
+      ),
+      gapAmount: serializer.fromJson<int>(json['gapAmount']),
+      attributedContactId: serializer.fromJson<String>(
+        json['attributedContactId'],
+      ),
+      recordedByContactId: serializer.fromJson<String>(
+        json['recordedByContactId'],
+      ),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+      vehicleUseId: serializer.fromJson<String?>(json['vehicleUseId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'latestReadingBeforeGap': serializer.toJson<int>(latestReadingBeforeGap),
+      'startReadingAfterGap': serializer.toJson<int>(startReadingAfterGap),
+      'gapAmount': serializer.toJson<int>(gapAmount),
+      'attributedContactId': serializer.toJson<String>(attributedContactId),
+      'recordedByContactId': serializer.toJson<String>(recordedByContactId),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+      'vehicleUseId': serializer.toJson<String?>(vehicleUseId),
+    };
+  }
+
+  VehicleOdometerGap copyWith({
+    String? id,
+    String? vehicleId,
+    int? latestReadingBeforeGap,
+    int? startReadingAfterGap,
+    int? gapAmount,
+    String? attributedContactId,
+    String? recordedByContactId,
+    DateTime? recordedAt,
+    Value<String?> vehicleUseId = const Value.absent(),
+  }) => VehicleOdometerGap(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    latestReadingBeforeGap:
+        latestReadingBeforeGap ?? this.latestReadingBeforeGap,
+    startReadingAfterGap: startReadingAfterGap ?? this.startReadingAfterGap,
+    gapAmount: gapAmount ?? this.gapAmount,
+    attributedContactId: attributedContactId ?? this.attributedContactId,
+    recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+    recordedAt: recordedAt ?? this.recordedAt,
+    vehicleUseId: vehicleUseId.present ? vehicleUseId.value : this.vehicleUseId,
+  );
+  VehicleOdometerGap copyWithCompanion(VehicleOdometerGapsCompanion data) {
+    return VehicleOdometerGap(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      latestReadingBeforeGap: data.latestReadingBeforeGap.present
+          ? data.latestReadingBeforeGap.value
+          : this.latestReadingBeforeGap,
+      startReadingAfterGap: data.startReadingAfterGap.present
+          ? data.startReadingAfterGap.value
+          : this.startReadingAfterGap,
+      gapAmount: data.gapAmount.present ? data.gapAmount.value : this.gapAmount,
+      attributedContactId: data.attributedContactId.present
+          ? data.attributedContactId.value
+          : this.attributedContactId,
+      recordedByContactId: data.recordedByContactId.present
+          ? data.recordedByContactId.value
+          : this.recordedByContactId,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      vehicleUseId: data.vehicleUseId.present
+          ? data.vehicleUseId.value
+          : this.vehicleUseId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleOdometerGap(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('latestReadingBeforeGap: $latestReadingBeforeGap, ')
+          ..write('startReadingAfterGap: $startReadingAfterGap, ')
+          ..write('gapAmount: $gapAmount, ')
+          ..write('attributedContactId: $attributedContactId, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('vehicleUseId: $vehicleUseId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    latestReadingBeforeGap,
+    startReadingAfterGap,
+    gapAmount,
+    attributedContactId,
+    recordedByContactId,
+    recordedAt,
+    vehicleUseId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleOdometerGap &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.latestReadingBeforeGap == this.latestReadingBeforeGap &&
+          other.startReadingAfterGap == this.startReadingAfterGap &&
+          other.gapAmount == this.gapAmount &&
+          other.attributedContactId == this.attributedContactId &&
+          other.recordedByContactId == this.recordedByContactId &&
+          other.recordedAt == this.recordedAt &&
+          other.vehicleUseId == this.vehicleUseId);
+}
+
+class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<int> latestReadingBeforeGap;
+  final Value<int> startReadingAfterGap;
+  final Value<int> gapAmount;
+  final Value<String> attributedContactId;
+  final Value<String> recordedByContactId;
+  final Value<DateTime> recordedAt;
+  final Value<String?> vehicleUseId;
+  final Value<int> rowid;
+  const VehicleOdometerGapsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.latestReadingBeforeGap = const Value.absent(),
+    this.startReadingAfterGap = const Value.absent(),
+    this.gapAmount = const Value.absent(),
+    this.attributedContactId = const Value.absent(),
+    this.recordedByContactId = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.vehicleUseId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleOdometerGapsCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required int latestReadingBeforeGap,
+    required int startReadingAfterGap,
+    required int gapAmount,
+    required String attributedContactId,
+    required String recordedByContactId,
+    required DateTime recordedAt,
+    this.vehicleUseId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       latestReadingBeforeGap = Value(latestReadingBeforeGap),
+       startReadingAfterGap = Value(startReadingAfterGap),
+       gapAmount = Value(gapAmount),
+       attributedContactId = Value(attributedContactId),
+       recordedByContactId = Value(recordedByContactId),
+       recordedAt = Value(recordedAt);
+  static Insertable<VehicleOdometerGap> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<int>? latestReadingBeforeGap,
+    Expression<int>? startReadingAfterGap,
+    Expression<int>? gapAmount,
+    Expression<String>? attributedContactId,
+    Expression<String>? recordedByContactId,
+    Expression<DateTime>? recordedAt,
+    Expression<String>? vehicleUseId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (latestReadingBeforeGap != null)
+        'latest_reading_before_gap': latestReadingBeforeGap,
+      if (startReadingAfterGap != null)
+        'start_reading_after_gap': startReadingAfterGap,
+      if (gapAmount != null) 'gap_amount': gapAmount,
+      if (attributedContactId != null)
+        'attributed_contact_id': attributedContactId,
+      if (recordedByContactId != null)
+        'recorded_by_contact_id': recordedByContactId,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (vehicleUseId != null) 'vehicle_use_id': vehicleUseId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleOdometerGapsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<int>? latestReadingBeforeGap,
+    Value<int>? startReadingAfterGap,
+    Value<int>? gapAmount,
+    Value<String>? attributedContactId,
+    Value<String>? recordedByContactId,
+    Value<DateTime>? recordedAt,
+    Value<String?>? vehicleUseId,
+    Value<int>? rowid,
+  }) {
+    return VehicleOdometerGapsCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      latestReadingBeforeGap:
+          latestReadingBeforeGap ?? this.latestReadingBeforeGap,
+      startReadingAfterGap: startReadingAfterGap ?? this.startReadingAfterGap,
+      gapAmount: gapAmount ?? this.gapAmount,
+      attributedContactId: attributedContactId ?? this.attributedContactId,
+      recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+      recordedAt: recordedAt ?? this.recordedAt,
+      vehicleUseId: vehicleUseId ?? this.vehicleUseId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (latestReadingBeforeGap.present) {
+      map['latest_reading_before_gap'] = Variable<int>(
+        latestReadingBeforeGap.value,
+      );
+    }
+    if (startReadingAfterGap.present) {
+      map['start_reading_after_gap'] = Variable<int>(
+        startReadingAfterGap.value,
+      );
+    }
+    if (gapAmount.present) {
+      map['gap_amount'] = Variable<int>(gapAmount.value);
+    }
+    if (attributedContactId.present) {
+      map['attributed_contact_id'] = Variable<String>(
+        attributedContactId.value,
+      );
+    }
+    if (recordedByContactId.present) {
+      map['recorded_by_contact_id'] = Variable<String>(
+        recordedByContactId.value,
+      );
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    if (vehicleUseId.present) {
+      map['vehicle_use_id'] = Variable<String>(vehicleUseId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleOdometerGapsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('latestReadingBeforeGap: $latestReadingBeforeGap, ')
+          ..write('startReadingAfterGap: $startReadingAfterGap, ')
+          ..write('gapAmount: $gapAmount, ')
+          ..write('attributedContactId: $attributedContactId, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('vehicleUseId: $vehicleUseId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FuelPurchasesTable extends FuelPurchases
+    with TableInfo<$FuelPurchasesTable, FuelPurchase> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FuelPurchasesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _purchasedAtMeta = const VerificationMeta(
+    'purchasedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> purchasedAt = GeneratedColumn<DateTime>(
+    'purchased_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _costMinorMeta = const VerificationMeta(
+    'costMinor',
+  );
+  @override
+  late final GeneratedColumn<int> costMinor = GeneratedColumn<int>(
+    'cost_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _volumeLitersMeta = const VerificationMeta(
+    'volumeLiters',
+  );
+  @override
+  late final GeneratedColumn<double> volumeLiters = GeneratedColumn<double>(
+    'volume_liters',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _meterReadingValueMeta = const VerificationMeta(
+    'meterReadingValue',
+  );
+  @override
+  late final GeneratedColumn<int> meterReadingValue = GeneratedColumn<int>(
+    'meter_reading_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _meterPhotoPathMeta = const VerificationMeta(
+    'meterPhotoPath',
+  );
+  @override
+  late final GeneratedColumn<String> meterPhotoPath = GeneratedColumn<String>(
+    'meter_photo_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isFullTankMeta = const VerificationMeta(
+    'isFullTank',
+  );
+  @override
+  late final GeneratedColumn<bool> isFullTank = GeneratedColumn<bool>(
+    'is_full_tank',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_full_tank" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _recordedByContactIdMeta =
+      const VerificationMeta('recordedByContactId');
+  @override
+  late final GeneratedColumn<String> recordedByContactId =
+      GeneratedColumn<String>(
+        'recorded_by_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    purchasedAt,
+    costMinor,
+    currency,
+    volumeLiters,
+    meterReadingValue,
+    meterPhotoPath,
+    isFullTank,
+    recordedByContactId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fuel_purchases';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FuelPurchase> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('purchased_at')) {
+      context.handle(
+        _purchasedAtMeta,
+        purchasedAt.isAcceptableOrUnknown(
+          data['purchased_at']!,
+          _purchasedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_purchasedAtMeta);
+    }
+    if (data.containsKey('cost_minor')) {
+      context.handle(
+        _costMinorMeta,
+        costMinor.isAcceptableOrUnknown(data['cost_minor']!, _costMinorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_costMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('volume_liters')) {
+      context.handle(
+        _volumeLitersMeta,
+        volumeLiters.isAcceptableOrUnknown(
+          data['volume_liters']!,
+          _volumeLitersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meter_reading_value')) {
+      context.handle(
+        _meterReadingValueMeta,
+        meterReadingValue.isAcceptableOrUnknown(
+          data['meter_reading_value']!,
+          _meterReadingValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meter_photo_path')) {
+      context.handle(
+        _meterPhotoPathMeta,
+        meterPhotoPath.isAcceptableOrUnknown(
+          data['meter_photo_path']!,
+          _meterPhotoPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_full_tank')) {
+      context.handle(
+        _isFullTankMeta,
+        isFullTank.isAcceptableOrUnknown(
+          data['is_full_tank']!,
+          _isFullTankMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_isFullTankMeta);
+    }
+    if (data.containsKey('recorded_by_contact_id')) {
+      context.handle(
+        _recordedByContactIdMeta,
+        recordedByContactId.isAcceptableOrUnknown(
+          data['recorded_by_contact_id']!,
+          _recordedByContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByContactIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FuelPurchase map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FuelPurchase(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      purchasedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}purchased_at'],
+      )!,
+      costMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cost_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      volumeLiters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}volume_liters'],
+      ),
+      meterReadingValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}meter_reading_value'],
+      ),
+      meterPhotoPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meter_photo_path'],
+      ),
+      isFullTank: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_full_tank'],
+      )!,
+      recordedByContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_contact_id'],
+      )!,
+    );
+  }
+
+  @override
+  $FuelPurchasesTable createAlias(String alias) {
+    return $FuelPurchasesTable(attachedDatabase, alias);
+  }
+}
+
+class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
+  final String id;
+  final String vehicleId;
+  final DateTime purchasedAt;
+  final int costMinor;
+  final String currency;
+  final double? volumeLiters;
+  final int? meterReadingValue;
+  final String? meterPhotoPath;
+  final bool isFullTank;
+  final String recordedByContactId;
+  const FuelPurchase({
+    required this.id,
+    required this.vehicleId,
+    required this.purchasedAt,
+    required this.costMinor,
+    required this.currency,
+    this.volumeLiters,
+    this.meterReadingValue,
+    this.meterPhotoPath,
+    required this.isFullTank,
+    required this.recordedByContactId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['purchased_at'] = Variable<DateTime>(purchasedAt);
+    map['cost_minor'] = Variable<int>(costMinor);
+    map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || volumeLiters != null) {
+      map['volume_liters'] = Variable<double>(volumeLiters);
+    }
+    if (!nullToAbsent || meterReadingValue != null) {
+      map['meter_reading_value'] = Variable<int>(meterReadingValue);
+    }
+    if (!nullToAbsent || meterPhotoPath != null) {
+      map['meter_photo_path'] = Variable<String>(meterPhotoPath);
+    }
+    map['is_full_tank'] = Variable<bool>(isFullTank);
+    map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
+    return map;
+  }
+
+  FuelPurchasesCompanion toCompanion(bool nullToAbsent) {
+    return FuelPurchasesCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      purchasedAt: Value(purchasedAt),
+      costMinor: Value(costMinor),
+      currency: Value(currency),
+      volumeLiters: volumeLiters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(volumeLiters),
+      meterReadingValue: meterReadingValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meterReadingValue),
+      meterPhotoPath: meterPhotoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meterPhotoPath),
+      isFullTank: Value(isFullTank),
+      recordedByContactId: Value(recordedByContactId),
+    );
+  }
+
+  factory FuelPurchase.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FuelPurchase(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      purchasedAt: serializer.fromJson<DateTime>(json['purchasedAt']),
+      costMinor: serializer.fromJson<int>(json['costMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      volumeLiters: serializer.fromJson<double?>(json['volumeLiters']),
+      meterReadingValue: serializer.fromJson<int?>(json['meterReadingValue']),
+      meterPhotoPath: serializer.fromJson<String?>(json['meterPhotoPath']),
+      isFullTank: serializer.fromJson<bool>(json['isFullTank']),
+      recordedByContactId: serializer.fromJson<String>(
+        json['recordedByContactId'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'purchasedAt': serializer.toJson<DateTime>(purchasedAt),
+      'costMinor': serializer.toJson<int>(costMinor),
+      'currency': serializer.toJson<String>(currency),
+      'volumeLiters': serializer.toJson<double?>(volumeLiters),
+      'meterReadingValue': serializer.toJson<int?>(meterReadingValue),
+      'meterPhotoPath': serializer.toJson<String?>(meterPhotoPath),
+      'isFullTank': serializer.toJson<bool>(isFullTank),
+      'recordedByContactId': serializer.toJson<String>(recordedByContactId),
+    };
+  }
+
+  FuelPurchase copyWith({
+    String? id,
+    String? vehicleId,
+    DateTime? purchasedAt,
+    int? costMinor,
+    String? currency,
+    Value<double?> volumeLiters = const Value.absent(),
+    Value<int?> meterReadingValue = const Value.absent(),
+    Value<String?> meterPhotoPath = const Value.absent(),
+    bool? isFullTank,
+    String? recordedByContactId,
+  }) => FuelPurchase(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    purchasedAt: purchasedAt ?? this.purchasedAt,
+    costMinor: costMinor ?? this.costMinor,
+    currency: currency ?? this.currency,
+    volumeLiters: volumeLiters.present ? volumeLiters.value : this.volumeLiters,
+    meterReadingValue: meterReadingValue.present
+        ? meterReadingValue.value
+        : this.meterReadingValue,
+    meterPhotoPath: meterPhotoPath.present
+        ? meterPhotoPath.value
+        : this.meterPhotoPath,
+    isFullTank: isFullTank ?? this.isFullTank,
+    recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+  );
+  FuelPurchase copyWithCompanion(FuelPurchasesCompanion data) {
+    return FuelPurchase(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      purchasedAt: data.purchasedAt.present
+          ? data.purchasedAt.value
+          : this.purchasedAt,
+      costMinor: data.costMinor.present ? data.costMinor.value : this.costMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      volumeLiters: data.volumeLiters.present
+          ? data.volumeLiters.value
+          : this.volumeLiters,
+      meterReadingValue: data.meterReadingValue.present
+          ? data.meterReadingValue.value
+          : this.meterReadingValue,
+      meterPhotoPath: data.meterPhotoPath.present
+          ? data.meterPhotoPath.value
+          : this.meterPhotoPath,
+      isFullTank: data.isFullTank.present
+          ? data.isFullTank.value
+          : this.isFullTank,
+      recordedByContactId: data.recordedByContactId.present
+          ? data.recordedByContactId.value
+          : this.recordedByContactId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FuelPurchase(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('purchasedAt: $purchasedAt, ')
+          ..write('costMinor: $costMinor, ')
+          ..write('currency: $currency, ')
+          ..write('volumeLiters: $volumeLiters, ')
+          ..write('meterReadingValue: $meterReadingValue, ')
+          ..write('meterPhotoPath: $meterPhotoPath, ')
+          ..write('isFullTank: $isFullTank, ')
+          ..write('recordedByContactId: $recordedByContactId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    purchasedAt,
+    costMinor,
+    currency,
+    volumeLiters,
+    meterReadingValue,
+    meterPhotoPath,
+    isFullTank,
+    recordedByContactId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FuelPurchase &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.purchasedAt == this.purchasedAt &&
+          other.costMinor == this.costMinor &&
+          other.currency == this.currency &&
+          other.volumeLiters == this.volumeLiters &&
+          other.meterReadingValue == this.meterReadingValue &&
+          other.meterPhotoPath == this.meterPhotoPath &&
+          other.isFullTank == this.isFullTank &&
+          other.recordedByContactId == this.recordedByContactId);
+}
+
+class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<DateTime> purchasedAt;
+  final Value<int> costMinor;
+  final Value<String> currency;
+  final Value<double?> volumeLiters;
+  final Value<int?> meterReadingValue;
+  final Value<String?> meterPhotoPath;
+  final Value<bool> isFullTank;
+  final Value<String> recordedByContactId;
+  final Value<int> rowid;
+  const FuelPurchasesCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.purchasedAt = const Value.absent(),
+    this.costMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.volumeLiters = const Value.absent(),
+    this.meterReadingValue = const Value.absent(),
+    this.meterPhotoPath = const Value.absent(),
+    this.isFullTank = const Value.absent(),
+    this.recordedByContactId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FuelPurchasesCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required DateTime purchasedAt,
+    required int costMinor,
+    required String currency,
+    this.volumeLiters = const Value.absent(),
+    this.meterReadingValue = const Value.absent(),
+    this.meterPhotoPath = const Value.absent(),
+    required bool isFullTank,
+    required String recordedByContactId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       purchasedAt = Value(purchasedAt),
+       costMinor = Value(costMinor),
+       currency = Value(currency),
+       isFullTank = Value(isFullTank),
+       recordedByContactId = Value(recordedByContactId);
+  static Insertable<FuelPurchase> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<DateTime>? purchasedAt,
+    Expression<int>? costMinor,
+    Expression<String>? currency,
+    Expression<double>? volumeLiters,
+    Expression<int>? meterReadingValue,
+    Expression<String>? meterPhotoPath,
+    Expression<bool>? isFullTank,
+    Expression<String>? recordedByContactId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (purchasedAt != null) 'purchased_at': purchasedAt,
+      if (costMinor != null) 'cost_minor': costMinor,
+      if (currency != null) 'currency': currency,
+      if (volumeLiters != null) 'volume_liters': volumeLiters,
+      if (meterReadingValue != null) 'meter_reading_value': meterReadingValue,
+      if (meterPhotoPath != null) 'meter_photo_path': meterPhotoPath,
+      if (isFullTank != null) 'is_full_tank': isFullTank,
+      if (recordedByContactId != null)
+        'recorded_by_contact_id': recordedByContactId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FuelPurchasesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<DateTime>? purchasedAt,
+    Value<int>? costMinor,
+    Value<String>? currency,
+    Value<double?>? volumeLiters,
+    Value<int?>? meterReadingValue,
+    Value<String?>? meterPhotoPath,
+    Value<bool>? isFullTank,
+    Value<String>? recordedByContactId,
+    Value<int>? rowid,
+  }) {
+    return FuelPurchasesCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      purchasedAt: purchasedAt ?? this.purchasedAt,
+      costMinor: costMinor ?? this.costMinor,
+      currency: currency ?? this.currency,
+      volumeLiters: volumeLiters ?? this.volumeLiters,
+      meterReadingValue: meterReadingValue ?? this.meterReadingValue,
+      meterPhotoPath: meterPhotoPath ?? this.meterPhotoPath,
+      isFullTank: isFullTank ?? this.isFullTank,
+      recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (purchasedAt.present) {
+      map['purchased_at'] = Variable<DateTime>(purchasedAt.value);
+    }
+    if (costMinor.present) {
+      map['cost_minor'] = Variable<int>(costMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (volumeLiters.present) {
+      map['volume_liters'] = Variable<double>(volumeLiters.value);
+    }
+    if (meterReadingValue.present) {
+      map['meter_reading_value'] = Variable<int>(meterReadingValue.value);
+    }
+    if (meterPhotoPath.present) {
+      map['meter_photo_path'] = Variable<String>(meterPhotoPath.value);
+    }
+    if (isFullTank.present) {
+      map['is_full_tank'] = Variable<bool>(isFullTank.value);
+    }
+    if (recordedByContactId.present) {
+      map['recorded_by_contact_id'] = Variable<String>(
+        recordedByContactId.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FuelPurchasesCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('purchasedAt: $purchasedAt, ')
+          ..write('costMinor: $costMinor, ')
+          ..write('currency: $currency, ')
+          ..write('volumeLiters: $volumeLiters, ')
+          ..write('meterReadingValue: $meterReadingValue, ')
+          ..write('meterPhotoPath: $meterPhotoPath, ')
+          ..write('isFullTank: $isFullTank, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MaintenanceEventsTable extends MaintenanceEvents
+    with TableInfo<$MaintenanceEventsTable, MaintenanceEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MaintenanceEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _servicedAtMeta = const VerificationMeta(
+    'servicedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> servicedAt = GeneratedColumn<DateTime>(
+    'serviced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _costMinorMeta = const VerificationMeta(
+    'costMinor',
+  );
+  @override
+  late final GeneratedColumn<int> costMinor = GeneratedColumn<int>(
+    'cost_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _attachmentPathMeta = const VerificationMeta(
+    'attachmentPath',
+  );
+  @override
+  late final GeneratedColumn<String> attachmentPath = GeneratedColumn<String>(
+    'attachment_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _meterAtServiceMeta = const VerificationMeta(
+    'meterAtService',
+  );
+  @override
+  late final GeneratedColumn<int> meterAtService = GeneratedColumn<int>(
+    'meter_at_service',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recordedByContactIdMeta =
+      const VerificationMeta('recordedByContactId');
+  @override
+  late final GeneratedColumn<String> recordedByContactId =
+      GeneratedColumn<String>(
+        'recorded_by_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    servicedAt,
+    category,
+    costMinor,
+    currency,
+    notes,
+    attachmentPath,
+    meterAtService,
+    recordedByContactId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'maintenance_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MaintenanceEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('serviced_at')) {
+      context.handle(
+        _servicedAtMeta,
+        servicedAt.isAcceptableOrUnknown(data['serviced_at']!, _servicedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_servicedAtMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('cost_minor')) {
+      context.handle(
+        _costMinorMeta,
+        costMinor.isAcceptableOrUnknown(data['cost_minor']!, _costMinorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_costMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('attachment_path')) {
+      context.handle(
+        _attachmentPathMeta,
+        attachmentPath.isAcceptableOrUnknown(
+          data['attachment_path']!,
+          _attachmentPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meter_at_service')) {
+      context.handle(
+        _meterAtServiceMeta,
+        meterAtService.isAcceptableOrUnknown(
+          data['meter_at_service']!,
+          _meterAtServiceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recorded_by_contact_id')) {
+      context.handle(
+        _recordedByContactIdMeta,
+        recordedByContactId.isAcceptableOrUnknown(
+          data['recorded_by_contact_id']!,
+          _recordedByContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByContactIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MaintenanceEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MaintenanceEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      servicedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}serviced_at'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      costMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cost_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      attachmentPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachment_path'],
+      ),
+      meterAtService: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}meter_at_service'],
+      ),
+      recordedByContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_contact_id'],
+      )!,
+    );
+  }
+
+  @override
+  $MaintenanceEventsTable createAlias(String alias) {
+    return $MaintenanceEventsTable(attachedDatabase, alias);
+  }
+}
+
+class MaintenanceEvent extends DataClass
+    implements Insertable<MaintenanceEvent> {
+  final String id;
+  final String vehicleId;
+  final DateTime servicedAt;
+  final String category;
+  final int costMinor;
+  final String currency;
+  final String notes;
+  final String? attachmentPath;
+  final int? meterAtService;
+  final String recordedByContactId;
+  const MaintenanceEvent({
+    required this.id,
+    required this.vehicleId,
+    required this.servicedAt,
+    required this.category,
+    required this.costMinor,
+    required this.currency,
+    required this.notes,
+    this.attachmentPath,
+    this.meterAtService,
+    required this.recordedByContactId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['serviced_at'] = Variable<DateTime>(servicedAt);
+    map['category'] = Variable<String>(category);
+    map['cost_minor'] = Variable<int>(costMinor);
+    map['currency'] = Variable<String>(currency);
+    map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || attachmentPath != null) {
+      map['attachment_path'] = Variable<String>(attachmentPath);
+    }
+    if (!nullToAbsent || meterAtService != null) {
+      map['meter_at_service'] = Variable<int>(meterAtService);
+    }
+    map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
+    return map;
+  }
+
+  MaintenanceEventsCompanion toCompanion(bool nullToAbsent) {
+    return MaintenanceEventsCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      servicedAt: Value(servicedAt),
+      category: Value(category),
+      costMinor: Value(costMinor),
+      currency: Value(currency),
+      notes: Value(notes),
+      attachmentPath: attachmentPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attachmentPath),
+      meterAtService: meterAtService == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meterAtService),
+      recordedByContactId: Value(recordedByContactId),
+    );
+  }
+
+  factory MaintenanceEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MaintenanceEvent(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      servicedAt: serializer.fromJson<DateTime>(json['servicedAt']),
+      category: serializer.fromJson<String>(json['category']),
+      costMinor: serializer.fromJson<int>(json['costMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      notes: serializer.fromJson<String>(json['notes']),
+      attachmentPath: serializer.fromJson<String?>(json['attachmentPath']),
+      meterAtService: serializer.fromJson<int?>(json['meterAtService']),
+      recordedByContactId: serializer.fromJson<String>(
+        json['recordedByContactId'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'servicedAt': serializer.toJson<DateTime>(servicedAt),
+      'category': serializer.toJson<String>(category),
+      'costMinor': serializer.toJson<int>(costMinor),
+      'currency': serializer.toJson<String>(currency),
+      'notes': serializer.toJson<String>(notes),
+      'attachmentPath': serializer.toJson<String?>(attachmentPath),
+      'meterAtService': serializer.toJson<int?>(meterAtService),
+      'recordedByContactId': serializer.toJson<String>(recordedByContactId),
+    };
+  }
+
+  MaintenanceEvent copyWith({
+    String? id,
+    String? vehicleId,
+    DateTime? servicedAt,
+    String? category,
+    int? costMinor,
+    String? currency,
+    String? notes,
+    Value<String?> attachmentPath = const Value.absent(),
+    Value<int?> meterAtService = const Value.absent(),
+    String? recordedByContactId,
+  }) => MaintenanceEvent(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    servicedAt: servicedAt ?? this.servicedAt,
+    category: category ?? this.category,
+    costMinor: costMinor ?? this.costMinor,
+    currency: currency ?? this.currency,
+    notes: notes ?? this.notes,
+    attachmentPath: attachmentPath.present
+        ? attachmentPath.value
+        : this.attachmentPath,
+    meterAtService: meterAtService.present
+        ? meterAtService.value
+        : this.meterAtService,
+    recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+  );
+  MaintenanceEvent copyWithCompanion(MaintenanceEventsCompanion data) {
+    return MaintenanceEvent(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      servicedAt: data.servicedAt.present
+          ? data.servicedAt.value
+          : this.servicedAt,
+      category: data.category.present ? data.category.value : this.category,
+      costMinor: data.costMinor.present ? data.costMinor.value : this.costMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      attachmentPath: data.attachmentPath.present
+          ? data.attachmentPath.value
+          : this.attachmentPath,
+      meterAtService: data.meterAtService.present
+          ? data.meterAtService.value
+          : this.meterAtService,
+      recordedByContactId: data.recordedByContactId.present
+          ? data.recordedByContactId.value
+          : this.recordedByContactId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MaintenanceEvent(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('servicedAt: $servicedAt, ')
+          ..write('category: $category, ')
+          ..write('costMinor: $costMinor, ')
+          ..write('currency: $currency, ')
+          ..write('notes: $notes, ')
+          ..write('attachmentPath: $attachmentPath, ')
+          ..write('meterAtService: $meterAtService, ')
+          ..write('recordedByContactId: $recordedByContactId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    servicedAt,
+    category,
+    costMinor,
+    currency,
+    notes,
+    attachmentPath,
+    meterAtService,
+    recordedByContactId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MaintenanceEvent &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.servicedAt == this.servicedAt &&
+          other.category == this.category &&
+          other.costMinor == this.costMinor &&
+          other.currency == this.currency &&
+          other.notes == this.notes &&
+          other.attachmentPath == this.attachmentPath &&
+          other.meterAtService == this.meterAtService &&
+          other.recordedByContactId == this.recordedByContactId);
+}
+
+class MaintenanceEventsCompanion extends UpdateCompanion<MaintenanceEvent> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<DateTime> servicedAt;
+  final Value<String> category;
+  final Value<int> costMinor;
+  final Value<String> currency;
+  final Value<String> notes;
+  final Value<String?> attachmentPath;
+  final Value<int?> meterAtService;
+  final Value<String> recordedByContactId;
+  final Value<int> rowid;
+  const MaintenanceEventsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.servicedAt = const Value.absent(),
+    this.category = const Value.absent(),
+    this.costMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.attachmentPath = const Value.absent(),
+    this.meterAtService = const Value.absent(),
+    this.recordedByContactId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MaintenanceEventsCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required DateTime servicedAt,
+    required String category,
+    required int costMinor,
+    required String currency,
+    this.notes = const Value.absent(),
+    this.attachmentPath = const Value.absent(),
+    this.meterAtService = const Value.absent(),
+    required String recordedByContactId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       servicedAt = Value(servicedAt),
+       category = Value(category),
+       costMinor = Value(costMinor),
+       currency = Value(currency),
+       recordedByContactId = Value(recordedByContactId);
+  static Insertable<MaintenanceEvent> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<DateTime>? servicedAt,
+    Expression<String>? category,
+    Expression<int>? costMinor,
+    Expression<String>? currency,
+    Expression<String>? notes,
+    Expression<String>? attachmentPath,
+    Expression<int>? meterAtService,
+    Expression<String>? recordedByContactId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (servicedAt != null) 'serviced_at': servicedAt,
+      if (category != null) 'category': category,
+      if (costMinor != null) 'cost_minor': costMinor,
+      if (currency != null) 'currency': currency,
+      if (notes != null) 'notes': notes,
+      if (attachmentPath != null) 'attachment_path': attachmentPath,
+      if (meterAtService != null) 'meter_at_service': meterAtService,
+      if (recordedByContactId != null)
+        'recorded_by_contact_id': recordedByContactId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MaintenanceEventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<DateTime>? servicedAt,
+    Value<String>? category,
+    Value<int>? costMinor,
+    Value<String>? currency,
+    Value<String>? notes,
+    Value<String?>? attachmentPath,
+    Value<int?>? meterAtService,
+    Value<String>? recordedByContactId,
+    Value<int>? rowid,
+  }) {
+    return MaintenanceEventsCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      servicedAt: servicedAt ?? this.servicedAt,
+      category: category ?? this.category,
+      costMinor: costMinor ?? this.costMinor,
+      currency: currency ?? this.currency,
+      notes: notes ?? this.notes,
+      attachmentPath: attachmentPath ?? this.attachmentPath,
+      meterAtService: meterAtService ?? this.meterAtService,
+      recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (servicedAt.present) {
+      map['serviced_at'] = Variable<DateTime>(servicedAt.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (costMinor.present) {
+      map['cost_minor'] = Variable<int>(costMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (attachmentPath.present) {
+      map['attachment_path'] = Variable<String>(attachmentPath.value);
+    }
+    if (meterAtService.present) {
+      map['meter_at_service'] = Variable<int>(meterAtService.value);
+    }
+    if (recordedByContactId.present) {
+      map['recorded_by_contact_id'] = Variable<String>(
+        recordedByContactId.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MaintenanceEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('servicedAt: $servicedAt, ')
+          ..write('category: $category, ')
+          ..write('costMinor: $costMinor, ')
+          ..write('currency: $currency, ')
+          ..write('notes: $notes, ')
+          ..write('attachmentPath: $attachmentPath, ')
+          ..write('meterAtService: $meterAtService, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleMaintenanceRulesTable extends VehicleMaintenanceRules
+    with TableInfo<$VehicleMaintenanceRulesTable, VehicleMaintenanceRule> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleMaintenanceRulesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalAmountMeta = const VerificationMeta(
+    'intervalAmount',
+  );
+  @override
+  late final GeneratedColumn<int> intervalAmount = GeneratedColumn<int>(
+    'interval_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _previewWindowAmountMeta =
+      const VerificationMeta('previewWindowAmount');
+  @override
+  late final GeneratedColumn<int> previewWindowAmount = GeneratedColumn<int>(
+    'preview_window_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(500),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    category,
+    intervalAmount,
+    previewWindowAmount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_maintenance_rules';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleMaintenanceRule> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('interval_amount')) {
+      context.handle(
+        _intervalAmountMeta,
+        intervalAmount.isAcceptableOrUnknown(
+          data['interval_amount']!,
+          _intervalAmountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_intervalAmountMeta);
+    }
+    if (data.containsKey('preview_window_amount')) {
+      context.handle(
+        _previewWindowAmountMeta,
+        previewWindowAmount.isAcceptableOrUnknown(
+          data['preview_window_amount']!,
+          _previewWindowAmountMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleMaintenanceRule map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleMaintenanceRule(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      intervalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_amount'],
+      )!,
+      previewWindowAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preview_window_amount'],
+      )!,
+    );
+  }
+
+  @override
+  $VehicleMaintenanceRulesTable createAlias(String alias) {
+    return $VehicleMaintenanceRulesTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleMaintenanceRule extends DataClass
+    implements Insertable<VehicleMaintenanceRule> {
+  final String id;
+  final String vehicleId;
+  final String category;
+  final int intervalAmount;
+  final int previewWindowAmount;
+  const VehicleMaintenanceRule({
+    required this.id,
+    required this.vehicleId,
+    required this.category,
+    required this.intervalAmount,
+    required this.previewWindowAmount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['category'] = Variable<String>(category);
+    map['interval_amount'] = Variable<int>(intervalAmount);
+    map['preview_window_amount'] = Variable<int>(previewWindowAmount);
+    return map;
+  }
+
+  VehicleMaintenanceRulesCompanion toCompanion(bool nullToAbsent) {
+    return VehicleMaintenanceRulesCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      category: Value(category),
+      intervalAmount: Value(intervalAmount),
+      previewWindowAmount: Value(previewWindowAmount),
+    );
+  }
+
+  factory VehicleMaintenanceRule.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleMaintenanceRule(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      category: serializer.fromJson<String>(json['category']),
+      intervalAmount: serializer.fromJson<int>(json['intervalAmount']),
+      previewWindowAmount: serializer.fromJson<int>(
+        json['previewWindowAmount'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'category': serializer.toJson<String>(category),
+      'intervalAmount': serializer.toJson<int>(intervalAmount),
+      'previewWindowAmount': serializer.toJson<int>(previewWindowAmount),
+    };
+  }
+
+  VehicleMaintenanceRule copyWith({
+    String? id,
+    String? vehicleId,
+    String? category,
+    int? intervalAmount,
+    int? previewWindowAmount,
+  }) => VehicleMaintenanceRule(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    category: category ?? this.category,
+    intervalAmount: intervalAmount ?? this.intervalAmount,
+    previewWindowAmount: previewWindowAmount ?? this.previewWindowAmount,
+  );
+  VehicleMaintenanceRule copyWithCompanion(
+    VehicleMaintenanceRulesCompanion data,
+  ) {
+    return VehicleMaintenanceRule(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      category: data.category.present ? data.category.value : this.category,
+      intervalAmount: data.intervalAmount.present
+          ? data.intervalAmount.value
+          : this.intervalAmount,
+      previewWindowAmount: data.previewWindowAmount.present
+          ? data.previewWindowAmount.value
+          : this.previewWindowAmount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMaintenanceRule(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('category: $category, ')
+          ..write('intervalAmount: $intervalAmount, ')
+          ..write('previewWindowAmount: $previewWindowAmount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, vehicleId, category, intervalAmount, previewWindowAmount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleMaintenanceRule &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.category == this.category &&
+          other.intervalAmount == this.intervalAmount &&
+          other.previewWindowAmount == this.previewWindowAmount);
+}
+
+class VehicleMaintenanceRulesCompanion
+    extends UpdateCompanion<VehicleMaintenanceRule> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<String> category;
+  final Value<int> intervalAmount;
+  final Value<int> previewWindowAmount;
+  final Value<int> rowid;
+  const VehicleMaintenanceRulesCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.category = const Value.absent(),
+    this.intervalAmount = const Value.absent(),
+    this.previewWindowAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleMaintenanceRulesCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required String category,
+    required int intervalAmount,
+    this.previewWindowAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       category = Value(category),
+       intervalAmount = Value(intervalAmount);
+  static Insertable<VehicleMaintenanceRule> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<String>? category,
+    Expression<int>? intervalAmount,
+    Expression<int>? previewWindowAmount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (category != null) 'category': category,
+      if (intervalAmount != null) 'interval_amount': intervalAmount,
+      if (previewWindowAmount != null)
+        'preview_window_amount': previewWindowAmount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleMaintenanceRulesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<String>? category,
+    Value<int>? intervalAmount,
+    Value<int>? previewWindowAmount,
+    Value<int>? rowid,
+  }) {
+    return VehicleMaintenanceRulesCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      category: category ?? this.category,
+      intervalAmount: intervalAmount ?? this.intervalAmount,
+      previewWindowAmount: previewWindowAmount ?? this.previewWindowAmount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (intervalAmount.present) {
+      map['interval_amount'] = Variable<int>(intervalAmount.value);
+    }
+    if (previewWindowAmount.present) {
+      map['preview_window_amount'] = Variable<int>(previewWindowAmount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMaintenanceRulesCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('category: $category, ')
+          ..write('intervalAmount: $intervalAmount, ')
+          ..write('previewWindowAmount: $previewWindowAmount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TrafficViolationsTable extends TrafficViolations
+    with TableInfo<$TrafficViolationsTable, TrafficViolation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TrafficViolationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _violatedAtMeta = const VerificationMeta(
+    'violatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> violatedAt = GeneratedColumn<DateTime>(
+    'violated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _violationTypeMeta = const VerificationMeta(
+    'violationType',
+  );
+  @override
+  late final GeneratedColumn<String> violationType = GeneratedColumn<String>(
+    'violation_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMinorMeta = const VerificationMeta(
+    'amountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> amountMinor = GeneratedColumn<int>(
+    'amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _responsibilityContactIdMeta =
+      const VerificationMeta('responsibilityContactId');
+  @override
+  late final GeneratedColumn<String> responsibilityContactId =
+      GeneratedColumn<String>(
+        'responsibility_contact_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _recordedByContactIdMeta =
+      const VerificationMeta('recordedByContactId');
+  @override
+  late final GeneratedColumn<String> recordedByContactId =
+      GeneratedColumn<String>(
+        'recorded_by_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    violatedAt,
+    violationType,
+    amountMinor,
+    currency,
+    responsibilityContactId,
+    notes,
+    recordedByContactId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'traffic_violations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TrafficViolation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('violated_at')) {
+      context.handle(
+        _violatedAtMeta,
+        violatedAt.isAcceptableOrUnknown(data['violated_at']!, _violatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_violatedAtMeta);
+    }
+    if (data.containsKey('violation_type')) {
+      context.handle(
+        _violationTypeMeta,
+        violationType.isAcceptableOrUnknown(
+          data['violation_type']!,
+          _violationTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_violationTypeMeta);
+    }
+    if (data.containsKey('amount_minor')) {
+      context.handle(
+        _amountMinorMeta,
+        amountMinor.isAcceptableOrUnknown(
+          data['amount_minor']!,
+          _amountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMinorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyMeta);
+    }
+    if (data.containsKey('responsibility_contact_id')) {
+      context.handle(
+        _responsibilityContactIdMeta,
+        responsibilityContactId.isAcceptableOrUnknown(
+          data['responsibility_contact_id']!,
+          _responsibilityContactIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('recorded_by_contact_id')) {
+      context.handle(
+        _recordedByContactIdMeta,
+        recordedByContactId.isAcceptableOrUnknown(
+          data['recorded_by_contact_id']!,
+          _recordedByContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedByContactIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TrafficViolation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TrafficViolation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      violatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}violated_at'],
+      )!,
+      violationType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}violation_type'],
+      )!,
+      amountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_minor'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      responsibilityContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}responsibility_contact_id'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      recordedByContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recorded_by_contact_id'],
+      )!,
+    );
+  }
+
+  @override
+  $TrafficViolationsTable createAlias(String alias) {
+    return $TrafficViolationsTable(attachedDatabase, alias);
+  }
+}
+
+class TrafficViolation extends DataClass
+    implements Insertable<TrafficViolation> {
+  final String id;
+  final String vehicleId;
+  final DateTime violatedAt;
+  final String violationType;
+  final int amountMinor;
+  final String currency;
+  final String? responsibilityContactId;
+  final String notes;
+  final String recordedByContactId;
+  const TrafficViolation({
+    required this.id,
+    required this.vehicleId,
+    required this.violatedAt,
+    required this.violationType,
+    required this.amountMinor,
+    required this.currency,
+    this.responsibilityContactId,
+    required this.notes,
+    required this.recordedByContactId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['violated_at'] = Variable<DateTime>(violatedAt);
+    map['violation_type'] = Variable<String>(violationType);
+    map['amount_minor'] = Variable<int>(amountMinor);
+    map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || responsibilityContactId != null) {
+      map['responsibility_contact_id'] = Variable<String>(
+        responsibilityContactId,
+      );
+    }
+    map['notes'] = Variable<String>(notes);
+    map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
+    return map;
+  }
+
+  TrafficViolationsCompanion toCompanion(bool nullToAbsent) {
+    return TrafficViolationsCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      violatedAt: Value(violatedAt),
+      violationType: Value(violationType),
+      amountMinor: Value(amountMinor),
+      currency: Value(currency),
+      responsibilityContactId: responsibilityContactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(responsibilityContactId),
+      notes: Value(notes),
+      recordedByContactId: Value(recordedByContactId),
+    );
+  }
+
+  factory TrafficViolation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TrafficViolation(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      violatedAt: serializer.fromJson<DateTime>(json['violatedAt']),
+      violationType: serializer.fromJson<String>(json['violationType']),
+      amountMinor: serializer.fromJson<int>(json['amountMinor']),
+      currency: serializer.fromJson<String>(json['currency']),
+      responsibilityContactId: serializer.fromJson<String?>(
+        json['responsibilityContactId'],
+      ),
+      notes: serializer.fromJson<String>(json['notes']),
+      recordedByContactId: serializer.fromJson<String>(
+        json['recordedByContactId'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'violatedAt': serializer.toJson<DateTime>(violatedAt),
+      'violationType': serializer.toJson<String>(violationType),
+      'amountMinor': serializer.toJson<int>(amountMinor),
+      'currency': serializer.toJson<String>(currency),
+      'responsibilityContactId': serializer.toJson<String?>(
+        responsibilityContactId,
+      ),
+      'notes': serializer.toJson<String>(notes),
+      'recordedByContactId': serializer.toJson<String>(recordedByContactId),
+    };
+  }
+
+  TrafficViolation copyWith({
+    String? id,
+    String? vehicleId,
+    DateTime? violatedAt,
+    String? violationType,
+    int? amountMinor,
+    String? currency,
+    Value<String?> responsibilityContactId = const Value.absent(),
+    String? notes,
+    String? recordedByContactId,
+  }) => TrafficViolation(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    violatedAt: violatedAt ?? this.violatedAt,
+    violationType: violationType ?? this.violationType,
+    amountMinor: amountMinor ?? this.amountMinor,
+    currency: currency ?? this.currency,
+    responsibilityContactId: responsibilityContactId.present
+        ? responsibilityContactId.value
+        : this.responsibilityContactId,
+    notes: notes ?? this.notes,
+    recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+  );
+  TrafficViolation copyWithCompanion(TrafficViolationsCompanion data) {
+    return TrafficViolation(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      violatedAt: data.violatedAt.present
+          ? data.violatedAt.value
+          : this.violatedAt,
+      violationType: data.violationType.present
+          ? data.violationType.value
+          : this.violationType,
+      amountMinor: data.amountMinor.present
+          ? data.amountMinor.value
+          : this.amountMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      responsibilityContactId: data.responsibilityContactId.present
+          ? data.responsibilityContactId.value
+          : this.responsibilityContactId,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      recordedByContactId: data.recordedByContactId.present
+          ? data.recordedByContactId.value
+          : this.recordedByContactId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrafficViolation(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('violatedAt: $violatedAt, ')
+          ..write('violationType: $violationType, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('responsibilityContactId: $responsibilityContactId, ')
+          ..write('notes: $notes, ')
+          ..write('recordedByContactId: $recordedByContactId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    violatedAt,
+    violationType,
+    amountMinor,
+    currency,
+    responsibilityContactId,
+    notes,
+    recordedByContactId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TrafficViolation &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.violatedAt == this.violatedAt &&
+          other.violationType == this.violationType &&
+          other.amountMinor == this.amountMinor &&
+          other.currency == this.currency &&
+          other.responsibilityContactId == this.responsibilityContactId &&
+          other.notes == this.notes &&
+          other.recordedByContactId == this.recordedByContactId);
+}
+
+class TrafficViolationsCompanion extends UpdateCompanion<TrafficViolation> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<DateTime> violatedAt;
+  final Value<String> violationType;
+  final Value<int> amountMinor;
+  final Value<String> currency;
+  final Value<String?> responsibilityContactId;
+  final Value<String> notes;
+  final Value<String> recordedByContactId;
+  final Value<int> rowid;
+  const TrafficViolationsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.violatedAt = const Value.absent(),
+    this.violationType = const Value.absent(),
+    this.amountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.responsibilityContactId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.recordedByContactId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TrafficViolationsCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required DateTime violatedAt,
+    required String violationType,
+    required int amountMinor,
+    required String currency,
+    this.responsibilityContactId = const Value.absent(),
+    this.notes = const Value.absent(),
+    required String recordedByContactId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       violatedAt = Value(violatedAt),
+       violationType = Value(violationType),
+       amountMinor = Value(amountMinor),
+       currency = Value(currency),
+       recordedByContactId = Value(recordedByContactId);
+  static Insertable<TrafficViolation> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<DateTime>? violatedAt,
+    Expression<String>? violationType,
+    Expression<int>? amountMinor,
+    Expression<String>? currency,
+    Expression<String>? responsibilityContactId,
+    Expression<String>? notes,
+    Expression<String>? recordedByContactId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (violatedAt != null) 'violated_at': violatedAt,
+      if (violationType != null) 'violation_type': violationType,
+      if (amountMinor != null) 'amount_minor': amountMinor,
+      if (currency != null) 'currency': currency,
+      if (responsibilityContactId != null)
+        'responsibility_contact_id': responsibilityContactId,
+      if (notes != null) 'notes': notes,
+      if (recordedByContactId != null)
+        'recorded_by_contact_id': recordedByContactId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TrafficViolationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<DateTime>? violatedAt,
+    Value<String>? violationType,
+    Value<int>? amountMinor,
+    Value<String>? currency,
+    Value<String?>? responsibilityContactId,
+    Value<String>? notes,
+    Value<String>? recordedByContactId,
+    Value<int>? rowid,
+  }) {
+    return TrafficViolationsCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      violatedAt: violatedAt ?? this.violatedAt,
+      violationType: violationType ?? this.violationType,
+      amountMinor: amountMinor ?? this.amountMinor,
+      currency: currency ?? this.currency,
+      responsibilityContactId:
+          responsibilityContactId ?? this.responsibilityContactId,
+      notes: notes ?? this.notes,
+      recordedByContactId: recordedByContactId ?? this.recordedByContactId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (violatedAt.present) {
+      map['violated_at'] = Variable<DateTime>(violatedAt.value);
+    }
+    if (violationType.present) {
+      map['violation_type'] = Variable<String>(violationType.value);
+    }
+    if (amountMinor.present) {
+      map['amount_minor'] = Variable<int>(amountMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (responsibilityContactId.present) {
+      map['responsibility_contact_id'] = Variable<String>(
+        responsibilityContactId.value,
+      );
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (recordedByContactId.present) {
+      map['recorded_by_contact_id'] = Variable<String>(
+        recordedByContactId.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrafficViolationsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('violatedAt: $violatedAt, ')
+          ..write('violationType: $violationType, ')
+          ..write('amountMinor: $amountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('responsibilityContactId: $responsibilityContactId, ')
+          ..write('notes: $notes, ')
+          ..write('recordedByContactId: $recordedByContactId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleSharingLinksTable extends VehicleSharingLinks
+    with TableInfo<$VehicleSharingLinksTable, VehicleSharingLink> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleSharingLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerContactIdMeta = const VerificationMeta(
+    'ownerContactId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerContactId = GeneratedColumn<String>(
+    'owner_contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _borrowerContactIdMeta = const VerificationMeta(
+    'borrowerContactId',
+  );
+  @override
+  late final GeneratedColumn<String> borrowerContactId =
+      GeneratedColumn<String>(
+        'borrower_contact_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _acceptedAtMeta = const VerificationMeta(
+    'acceptedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> acceptedAt = GeneratedColumn<DateTime>(
+    'accepted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revokedAtMeta = const VerificationMeta(
+    'revokedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> revokedAt = GeneratedColumn<DateTime>(
+    'revoked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    ownerContactId,
+    borrowerContactId,
+    status,
+    createdAt,
+    acceptedAt,
+    revokedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_sharing_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleSharingLink> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('owner_contact_id')) {
+      context.handle(
+        _ownerContactIdMeta,
+        ownerContactId.isAcceptableOrUnknown(
+          data['owner_contact_id']!,
+          _ownerContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_ownerContactIdMeta);
+    }
+    if (data.containsKey('borrower_contact_id')) {
+      context.handle(
+        _borrowerContactIdMeta,
+        borrowerContactId.isAcceptableOrUnknown(
+          data['borrower_contact_id']!,
+          _borrowerContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_borrowerContactIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('accepted_at')) {
+      context.handle(
+        _acceptedAtMeta,
+        acceptedAt.isAcceptableOrUnknown(data['accepted_at']!, _acceptedAtMeta),
+      );
+    }
+    if (data.containsKey('revoked_at')) {
+      context.handle(
+        _revokedAtMeta,
+        revokedAt.isAcceptableOrUnknown(data['revoked_at']!, _revokedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleSharingLink map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleSharingLink(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      ownerContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_contact_id'],
+      )!,
+      borrowerContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}borrower_contact_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      acceptedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}accepted_at'],
+      ),
+      revokedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}revoked_at'],
+      ),
+    );
+  }
+
+  @override
+  $VehicleSharingLinksTable createAlias(String alias) {
+    return $VehicleSharingLinksTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleSharingLink extends DataClass
+    implements Insertable<VehicleSharingLink> {
+  final String id;
+  final String vehicleId;
+  final String ownerContactId;
+  final String borrowerContactId;
+  final String status;
+  final DateTime createdAt;
+  final DateTime? acceptedAt;
+  final DateTime? revokedAt;
+  const VehicleSharingLink({
+    required this.id,
+    required this.vehicleId,
+    required this.ownerContactId,
+    required this.borrowerContactId,
+    required this.status,
+    required this.createdAt,
+    this.acceptedAt,
+    this.revokedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['owner_contact_id'] = Variable<String>(ownerContactId);
+    map['borrower_contact_id'] = Variable<String>(borrowerContactId);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || acceptedAt != null) {
+      map['accepted_at'] = Variable<DateTime>(acceptedAt);
+    }
+    if (!nullToAbsent || revokedAt != null) {
+      map['revoked_at'] = Variable<DateTime>(revokedAt);
+    }
+    return map;
+  }
+
+  VehicleSharingLinksCompanion toCompanion(bool nullToAbsent) {
+    return VehicleSharingLinksCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      ownerContactId: Value(ownerContactId),
+      borrowerContactId: Value(borrowerContactId),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      acceptedAt: acceptedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(acceptedAt),
+      revokedAt: revokedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(revokedAt),
+    );
+  }
+
+  factory VehicleSharingLink.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleSharingLink(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      ownerContactId: serializer.fromJson<String>(json['ownerContactId']),
+      borrowerContactId: serializer.fromJson<String>(json['borrowerContactId']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      acceptedAt: serializer.fromJson<DateTime?>(json['acceptedAt']),
+      revokedAt: serializer.fromJson<DateTime?>(json['revokedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'ownerContactId': serializer.toJson<String>(ownerContactId),
+      'borrowerContactId': serializer.toJson<String>(borrowerContactId),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'acceptedAt': serializer.toJson<DateTime?>(acceptedAt),
+      'revokedAt': serializer.toJson<DateTime?>(revokedAt),
+    };
+  }
+
+  VehicleSharingLink copyWith({
+    String? id,
+    String? vehicleId,
+    String? ownerContactId,
+    String? borrowerContactId,
+    String? status,
+    DateTime? createdAt,
+    Value<DateTime?> acceptedAt = const Value.absent(),
+    Value<DateTime?> revokedAt = const Value.absent(),
+  }) => VehicleSharingLink(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    ownerContactId: ownerContactId ?? this.ownerContactId,
+    borrowerContactId: borrowerContactId ?? this.borrowerContactId,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    acceptedAt: acceptedAt.present ? acceptedAt.value : this.acceptedAt,
+    revokedAt: revokedAt.present ? revokedAt.value : this.revokedAt,
+  );
+  VehicleSharingLink copyWithCompanion(VehicleSharingLinksCompanion data) {
+    return VehicleSharingLink(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      ownerContactId: data.ownerContactId.present
+          ? data.ownerContactId.value
+          : this.ownerContactId,
+      borrowerContactId: data.borrowerContactId.present
+          ? data.borrowerContactId.value
+          : this.borrowerContactId,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      acceptedAt: data.acceptedAt.present
+          ? data.acceptedAt.value
+          : this.acceptedAt,
+      revokedAt: data.revokedAt.present ? data.revokedAt.value : this.revokedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleSharingLink(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('ownerContactId: $ownerContactId, ')
+          ..write('borrowerContactId: $borrowerContactId, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('acceptedAt: $acceptedAt, ')
+          ..write('revokedAt: $revokedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    ownerContactId,
+    borrowerContactId,
+    status,
+    createdAt,
+    acceptedAt,
+    revokedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleSharingLink &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.ownerContactId == this.ownerContactId &&
+          other.borrowerContactId == this.borrowerContactId &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.acceptedAt == this.acceptedAt &&
+          other.revokedAt == this.revokedAt);
+}
+
+class VehicleSharingLinksCompanion extends UpdateCompanion<VehicleSharingLink> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<String> ownerContactId;
+  final Value<String> borrowerContactId;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> acceptedAt;
+  final Value<DateTime?> revokedAt;
+  final Value<int> rowid;
+  const VehicleSharingLinksCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.ownerContactId = const Value.absent(),
+    this.borrowerContactId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.acceptedAt = const Value.absent(),
+    this.revokedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleSharingLinksCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required String ownerContactId,
+    required String borrowerContactId,
+    required String status,
+    required DateTime createdAt,
+    this.acceptedAt = const Value.absent(),
+    this.revokedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       ownerContactId = Value(ownerContactId),
+       borrowerContactId = Value(borrowerContactId),
+       status = Value(status),
+       createdAt = Value(createdAt);
+  static Insertable<VehicleSharingLink> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<String>? ownerContactId,
+    Expression<String>? borrowerContactId,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? acceptedAt,
+    Expression<DateTime>? revokedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (ownerContactId != null) 'owner_contact_id': ownerContactId,
+      if (borrowerContactId != null) 'borrower_contact_id': borrowerContactId,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (acceptedAt != null) 'accepted_at': acceptedAt,
+      if (revokedAt != null) 'revoked_at': revokedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleSharingLinksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<String>? ownerContactId,
+    Value<String>? borrowerContactId,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? acceptedAt,
+    Value<DateTime?>? revokedAt,
+    Value<int>? rowid,
+  }) {
+    return VehicleSharingLinksCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      ownerContactId: ownerContactId ?? this.ownerContactId,
+      borrowerContactId: borrowerContactId ?? this.borrowerContactId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      acceptedAt: acceptedAt ?? this.acceptedAt,
+      revokedAt: revokedAt ?? this.revokedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (ownerContactId.present) {
+      map['owner_contact_id'] = Variable<String>(ownerContactId.value);
+    }
+    if (borrowerContactId.present) {
+      map['borrower_contact_id'] = Variable<String>(borrowerContactId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (acceptedAt.present) {
+      map['accepted_at'] = Variable<DateTime>(acceptedAt.value);
+    }
+    if (revokedAt.present) {
+      map['revoked_at'] = Variable<DateTime>(revokedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleSharingLinksCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('ownerContactId: $ownerContactId, ')
+          ..write('borrowerContactId: $borrowerContactId, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('acceptedAt: $acceptedAt, ')
+          ..write('revokedAt: $revokedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -13510,6 +18712,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $HousingPaymentOverdueJournalEntriesTable(this);
   late final $PlanPeerEstablishmentsTable planPeerEstablishments =
       $PlanPeerEstablishmentsTable(this);
+  late final $VehiclesTable vehicles = $VehiclesTable(this);
+  late final $VehicleMeterReadingsTable vehicleMeterReadings =
+      $VehicleMeterReadingsTable(this);
+  late final $VehicleUsesTable vehicleUses = $VehicleUsesTable(this);
+  late final $VehicleOdometerGapsTable vehicleOdometerGaps =
+      $VehicleOdometerGapsTable(this);
+  late final $FuelPurchasesTable fuelPurchases = $FuelPurchasesTable(this);
+  late final $MaintenanceEventsTable maintenanceEvents =
+      $MaintenanceEventsTable(this);
+  late final $VehicleMaintenanceRulesTable vehicleMaintenanceRules =
+      $VehicleMaintenanceRulesTable(this);
+  late final $TrafficViolationsTable trafficViolations =
+      $TrafficViolationsTable(this);
+  late final $VehicleSharingLinksTable vehicleSharingLinks =
+      $VehicleSharingLinksTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -13539,6 +18756,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     housingInactiveParticipants,
     housingPaymentOverdueJournalEntries,
     planPeerEstablishments,
+    vehicles,
+    vehicleMeterReadings,
+    vehicleUses,
+    vehicleOdometerGaps,
+    fuelPurchases,
+    maintenanceEvents,
+    vehicleMaintenanceRules,
+    trafficViolations,
+    vehicleSharingLinks,
   ];
 }
 
@@ -20294,6 +25520,2619 @@ typedef $$PlanPeerEstablishmentsTableProcessedTableManager =
       PlanPeerEstablishment,
       PrefetchHooks Function()
     >;
+typedef $$VehiclesTableCreateCompanionBuilder =
+    VehiclesCompanion Function({
+      required String id,
+      required String ownerContactId,
+      required String vehicleKind,
+      required String displayLabel,
+      Value<String> make,
+      Value<String> model,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$VehiclesTableUpdateCompanionBuilder =
+    VehiclesCompanion Function({
+      Value<String> id,
+      Value<String> ownerContactId,
+      Value<String> vehicleKind,
+      Value<String> displayLabel,
+      Value<String> make,
+      Value<String> model,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$VehiclesTableFilterComposer
+    extends Composer<_$AppDatabase, $VehiclesTable> {
+  $$VehiclesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleKind => $composableBuilder(
+    column: $table.vehicleKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayLabel => $composableBuilder(
+    column: $table.displayLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get make => $composableBuilder(
+    column: $table.make,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get model => $composableBuilder(
+    column: $table.model,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehiclesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehiclesTable> {
+  $$VehiclesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleKind => $composableBuilder(
+    column: $table.vehicleKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayLabel => $composableBuilder(
+    column: $table.displayLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get make => $composableBuilder(
+    column: $table.make,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get model => $composableBuilder(
+    column: $table.model,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehiclesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehiclesTable> {
+  $$VehiclesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get vehicleKind => $composableBuilder(
+    column: $table.vehicleKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get displayLabel => $composableBuilder(
+    column: $table.displayLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get make =>
+      $composableBuilder(column: $table.make, builder: (column) => column);
+
+  GeneratedColumn<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$VehiclesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehiclesTable,
+          Vehicle,
+          $$VehiclesTableFilterComposer,
+          $$VehiclesTableOrderingComposer,
+          $$VehiclesTableAnnotationComposer,
+          $$VehiclesTableCreateCompanionBuilder,
+          $$VehiclesTableUpdateCompanionBuilder,
+          (Vehicle, BaseReferences<_$AppDatabase, $VehiclesTable, Vehicle>),
+          Vehicle,
+          PrefetchHooks Function()
+        > {
+  $$VehiclesTableTableManager(_$AppDatabase db, $VehiclesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehiclesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehiclesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VehiclesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ownerContactId = const Value.absent(),
+                Value<String> vehicleKind = const Value.absent(),
+                Value<String> displayLabel = const Value.absent(),
+                Value<String> make = const Value.absent(),
+                Value<String> model = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehiclesCompanion(
+                id: id,
+                ownerContactId: ownerContactId,
+                vehicleKind: vehicleKind,
+                displayLabel: displayLabel,
+                make: make,
+                model: model,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ownerContactId,
+                required String vehicleKind,
+                required String displayLabel,
+                Value<String> make = const Value.absent(),
+                Value<String> model = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => VehiclesCompanion.insert(
+                id: id,
+                ownerContactId: ownerContactId,
+                vehicleKind: vehicleKind,
+                displayLabel: displayLabel,
+                make: make,
+                model: model,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehiclesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehiclesTable,
+      Vehicle,
+      $$VehiclesTableFilterComposer,
+      $$VehiclesTableOrderingComposer,
+      $$VehiclesTableAnnotationComposer,
+      $$VehiclesTableCreateCompanionBuilder,
+      $$VehiclesTableUpdateCompanionBuilder,
+      (Vehicle, BaseReferences<_$AppDatabase, $VehiclesTable, Vehicle>),
+      Vehicle,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleMeterReadingsTableCreateCompanionBuilder =
+    VehicleMeterReadingsCompanion Function({
+      required String id,
+      required String vehicleId,
+      required int value,
+      required String unit,
+      required String photoPath,
+      required DateTime recordedAt,
+      required String recordedByContactId,
+      Value<String?> vehicleUseId,
+      required String readingRole,
+      Value<bool> isCorrection,
+      Value<String> correctionNote,
+      Value<bool> negativeGapAcknowledged,
+      Value<int> rowid,
+    });
+typedef $$VehicleMeterReadingsTableUpdateCompanionBuilder =
+    VehicleMeterReadingsCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<int> value,
+      Value<String> unit,
+      Value<String> photoPath,
+      Value<DateTime> recordedAt,
+      Value<String> recordedByContactId,
+      Value<String?> vehicleUseId,
+      Value<String> readingRole,
+      Value<bool> isCorrection,
+      Value<String> correctionNote,
+      Value<bool> negativeGapAcknowledged,
+      Value<int> rowid,
+    });
+
+class $$VehicleMeterReadingsTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleMeterReadingsTable> {
+  $$VehicleMeterReadingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get readingRole => $composableBuilder(
+    column: $table.readingRole,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCorrection => $composableBuilder(
+    column: $table.isCorrection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get correctionNote => $composableBuilder(
+    column: $table.correctionNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get negativeGapAcknowledged => $composableBuilder(
+    column: $table.negativeGapAcknowledged,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleMeterReadingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleMeterReadingsTable> {
+  $$VehicleMeterReadingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get readingRole => $composableBuilder(
+    column: $table.readingRole,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCorrection => $composableBuilder(
+    column: $table.isCorrection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get correctionNote => $composableBuilder(
+    column: $table.correctionNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get negativeGapAcknowledged => $composableBuilder(
+    column: $table.negativeGapAcknowledged,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleMeterReadingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleMeterReadingsTable> {
+  $$VehicleMeterReadingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<int> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get photoPath =>
+      $composableBuilder(column: $table.photoPath, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get readingRole => $composableBuilder(
+    column: $table.readingRole,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCorrection => $composableBuilder(
+    column: $table.isCorrection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get correctionNote => $composableBuilder(
+    column: $table.correctionNote,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get negativeGapAcknowledged => $composableBuilder(
+    column: $table.negativeGapAcknowledged,
+    builder: (column) => column,
+  );
+}
+
+class $$VehicleMeterReadingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleMeterReadingsTable,
+          VehicleMeterReading,
+          $$VehicleMeterReadingsTableFilterComposer,
+          $$VehicleMeterReadingsTableOrderingComposer,
+          $$VehicleMeterReadingsTableAnnotationComposer,
+          $$VehicleMeterReadingsTableCreateCompanionBuilder,
+          $$VehicleMeterReadingsTableUpdateCompanionBuilder,
+          (
+            VehicleMeterReading,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleMeterReadingsTable,
+              VehicleMeterReading
+            >,
+          ),
+          VehicleMeterReading,
+          PrefetchHooks Function()
+        > {
+  $$VehicleMeterReadingsTableTableManager(
+    _$AppDatabase db,
+    $VehicleMeterReadingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleMeterReadingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleMeterReadingsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleMeterReadingsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<int> value = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> photoPath = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<String> recordedByContactId = const Value.absent(),
+                Value<String?> vehicleUseId = const Value.absent(),
+                Value<String> readingRole = const Value.absent(),
+                Value<bool> isCorrection = const Value.absent(),
+                Value<String> correctionNote = const Value.absent(),
+                Value<bool> negativeGapAcknowledged = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMeterReadingsCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                value: value,
+                unit: unit,
+                photoPath: photoPath,
+                recordedAt: recordedAt,
+                recordedByContactId: recordedByContactId,
+                vehicleUseId: vehicleUseId,
+                readingRole: readingRole,
+                isCorrection: isCorrection,
+                correctionNote: correctionNote,
+                negativeGapAcknowledged: negativeGapAcknowledged,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required int value,
+                required String unit,
+                required String photoPath,
+                required DateTime recordedAt,
+                required String recordedByContactId,
+                Value<String?> vehicleUseId = const Value.absent(),
+                required String readingRole,
+                Value<bool> isCorrection = const Value.absent(),
+                Value<String> correctionNote = const Value.absent(),
+                Value<bool> negativeGapAcknowledged = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMeterReadingsCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                value: value,
+                unit: unit,
+                photoPath: photoPath,
+                recordedAt: recordedAt,
+                recordedByContactId: recordedByContactId,
+                vehicleUseId: vehicleUseId,
+                readingRole: readingRole,
+                isCorrection: isCorrection,
+                correctionNote: correctionNote,
+                negativeGapAcknowledged: negativeGapAcknowledged,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleMeterReadingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleMeterReadingsTable,
+      VehicleMeterReading,
+      $$VehicleMeterReadingsTableFilterComposer,
+      $$VehicleMeterReadingsTableOrderingComposer,
+      $$VehicleMeterReadingsTableAnnotationComposer,
+      $$VehicleMeterReadingsTableCreateCompanionBuilder,
+      $$VehicleMeterReadingsTableUpdateCompanionBuilder,
+      (
+        VehicleMeterReading,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleMeterReadingsTable,
+          VehicleMeterReading
+        >,
+      ),
+      VehicleMeterReading,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleUsesTableCreateCompanionBuilder =
+    VehicleUsesCompanion Function({
+      required String id,
+      required String vehicleId,
+      required String attributedContactId,
+      required DateTime startedAt,
+      Value<DateTime?> endedAt,
+      required String startReadingId,
+      Value<String?> endReadingId,
+      Value<int?> usageAmount,
+      Value<int> rowid,
+    });
+typedef $$VehicleUsesTableUpdateCompanionBuilder =
+    VehicleUsesCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<String> attributedContactId,
+      Value<DateTime> startedAt,
+      Value<DateTime?> endedAt,
+      Value<String> startReadingId,
+      Value<String?> endReadingId,
+      Value<int?> usageAmount,
+      Value<int> rowid,
+    });
+
+class $$VehicleUsesTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleUsesTable> {
+  $$VehicleUsesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startReadingId => $composableBuilder(
+    column: $table.startReadingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endReadingId => $composableBuilder(
+    column: $table.endReadingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usageAmount => $composableBuilder(
+    column: $table.usageAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleUsesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleUsesTable> {
+  $$VehicleUsesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startReadingId => $composableBuilder(
+    column: $table.startReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endReadingId => $composableBuilder(
+    column: $table.endReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usageAmount => $composableBuilder(
+    column: $table.usageAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleUsesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleUsesTable> {
+  $$VehicleUsesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get startReadingId => $composableBuilder(
+    column: $table.startReadingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get endReadingId => $composableBuilder(
+    column: $table.endReadingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get usageAmount => $composableBuilder(
+    column: $table.usageAmount,
+    builder: (column) => column,
+  );
+}
+
+class $$VehicleUsesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleUsesTable,
+          VehicleUse,
+          $$VehicleUsesTableFilterComposer,
+          $$VehicleUsesTableOrderingComposer,
+          $$VehicleUsesTableAnnotationComposer,
+          $$VehicleUsesTableCreateCompanionBuilder,
+          $$VehicleUsesTableUpdateCompanionBuilder,
+          (
+            VehicleUse,
+            BaseReferences<_$AppDatabase, $VehicleUsesTable, VehicleUse>,
+          ),
+          VehicleUse,
+          PrefetchHooks Function()
+        > {
+  $$VehicleUsesTableTableManager(_$AppDatabase db, $VehicleUsesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleUsesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleUsesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VehicleUsesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<String> attributedContactId = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> endedAt = const Value.absent(),
+                Value<String> startReadingId = const Value.absent(),
+                Value<String?> endReadingId = const Value.absent(),
+                Value<int?> usageAmount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleUsesCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                attributedContactId: attributedContactId,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                startReadingId: startReadingId,
+                endReadingId: endReadingId,
+                usageAmount: usageAmount,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required String attributedContactId,
+                required DateTime startedAt,
+                Value<DateTime?> endedAt = const Value.absent(),
+                required String startReadingId,
+                Value<String?> endReadingId = const Value.absent(),
+                Value<int?> usageAmount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleUsesCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                attributedContactId: attributedContactId,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                startReadingId: startReadingId,
+                endReadingId: endReadingId,
+                usageAmount: usageAmount,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleUsesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleUsesTable,
+      VehicleUse,
+      $$VehicleUsesTableFilterComposer,
+      $$VehicleUsesTableOrderingComposer,
+      $$VehicleUsesTableAnnotationComposer,
+      $$VehicleUsesTableCreateCompanionBuilder,
+      $$VehicleUsesTableUpdateCompanionBuilder,
+      (
+        VehicleUse,
+        BaseReferences<_$AppDatabase, $VehicleUsesTable, VehicleUse>,
+      ),
+      VehicleUse,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleOdometerGapsTableCreateCompanionBuilder =
+    VehicleOdometerGapsCompanion Function({
+      required String id,
+      required String vehicleId,
+      required int latestReadingBeforeGap,
+      required int startReadingAfterGap,
+      required int gapAmount,
+      required String attributedContactId,
+      required String recordedByContactId,
+      required DateTime recordedAt,
+      Value<String?> vehicleUseId,
+      Value<int> rowid,
+    });
+typedef $$VehicleOdometerGapsTableUpdateCompanionBuilder =
+    VehicleOdometerGapsCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<int> latestReadingBeforeGap,
+      Value<int> startReadingAfterGap,
+      Value<int> gapAmount,
+      Value<String> attributedContactId,
+      Value<String> recordedByContactId,
+      Value<DateTime> recordedAt,
+      Value<String?> vehicleUseId,
+      Value<int> rowid,
+    });
+
+class $$VehicleOdometerGapsTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleOdometerGapsTable> {
+  $$VehicleOdometerGapsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get latestReadingBeforeGap => $composableBuilder(
+    column: $table.latestReadingBeforeGap,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startReadingAfterGap => $composableBuilder(
+    column: $table.startReadingAfterGap,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gapAmount => $composableBuilder(
+    column: $table.gapAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleOdometerGapsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleOdometerGapsTable> {
+  $$VehicleOdometerGapsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get latestReadingBeforeGap => $composableBuilder(
+    column: $table.latestReadingBeforeGap,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startReadingAfterGap => $composableBuilder(
+    column: $table.startReadingAfterGap,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get gapAmount => $composableBuilder(
+    column: $table.gapAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleOdometerGapsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleOdometerGapsTable> {
+  $$VehicleOdometerGapsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<int> get latestReadingBeforeGap => $composableBuilder(
+    column: $table.latestReadingBeforeGap,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get startReadingAfterGap => $composableBuilder(
+    column: $table.startReadingAfterGap,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get gapAmount =>
+      $composableBuilder(column: $table.gapAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get attributedContactId => $composableBuilder(
+    column: $table.attributedContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get vehicleUseId => $composableBuilder(
+    column: $table.vehicleUseId,
+    builder: (column) => column,
+  );
+}
+
+class $$VehicleOdometerGapsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleOdometerGapsTable,
+          VehicleOdometerGap,
+          $$VehicleOdometerGapsTableFilterComposer,
+          $$VehicleOdometerGapsTableOrderingComposer,
+          $$VehicleOdometerGapsTableAnnotationComposer,
+          $$VehicleOdometerGapsTableCreateCompanionBuilder,
+          $$VehicleOdometerGapsTableUpdateCompanionBuilder,
+          (
+            VehicleOdometerGap,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleOdometerGapsTable,
+              VehicleOdometerGap
+            >,
+          ),
+          VehicleOdometerGap,
+          PrefetchHooks Function()
+        > {
+  $$VehicleOdometerGapsTableTableManager(
+    _$AppDatabase db,
+    $VehicleOdometerGapsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleOdometerGapsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleOdometerGapsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleOdometerGapsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<int> latestReadingBeforeGap = const Value.absent(),
+                Value<int> startReadingAfterGap = const Value.absent(),
+                Value<int> gapAmount = const Value.absent(),
+                Value<String> attributedContactId = const Value.absent(),
+                Value<String> recordedByContactId = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<String?> vehicleUseId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleOdometerGapsCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                latestReadingBeforeGap: latestReadingBeforeGap,
+                startReadingAfterGap: startReadingAfterGap,
+                gapAmount: gapAmount,
+                attributedContactId: attributedContactId,
+                recordedByContactId: recordedByContactId,
+                recordedAt: recordedAt,
+                vehicleUseId: vehicleUseId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required int latestReadingBeforeGap,
+                required int startReadingAfterGap,
+                required int gapAmount,
+                required String attributedContactId,
+                required String recordedByContactId,
+                required DateTime recordedAt,
+                Value<String?> vehicleUseId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleOdometerGapsCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                latestReadingBeforeGap: latestReadingBeforeGap,
+                startReadingAfterGap: startReadingAfterGap,
+                gapAmount: gapAmount,
+                attributedContactId: attributedContactId,
+                recordedByContactId: recordedByContactId,
+                recordedAt: recordedAt,
+                vehicleUseId: vehicleUseId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleOdometerGapsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleOdometerGapsTable,
+      VehicleOdometerGap,
+      $$VehicleOdometerGapsTableFilterComposer,
+      $$VehicleOdometerGapsTableOrderingComposer,
+      $$VehicleOdometerGapsTableAnnotationComposer,
+      $$VehicleOdometerGapsTableCreateCompanionBuilder,
+      $$VehicleOdometerGapsTableUpdateCompanionBuilder,
+      (
+        VehicleOdometerGap,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleOdometerGapsTable,
+          VehicleOdometerGap
+        >,
+      ),
+      VehicleOdometerGap,
+      PrefetchHooks Function()
+    >;
+typedef $$FuelPurchasesTableCreateCompanionBuilder =
+    FuelPurchasesCompanion Function({
+      required String id,
+      required String vehicleId,
+      required DateTime purchasedAt,
+      required int costMinor,
+      required String currency,
+      Value<double?> volumeLiters,
+      Value<int?> meterReadingValue,
+      Value<String?> meterPhotoPath,
+      required bool isFullTank,
+      required String recordedByContactId,
+      Value<int> rowid,
+    });
+typedef $$FuelPurchasesTableUpdateCompanionBuilder =
+    FuelPurchasesCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<DateTime> purchasedAt,
+      Value<int> costMinor,
+      Value<String> currency,
+      Value<double?> volumeLiters,
+      Value<int?> meterReadingValue,
+      Value<String?> meterPhotoPath,
+      Value<bool> isFullTank,
+      Value<String> recordedByContactId,
+      Value<int> rowid,
+    });
+
+class $$FuelPurchasesTableFilterComposer
+    extends Composer<_$AppDatabase, $FuelPurchasesTable> {
+  $$FuelPurchasesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get purchasedAt => $composableBuilder(
+    column: $table.purchasedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get volumeLiters => $composableBuilder(
+    column: $table.volumeLiters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get meterReadingValue => $composableBuilder(
+    column: $table.meterReadingValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get meterPhotoPath => $composableBuilder(
+    column: $table.meterPhotoPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FuelPurchasesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FuelPurchasesTable> {
+  $$FuelPurchasesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get purchasedAt => $composableBuilder(
+    column: $table.purchasedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get volumeLiters => $composableBuilder(
+    column: $table.volumeLiters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get meterReadingValue => $composableBuilder(
+    column: $table.meterReadingValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meterPhotoPath => $composableBuilder(
+    column: $table.meterPhotoPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FuelPurchasesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FuelPurchasesTable> {
+  $$FuelPurchasesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get purchasedAt => $composableBuilder(
+    column: $table.purchasedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get costMinor =>
+      $composableBuilder(column: $table.costMinor, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<double> get volumeLiters => $composableBuilder(
+    column: $table.volumeLiters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get meterReadingValue => $composableBuilder(
+    column: $table.meterReadingValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get meterPhotoPath => $composableBuilder(
+    column: $table.meterPhotoPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => column,
+  );
+}
+
+class $$FuelPurchasesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FuelPurchasesTable,
+          FuelPurchase,
+          $$FuelPurchasesTableFilterComposer,
+          $$FuelPurchasesTableOrderingComposer,
+          $$FuelPurchasesTableAnnotationComposer,
+          $$FuelPurchasesTableCreateCompanionBuilder,
+          $$FuelPurchasesTableUpdateCompanionBuilder,
+          (
+            FuelPurchase,
+            BaseReferences<_$AppDatabase, $FuelPurchasesTable, FuelPurchase>,
+          ),
+          FuelPurchase,
+          PrefetchHooks Function()
+        > {
+  $$FuelPurchasesTableTableManager(_$AppDatabase db, $FuelPurchasesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FuelPurchasesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FuelPurchasesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FuelPurchasesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<DateTime> purchasedAt = const Value.absent(),
+                Value<int> costMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<double?> volumeLiters = const Value.absent(),
+                Value<int?> meterReadingValue = const Value.absent(),
+                Value<String?> meterPhotoPath = const Value.absent(),
+                Value<bool> isFullTank = const Value.absent(),
+                Value<String> recordedByContactId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FuelPurchasesCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                purchasedAt: purchasedAt,
+                costMinor: costMinor,
+                currency: currency,
+                volumeLiters: volumeLiters,
+                meterReadingValue: meterReadingValue,
+                meterPhotoPath: meterPhotoPath,
+                isFullTank: isFullTank,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required DateTime purchasedAt,
+                required int costMinor,
+                required String currency,
+                Value<double?> volumeLiters = const Value.absent(),
+                Value<int?> meterReadingValue = const Value.absent(),
+                Value<String?> meterPhotoPath = const Value.absent(),
+                required bool isFullTank,
+                required String recordedByContactId,
+                Value<int> rowid = const Value.absent(),
+              }) => FuelPurchasesCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                purchasedAt: purchasedAt,
+                costMinor: costMinor,
+                currency: currency,
+                volumeLiters: volumeLiters,
+                meterReadingValue: meterReadingValue,
+                meterPhotoPath: meterPhotoPath,
+                isFullTank: isFullTank,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FuelPurchasesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FuelPurchasesTable,
+      FuelPurchase,
+      $$FuelPurchasesTableFilterComposer,
+      $$FuelPurchasesTableOrderingComposer,
+      $$FuelPurchasesTableAnnotationComposer,
+      $$FuelPurchasesTableCreateCompanionBuilder,
+      $$FuelPurchasesTableUpdateCompanionBuilder,
+      (
+        FuelPurchase,
+        BaseReferences<_$AppDatabase, $FuelPurchasesTable, FuelPurchase>,
+      ),
+      FuelPurchase,
+      PrefetchHooks Function()
+    >;
+typedef $$MaintenanceEventsTableCreateCompanionBuilder =
+    MaintenanceEventsCompanion Function({
+      required String id,
+      required String vehicleId,
+      required DateTime servicedAt,
+      required String category,
+      required int costMinor,
+      required String currency,
+      Value<String> notes,
+      Value<String?> attachmentPath,
+      Value<int?> meterAtService,
+      required String recordedByContactId,
+      Value<int> rowid,
+    });
+typedef $$MaintenanceEventsTableUpdateCompanionBuilder =
+    MaintenanceEventsCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<DateTime> servicedAt,
+      Value<String> category,
+      Value<int> costMinor,
+      Value<String> currency,
+      Value<String> notes,
+      Value<String?> attachmentPath,
+      Value<int?> meterAtService,
+      Value<String> recordedByContactId,
+      Value<int> rowid,
+    });
+
+class $$MaintenanceEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $MaintenanceEventsTable> {
+  $$MaintenanceEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get servicedAt => $composableBuilder(
+    column: $table.servicedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachmentPath => $composableBuilder(
+    column: $table.attachmentPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get meterAtService => $composableBuilder(
+    column: $table.meterAtService,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MaintenanceEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MaintenanceEventsTable> {
+  $$MaintenanceEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get servicedAt => $composableBuilder(
+    column: $table.servicedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get costMinor => $composableBuilder(
+    column: $table.costMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attachmentPath => $composableBuilder(
+    column: $table.attachmentPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get meterAtService => $composableBuilder(
+    column: $table.meterAtService,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MaintenanceEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MaintenanceEventsTable> {
+  $$MaintenanceEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get servicedAt => $composableBuilder(
+    column: $table.servicedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<int> get costMinor =>
+      $composableBuilder(column: $table.costMinor, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get attachmentPath => $composableBuilder(
+    column: $table.attachmentPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get meterAtService => $composableBuilder(
+    column: $table.meterAtService,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => column,
+  );
+}
+
+class $$MaintenanceEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MaintenanceEventsTable,
+          MaintenanceEvent,
+          $$MaintenanceEventsTableFilterComposer,
+          $$MaintenanceEventsTableOrderingComposer,
+          $$MaintenanceEventsTableAnnotationComposer,
+          $$MaintenanceEventsTableCreateCompanionBuilder,
+          $$MaintenanceEventsTableUpdateCompanionBuilder,
+          (
+            MaintenanceEvent,
+            BaseReferences<
+              _$AppDatabase,
+              $MaintenanceEventsTable,
+              MaintenanceEvent
+            >,
+          ),
+          MaintenanceEvent,
+          PrefetchHooks Function()
+        > {
+  $$MaintenanceEventsTableTableManager(
+    _$AppDatabase db,
+    $MaintenanceEventsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MaintenanceEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MaintenanceEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MaintenanceEventsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<DateTime> servicedAt = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<int> costMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<String?> attachmentPath = const Value.absent(),
+                Value<int?> meterAtService = const Value.absent(),
+                Value<String> recordedByContactId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MaintenanceEventsCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                servicedAt: servicedAt,
+                category: category,
+                costMinor: costMinor,
+                currency: currency,
+                notes: notes,
+                attachmentPath: attachmentPath,
+                meterAtService: meterAtService,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required DateTime servicedAt,
+                required String category,
+                required int costMinor,
+                required String currency,
+                Value<String> notes = const Value.absent(),
+                Value<String?> attachmentPath = const Value.absent(),
+                Value<int?> meterAtService = const Value.absent(),
+                required String recordedByContactId,
+                Value<int> rowid = const Value.absent(),
+              }) => MaintenanceEventsCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                servicedAt: servicedAt,
+                category: category,
+                costMinor: costMinor,
+                currency: currency,
+                notes: notes,
+                attachmentPath: attachmentPath,
+                meterAtService: meterAtService,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MaintenanceEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MaintenanceEventsTable,
+      MaintenanceEvent,
+      $$MaintenanceEventsTableFilterComposer,
+      $$MaintenanceEventsTableOrderingComposer,
+      $$MaintenanceEventsTableAnnotationComposer,
+      $$MaintenanceEventsTableCreateCompanionBuilder,
+      $$MaintenanceEventsTableUpdateCompanionBuilder,
+      (
+        MaintenanceEvent,
+        BaseReferences<
+          _$AppDatabase,
+          $MaintenanceEventsTable,
+          MaintenanceEvent
+        >,
+      ),
+      MaintenanceEvent,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleMaintenanceRulesTableCreateCompanionBuilder =
+    VehicleMaintenanceRulesCompanion Function({
+      required String id,
+      required String vehicleId,
+      required String category,
+      required int intervalAmount,
+      Value<int> previewWindowAmount,
+      Value<int> rowid,
+    });
+typedef $$VehicleMaintenanceRulesTableUpdateCompanionBuilder =
+    VehicleMaintenanceRulesCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<String> category,
+      Value<int> intervalAmount,
+      Value<int> previewWindowAmount,
+      Value<int> rowid,
+    });
+
+class $$VehicleMaintenanceRulesTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleMaintenanceRulesTable> {
+  $$VehicleMaintenanceRulesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intervalAmount => $composableBuilder(
+    column: $table.intervalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get previewWindowAmount => $composableBuilder(
+    column: $table.previewWindowAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleMaintenanceRulesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleMaintenanceRulesTable> {
+  $$VehicleMaintenanceRulesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get intervalAmount => $composableBuilder(
+    column: $table.intervalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get previewWindowAmount => $composableBuilder(
+    column: $table.previewWindowAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleMaintenanceRulesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleMaintenanceRulesTable> {
+  $$VehicleMaintenanceRulesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<int> get intervalAmount => $composableBuilder(
+    column: $table.intervalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get previewWindowAmount => $composableBuilder(
+    column: $table.previewWindowAmount,
+    builder: (column) => column,
+  );
+}
+
+class $$VehicleMaintenanceRulesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleMaintenanceRulesTable,
+          VehicleMaintenanceRule,
+          $$VehicleMaintenanceRulesTableFilterComposer,
+          $$VehicleMaintenanceRulesTableOrderingComposer,
+          $$VehicleMaintenanceRulesTableAnnotationComposer,
+          $$VehicleMaintenanceRulesTableCreateCompanionBuilder,
+          $$VehicleMaintenanceRulesTableUpdateCompanionBuilder,
+          (
+            VehicleMaintenanceRule,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleMaintenanceRulesTable,
+              VehicleMaintenanceRule
+            >,
+          ),
+          VehicleMaintenanceRule,
+          PrefetchHooks Function()
+        > {
+  $$VehicleMaintenanceRulesTableTableManager(
+    _$AppDatabase db,
+    $VehicleMaintenanceRulesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleMaintenanceRulesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$VehicleMaintenanceRulesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleMaintenanceRulesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<int> intervalAmount = const Value.absent(),
+                Value<int> previewWindowAmount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMaintenanceRulesCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                category: category,
+                intervalAmount: intervalAmount,
+                previewWindowAmount: previewWindowAmount,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required String category,
+                required int intervalAmount,
+                Value<int> previewWindowAmount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMaintenanceRulesCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                category: category,
+                intervalAmount: intervalAmount,
+                previewWindowAmount: previewWindowAmount,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleMaintenanceRulesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleMaintenanceRulesTable,
+      VehicleMaintenanceRule,
+      $$VehicleMaintenanceRulesTableFilterComposer,
+      $$VehicleMaintenanceRulesTableOrderingComposer,
+      $$VehicleMaintenanceRulesTableAnnotationComposer,
+      $$VehicleMaintenanceRulesTableCreateCompanionBuilder,
+      $$VehicleMaintenanceRulesTableUpdateCompanionBuilder,
+      (
+        VehicleMaintenanceRule,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleMaintenanceRulesTable,
+          VehicleMaintenanceRule
+        >,
+      ),
+      VehicleMaintenanceRule,
+      PrefetchHooks Function()
+    >;
+typedef $$TrafficViolationsTableCreateCompanionBuilder =
+    TrafficViolationsCompanion Function({
+      required String id,
+      required String vehicleId,
+      required DateTime violatedAt,
+      required String violationType,
+      required int amountMinor,
+      required String currency,
+      Value<String?> responsibilityContactId,
+      Value<String> notes,
+      required String recordedByContactId,
+      Value<int> rowid,
+    });
+typedef $$TrafficViolationsTableUpdateCompanionBuilder =
+    TrafficViolationsCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<DateTime> violatedAt,
+      Value<String> violationType,
+      Value<int> amountMinor,
+      Value<String> currency,
+      Value<String?> responsibilityContactId,
+      Value<String> notes,
+      Value<String> recordedByContactId,
+      Value<int> rowid,
+    });
+
+class $$TrafficViolationsTableFilterComposer
+    extends Composer<_$AppDatabase, $TrafficViolationsTable> {
+  $$TrafficViolationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get violatedAt => $composableBuilder(
+    column: $table.violatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get violationType => $composableBuilder(
+    column: $table.violationType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get responsibilityContactId => $composableBuilder(
+    column: $table.responsibilityContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TrafficViolationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TrafficViolationsTable> {
+  $$TrafficViolationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get violatedAt => $composableBuilder(
+    column: $table.violatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get violationType => $composableBuilder(
+    column: $table.violationType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get responsibilityContactId => $composableBuilder(
+    column: $table.responsibilityContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TrafficViolationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TrafficViolationsTable> {
+  $$TrafficViolationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get violatedAt => $composableBuilder(
+    column: $table.violatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get violationType => $composableBuilder(
+    column: $table.violationType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountMinor => $composableBuilder(
+    column: $table.amountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get responsibilityContactId => $composableBuilder(
+    column: $table.responsibilityContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get recordedByContactId => $composableBuilder(
+    column: $table.recordedByContactId,
+    builder: (column) => column,
+  );
+}
+
+class $$TrafficViolationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TrafficViolationsTable,
+          TrafficViolation,
+          $$TrafficViolationsTableFilterComposer,
+          $$TrafficViolationsTableOrderingComposer,
+          $$TrafficViolationsTableAnnotationComposer,
+          $$TrafficViolationsTableCreateCompanionBuilder,
+          $$TrafficViolationsTableUpdateCompanionBuilder,
+          (
+            TrafficViolation,
+            BaseReferences<
+              _$AppDatabase,
+              $TrafficViolationsTable,
+              TrafficViolation
+            >,
+          ),
+          TrafficViolation,
+          PrefetchHooks Function()
+        > {
+  $$TrafficViolationsTableTableManager(
+    _$AppDatabase db,
+    $TrafficViolationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TrafficViolationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TrafficViolationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TrafficViolationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<DateTime> violatedAt = const Value.absent(),
+                Value<String> violationType = const Value.absent(),
+                Value<int> amountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String?> responsibilityContactId = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                Value<String> recordedByContactId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TrafficViolationsCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                violatedAt: violatedAt,
+                violationType: violationType,
+                amountMinor: amountMinor,
+                currency: currency,
+                responsibilityContactId: responsibilityContactId,
+                notes: notes,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required DateTime violatedAt,
+                required String violationType,
+                required int amountMinor,
+                required String currency,
+                Value<String?> responsibilityContactId = const Value.absent(),
+                Value<String> notes = const Value.absent(),
+                required String recordedByContactId,
+                Value<int> rowid = const Value.absent(),
+              }) => TrafficViolationsCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                violatedAt: violatedAt,
+                violationType: violationType,
+                amountMinor: amountMinor,
+                currency: currency,
+                responsibilityContactId: responsibilityContactId,
+                notes: notes,
+                recordedByContactId: recordedByContactId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TrafficViolationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TrafficViolationsTable,
+      TrafficViolation,
+      $$TrafficViolationsTableFilterComposer,
+      $$TrafficViolationsTableOrderingComposer,
+      $$TrafficViolationsTableAnnotationComposer,
+      $$TrafficViolationsTableCreateCompanionBuilder,
+      $$TrafficViolationsTableUpdateCompanionBuilder,
+      (
+        TrafficViolation,
+        BaseReferences<
+          _$AppDatabase,
+          $TrafficViolationsTable,
+          TrafficViolation
+        >,
+      ),
+      TrafficViolation,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleSharingLinksTableCreateCompanionBuilder =
+    VehicleSharingLinksCompanion Function({
+      required String id,
+      required String vehicleId,
+      required String ownerContactId,
+      required String borrowerContactId,
+      required String status,
+      required DateTime createdAt,
+      Value<DateTime?> acceptedAt,
+      Value<DateTime?> revokedAt,
+      Value<int> rowid,
+    });
+typedef $$VehicleSharingLinksTableUpdateCompanionBuilder =
+    VehicleSharingLinksCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<String> ownerContactId,
+      Value<String> borrowerContactId,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<DateTime?> acceptedAt,
+      Value<DateTime?> revokedAt,
+      Value<int> rowid,
+    });
+
+class $$VehicleSharingLinksTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleSharingLinksTable> {
+  $$VehicleSharingLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get borrowerContactId => $composableBuilder(
+    column: $table.borrowerContactId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get acceptedAt => $composableBuilder(
+    column: $table.acceptedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get revokedAt => $composableBuilder(
+    column: $table.revokedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleSharingLinksTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleSharingLinksTable> {
+  $$VehicleSharingLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get borrowerContactId => $composableBuilder(
+    column: $table.borrowerContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get acceptedAt => $composableBuilder(
+    column: $table.acceptedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get revokedAt => $composableBuilder(
+    column: $table.revokedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleSharingLinksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleSharingLinksTable> {
+  $$VehicleSharingLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerContactId => $composableBuilder(
+    column: $table.ownerContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get borrowerContactId => $composableBuilder(
+    column: $table.borrowerContactId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get acceptedAt => $composableBuilder(
+    column: $table.acceptedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get revokedAt =>
+      $composableBuilder(column: $table.revokedAt, builder: (column) => column);
+}
+
+class $$VehicleSharingLinksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleSharingLinksTable,
+          VehicleSharingLink,
+          $$VehicleSharingLinksTableFilterComposer,
+          $$VehicleSharingLinksTableOrderingComposer,
+          $$VehicleSharingLinksTableAnnotationComposer,
+          $$VehicleSharingLinksTableCreateCompanionBuilder,
+          $$VehicleSharingLinksTableUpdateCompanionBuilder,
+          (
+            VehicleSharingLink,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleSharingLinksTable,
+              VehicleSharingLink
+            >,
+          ),
+          VehicleSharingLink,
+          PrefetchHooks Function()
+        > {
+  $$VehicleSharingLinksTableTableManager(
+    _$AppDatabase db,
+    $VehicleSharingLinksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleSharingLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleSharingLinksTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleSharingLinksTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<String> ownerContactId = const Value.absent(),
+                Value<String> borrowerContactId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> acceptedAt = const Value.absent(),
+                Value<DateTime?> revokedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleSharingLinksCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                ownerContactId: ownerContactId,
+                borrowerContactId: borrowerContactId,
+                status: status,
+                createdAt: createdAt,
+                acceptedAt: acceptedAt,
+                revokedAt: revokedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required String ownerContactId,
+                required String borrowerContactId,
+                required String status,
+                required DateTime createdAt,
+                Value<DateTime?> acceptedAt = const Value.absent(),
+                Value<DateTime?> revokedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleSharingLinksCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                ownerContactId: ownerContactId,
+                borrowerContactId: borrowerContactId,
+                status: status,
+                createdAt: createdAt,
+                acceptedAt: acceptedAt,
+                revokedAt: revokedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleSharingLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleSharingLinksTable,
+      VehicleSharingLink,
+      $$VehicleSharingLinksTableFilterComposer,
+      $$VehicleSharingLinksTableOrderingComposer,
+      $$VehicleSharingLinksTableAnnotationComposer,
+      $$VehicleSharingLinksTableCreateCompanionBuilder,
+      $$VehicleSharingLinksTableUpdateCompanionBuilder,
+      (
+        VehicleSharingLink,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleSharingLinksTable,
+          VehicleSharingLink
+        >,
+      ),
+      VehicleSharingLink,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20382,4 +28221,25 @@ class $AppDatabaseManager {
         _db,
         _db.planPeerEstablishments,
       );
+  $$VehiclesTableTableManager get vehicles =>
+      $$VehiclesTableTableManager(_db, _db.vehicles);
+  $$VehicleMeterReadingsTableTableManager get vehicleMeterReadings =>
+      $$VehicleMeterReadingsTableTableManager(_db, _db.vehicleMeterReadings);
+  $$VehicleUsesTableTableManager get vehicleUses =>
+      $$VehicleUsesTableTableManager(_db, _db.vehicleUses);
+  $$VehicleOdometerGapsTableTableManager get vehicleOdometerGaps =>
+      $$VehicleOdometerGapsTableTableManager(_db, _db.vehicleOdometerGaps);
+  $$FuelPurchasesTableTableManager get fuelPurchases =>
+      $$FuelPurchasesTableTableManager(_db, _db.fuelPurchases);
+  $$MaintenanceEventsTableTableManager get maintenanceEvents =>
+      $$MaintenanceEventsTableTableManager(_db, _db.maintenanceEvents);
+  $$VehicleMaintenanceRulesTableTableManager get vehicleMaintenanceRules =>
+      $$VehicleMaintenanceRulesTableTableManager(
+        _db,
+        _db.vehicleMaintenanceRules,
+      );
+  $$TrafficViolationsTableTableManager get trafficViolations =>
+      $$TrafficViolationsTableTableManager(_db, _db.trafficViolations);
+  $$VehicleSharingLinksTableTableManager get vehicleSharingLinks =>
+      $$VehicleSharingLinksTableTableManager(_db, _db.vehicleSharingLinks);
 }

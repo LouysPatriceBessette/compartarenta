@@ -5606,6 +5606,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount exceeds what is owed to them.'**
   String get housingInactiveSettlementErrorExceedsCredit;
+
+  /// No description provided for @vehicleLicensingRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle module requires an active subscription.'**
+  String get vehicleLicensingRequired;
+
+  /// No description provided for @vehicleSharingLicensingRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle sharing requires an active subscription.'**
+  String get vehicleSharingLicensingRequired;
+
+  /// No description provided for @vehicleQuickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get vehicleQuickActionsTitle;
+
+  /// No description provided for @vehicleMyVehiclesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My vehicles'**
+  String get vehicleMyVehiclesTitle;
+
+  /// No description provided for @vehicleMyVehiclesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No vehicles yet. Tap + to add one.'**
+  String get vehicleMyVehiclesEmpty;
+
+  /// No description provided for @vehicleAddVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add vehicle'**
+  String get vehicleAddVehicle;
+
+  /// No description provided for @vehicleAddFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vehicle first.'**
+  String get vehicleAddFirst;
+
+  /// No description provided for @vehicleFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get vehicleFieldLabel;
+
+  /// No description provided for @vehicleFieldKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle kind'**
+  String get vehicleFieldKind;
+
+  /// No description provided for @vehicleFieldMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get vehicleFieldMake;
+
+  /// No description provided for @vehicleFieldModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get vehicleFieldModel;
+
+  /// No description provided for @vehicleKindCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Car'**
+  String get vehicleKindCar;
+
+  /// No description provided for @vehicleKindTruck.
+  ///
+  /// In en, this message translates to:
+  /// **'Truck'**
+  String get vehicleKindTruck;
+
+  /// No description provided for @vehicleKindMotorcycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Motorcycle'**
+  String get vehicleKindMotorcycle;
+
+  /// No description provided for @vehicleKindBoat.
+  ///
+  /// In en, this message translates to:
+  /// **'Boat'**
+  String get vehicleKindBoat;
+
+  /// No description provided for @vehicleQuickActionOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer reading'**
+  String get vehicleQuickActionOdometer;
+
+  /// No description provided for @vehicleQuickActionFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel purchase'**
+  String get vehicleQuickActionFuel;
+
+  /// No description provided for @vehicleQuickActionMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance performed'**
+  String get vehicleQuickActionMaintenance;
+
+  /// No description provided for @vehicleQuickActionViolation.
+  ///
+  /// In en, this message translates to:
+  /// **'Damage or violation'**
+  String get vehicleQuickActionViolation;
+
+  /// No description provided for @vehicleOdometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get vehicleOdometerLabel;
+
+  /// No description provided for @vehicleHorometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine hour meter'**
+  String get vehicleHorometerLabel;
+
+  /// No description provided for @vehicleMeterPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A meter photo is required.'**
+  String get vehicleMeterPhotoRequired;
+
+  /// No description provided for @vehicleMeterPhotoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add meter photo'**
+  String get vehicleMeterPhotoAdd;
+
+  /// No description provided for @vehicleMeterPhotoAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo attached'**
+  String get vehicleMeterPhotoAttached;
+
+  /// No description provided for @vehicleMeterPhotoCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get vehicleMeterPhotoCamera;
+
+  /// No description provided for @vehicleMeterPhotoGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get vehicleMeterPhotoGallery;
+
+  /// No description provided for @vehicleUseSessionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start use session'**
+  String get vehicleUseSessionStart;
+
+  /// No description provided for @vehicleUseSessionEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End use session'**
+  String get vehicleUseSessionEnd;
+
+  /// No description provided for @vehicleUseSessionStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Session started. End it when you finish driving.'**
+  String get vehicleUseSessionStarted;
+
+  /// No description provided for @vehicleConsumptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumption'**
+  String get vehicleConsumptionTitle;
+
+  /// No description provided for @vehicleConsumptionInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient data for consumption'**
+  String get vehicleConsumptionInsufficient;
+
+  /// No description provided for @vehicleConsumptionPer100Km.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} L/100 km'**
+  String vehicleConsumptionPer100Km(String value);
+
+  /// No description provided for @vehicleConsumptionPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} L/h'**
+  String vehicleConsumptionPerHour(String value);
+
+  /// No description provided for @vehicleStatisticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get vehicleStatisticsTitle;
+
+  /// No description provided for @vehicleStatisticsMileageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My mileage'**
+  String get vehicleStatisticsMileageTitle;
+
+  /// No description provided for @vehicleStatisticsExpensesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My expenses'**
+  String get vehicleStatisticsExpensesTitle;
+
+  /// No description provided for @vehicleExpenseFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get vehicleExpenseFuel;
+
+  /// No description provided for @vehicleExpenseMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get vehicleExpenseMaintenance;
+
+  /// No description provided for @vehicleExpenseViolations.
+  ///
+  /// In en, this message translates to:
+  /// **'Violations'**
+  String get vehicleExpenseViolations;
+
+  /// No description provided for @vehicleFuelCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost'**
+  String get vehicleFuelCost;
+
+  /// No description provided for @vehicleFuelVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume (L, optional)'**
+  String get vehicleFuelVolume;
+
+  /// No description provided for @vehicleFuelMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Meter reading'**
+  String get vehicleFuelMeter;
+
+  /// No description provided for @vehicleFuelFullTank.
+  ///
+  /// In en, this message translates to:
+  /// **'Full tank'**
+  String get vehicleFuelFullTank;
+
+  /// No description provided for @vehicleMaintenanceCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get vehicleMaintenanceCategory;
+
+  /// No description provided for @vehicleMaintenanceCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get vehicleMaintenanceCost;
+
+  /// No description provided for @vehicleMaintenanceNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get vehicleMaintenanceNotes;
+
+  /// No description provided for @vehicleViolationType.
+  ///
+  /// In en, this message translates to:
+  /// **'Violation type'**
+  String get vehicleViolationType;
+
+  /// No description provided for @vehicleViolationAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get vehicleViolationAmount;
+
+  /// No description provided for @vehicleMaintenanceAlertTile.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}: {remaining} remaining'**
+  String vehicleMaintenanceAlertTile(String category, int remaining);
+
+  /// No description provided for @vehicleGapAttributionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlogged usage'**
+  String get vehicleGapAttributionTitle;
+
+  /// No description provided for @vehicleGapAttributionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is the {amount} {unit} difference attributable to?'**
+  String vehicleGapAttributionPrompt(int amount, String unit);
+
+  /// No description provided for @vehicleGapAttributionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t know'**
+  String get vehicleGapAttributionUnknown;
+
+  /// No description provided for @vehicleGapAttributionSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Myself'**
+  String get vehicleGapAttributionSelf;
+
+  /// No description provided for @vehicleGapOwnerNotified.
+  ///
+  /// In en, this message translates to:
+  /// **'The owner will be notified.'**
+  String get vehicleGapOwnerNotified;
+
+  /// No description provided for @vehicleNegativeGapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading decreased'**
+  String get vehicleNegativeGapTitle;
+
+  /// No description provided for @vehicleNegativeGapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The new reading is {amount} {unit} lower than the last stored reading.'**
+  String vehicleNegativeGapBody(int amount, String unit);
+
+  /// No description provided for @vehicleNegativeGapMaintain.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain reading, investigate later'**
+  String get vehicleNegativeGapMaintain;
+
+  /// No description provided for @vehicleNegativeGapCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel entry'**
+  String get vehicleNegativeGapCancel;
+
+  /// No description provided for @vehicleRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get vehicleRoleOwner;
+
+  /// No description provided for @vehicleRoleBorrower.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrower'**
+  String get vehicleRoleBorrower;
+
+  /// No description provided for @vehicleSharingAccessibleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessible vehicles'**
+  String get vehicleSharingAccessibleTitle;
+
+  /// No description provided for @vehicleSharingAccessibleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared vehicles yet.'**
+  String get vehicleSharingAccessibleEmpty;
+
+  /// No description provided for @vehicleSharingPendingOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending offers'**
+  String get vehicleSharingPendingOffers;
+
+  /// No description provided for @vehicleSharingAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get vehicleSharingAccept;
+
+  /// No description provided for @vehicleSharingOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sharing'**
+  String get vehicleSharingOffer;
+
+  /// No description provided for @vehicleSharingOfferPickContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a connected contact'**
+  String get vehicleSharingOfferPickContact;
+
+  /// No description provided for @vehicleSharingNoContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a connected contact first.'**
+  String get vehicleSharingNoContacts;
+
+  /// No description provided for @vehicleSharingOfferSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer sent.'**
+  String get vehicleSharingOfferSent;
+
+  /// No description provided for @vehicleSharingOfferBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing requires vehicle and vehicle-sharing subscriptions.'**
+  String get vehicleSharingOfferBlocked;
+
+  /// No description provided for @vehicleSharingForwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded on the owner\'s vehicle.'**
+  String get vehicleSharingForwarded;
+
+  /// No description provided for @vehicleSharingBorrowerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrower: {name}'**
+  String vehicleSharingBorrowerLabel(String name);
+
+  /// No description provided for @vehicleSharingOwnerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner: {name}'**
+  String vehicleSharingOwnerLabel(String name);
 }
 
 class _AppLocalizationsDelegate

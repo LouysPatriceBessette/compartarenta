@@ -6,6 +6,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'db_paths.dart';
+import 'vehicle_tables.dart';
 import '../debug/web_dev_db_write_observer.dart';
 
 part 'app_database.g.dart';
@@ -600,6 +601,15 @@ class PlanPeerEstablishments extends Table {
     HousingInactiveParticipants,
     HousingPaymentOverdueJournalEntries,
     PlanPeerEstablishments,
+    Vehicles,
+    VehicleMeterReadings,
+    VehicleUses,
+    VehicleOdometerGaps,
+    FuelPurchases,
+    MaintenanceEvents,
+    VehicleMaintenanceRules,
+    TrafficViolations,
+    VehicleSharingLinks,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -699,7 +709,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -910,6 +920,17 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 23) {
         await m.createTable(housingPaymentOverdueJournalEntries);
+      }
+      if (from < 24) {
+        await m.createTable(vehicles);
+        await m.createTable(vehicleMeterReadings);
+        await m.createTable(vehicleUses);
+        await m.createTable(vehicleOdometerGaps);
+        await m.createTable(fuelPurchases);
+        await m.createTable(maintenanceEvents);
+        await m.createTable(vehicleMaintenanceRules);
+        await m.createTable(trafficViolations);
+        await m.createTable(vehicleSharingLinks);
       }
     },
     beforeOpen: (details) async {

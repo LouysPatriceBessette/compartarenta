@@ -22,7 +22,14 @@ import 'screens/settings_screen.dart';
 import 'screens/help/help_faq_route.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_module_entry_screen.dart';
-import 'screens/car_sharing/car_sharing_plan_screen.dart';
+import 'screens/vehicle/vehicle_module_hub_screen.dart';
+import 'screens/vehicle/vehicle_add_screen.dart';
+import 'screens/vehicle/vehicle_detail_screen.dart';
+import 'screens/vehicle/vehicle_statistics_screen.dart';
+import 'screens/vehicle/vehicle_use_session_screen.dart';
+import 'screens/vehicle/vehicle_quick_action_screens.dart';
+import 'screens/vehicle_sharing/vehicle_sharing_hub_screen.dart';
+import 'screens/vehicle_sharing/vehicle_sharing_offer_screen.dart';
 import 'screens/contacts/contact_detail_screen.dart';
 import 'screens/contacts/contact_edit_route_screen.dart';
 import 'screens/contacts/contacts_list_screen.dart';
@@ -448,8 +455,90 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
         builder: (context, state) => HousingModuleEntryScreen(prefs: prefs),
       ),
       GoRoute(
-        path: '/car',
-        builder: (context, state) => CarSharingPlanScreen(prefs: prefs),
+        path: '/vehicle',
+        builder: (context, state) => VehicleModuleHubScreen(prefs: prefs),
+        routes: [
+          GoRoute(
+            path: 'add',
+            builder: (context, state) => const VehicleAddScreen(),
+          ),
+          GoRoute(
+            path: 'statistics',
+            builder: (context, state) =>
+                VehicleStatisticsScreen(prefs: prefs),
+          ),
+          GoRoute(
+            path: ':vehicleId',
+            builder: (context, state) => VehicleDetailScreen(
+              vehicleId: state.pathParameters['vehicleId']!,
+            ),
+            routes: [
+              GoRoute(
+                path: 'use',
+                builder: (context, state) => VehicleUseSessionScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                ),
+              ),
+              GoRoute(
+                path: 'fuel',
+                builder: (context, state) => VehicleFuelPurchaseScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+              ),
+              GoRoute(
+                path: 'maintenance',
+                builder: (context, state) => VehicleMaintenanceFormScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+              ),
+              GoRoute(
+                path: 'violation',
+                builder: (context, state) => VehicleViolationFormScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/vehicle-sharing',
+        builder: (context, state) =>
+            VehicleSharingHubScreen(prefs: prefs),
+        routes: [
+          GoRoute(
+            path: 'offer',
+            builder: (context, state) => VehicleSharingOfferScreen(
+              vehicleId: state.uri.queryParameters['vehicleId'] ?? '',
+            ),
+          ),
+          GoRoute(
+            path: ':vehicleId/use',
+            builder: (context, state) {
+              final q = state.uri.queryParameters;
+              return VehicleUseSessionScreen(
+                vehicleId: state.pathParameters['vehicleId']!,
+                actingContactId: q['acting'] ?? '',
+                forwardToOwner: q['forward'] == 'true',
+              );
+            },
+          ),
+          GoRoute(
+            path: ':vehicleId/fuel',
+            builder: (context, state) {
+              final q = state.uri.queryParameters;
+              return VehicleFuelPurchaseScreen(
+                vehicleId: state.pathParameters['vehicleId']!,
+                prefs: prefs,
+                actingContactId: q['acting'] ?? '',
+                forwardToOwner: q['forward'] == 'true',
+              );
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/contacts',
