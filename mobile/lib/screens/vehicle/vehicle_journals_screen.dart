@@ -5,21 +5,33 @@ import 'package:intl/intl.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
+import '../../util/display_units.dart';
+import '../../util/format_money.dart';
+import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_kind.dart';
+import '../../vehicle/vehicle_meter_reading_labels.dart';
 import '../../widgets/screen_body_padding.dart';
 
-enum _VehicleJournalKind { meter, fuel, maintenance, violation }
+enum _VehicleJournalKind { meterAndFuel, maintenance, violation }
 
 class VehicleJournalsScreen extends StatefulWidget {
-  const VehicleJournalsScreen({super.key, required this.vehicleId});
+  const VehicleJournalsScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   State<VehicleJournalsScreen> createState() => _VehicleJournalsScreenState();
 }
 
 class _VehicleJournalsScreenState extends State<VehicleJournalsScreen> {
-  _VehicleJournalKind _kind = _VehicleJournalKind.meter;
+  _VehicleJournalKind _kind = _VehicleJournalKind.meterAndFuel;
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +52,8 @@ class _VehicleJournalsScreenState extends State<VehicleJournalsScreen> {
               ),
               items: [
                 DropdownMenuItem(
-                  value: _VehicleJournalKind.meter,
-                  child: Text(l10n.vehicleLogMeterTitle),
-                ),
-                DropdownMenuItem(
-                  value: _VehicleJournalKind.fuel,
-                  child: Text(l10n.vehicleLogFuelTitle),
+                  value: _VehicleJournalKind.meterAndFuel,
+                  child: Text(l10n.vehicleLogMeterFuelTitle),
                 ),
                 DropdownMenuItem(
                   value: _VehicleJournalKind.maintenance,
@@ -65,11 +73,9 @@ class _VehicleJournalsScreenState extends State<VehicleJournalsScreen> {
           const SizedBox(height: 8),
           Expanded(
             child: switch (_kind) {
-              _VehicleJournalKind.meter => _MeterJournalList(
+              _VehicleJournalKind.meterAndFuel => _MeterFuelJournalList(
                   vehicleId: widget.vehicleId,
-                ),
-              _VehicleJournalKind.fuel => _FuelJournalList(
-                  vehicleId: widget.vehicleId,
+                  prefs: widget.prefs,
                 ),
               _VehicleJournalKind.maintenance => _MaintenanceJournalList(
                   vehicleId: widget.vehicleId,
@@ -85,90 +91,179 @@ class _VehicleJournalsScreenState extends State<VehicleJournalsScreen> {
   }
 }
 
-class _MeterJournalList extends StatelessWidget {
-  const _MeterJournalList({required this.vehicleId});
+sealed class _MeterFuelJournalRow {
+  const _MeterFuelJournalRow({required this.sortAt});
+
+  final DateTime sortAt;
+}
+
+final class _MeterFuelJournalMeterRow extends _MeterFuelJournalRow {
+  _MeterFuelJournalMeterRow({
+    required this.reading,
+    required this.roleLabel,
+    required super.sortAt,
+  });
+
+  final VehicleMeterReading reading;
+  final String roleLabel;
+}
+
+final class _MeterFuelJournalFuelRow extends _MeterFuelJournalRow {
+  _MeterFuelJournalFuelRow({
+    required this.purchase,
+    required super.sortAt,
+  });
+
+  final FuelPurchase purchase;
+}
+
+class _MeterFuelJournalList extends StatelessWidget {
+  const _MeterFuelJournalList({
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return FutureBuilder<List<VehicleMeterReading>>(
-      future: VehiclesRepository(AppDatabase.processScope)
-          .listMeterReadings(vehicleId),
+    return FutureBuilder<_MeterFuelJournalData?>(
+      future: _load(l10n),
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final rows = snap.data!;
-        if (rows.isEmpty) {
+        final data = snap.data;
+        if (data == null || data.rows.isEmpty) {
           return Center(child: Text(l10n.vehicleJournalEmpty));
         }
+        final dateFmt = effectiveDateFormat(prefs);
+        final distanceUnit = resolveDistanceUnit(prefs);
+        final liquidUnit = resolveLiquidVolumeUnit(prefs);
+        final locale = Localizations.localeOf(context).toString();
+        final bodySmall = Theme.of(context).textTheme.bodySmall;
         return ListView.separated(
           padding: screenBodyScrollPadding(context),
-          itemCount: rows.length,
+          itemCount: data.rows.length,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
-            final row = rows[index];
-            final date = DateFormat.yMMMd().add_Hm().format(
-                  row.recordedAt.toLocal(),
-                );
-            return ListTile(
-              title: Text('${row.value}'),
-              subtitle: Text(date),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(
-                '/vehicle/$vehicleId/meter-log/${row.id}',
-              ),
-            );
+            final row = data.rows[index];
+            return switch (row) {
+              _MeterFuelJournalMeterRow(:final reading, :final roleLabel) =>
+                _journalTile(
+                  context: context,
+                  line1: formatStoredMeterForDisplay(
+                    context,
+                    reading.value,
+                    usesHorometer: data.usesHorometer,
+                    distanceUnit: distanceUnit,
+                  ),
+                  line2: roleLabel,
+                  line3: formatPreferenceDateTime(reading.recordedAt, dateFmt),
+                  bodySmall: bodySmall,
+                  onTap: () => context.push(
+                    '/vehicle/$vehicleId/meter-log/${reading.id}',
+                  ),
+                ),
+              _MeterFuelJournalFuelRow(:final purchase) => _journalTile(
+                  context: context,
+                  line1: formatMinorAsMoney(
+                    context,
+                    purchase.costMinor,
+                    purchase.currency,
+                  ),
+                  line2: purchase.volumeLiters == null
+                      ? '—'
+                      : formatLiquidVolumeForDisplay(
+                          purchase.volumeLiters!,
+                          unit: liquidUnit,
+                          locale: locale,
+                        ),
+                  line3: formatPreferenceDateTime(
+                    purchase.purchasedAt,
+                    dateFmt,
+                  ),
+                  bodySmall: bodySmall,
+                  onTap: () => context.push(
+                    '/vehicle/$vehicleId/fuel-log/${purchase.id}',
+                  ),
+                ),
+            };
           },
         );
       },
     );
+  }
+
+  Widget _journalTile({
+    required BuildContext context,
+    required String line1,
+    required String line2,
+    required String line3,
+    required TextStyle? bodySmall,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      title: Text(line1),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(line2),
+          Text(line3, style: bodySmall),
+        ],
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+
+  Future<_MeterFuelJournalData?> _load(AppLocalizations l10n) async {
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    final vehicle = await repo.getVehicle(vehicleId);
+    if (vehicle == null) return null;
+    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    final usesHorometer = kind?.usesHorometer ?? false;
+    final readings = await repo.listMeterReadings(vehicleId);
+    final purchases = await repo.listFuelPurchases(vehicleId);
+    final rows = <_MeterFuelJournalRow>[];
+    for (final reading in readings) {
+      final roleLabel = await meterReadingRoleLabel(
+        l10n: l10n,
+        prefs: prefs,
+        reading: reading,
+        repo: repo,
+      );
+      rows.add(
+        _MeterFuelJournalMeterRow(
+          reading: reading,
+          roleLabel: roleLabel,
+          sortAt: reading.recordedAt,
+        ),
+      );
+    }
+    for (final purchase in purchases) {
+      rows.add(
+        _MeterFuelJournalFuelRow(
+          purchase: purchase,
+          sortAt: purchase.purchasedAt,
+        ),
+      );
+    }
+    rows.sort((a, b) => b.sortAt.compareTo(a.sortAt));
+    return _MeterFuelJournalData(usesHorometer: usesHorometer, rows: rows);
   }
 }
 
-class _FuelJournalList extends StatelessWidget {
-  const _FuelJournalList({required this.vehicleId});
+class _MeterFuelJournalData {
+  const _MeterFuelJournalData({
+    required this.usesHorometer,
+    required this.rows,
+  });
 
-  final String vehicleId;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return FutureBuilder<List<FuelPurchase>>(
-      future: VehiclesRepository(AppDatabase.processScope)
-          .listFuelPurchases(vehicleId),
-      builder: (context, snap) {
-        if (!snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final rows = snap.data!;
-        if (rows.isEmpty) {
-          return Center(child: Text(l10n.vehicleJournalEmpty));
-        }
-        return ListView.separated(
-          padding: screenBodyScrollPadding(context),
-          itemCount: rows.length,
-          separatorBuilder: (context, index) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final row = rows[index];
-            final date = DateFormat.yMMMd().add_Hm().format(
-                  row.purchasedAt.toLocal(),
-                );
-            return ListTile(
-              title: Text('${row.costMinor / 100} ${row.currency}'),
-              subtitle: Text(date),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(
-                '/vehicle/$vehicleId/fuel-log/${row.id}',
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  final bool usesHorometer;
+  final List<_MeterFuelJournalRow> rows;
 }
 
 class _MaintenanceJournalList extends StatelessWidget {

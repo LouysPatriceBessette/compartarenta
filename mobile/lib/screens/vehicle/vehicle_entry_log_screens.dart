@@ -5,42 +5,62 @@ import 'package:intl/intl.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
+import '../../util/display_units.dart';
+import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_kind.dart';
+import '../../util/format_money.dart';
+import '../../vehicle/vehicle_fuel_log_display.dart';
+import '../../vehicle/vehicle_meter_reading_labels.dart';
 import '../../vehicle/vehicle_stored_image.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class VehicleMeterLogScreen extends StatelessWidget {
-  const VehicleMeterLogScreen({super.key, required this.vehicleId});
+  const VehicleMeterLogScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final dateFmt = effectiveDateFormat(prefs);
+    final distanceUnit = resolveDistanceUnit(prefs);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleLogMeterTitle)),
-      body: FutureBuilder<List<VehicleMeterReading>>(
-        future: VehiclesRepository(AppDatabase.processScope)
-            .listMeterReadings(vehicleId),
+      body: FutureBuilder<(Vehicle?, List<VehicleMeterReading>)>(
+        future: _load(),
         builder: (context, snap) {
           if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final rows = snap.data!;
+          final vehicle = snap.data!.$1;
+          final rows = snap.data!.$2;
           if (rows.isEmpty) {
             return Center(child: Text(l10n.vehicleJournalEmpty));
           }
+          final kind = VehicleKind.fromWire(vehicle?.vehicleKind);
+          final usesHorometer = kind?.usesHorometer ?? false;
           return ListView.separated(
             padding: screenBodyScrollPadding(context),
             itemCount: rows.length,
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final row = rows[index];
-              final date = DateFormat.yMMMd().add_Hm().format(
-                    row.recordedAt.toLocal(),
-                  );
+              final date = formatPreferenceDateTime(row.recordedAt, dateFmt);
+              final meter = formatStoredMeterForDisplay(
+                context,
+                row.value,
+                usesHorometer: usesHorometer,
+                distanceUnit: distanceUnit,
+              );
               return ListTile(
-                title: Text('${row.value}'),
+                title: Text(meter),
                 subtitle: Text(date),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(
@@ -53,6 +73,13 @@ class VehicleMeterLogScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<(Vehicle?, List<VehicleMeterReading>)> _load() async {
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    final vehicle = await repo.getVehicle(vehicleId);
+    final rows = await repo.listMeterReadings(vehicleId);
+    return (vehicle, rows);
+  }
 }
 
 class VehicleMeterReadingDetailScreen extends StatelessWidget {
@@ -60,16 +87,18 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
     super.key,
     required this.vehicleId,
     required this.readingId,
+    required this.prefs,
   });
 
   final String vehicleId;
   final String readingId;
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return FutureBuilder<(Vehicle?, VehicleMeterReading?)>(
-      future: _load(),
+    return FutureBuilder<_MeterReadingDetailData?>(
+      future: _load(l10n),
       builder: (context, snap) {
         if (!snap.hasData) {
           return Scaffold(
@@ -77,39 +106,51 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        final vehicle = snap.data!.$1;
-        final reading = snap.data!.$2;
-        if (vehicle == null || reading == null) {
+        final data = snap.data;
+        if (data == null) {
           return Scaffold(
             appBar: AppBar(title: Text(l10n.vehicleLogMeterDetailTitle)),
             body: Center(child: Text(l10n.vehicleUsageBlockedVehicleNotFound)),
           );
         }
-        final kind = VehicleKind.fromWire(vehicle.vehicleKind);
-        final meterLabel = kind?.usesHorometer ?? false
+        final dateFmt = effectiveDateFormat(prefs);
+        final distanceUnit = resolveDistanceUnit(prefs);
+        final meterLabel = data.usesHorometer
             ? l10n.vehicleHorometerLabel
             : l10n.vehicleOdometerLabel;
-        final date = DateFormat.yMMMd().add_Hm().format(
-              reading.recordedAt.toLocal(),
-            );
+        final date = formatPreferenceDateTime(data.reading.recordedAt, dateFmt);
+        final meter = formatStoredMeterForDisplay(
+          context,
+          data.reading.value,
+          usesHorometer: data.usesHorometer,
+          distanceUnit: distanceUnit,
+        );
         return Scaffold(
           appBar: AppBar(title: Text(l10n.vehicleLogMeterDetailTitle)),
           body: ListView(
             padding: screenBodyScrollPadding(context),
             children: [
-              ListTile(
-                title: Text(meterLabel),
-                subtitle: Text('${reading.value}'),
-              ),
-              ListTile(
-                title: Text(l10n.vehicleLogRecordedAt),
-                subtitle: Text(date),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Text(
+                  date,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               ListTile(
                 title: Text(l10n.vehicleLogReadingRole),
-                subtitle: Text(reading.readingRole),
+                subtitle: Text(data.roleLabel),
               ),
-              if (reading.photoPath.isNotEmpty) ...[
+              ListTile(
+                title: Text(meterLabel),
+                subtitle: Text(meter),
+              ),
+              if (formatMeterReadingTankStateLabel(data.reading).isNotEmpty)
+                ListTile(
+                  title: Text(l10n.vehicleFuelTankState),
+                  subtitle: Text(formatMeterReadingTankStateLabel(data.reading)),
+                ),
+              if (data.reading.photoPath.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -119,7 +160,7 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: VehicleStoredImage(path: reading.photoPath),
+                  child: VehicleStoredImage(path: data.reading.photoPath),
                 ),
               ],
             ],
@@ -129,22 +170,53 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<(Vehicle?, VehicleMeterReading?)> _load() async {
+  Future<_MeterReadingDetailData?> _load(AppLocalizations l10n) async {
     final repo = VehiclesRepository(AppDatabase.processScope);
     final vehicle = await repo.getVehicle(vehicleId);
     final reading = await repo.getMeterReading(readingId);
-    return (vehicle, reading);
+    if (vehicle == null || reading == null) return null;
+    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    final usesHorometer = kind?.usesHorometer ?? false;
+    final roleLabel = await meterReadingRoleLabel(
+      l10n: l10n,
+      prefs: prefs,
+      reading: reading,
+      repo: repo,
+    );
+    return _MeterReadingDetailData(
+      reading: reading,
+      roleLabel: roleLabel,
+      usesHorometer: usesHorometer,
+    );
   }
 }
 
+class _MeterReadingDetailData {
+  const _MeterReadingDetailData({
+    required this.reading,
+    required this.roleLabel,
+    required this.usesHorometer,
+  });
+
+  final VehicleMeterReading reading;
+  final String roleLabel;
+  final bool usesHorometer;
+}
+
 class VehicleFuelLogScreen extends StatelessWidget {
-  const VehicleFuelLogScreen({super.key, required this.vehicleId});
+  const VehicleFuelLogScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final dateFmt = effectiveDateFormat(prefs);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleLogFuelTitle)),
       body: FutureBuilder<List<FuelPurchase>>(
@@ -164,11 +236,10 @@ class VehicleFuelLogScreen extends StatelessWidget {
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final row = rows[index];
-              final date = DateFormat.yMMMd().add_Hm().format(
-                    row.purchasedAt.toLocal(),
-                  );
+              final date = formatPreferenceDateTime(row.purchasedAt, dateFmt);
+              final cost = formatMinorAsMoney(context, row.costMinor, row.currency);
               return ListTile(
-                title: Text('${row.costMinor / 100} ${row.currency}'),
+                title: Text(cost),
                 subtitle: Text(date),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(
@@ -188,17 +259,18 @@ class VehicleFuelPurchaseDetailScreen extends StatelessWidget {
     super.key,
     required this.vehicleId,
     required this.purchaseId,
+    required this.prefs,
   });
 
   final String vehicleId;
   final String purchaseId;
+  final AppPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return FutureBuilder<FuelPurchase?>(
-      future: VehiclesRepository(AppDatabase.processScope)
-          .getFuelPurchase(purchaseId),
+    return FutureBuilder<_FuelPurchaseDetailData?>(
+      future: _load(),
       builder: (context, snap) {
         if (!snap.hasData) {
           return Scaffold(
@@ -206,52 +278,108 @@ class VehicleFuelPurchaseDetailScreen extends StatelessWidget {
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        final row = snap.data;
-        if (row == null) {
+        final data = snap.data;
+        if (data == null) {
           return Scaffold(
             appBar: AppBar(title: Text(l10n.vehicleLogFuelDetailTitle)),
             body: Center(child: Text(l10n.vehicleUsageBlockedVehicleNotFound)),
           );
         }
-        final date = DateFormat.yMMMd().add_Hm().format(row.purchasedAt.toLocal());
+        final row = data.purchase;
+        final dateFmt = effectiveDateFormat(prefs);
+        final distanceUnit = resolveDistanceUnit(prefs);
+        final liquidUnit = resolveLiquidVolumeUnit(prefs);
+        final locale = Localizations.localeOf(context).toString();
+        final date = formatPreferenceDateTime(row.purchasedAt, dateFmt);
+        final cost = formatMinorAsMoney(context, row.costMinor, row.currency);
+        final tankState = formatFuelTankStateLabel(row);
+        final meterLabel = data.usesHorometer
+            ? l10n.vehicleHorometerLabel
+            : l10n.vehicleOdometerLabel;
         return Scaffold(
           appBar: AppBar(title: Text(l10n.vehicleLogFuelDetailTitle)),
           body: ListView(
             padding: screenBodyScrollPadding(context),
             children: [
-              ListTile(
-                title: Text(l10n.vehicleFuelCost),
-                subtitle: Text('${row.costMinor / 100} ${row.currency}'),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Text(
+                  date,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               ListTile(
-                title: Text(l10n.vehicleLogRecordedAt),
-                subtitle: Text(date),
+                title: Text(l10n.vehicleFuelCost),
+                subtitle: Text(cost),
               ),
               if (row.volumeLiters != null)
                 ListTile(
                   title: Text(l10n.vehicleFuelVolume),
-                  subtitle: Text('${row.volumeLiters}'),
-                ),
-              if (row.meterReadingValue != null)
-                ListTile(
-                  title: Text(l10n.vehicleFuelMeter),
-                  subtitle: Text('${row.meterReadingValue}'),
+                  subtitle: Text(
+                    formatLiquidVolumeForDisplay(
+                      row.volumeLiters!,
+                      unit: liquidUnit,
+                      locale: locale,
+                    ),
+                  ),
                 ),
               ListTile(
-                title: Text(l10n.vehicleFuelFullTank),
-                subtitle: Text(row.isFullTank ? l10n.commonYes : l10n.commonNo),
+                title: Text(l10n.vehicleFuelTankState),
+                subtitle: Text(tankState),
               ),
-              if (row.meterPhotoPath != null && row.meterPhotoPath!.isNotEmpty)
+              if (row.meterReadingValue != null)
+                ListTile(
+                  title: Text(meterLabel),
+                  subtitle: Text(
+                    formatStoredMeterForDisplay(
+                      context,
+                      row.meterReadingValue!,
+                      usesHorometer: data.usesHorometer,
+                      distanceUnit: distanceUnit,
+                    ),
+                  ),
+                ),
+              if (row.meterPhotoPath != null && row.meterPhotoPath!.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    l10n.vehicleOdometerPhotoLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: VehicleStoredImage(path: row.meterPhotoPath!),
                 ),
+              ],
             ],
           ),
         );
       },
     );
   }
+
+  Future<_FuelPurchaseDetailData?> _load() async {
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    final vehicle = await repo.getVehicle(vehicleId);
+    final purchase = await repo.getFuelPurchase(purchaseId);
+    if (vehicle == null || purchase == null) return null;
+    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    return _FuelPurchaseDetailData(
+      purchase: purchase,
+      usesHorometer: kind?.usesHorometer ?? false,
+    );
+  }
+}
+
+class _FuelPurchaseDetailData {
+  const _FuelPurchaseDetailData({
+    required this.purchase,
+    required this.usesHorometer,
+  });
+
+  final FuelPurchase purchase;
+  final bool usesHorometer;
 }
 
 class VehicleMaintenanceLogScreen extends StatelessWidget {

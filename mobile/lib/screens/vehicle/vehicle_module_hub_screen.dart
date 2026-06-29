@@ -6,12 +6,16 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../util/display_units.dart';
+import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
+import '../../vehicle/vehicle_fuel_tank_estimate.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
 import '../../vehicle/vehicle_module_exit.dart';
+import '../help/help_faq_screen.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class VehicleModuleHubScreen extends StatefulWidget {
@@ -123,6 +127,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
                         key: ValueKey('${v.id}-$_cardReloadToken'),
                         vehicle: v,
                         repo: _repo,
+                        prefs: widget.prefs,
                         onTap: () async {
                           await context.push('/vehicle/${v.id}');
                           _reload();
@@ -205,11 +210,13 @@ class _VehicleCard extends StatefulWidget {
     super.key,
     required this.vehicle,
     required this.repo,
+    required this.prefs,
     required this.onTap,
   });
 
   final Vehicle vehicle;
   final VehiclesRepository repo;
+  final AppPreferences prefs;
   final VoidCallback onTap;
 
   @override
@@ -242,9 +249,10 @@ class _VehicleCardState extends State<_VehicleCard> {
         final data = snap.data;
         final l10n = AppLocalizations.of(context);
         final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
-        final meterLabel = kind?.usesHorometer ?? false
-            ? l10n.vehicleHorometerLabel
-            : l10n.vehicleOdometerLabel;
+        final usesHorometer = kind?.usesHorometer ?? false;
+        final distanceUnit = resolveDistanceUnit(widget.prefs);
+        final liquidUnit = resolveLiquidVolumeUnit(widget.prefs);
+        final locale = Localizations.localeOf(context).toString();
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
@@ -264,9 +272,33 @@ class _VehicleCardState extends State<_VehicleCard> {
                     const SizedBox.shrink()
                   else if (data != null) ...[
                     Text(
-                      '$meterLabel: ${data.meterDisplay}',
+                      formatStoredMeterForDisplay(
+                        context,
+                        data.meterValue,
+                        usesHorometer: usesHorometer,
+                        distanceUnit: distanceUnit,
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
+                    if (data.fuelTankLabel(l10n, locale, liquidUnit).isNotEmpty)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              data.fuelTankLabel(l10n, locale, liquidUnit),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.info_outline),
+                            tooltip: l10n.vehicleFuelTankInfoTooltip,
+                            onPressed: () => openHelpFaq(
+                              context,
+                              anchor: HelpFaqAnchors.vehicleFuelTank,
+                            ),
+                          ),
+                        ],
+                      ),
                     if (data.consumptionLabel(l10n).isNotEmpty)
                       Text(
                         data.consumptionLabel(l10n),
@@ -291,7 +323,12 @@ class _VehicleCardState extends State<_VehicleCard> {
                                       l10n,
                                       a.category,
                                     ),
-                                    a.remainingAmount,
+                                    formatStoredMeterForDisplay(
+                                      context,
+                                      a.remainingAmount,
+                                      usesHorometer: usesHorometer,
+                                      distanceUnit: distanceUnit,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -317,25 +354,26 @@ class _VehicleCardState extends State<_VehicleCard> {
     final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
     final meter =
         await widget.repo.latestMeterValue(widget.vehicle.id) ?? 0;
-    final meterDisplay = kind?.usesHorometer ?? false
-        ? '${(meter / 10).toStringAsFixed(1)} h'
-        : '$meter km';
     try {
       final metrics = VehicleConsumptionMetrics(AppDatabase.processScope);
       final consumption = await metrics.forVehicle(widget.vehicle.id);
       final alerts = await VehicleMaintenanceAlerts(AppDatabase.processScope)
           .alertsForVehicle(widget.vehicle.id, currentMeter: meter);
+      final fuelTank = await VehicleFuelTankEstimate(AppDatabase.processScope)
+          .forVehicle(widget.vehicle.id);
       return _VehicleCardData(
-        meterDisplay: meterDisplay,
+        meterValue: meter,
         consumption: consumption,
         alerts: alerts,
+        fuelTank: fuelTank,
         kind: kind,
       );
     } catch (_) {
       return _VehicleCardData(
-        meterDisplay: meterDisplay,
+        meterValue: meter,
         consumption: const VehicleConsumptionSnapshot(hasSufficientData: false),
         alerts: const [],
+        fuelTank: null,
         kind: kind,
       );
     }
@@ -344,16 +382,33 @@ class _VehicleCardState extends State<_VehicleCard> {
 
 class _VehicleCardData {
   const _VehicleCardData({
-    required this.meterDisplay,
+    required this.meterValue,
     required this.consumption,
     required this.alerts,
+    required this.fuelTank,
     required this.kind,
   });
 
-  final String meterDisplay;
+  final int meterValue;
   final VehicleConsumptionSnapshot consumption;
   final List<VehicleMaintenanceAlert> alerts;
+  final VehicleFuelTankSnapshot? fuelTank;
   final VehicleKind? kind;
+
+  String fuelTankLabel(
+    AppLocalizations l10n,
+    String locale,
+    LiquidVolumeUnit liquidUnit,
+  ) {
+    final snapshot = fuelTank;
+    if (snapshot == null) return '';
+    final volume = formatLiquidVolumeForDisplay(
+      snapshot.volumeLiters,
+      unit: liquidUnit,
+      locale: locale,
+    );
+    return l10n.vehicleFuelTankInTank(volume);
+  }
 
   String consumptionLabel(AppLocalizations l10n) {
     if (!consumption.hasSufficientData) {

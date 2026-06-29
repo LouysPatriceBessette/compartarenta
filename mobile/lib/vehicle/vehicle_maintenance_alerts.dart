@@ -75,8 +75,8 @@ class VehicleMaintenanceAlerts {
     String vehicleId,
     VehicleKind kind,
   ) {
-    final interval = kind.usesHorometer ? 100 : 5000;
-    final preview = kind.usesHorometer ? 10 : 500;
+    final interval = kind.usesHorometer ? 100 : 50000;
+    final preview = kind.usesHorometer ? 10 : 5000;
     return [
       VehicleMaintenanceRule(
         id: '$vehicleId:rule:oil',

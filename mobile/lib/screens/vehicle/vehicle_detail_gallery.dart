@@ -23,6 +23,7 @@ class VehicleDetailGalleryView extends StatefulWidget {
 
 class _VehicleDetailGalleryViewState extends State<VehicleDetailGalleryView> {
   late Future<List<_GalleryWithPhotos>> _future;
+  bool _showEarlierGalleries = false;
 
   @override
   void initState() {
@@ -54,6 +55,7 @@ class _VehicleDetailGalleryViewState extends State<VehicleDetailGalleryView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FutureBuilder<List<_GalleryWithPhotos>>(
       future: _future,
       builder: (context, snap) {
@@ -61,24 +63,58 @@ class _VehicleDetailGalleryViewState extends State<VehicleDetailGalleryView> {
           return const SizedBox.shrink();
         }
         final galleries = snap.data!;
+        final latest = galleries.first;
+        final earlier = galleries.length > 1 ? galleries.sublist(1) : const [];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final gallery in galleries) ...[
-              if (gallery.title.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    gallery.title,
-                    style: Theme.of(context).textTheme.titleSmall,
+            _GallerySection(gallery: latest),
+            if (earlier.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(
+                    () => _showEarlierGalleries = !_showEarlierGalleries,
                   ),
+                  child: Text(l10n.vehicleDetailEarlierPhotos),
                 ),
-              _GalleryPhotoCarousel(photos: gallery.photos),
-              const SizedBox(height: 16),
+              ),
+              if (_showEarlierGalleries)
+                for (final gallery in earlier) ...[
+                  const SizedBox(height: 8),
+                  _GallerySection(gallery: gallery),
+                ],
             ],
           ],
         );
       },
+    );
+  }
+}
+
+class _GallerySection extends StatelessWidget {
+  const _GallerySection({required this.gallery});
+
+  final _GalleryWithPhotos gallery;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (gallery.title.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              gallery.title,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+        _GalleryPhotoCarousel(photos: gallery.photos),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }
@@ -109,6 +145,18 @@ class _GalleryPhotoCarouselState extends State<_GalleryPhotoCarousel> {
     super.dispose();
   }
 
+  void _openFullscreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (context) => _GalleryFullscreenView(
+          photos: widget.photos,
+          initialIndex: _index,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final photos = widget.photos;
@@ -121,27 +169,30 @@ class _GalleryPhotoCarouselState extends State<_GalleryPhotoCarousel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: _height,
-          child: photos.length == 1
-              ? VehicleStoredImage(
-                  path: photos.first.relativeFilePath,
-                  height: _height,
-                )
-              : PageView.builder(
-                  controller: _pageController,
-                  itemCount: photos.length,
-                  onPageChanged: (i) => setState(() => _index = i),
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: VehicleStoredImage(
-                        path: photos[index].relativeFilePath,
-                        height: _height,
-                      ),
-                    );
-                  },
-                ),
+        GestureDetector(
+          onDoubleTap: _openFullscreen,
+          child: SizedBox(
+            height: _height,
+            child: photos.length == 1
+                ? VehicleStoredImage(
+                    path: photos.first.relativeFilePath,
+                    height: _height,
+                  )
+                : PageView.builder(
+                    controller: _pageController,
+                    itemCount: photos.length,
+                    onPageChanged: (i) => setState(() => _index = i),
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: VehicleStoredImage(
+                          path: photos[index].relativeFilePath,
+                          height: _height,
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ),
         if (photos.length > 1) ...[
           const SizedBox(height: 8),
@@ -185,6 +236,120 @@ class _GalleryPhotoCarouselState extends State<_GalleryPhotoCarousel> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _GalleryFullscreenView extends StatefulWidget {
+  const _GalleryFullscreenView({
+    required this.photos,
+    required this.initialIndex,
+  });
+
+  final List<VehicleGalleryPhoto> photos;
+  final int initialIndex;
+
+  @override
+  State<_GalleryFullscreenView> createState() => _GalleryFullscreenViewState();
+}
+
+class _GalleryFullscreenViewState extends State<_GalleryFullscreenView> {
+  late final PageController _pageController;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = widget.photos;
+    final description = photos[_index].description.trim();
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          photos.length == 1
+              ? InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 4,
+                  child: VehicleStoredImage(
+                    path: photos.first.relativeFilePath,
+                    expand: true,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : PageView.builder(
+                  controller: _pageController,
+                  itemCount: photos.length,
+                  onPageChanged: (i) => setState(() => _index = i),
+                  itemBuilder: (context, index) {
+                    return InteractiveViewer(
+                      minScale: 1,
+                      maxScale: 4,
+                      child: VehicleStoredImage(
+                        path: photos[index].relativeFilePath,
+                        expand: true,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  },
+                ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Material(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (description.isNotEmpty)
+                        Expanded(
+                          child: Text(
+                            description,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: Colors.black,
+                                    ),
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      IconButton(
+                        tooltip: MaterialLocalizations.of(context)
+                            .closeButtonTooltip,
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.fullscreen_exit,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

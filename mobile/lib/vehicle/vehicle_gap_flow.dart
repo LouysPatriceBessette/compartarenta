@@ -8,8 +8,7 @@ import '../widgets/app_dialog.dart';
 /// Positive gap attribution choices for a vehicle use session start.
 Future<String?> showPositiveGapAttributionDialog(
   BuildContext context, {
-  required int gapAmount,
-  required String unitLabel,
+  required String gapDisplay,
   required List<({String id, String label})> participants,
 }) async {
   final l10n = AppLocalizations.of(context);
@@ -20,7 +19,7 @@ Future<String?> showPositiveGapAttributionDialog(
       return AlertDialog(
         title: Text(l10n.vehicleGapAttributionTitle),
         content: Text(
-          l10n.vehicleGapAttributionPrompt(gapAmount, unitLabel),
+          l10n.vehicleGapAttributionPrompt(gapDisplay),
         ),
         actions: [
           for (final p in participants)
@@ -44,8 +43,7 @@ enum NegativeGapChoice { maintain, cancel }
 /// Propriétaire negative-gap dialog per `vehicle-odometer-gap-attribution`.
 Future<NegativeGapChoice?> showNegativeGapDialog(
   BuildContext context, {
-  required int gapAmount,
-  required String unitLabel,
+  required String gapDisplay,
 }) async {
   final l10n = AppLocalizations.of(context);
   return showAppDialog<NegativeGapChoice>(
@@ -55,7 +53,7 @@ Future<NegativeGapChoice?> showNegativeGapDialog(
       return AlertDialog(
         title: Text(l10n.vehicleNegativeGapTitle),
         content: Text(
-          l10n.vehicleNegativeGapBody(gapAmount.abs(), unitLabel),
+          l10n.vehicleNegativeGapBody(gapDisplay),
         ),
         actions: [
           TextButton(

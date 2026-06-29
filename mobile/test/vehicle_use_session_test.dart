@@ -33,7 +33,7 @@ void main() {
           VehicleMeterReadingsCompanion.insert(
             id: 'meter:1',
             vehicleId: vehicleId,
-            value: 175000,
+            value: 1750000,
             unit: 'odometer_km',
             photoPath: 'a.jpg',
             recordedAt: sameTime,
@@ -45,7 +45,7 @@ void main() {
           VehicleMeterReadingsCompanion.insert(
             id: 'meter:2',
             vehicleId: vehicleId,
-            value: 175000,
+            value: 1750000,
             unit: 'odometer_km',
             photoPath: 'b.jpg',
             recordedAt: sameTime,
@@ -54,7 +54,7 @@ void main() {
           ),
         );
 
-    expect(await repo.latestMeterValue(vehicleId), 175000);
+    expect(await repo.latestMeterValue(vehicleId), 1750000);
   });
 
   test('start and close use session', () async {
@@ -81,7 +81,7 @@ void main() {
 
     final startReading = await repo.saveMeterReading(
       vehicleId: vehicleId,
-      value: 175000,
+      value: 1750000,
       unit: 'odometer_km',
       photoPath: 'photos/start.jpg',
       recordedByContactId: kVehicleOwnerSelfContactId,
@@ -96,7 +96,7 @@ void main() {
 
     final endReading = await repo.saveMeterReading(
       vehicleId: vehicleId,
-      value: 175005,
+      value: 1750050,
       unit: 'odometer_km',
       photoPath: 'photos/end.jpg',
       recordedByContactId: kVehicleOwnerSelfContactId,
@@ -109,7 +109,7 @@ void main() {
       endReadingId: endReading.id,
     );
     expect(closed.endedAt, isNotNull);
-    expect(closed.usageAmount, 5);
+    expect(closed.usageAmount, 50);
     expect(await repo.openUseForVehicle(vehicleId), isNull);
   });
 }

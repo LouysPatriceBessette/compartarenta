@@ -1245,6 +1245,8 @@
   "helpFaqIntro": "Réponses aux questions fréquentes sur le fonctionnement de Compartarenta.",
   "helpFaqHousingInviteParticipantTitle": "Pourquoi ne puis-je pas inviter quelqu'un au plan actuel ?",
   "helpFaqHousingInviteParticipantBody": "Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D'ici là, l'application conserve une entente stable pour tous.",
+  "helpFaqVehicleFuelTankTitle": "Essence dans le réservoir",
+  "helpFaqVehicleFuelTankBody": "La quantité d'essence du réservoir d'un véhicule est basée sur la quantité connue des achats d'essence.\n\nS'il y a suffisamment de données connues pour déterminer la consommation par kilomètre, cette quantité est calculée selon le kilométrage parcouru.\n\nIl ne s'agit que d'une estimation.",
   "housingVoteRefusedByAgreementExpiration": "Refusé par expiration de l'entente",
   "contactsDisconnectBlockedByPlansTitle": "Impossible de déconnecter ce contact pour l'instant",
   "contactsDisconnectBlockedByPlansBody": "Ce contact fait partie d'une entente active ou d'un vote ouvert sur cet appareil : {plans}. Terminez ou réglez cette activité avant de déconnecter.",
@@ -1391,7 +1393,23 @@
   "vehicleJournalEmpty": "Aucune entrée pour l'instant.",
   "vehicleLogRecordedAt": "Enregistré le",
   "vehicleLogReadingRole": "Type de relevé",
+  "vehicleLogReadingRoleSessionEnd": "{userName} - Fin",
+  "@vehicleLogReadingRoleSessionEnd": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleSessionStart": "{userName} - Début",
+  "@vehicleLogReadingRoleSessionStart": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleStandalone": "Lecture ponctuelle",
+  "vehicleLogReadingRoleFuelPurchase": "Achat de carburant",
+  "vehicleLogReadingRoleCorrection": "Correction",
   "vehicleLogMeterTitle": "Journal — odomètre",
+  "vehicleLogMeterFuelTitle": "Odomètre et carburant",
   "vehicleLogMeterDetailTitle": "Détail du relevé",
   "vehicleLogFuelTitle": "Journal — carburant",
   "vehicleLogFuelDetailTitle": "Détail de l'achat",
@@ -1440,6 +1458,17 @@
   "vehicleFuelVolume": "Volume",
   "vehicleFuelMeter": "Odomètre",
   "vehicleFuelFullTank": "Réservoir plein",
+  "vehicleFuelTankState": "État du réservoir",
+  "vehicleFuelApproximateLevel": "Approximativement :",
+  "vehicleFieldFuelTankCapacity": "Capacité du réservoir d'essence",
+  "vehicleDetailEarlierPhotos": "Photos antérieures",
+  "vehicleFuelTankInTank": "{volume} dans le réservoir",
+  "@vehicleFuelTankInTank": {
+    "placeholders": {
+      "volume": { "type": "String" }
+    }
+  },
+  "vehicleFuelTankInfoTooltip": "À propos de l'estimation du réservoir",
   "vehicleMaintenanceCategory": "Catégorie",
   "vehicleMaintenanceCategoryOil": "Huile",
   "vehicleMaintenanceCategoryOtherFluids": "Autres fluides",
@@ -1454,12 +1483,12 @@
   "vehicleViolationAmount": "Montant",
   "vehicleMaintenanceAlertTile": "{category} : {remaining} restants",
   "vehicleGapAttributionTitle": "Usage non enregistré",
-  "vehicleGapAttributionPrompt": "À qui le différentiel de {amount} {unit} est-il attribuable ?",
+  "vehicleGapAttributionPrompt": "À qui le différentiel de {gap} est-il attribuable ?",
   "vehicleGapAttributionUnknown": "Je ne sais pas",
   "vehicleGapAttributionSelf": "Moi",
   "vehicleGapOwnerNotified": "Le propriétaire sera notifié.",
   "vehicleNegativeGapTitle": "Relevé en baisse",
-  "vehicleNegativeGapBody": "Le nouveau relevé est inférieur de {amount} {unit} au dernier relevé enregistré.",
+  "vehicleNegativeGapBody": "Le nouveau relevé est inférieur de {gap} au dernier relevé enregistré.",
   "vehicleNegativeGapMaintain": "Conserver le relevé, vérifier plus tard",
   "vehicleNegativeGapCancel": "Annuler la saisie",
   "vehicleRoleOwner": "Propriétaire",

@@ -8,6 +8,7 @@ import 'package:compartarenta/navigation/app_navigation.dart';
 /// FAQ anchor ids used by in-app links (fragment after `#`).
 abstract final class HelpFaqAnchors {
   static const housingInviteParticipant = 'housing-invite-participant';
+  static const vehicleFuelTank = 'vehicle-fuel-tank';
 }
 
 /// One FAQ accordion section. Add entries in [_buildFaqSections] only.
@@ -33,6 +34,11 @@ List<_FaqSectionData> _buildFaqSections(AppLocalizations l10n) => [
     anchor: HelpFaqAnchors.housingInviteParticipant,
     title: l10n.helpFaqHousingInviteParticipantTitle,
     children: [Text(l10n.helpFaqHousingInviteParticipantBody)],
+  ),
+  _FaqSectionData(
+    anchor: HelpFaqAnchors.vehicleFuelTank,
+    title: l10n.helpFaqVehicleFuelTankTitle,
+    children: [Text(l10n.helpFaqVehicleFuelTankBody)],
   ),
 ];
 
@@ -185,5 +191,5 @@ void openHelpFaq(BuildContext context, {String? anchor}) {
   final path = anchor == null || anchor.isEmpty
       ? '/help/faq'
       : '/help/faq#$anchor';
-  navigateTo(context, path);
+  navigateToChild(context, path);
 }

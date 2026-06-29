@@ -1555,7 +1555,23 @@
   "vehicleJournalEmpty": "No entries yet.",
   "vehicleLogRecordedAt": "Recorded on",
   "vehicleLogReadingRole": "Reading type",
+  "vehicleLogReadingRoleSessionEnd": "{userName} - End",
+  "@vehicleLogReadingRoleSessionEnd": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleSessionStart": "{userName} - Start",
+  "@vehicleLogReadingRoleSessionStart": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleStandalone": "One-time reading",
+  "vehicleLogReadingRoleFuelPurchase": "Fuel purchase",
+  "vehicleLogReadingRoleCorrection": "Correction",
   "vehicleLogMeterTitle": "Log — odometer",
+  "vehicleLogMeterFuelTitle": "Odometer and fuel",
   "vehicleLogMeterDetailTitle": "Reading details",
   "vehicleLogFuelTitle": "Log — fuel",
   "vehicleLogFuelDetailTitle": "Purchase details",
@@ -1606,6 +1622,19 @@
   "vehicleFuelVolume": "Volume",
   "vehicleFuelMeter": "Odometer",
   "vehicleFuelFullTank": "Full tank",
+  "vehicleFuelTankState": "Tank state",
+  "vehicleFuelApproximateLevel": "Approximately:",
+  "vehicleFieldFuelTankCapacity": "Fuel tank capacity",
+  "vehicleDetailEarlierPhotos": "Earlier photos",
+  "vehicleFuelTankInTank": "{volume} in tank",
+  "@vehicleFuelTankInTank": {
+    "placeholders": {
+      "volume": { "type": "String" }
+    }
+  },
+  "vehicleFuelTankInfoTooltip": "About fuel tank estimate",
+  "helpFaqVehicleFuelTankTitle": "Fuel in the tank",
+  "helpFaqVehicleFuelTankBody": "The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.",
   "vehicleMaintenanceCategory": "Category",
   "vehicleMaintenanceCategoryOil": "Oil",
   "vehicleMaintenanceCategoryOtherFluids": "Other fluids",
@@ -1622,26 +1651,24 @@
   "@vehicleMaintenanceAlertTile": {
     "placeholders": {
       "category": { "type": "String" },
-      "remaining": { "type": "int" }
+      "remaining": { "type": "String" }
     }
   },
   "vehicleGapAttributionTitle": "Unlogged usage",
-  "vehicleGapAttributionPrompt": "Who is the {amount} {unit} difference attributable to?",
+  "vehicleGapAttributionPrompt": "Who is the {gap} difference attributable to?",
   "@vehicleGapAttributionPrompt": {
     "placeholders": {
-      "amount": { "type": "int" },
-      "unit": { "type": "String" }
+      "gap": { "type": "String" }
     }
   },
   "vehicleGapAttributionUnknown": "I don't know",
   "vehicleGapAttributionSelf": "Myself",
   "vehicleGapOwnerNotified": "The owner will be notified.",
   "vehicleNegativeGapTitle": "Reading decreased",
-  "vehicleNegativeGapBody": "The new reading is {amount} {unit} lower than the last stored reading.",
+  "vehicleNegativeGapBody": "The new reading is {gap} lower than the last stored reading.",
   "@vehicleNegativeGapBody": {
     "placeholders": {
-      "amount": { "type": "int" },
-      "unit": { "type": "String" }
+      "gap": { "type": "String" }
     }
   },
   "vehicleNegativeGapMaintain": "Maintain reading, investigate later",

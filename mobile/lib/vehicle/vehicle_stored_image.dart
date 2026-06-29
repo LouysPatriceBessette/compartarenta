@@ -8,17 +8,31 @@ import 'package:path_provider/path_provider.dart';
 import '../portability/public_documents_file_sink.dart';
 
 class VehicleStoredImage extends StatelessWidget {
-  const VehicleStoredImage({super.key, required this.path, this.height = 220});
+  const VehicleStoredImage({
+    super.key,
+    required this.path,
+    this.height = 220,
+    this.fit = BoxFit.contain,
+    this.expand = false,
+  });
 
   final String path;
   final double height;
+  final BoxFit fit;
+  /// When true, fills the parent (use with [BoxFit.cover] for fullscreen).
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
       return SizedBox(
-        height: height,
-        child: const Center(child: Icon(Icons.image_outlined, size: 48)),
+        height: expand ? null : height,
+        child: expand
+            ? const Center(child: Icon(Icons.image_outlined, size: 48))
+            : SizedBox(
+                height: height,
+                child: const Center(child: Icon(Icons.image_outlined, size: 48)),
+              ),
       );
     }
     return FutureBuilder<ImageProvider?>(
@@ -27,15 +41,28 @@ class VehicleStoredImage extends StatelessWidget {
         final provider = snap.data;
         if (provider == null) {
           return SizedBox(
-            height: height,
-            child: const Center(child: Icon(Icons.broken_image_outlined)),
+            height: expand ? null : height,
+            child: expand
+                ? const Center(child: Icon(Icons.broken_image_outlined))
+                : SizedBox(
+                    height: height,
+                    child: const Center(child: Icon(Icons.broken_image_outlined)),
+                  ),
+          );
+        }
+        if (expand) {
+          return Image(
+            image: provider,
+            fit: fit,
+            width: double.infinity,
+            height: double.infinity,
           );
         }
         return Image(
           image: provider,
+          fit: fit,
           height: height,
           width: double.infinity,
-          fit: BoxFit.contain,
         );
       },
     );

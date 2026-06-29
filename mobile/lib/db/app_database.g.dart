@@ -13573,6 +13573,17 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _fuelTankCapacityLitersMeta =
+      const VerificationMeta('fuelTankCapacityLiters');
+  @override
+  late final GeneratedColumn<double> fuelTankCapacityLiters =
+      GeneratedColumn<double>(
+        'fuel_tank_capacity_liters',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -13607,6 +13618,7 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     modelYear,
     licensePlate,
     vin,
+    fuelTankCapacityLiters,
     createdAt,
     updatedAt,
   ];
@@ -13699,6 +13711,15 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         vin.isAcceptableOrUnknown(data['vin']!, _vinMeta),
       );
     }
+    if (data.containsKey('fuel_tank_capacity_liters')) {
+      context.handle(
+        _fuelTankCapacityLitersMeta,
+        fuelTankCapacityLiters.isAcceptableOrUnknown(
+          data['fuel_tank_capacity_liters']!,
+          _fuelTankCapacityLitersMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -13764,6 +13785,10 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.string,
         data['${effectivePrefix}vin'],
       )!,
+      fuelTankCapacityLiters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fuel_tank_capacity_liters'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -13792,6 +13817,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
   final int? modelYear;
   final String licensePlate;
   final String vin;
+  final double? fuelTankCapacityLiters;
   final DateTime createdAt;
   final DateTime updatedAt;
   const Vehicle({
@@ -13805,6 +13831,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     this.modelYear,
     required this.licensePlate,
     required this.vin,
+    this.fuelTankCapacityLiters,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -13823,6 +13850,11 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     }
     map['license_plate'] = Variable<String>(licensePlate);
     map['vin'] = Variable<String>(vin);
+    if (!nullToAbsent || fuelTankCapacityLiters != null) {
+      map['fuel_tank_capacity_liters'] = Variable<double>(
+        fuelTankCapacityLiters,
+      );
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -13842,6 +13874,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           : Value(modelYear),
       licensePlate: Value(licensePlate),
       vin: Value(vin),
+      fuelTankCapacityLiters: fuelTankCapacityLiters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fuelTankCapacityLiters),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -13863,6 +13898,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       modelYear: serializer.fromJson<int?>(json['modelYear']),
       licensePlate: serializer.fromJson<String>(json['licensePlate']),
       vin: serializer.fromJson<String>(json['vin']),
+      fuelTankCapacityLiters: serializer.fromJson<double?>(
+        json['fuelTankCapacityLiters'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -13881,6 +13919,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       'modelYear': serializer.toJson<int?>(modelYear),
       'licensePlate': serializer.toJson<String>(licensePlate),
       'vin': serializer.toJson<String>(vin),
+      'fuelTankCapacityLiters': serializer.toJson<double?>(
+        fuelTankCapacityLiters,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -13897,6 +13938,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     Value<int?> modelYear = const Value.absent(),
     String? licensePlate,
     String? vin,
+    Value<double?> fuelTankCapacityLiters = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => Vehicle(
@@ -13910,6 +13952,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     modelYear: modelYear.present ? modelYear.value : this.modelYear,
     licensePlate: licensePlate ?? this.licensePlate,
     vin: vin ?? this.vin,
+    fuelTankCapacityLiters: fuelTankCapacityLiters.present
+        ? fuelTankCapacityLiters.value
+        : this.fuelTankCapacityLiters,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -13933,6 +13978,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           ? data.licensePlate.value
           : this.licensePlate,
       vin: data.vin.present ? data.vin.value : this.vin,
+      fuelTankCapacityLiters: data.fuelTankCapacityLiters.present
+          ? data.fuelTankCapacityLiters.value
+          : this.fuelTankCapacityLiters,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -13951,6 +13999,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           ..write('modelYear: $modelYear, ')
           ..write('licensePlate: $licensePlate, ')
           ..write('vin: $vin, ')
+          ..write('fuelTankCapacityLiters: $fuelTankCapacityLiters, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -13969,6 +14018,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     modelYear,
     licensePlate,
     vin,
+    fuelTankCapacityLiters,
     createdAt,
     updatedAt,
   );
@@ -13986,6 +14036,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           other.modelYear == this.modelYear &&
           other.licensePlate == this.licensePlate &&
           other.vin == this.vin &&
+          other.fuelTankCapacityLiters == this.fuelTankCapacityLiters &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -14001,6 +14052,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<int?> modelYear;
   final Value<String> licensePlate;
   final Value<String> vin;
+  final Value<double?> fuelTankCapacityLiters;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -14015,6 +14067,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.modelYear = const Value.absent(),
     this.licensePlate = const Value.absent(),
     this.vin = const Value.absent(),
+    this.fuelTankCapacityLiters = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -14030,6 +14083,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.modelYear = const Value.absent(),
     this.licensePlate = const Value.absent(),
     this.vin = const Value.absent(),
+    this.fuelTankCapacityLiters = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -14050,6 +14104,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<int>? modelYear,
     Expression<String>? licensePlate,
     Expression<String>? vin,
+    Expression<double>? fuelTankCapacityLiters,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -14065,6 +14120,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       if (modelYear != null) 'model_year': modelYear,
       if (licensePlate != null) 'license_plate': licensePlate,
       if (vin != null) 'vin': vin,
+      if (fuelTankCapacityLiters != null)
+        'fuel_tank_capacity_liters': fuelTankCapacityLiters,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -14082,6 +14139,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<int?>? modelYear,
     Value<String>? licensePlate,
     Value<String>? vin,
+    Value<double?>? fuelTankCapacityLiters,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -14097,6 +14155,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       modelYear: modelYear ?? this.modelYear,
       licensePlate: licensePlate ?? this.licensePlate,
       vin: vin ?? this.vin,
+      fuelTankCapacityLiters:
+          fuelTankCapacityLiters ?? this.fuelTankCapacityLiters,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -14136,6 +14196,11 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     if (vin.present) {
       map['vin'] = Variable<String>(vin.value);
     }
+    if (fuelTankCapacityLiters.present) {
+      map['fuel_tank_capacity_liters'] = Variable<double>(
+        fuelTankCapacityLiters.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -14161,6 +14226,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           ..write('modelYear: $modelYear, ')
           ..write('licensePlate: $licensePlate, ')
           ..write('vin: $vin, ')
+          ..write('fuelTankCapacityLiters: $fuelTankCapacityLiters, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -14310,6 +14376,31 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
         ),
         defaultValue: const Constant(false),
       );
+  static const VerificationMeta _isFullTankMeta = const VerificationMeta(
+    'isFullTank',
+  );
+  @override
+  late final GeneratedColumn<bool> isFullTank = GeneratedColumn<bool>(
+    'is_full_tank',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_full_tank" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _tankFillFractionMeta = const VerificationMeta(
+    'tankFillFraction',
+  );
+  @override
+  late final GeneratedColumn<int> tankFillFraction = GeneratedColumn<int>(
+    'tank_fill_fraction',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -14324,6 +14415,8 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
     isCorrection,
     correctionNote,
     negativeGapAcknowledged,
+    isFullTank,
+    tankFillFraction,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14440,6 +14533,24 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
         ),
       );
     }
+    if (data.containsKey('is_full_tank')) {
+      context.handle(
+        _isFullTankMeta,
+        isFullTank.isAcceptableOrUnknown(
+          data['is_full_tank']!,
+          _isFullTankMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tank_fill_fraction')) {
+      context.handle(
+        _tankFillFractionMeta,
+        tankFillFraction.isAcceptableOrUnknown(
+          data['tank_fill_fraction']!,
+          _tankFillFractionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14497,6 +14608,14 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
         DriftSqlType.bool,
         data['${effectivePrefix}negative_gap_acknowledged'],
       )!,
+      isFullTank: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_full_tank'],
+      ),
+      tankFillFraction: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tank_fill_fraction'],
+      ),
     );
   }
 
@@ -14520,6 +14639,8 @@ class VehicleMeterReading extends DataClass
   final bool isCorrection;
   final String correctionNote;
   final bool negativeGapAcknowledged;
+  final bool? isFullTank;
+  final int? tankFillFraction;
   const VehicleMeterReading({
     required this.id,
     required this.vehicleId,
@@ -14533,6 +14654,8 @@ class VehicleMeterReading extends DataClass
     required this.isCorrection,
     required this.correctionNote,
     required this.negativeGapAcknowledged,
+    this.isFullTank,
+    this.tankFillFraction,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14551,6 +14674,12 @@ class VehicleMeterReading extends DataClass
     map['is_correction'] = Variable<bool>(isCorrection);
     map['correction_note'] = Variable<String>(correctionNote);
     map['negative_gap_acknowledged'] = Variable<bool>(negativeGapAcknowledged);
+    if (!nullToAbsent || isFullTank != null) {
+      map['is_full_tank'] = Variable<bool>(isFullTank);
+    }
+    if (!nullToAbsent || tankFillFraction != null) {
+      map['tank_fill_fraction'] = Variable<int>(tankFillFraction);
+    }
     return map;
   }
 
@@ -14570,6 +14699,12 @@ class VehicleMeterReading extends DataClass
       isCorrection: Value(isCorrection),
       correctionNote: Value(correctionNote),
       negativeGapAcknowledged: Value(negativeGapAcknowledged),
+      isFullTank: isFullTank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(isFullTank),
+      tankFillFraction: tankFillFraction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tankFillFraction),
     );
   }
 
@@ -14595,6 +14730,8 @@ class VehicleMeterReading extends DataClass
       negativeGapAcknowledged: serializer.fromJson<bool>(
         json['negativeGapAcknowledged'],
       ),
+      isFullTank: serializer.fromJson<bool?>(json['isFullTank']),
+      tankFillFraction: serializer.fromJson<int?>(json['tankFillFraction']),
     );
   }
   @override
@@ -14615,6 +14752,8 @@ class VehicleMeterReading extends DataClass
       'negativeGapAcknowledged': serializer.toJson<bool>(
         negativeGapAcknowledged,
       ),
+      'isFullTank': serializer.toJson<bool?>(isFullTank),
+      'tankFillFraction': serializer.toJson<int?>(tankFillFraction),
     };
   }
 
@@ -14631,6 +14770,8 @@ class VehicleMeterReading extends DataClass
     bool? isCorrection,
     String? correctionNote,
     bool? negativeGapAcknowledged,
+    Value<bool?> isFullTank = const Value.absent(),
+    Value<int?> tankFillFraction = const Value.absent(),
   }) => VehicleMeterReading(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -14645,6 +14786,10 @@ class VehicleMeterReading extends DataClass
     correctionNote: correctionNote ?? this.correctionNote,
     negativeGapAcknowledged:
         negativeGapAcknowledged ?? this.negativeGapAcknowledged,
+    isFullTank: isFullTank.present ? isFullTank.value : this.isFullTank,
+    tankFillFraction: tankFillFraction.present
+        ? tankFillFraction.value
+        : this.tankFillFraction,
   );
   VehicleMeterReading copyWithCompanion(VehicleMeterReadingsCompanion data) {
     return VehicleMeterReading(
@@ -14674,6 +14819,12 @@ class VehicleMeterReading extends DataClass
       negativeGapAcknowledged: data.negativeGapAcknowledged.present
           ? data.negativeGapAcknowledged.value
           : this.negativeGapAcknowledged,
+      isFullTank: data.isFullTank.present
+          ? data.isFullTank.value
+          : this.isFullTank,
+      tankFillFraction: data.tankFillFraction.present
+          ? data.tankFillFraction.value
+          : this.tankFillFraction,
     );
   }
 
@@ -14691,7 +14842,9 @@ class VehicleMeterReading extends DataClass
           ..write('readingRole: $readingRole, ')
           ..write('isCorrection: $isCorrection, ')
           ..write('correctionNote: $correctionNote, ')
-          ..write('negativeGapAcknowledged: $negativeGapAcknowledged')
+          ..write('negativeGapAcknowledged: $negativeGapAcknowledged, ')
+          ..write('isFullTank: $isFullTank, ')
+          ..write('tankFillFraction: $tankFillFraction')
           ..write(')'))
         .toString();
   }
@@ -14710,6 +14863,8 @@ class VehicleMeterReading extends DataClass
     isCorrection,
     correctionNote,
     negativeGapAcknowledged,
+    isFullTank,
+    tankFillFraction,
   );
   @override
   bool operator ==(Object other) =>
@@ -14726,7 +14881,9 @@ class VehicleMeterReading extends DataClass
           other.readingRole == this.readingRole &&
           other.isCorrection == this.isCorrection &&
           other.correctionNote == this.correctionNote &&
-          other.negativeGapAcknowledged == this.negativeGapAcknowledged);
+          other.negativeGapAcknowledged == this.negativeGapAcknowledged &&
+          other.isFullTank == this.isFullTank &&
+          other.tankFillFraction == this.tankFillFraction);
 }
 
 class VehicleMeterReadingsCompanion
@@ -14743,6 +14900,8 @@ class VehicleMeterReadingsCompanion
   final Value<bool> isCorrection;
   final Value<String> correctionNote;
   final Value<bool> negativeGapAcknowledged;
+  final Value<bool?> isFullTank;
+  final Value<int?> tankFillFraction;
   final Value<int> rowid;
   const VehicleMeterReadingsCompanion({
     this.id = const Value.absent(),
@@ -14757,6 +14916,8 @@ class VehicleMeterReadingsCompanion
     this.isCorrection = const Value.absent(),
     this.correctionNote = const Value.absent(),
     this.negativeGapAcknowledged = const Value.absent(),
+    this.isFullTank = const Value.absent(),
+    this.tankFillFraction = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehicleMeterReadingsCompanion.insert({
@@ -14772,6 +14933,8 @@ class VehicleMeterReadingsCompanion
     this.isCorrection = const Value.absent(),
     this.correctionNote = const Value.absent(),
     this.negativeGapAcknowledged = const Value.absent(),
+    this.isFullTank = const Value.absent(),
+    this.tankFillFraction = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        vehicleId = Value(vehicleId),
@@ -14794,6 +14957,8 @@ class VehicleMeterReadingsCompanion
     Expression<bool>? isCorrection,
     Expression<String>? correctionNote,
     Expression<bool>? negativeGapAcknowledged,
+    Expression<bool>? isFullTank,
+    Expression<int>? tankFillFraction,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -14811,6 +14976,8 @@ class VehicleMeterReadingsCompanion
       if (correctionNote != null) 'correction_note': correctionNote,
       if (negativeGapAcknowledged != null)
         'negative_gap_acknowledged': negativeGapAcknowledged,
+      if (isFullTank != null) 'is_full_tank': isFullTank,
+      if (tankFillFraction != null) 'tank_fill_fraction': tankFillFraction,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -14828,6 +14995,8 @@ class VehicleMeterReadingsCompanion
     Value<bool>? isCorrection,
     Value<String>? correctionNote,
     Value<bool>? negativeGapAcknowledged,
+    Value<bool?>? isFullTank,
+    Value<int?>? tankFillFraction,
     Value<int>? rowid,
   }) {
     return VehicleMeterReadingsCompanion(
@@ -14844,6 +15013,8 @@ class VehicleMeterReadingsCompanion
       correctionNote: correctionNote ?? this.correctionNote,
       negativeGapAcknowledged:
           negativeGapAcknowledged ?? this.negativeGapAcknowledged,
+      isFullTank: isFullTank ?? this.isFullTank,
+      tankFillFraction: tankFillFraction ?? this.tankFillFraction,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -14891,6 +15062,12 @@ class VehicleMeterReadingsCompanion
         negativeGapAcknowledged.value,
       );
     }
+    if (isFullTank.present) {
+      map['is_full_tank'] = Variable<bool>(isFullTank.value);
+    }
+    if (tankFillFraction.present) {
+      map['tank_fill_fraction'] = Variable<int>(tankFillFraction.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -14912,6 +15089,8 @@ class VehicleMeterReadingsCompanion
           ..write('isCorrection: $isCorrection, ')
           ..write('correctionNote: $correctionNote, ')
           ..write('negativeGapAcknowledged: $negativeGapAcknowledged, ')
+          ..write('isFullTank: $isFullTank, ')
+          ..write('tankFillFraction: $tankFillFraction, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -16173,6 +16352,17 @@ class $FuelPurchasesTable extends FuelPurchases
       'CHECK ("is_full_tank" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _tankFillFractionMeta = const VerificationMeta(
+    'tankFillFraction',
+  );
+  @override
+  late final GeneratedColumn<int> tankFillFraction = GeneratedColumn<int>(
+    'tank_fill_fraction',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _recordedByContactIdMeta =
       const VerificationMeta('recordedByContactId');
   @override
@@ -16195,6 +16385,7 @@ class $FuelPurchasesTable extends FuelPurchases
     meterReadingValue,
     meterPhotoPath,
     isFullTank,
+    tankFillFraction,
     recordedByContactId,
   ];
   @override
@@ -16287,6 +16478,15 @@ class $FuelPurchasesTable extends FuelPurchases
     } else if (isInserting) {
       context.missing(_isFullTankMeta);
     }
+    if (data.containsKey('tank_fill_fraction')) {
+      context.handle(
+        _tankFillFractionMeta,
+        tankFillFraction.isAcceptableOrUnknown(
+          data['tank_fill_fraction']!,
+          _tankFillFractionMeta,
+        ),
+      );
+    }
     if (data.containsKey('recorded_by_contact_id')) {
       context.handle(
         _recordedByContactIdMeta,
@@ -16343,6 +16543,10 @@ class $FuelPurchasesTable extends FuelPurchases
         DriftSqlType.bool,
         data['${effectivePrefix}is_full_tank'],
       )!,
+      tankFillFraction: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tank_fill_fraction'],
+      ),
       recordedByContactId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}recorded_by_contact_id'],
@@ -16366,6 +16570,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
   final int? meterReadingValue;
   final String? meterPhotoPath;
   final bool isFullTank;
+  final int? tankFillFraction;
   final String recordedByContactId;
   const FuelPurchase({
     required this.id,
@@ -16377,6 +16582,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
     this.meterReadingValue,
     this.meterPhotoPath,
     required this.isFullTank,
+    this.tankFillFraction,
     required this.recordedByContactId,
   });
   @override
@@ -16397,6 +16603,9 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
       map['meter_photo_path'] = Variable<String>(meterPhotoPath);
     }
     map['is_full_tank'] = Variable<bool>(isFullTank);
+    if (!nullToAbsent || tankFillFraction != null) {
+      map['tank_fill_fraction'] = Variable<int>(tankFillFraction);
+    }
     map['recorded_by_contact_id'] = Variable<String>(recordedByContactId);
     return map;
   }
@@ -16418,6 +16627,9 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
           ? const Value.absent()
           : Value(meterPhotoPath),
       isFullTank: Value(isFullTank),
+      tankFillFraction: tankFillFraction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tankFillFraction),
       recordedByContactId: Value(recordedByContactId),
     );
   }
@@ -16437,6 +16649,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
       meterReadingValue: serializer.fromJson<int?>(json['meterReadingValue']),
       meterPhotoPath: serializer.fromJson<String?>(json['meterPhotoPath']),
       isFullTank: serializer.fromJson<bool>(json['isFullTank']),
+      tankFillFraction: serializer.fromJson<int?>(json['tankFillFraction']),
       recordedByContactId: serializer.fromJson<String>(
         json['recordedByContactId'],
       ),
@@ -16455,6 +16668,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
       'meterReadingValue': serializer.toJson<int?>(meterReadingValue),
       'meterPhotoPath': serializer.toJson<String?>(meterPhotoPath),
       'isFullTank': serializer.toJson<bool>(isFullTank),
+      'tankFillFraction': serializer.toJson<int?>(tankFillFraction),
       'recordedByContactId': serializer.toJson<String>(recordedByContactId),
     };
   }
@@ -16469,6 +16683,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
     Value<int?> meterReadingValue = const Value.absent(),
     Value<String?> meterPhotoPath = const Value.absent(),
     bool? isFullTank,
+    Value<int?> tankFillFraction = const Value.absent(),
     String? recordedByContactId,
   }) => FuelPurchase(
     id: id ?? this.id,
@@ -16484,6 +16699,9 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
         ? meterPhotoPath.value
         : this.meterPhotoPath,
     isFullTank: isFullTank ?? this.isFullTank,
+    tankFillFraction: tankFillFraction.present
+        ? tankFillFraction.value
+        : this.tankFillFraction,
     recordedByContactId: recordedByContactId ?? this.recordedByContactId,
   );
   FuelPurchase copyWithCompanion(FuelPurchasesCompanion data) {
@@ -16507,6 +16725,9 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
       isFullTank: data.isFullTank.present
           ? data.isFullTank.value
           : this.isFullTank,
+      tankFillFraction: data.tankFillFraction.present
+          ? data.tankFillFraction.value
+          : this.tankFillFraction,
       recordedByContactId: data.recordedByContactId.present
           ? data.recordedByContactId.value
           : this.recordedByContactId,
@@ -16525,6 +16746,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
           ..write('meterReadingValue: $meterReadingValue, ')
           ..write('meterPhotoPath: $meterPhotoPath, ')
           ..write('isFullTank: $isFullTank, ')
+          ..write('tankFillFraction: $tankFillFraction, ')
           ..write('recordedByContactId: $recordedByContactId')
           ..write(')'))
         .toString();
@@ -16541,6 +16763,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
     meterReadingValue,
     meterPhotoPath,
     isFullTank,
+    tankFillFraction,
     recordedByContactId,
   );
   @override
@@ -16556,6 +16779,7 @@ class FuelPurchase extends DataClass implements Insertable<FuelPurchase> {
           other.meterReadingValue == this.meterReadingValue &&
           other.meterPhotoPath == this.meterPhotoPath &&
           other.isFullTank == this.isFullTank &&
+          other.tankFillFraction == this.tankFillFraction &&
           other.recordedByContactId == this.recordedByContactId);
 }
 
@@ -16569,6 +16793,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
   final Value<int?> meterReadingValue;
   final Value<String?> meterPhotoPath;
   final Value<bool> isFullTank;
+  final Value<int?> tankFillFraction;
   final Value<String> recordedByContactId;
   final Value<int> rowid;
   const FuelPurchasesCompanion({
@@ -16581,6 +16806,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
     this.meterReadingValue = const Value.absent(),
     this.meterPhotoPath = const Value.absent(),
     this.isFullTank = const Value.absent(),
+    this.tankFillFraction = const Value.absent(),
     this.recordedByContactId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -16594,6 +16820,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
     this.meterReadingValue = const Value.absent(),
     this.meterPhotoPath = const Value.absent(),
     required bool isFullTank,
+    this.tankFillFraction = const Value.absent(),
     required String recordedByContactId,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -16613,6 +16840,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
     Expression<int>? meterReadingValue,
     Expression<String>? meterPhotoPath,
     Expression<bool>? isFullTank,
+    Expression<int>? tankFillFraction,
     Expression<String>? recordedByContactId,
     Expression<int>? rowid,
   }) {
@@ -16626,6 +16854,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
       if (meterReadingValue != null) 'meter_reading_value': meterReadingValue,
       if (meterPhotoPath != null) 'meter_photo_path': meterPhotoPath,
       if (isFullTank != null) 'is_full_tank': isFullTank,
+      if (tankFillFraction != null) 'tank_fill_fraction': tankFillFraction,
       if (recordedByContactId != null)
         'recorded_by_contact_id': recordedByContactId,
       if (rowid != null) 'rowid': rowid,
@@ -16642,6 +16871,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
     Value<int?>? meterReadingValue,
     Value<String?>? meterPhotoPath,
     Value<bool>? isFullTank,
+    Value<int?>? tankFillFraction,
     Value<String>? recordedByContactId,
     Value<int>? rowid,
   }) {
@@ -16655,6 +16885,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
       meterReadingValue: meterReadingValue ?? this.meterReadingValue,
       meterPhotoPath: meterPhotoPath ?? this.meterPhotoPath,
       isFullTank: isFullTank ?? this.isFullTank,
+      tankFillFraction: tankFillFraction ?? this.tankFillFraction,
       recordedByContactId: recordedByContactId ?? this.recordedByContactId,
       rowid: rowid ?? this.rowid,
     );
@@ -16690,6 +16921,9 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
     if (isFullTank.present) {
       map['is_full_tank'] = Variable<bool>(isFullTank.value);
     }
+    if (tankFillFraction.present) {
+      map['tank_fill_fraction'] = Variable<int>(tankFillFraction.value);
+    }
     if (recordedByContactId.present) {
       map['recorded_by_contact_id'] = Variable<String>(
         recordedByContactId.value,
@@ -16713,6 +16947,7 @@ class FuelPurchasesCompanion extends UpdateCompanion<FuelPurchase> {
           ..write('meterReadingValue: $meterReadingValue, ')
           ..write('meterPhotoPath: $meterPhotoPath, ')
           ..write('isFullTank: $isFullTank, ')
+          ..write('tankFillFraction: $tankFillFraction, ')
           ..write('recordedByContactId: $recordedByContactId, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -26528,6 +26763,7 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       Value<int?> modelYear,
       Value<String> licensePlate,
       Value<String> vin,
+      Value<double?> fuelTankCapacityLiters,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -26544,6 +26780,7 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<int?> modelYear,
       Value<String> licensePlate,
       Value<String> vin,
+      Value<double?> fuelTankCapacityLiters,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -26605,6 +26842,11 @@ class $$VehiclesTableFilterComposer
 
   ColumnFilters<String> get vin => $composableBuilder(
     column: $table.vin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fuelTankCapacityLiters => $composableBuilder(
+    column: $table.fuelTankCapacityLiters,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26678,6 +26920,11 @@ class $$VehiclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get fuelTankCapacityLiters => $composableBuilder(
+    column: $table.fuelTankCapacityLiters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -26736,6 +26983,11 @@ class $$VehiclesTableAnnotationComposer
   GeneratedColumn<String> get vin =>
       $composableBuilder(column: $table.vin, builder: (column) => column);
 
+  GeneratedColumn<double> get fuelTankCapacityLiters => $composableBuilder(
+    column: $table.fuelTankCapacityLiters,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -26781,6 +27033,7 @@ class $$VehiclesTableTableManager
                 Value<int?> modelYear = const Value.absent(),
                 Value<String> licensePlate = const Value.absent(),
                 Value<String> vin = const Value.absent(),
+                Value<double?> fuelTankCapacityLiters = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -26795,6 +27048,7 @@ class $$VehiclesTableTableManager
                 modelYear: modelYear,
                 licensePlate: licensePlate,
                 vin: vin,
+                fuelTankCapacityLiters: fuelTankCapacityLiters,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -26811,6 +27065,7 @@ class $$VehiclesTableTableManager
                 Value<int?> modelYear = const Value.absent(),
                 Value<String> licensePlate = const Value.absent(),
                 Value<String> vin = const Value.absent(),
+                Value<double?> fuelTankCapacityLiters = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -26825,6 +27080,7 @@ class $$VehiclesTableTableManager
                 modelYear: modelYear,
                 licensePlate: licensePlate,
                 vin: vin,
+                fuelTankCapacityLiters: fuelTankCapacityLiters,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -26865,6 +27121,8 @@ typedef $$VehicleMeterReadingsTableCreateCompanionBuilder =
       Value<bool> isCorrection,
       Value<String> correctionNote,
       Value<bool> negativeGapAcknowledged,
+      Value<bool?> isFullTank,
+      Value<int?> tankFillFraction,
       Value<int> rowid,
     });
 typedef $$VehicleMeterReadingsTableUpdateCompanionBuilder =
@@ -26881,6 +27139,8 @@ typedef $$VehicleMeterReadingsTableUpdateCompanionBuilder =
       Value<bool> isCorrection,
       Value<String> correctionNote,
       Value<bool> negativeGapAcknowledged,
+      Value<bool?> isFullTank,
+      Value<int?> tankFillFraction,
       Value<int> rowid,
     });
 
@@ -26950,6 +27210,16 @@ class $$VehicleMeterReadingsTableFilterComposer
 
   ColumnFilters<bool> get negativeGapAcknowledged => $composableBuilder(
     column: $table.negativeGapAcknowledged,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -27022,6 +27292,16 @@ class $$VehicleMeterReadingsTableOrderingComposer
     column: $table.negativeGapAcknowledged,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehicleMeterReadingsTableAnnotationComposer
@@ -27082,6 +27362,16 @@ class $$VehicleMeterReadingsTableAnnotationComposer
     column: $table.negativeGapAcknowledged,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isFullTank => $composableBuilder(
+    column: $table.isFullTank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
+    builder: (column) => column,
+  );
 }
 
 class $$VehicleMeterReadingsTableTableManager
@@ -27139,6 +27429,8 @@ class $$VehicleMeterReadingsTableTableManager
                 Value<bool> isCorrection = const Value.absent(),
                 Value<String> correctionNote = const Value.absent(),
                 Value<bool> negativeGapAcknowledged = const Value.absent(),
+                Value<bool?> isFullTank = const Value.absent(),
+                Value<int?> tankFillFraction = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleMeterReadingsCompanion(
                 id: id,
@@ -27153,6 +27445,8 @@ class $$VehicleMeterReadingsTableTableManager
                 isCorrection: isCorrection,
                 correctionNote: correctionNote,
                 negativeGapAcknowledged: negativeGapAcknowledged,
+                isFullTank: isFullTank,
+                tankFillFraction: tankFillFraction,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -27169,6 +27463,8 @@ class $$VehicleMeterReadingsTableTableManager
                 Value<bool> isCorrection = const Value.absent(),
                 Value<String> correctionNote = const Value.absent(),
                 Value<bool> negativeGapAcknowledged = const Value.absent(),
+                Value<bool?> isFullTank = const Value.absent(),
+                Value<int?> tankFillFraction = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleMeterReadingsCompanion.insert(
                 id: id,
@@ -27183,6 +27479,8 @@ class $$VehicleMeterReadingsTableTableManager
                 isCorrection: isCorrection,
                 correctionNote: correctionNote,
                 negativeGapAcknowledged: negativeGapAcknowledged,
+                isFullTank: isFullTank,
+                tankFillFraction: tankFillFraction,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -27794,6 +28092,7 @@ typedef $$FuelPurchasesTableCreateCompanionBuilder =
       Value<int?> meterReadingValue,
       Value<String?> meterPhotoPath,
       required bool isFullTank,
+      Value<int?> tankFillFraction,
       required String recordedByContactId,
       Value<int> rowid,
     });
@@ -27808,6 +28107,7 @@ typedef $$FuelPurchasesTableUpdateCompanionBuilder =
       Value<int?> meterReadingValue,
       Value<String?> meterPhotoPath,
       Value<bool> isFullTank,
+      Value<int?> tankFillFraction,
       Value<String> recordedByContactId,
       Value<int> rowid,
     });
@@ -27863,6 +28163,11 @@ class $$FuelPurchasesTableFilterComposer
 
   ColumnFilters<bool> get isFullTank => $composableBuilder(
     column: $table.isFullTank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -27926,6 +28231,11 @@ class $$FuelPurchasesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get recordedByContactId => $composableBuilder(
     column: $table.recordedByContactId,
     builder: (column) => ColumnOrderings(column),
@@ -27978,6 +28288,11 @@ class $$FuelPurchasesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get tankFillFraction => $composableBuilder(
+    column: $table.tankFillFraction,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get recordedByContactId => $composableBuilder(
     column: $table.recordedByContactId,
     builder: (column) => column,
@@ -28024,6 +28339,7 @@ class $$FuelPurchasesTableTableManager
                 Value<int?> meterReadingValue = const Value.absent(),
                 Value<String?> meterPhotoPath = const Value.absent(),
                 Value<bool> isFullTank = const Value.absent(),
+                Value<int?> tankFillFraction = const Value.absent(),
                 Value<String> recordedByContactId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FuelPurchasesCompanion(
@@ -28036,6 +28352,7 @@ class $$FuelPurchasesTableTableManager
                 meterReadingValue: meterReadingValue,
                 meterPhotoPath: meterPhotoPath,
                 isFullTank: isFullTank,
+                tankFillFraction: tankFillFraction,
                 recordedByContactId: recordedByContactId,
                 rowid: rowid,
               ),
@@ -28050,6 +28367,7 @@ class $$FuelPurchasesTableTableManager
                 Value<int?> meterReadingValue = const Value.absent(),
                 Value<String?> meterPhotoPath = const Value.absent(),
                 required bool isFullTank,
+                Value<int?> tankFillFraction = const Value.absent(),
                 required String recordedByContactId,
                 Value<int> rowid = const Value.absent(),
               }) => FuelPurchasesCompanion.insert(
@@ -28062,6 +28380,7 @@ class $$FuelPurchasesTableTableManager
                 meterReadingValue: meterReadingValue,
                 meterPhotoPath: meterPhotoPath,
                 isFullTank: isFullTank,
+                tankFillFraction: tankFillFraction,
                 recordedByContactId: recordedByContactId,
                 rowid: rowid,
               ),

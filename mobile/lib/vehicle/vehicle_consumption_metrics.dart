@@ -90,7 +90,7 @@ class VehicleConsumptionMetrics {
     }
     return VehicleConsumptionSnapshot(
       hasSufficientData: true,
-      litersPer100Km: (vol / delta) * 100,
+      litersPer100Km: (vol / delta) * 1000,
       anchorStartAt: previous.purchasedAt,
       anchorEndAt: newest.purchasedAt,
       distanceInWindow: delta,

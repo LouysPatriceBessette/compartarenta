@@ -3481,7 +3481,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleLogReadingRole => 'Reading type';
 
   @override
+  String vehicleLogReadingRoleSessionEnd(String userName) {
+    return '$userName - End';
+  }
+
+  @override
+  String vehicleLogReadingRoleSessionStart(String userName) {
+    return '$userName - Start';
+  }
+
+  @override
+  String get vehicleLogReadingRoleStandalone => 'One-time reading';
+
+  @override
+  String get vehicleLogReadingRoleFuelPurchase => 'Fuel purchase';
+
+  @override
+  String get vehicleLogReadingRoleCorrection => 'Correction';
+
+  @override
   String get vehicleLogMeterTitle => 'Log — odometer';
+
+  @override
+  String get vehicleLogMeterFuelTitle => 'Odometer and fuel';
 
   @override
   String get vehicleLogMeterDetailTitle => 'Reading details';
@@ -3621,6 +3643,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleFuelFullTank => 'Full tank';
 
   @override
+  String get vehicleFuelTankState => 'Tank state';
+
+  @override
+  String get vehicleFuelApproximateLevel => 'Approximately:';
+
+  @override
+  String get vehicleFieldFuelTankCapacity => 'Fuel tank capacity';
+
+  @override
+  String get vehicleDetailEarlierPhotos => 'Earlier photos';
+
+  @override
+  String vehicleFuelTankInTank(String volume) {
+    return '$volume in tank';
+  }
+
+  @override
+  String get vehicleFuelTankInfoTooltip => 'About fuel tank estimate';
+
+  @override
+  String get helpFaqVehicleFuelTankTitle => 'Fuel in the tank';
+
+  @override
+  String get helpFaqVehicleFuelTankBody =>
+      'The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.';
+
+  @override
   String get vehicleMaintenanceCategory => 'Category';
 
   @override
@@ -3657,7 +3706,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleViolationAmount => 'Amount';
 
   @override
-  String vehicleMaintenanceAlertTile(String category, int remaining) {
+  String vehicleMaintenanceAlertTile(String category, String remaining) {
     return '$category: $remaining remaining';
   }
 
@@ -3665,8 +3714,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleGapAttributionTitle => 'Unlogged usage';
 
   @override
-  String vehicleGapAttributionPrompt(int amount, String unit) {
-    return 'Who is the $amount $unit difference attributable to?';
+  String vehicleGapAttributionPrompt(String gap) {
+    return 'Who is the $gap difference attributable to?';
   }
 
   @override
@@ -3682,8 +3731,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleNegativeGapTitle => 'Reading decreased';
 
   @override
-  String vehicleNegativeGapBody(int amount, String unit) {
-    return 'The new reading is $amount $unit lower than the last stored reading.';
+  String vehicleNegativeGapBody(String gap) {
+    return 'The new reading is $gap lower than the last stored reading.';
   }
 
   @override

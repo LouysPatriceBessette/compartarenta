@@ -5895,11 +5895,47 @@ abstract class AppLocalizations {
   /// **'Reading type'**
   String get vehicleLogReadingRole;
 
+  /// No description provided for @vehicleLogReadingRoleSessionEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{userName} - End'**
+  String vehicleLogReadingRoleSessionEnd(String userName);
+
+  /// No description provided for @vehicleLogReadingRoleSessionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{userName} - Start'**
+  String vehicleLogReadingRoleSessionStart(String userName);
+
+  /// No description provided for @vehicleLogReadingRoleStandalone.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time reading'**
+  String get vehicleLogReadingRoleStandalone;
+
+  /// No description provided for @vehicleLogReadingRoleFuelPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel purchase'**
+  String get vehicleLogReadingRoleFuelPurchase;
+
+  /// No description provided for @vehicleLogReadingRoleCorrection.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get vehicleLogReadingRoleCorrection;
+
   /// No description provided for @vehicleLogMeterTitle.
   ///
   /// In en, this message translates to:
   /// **'Log — odometer'**
   String get vehicleLogMeterTitle;
+
+  /// No description provided for @vehicleLogMeterFuelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer and fuel'**
+  String get vehicleLogMeterFuelTitle;
 
   /// No description provided for @vehicleLogMeterDetailTitle.
   ///
@@ -6159,6 +6195,54 @@ abstract class AppLocalizations {
   /// **'Full tank'**
   String get vehicleFuelFullTank;
 
+  /// No description provided for @vehicleFuelTankState.
+  ///
+  /// In en, this message translates to:
+  /// **'Tank state'**
+  String get vehicleFuelTankState;
+
+  /// No description provided for @vehicleFuelApproximateLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximately:'**
+  String get vehicleFuelApproximateLevel;
+
+  /// No description provided for @vehicleFieldFuelTankCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel tank capacity'**
+  String get vehicleFieldFuelTankCapacity;
+
+  /// No description provided for @vehicleDetailEarlierPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier photos'**
+  String get vehicleDetailEarlierPhotos;
+
+  /// No description provided for @vehicleFuelTankInTank.
+  ///
+  /// In en, this message translates to:
+  /// **'{volume} in tank'**
+  String vehicleFuelTankInTank(String volume);
+
+  /// No description provided for @vehicleFuelTankInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About fuel tank estimate'**
+  String get vehicleFuelTankInfoTooltip;
+
+  /// No description provided for @helpFaqVehicleFuelTankTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel in the tank'**
+  String get helpFaqVehicleFuelTankTitle;
+
+  /// No description provided for @helpFaqVehicleFuelTankBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.'**
+  String get helpFaqVehicleFuelTankBody;
+
   /// No description provided for @vehicleMaintenanceCategory.
   ///
   /// In en, this message translates to:
@@ -6235,7 +6319,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{category}: {remaining} remaining'**
-  String vehicleMaintenanceAlertTile(String category, int remaining);
+  String vehicleMaintenanceAlertTile(String category, String remaining);
 
   /// No description provided for @vehicleGapAttributionTitle.
   ///
@@ -6246,8 +6330,8 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleGapAttributionPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Who is the {amount} {unit} difference attributable to?'**
-  String vehicleGapAttributionPrompt(int amount, String unit);
+  /// **'Who is the {gap} difference attributable to?'**
+  String vehicleGapAttributionPrompt(String gap);
 
   /// No description provided for @vehicleGapAttributionUnknown.
   ///
@@ -6276,8 +6360,8 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleNegativeGapBody.
   ///
   /// In en, this message translates to:
-  /// **'The new reading is {amount} {unit} lower than the last stored reading.'**
-  String vehicleNegativeGapBody(int amount, String unit);
+  /// **'The new reading is {gap} lower than the last stored reading.'**
+  String vehicleNegativeGapBody(String gap);
 
   /// No description provided for @vehicleNegativeGapMaintain.
   ///

@@ -97,6 +97,7 @@ class VehiclesRepository {
     required int modelYear,
     String licensePlate = '',
     String vin = '',
+    double? fuelTankCapacityLiters,
     required int initialMeterValue,
     required String initialMeterPhotoPath,
     List<VehicleGalleryDraft> galleries = const [],
@@ -115,6 +116,7 @@ class VehiclesRepository {
             modelYear: drift.Value(modelYear),
             licensePlate: drift.Value(licensePlate.trim()),
             vin: drift.Value(vin.trim()),
+            fuelTankCapacityLiters: drift.Value(fuelTankCapacityLiters),
             createdAt: now,
             updatedAt: now,
           ),
@@ -265,7 +267,7 @@ class VehiclesRepository {
   Future<List<VehiclePhotoGallery>> listPhotoGalleries(String vehicleId) {
     return (_db.select(_db.vehiclePhotoGalleries)
           ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([(t) => drift.OrderingTerm.asc(t.galleryIndex)]))
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.galleryIndex)]))
         .get();
   }
 
@@ -311,6 +313,8 @@ class VehiclesRepository {
     bool isCorrection = false,
     String correctionNote = '',
     bool negativeGapAcknowledged = false,
+    bool? isFullTank,
+    int? tankFillFraction,
   }) async {
     final id = _newVehicleId('meter:');
     final now = await _nextMeterRecordedAt(vehicleId);
@@ -328,6 +332,10 @@ class VehiclesRepository {
             isCorrection: drift.Value(isCorrection),
             correctionNote: drift.Value(correctionNote),
             negativeGapAcknowledged: drift.Value(negativeGapAcknowledged),
+            isFullTank: drift.Value(isFullTank),
+            tankFillFraction: drift.Value(
+              isFullTank == true ? null : tankFillFraction,
+            ),
           ),
         );
     return (await (_db.select(_db.vehicleMeterReadings)
@@ -390,6 +398,10 @@ class VehiclesRepository {
         .getSingle());
   }
 
+  Future<VehicleUse?> getVehicleUse(String id) =>
+      (_db.select(_db.vehicleUses)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+
   Future<VehicleUse?> openUseForVehicle(String vehicleId) async {
     final rows = await (_db.select(_db.vehicleUses)
           ..where(
@@ -446,6 +458,7 @@ class VehiclesRepository {
     double? volumeLiters,
     int? meterReadingValue,
     String? meterPhotoPath,
+    int? tankFillFraction,
   }) async {
     final id = _newVehicleId('fuel:');
     await _db.into(_db.fuelPurchases).insert(
@@ -460,6 +473,9 @@ class VehiclesRepository {
             volumeLiters: drift.Value(volumeLiters),
             meterReadingValue: drift.Value(meterReadingValue),
             meterPhotoPath: drift.Value(meterPhotoPath),
+            tankFillFraction: drift.Value(
+              isFullTank ? null : tankFillFraction,
+            ),
           ),
         );
     return (await (_db.select(_db.fuelPurchases)

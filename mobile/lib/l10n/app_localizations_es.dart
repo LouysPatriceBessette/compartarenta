@@ -3517,7 +3517,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleLogReadingRole => 'Tipo de lectura';
 
   @override
+  String vehicleLogReadingRoleSessionEnd(String userName) {
+    return '$userName - Fin';
+  }
+
+  @override
+  String vehicleLogReadingRoleSessionStart(String userName) {
+    return '$userName - Inicio';
+  }
+
+  @override
+  String get vehicleLogReadingRoleStandalone => 'Lectura puntual';
+
+  @override
+  String get vehicleLogReadingRoleFuelPurchase => 'Compra de combustible';
+
+  @override
+  String get vehicleLogReadingRoleCorrection => 'Corrección';
+
+  @override
   String get vehicleLogMeterTitle => 'Registro — odómetro';
+
+  @override
+  String get vehicleLogMeterFuelTitle => 'Odómetro y combustible';
 
   @override
   String get vehicleLogMeterDetailTitle => 'Detalle de la lectura';
@@ -3658,6 +3680,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleFuelFullTank => 'Depósito lleno';
 
   @override
+  String get vehicleFuelTankState => 'Estado del depósito';
+
+  @override
+  String get vehicleFuelApproximateLevel => 'Aproximadamente:';
+
+  @override
+  String get vehicleFieldFuelTankCapacity =>
+      'Capacidad del depósito de combustible';
+
+  @override
+  String get vehicleDetailEarlierPhotos => 'Fotos anteriores';
+
+  @override
+  String vehicleFuelTankInTank(String volume) {
+    return '$volume en el depósito';
+  }
+
+  @override
+  String get vehicleFuelTankInfoTooltip =>
+      'Acerca de la estimación del depósito';
+
+  @override
+  String get helpFaqVehicleFuelTankTitle => 'Combustible en el depósito';
+
+  @override
+  String get helpFaqVehicleFuelTankBody =>
+      'La cantidad de combustible mostrada para un vehículo se basa en las compras de combustible conocidas.\n\nCuando hay suficientes datos para determinar el consumo por unidad de distancia, la cantidad se calcula según la distancia recorrida.\n\nSolo es una estimación.';
+
+  @override
   String get vehicleMaintenanceCategory => 'Categoría';
 
   @override
@@ -3694,7 +3745,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleViolationAmount => 'Importe';
 
   @override
-  String vehicleMaintenanceAlertTile(String category, int remaining) {
+  String vehicleMaintenanceAlertTile(String category, String remaining) {
     return '$category: $remaining restantes';
   }
 
@@ -3702,8 +3753,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleGapAttributionTitle => 'Uso no registrado';
 
   @override
-  String vehicleGapAttributionPrompt(int amount, String unit) {
-    return '¿A quién es atribuible la diferencia de $amount $unit?';
+  String vehicleGapAttributionPrompt(String gap) {
+    return '¿A quién es atribuible la diferencia de $gap?';
   }
 
   @override
@@ -3719,8 +3770,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleNegativeGapTitle => 'Lectura menor';
 
   @override
-  String vehicleNegativeGapBody(int amount, String unit) {
-    return 'La nueva lectura es $amount $unit inferior a la última guardada.';
+  String vehicleNegativeGapBody(String gap) {
+    return 'La nueva lectura es $gap inferior a la última guardada.';
   }
 
   @override

@@ -1228,6 +1228,8 @@
   "helpFaqIntro": "Respuestas a preguntas habituales sobre el funcionamiento de Compartarenta.",
   "helpFaqHousingInviteParticipantTitle": "¿Por qué no puedo invitar a alguien al plan actual?",
   "helpFaqHousingInviteParticipantBody": "Un acuerdo de vivienda activo vincula a todos los participantes al mismo roster y a las mismas reglas de gastos. Añadir un compañero cambia quién debe qué durante todo el periodo, incluidos gastos pasados y en curso. Es un acuerdo nuevo, no un pequeño cambio.\n\nPara añadir a alguien, un participante debe terminar el plan actual (Cambio importante → retiro voluntario o terminación, según corresponda); luego el grupo puede negociar y aceptar un plan nuevo que incluya a la nueva persona. Hasta entonces, la aplicación mantiene un acuerdo estable para todos.",
+  "helpFaqVehicleFuelTankTitle": "Combustible en el depósito",
+  "helpFaqVehicleFuelTankBody": "La cantidad de combustible mostrada para un vehículo se basa en las compras de combustible conocidas.\n\nCuando hay suficientes datos para determinar el consumo por unidad de distancia, la cantidad se calcula según la distancia recorrida.\n\nSolo es una estimación.",
   "housingVoteRefusedByAgreementExpiration": "Rechazado por vencimiento del acuerdo",
   "contactsDisconnectBlockedByPlansTitle": "No se puede desconectar este contacto todavía",
   "contactsDisconnectBlockedByPlansBody": "Este contacto forma parte de un acuerdo activo o de una votación abierta en este dispositivo: {plans}. Finalice o resuelva esa actividad antes de desconectar.",
@@ -1374,7 +1376,23 @@
   "vehicleJournalEmpty": "Sin entradas por ahora.",
   "vehicleLogRecordedAt": "Registrado el",
   "vehicleLogReadingRole": "Tipo de lectura",
+  "vehicleLogReadingRoleSessionEnd": "{userName} - Fin",
+  "@vehicleLogReadingRoleSessionEnd": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleSessionStart": "{userName} - Inicio",
+  "@vehicleLogReadingRoleSessionStart": {
+    "placeholders": {
+      "userName": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleStandalone": "Lectura puntual",
+  "vehicleLogReadingRoleFuelPurchase": "Compra de combustible",
+  "vehicleLogReadingRoleCorrection": "Corrección",
   "vehicleLogMeterTitle": "Registro — odómetro",
+  "vehicleLogMeterFuelTitle": "Odómetro y combustible",
   "vehicleLogMeterDetailTitle": "Detalle de la lectura",
   "vehicleLogFuelTitle": "Registro — combustible",
   "vehicleLogFuelDetailTitle": "Detalle de la compra",
@@ -1423,6 +1441,17 @@
   "vehicleFuelVolume": "Volumen",
   "vehicleFuelMeter": "Odómetro",
   "vehicleFuelFullTank": "Depósito lleno",
+  "vehicleFuelTankState": "Estado del depósito",
+  "vehicleFuelApproximateLevel": "Aproximadamente:",
+  "vehicleFieldFuelTankCapacity": "Capacidad del depósito de combustible",
+  "vehicleDetailEarlierPhotos": "Fotos anteriores",
+  "vehicleFuelTankInTank": "{volume} en el depósito",
+  "@vehicleFuelTankInTank": {
+    "placeholders": {
+      "volume": { "type": "String" }
+    }
+  },
+  "vehicleFuelTankInfoTooltip": "Acerca de la estimación del depósito",
   "vehicleMaintenanceCategory": "Categoría",
   "vehicleMaintenanceCategoryOil": "Aceite",
   "vehicleMaintenanceCategoryOtherFluids": "Otros fluidos",
@@ -1437,12 +1466,12 @@
   "vehicleViolationAmount": "Importe",
   "vehicleMaintenanceAlertTile": "{category}: {remaining} restantes",
   "vehicleGapAttributionTitle": "Uso no registrado",
-  "vehicleGapAttributionPrompt": "¿A quién es atribuible la diferencia de {amount} {unit}?",
+  "vehicleGapAttributionPrompt": "¿A quién es atribuible la diferencia de {gap}?",
   "vehicleGapAttributionUnknown": "No lo sé",
   "vehicleGapAttributionSelf": "Yo",
   "vehicleGapOwnerNotified": "Se notificará al propietario.",
   "vehicleNegativeGapTitle": "Lectura menor",
-  "vehicleNegativeGapBody": "La nueva lectura es {amount} {unit} inferior a la última guardada.",
+  "vehicleNegativeGapBody": "La nueva lectura es {gap} inferior a la última guardada.",
   "vehicleNegativeGapMaintain": "Mantener lectura, investigar después",
   "vehicleNegativeGapCancel": "Cancelar entrada",
   "vehicleRoleOwner": "Propietario",

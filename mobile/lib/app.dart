@@ -464,7 +464,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
         routes: [
           GoRoute(
             path: 'add',
-            builder: (context, state) => const VehicleAddScreen(),
+            builder: (context, state) => VehicleAddScreen(prefs: prefs),
           ),
           GoRoute(
             path: 'statistics',
@@ -504,12 +504,14 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                 path: 'journals',
                 builder: (context, state) => VehicleJournalsScreen(
                   vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
                 ),
               ),
               GoRoute(
                 path: 'meter-log',
                 builder: (context, state) => VehicleMeterLogScreen(
                   vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
                 ),
                 routes: [
                   GoRoute(
@@ -517,6 +519,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                     builder: (context, state) => VehicleMeterReadingDetailScreen(
                       vehicleId: state.pathParameters['vehicleId']!,
                       readingId: state.pathParameters['readingId']!,
+                      prefs: prefs,
                     ),
                   ),
                 ],
@@ -525,6 +528,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                 path: 'fuel-log',
                 builder: (context, state) => VehicleFuelLogScreen(
                   vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
                 ),
                 routes: [
                   GoRoute(
@@ -533,6 +537,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                         VehicleFuelPurchaseDetailScreen(
                       vehicleId: state.pathParameters['vehicleId']!,
                       purchaseId: state.pathParameters['purchaseId']!,
+                      prefs: prefs,
                     ),
                   ),
                 ],

@@ -11,6 +11,7 @@ class Vehicles extends Table {
   IntColumn get modelYear => integer().nullable()();
   TextColumn get licensePlate => text().withDefault(const Constant(''))();
   TextColumn get vin => text().withDefault(const Constant(''))();
+  RealColumn get fuelTankCapacityLiters => real().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -34,6 +35,8 @@ class VehicleMeterReadings extends Table {
       text().withDefault(const Constant(''))();
   BoolColumn get negativeGapAcknowledged =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get isFullTank => boolean().nullable()();
+  IntColumn get tankFillFraction => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -78,6 +81,7 @@ class FuelPurchases extends Table {
   IntColumn get meterReadingValue => integer().nullable()();
   TextColumn get meterPhotoPath => text().nullable()();
   BoolColumn get isFullTank => boolean()();
+  IntColumn get tankFillFraction => integer().nullable()();
   TextColumn get recordedByContactId => text()();
 
   @override

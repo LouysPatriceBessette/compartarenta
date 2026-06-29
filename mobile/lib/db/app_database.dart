@@ -711,7 +711,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -941,6 +941,57 @@ class AppDatabase extends _$AppDatabase {
         await _migrateAddColumn(m, vehicles, vehicles.vin);
         await m.createTable(vehiclePhotoGalleries);
         await m.createTable(vehicleGalleryPhotos);
+      }
+      if (from < 26) {
+        await _migrateAddColumn(m, vehicles, vehicles.fuelTankCapacityLiters);
+        await _migrateAddColumn(m, fuelPurchases, fuelPurchases.tankFillFraction);
+        await customStatement('''
+              UPDATE vehicle_meter_readings
+              SET value = value * 10
+              WHERE unit = 'odometer_km'
+              ''');
+        await customStatement('''
+              UPDATE fuel_purchases
+              SET meter_reading_value = meter_reading_value * 10
+              WHERE meter_reading_value IS NOT NULL
+                AND vehicle_id IN (
+                  SELECT id FROM vehicles WHERE vehicle_kind != 'boat'
+                )
+              ''');
+        await customStatement('''
+              UPDATE maintenance_events
+              SET meter_at_service = meter_at_service * 10
+              WHERE meter_at_service IS NOT NULL
+                AND vehicle_id IN (
+                  SELECT id FROM vehicles WHERE vehicle_kind != 'boat'
+                )
+              ''');
+        await customStatement('''
+              UPDATE vehicle_odometer_gaps
+              SET latest_reading_before_gap = latest_reading_before_gap * 10,
+                  start_reading_after_gap = start_reading_after_gap * 10,
+                  gap_amount = gap_amount * 10
+              ''');
+        await customStatement('''
+              UPDATE vehicle_maintenance_rules
+              SET interval_amount = interval_amount * 10,
+                  preview_window_amount = preview_window_amount * 10
+              WHERE vehicle_id IN (
+                SELECT id FROM vehicles WHERE vehicle_kind != 'boat'
+              )
+              ''');
+      }
+      if (from < 27) {
+        await _migrateAddColumn(
+          m,
+          vehicleMeterReadings,
+          vehicleMeterReadings.isFullTank,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleMeterReadings,
+          vehicleMeterReadings.tankFillFraction,
+        );
       }
     },
     beforeOpen: (details) async {

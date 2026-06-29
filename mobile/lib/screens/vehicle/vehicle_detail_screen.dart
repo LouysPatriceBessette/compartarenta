@@ -72,24 +72,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         padding: screenBodyScrollPadding(context),
         children: [
           if (summary.isNotEmpty)
-            Text(
-              summary,
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    summary,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  onPressed: _openEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: l10n.vehicleEditDetailsTitle,
+                ),
+              ],
+            )
+          else
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                onPressed: _openEdit,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: l10n.vehicleEditDetailsTitle,
+              ),
             ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: _openEdit,
-              icon: const Icon(Icons.edit_outlined),
-              label: Text(l10n.vehicleEditDetailsTitle),
-            ),
-          ),
-          VehicleDetailGalleryView(
-            key: ValueKey('gallery-$_galleryReloadToken'),
-            vehicleId: v.id,
-            dateFormat: dateFmt,
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.build_outlined),
             title: Text(l10n.vehicleQuickActionMaintenance),
@@ -106,6 +113,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             title: Text(l10n.vehicleJournalsTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/vehicle/${v.id}/journals'),
+          ),
+          const Divider(),
+          VehicleDetailGalleryView(
+            key: ValueKey('gallery-$_galleryReloadToken'),
+            vehicleId: v.id,
+            dateFormat: dateFmt,
           ),
         ],
       ),

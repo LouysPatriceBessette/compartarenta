@@ -7,13 +7,17 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/format_money.dart';
+import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
+import '../../vehicle/vehicle_tank_fill_levels.dart';
 import '../../vehicle/vehicle_usage_context.dart';
 import '../../vehicle/vehicle_usage_denial_ui.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
+import '../../widgets/vehicle_tank_fill_fields.dart';
 import 'vehicle_form_vehicle_selector.dart';
 
 class VehicleFuelPurchaseScreen extends StatefulWidget {
@@ -37,10 +41,12 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   final _cost = TextEditingController();
   final _volume = TextEditingController();
   final _meter = TextEditingController();
-  bool _fullTank = false;
+  bool _fullTank = true;
+  VehicleTankFillLevel _tankFillLevel = VehicleTankFillLevel.defaultChoice;
   String? _photoPath;
   List<Vehicle> _vehicles = const [];
   String? _selectedVehicleId;
+  Vehicle? _selectedVehicle;
   VehicleUsageAccessDenial? _denial;
   bool _loading = true;
 
@@ -79,10 +85,17 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
         context: widget.usageContext,
       );
     }
+    Vehicle? selectedVehicle;
+    if (selectedId != null) {
+      selectedVehicle = vehicles.where((v) => v.id == selectedId).firstOrNull ??
+          await VehiclesRepository(AppDatabase.processScope)
+              .getVehicle(selectedId);
+    }
     if (!mounted) return;
     setState(() {
       _vehicles = vehicles;
       _selectedVehicleId = selectedId;
+      _selectedVehicle = selectedVehicle;
       _denial = denial;
       _loading = false;
     });
@@ -94,6 +107,7 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     if (!mounted) return;
     setState(() {
       _selectedVehicleId = vehicleId;
+      _selectedVehicle = v;
       _denial = denyVehicleUsageAccess(
         vehicle: v,
         context: widget.usageContext,
@@ -102,11 +116,22 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     });
   }
 
+  int? _parsedMeter() {
+    final vehicle = _selectedVehicle;
+    if (vehicle == null) return null;
+    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    return parseMeterInputToStoredTenths(
+      _meter.text,
+      usesHorometer: kind?.usesHorometer ?? false,
+      distanceUnit: resolveDistanceUnit(widget.prefs),
+    );
+  }
+
   bool get _canSave {
     if (_denial != null || _selectedVehicleId == null) return false;
     if (double.tryParse(_cost.text.replaceAll(',', '.')) == null) return false;
     if (double.tryParse(_volume.text.replaceAll(',', '.')) == null) return false;
-    if (int.tryParse(_meter.text.trim()) == null) return false;
+    if (_parsedMeter() == null) return false;
     if (_photoPath == null || _photoPath!.isEmpty) return false;
     return true;
   }
@@ -116,7 +141,7 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     final l10n = AppLocalizations.of(context);
     final costMajor = double.parse(_cost.text.replaceAll(',', '.'));
     final volume = double.parse(_volume.text.replaceAll(',', '.'));
-    final meter = int.parse(_meter.text.trim());
+    final meter = _parsedMeter()!;
     final vehicleId = _selectedVehicleId!;
     final repo = VehiclesRepository(AppDatabase.processScope);
 
@@ -127,9 +152,13 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
       currency: widget.prefs.currency,
       isFullTank: _fullTank,
       recordedByContactId: widget.usageContext.actingContactId,
-      volumeLiters: volume,
+      volumeLiters: displayVolumeToLiters(
+        volume,
+        resolveLiquidVolumeUnit(widget.prefs),
+      ),
       meterReadingValue: meter,
       meterPhotoPath: _photoPath,
+      tankFillFraction: _fullTank ? null : _tankFillLevel.percent,
     );
 
     if (!mounted) return;
@@ -148,6 +177,10 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
         liquidVolumeUnitAbbrev(resolveLiquidVolumeUnit(widget.prefs));
     final distanceUnit =
         distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+    final selectedKind =
+        VehicleKind.fromWire(_selectedVehicle?.vehicleKind);
+    final usesHorometer = selectedKind?.usesHorometer ?? false;
+    final meterUnitSuffix = usesHorometer ? 'h' : distanceUnit;
     final currencySymbol =
         currencyDisplaySymbol(context, widget.prefs.currency);
 
@@ -182,29 +215,21 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                       onChanged: (_) => _refresh(),
                     ),
                     const SizedBox(height: 8),
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
-                        ),
-                        child: Row(
-                          children: [
-                            Switch(
-                              value: _fullTank,
-                              onChanged: (v) => setState(() => _fullTank = v),
-                            ),
-                            Expanded(
-                              child: Text(l10n.vehicleFuelFullTank),
-                            ),
-                          ],
-                        ),
-                      ),
+                    VehicleTankFillFields(
+                      fullTank: _fullTank,
+                      onFullTankChanged: (v) => setState(() => _fullTank = v),
+                      tankFillLevel: _tankFillLevel,
+                      onTankFillLevelChanged: (v) =>
+                          setState(() => _tankFillLevel = v),
                     ),
                     const SizedBox(height: 12),
                     VehicleNarrowUnitField(
                       controller: _meter,
-                      label: l10n.vehicleFuelMeter,
-                      unitSuffix: distanceUnit,
+                      label: usesHorometer
+                          ? l10n.vehicleHorometerLabel
+                          : l10n.vehicleFuelMeter,
+                      unitSuffix: meterUnitSuffix,
+                      decimal: true,
                       onChanged: (_) => _refresh(),
                     ),
                     const SizedBox(height: 12),
@@ -264,6 +289,7 @@ class _VehicleMaintenanceFormScreenState
   final _cost = TextEditingController();
   final _notes = TextEditingController();
   final _meter = TextEditingController();
+  Vehicle? _vehicle;
   VehicleUsageAccessDenial? _denial;
   bool _loading = true;
 
@@ -286,6 +312,7 @@ class _VehicleMaintenanceFormScreenState
         .getVehicle(widget.vehicleId);
     if (!mounted) return;
     setState(() {
+      _vehicle = v;
       _denial = denyVehicleUsageAccess(
         vehicle: v,
         context: widget.usageContext,
@@ -298,6 +325,14 @@ class _VehicleMaintenanceFormScreenState
     if (_denial != null) return;
     final costMajor = double.tryParse(_cost.text.replaceAll(',', '.'));
     if (costMajor == null) return;
+    final kind = VehicleKind.fromWire(_vehicle?.vehicleKind);
+    final meterAtService = _category.requiresOdometer
+        ? parseMeterInputToStoredTenths(
+            _meter.text,
+            usesHorometer: kind?.usesHorometer ?? false,
+            distanceUnit: resolveDistanceUnit(widget.prefs),
+          )
+        : null;
     final repo = VehiclesRepository(AppDatabase.processScope);
     await repo.saveMaintenanceEvent(
       vehicleId: widget.vehicleId,
@@ -307,9 +342,7 @@ class _VehicleMaintenanceFormScreenState
       currency: widget.prefs.currency,
       recordedByContactId: widget.usageContext.actingContactId,
       notes: _notes.text.trim(),
-      meterAtService: _category.requiresOdometer
-          ? int.tryParse(_meter.text.trim())
-          : null,
+      meterAtService: meterAtService,
     );
     if (!mounted) return;
     if (widget.usageContext.forwardsToOwner) {
@@ -325,6 +358,11 @@ class _VehicleMaintenanceFormScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final kind = VehicleKind.fromWire(_vehicle?.vehicleKind);
+    final distanceUnit =
+        distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+    final meterUnitSuffix =
+        kind?.usesHorometer ?? false ? 'h' : distanceUnit;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleQuickActionMaintenance)),
       body: _loading
@@ -368,11 +406,13 @@ class _VehicleMaintenanceFormScreenState
                     ),
                     if (_category.requiresOdometer) ...[
                       const SizedBox(height: 12),
-                      AppTextField(
+                      VehicleNarrowUnitField(
                         controller: _meter,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            InputDecoration(labelText: l10n.vehicleFuelMeter),
+                        label: kind?.usesHorometer ?? false
+                            ? l10n.vehicleHorometerLabel
+                            : l10n.vehicleFuelMeter,
+                        unitSuffix: meterUnitSuffix,
+                        decimal: true,
                       ),
                     ],
                     const SizedBox(height: 12),

@@ -5,14 +5,20 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_units.dart';
+import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
+import '../../widgets/vehicle_narrow_unit_field.dart';
 import 'vehicle_add_gallery_section.dart';
 
 class VehicleAddScreen extends StatefulWidget {
-  const VehicleAddScreen({super.key});
+  const VehicleAddScreen({super.key, required this.prefs});
+
+  final AppPreferences prefs;
 
   @override
   State<VehicleAddScreen> createState() => _VehicleAddScreenState();
@@ -25,6 +31,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   final _color = TextEditingController();
   final _year = TextEditingController();
   final _meter = TextEditingController();
+  final _tankCapacity = TextEditingController();
   final _licensePlate = TextEditingController();
   final _vin = TextEditingController();
   VehicleKind _kind = VehicleKind.car;
@@ -42,6 +49,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       _color,
       _year,
       _meter,
+      _tankCapacity,
       _licensePlate,
       _vin,
     ]) {
@@ -60,6 +68,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       _color,
       _year,
       _meter,
+      _tankCapacity,
       _licensePlate,
       _vin,
     ]) {
@@ -69,6 +78,12 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     }
     super.dispose();
   }
+
+  int? get _parsedMeter => parseMeterInputToStoredTenths(
+        _meter.text,
+        usesHorometer: _kind.usesHorometer,
+        distanceUnit: resolveDistanceUnit(widget.prefs),
+      );
 
   bool get _canSave {
     if (_saving) return false;
@@ -82,8 +97,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     if (year == null || year < 1900 || year > DateTime.now().year + 1) {
       return false;
     }
-    final meter = int.tryParse(_meter.text.trim());
-    if (meter == null || meter < 0) return false;
+    if (_parsedMeter == null) return false;
     if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) return false;
     return true;
   }
@@ -106,7 +120,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
         int.tryParse(_year.text.trim()) == null) {
       return l10n.vehicleAddValidationYearInvalid;
     }
-    if (int.tryParse(_meter.text.trim()) == null) {
+    if (_parsedMeter == null) {
       return l10n.vehicleAddValidationMeterRequired;
     }
     if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) {
@@ -130,6 +144,17 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       return;
     }
     setState(() => _saving = true);
+    final tankText = _tankCapacity.text.trim();
+    double? tankLiters;
+    if (tankText.isNotEmpty) {
+      final parsed = double.tryParse(tankText.replaceAll(',', '.'));
+      if (parsed != null && parsed > 0) {
+        tankLiters = displayVolumeToLiters(
+          parsed,
+          resolveLiquidVolumeUnit(widget.prefs),
+        );
+      }
+    }
     final repo = VehiclesRepository(AppDatabase.processScope);
     await repo.createVehicle(
       kind: _kind,
@@ -140,7 +165,8 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       modelYear: int.parse(_year.text.trim()),
       licensePlate: _licensePlate.text.trim(),
       vin: _vin.text.trim(),
-      initialMeterValue: int.parse(_meter.text.trim()),
+      fuelTankCapacityLiters: tankLiters,
+      initialMeterValue: _parsedMeter!,
       initialMeterPhotoPath: _meterPhotoPath!,
       galleries: _galleries.where((g) => g.photos.isNotEmpty).toList(),
     );
@@ -156,6 +182,10 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final distanceUnit =
+        distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+    final volumeUnit =
+        liquidVolumeUnitAbbrev(resolveLiquidVolumeUnit(widget.prefs));
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleAddVehicle)),
       body: ListView(
@@ -207,10 +237,12 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
             decoration: InputDecoration(labelText: l10n.vehicleFieldYear),
           ),
           const SizedBox(height: 12),
-          AppTextField(
+          VehicleNarrowUnitField(
             controller: _meter,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: _initialMeterLabel(l10n)),
+            label: _initialMeterLabel(l10n),
+            unitSuffix: _kind.usesHorometer ? 'h' : distanceUnit,
+            decimal: true,
+            onChanged: (_) => _refresh(),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
@@ -221,6 +253,14 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
                   ? l10n.vehicleOdometerPhotoLabel
                   : l10n.vehicleMeterPhotoAttached,
             ),
+          ),
+          const SizedBox(height: 12),
+          VehicleNarrowUnitField(
+            controller: _tankCapacity,
+            label: l10n.vehicleFieldFuelTankCapacity,
+            unitSuffix: volumeUnit,
+            decimal: true,
+            onChanged: (_) => _refresh(),
           ),
           const SizedBox(height: 12),
           AppTextField(
