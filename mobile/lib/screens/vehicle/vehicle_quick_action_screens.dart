@@ -5,21 +5,26 @@ import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../util/display_units.dart';
+import '../../util/format_money.dart';
+import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_usage_context.dart';
 import '../../vehicle/vehicle_usage_denial_ui.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
+import '../../widgets/vehicle_narrow_unit_field.dart';
+import 'vehicle_form_vehicle_selector.dart';
 
 class VehicleFuelPurchaseScreen extends StatefulWidget {
   const VehicleFuelPurchaseScreen({
     super.key,
-    required this.vehicleId,
+    this.initialVehicleId,
     required this.prefs,
     this.usageContext = const VehicleUsageContext.owner(),
   });
 
-  final String vehicleId;
+  final String? initialVehicleId;
   final AppPreferences prefs;
   final VehicleUsageContext usageContext;
 
@@ -34,54 +39,96 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   final _meter = TextEditingController();
   bool _fullTank = false;
   String? _photoPath;
+  List<Vehicle> _vehicles = const [];
+  String? _selectedVehicleId;
   VehicleUsageAccessDenial? _denial;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    for (final c in [_cost, _volume, _meter]) {
+      c.addListener(_refresh);
+    }
     _load();
   }
 
   @override
   void dispose() {
-    _cost.dispose();
-    _volume.dispose();
-    _meter.dispose();
+    for (final c in [_cost, _volume, _meter]) {
+      c
+        ..removeListener(_refresh)
+        ..dispose();
+    }
     super.dispose();
   }
 
+  void _refresh() => setState(() {});
+
   Future<void> _load() async {
-    final v = await VehiclesRepository(AppDatabase.processScope)
-        .getVehicle(widget.vehicleId);
-    if (!mounted) return;
-    setState(() {
-      _denial = denyVehicleUsageAccess(
+    final vehicles = await loadOwnedVehiclesForForms();
+    final selectedId = widget.initialVehicleId?.isNotEmpty == true
+        ? widget.initialVehicleId
+        : vehicles.firstOrNull?.id;
+    VehicleUsageAccessDenial? denial;
+    if (selectedId != null) {
+      final v = await VehiclesRepository(AppDatabase.processScope)
+          .getVehicle(selectedId);
+      denial = denyVehicleUsageAccess(
         vehicle: v,
         context: widget.usageContext,
       );
+    }
+    if (!mounted) return;
+    setState(() {
+      _vehicles = vehicles;
+      _selectedVehicleId = selectedId;
+      _denial = denial;
       _loading = false;
     });
   }
 
+  Future<void> _onVehicleSelected(String vehicleId) async {
+    final v = await VehiclesRepository(AppDatabase.processScope)
+        .getVehicle(vehicleId);
+    if (!mounted) return;
+    setState(() {
+      _selectedVehicleId = vehicleId;
+      _denial = denyVehicleUsageAccess(
+        vehicle: v,
+        context: widget.usageContext,
+      );
+      _photoPath = null;
+    });
+  }
+
+  bool get _canSave {
+    if (_denial != null || _selectedVehicleId == null) return false;
+    if (double.tryParse(_cost.text.replaceAll(',', '.')) == null) return false;
+    if (double.tryParse(_volume.text.replaceAll(',', '.')) == null) return false;
+    if (int.tryParse(_meter.text.trim()) == null) return false;
+    if (_photoPath == null || _photoPath!.isEmpty) return false;
+    return true;
+  }
+
   Future<void> _save() async {
-    if (_denial != null) return;
+    if (!_canSave) return;
     final l10n = AppLocalizations.of(context);
-    final costMajor = double.tryParse(_cost.text.replaceAll(',', '.'));
-    if (costMajor == null) return;
+    final costMajor = double.parse(_cost.text.replaceAll(',', '.'));
+    final volume = double.parse(_volume.text.replaceAll(',', '.'));
+    final meter = int.parse(_meter.text.trim());
+    final vehicleId = _selectedVehicleId!;
     final repo = VehiclesRepository(AppDatabase.processScope);
-    final v = await repo.getVehicle(widget.vehicleId);
-    if (v == null) return;
 
     await repo.saveFuelPurchase(
-      vehicleId: v.id,
+      vehicleId: vehicleId,
       purchasedAt: DateTime.now().toUtc(),
       costMinor: (costMajor * 100).round(),
       currency: widget.prefs.currency,
       isFullTank: _fullTank,
       recordedByContactId: widget.usageContext.actingContactId,
-      volumeLiters: double.tryParse(_volume.text.replaceAll(',', '.')),
-      meterReadingValue: int.tryParse(_meter.text.trim()),
+      volumeLiters: volume,
+      meterReadingValue: meter,
       meterPhotoPath: _photoPath,
     );
 
@@ -97,6 +144,13 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final volumeUnit =
+        liquidVolumeUnitAbbrev(resolveLiquidVolumeUnit(widget.prefs));
+    final distanceUnit =
+        distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+    final currencySymbol =
+        currencyDisplaySymbol(context, widget.prefs.currency);
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleQuickActionFuel)),
       body: _loading
@@ -106,48 +160,78 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
               : ListView(
                   padding: screenBodyScrollPadding(context),
                   children: [
-                    AppTextField(
+                    VehicleFormVehicleSelector(
+                      vehicles: _vehicles,
+                      selectedId: _selectedVehicleId,
+                      onSelected: _onVehicleSelected,
+                    ),
+                    const SizedBox(height: 16),
+                    VehicleNarrowUnitField(
                       controller: _cost,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(labelText: l10n.vehicleFuelCost),
+                      label: l10n.vehicleFuelCost,
+                      unitSuffix: currencySymbol,
+                      decimal: true,
+                      onChanged: (_) => _refresh(),
                     ),
                     const SizedBox(height: 12),
-                    AppTextField(
+                    VehicleNarrowUnitField(
                       controller: _volume,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration:
-                          InputDecoration(labelText: l10n.vehicleFuelVolume),
-                    ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      controller: _meter,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
+                      label: l10n.vehicleFuelVolume,
+                      unitSuffix: volumeUnit,
+                      decimal: true,
+                      onChanged: (_) => _refresh(),
                     ),
                     const SizedBox(height: 8),
-                    SwitchListTile(
-                      title: Text(l10n.vehicleFuelFullTank),
-                      value: _fullTank,
-                      onChanged: (v) => setState(() => _fullTank = v),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
+                        ),
+                        child: Row(
+                          children: [
+                            Switch(
+                              value: _fullTank,
+                              onChanged: (v) => setState(() => _fullTank = v),
+                            ),
+                            Expanded(
+                              child: Text(l10n.vehicleFuelFullTank),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final path = await pickAndStoreVehicleMeterPhoto(
-                          context,
-                          vehicleId: widget.vehicleId,
-                        );
-                        if (path != null && mounted) {
-                          setState(() => _photoPath = path);
-                        }
-                      },
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: Text(l10n.vehicleOdometerPhotoLabel),
+                    const SizedBox(height: 12),
+                    VehicleNarrowUnitField(
+                      controller: _meter,
+                      label: l10n.vehicleFuelMeter,
+                      unitSuffix: distanceUnit,
+                      onChanged: (_) => _refresh(),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: OutlinedButton.icon(
+                        onPressed: _selectedVehicleId == null
+                            ? null
+                            : () async {
+                                final path = await pickAndStoreVehicleMeterPhoto(
+                                  context,
+                                  vehicleId: _selectedVehicleId!,
+                                );
+                                if (path != null && mounted) {
+                                  setState(() => _photoPath = path);
+                                }
+                              },
+                        icon: const Icon(Icons.photo_camera_outlined),
+                        label: Text(
+                          _photoPath == null
+                              ? l10n.vehicleOdometerPhotoLabel
+                              : l10n.vehicleMeterPhotoAttached,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: _save,
+                      onPressed: _canSave ? _save : null,
                       child: Text(l10n.commonSave),
                     ),
                   ],
@@ -175,7 +259,8 @@ class VehicleMaintenanceFormScreen extends StatefulWidget {
 
 class _VehicleMaintenanceFormScreenState
     extends State<VehicleMaintenanceFormScreen> {
-  final _category = TextEditingController(text: 'oil');
+  VehicleMaintenanceCategoryWire _category =
+      VehicleMaintenanceCategoryWire.oil;
   final _cost = TextEditingController();
   final _notes = TextEditingController();
   final _meter = TextEditingController();
@@ -190,7 +275,6 @@ class _VehicleMaintenanceFormScreenState
 
   @override
   void dispose() {
-    _category.dispose();
     _cost.dispose();
     _notes.dispose();
     _meter.dispose();
@@ -218,12 +302,14 @@ class _VehicleMaintenanceFormScreenState
     await repo.saveMaintenanceEvent(
       vehicleId: widget.vehicleId,
       servicedAt: DateTime.now().toUtc(),
-      category: _category.text.trim(),
+      category: _category.wire,
       costMinor: (costMajor * 100).round(),
       currency: widget.prefs.currency,
       recordedByContactId: widget.usageContext.actingContactId,
       notes: _notes.text.trim(),
-      meterAtService: int.tryParse(_meter.text.trim()),
+      meterAtService: _category.requiresOdometer
+          ? int.tryParse(_meter.text.trim())
+          : null,
     );
     if (!mounted) return;
     if (widget.usageContext.forwardsToOwner) {
@@ -248,10 +334,29 @@ class _VehicleMaintenanceFormScreenState
               : ListView(
                   padding: screenBodyScrollPadding(context),
                   children: [
-                    AppTextField(
-                      controller: _category,
-                      decoration:
-                          InputDecoration(labelText: l10n.vehicleMaintenanceCategory),
+                    DropdownButtonFormField<VehicleMaintenanceCategoryWire>(
+                      key: ValueKey(_category),
+                      isExpanded: true,
+                      initialValue: _category,
+                      decoration: InputDecoration(
+                        labelText: l10n.vehicleMaintenanceCategory,
+                      ),
+                      items: [
+                        for (final c in VehicleMaintenanceCategoryWire.values)
+                          DropdownMenuItem(
+                            value: c,
+                            child: Text(vehicleMaintenanceCategoryLabel(l10n, c.wire)),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _category = value;
+                          if (!value.requiresOdometer) {
+                            _meter.clear();
+                          }
+                        });
+                      },
                     ),
                     const SizedBox(height: 12),
                     AppTextField(
@@ -261,12 +366,15 @@ class _VehicleMaintenanceFormScreenState
                       decoration:
                           InputDecoration(labelText: l10n.vehicleMaintenanceCost),
                     ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      controller: _meter,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: l10n.vehicleFuelMeter),
-                    ),
+                    if (_category.requiresOdometer) ...[
+                      const SizedBox(height: 12),
+                      AppTextField(
+                        controller: _meter,
+                        keyboardType: TextInputType.number,
+                        decoration:
+                            InputDecoration(labelText: l10n.vehicleFuelMeter),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     AppTextField(
                       controller: _notes,

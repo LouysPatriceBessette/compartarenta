@@ -28,6 +28,7 @@ import 'screens/vehicle/vehicle_detail_screen.dart';
 import 'screens/vehicle/vehicle_statistics_screen.dart';
 import 'screens/vehicle/vehicle_edit_details_screen.dart';
 import 'screens/vehicle/vehicle_entry_log_screens.dart';
+import 'screens/vehicle/vehicle_journals_screen.dart';
 import 'screens/vehicle/vehicle_use_session_screen.dart';
 import 'screens/vehicle/vehicle_quick_action_screens.dart';
 import 'screens/vehicle_sharing/vehicle_sharing_hub_screen.dart';
@@ -471,14 +472,37 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                 VehicleStatisticsScreen(prefs: prefs),
           ),
           GoRoute(
+            path: 'use-session',
+            builder: (context, state) => VehicleUseSessionScreen(
+              initialVehicleId: state.uri.queryParameters['vehicleId'],
+              prefs: prefs,
+              usageContext: const VehicleUsageContext.owner(),
+            ),
+          ),
+          GoRoute(
+            path: 'fuel-purchase',
+            builder: (context, state) => VehicleFuelPurchaseScreen(
+              initialVehicleId: state.uri.queryParameters['vehicleId'],
+              prefs: prefs,
+            ),
+          ),
+          GoRoute(
             path: ':vehicleId',
             builder: (context, state) => VehicleDetailScreen(
               vehicleId: state.pathParameters['vehicleId']!,
+              prefs: prefs,
             ),
             routes: [
               GoRoute(
                 path: 'edit',
                 builder: (context, state) => VehicleEditDetailsScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+              ),
+              GoRoute(
+                path: 'journals',
+                builder: (context, state) => VehicleJournalsScreen(
                   vehicleId: state.pathParameters['vehicleId']!,
                 ),
               ),
@@ -546,14 +570,15 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
               GoRoute(
                 path: 'use',
                 builder: (context, state) => VehicleUseSessionScreen(
-                  vehicleId: state.pathParameters['vehicleId']!,
+                  initialVehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
                   usageContext: const VehicleUsageContext.owner(),
                 ),
               ),
               GoRoute(
                 path: 'fuel',
                 builder: (context, state) => VehicleFuelPurchaseScreen(
-                  vehicleId: state.pathParameters['vehicleId']!,
+                  initialVehicleId: state.pathParameters['vehicleId']!,
                   prefs: prefs,
                 ),
               ),
@@ -591,7 +616,8 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
             builder: (context, state) {
               final borrower = state.uri.queryParameters['borrower'] ?? '';
               return VehicleUseSessionScreen(
-                vehicleId: state.pathParameters['vehicleId']!,
+                initialVehicleId: state.pathParameters['vehicleId']!,
+                prefs: prefs,
                 usageContext: VehicleUsageContext.borrower(
                   actingContactId: borrower,
                 ),
@@ -603,7 +629,7 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
             builder: (context, state) {
               final borrower = state.uri.queryParameters['borrower'] ?? '';
               return VehicleFuelPurchaseScreen(
-                vehicleId: state.pathParameters['vehicleId']!,
+                initialVehicleId: state.pathParameters['vehicleId']!,
                 prefs: prefs,
                 usageContext: VehicleUsageContext.borrower(
                   actingContactId: borrower,

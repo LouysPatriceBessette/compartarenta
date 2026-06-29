@@ -5,9 +5,10 @@ import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_kind.dart';
-import '../../vehicle/vehicle_maintenance_category_label.dart';
+import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
 import '../../vehicle/vehicle_module_exit.dart';
@@ -28,6 +29,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
   late final VehiclesRepository _repo =
       VehiclesRepository(AppDatabase.processScope);
   List<Vehicle> _vehicles = const [];
+  VehicleUse? _openUse;
   bool _loading = true;
   int _cardReloadToken = 0;
 
@@ -39,9 +41,11 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
 
   Future<void> _reload() async {
     final vehicles = await _repo.listOwnedVehicles();
+    final openUse = await _repo.findAnyOpenUse();
     if (!mounted) return;
     setState(() {
       _vehicles = vehicles;
+      _openUse = openUse;
       _loading = false;
       _cardReloadToken++;
     });
@@ -56,6 +60,12 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
         body: Center(child: Text(l10n.vehicleLicensingRequired)),
       );
     }
+    final dateFmt = effectiveDateFormat(widget.prefs);
+    final sessionStartedLine = _openUse == null
+        ? null
+        : l10n.vehicleUseSessionStartedOn(
+            formatPreferenceDateTime(_openUse!.startedAt, dateFmt),
+          );
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => exitVehicleModule(context)),
@@ -89,10 +99,12 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
                   ),
                   const SizedBox(height: 8),
                   _QuickActionsRow(
-                    onOdometer: () => _launchQuickAction('odometer'),
+                    sessionPrimaryLabel: _openUse == null
+                        ? l10n.vehicleUseSessionStartAction
+                        : l10n.vehicleUseSessionEndAction,
+                    sessionSecondaryLine: sessionStartedLine,
+                    onSession: () => _launchQuickAction('odometer'),
                     onFuel: () => _launchQuickAction('fuel'),
-                    onMaintenance: () => _launchQuickAction('maintenance'),
-                    onViolation: () => _launchQuickAction('violation'),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -130,28 +142,12 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
       );
       return;
     }
-    String? vehicleId = _vehicles.length == 1 ? _vehicles.first.id : null;
-    vehicleId ??= await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final v in _vehicles)
-              ListTile(
-                title: Text(v.displayLabel),
-                onTap: () => Navigator.pop(ctx, v.id),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (vehicleId == null || !mounted) return;
     final path = switch (kind) {
-      'odometer' => '/vehicle/$vehicleId/use',
-      'fuel' => '/vehicle/$vehicleId/fuel',
-      'maintenance' => '/vehicle/$vehicleId/maintenance',
-      _ => '/vehicle/$vehicleId/violation',
+      'odometer' => _openUse == null
+          ? '/vehicle/use-session'
+          : '/vehicle/use-session?vehicleId=${Uri.encodeComponent(_openUse!.vehicleId)}',
+      'fuel' => '/vehicle/fuel-purchase',
+      _ => '/vehicle',
     };
     await context.push(path);
     _reload();
@@ -160,16 +156,16 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
 
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow({
-    required this.onOdometer,
+    required this.sessionPrimaryLabel,
+    required this.sessionSecondaryLine,
+    required this.onSession,
     required this.onFuel,
-    required this.onMaintenance,
-    required this.onViolation,
   });
 
-  final VoidCallback onOdometer;
+  final String sessionPrimaryLabel;
+  final String? sessionSecondaryLine;
+  final VoidCallback onSession;
   final VoidCallback onFuel;
-  final VoidCallback onMaintenance;
-  final VoidCallback onViolation;
 
   @override
   Widget build(BuildContext context) {
@@ -180,23 +176,24 @@ class _QuickActionsRow extends StatelessWidget {
       children: [
         ActionChip(
           avatar: const Icon(Icons.speed_outlined, size: 18),
-          label: Text(l10n.vehicleQuickActionOdometer),
-          onPressed: onOdometer,
+          label: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(sessionPrimaryLabel),
+              if (sessionSecondaryLine != null)
+                Text(
+                  sessionSecondaryLine!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
+          ),
+          onPressed: onSession,
         ),
         ActionChip(
           avatar: const Icon(Icons.local_gas_station_outlined, size: 18),
           label: Text(l10n.vehicleQuickActionFuel),
           onPressed: onFuel,
-        ),
-        ActionChip(
-          avatar: const Icon(Icons.build_outlined, size: 18),
-          label: Text(l10n.vehicleQuickActionMaintenance),
-          onPressed: onMaintenance,
-        ),
-        ActionChip(
-          avatar: const Icon(Icons.report_outlined, size: 18),
-          label: Text(l10n.vehicleQuickActionViolation),
-          onPressed: onViolation,
         ),
       ],
     );
@@ -317,22 +314,31 @@ class _VehicleCardState extends State<_VehicleCard> {
   }
 
   Future<_VehicleCardData> _load() async {
-    final metrics = VehicleConsumptionMetrics(AppDatabase.processScope);
-    final consumption = await metrics.forVehicle(widget.vehicle.id);
+    final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
     final meter =
         await widget.repo.latestMeterValue(widget.vehicle.id) ?? 0;
-    final alerts = await VehicleMaintenanceAlerts(AppDatabase.processScope)
-        .alertsForVehicle(widget.vehicle.id, currentMeter: meter);
-    final kind = VehicleKind.fromWire(widget.vehicle.vehicleKind);
     final meterDisplay = kind?.usesHorometer ?? false
         ? '${(meter / 10).toStringAsFixed(1)} h'
         : '$meter km';
-    return _VehicleCardData(
-      meterDisplay: meterDisplay,
-      consumption: consumption,
-      alerts: alerts,
-      kind: kind,
-    );
+    try {
+      final metrics = VehicleConsumptionMetrics(AppDatabase.processScope);
+      final consumption = await metrics.forVehicle(widget.vehicle.id);
+      final alerts = await VehicleMaintenanceAlerts(AppDatabase.processScope)
+          .alertsForVehicle(widget.vehicle.id, currentMeter: meter);
+      return _VehicleCardData(
+        meterDisplay: meterDisplay,
+        consumption: consumption,
+        alerts: alerts,
+        kind: kind,
+      );
+    } catch (_) {
+      return _VehicleCardData(
+        meterDisplay: meterDisplay,
+        consumption: const VehicleConsumptionSnapshot(hasSufficientData: false),
+        alerts: const [],
+        kind: kind,
+      );
+    }
   }
 }
 

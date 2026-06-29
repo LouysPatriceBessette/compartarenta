@@ -23,9 +23,9 @@ class UnitsSettingsScreen extends StatelessWidget {
         builder: (context, _) {
           final locale = Localizations.localeOf(context);
           final weekStart = prefs.resolveWeekStart(locale);
-          final dateFmt =
-              prefs.dateFormat.isEmpty ? null : prefs.dateFormat;
+          final dateFmt = prefs.dateFormat.isEmpty ? null : prefs.dateFormat;
           final distance = prefs.distanceUnit;
+          final liquidVolume = prefs.liquidVolumeUnit;
           final useDeviceTz = prefs.usesDeviceTimeZone;
           final ianaId = prefs.timeZoneId.isEmpty
               ? kDefaultExplicitTimeZoneId
@@ -34,6 +34,18 @@ class UnitsSettingsScreen extends StatelessWidget {
           return ListView(
             padding: screenBodyScrollPadding(context),
             children: [
+              TimeZonePreferenceField(
+                useDevice: useDeviceTz,
+                ianaId: ianaId,
+                onSelected: ({required useDevice, required ianaId}) async {
+                  if (useDevice) {
+                    await prefs.setTimeZoneToDevice();
+                  } else {
+                    await prefs.setTimeZoneExplicit(ianaId);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 key: ValueKey(dateFmt),
                 isExpanded: true,
@@ -46,6 +58,29 @@ class UnitsSettingsScreen extends StatelessWidget {
                     .toList(),
                 onChanged: (value) async {
                   if (value != null) await prefs.setDateFormat(value);
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.prefsWeekStartLabel,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              SegmentedButton<WeekStart>(
+                segments: [
+                  ButtonSegment(
+                    value: WeekStart.sunday,
+                    label: Text(l10n.prefsWeekStartSunday),
+                  ),
+                  ButtonSegment(
+                    value: WeekStart.monday,
+                    label: Text(l10n.prefsWeekStartMonday),
+                  ),
+                ],
+                selected: {weekStart},
+                onSelectionChanged: (selected) async {
+                  if (selected.isEmpty) return;
+                  await prefs.setWeekStart(selected.first);
                 },
               ),
               const SizedBox(height: 12),
@@ -77,38 +112,38 @@ class UnitsSettingsScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 12),
-              TimeZonePreferenceField(
-                useDevice: useDeviceTz,
-                ianaId: ianaId,
-                onSelected: ({required useDevice, required ianaId}) async {
-                  if (useDevice) {
-                    await prefs.setTimeZoneToDevice();
-                  } else {
-                    await prefs.setTimeZoneExplicit(ianaId);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.prefsWeekStartLabel,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<WeekStart>(
-                segments: [
-                  ButtonSegment(
-                    value: WeekStart.sunday,
-                    label: Text(l10n.prefsWeekStartSunday),
+              DropdownButtonFormField<LiquidVolumeUnit>(
+                key: ValueKey(liquidVolume),
+                isExpanded: true,
+                initialValue: liquidVolume,
+                decoration: InputDecoration(
+                  labelText: l10n.prefsLiquidVolumeUnitLabel,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: LiquidVolumeUnit.liter,
+                    child: Text(
+                      l10n.prefsLiquidVolumeUnitLiter,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  ButtonSegment(
-                    value: WeekStart.monday,
-                    label: Text(l10n.prefsWeekStartMonday),
+                  DropdownMenuItem(
+                    value: LiquidVolumeUnit.usGallon,
+                    child: Text(
+                      l10n.prefsLiquidVolumeUnitUsGallon,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: LiquidVolumeUnit.imperialGallon,
+                    child: Text(
+                      l10n.prefsLiquidVolumeUnitImperialGallon,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
-                selected: {weekStart},
-                onSelectionChanged: (selected) async {
-                  if (selected.isEmpty) return;
-                  await prefs.setWeekStart(selected.first);
+                onChanged: (value) async {
+                  if (value != null) await prefs.setLiquidVolumeUnit(value);
                 },
               ),
             ],

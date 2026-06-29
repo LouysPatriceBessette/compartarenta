@@ -420,6 +420,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prefsDistanceUnitMiles => 'Miles';
 
   @override
+  String get prefsLiquidVolumeUnitLabel => 'Liquid volume unit';
+
+  @override
+  String get prefsLiquidVolumeUnitLiter => 'Liter';
+
+  @override
+  String get prefsLiquidVolumeUnitUsGallon => 'US gallon (3.785 L)';
+
+  @override
+  String get prefsLiquidVolumeUnitImperialGallon => 'Imperial gallon (4.546 L)';
+
+  @override
   String get prefsWeekStartLabel => 'Week starts on';
 
   @override
@@ -3401,6 +3413,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleAddGalleryStart => 'Add a gallery';
 
   @override
+  String get vehicleAddPhotoGalleryStart => 'Add a photo gallery';
+
+  @override
   String vehicleAddGalleryTitle(int index) {
     return 'Gallery $index';
   }
@@ -3446,6 +3461,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleEditDetailsTitle => 'Edit details';
+
+  @override
+  String get vehicleJournalsTitle => 'Logs';
+
+  @override
+  String get vehicleJournalSelectorLabel => 'Log';
+
+  @override
+  String get vehicleFormVehicleLabel => 'Vehicle';
 
   @override
   String get vehicleJournalEmpty => 'No entries yet.';
@@ -3496,10 +3520,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleQuickActionOdometer => 'Odometer reading';
 
   @override
+  String get vehicleUseSessionStartAction => 'Start a use session';
+
+  @override
+  String get vehicleUseSessionEndAction => 'End a use session';
+
+  @override
+  String vehicleUseSessionStartedOn(String dateTime) {
+    return 'started on $dateTime';
+  }
+
+  @override
   String get vehicleQuickActionFuel => 'Fuel purchase';
 
   @override
-  String get vehicleQuickActionMaintenance => 'Maintenance performed';
+  String get vehicleQuickActionMaintenance => 'Maintenance';
 
   @override
   String get vehicleQuickActionViolation => 'Damage or violation';
@@ -3534,6 +3569,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vehicleUseSessionStarted =>
       'Session started. End it when you finish driving.';
+
+  @override
+  String get vehicleUseSessionEnded => 'Session ended.';
 
   @override
   String get vehicleConsumptionTitle => 'Consumption';
@@ -3574,10 +3612,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleFuelCost => 'Total cost';
 
   @override
-  String get vehicleFuelVolume => 'Volume (L, optional)';
+  String get vehicleFuelVolume => 'Volume';
 
   @override
-  String get vehicleFuelMeter => 'Meter reading';
+  String get vehicleFuelMeter => 'Odometer';
 
   @override
   String get vehicleFuelFullTank => 'Full tank';
@@ -3587,6 +3625,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleMaintenanceCategoryOil => 'Oil';
+
+  @override
+  String get vehicleMaintenanceCategoryOtherFluids => 'Other fluids';
+
+  @override
+  String get vehicleMaintenanceCategoryTires => 'Tires';
+
+  @override
+  String get vehicleMaintenanceCategoryBrakes => 'Brakes';
+
+  @override
+  String get vehicleMaintenanceCategoryLights => 'Lights';
+
+  @override
+  String get vehicleMaintenanceCategoryCleaning => 'Cleaning';
+
+  @override
+  String get vehicleMaintenanceCategoryOther => 'Other';
 
   @override
   String get vehicleMaintenanceCost => 'Cost';

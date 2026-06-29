@@ -23,10 +23,13 @@ class VehicleGalleryPhotoDraft {
 }
 
 class VehicleGalleryDraft {
-  VehicleGalleryDraft({List<VehicleGalleryPhotoDraft>? photos})
-      : photos = photos ?? <VehicleGalleryPhotoDraft>[];
+  VehicleGalleryDraft({
+    List<VehicleGalleryPhotoDraft>? photos,
+    this.displayTitle,
+  }) : photos = photos ?? <VehicleGalleryPhotoDraft>[];
 
   final List<VehicleGalleryPhotoDraft> photos;
+  final String? displayTitle;
 }
 
 String _newVehicleId(String prefix) {
@@ -240,11 +243,15 @@ class VehiclesRepository {
           .getSingleOrNull();
 
   Future<int?> initialMeterBaseline(String vehicleId) async {
-    final row = await (_db.select(_db.vehicleMeterReadings)
+    final rows = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([(t) => drift.OrderingTerm.asc(t.recordedAt)]))
-        .getSingleOrNull();
-    return row?.value;
+          ..orderBy([
+            (t) => drift.OrderingTerm.asc(t.recordedAt),
+            (t) => drift.OrderingTerm.asc(t.id),
+          ])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull?.value;
   }
 
   Future<int> _nextGalleryIndex(String vehicleId) async {
@@ -270,11 +277,27 @@ class VehiclesRepository {
   }
 
   Future<int?> latestMeterValue(String vehicleId) async {
-    final row = await (_db.select(_db.vehicleMeterReadings)
+    final rows = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([(t) => drift.OrderingTerm.desc(t.recordedAt)]))
-        .getSingleOrNull();
-    return row?.value;
+          ..orderBy([
+            (t) => drift.OrderingTerm.desc(t.recordedAt),
+            (t) => drift.OrderingTerm.desc(t.id),
+          ])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull?.value;
+  }
+
+  Future<DateTime> _nextMeterRecordedAt(String vehicleId) async {
+    final rows = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.recordedAt)])
+          ..limit(1))
+        .get();
+    final now = DateTime.now().toUtc();
+    final latest = rows.firstOrNull?.recordedAt;
+    if (latest == null || now.isAfter(latest)) return now;
+    return latest.add(const Duration(milliseconds: 1));
   }
 
   Future<VehicleMeterReading> saveMeterReading({
@@ -290,7 +313,7 @@ class VehiclesRepository {
     bool negativeGapAcknowledged = false,
   }) async {
     final id = _newVehicleId('meter:');
-    final now = DateTime.now().toUtc();
+    final now = await _nextMeterRecordedAt(vehicleId);
     await _db.into(_db.vehicleMeterReadings).insert(
           VehicleMeterReadingsCompanion.insert(
             id: id,
@@ -346,6 +369,10 @@ class VehiclesRepository {
     required String attributedContactId,
     required String startReadingId,
   }) async {
+    final existing = await openUseForVehicle(vehicleId);
+    if (existing != null) {
+      return existing;
+    }
     final reading = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.id.equals(startReadingId)))
         .getSingle();
@@ -364,12 +391,24 @@ class VehiclesRepository {
   }
 
   Future<VehicleUse?> openUseForVehicle(String vehicleId) async {
-    return (_db.select(_db.vehicleUses)
+    final rows = await (_db.select(_db.vehicleUses)
           ..where(
             (t) =>
                 t.vehicleId.equals(vehicleId) & t.endedAt.isNull(),
-          ))
-        .getSingleOrNull();
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.startedAt)])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull;
+  }
+
+  Future<VehicleUse?> findAnyOpenUse() async {
+    final rows = await (_db.select(_db.vehicleUses)
+          ..where((t) => t.endedAt.isNull())
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.startedAt)])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull;
   }
 
   Future<VehicleUse> closeUseSession({

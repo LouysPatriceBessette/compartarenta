@@ -826,6 +826,30 @@ abstract class AppLocalizations {
   /// **'Miles'**
   String get prefsDistanceUnitMiles;
 
+  /// No description provided for @prefsLiquidVolumeUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquid volume unit'**
+  String get prefsLiquidVolumeUnitLabel;
+
+  /// No description provided for @prefsLiquidVolumeUnitLiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Liter'**
+  String get prefsLiquidVolumeUnitLiter;
+
+  /// No description provided for @prefsLiquidVolumeUnitUsGallon.
+  ///
+  /// In en, this message translates to:
+  /// **'US gallon (3.785 L)'**
+  String get prefsLiquidVolumeUnitUsGallon;
+
+  /// No description provided for @prefsLiquidVolumeUnitImperialGallon.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial gallon (4.546 L)'**
+  String get prefsLiquidVolumeUnitImperialGallon;
+
   /// No description provided for @prefsWeekStartLabel.
   ///
   /// In en, this message translates to:
@@ -5745,6 +5769,12 @@ abstract class AppLocalizations {
   /// **'Add a gallery'**
   String get vehicleAddGalleryStart;
 
+  /// No description provided for @vehicleAddPhotoGalleryStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo gallery'**
+  String get vehicleAddPhotoGalleryStart;
+
   /// No description provided for @vehicleAddGalleryTitle.
   ///
   /// In en, this message translates to:
@@ -5828,6 +5858,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit details'**
   String get vehicleEditDetailsTitle;
+
+  /// No description provided for @vehicleJournalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get vehicleJournalsTitle;
+
+  /// No description provided for @vehicleJournalSelectorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get vehicleJournalSelectorLabel;
+
+  /// No description provided for @vehicleFormVehicleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get vehicleFormVehicleLabel;
 
   /// No description provided for @vehicleJournalEmpty.
   ///
@@ -5925,6 +5973,24 @@ abstract class AppLocalizations {
   /// **'Odometer reading'**
   String get vehicleQuickActionOdometer;
 
+  /// No description provided for @vehicleUseSessionStartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a use session'**
+  String get vehicleUseSessionStartAction;
+
+  /// No description provided for @vehicleUseSessionEndAction.
+  ///
+  /// In en, this message translates to:
+  /// **'End a use session'**
+  String get vehicleUseSessionEndAction;
+
+  /// No description provided for @vehicleUseSessionStartedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'started on {dateTime}'**
+  String vehicleUseSessionStartedOn(String dateTime);
+
   /// No description provided for @vehicleQuickActionFuel.
   ///
   /// In en, this message translates to:
@@ -5934,7 +6000,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleQuickActionMaintenance.
   ///
   /// In en, this message translates to:
-  /// **'Maintenance performed'**
+  /// **'Maintenance'**
   String get vehicleQuickActionMaintenance;
 
   /// No description provided for @vehicleQuickActionViolation.
@@ -6002,6 +6068,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Session started. End it when you finish driving.'**
   String get vehicleUseSessionStarted;
+
+  /// No description provided for @vehicleUseSessionEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ended.'**
+  String get vehicleUseSessionEnded;
 
   /// No description provided for @vehicleConsumptionTitle.
   ///
@@ -6072,13 +6144,13 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleFuelVolume.
   ///
   /// In en, this message translates to:
-  /// **'Volume (L, optional)'**
+  /// **'Volume'**
   String get vehicleFuelVolume;
 
   /// No description provided for @vehicleFuelMeter.
   ///
   /// In en, this message translates to:
-  /// **'Meter reading'**
+  /// **'Odometer'**
   String get vehicleFuelMeter;
 
   /// No description provided for @vehicleFuelFullTank.
@@ -6098,6 +6170,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Oil'**
   String get vehicleMaintenanceCategoryOil;
+
+  /// No description provided for @vehicleMaintenanceCategoryOtherFluids.
+  ///
+  /// In en, this message translates to:
+  /// **'Other fluids'**
+  String get vehicleMaintenanceCategoryOtherFluids;
+
+  /// No description provided for @vehicleMaintenanceCategoryTires.
+  ///
+  /// In en, this message translates to:
+  /// **'Tires'**
+  String get vehicleMaintenanceCategoryTires;
+
+  /// No description provided for @vehicleMaintenanceCategoryBrakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Brakes'**
+  String get vehicleMaintenanceCategoryBrakes;
+
+  /// No description provided for @vehicleMaintenanceCategoryLights.
+  ///
+  /// In en, this message translates to:
+  /// **'Lights'**
+  String get vehicleMaintenanceCategoryLights;
+
+  /// No description provided for @vehicleMaintenanceCategoryCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get vehicleMaintenanceCategoryCleaning;
+
+  /// No description provided for @vehicleMaintenanceCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get vehicleMaintenanceCategoryOther;
 
   /// No description provided for @vehicleMaintenanceCost.
   ///

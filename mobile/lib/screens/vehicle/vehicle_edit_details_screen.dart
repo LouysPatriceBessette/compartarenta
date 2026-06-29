@@ -4,14 +4,21 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'vehicle_add_gallery_section.dart';
 
 class VehicleEditDetailsScreen extends StatefulWidget {
-  const VehicleEditDetailsScreen({super.key, required this.vehicleId});
+  const VehicleEditDetailsScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   State<VehicleEditDetailsScreen> createState() =>
@@ -22,7 +29,6 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
   final _color = TextEditingController();
   final _licensePlate = TextEditingController();
   final _newGalleries = <VehicleGalleryDraft>[];
-  int _savedGalleryCount = 0;
   bool _loading = true;
   bool _saving = false;
 
@@ -42,12 +48,10 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
   Future<void> _load() async {
     final repo = VehiclesRepository(AppDatabase.processScope);
     final vehicle = await repo.getVehicle(widget.vehicleId);
-    final galleries = await repo.listPhotoGalleries(widget.vehicleId);
     if (!mounted) return;
     setState(() {
       _color.text = vehicle?.color ?? '';
       _licensePlate.text = vehicle?.licensePlate ?? '';
-      _savedGalleryCount = galleries.length;
       _loading = false;
     });
   }
@@ -56,6 +60,11 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
     if (_saving || _loading) return false;
     return _color.text.trim().isNotEmpty;
   }
+
+  String _todayGalleryTitle() => formatPreferenceDate(
+        DateTime.now().toUtc(),
+        effectiveDateFormat(widget.prefs),
+      );
 
   Future<void> _save() async {
     if (!_canSave) return;
@@ -105,7 +114,10 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
           const SizedBox(height: 24),
           VehicleAddGallerySection(
             galleries: _newGalleries,
-            allowAddAnotherGallery: _savedGalleryCount > 0,
+            showSectionHeader: false,
+            startGalleryButtonLabel: l10n.vehicleAddPhotoGalleryStart,
+            allowAddAnotherGallery: false,
+            newGalleryTitle: _todayGalleryTitle,
             onChanged: () => setState(() {}),
           ),
           const SizedBox(height: 24),

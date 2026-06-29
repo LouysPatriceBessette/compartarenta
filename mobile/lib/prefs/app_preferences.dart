@@ -14,6 +14,8 @@ import 'week_start.dart';
 
 enum DistanceUnit { km, miles }
 
+enum LiquidVolumeUnit { liter, usGallon, imperialGallon }
+
 enum PlanType { housing }
 
 class AppPreferences extends ChangeNotifier {
@@ -34,6 +36,7 @@ class AppPreferences extends ChangeNotifier {
   static const _kCurrency = 'prefs.currency';
   static const _kDateFormat = 'prefs.dateFormat';
   static const _kDistanceUnit = 'prefs.distanceUnit';
+  static const _kLiquidVolumeUnit = 'prefs.liquidVolumeUnit';
   static const _kTimeZonePolicy = 'prefs.timeZonePolicy';
   static const _kTimeZoneId = 'prefs.timeZoneId';
   static const _kWeekStart = 'prefs.weekStart';
@@ -192,6 +195,16 @@ class AppPreferences extends ChangeNotifier {
 
   Future<void> setDistanceUnit(DistanceUnit value) async {
     await _prefs.setString(_kDistanceUnit, value.name);
+    notifyListeners();
+  }
+
+  LiquidVolumeUnit? get liquidVolumeUnit {
+    final raw = _prefs.getString(_kLiquidVolumeUnit);
+    return LiquidVolumeUnit.values.where((u) => u.name == raw).firstOrNull;
+  }
+
+  Future<void> setLiquidVolumeUnit(LiquidVolumeUnit value) async {
+    await _prefs.setString(_kLiquidVolumeUnit, value.name);
     notifyListeners();
   }
 
@@ -370,6 +383,9 @@ class AppPreferences extends ChangeNotifier {
     }
     if (distanceUnit == null) {
       await setDistanceUnit(DistanceUnit.km);
+    }
+    if (liquidVolumeUnit == null) {
+      await setLiquidVolumeUnit(LiquidVolumeUnit.liter);
     }
     if (weekStart == null) {
       await setWeekStart(WeekStart.sunday);

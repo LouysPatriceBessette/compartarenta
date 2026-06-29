@@ -60,11 +60,15 @@ class VehicleMaintenanceAlerts {
   }
 
   Future<int?> _initialMeterBaseline(String vehicleId) async {
-    final row = await (_db.select(_db.vehicleMeterReadings)
+    final rows = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
-        .getSingleOrNull();
-    return row?.value;
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.recordedAt),
+            (t) => OrderingTerm.asc(t.id),
+          ])
+          ..limit(1))
+        .get();
+    return rows.firstOrNull?.value;
   }
 
   static List<VehicleMaintenanceRule> defaultRulesForKind(

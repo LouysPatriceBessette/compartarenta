@@ -14,11 +14,17 @@ class VehicleAddGallerySection extends StatefulWidget {
     required this.galleries,
     required this.onChanged,
     this.allowAddAnotherGallery = false,
+    this.showSectionHeader = true,
+    this.startGalleryButtonLabel,
+    this.newGalleryTitle,
   });
 
   final List<VehicleGalleryDraft> galleries;
   final VoidCallback onChanged;
   final bool allowAddAnotherGallery;
+  final bool showSectionHeader;
+  final String? startGalleryButtonLabel;
+  final String? Function()? newGalleryTitle;
 
   @override
   State<VehicleAddGallerySection> createState() =>
@@ -67,19 +73,54 @@ class _VehicleAddGallerySectionState extends State<VehicleAddGallerySection> {
   }
 
   void _addGallery() {
+    final title = widget.newGalleryTitle?.call();
     setState(() {
-      widget.galleries.add(VehicleGalleryDraft());
+      widget.galleries.add(VehicleGalleryDraft(displayTitle: title));
     });
     _notify();
+  }
+
+  String _galleryCardTitle(AppLocalizations l10n, VehicleGalleryDraft gallery, int galleryIndex) {
+    final custom = gallery.displayTitle?.trim();
+    if (custom != null && custom.isNotEmpty) return custom;
+    return l10n.vehicleAddGalleryTitle(galleryIndex + 1);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final startLabel =
+        widget.startGalleryButtonLabel ?? l10n.vehicleAddGalleryStart;
+
     if (widget.galleries.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (widget.showSectionHeader) ...[
+            Text(
+              l10n.vehicleAddPhotosSection,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.vehicleAddPhotosOptionalHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+          ],
+          OutlinedButton.icon(
+            onPressed: _addGallery,
+            icon: const Icon(Icons.photo_library_outlined),
+            label: Text(startLabel),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.showSectionHeader) ...[
           Text(
             l10n.vehicleAddPhotosSection,
             style: Theme.of(context).textTheme.titleMedium,
@@ -90,28 +131,7 @@ class _VehicleAddGallerySectionState extends State<VehicleAddGallerySection> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _addGallery,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: Text(l10n.vehicleAddGalleryStart),
-          ),
         ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.vehicleAddPhotosSection,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.vehicleAddPhotosOptionalHint,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 12),
         ...List.generate(widget.galleries.length, (galleryIndex) {
           final gallery = widget.galleries[galleryIndex];
           return Card(
@@ -122,7 +142,7 @@ class _VehicleAddGallerySectionState extends State<VehicleAddGallerySection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.vehicleAddGalleryTitle(galleryIndex + 1),
+                    _galleryCardTitle(l10n, gallery, galleryIndex),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),

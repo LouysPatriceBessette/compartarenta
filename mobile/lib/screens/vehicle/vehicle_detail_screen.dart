@@ -4,14 +4,20 @@ import 'package:go_router/go_router.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
-import '../../vehicle/vehicle_consumption_metrics.dart';
-import '../../vehicle/vehicle_kind.dart';
+import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
 import '../../widgets/screen_body_padding.dart';
+import 'vehicle_detail_gallery.dart';
 
 class VehicleDetailScreen extends StatefulWidget {
-  const VehicleDetailScreen({super.key, required this.vehicleId});
+  const VehicleDetailScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+  });
 
   final String vehicleId;
+  final AppPreferences prefs;
 
   @override
   State<VehicleDetailScreen> createState() => _VehicleDetailScreenState();
@@ -20,6 +26,7 @@ class VehicleDetailScreen extends StatefulWidget {
 class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Vehicle? _vehicle;
   bool _loading = true;
+  int _galleryReloadToken = 0;
 
   @override
   void initState() {
@@ -37,6 +44,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     });
   }
 
+  Future<void> _openEdit() async {
+    final updated = await context.push<bool>(
+      '/vehicle/${widget.vehicleId}/edit',
+    );
+    if (updated == true) {
+      await _load();
+      setState(() => _galleryReloadToken++);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -47,82 +64,51 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-    final kind = VehicleKind.fromWire(v.vehicleKind);
+    final summary = vehicleModelColorSummary(l10n, v);
+    final dateFmt = effectiveDateFormat(widget.prefs);
     return Scaffold(
       appBar: AppBar(title: Text(v.displayLabel)),
       body: ListView(
         padding: screenBodyScrollPadding(context),
         children: [
-          ListTile(
-            title: Text(l10n.vehicleFieldKind),
-            subtitle: Text(_kindLabel(l10n, kind)),
-          ),
+          if (summary.isNotEmpty)
+            Text(
+              summary,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              onPressed: () async {
-                final updated = await context.push<bool>(
-                  '/vehicle/${v.id}/edit',
-                );
-                if (updated == true) _load();
-              },
+              onPressed: _openEdit,
               icon: const Icon(Icons.edit_outlined),
               label: Text(l10n.vehicleEditDetailsTitle),
             ),
           ),
+          VehicleDetailGalleryView(
+            key: ValueKey('gallery-$_galleryReloadToken'),
+            vehicleId: v.id,
+            dateFormat: dateFmt,
+          ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.speed_outlined),
-            title: Text(l10n.vehicleQuickActionOdometer),
-            onTap: () => context.push('/vehicle/${v.id}/meter-log'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.local_gas_station_outlined),
-            title: Text(l10n.vehicleQuickActionFuel),
-            onTap: () => context.push('/vehicle/${v.id}/fuel-log'),
-          ),
           ListTile(
             leading: const Icon(Icons.build_outlined),
             title: Text(l10n.vehicleQuickActionMaintenance),
-            onTap: () => context.push('/vehicle/${v.id}/maintenance-log'),
+            onTap: () => context.push('/vehicle/${v.id}/maintenance'),
           ),
           ListTile(
             leading: const Icon(Icons.report_outlined),
             title: Text(l10n.vehicleQuickActionViolation),
-            onTap: () => context.push('/vehicle/${v.id}/violation-log'),
+            onTap: () => context.push('/vehicle/${v.id}/violation'),
           ),
           const Divider(),
-          FutureBuilder<VehicleConsumptionSnapshot>(
-            future: VehicleConsumptionMetrics(AppDatabase.processScope)
-                .forVehicle(v.id),
-            builder: (context, snap) {
-              final c = snap.data;
-              if (c == null || !c.hasSufficientData) {
-                return const SizedBox.shrink();
-              }
-              final text = kind?.usesHorometer ?? false
-                  ? l10n.vehicleConsumptionPerHour(
-                      c.litersPerHour!.toStringAsFixed(2),
-                    )
-                  : l10n.vehicleConsumptionPer100Km(
-                      c.litersPer100Km!.toStringAsFixed(1),
-                    );
-              return ListTile(
-                title: Text(l10n.vehicleConsumptionTitle),
-                subtitle: Text(text),
-              );
-            },
+          ListTile(
+            leading: const Icon(Icons.menu_book_outlined),
+            title: Text(l10n.vehicleJournalsTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/vehicle/${v.id}/journals'),
           ),
         ],
       ),
     );
   }
-
-  String _kindLabel(AppLocalizations l10n, VehicleKind? k) => switch (k) {
-        VehicleKind.car => l10n.vehicleKindCar,
-        VehicleKind.truck => l10n.vehicleKindTruck,
-        VehicleKind.motorcycle => l10n.vehicleKindMotorcycle,
-        VehicleKind.boat => l10n.vehicleKindBoat,
-        null => '',
-      };
 }

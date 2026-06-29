@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
-import '../l10n/app_localizations.dart';
 import '../portability/compartarenta_documents_layout.dart';
 import '../portability/public_documents_file_sink.dart';
-import '../widgets/app_dialog.dart';
 import 'vehicle_gallery_storage.dart';
 
 String _mimeTypeForExtension(String extension) {
@@ -24,34 +22,11 @@ String _mimeTypeForExtension(String extension) {
   }
 }
 
-/// Picks a meter photo; returns a local source path (not yet persisted).
+/// Picks a meter photo from the device camera; returns a local source path.
 Future<String?> pickVehicleMeterPhotoSource(BuildContext context) async {
-  final l10n = AppLocalizations.of(context);
-  final source = await showAppModalBottomSheet<ImageSource>(
-    context: context,
-    guardKey: 'vehicleMeterPhotoSource',
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.photo_camera_outlined),
-            title: Text(l10n.vehicleMeterPhotoCamera),
-            onTap: () => Navigator.pop(ctx, ImageSource.camera),
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
-            title: Text(l10n.vehicleMeterPhotoGallery),
-            onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-          ),
-        ],
-      ),
-    ),
-  );
-  if (source == null || !context.mounted) return null;
-
   final picker = ImagePicker();
-  final file = await picker.pickImage(source: source, imageQuality: 85);
+  final file =
+      await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
   if (file == null) return null;
   return file.path;
 }
