@@ -10,6 +10,7 @@ import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
+import '../../vehicle/vehicle_oil_change_interval.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
@@ -32,16 +33,20 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   final _year = TextEditingController();
   final _meter = TextEditingController();
   final _tankCapacity = TextEditingController();
+  final _oilChangeInterval = TextEditingController();
+  final _oilChangeIntervalFocus = FocusNode();
   final _licensePlate = TextEditingController();
   final _vin = TextEditingController();
   VehicleKind _kind = VehicleKind.car;
   String? _meterPhotoPath;
   final _galleries = <VehicleGalleryDraft>[];
   bool _saving = false;
+  bool _oilChangeIntervalBlurred = false;
 
   @override
   void initState() {
     super.initState();
+    _oilChangeIntervalFocus.addListener(_onOilChangeIntervalFocus);
     for (final c in [
       _label,
       _make,
@@ -50,6 +55,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       _year,
       _meter,
       _tankCapacity,
+      _oilChangeInterval,
       _licensePlate,
       _vin,
     ]) {
@@ -57,10 +63,19 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     }
   }
 
+  void _onOilChangeIntervalFocus() {
+    if (!_oilChangeIntervalFocus.hasFocus && mounted) {
+      setState(() => _oilChangeIntervalBlurred = true);
+    }
+  }
+
   void _refresh() => setState(() {});
 
   @override
   void dispose() {
+    _oilChangeIntervalFocus
+      ..removeListener(_onOilChangeIntervalFocus)
+      ..dispose();
     for (final c in [
       _label,
       _make,
@@ -69,6 +84,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       _year,
       _meter,
       _tankCapacity,
+      _oilChangeInterval,
       _licensePlate,
       _vin,
     ]) {
@@ -85,6 +101,35 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
         distanceUnit: resolveDistanceUnit(widget.prefs),
       );
 
+  int? get _parsedOilChangeInterval => parseOilChangeIntervalToStoredTenths(
+        text: _oilChangeInterval.text,
+        usesHorometer: _kind.usesHorometer,
+        distanceUnit: resolveDistanceUnit(widget.prefs),
+      );
+
+  String? _oilChangeIntervalError(AppLocalizations l10n) {
+    if (!_oilChangeIntervalBlurred) return null;
+    final issue = oilChangeIntervalValidationIssue(
+      text: _oilChangeInterval.text,
+      usesHorometer: _kind.usesHorometer,
+    );
+    return switch (issue) {
+      OilChangeIntervalValidationIssue.empty =>
+        l10n.vehicleOilChangeIntervalRequired,
+      OilChangeIntervalValidationIssue.invalid =>
+        l10n.vehicleOilChangeIntervalInvalid,
+      OilChangeIntervalValidationIssue.landBelowMin =>
+        l10n.vehicleOilChangeIntervalLandMin,
+      OilChangeIntervalValidationIssue.landAboveMax =>
+        l10n.vehicleOilChangeIntervalLandMax,
+      OilChangeIntervalValidationIssue.boatBelowMin =>
+        l10n.vehicleOilChangeIntervalBoatMin,
+      OilChangeIntervalValidationIssue.boatAboveMax =>
+        l10n.vehicleOilChangeIntervalBoatMax,
+      null => null,
+    };
+  }
+
   bool get _canSave {
     if (_saving) return false;
     if (_label.text.trim().isEmpty) return false;
@@ -98,35 +143,9 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       return false;
     }
     if (_parsedMeter == null) return false;
+    if (_parsedOilChangeInterval == null) return false;
     if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) return false;
     return true;
-  }
-
-  String? _validationError(AppLocalizations l10n) {
-    if (_canSave) return null;
-    if (_label.text.trim().isEmpty) {
-      return l10n.vehicleAddValidationLabelRequired;
-    }
-    if (_make.text.trim().isEmpty) {
-      return l10n.vehicleAddValidationMakeRequired;
-    }
-    if (_model.text.trim().isEmpty) {
-      return l10n.vehicleAddValidationModelRequired;
-    }
-    if (_color.text.trim().isEmpty) {
-      return l10n.vehicleAddValidationColorRequired;
-    }
-    if (_year.text.trim().length != 4 ||
-        int.tryParse(_year.text.trim()) == null) {
-      return l10n.vehicleAddValidationYearInvalid;
-    }
-    if (_parsedMeter == null) {
-      return l10n.vehicleAddValidationMeterRequired;
-    }
-    if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) {
-      return l10n.vehicleMeterPhotoRequired;
-    }
-    return l10n.vehicleAddValidationRequiredFields;
   }
 
   Future<void> _pickMeterPhoto() async {
@@ -135,14 +154,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   }
 
   Future<void> _save() async {
-    final l10n = AppLocalizations.of(context);
-    final error = _validationError(l10n);
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-      return;
-    }
+    if (!_canSave) return;
     setState(() => _saving = true);
     final tankText = _tankCapacity.text.trim();
     double? tankLiters;
@@ -166,6 +178,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       licensePlate: _licensePlate.text.trim(),
       vin: _vin.text.trim(),
       fuelTankCapacityLiters: tankLiters,
+      oilChangeIntervalAmount: _parsedOilChangeInterval!,
       initialMeterValue: _parsedMeter!,
       initialMeterPhotoPath: _meterPhotoPath!,
       galleries: _galleries.where((g) => g.photos.isNotEmpty).toList(),
@@ -182,10 +195,14 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final distanceUnit =
-        distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+    final distanceUnit = resolveDistanceUnit(widget.prefs);
+    final distanceUnitLabel = distanceUnitAbbrev(distanceUnit);
     final volumeUnit =
         liquidVolumeUnitAbbrev(resolveLiquidVolumeUnit(widget.prefs));
+    final oilIntervalUnit = oilChangeIntervalUnitSuffix(
+      usesHorometer: _kind.usesHorometer,
+      distanceUnit: distanceUnit,
+    );
     return Scaffold(
       appBar: AppBar(title: Text(l10n.vehicleAddVehicle)),
       body: ListView(
@@ -208,7 +225,12 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
                 )
                 .toList(),
             onChanged: (v) {
-              if (v != null) setState(() => _kind = v);
+              if (v != null) {
+                setState(() {
+                  _kind = v;
+                  _oilChangeIntervalBlurred = false;
+                });
+              }
             },
           ),
           const SizedBox(height: 12),
@@ -240,7 +262,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
           VehicleNarrowUnitField(
             controller: _meter,
             label: _initialMeterLabel(l10n),
-            unitSuffix: _kind.usesHorometer ? 'h' : distanceUnit,
+            unitSuffix: _kind.usesHorometer ? 'h' : distanceUnitLabel,
             decimal: true,
             onChanged: (_) => _refresh(),
           ),
@@ -261,6 +283,18 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
             unitSuffix: volumeUnit,
             decimal: true,
             onChanged: (_) => _refresh(),
+          ),
+          const SizedBox(height: 12),
+          VehicleNarrowUnitField(
+            controller: _oilChangeInterval,
+            focusNode: _oilChangeIntervalFocus,
+            label: l10n.vehicleFieldFluidChangeFrequency,
+            unitSuffix: oilIntervalUnit,
+            allowDecimalWithoutDecimalKeyboard: !_kind.usesHorometer,
+            errorText: _oilChangeIntervalError(l10n),
+            onChanged: (_) => _refresh(),
+            onEditingComplete: () =>
+                setState(() => _oilChangeIntervalBlurred = true),
           ),
           const SizedBox(height: 12),
           AppTextField(

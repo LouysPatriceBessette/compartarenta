@@ -3453,6 +3453,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Initial meter reading is required.';
 
   @override
+  String get vehicleAddValidationFluidChangeFrequencyRequired =>
+      'Oil changes are required.';
+
+  @override
   String get vehicleAddValidationRequiredFields =>
       'Complete all required fields, including the odometer photo.';
 
@@ -3515,13 +3519,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleLogFuelDetailTitle => 'Purchase details';
 
   @override
-  String get vehicleLogMaintenanceTitle => 'Log — maintenance';
+  String get vehicleLogMaintenanceTitle => 'Maintenance';
 
   @override
   String get vehicleLogMaintenanceDetailTitle => 'Maintenance details';
 
   @override
-  String get vehicleLogViolationTitle => 'Log — damage and violations';
+  String get vehicleLogViolationTitle => 'Damage and violations';
 
   @override
   String get vehicleLogViolationDetailTitle => 'Violation details';
@@ -3650,6 +3654,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleFieldFuelTankCapacity => 'Fuel tank capacity';
+
+  @override
+  String get vehicleFieldFluidChangeFrequency => 'Oil changes';
+
+  @override
+  String get vehicleOilChangeIntervalRequired =>
+      'Enter an oil change interval.';
+
+  @override
+  String get vehicleOilChangeIntervalInvalid => 'Invalid number.';
+
+  @override
+  String get vehicleOilChangeIntervalLandMin =>
+      'Minimum: 1 (1,000 km or miles).';
+
+  @override
+  String get vehicleOilChangeIntervalLandMax =>
+      'Maximum: 20 (20,000 km or miles).';
+
+  @override
+  String get vehicleOilChangeIntervalBoatMin => 'Minimum: 50 h.';
+
+  @override
+  String get vehicleOilChangeIntervalBoatMax => 'Maximum: 500 h.';
 
   @override
   String get vehicleDetailEarlierPhotos => 'Earlier photos';

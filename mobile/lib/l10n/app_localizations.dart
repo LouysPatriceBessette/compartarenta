@@ -5841,6 +5841,12 @@ abstract class AppLocalizations {
   /// **'Initial meter reading is required.'**
   String get vehicleAddValidationMeterRequired;
 
+  /// No description provided for @vehicleAddValidationFluidChangeFrequencyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Oil changes are required.'**
+  String get vehicleAddValidationFluidChangeFrequencyRequired;
+
   /// No description provided for @vehicleAddValidationRequiredFields.
   ///
   /// In en, this message translates to:
@@ -5958,7 +5964,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleLogMaintenanceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Log — maintenance'**
+  /// **'Maintenance'**
   String get vehicleLogMaintenanceTitle;
 
   /// No description provided for @vehicleLogMaintenanceDetailTitle.
@@ -5970,7 +5976,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleLogViolationTitle.
   ///
   /// In en, this message translates to:
-  /// **'Log — damage and violations'**
+  /// **'Damage and violations'**
   String get vehicleLogViolationTitle;
 
   /// No description provided for @vehicleLogViolationDetailTitle.
@@ -6212,6 +6218,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fuel tank capacity'**
   String get vehicleFieldFuelTankCapacity;
+
+  /// No description provided for @vehicleFieldFluidChangeFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Oil changes'**
+  String get vehicleFieldFluidChangeFrequency;
+
+  /// No description provided for @vehicleOilChangeIntervalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an oil change interval.'**
+  String get vehicleOilChangeIntervalRequired;
+
+  /// No description provided for @vehicleOilChangeIntervalInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid number.'**
+  String get vehicleOilChangeIntervalInvalid;
+
+  /// No description provided for @vehicleOilChangeIntervalLandMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum: 1 (1,000 km or miles).'**
+  String get vehicleOilChangeIntervalLandMin;
+
+  /// No description provided for @vehicleOilChangeIntervalLandMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum: 20 (20,000 km or miles).'**
+  String get vehicleOilChangeIntervalLandMax;
+
+  /// No description provided for @vehicleOilChangeIntervalBoatMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum: 50 h.'**
+  String get vehicleOilChangeIntervalBoatMin;
+
+  /// No description provided for @vehicleOilChangeIntervalBoatMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum: 500 h.'**
+  String get vehicleOilChangeIntervalBoatMax;
 
   /// No description provided for @vehicleDetailEarlierPhotos.
   ///

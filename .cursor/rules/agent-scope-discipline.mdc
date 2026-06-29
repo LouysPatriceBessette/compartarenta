@@ -15,5 +15,6 @@ When a request mixes UI, navigation, local state, transport/sync, screenshots, o
 6. After each change, verify that user-confirmed behaviors have not been moved or regressed.
 7. For card/list UI changes, identify the exact data source and existing route before changing the rendering.
 8. **Retest and recovery instructions:** If the delivery mentions what the user should tap or redo across roles, read the proposal/response gates and resend preconditions in code first (see `no-blind-patching-evidence-first.mdc`). Do not attach a “test plan” with unverified steps.
+9. **UI/UX product choices:** See `ui-ux-no-initiative.mdc` — do not assume optional/required, defaults, copy, layout, or validation UX when the user did not specify; ask first.
 
 Prefer a smaller, verified change over a broader speculative fix.

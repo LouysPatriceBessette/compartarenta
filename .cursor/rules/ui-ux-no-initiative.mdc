@@ -1,0 +1,55 @@
+---
+description: Do not assume UI/UX product decisions; ask before implementing unspecified behavior
+alwaysApply: true
+---
+
+# UI/UX — No Unilateral Product Decisions
+
+For **anything that affects what users see, read, tap, or how screens behave**
+(Flutter widgets, navigation, copy, labels, layout order, defaults, optional vs
+required fields, empty states, validation gates, accessibility affordances, HTML
+mocks, ARB strings):
+
+## Hard rule
+
+**Do not take initiative** on product choices the user did not specify. When a
+reasonable implementation could go more than one way, **stop and ask** — in chat
+or via a short structured question — **before** editing UI code, ARB files, or
+routes.
+
+This complements `agent-scope-discipline.mdc` (multi-state scope) and
+`ui-restoration-no-new-variants.mdc` (regressions). This rule applies even to
+**small** additions (one field, one label, one button state).
+
+## Must ask when unspecified (non-exhaustive)
+
+| Topic | Do not guess |
+| --- | --- |
+| **Required vs optional** | Whether a field, photo, or step blocks save/submit |
+| **Defaults** | Initial switch value, pre-selected dropdown, placeholder text |
+| **Order and grouping** | Field order, sections, dividers, what sits above/below what |
+| **Labels and copy** | Wording, title casing, “Journal — …” prefixes, helper text |
+| **Validation UX** | Snackbar vs inline error, when the primary button disables |
+| **Empty / missing data** | Hide row, show “—”, omit section, or block navigation |
+| **Navigation** | Push vs go, which screen opens, back-stack behavior |
+| **Visual design** | Colors, opacity, fullscreen fit (cover vs contain), bar style |
+
+## Allowed without asking
+
+- Match **existing patterns in the same screen or feature** when the user’s
+  request already implies them (e.g. “same as fuel purchase form” → reuse that
+  widget and behavior).
+- Apply **project rules** already binding (terminology dictionary, date/money
+  display, melos workflow) — not new product choices.
+- **Bug fixes** where expected behavior is **proven** by code, logs, or an
+  explicit user correction (“c’est sous le menu Android” → fix placement only).
+
+## When the user confirms
+
+Implement exactly what they chose. Do not add adjacent UX “improvements” in the
+same diff unless they asked.
+
+## If you already guessed wrong
+
+Acknowledge briefly, apply the user’s correction, and do not defend the earlier
+assumption.

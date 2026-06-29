@@ -6,8 +6,8 @@ import 'package:drift/drift.dart' as drift;
 import '../app_database.dart';
 import '../../vehicle/vehicle_gallery_storage.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
+import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_kind.dart';
-import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
 
 const String kVehicleGapAttributionUnknown = 'unknown';
@@ -98,6 +98,7 @@ class VehiclesRepository {
     String licensePlate = '',
     String vin = '',
     double? fuelTankCapacityLiters,
+    required int oilChangeIntervalAmount,
     required int initialMeterValue,
     required String initialMeterPhotoPath,
     List<VehicleGalleryDraft> galleries = const [],
@@ -121,18 +122,17 @@ class VehiclesRepository {
             updatedAt: now,
           ),
         );
-    for (final rule
-        in VehicleMaintenanceAlerts.defaultRulesForKind(id, kind)) {
-      await _db.into(_db.vehicleMaintenanceRules).insert(
-            VehicleMaintenanceRulesCompanion.insert(
-              id: rule.id,
-              vehicleId: rule.vehicleId,
-              category: rule.category,
-              intervalAmount: rule.intervalAmount,
-              previewWindowAmount: drift.Value(rule.previewWindowAmount),
-            ),
-          );
-    }
+    final preview = (oilChangeIntervalAmount ~/ 10)
+        .clamp(1, oilChangeIntervalAmount);
+    await _db.into(_db.vehicleMaintenanceRules).insert(
+          VehicleMaintenanceRulesCompanion.insert(
+            id: '$id:rule:oil',
+            vehicleId: id,
+            category: VehicleMaintenanceCategoryWire.oil.wire,
+            intervalAmount: oilChangeIntervalAmount,
+            previewWindowAmount: drift.Value(preview),
+          ),
+        );
     await saveMeterReading(
       vehicleId: id,
       value: initialMeterValue,
@@ -206,19 +206,71 @@ class VehiclesRepository {
 
   Future<Vehicle> updateVehicleEditableDetails({
     required String vehicleId,
+    required String displayLabel,
     required String color,
     String licensePlate = '',
+    required int oilChangeIntervalAmount,
   }) async {
     final now = DateTime.now().toUtc();
     await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId))).write(
           VehiclesCompanion(
+            displayLabel: drift.Value(displayLabel.trim()),
             color: drift.Value(color.trim()),
             licensePlate: drift.Value(licensePlate.trim()),
             updatedAt: drift.Value(now),
           ),
         );
+    await _upsertOilChangeInterval(
+      vehicleId: vehicleId,
+      intervalAmount: oilChangeIntervalAmount,
+    );
     return (await getVehicle(vehicleId)) ??
         (throw StateError('vehicle missing after update'));
+  }
+
+  Future<int?> oilChangeIntervalAmountForVehicle(String vehicleId) async {
+    final rule = await (_db.select(_db.vehicleMaintenanceRules)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) &
+                t.category.equals(VehicleMaintenanceCategoryWire.oil.wire),
+          ))
+        .getSingleOrNull();
+    return rule?.intervalAmount;
+  }
+
+  Future<void> _upsertOilChangeInterval({
+    required String vehicleId,
+    required int intervalAmount,
+  }) async {
+    final preview = (intervalAmount ~/ 10).clamp(1, intervalAmount);
+    final existing = await (_db.select(_db.vehicleMaintenanceRules)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) &
+                t.category.equals(VehicleMaintenanceCategoryWire.oil.wire),
+          ))
+        .getSingleOrNull();
+    if (existing != null) {
+      await (_db.update(_db.vehicleMaintenanceRules)
+            ..where((t) => t.id.equals(existing.id)))
+          .write(
+        VehicleMaintenanceRulesCompanion(
+          intervalAmount: drift.Value(intervalAmount),
+          previewWindowAmount: drift.Value(preview),
+        ),
+      );
+      return;
+    }
+    await _db.into(_db.vehicleMaintenanceRules).insert(
+          VehicleMaintenanceRulesCompanion.insert(
+            id: '$vehicleId:rule:oil',
+            vehicleId: vehicleId,
+            category: VehicleMaintenanceCategoryWire.oil.wire,
+            intervalAmount: intervalAmount,
+            previewWindowAmount: drift.Value(preview),
+          ),
+        );
   }
 
   Future<List<VehicleMeterReading>> listMeterReadings(String vehicleId) {
