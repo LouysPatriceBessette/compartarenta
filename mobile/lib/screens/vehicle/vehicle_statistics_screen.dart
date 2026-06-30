@@ -4,9 +4,12 @@ import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../util/display_date.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
+import '../../vehicle/vehicle_consumption_reliability.dart';
+import '../../vehicle/vehicle_consumption_reliability_l10n.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../widgets/screen_body_padding.dart';
 
@@ -43,6 +46,7 @@ class _VehicleStatisticsScreenState extends State<VehicleStatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final dateFmt = widget.prefs.dateFormat;
     final metrics = VehicleConsumptionMetrics(AppDatabase.processScope);
     final repo = VehiclesRepository(AppDatabase.processScope);
     return Scaffold(
@@ -80,6 +84,87 @@ class _VehicleStatisticsScreenState extends State<VehicleStatisticsScreen> {
                         return ListTile(
                           title: Text(v.displayLabel),
                           subtitle: Text(display),
+                        );
+                      },
+                    );
+                  }),
+                const Divider(height: 32),
+                Text(
+                  l10n.vehicleStatisticsConsumptionHistoryTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                if (_vehicles.isEmpty)
+                  Text(l10n.vehicleMyVehiclesEmpty)
+                else
+                  ..._vehicles.where((v) {
+                    final kind = VehicleKind.fromWire(v.vehicleKind);
+                    return !(kind?.usesHorometer ?? false);
+                  }).map((v) {
+                    return FutureBuilder<List<VehicleConsumptionEstimateHistoryData>>(
+                      future: metrics.listReliableEstimateHistory(v.id),
+                      builder: (context, snap) {
+                        final entries = snap.data;
+                        if (entries == null) {
+                          return ListTile(title: Text(v.displayLabel));
+                        }
+                        if (entries.isEmpty) {
+                          return ListTile(
+                            title: Text(v.displayLabel),
+                            subtitle: Text(
+                              l10n.vehicleConsumptionReliabilityNone,
+                            ),
+                          );
+                        }
+                        return ExpansionTile(
+                          title: Text(v.displayLabel),
+                          children: entries.map((entry) {
+                            final date = formatPreferenceDateTime(
+                              entry.anchorEndAt,
+                              dateFmt,
+                            );
+                            final blended = entry.litersPer100Km
+                                .toStringAsFixed(1);
+                            final lines = <String>[
+                              l10n.vehicleConsumptionHistoryBlended(
+                                date,
+                                blended,
+                              ),
+                            ];
+                            final route = entry.litersPer100KmRoute;
+                            final city = entry.litersPer100KmCity;
+                            final traffic = entry.litersPer100KmTraffic;
+                            if (route != null &&
+                                city != null &&
+                                traffic != null) {
+                              lines.add(
+                                '${l10n.vehicleDrivingConditionRoute}: '
+                                '${l10n.vehicleConsumptionPer100Km(route.toStringAsFixed(1))}',
+                              );
+                              lines.add(
+                                '${l10n.vehicleDrivingConditionCity}: '
+                                '${l10n.vehicleConsumptionPer100Km(city.toStringAsFixed(1))}',
+                              );
+                              lines.add(
+                                '${l10n.vehicleDrivingConditionTraffic}: '
+                                '${l10n.vehicleConsumptionPer100Km(traffic.toStringAsFixed(1))}',
+                              );
+                            }
+                            final reliability =
+                                VehicleConsumptionReliability.fromWire(
+                              entry.reliability,
+                            );
+                            if (reliability != null) {
+                              lines.add(reliability.message(l10n));
+                            }
+                            return ListTile(
+                              title: Text(lines.first),
+                              subtitle: lines.length > 1
+                                  ? Text(lines.sublist(1).join('\n'))
+                                  : null,
+                              isThreeLine: lines.length > 2,
+                            );
+                          }).toList(),
                         );
                       },
                     );

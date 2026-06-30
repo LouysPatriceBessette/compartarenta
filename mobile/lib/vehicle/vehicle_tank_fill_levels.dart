@@ -4,13 +4,16 @@ class VehicleTankFillLevel {
     required this.fractionNumerator,
     required this.fractionDenominator,
     required this.percent,
+    this.displayLabel,
   });
 
   final int fractionNumerator;
   final int fractionDenominator;
   final int percent;
+  final String? displayLabel;
 
-  String label() => '$fractionNumerator/$fractionDenominator - $percent%';
+  String label() =>
+      displayLabel ?? '$fractionNumerator/$fractionDenominator - $percent%';
 
   static const List<VehicleTankFillLevel> choices = [
     VehicleTankFillLevel(fractionNumerator: 7, fractionDenominator: 8, percent: 87),
@@ -19,9 +22,19 @@ class VehicleTankFillLevel {
     VehicleTankFillLevel(fractionNumerator: 1, fractionDenominator: 2, percent: 50),
     VehicleTankFillLevel(fractionNumerator: 3, fractionDenominator: 8, percent: 37),
     VehicleTankFillLevel(fractionNumerator: 1, fractionDenominator: 4, percent: 25),
+    VehicleTankFillLevel(fractionNumerator: 1, fractionDenominator: 8, percent: 12),
+    VehicleTankFillLevel(
+      fractionNumerator: 0,
+      fractionDenominator: 1,
+      percent: 1,
+      displayLabel: 'VIDE - 1%',
+    ),
   ];
 
   static final VehicleTankFillLevel defaultChoice = choices.first;
+
+  static int get highestPercent =>
+      choices.map((c) => c.percent).reduce((a, b) => a > b ? a : b);
 
   static VehicleTankFillLevel? fromPercent(int? percent) {
     if (percent == null) return null;

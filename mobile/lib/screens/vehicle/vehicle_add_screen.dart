@@ -13,6 +13,7 @@ import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_oil_change_interval.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
+import '../../widgets/vehicle_meter_photo_button.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
 import 'vehicle_add_gallery_section.dart';
 
@@ -267,14 +268,13 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
             onChanged: (_) => _refresh(),
           ),
           const SizedBox(height: 8),
-          OutlinedButton.icon(
+          VehicleMeterPhotoButton(
+            attached:
+                _meterPhotoPath != null && _meterPhotoPath!.isNotEmpty,
             onPressed: _pickMeterPhoto,
-            icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(
-              _meterPhotoPath == null
-                  ? l10n.vehicleOdometerPhotoLabel
-                  : l10n.vehicleMeterPhotoAttached,
-            ),
+            label: _meterPhotoPath == null
+                ? l10n.vehicleOdometerPhotoLabel
+                : l10n.vehicleMeterPhotoAttached,
           ),
           const SizedBox(height: 12),
           VehicleNarrowUnitField(

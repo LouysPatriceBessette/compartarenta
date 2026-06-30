@@ -1607,6 +1607,8 @@
   "vehicleMeterPhotoRequired": "A meter photo is required.",
   "vehicleMeterPhotoAdd": "Add meter photo",
   "vehicleMeterPhotoAttached": "Photo attached",
+  "vehicleMeterKnownUnchangedNoPhotoOdometer": "Known odometer unchanged. No photo recorded.",
+  "vehicleMeterKnownUnchangedNoPhotoHorometer": "Known engine hour meter unchanged. No photo recorded.",
   "vehicleMeterPhotoCamera": "Camera",
   "vehicleMeterPhotoGallery": "Gallery",
   "vehicleUseSessionStart": "Start use session",
@@ -1619,6 +1621,33 @@
   "@vehicleConsumptionPer100Km": { "placeholders": { "value": { "type": "String" } } },
   "vehicleConsumptionPerHour": "{value} L/h",
   "@vehicleConsumptionPerHour": { "placeholders": { "value": { "type": "String" } } },
+  "vehicleDrivingConditionColumn": "Condition",
+  "vehicleDrivingConditionProportionColumn": "Share of distance",
+  "vehicleDrivingConditionRoute": "Highway",
+  "vehicleDrivingConditionCity": "City",
+  "vehicleDrivingConditionTraffic": "Traffic",
+  "vehicleConsumptionReliabilityNone": "There is not enough data to calculate fuel consumption.",
+  "vehicleConsumptionReliabilityPreliminary": "This estimate is preliminary. It will become more accurate as you add more data.",
+  "vehicleConsumptionReliabilityReliable": "This estimate is reliable, based on the calculation formula and the data you entered.",
+  "vehicleConsumptionReliabilityVeryReliable": "This estimate is very reliable because it is based on a large amount of data you entered.",
+  "vehicleStatisticsConsumptionHistoryTitle": "Reliable consumption history",
+  "vehicleConsumptionHistoryBlended": "{date}: {value} L/100 km",
+  "@vehicleConsumptionHistoryBlended": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "value": { "type": "String" }
+    }
+  },
+  "vehicleSessionEndTankConfirmTitle": "Confirm tank level",
+  "vehicleSessionEndTankConfirmBody": "You declared the tank at {percent}% full after {distance} since the last fuel purchase. Please confirm this is correct.",
+  "@vehicleSessionEndTankConfirmBody": {
+    "placeholders": {
+      "distance": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "vehicleSessionEndTankConfirmReview": "Review",
+  "vehicleSessionEndTankConfirmProceed": "Confirm",
   "vehicleStatisticsTitle": "Statistics",
   "vehicleStatisticsMileageTitle": "My mileage",
   "vehicleStatisticsExpensesTitle": "My expenses",
@@ -1648,7 +1677,7 @@
   },
   "vehicleFuelTankInfoTooltip": "About fuel tank estimate",
   "helpFaqVehicleFuelTankTitle": "Fuel in the tank",
-  "helpFaqVehicleFuelTankBody": "The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.",
+  "helpFaqVehicleFuelTankBody": "The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.",
   "vehicleMaintenanceCategory": "Category",
   "vehicleMaintenanceCategoryOil": "Oil",
   "vehicleMaintenanceCategoryOtherFluids": "Other fluids",

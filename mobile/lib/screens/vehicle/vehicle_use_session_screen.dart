@@ -7,12 +7,17 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_meter_photo_path.dart';
+import '../../vehicle/vehicle_known_tank_state.dart';
+import '../../vehicle/vehicle_tank_session_flow.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_usage_context.dart';
 import '../../vehicle/vehicle_usage_denial_ui.dart';
+import '../../widgets/vehicle_meter_photo_button.dart';
 import '../../widgets/screen_body_padding.dart';
+import '../../widgets/vehicle_driving_condition_mix_fields.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
 import '../../widgets/vehicle_tank_fill_fields.dart';
 import '../../vehicle/vehicle_tank_fill_levels.dart';
@@ -38,9 +43,13 @@ class VehicleUseSessionScreen extends StatefulWidget {
 
 class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   final _reading = TextEditingController();
+  final _routePercent = TextEditingController();
+  final _cityPercent = TextEditingController();
+  final _trafficPercent = TextEditingController();
   bool _fullTank = true;
   VehicleTankFillLevel _tankFillLevel = VehicleTankFillLevel.defaultChoice;
   String? _photoPath;
+  int? _baselineMeterTenths;
   List<Vehicle> _vehicles = const [];
   String? _selectedVehicleId;
   Vehicle? _vehicle;
@@ -53,22 +62,51 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   void initState() {
     super.initState();
     _reading.addListener(_onReadingChanged);
+    _routePercent.addListener(_onReadingChanged);
+    _cityPercent.addListener(_onReadingChanged);
+    _trafficPercent.addListener(_onReadingChanged);
     _load();
   }
 
   @override
   void dispose() {
     _reading.removeListener(_onReadingChanged);
+    _routePercent.removeListener(_onReadingChanged);
+    _cityPercent.removeListener(_onReadingChanged);
+    _trafficPercent.removeListener(_onReadingChanged);
     _reading.dispose();
+    _routePercent.dispose();
+    _cityPercent.dispose();
+    _trafficPercent.dispose();
     super.dispose();
   }
 
-  void _onReadingChanged() => setState(() {});
+  void _onReadingChanged() {
+    if (_openUse == null && _baselineMeterTenths != null) {
+      final v = _vehicle;
+      if (v != null) {
+        final parsed = parseMeterInputToStoredTenths(
+          _reading.text,
+          usesHorometer:
+              VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false,
+          distanceUnit: widget.prefs == null
+              ? DistanceUnit.km
+              : resolveDistanceUnit(widget.prefs!),
+        );
+        if (parsed != _baselineMeterTenths &&
+            _photoPath != null &&
+            _photoPath!.isNotEmpty) {
+          _photoPath = null;
+        }
+      }
+    }
+    setState(() {});
+  }
 
-  bool get _formComplete {
+  int? _parsedMeterTenths() {
     final v = _vehicle;
-    if (v == null) return false;
-    final parsed = parseMeterInputToStoredTenths(
+    if (v == null) return null;
+    return parseMeterInputToStoredTenths(
       _reading.text,
       usesHorometer:
           VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false,
@@ -76,9 +114,50 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
           ? DistanceUnit.km
           : resolveDistanceUnit(widget.prefs!),
     );
+  }
+
+  bool get _startingSession => _openUse == null;
+
+  bool get _meterChangedFromBaseline {
+    if (!_startingSession || _baselineMeterTenths == null) return true;
+    final parsed = _parsedMeterTenths();
+    return parsed != null && parsed != _baselineMeterTenths;
+  }
+
+  bool get _photoRequired {
+    if (!_startingSession) return true;
+    return _meterChangedFromBaseline;
+  }
+
+  bool get _photoPickEnabled {
+    if (_photoPath != null && _photoPath!.isNotEmpty) return false;
+    if (!_startingSession) return true;
+    return _meterChangedFromBaseline;
+  }
+
+  bool get _endingRoadSession {
+    final v = _vehicle;
+    if (v == null || _openUse == null) return false;
+    return !(VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false);
+  }
+
+  bool get _formComplete {
+    final v = _vehicle;
+    if (v == null) return false;
+    final parsed = _parsedMeterTenths();
     if (parsed == null) return false;
-    final photo = _photoPath;
-    if (photo == null || photo.isEmpty) return false;
+    if (_photoRequired) {
+      final photo = _photoPath;
+      if (photo == null || photo.isEmpty) return false;
+    }
+    if (_endingRoadSession &&
+        !drivingMixFieldsCompleteAndValid(
+          routeText: _routePercent.text,
+          cityText: _cityPercent.text,
+          trafficText: _trafficPercent.text,
+        )) {
+      return false;
+    }
     return true;
   }
 
@@ -107,8 +186,38 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     if (denial == null && v != null) {
       open = await repo.openUseForVehicle(v.id);
     }
-    if (!mounted) return;
     final endingSession = open != null;
+    int? baselineMeter;
+    VehicleTankFillLevel tankLevel = VehicleTankFillLevel.defaultChoice;
+    var fullTank = !endingSession;
+    if (denial == null && v != null && !endingSession) {
+      final kind = VehicleKind.fromWire(v.vehicleKind);
+      final usesHorometer = kind?.usesHorometer ?? false;
+      final distanceUnit = widget.prefs == null
+          ? DistanceUnit.km
+          : resolveDistanceUnit(widget.prefs!);
+      final anchor = await repo.latestMeterAnchorDetail(v.id);
+      if (anchor != null) {
+        baselineMeter = anchor.value;
+        _reading.text = formatStoredMeterForInput(
+          anchor.value,
+          usesHorometer: usesHorometer,
+          distanceUnit: distanceUnit,
+        );
+      }
+      final tankState = await VehicleKnownTankState.latest(
+        AppDatabase.processScope,
+        v.id,
+      );
+      if (tankState != null) {
+        fullTank = tankState.isFullTank;
+        if (!tankState.isFullTank) {
+          tankLevel = VehicleTankFillLevel.fromPercent(tankState.tankFillFraction) ??
+              VehicleTankFillLevel.defaultChoice;
+        }
+      }
+    }
+    if (!mounted) return;
     setState(() {
       _vehicles = owned;
       _selectedVehicleId = vehicleId;
@@ -116,9 +225,22 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       _denial = denial;
       _openUse = open;
       _photoPath = null;
-      _reading.clear();
-      _fullTank = !endingSession;
-      _tankFillLevel = VehicleTankFillLevel.defaultChoice;
+      _baselineMeterTenths = baselineMeter;
+      if (endingSession) {
+        _reading.clear();
+        _routePercent.clear();
+        _cityPercent.clear();
+        _trafficPercent.clear();
+        _fullTank = false;
+        _tankFillLevel = VehicleTankFillLevel.defaultChoice;
+      } else if (denial != null || v == null) {
+        _reading.clear();
+        _fullTank = true;
+        _tankFillLevel = VehicleTankFillLevel.defaultChoice;
+      } else {
+        _fullTank = fullTank;
+        _tankFillLevel = tankLevel;
+      }
       _loading = false;
     });
   }
@@ -143,20 +265,8 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     final l10n = AppLocalizations.of(context);
     final v = _vehicle;
     if (v == null || _denial != null) return;
-    final parsed = parseMeterInputToStoredTenths(
-      _reading.text,
-      usesHorometer: VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false,
-      distanceUnit: widget.prefs == null
-          ? DistanceUnit.km
-          : resolveDistanceUnit(widget.prefs!),
-    );
+    final parsed = _parsedMeterTenths();
     if (parsed == null) return;
-    if (_photoPath == null || _photoPath!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
-      );
-      return;
-    }
 
     setState(() => _saving = true);
     final repo = VehiclesRepository(AppDatabase.processScope);
@@ -173,6 +283,20 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       if (!mounted) return;
       final actingId = widget.usageContext.actingContactId;
 
+      String photoPath;
+      if (_photoPath != null && _photoPath!.isNotEmpty) {
+        photoPath = _photoPath!;
+      } else if (_startingSession && !_meterChangedFromBaseline) {
+        photoPath = kVehicleMeterPhotoKnownUnchangedSentinel;
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
+        );
+        return;
+      }
+
+      if (!mounted) return;
       final proceed = await confirmMeterGapsBeforeSave(
         context: context,
         l10n: l10n,
@@ -189,11 +313,28 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         return;
       }
 
+      if (openUse != null) {
+        if (!mounted) return;
+        final tankOk = await confirmSessionEndTankLevelIfNeeded(
+          context: context,
+          l10n: l10n,
+          repo: repo,
+          vehicleId: v.id,
+          parsedMeterTenths: parsed,
+          declaredTankPercent: _tankFillLevel.percent,
+          usesHorometer: usesHorometer,
+          distanceUnit: distanceUnit,
+        );
+        if (!tankOk) {
+          return;
+        }
+      }
+
       final reading = await repo.saveMeterReading(
         vehicleId: v.id,
         value: parsed,
         unit: unit,
-        photoPath: _photoPath!,
+        photoPath: photoPath,
         recordedByContactId: actingId,
         role: openUse == null
             ? MeterReadingRole.sessionStart
@@ -223,6 +364,15 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       await repo.closeUseSession(
         useId: openUse.id,
         endReadingId: reading.id,
+        drivingRoutePercent: _endingRoadSession
+            ? parseDrivingMixPercent(_routePercent.text)
+            : null,
+        drivingCityPercent: _endingRoadSession
+            ? parseDrivingMixPercent(_cityPercent.text)
+            : null,
+        drivingTrafficPercent: _endingRoadSession
+            ? parseDrivingMixPercent(_trafficPercent.text)
+            : null,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -314,17 +464,23 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                           decimal: true,
                         ),
                         const SizedBox(height: 12),
-                        Center(
-                          child: OutlinedButton.icon(
-                            onPressed: _saving ? null : _pickPhoto,
-                            icon: const Icon(Icons.photo_camera_outlined),
-                            label: Text(
-                              _photoPath == null
-                                  ? l10n.vehicleOdometerPhotoLabel
-                                  : l10n.vehicleMeterPhotoAttached,
-                            ),
-                          ),
+                        VehicleMeterPhotoButton(
+                          attached: _photoPath != null && _photoPath!.isNotEmpty,
+                          enabled: _photoPickEnabled,
+                          onPressed: _saving ? null : _pickPhoto,
+                          label: _photoPath == null
+                              ? l10n.vehicleOdometerPhotoLabel
+                              : l10n.vehicleMeterPhotoAttached,
                         ),
+                        if (_endingRoadSession) ...[
+                          const SizedBox(height: 16),
+                          VehicleDrivingConditionMixFields(
+                            routeController: _routePercent,
+                            cityController: _cityPercent,
+                            trafficController: _trafficPercent,
+                            onChanged: _onReadingChanged,
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         FilledButton(
                           onPressed: _saving || !_formComplete ? null : _save,

@@ -17,6 +17,7 @@ import '../../vehicle/vehicle_usage_context.dart';
 import '../../vehicle/vehicle_usage_denial_ui.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
+import '../../widgets/vehicle_meter_photo_button.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
 import '../../widgets/vehicle_tank_fill_fields.dart';
 import 'vehicle_form_vehicle_selector.dart';
@@ -260,26 +261,23 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                       onChanged: (_) => _refresh(),
                     ),
                     const SizedBox(height: 12),
-                    Center(
-                      child: OutlinedButton.icon(
-                        onPressed: _selectedVehicleId == null
-                            ? null
-                            : () async {
-                                final path = await pickAndStoreVehicleMeterPhoto(
-                                  context,
-                                  vehicleId: _selectedVehicleId!,
-                                );
-                                if (path != null && mounted) {
-                                  setState(() => _photoPath = path);
-                                }
-                              },
-                        icon: const Icon(Icons.photo_camera_outlined),
-                        label: Text(
-                          _photoPath == null
-                              ? l10n.vehicleOdometerPhotoLabel
-                              : l10n.vehicleMeterPhotoAttached,
-                        ),
-                      ),
+                    VehicleMeterPhotoButton(
+                      attached: _photoPath != null && _photoPath!.isNotEmpty,
+                      enabled: _selectedVehicleId != null,
+                      onPressed: _selectedVehicleId == null
+                          ? null
+                          : () async {
+                              final path = await pickAndStoreVehicleMeterPhoto(
+                                context,
+                                vehicleId: _selectedVehicleId!,
+                              );
+                              if (path != null && mounted) {
+                                setState(() => _photoPath = path);
+                              }
+                            },
+                      label: _photoPath == null
+                          ? l10n.vehicleOdometerPhotoLabel
+                          : l10n.vehicleMeterPhotoAttached,
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
@@ -465,16 +463,12 @@ class _VehicleStandaloneMeterReadingScreenState
                           decimal: true,
                         ),
                         const SizedBox(height: 12),
-                        Center(
-                          child: OutlinedButton.icon(
-                            onPressed: _saving ? null : _pickPhoto,
-                            icon: const Icon(Icons.photo_camera_outlined),
-                            label: Text(
-                              _photoPath == null
-                                  ? l10n.vehicleOdometerPhotoLabel
-                                  : l10n.vehicleMeterPhotoAttached,
-                            ),
-                          ),
+                        VehicleMeterPhotoButton(
+                          attached: _photoPath != null && _photoPath!.isNotEmpty,
+                          onPressed: _saving ? null : _pickPhoto,
+                          label: _photoPath == null
+                              ? l10n.vehicleOdometerPhotoLabel
+                              : l10n.vehicleMeterPhotoAttached,
                         ),
                         const SizedBox(height: 24),
                         FilledButton(

@@ -65,3 +65,15 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 ## 9. Oil change interval (vehicle-specific)
 
 - [x] 9.1 Add-vehicle form: ×1000 km/miles (or 50–500 h boat), blur validation, store as interval tenths on `oil` maintenance rule only (`other_fluids` journal-only).
+
+## 10. Driving-condition consumption (road vehicles)
+
+- [x] 10.1 End-of-use session form: route / city / traffic integer percents (sum = 100) under odometer photo; persist on `VehicleUses`
+- [x] 10.2 Tank-to-tank NNLS fit for per-condition L/100 km (minimum two full-tank intervals with session mix data)
+- [x] 10.3 Rolling window of five plein→plein intervals; reliability gradation (none / preliminary / reliable / very reliable) with user-facing messages
+- [x] 10.4 Persist reliable+ estimate history (`VehicleConsumptionEstimateHistory`); show on statistics screen
+- [ ] 10.5 Boat-specific operating-condition mix and consumption model (horometer / marine use patterns — separate from road route/city/traffic)
+
+## 11. Vehicle notifications (deferred)
+
+- [ ] 11.1 **Suspicious session-end tank (borrower)**: when an Emprunteur ends a session with the highest declared tank level after high mileage since the last fuel purchase and confirms the declaration anyway, notify the Propriétaire (relay/push when vehicle notification infrastructure ships).

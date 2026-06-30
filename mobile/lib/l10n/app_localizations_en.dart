@@ -3586,6 +3586,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleMeterPhotoAttached => 'Photo attached';
 
   @override
+  String get vehicleMeterKnownUnchangedNoPhotoOdometer =>
+      'Known odometer unchanged. No photo recorded.';
+
+  @override
+  String get vehicleMeterKnownUnchangedNoPhotoHorometer =>
+      'Known engine hour meter unchanged. No photo recorded.';
+
+  @override
   String get vehicleMeterPhotoCamera => 'Camera';
 
   @override
@@ -3620,6 +3628,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String vehicleConsumptionPerHour(String value) {
     return '$value L/h';
   }
+
+  @override
+  String get vehicleDrivingConditionColumn => 'Condition';
+
+  @override
+  String get vehicleDrivingConditionProportionColumn => 'Share of distance';
+
+  @override
+  String get vehicleDrivingConditionRoute => 'Highway';
+
+  @override
+  String get vehicleDrivingConditionCity => 'City';
+
+  @override
+  String get vehicleDrivingConditionTraffic => 'Traffic';
+
+  @override
+  String get vehicleConsumptionReliabilityNone =>
+      'There is not enough data to calculate fuel consumption.';
+
+  @override
+  String get vehicleConsumptionReliabilityPreliminary =>
+      'This estimate is preliminary. It will become more accurate as you add more data.';
+
+  @override
+  String get vehicleConsumptionReliabilityReliable =>
+      'This estimate is reliable, based on the calculation formula and the data you entered.';
+
+  @override
+  String get vehicleConsumptionReliabilityVeryReliable =>
+      'This estimate is very reliable because it is based on a large amount of data you entered.';
+
+  @override
+  String get vehicleStatisticsConsumptionHistoryTitle =>
+      'Reliable consumption history';
+
+  @override
+  String vehicleConsumptionHistoryBlended(String date, String value) {
+    return '$date: $value L/100 km';
+  }
+
+  @override
+  String get vehicleSessionEndTankConfirmTitle => 'Confirm tank level';
+
+  @override
+  String vehicleSessionEndTankConfirmBody(String distance, int percent) {
+    return 'You declared the tank at $percent% full after $distance since the last fuel purchase. Please confirm this is correct.';
+  }
+
+  @override
+  String get vehicleSessionEndTankConfirmReview => 'Review';
+
+  @override
+  String get vehicleSessionEndTankConfirmProceed => 'Confirm';
 
   @override
   String get vehicleStatisticsTitle => 'Statistics';
@@ -3700,7 +3762,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFaqVehicleFuelTankBody =>
-      'The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.';
+      'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.';
 
   @override
   String get vehicleMaintenanceCategory => 'Category';

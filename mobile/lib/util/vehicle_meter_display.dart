@@ -64,6 +64,20 @@ int _storedKmTenthsToDisplayTenths(int storedKmTenths, DistanceUnit unit) {
   return (miles * 10).round();
 }
 
+/// Stored tenths formatted for a meter input field (no unit suffix).
+String formatStoredMeterForInput(
+  int storedTenths, {
+  required bool usesHorometer,
+  required DistanceUnit distanceUnit,
+}) {
+  if (usesHorometer) {
+    return _formatStoredTenthsCore(storedTenths);
+  }
+  final displayTenths =
+      _storedKmTenthsToDisplayTenths(storedTenths, distanceUnit);
+  return _formatStoredTenthsCore(displayTenths);
+}
+
 String formatStoredMeterForDisplay(
   BuildContext context,
   int storedTenths, {

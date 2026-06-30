@@ -604,6 +604,7 @@ class PlanPeerEstablishments extends Table {
     Vehicles,
     VehicleMeterReadings,
     VehicleUses,
+    VehicleConsumptionEstimateHistory,
     VehicleOdometerGaps,
     FuelPurchases,
     MaintenanceEvents,
@@ -711,7 +712,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 29;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -992,6 +993,26 @@ class AppDatabase extends _$AppDatabase {
           vehicleMeterReadings,
           vehicleMeterReadings.tankFillFraction,
         );
+      }
+      if (from < 28) {
+        await _migrateAddColumn(
+          m,
+          vehicleUses,
+          vehicleUses.drivingRoutePercent,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleUses,
+          vehicleUses.drivingCityPercent,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleUses,
+          vehicleUses.drivingTrafficPercent,
+        );
+      }
+      if (from < 29) {
+        await m.createTable(vehicleConsumptionEstimateHistory);
       }
     },
     beforeOpen: (details) async {

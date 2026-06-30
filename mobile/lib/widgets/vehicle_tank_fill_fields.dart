@@ -62,6 +62,7 @@ class VehicleTankFillFields extends StatelessWidget {
                 maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
               ),
               child: DropdownButtonFormField<VehicleTankFillLevel>(
+                key: ValueKey(tankFillLevel.percent),
                 isExpanded: true,
                 initialValue: tankFillLevel,
                 decoration: InputDecoration(

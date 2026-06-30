@@ -3625,6 +3625,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleMeterPhotoAttached => 'Photo jointe';
 
   @override
+  String get vehicleMeterKnownUnchangedNoPhotoOdometer =>
+      'Odomètre connu inchangé. Photo non saisie.';
+
+  @override
+  String get vehicleMeterKnownUnchangedNoPhotoHorometer =>
+      'Horomètre connu inchangé. Photo non saisie.';
+
+  @override
   String get vehicleMeterPhotoCamera => 'Appareil photo';
 
   @override
@@ -3659,6 +3667,62 @@ class AppLocalizationsFr extends AppLocalizations {
   String vehicleConsumptionPerHour(String value) {
     return '$value L/h';
   }
+
+  @override
+  String get vehicleDrivingConditionColumn => 'Condition';
+
+  @override
+  String get vehicleDrivingConditionProportionColumn =>
+      'Proportion (du kilométrage parcouru)';
+
+  @override
+  String get vehicleDrivingConditionRoute => 'Route';
+
+  @override
+  String get vehicleDrivingConditionCity => 'Ville';
+
+  @override
+  String get vehicleDrivingConditionTraffic => 'Traffic';
+
+  @override
+  String get vehicleConsumptionReliabilityNone =>
+      'Il n\'y a pas suffisamment de données pour calculer la consommation d\'essence.';
+
+  @override
+  String get vehicleConsumptionReliabilityPreliminary =>
+      'Cette estimation est préliminaire. Elle se précisera avec plus de données.';
+
+  @override
+  String get vehicleConsumptionReliabilityReliable =>
+      'Cette estimation est fiable, selon la formule de calcul utilisée et les données que vous avez entrées.';
+
+  @override
+  String get vehicleConsumptionReliabilityVeryReliable =>
+      'Cette estimation est très fiable car elle repose sur beaucoup de données que vous avez entrées.';
+
+  @override
+  String get vehicleStatisticsConsumptionHistoryTitle =>
+      'Historique des estimations fiables';
+
+  @override
+  String vehicleConsumptionHistoryBlended(String date, String value) {
+    return '$date : $value L/100 km';
+  }
+
+  @override
+  String get vehicleSessionEndTankConfirmTitle =>
+      'Confirmer l\'état du réservoir';
+
+  @override
+  String vehicleSessionEndTankConfirmBody(String distance, int percent) {
+    return 'Vous avez déclaré le réservoir à $percent % plein après $distance depuis le dernier achat d\'essence. Veuillez confirmer que c\'est exact.';
+  }
+
+  @override
+  String get vehicleSessionEndTankConfirmReview => 'Revoir';
+
+  @override
+  String get vehicleSessionEndTankConfirmProceed => 'Confirmer';
 
   @override
   String get vehicleStatisticsTitle => 'Statistiques';
@@ -3740,7 +3804,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get helpFaqVehicleFuelTankBody =>
-      'La quantité d\'essence du réservoir d\'un véhicule est basée sur la quantité connue des achats d\'essence.\n\nS\'il y a suffisamment de données connues pour déterminer la consommation par kilomètre, cette quantité est calculée selon le kilométrage parcouru.\n\nIl ne s\'agit que d\'une estimation.';
+      'La quantité d\'essence affichée pour un véhicule provient du niveau de réservoir le plus récent que vous déclarez à la fin d\'une session d\'utilisation ou lors d\'un achat d\'essence.\n\nSans déclaration de niveau, aucune quantité n\'est affichée.\n\nIl s\'agit de votre déclaration, pas d\'une mesure réelle.';
 
   @override
   String get vehicleMaintenanceCategory => 'Catégorie';

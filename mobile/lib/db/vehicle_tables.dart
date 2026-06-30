@@ -51,6 +51,27 @@ class VehicleUses extends Table {
   TextColumn get startReadingId => text()();
   TextColumn get endReadingId => text().nullable()();
   IntColumn get usageAmount => integer().nullable()();
+  /// Integer percent (0–100) of session distance on each driving condition.
+  /// Set when a road-vehicle use session ends; null for legacy rows and boats.
+  IntColumn get drivingRoutePercent => integer().nullable()();
+  IntColumn get drivingCityPercent => integer().nullable()();
+  IntColumn get drivingTrafficPercent => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class VehicleConsumptionEstimateHistory extends Table {
+  TextColumn get id => text()();
+  TextColumn get vehicleId => text()();
+  DateTimeColumn get anchorEndAt => dateTime()();
+  DateTimeColumn get recordedAt => dateTime()();
+  TextColumn get reliability => text()();
+  RealColumn get litersPer100Km => real()();
+  RealColumn get litersPer100KmRoute => real().nullable()();
+  RealColumn get litersPer100KmCity => real().nullable()();
+  RealColumn get litersPer100KmTraffic => real().nullable()();
+  IntColumn get periodsInWindow => integer()();
 
   @override
   Set<Column> get primaryKey => {id};

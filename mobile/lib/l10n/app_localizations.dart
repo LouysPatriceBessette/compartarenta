@@ -6087,6 +6087,18 @@ abstract class AppLocalizations {
   /// **'Photo attached'**
   String get vehicleMeterPhotoAttached;
 
+  /// No description provided for @vehicleMeterKnownUnchangedNoPhotoOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Known odometer unchanged. No photo recorded.'**
+  String get vehicleMeterKnownUnchangedNoPhotoOdometer;
+
+  /// No description provided for @vehicleMeterKnownUnchangedNoPhotoHorometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Known engine hour meter unchanged. No photo recorded.'**
+  String get vehicleMeterKnownUnchangedNoPhotoHorometer;
+
   /// No description provided for @vehicleMeterPhotoCamera.
   ///
   /// In en, this message translates to:
@@ -6146,6 +6158,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value} L/h'**
   String vehicleConsumptionPerHour(String value);
+
+  /// No description provided for @vehicleDrivingConditionColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition'**
+  String get vehicleDrivingConditionColumn;
+
+  /// No description provided for @vehicleDrivingConditionProportionColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share of distance'**
+  String get vehicleDrivingConditionProportionColumn;
+
+  /// No description provided for @vehicleDrivingConditionRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Highway'**
+  String get vehicleDrivingConditionRoute;
+
+  /// No description provided for @vehicleDrivingConditionCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get vehicleDrivingConditionCity;
+
+  /// No description provided for @vehicleDrivingConditionTraffic.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic'**
+  String get vehicleDrivingConditionTraffic;
+
+  /// No description provided for @vehicleConsumptionReliabilityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'There is not enough data to calculate fuel consumption.'**
+  String get vehicleConsumptionReliabilityNone;
+
+  /// No description provided for @vehicleConsumptionReliabilityPreliminary.
+  ///
+  /// In en, this message translates to:
+  /// **'This estimate is preliminary. It will become more accurate as you add more data.'**
+  String get vehicleConsumptionReliabilityPreliminary;
+
+  /// No description provided for @vehicleConsumptionReliabilityReliable.
+  ///
+  /// In en, this message translates to:
+  /// **'This estimate is reliable, based on the calculation formula and the data you entered.'**
+  String get vehicleConsumptionReliabilityReliable;
+
+  /// No description provided for @vehicleConsumptionReliabilityVeryReliable.
+  ///
+  /// In en, this message translates to:
+  /// **'This estimate is very reliable because it is based on a large amount of data you entered.'**
+  String get vehicleConsumptionReliabilityVeryReliable;
+
+  /// No description provided for @vehicleStatisticsConsumptionHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reliable consumption history'**
+  String get vehicleStatisticsConsumptionHistoryTitle;
+
+  /// No description provided for @vehicleConsumptionHistoryBlended.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {value} L/100 km'**
+  String vehicleConsumptionHistoryBlended(String date, String value);
+
+  /// No description provided for @vehicleSessionEndTankConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm tank level'**
+  String get vehicleSessionEndTankConfirmTitle;
+
+  /// No description provided for @vehicleSessionEndTankConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You declared the tank at {percent}% full after {distance} since the last fuel purchase. Please confirm this is correct.'**
+  String vehicleSessionEndTankConfirmBody(String distance, int percent);
+
+  /// No description provided for @vehicleSessionEndTankConfirmReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get vehicleSessionEndTankConfirmReview;
+
+  /// No description provided for @vehicleSessionEndTankConfirmProceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get vehicleSessionEndTankConfirmProceed;
 
   /// No description provided for @vehicleStatisticsTitle.
   ///
@@ -6294,7 +6396,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpFaqVehicleFuelTankBody.
   ///
   /// In en, this message translates to:
-  /// **'The fuel quantity shown for a vehicle is based on known fuel purchases.\n\nWhen enough data is available to determine consumption per distance unit, the quantity is calculated from distance traveled.\n\nThis is only an estimate.'**
+  /// **'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.'**
   String get helpFaqVehicleFuelTankBody;
 
   /// No description provided for @vehicleMaintenanceCategory.

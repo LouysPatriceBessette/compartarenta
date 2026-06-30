@@ -15189,6 +15189,36 @@ class $VehicleUsesTable extends VehicleUses
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _drivingRoutePercentMeta =
+      const VerificationMeta('drivingRoutePercent');
+  @override
+  late final GeneratedColumn<int> drivingRoutePercent = GeneratedColumn<int>(
+    'driving_route_percent',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _drivingCityPercentMeta =
+      const VerificationMeta('drivingCityPercent');
+  @override
+  late final GeneratedColumn<int> drivingCityPercent = GeneratedColumn<int>(
+    'driving_city_percent',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _drivingTrafficPercentMeta =
+      const VerificationMeta('drivingTrafficPercent');
+  @override
+  late final GeneratedColumn<int> drivingTrafficPercent = GeneratedColumn<int>(
+    'driving_traffic_percent',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -15199,6 +15229,9 @@ class $VehicleUsesTable extends VehicleUses
     startReadingId,
     endReadingId,
     usageAmount,
+    drivingRoutePercent,
+    drivingCityPercent,
+    drivingTrafficPercent,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -15279,6 +15312,33 @@ class $VehicleUsesTable extends VehicleUses
         ),
       );
     }
+    if (data.containsKey('driving_route_percent')) {
+      context.handle(
+        _drivingRoutePercentMeta,
+        drivingRoutePercent.isAcceptableOrUnknown(
+          data['driving_route_percent']!,
+          _drivingRoutePercentMeta,
+        ),
+      );
+    }
+    if (data.containsKey('driving_city_percent')) {
+      context.handle(
+        _drivingCityPercentMeta,
+        drivingCityPercent.isAcceptableOrUnknown(
+          data['driving_city_percent']!,
+          _drivingCityPercentMeta,
+        ),
+      );
+    }
+    if (data.containsKey('driving_traffic_percent')) {
+      context.handle(
+        _drivingTrafficPercentMeta,
+        drivingTrafficPercent.isAcceptableOrUnknown(
+          data['driving_traffic_percent']!,
+          _drivingTrafficPercentMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -15320,6 +15380,18 @@ class $VehicleUsesTable extends VehicleUses
         DriftSqlType.int,
         data['${effectivePrefix}usage_amount'],
       ),
+      drivingRoutePercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}driving_route_percent'],
+      ),
+      drivingCityPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}driving_city_percent'],
+      ),
+      drivingTrafficPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}driving_traffic_percent'],
+      ),
     );
   }
 
@@ -15338,6 +15410,12 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
   final String startReadingId;
   final String? endReadingId;
   final int? usageAmount;
+
+  /// Integer percent (0–100) of session distance on each driving condition.
+  /// Set when a road-vehicle use session ends; null for legacy rows and boats.
+  final int? drivingRoutePercent;
+  final int? drivingCityPercent;
+  final int? drivingTrafficPercent;
   const VehicleUse({
     required this.id,
     required this.vehicleId,
@@ -15347,6 +15425,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     required this.startReadingId,
     this.endReadingId,
     this.usageAmount,
+    this.drivingRoutePercent,
+    this.drivingCityPercent,
+    this.drivingTrafficPercent,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -15364,6 +15445,15 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     }
     if (!nullToAbsent || usageAmount != null) {
       map['usage_amount'] = Variable<int>(usageAmount);
+    }
+    if (!nullToAbsent || drivingRoutePercent != null) {
+      map['driving_route_percent'] = Variable<int>(drivingRoutePercent);
+    }
+    if (!nullToAbsent || drivingCityPercent != null) {
+      map['driving_city_percent'] = Variable<int>(drivingCityPercent);
+    }
+    if (!nullToAbsent || drivingTrafficPercent != null) {
+      map['driving_traffic_percent'] = Variable<int>(drivingTrafficPercent);
     }
     return map;
   }
@@ -15384,6 +15474,15 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       usageAmount: usageAmount == null && nullToAbsent
           ? const Value.absent()
           : Value(usageAmount),
+      drivingRoutePercent: drivingRoutePercent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(drivingRoutePercent),
+      drivingCityPercent: drivingCityPercent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(drivingCityPercent),
+      drivingTrafficPercent: drivingTrafficPercent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(drivingTrafficPercent),
     );
   }
 
@@ -15403,6 +15502,13 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       startReadingId: serializer.fromJson<String>(json['startReadingId']),
       endReadingId: serializer.fromJson<String?>(json['endReadingId']),
       usageAmount: serializer.fromJson<int?>(json['usageAmount']),
+      drivingRoutePercent: serializer.fromJson<int?>(
+        json['drivingRoutePercent'],
+      ),
+      drivingCityPercent: serializer.fromJson<int?>(json['drivingCityPercent']),
+      drivingTrafficPercent: serializer.fromJson<int?>(
+        json['drivingTrafficPercent'],
+      ),
     );
   }
   @override
@@ -15417,6 +15523,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       'startReadingId': serializer.toJson<String>(startReadingId),
       'endReadingId': serializer.toJson<String?>(endReadingId),
       'usageAmount': serializer.toJson<int?>(usageAmount),
+      'drivingRoutePercent': serializer.toJson<int?>(drivingRoutePercent),
+      'drivingCityPercent': serializer.toJson<int?>(drivingCityPercent),
+      'drivingTrafficPercent': serializer.toJson<int?>(drivingTrafficPercent),
     };
   }
 
@@ -15429,6 +15538,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     String? startReadingId,
     Value<String?> endReadingId = const Value.absent(),
     Value<int?> usageAmount = const Value.absent(),
+    Value<int?> drivingRoutePercent = const Value.absent(),
+    Value<int?> drivingCityPercent = const Value.absent(),
+    Value<int?> drivingTrafficPercent = const Value.absent(),
   }) => VehicleUse(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -15438,6 +15550,15 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     startReadingId: startReadingId ?? this.startReadingId,
     endReadingId: endReadingId.present ? endReadingId.value : this.endReadingId,
     usageAmount: usageAmount.present ? usageAmount.value : this.usageAmount,
+    drivingRoutePercent: drivingRoutePercent.present
+        ? drivingRoutePercent.value
+        : this.drivingRoutePercent,
+    drivingCityPercent: drivingCityPercent.present
+        ? drivingCityPercent.value
+        : this.drivingCityPercent,
+    drivingTrafficPercent: drivingTrafficPercent.present
+        ? drivingTrafficPercent.value
+        : this.drivingTrafficPercent,
   );
   VehicleUse copyWithCompanion(VehicleUsesCompanion data) {
     return VehicleUse(
@@ -15457,6 +15578,15 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       usageAmount: data.usageAmount.present
           ? data.usageAmount.value
           : this.usageAmount,
+      drivingRoutePercent: data.drivingRoutePercent.present
+          ? data.drivingRoutePercent.value
+          : this.drivingRoutePercent,
+      drivingCityPercent: data.drivingCityPercent.present
+          ? data.drivingCityPercent.value
+          : this.drivingCityPercent,
+      drivingTrafficPercent: data.drivingTrafficPercent.present
+          ? data.drivingTrafficPercent.value
+          : this.drivingTrafficPercent,
     );
   }
 
@@ -15470,7 +15600,10 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
           ..write('endedAt: $endedAt, ')
           ..write('startReadingId: $startReadingId, ')
           ..write('endReadingId: $endReadingId, ')
-          ..write('usageAmount: $usageAmount')
+          ..write('usageAmount: $usageAmount, ')
+          ..write('drivingRoutePercent: $drivingRoutePercent, ')
+          ..write('drivingCityPercent: $drivingCityPercent, ')
+          ..write('drivingTrafficPercent: $drivingTrafficPercent')
           ..write(')'))
         .toString();
   }
@@ -15485,6 +15618,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     startReadingId,
     endReadingId,
     usageAmount,
+    drivingRoutePercent,
+    drivingCityPercent,
+    drivingTrafficPercent,
   );
   @override
   bool operator ==(Object other) =>
@@ -15497,7 +15633,10 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
           other.endedAt == this.endedAt &&
           other.startReadingId == this.startReadingId &&
           other.endReadingId == this.endReadingId &&
-          other.usageAmount == this.usageAmount);
+          other.usageAmount == this.usageAmount &&
+          other.drivingRoutePercent == this.drivingRoutePercent &&
+          other.drivingCityPercent == this.drivingCityPercent &&
+          other.drivingTrafficPercent == this.drivingTrafficPercent);
 }
 
 class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
@@ -15509,6 +15648,9 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
   final Value<String> startReadingId;
   final Value<String?> endReadingId;
   final Value<int?> usageAmount;
+  final Value<int?> drivingRoutePercent;
+  final Value<int?> drivingCityPercent;
+  final Value<int?> drivingTrafficPercent;
   final Value<int> rowid;
   const VehicleUsesCompanion({
     this.id = const Value.absent(),
@@ -15519,6 +15661,9 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     this.startReadingId = const Value.absent(),
     this.endReadingId = const Value.absent(),
     this.usageAmount = const Value.absent(),
+    this.drivingRoutePercent = const Value.absent(),
+    this.drivingCityPercent = const Value.absent(),
+    this.drivingTrafficPercent = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehicleUsesCompanion.insert({
@@ -15530,6 +15675,9 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     required String startReadingId,
     this.endReadingId = const Value.absent(),
     this.usageAmount = const Value.absent(),
+    this.drivingRoutePercent = const Value.absent(),
+    this.drivingCityPercent = const Value.absent(),
+    this.drivingTrafficPercent = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        vehicleId = Value(vehicleId),
@@ -15545,6 +15693,9 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     Expression<String>? startReadingId,
     Expression<String>? endReadingId,
     Expression<int>? usageAmount,
+    Expression<int>? drivingRoutePercent,
+    Expression<int>? drivingCityPercent,
+    Expression<int>? drivingTrafficPercent,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -15557,6 +15708,12 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
       if (startReadingId != null) 'start_reading_id': startReadingId,
       if (endReadingId != null) 'end_reading_id': endReadingId,
       if (usageAmount != null) 'usage_amount': usageAmount,
+      if (drivingRoutePercent != null)
+        'driving_route_percent': drivingRoutePercent,
+      if (drivingCityPercent != null)
+        'driving_city_percent': drivingCityPercent,
+      if (drivingTrafficPercent != null)
+        'driving_traffic_percent': drivingTrafficPercent,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15570,6 +15727,9 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     Value<String>? startReadingId,
     Value<String?>? endReadingId,
     Value<int?>? usageAmount,
+    Value<int?>? drivingRoutePercent,
+    Value<int?>? drivingCityPercent,
+    Value<int?>? drivingTrafficPercent,
     Value<int>? rowid,
   }) {
     return VehicleUsesCompanion(
@@ -15581,6 +15741,10 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
       startReadingId: startReadingId ?? this.startReadingId,
       endReadingId: endReadingId ?? this.endReadingId,
       usageAmount: usageAmount ?? this.usageAmount,
+      drivingRoutePercent: drivingRoutePercent ?? this.drivingRoutePercent,
+      drivingCityPercent: drivingCityPercent ?? this.drivingCityPercent,
+      drivingTrafficPercent:
+          drivingTrafficPercent ?? this.drivingTrafficPercent,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15614,6 +15778,17 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     if (usageAmount.present) {
       map['usage_amount'] = Variable<int>(usageAmount.value);
     }
+    if (drivingRoutePercent.present) {
+      map['driving_route_percent'] = Variable<int>(drivingRoutePercent.value);
+    }
+    if (drivingCityPercent.present) {
+      map['driving_city_percent'] = Variable<int>(drivingCityPercent.value);
+    }
+    if (drivingTrafficPercent.present) {
+      map['driving_traffic_percent'] = Variable<int>(
+        drivingTrafficPercent.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15631,6 +15806,691 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
           ..write('startReadingId: $startReadingId, ')
           ..write('endReadingId: $endReadingId, ')
           ..write('usageAmount: $usageAmount, ')
+          ..write('drivingRoutePercent: $drivingRoutePercent, ')
+          ..write('drivingCityPercent: $drivingCityPercent, ')
+          ..write('drivingTrafficPercent: $drivingTrafficPercent, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VehicleConsumptionEstimateHistoryTable
+    extends VehicleConsumptionEstimateHistory
+    with
+        TableInfo<
+          $VehicleConsumptionEstimateHistoryTable,
+          VehicleConsumptionEstimateHistoryData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleConsumptionEstimateHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _anchorEndAtMeta = const VerificationMeta(
+    'anchorEndAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> anchorEndAt = GeneratedColumn<DateTime>(
+    'anchor_end_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
+    'recordedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reliabilityMeta = const VerificationMeta(
+    'reliability',
+  );
+  @override
+  late final GeneratedColumn<String> reliability = GeneratedColumn<String>(
+    'reliability',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _litersPer100KmMeta = const VerificationMeta(
+    'litersPer100Km',
+  );
+  @override
+  late final GeneratedColumn<double> litersPer100Km = GeneratedColumn<double>(
+    'liters_per100_km',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _litersPer100KmRouteMeta =
+      const VerificationMeta('litersPer100KmRoute');
+  @override
+  late final GeneratedColumn<double> litersPer100KmRoute =
+      GeneratedColumn<double>(
+        'liters_per100_km_route',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _litersPer100KmCityMeta =
+      const VerificationMeta('litersPer100KmCity');
+  @override
+  late final GeneratedColumn<double> litersPer100KmCity =
+      GeneratedColumn<double>(
+        'liters_per100_km_city',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _litersPer100KmTrafficMeta =
+      const VerificationMeta('litersPer100KmTraffic');
+  @override
+  late final GeneratedColumn<double> litersPer100KmTraffic =
+      GeneratedColumn<double>(
+        'liters_per100_km_traffic',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _periodsInWindowMeta = const VerificationMeta(
+    'periodsInWindow',
+  );
+  @override
+  late final GeneratedColumn<int> periodsInWindow = GeneratedColumn<int>(
+    'periods_in_window',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vehicleId,
+    anchorEndAt,
+    recordedAt,
+    reliability,
+    litersPer100Km,
+    litersPer100KmRoute,
+    litersPer100KmCity,
+    litersPer100KmTraffic,
+    periodsInWindow,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_consumption_estimate_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleConsumptionEstimateHistoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('anchor_end_at')) {
+      context.handle(
+        _anchorEndAtMeta,
+        anchorEndAt.isAcceptableOrUnknown(
+          data['anchor_end_at']!,
+          _anchorEndAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_anchorEndAtMeta);
+    }
+    if (data.containsKey('recorded_at')) {
+      context.handle(
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordedAtMeta);
+    }
+    if (data.containsKey('reliability')) {
+      context.handle(
+        _reliabilityMeta,
+        reliability.isAcceptableOrUnknown(
+          data['reliability']!,
+          _reliabilityMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_reliabilityMeta);
+    }
+    if (data.containsKey('liters_per100_km')) {
+      context.handle(
+        _litersPer100KmMeta,
+        litersPer100Km.isAcceptableOrUnknown(
+          data['liters_per100_km']!,
+          _litersPer100KmMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_litersPer100KmMeta);
+    }
+    if (data.containsKey('liters_per100_km_route')) {
+      context.handle(
+        _litersPer100KmRouteMeta,
+        litersPer100KmRoute.isAcceptableOrUnknown(
+          data['liters_per100_km_route']!,
+          _litersPer100KmRouteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('liters_per100_km_city')) {
+      context.handle(
+        _litersPer100KmCityMeta,
+        litersPer100KmCity.isAcceptableOrUnknown(
+          data['liters_per100_km_city']!,
+          _litersPer100KmCityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('liters_per100_km_traffic')) {
+      context.handle(
+        _litersPer100KmTrafficMeta,
+        litersPer100KmTraffic.isAcceptableOrUnknown(
+          data['liters_per100_km_traffic']!,
+          _litersPer100KmTrafficMeta,
+        ),
+      );
+    }
+    if (data.containsKey('periods_in_window')) {
+      context.handle(
+        _periodsInWindowMeta,
+        periodsInWindow.isAcceptableOrUnknown(
+          data['periods_in_window']!,
+          _periodsInWindowMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodsInWindowMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VehicleConsumptionEstimateHistoryData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleConsumptionEstimateHistoryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      anchorEndAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}anchor_end_at'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      reliability: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reliability'],
+      )!,
+      litersPer100Km: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}liters_per100_km'],
+      )!,
+      litersPer100KmRoute: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}liters_per100_km_route'],
+      ),
+      litersPer100KmCity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}liters_per100_km_city'],
+      ),
+      litersPer100KmTraffic: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}liters_per100_km_traffic'],
+      ),
+      periodsInWindow: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}periods_in_window'],
+      )!,
+    );
+  }
+
+  @override
+  $VehicleConsumptionEstimateHistoryTable createAlias(String alias) {
+    return $VehicleConsumptionEstimateHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleConsumptionEstimateHistoryData extends DataClass
+    implements Insertable<VehicleConsumptionEstimateHistoryData> {
+  final String id;
+  final String vehicleId;
+  final DateTime anchorEndAt;
+  final DateTime recordedAt;
+  final String reliability;
+  final double litersPer100Km;
+  final double? litersPer100KmRoute;
+  final double? litersPer100KmCity;
+  final double? litersPer100KmTraffic;
+  final int periodsInWindow;
+  const VehicleConsumptionEstimateHistoryData({
+    required this.id,
+    required this.vehicleId,
+    required this.anchorEndAt,
+    required this.recordedAt,
+    required this.reliability,
+    required this.litersPer100Km,
+    this.litersPer100KmRoute,
+    this.litersPer100KmCity,
+    this.litersPer100KmTraffic,
+    required this.periodsInWindow,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['anchor_end_at'] = Variable<DateTime>(anchorEndAt);
+    map['recorded_at'] = Variable<DateTime>(recordedAt);
+    map['reliability'] = Variable<String>(reliability);
+    map['liters_per100_km'] = Variable<double>(litersPer100Km);
+    if (!nullToAbsent || litersPer100KmRoute != null) {
+      map['liters_per100_km_route'] = Variable<double>(litersPer100KmRoute);
+    }
+    if (!nullToAbsent || litersPer100KmCity != null) {
+      map['liters_per100_km_city'] = Variable<double>(litersPer100KmCity);
+    }
+    if (!nullToAbsent || litersPer100KmTraffic != null) {
+      map['liters_per100_km_traffic'] = Variable<double>(litersPer100KmTraffic);
+    }
+    map['periods_in_window'] = Variable<int>(periodsInWindow);
+    return map;
+  }
+
+  VehicleConsumptionEstimateHistoryCompanion toCompanion(bool nullToAbsent) {
+    return VehicleConsumptionEstimateHistoryCompanion(
+      id: Value(id),
+      vehicleId: Value(vehicleId),
+      anchorEndAt: Value(anchorEndAt),
+      recordedAt: Value(recordedAt),
+      reliability: Value(reliability),
+      litersPer100Km: Value(litersPer100Km),
+      litersPer100KmRoute: litersPer100KmRoute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(litersPer100KmRoute),
+      litersPer100KmCity: litersPer100KmCity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(litersPer100KmCity),
+      litersPer100KmTraffic: litersPer100KmTraffic == null && nullToAbsent
+          ? const Value.absent()
+          : Value(litersPer100KmTraffic),
+      periodsInWindow: Value(periodsInWindow),
+    );
+  }
+
+  factory VehicleConsumptionEstimateHistoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleConsumptionEstimateHistoryData(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      anchorEndAt: serializer.fromJson<DateTime>(json['anchorEndAt']),
+      recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+      reliability: serializer.fromJson<String>(json['reliability']),
+      litersPer100Km: serializer.fromJson<double>(json['litersPer100Km']),
+      litersPer100KmRoute: serializer.fromJson<double?>(
+        json['litersPer100KmRoute'],
+      ),
+      litersPer100KmCity: serializer.fromJson<double?>(
+        json['litersPer100KmCity'],
+      ),
+      litersPer100KmTraffic: serializer.fromJson<double?>(
+        json['litersPer100KmTraffic'],
+      ),
+      periodsInWindow: serializer.fromJson<int>(json['periodsInWindow']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'anchorEndAt': serializer.toJson<DateTime>(anchorEndAt),
+      'recordedAt': serializer.toJson<DateTime>(recordedAt),
+      'reliability': serializer.toJson<String>(reliability),
+      'litersPer100Km': serializer.toJson<double>(litersPer100Km),
+      'litersPer100KmRoute': serializer.toJson<double?>(litersPer100KmRoute),
+      'litersPer100KmCity': serializer.toJson<double?>(litersPer100KmCity),
+      'litersPer100KmTraffic': serializer.toJson<double?>(
+        litersPer100KmTraffic,
+      ),
+      'periodsInWindow': serializer.toJson<int>(periodsInWindow),
+    };
+  }
+
+  VehicleConsumptionEstimateHistoryData copyWith({
+    String? id,
+    String? vehicleId,
+    DateTime? anchorEndAt,
+    DateTime? recordedAt,
+    String? reliability,
+    double? litersPer100Km,
+    Value<double?> litersPer100KmRoute = const Value.absent(),
+    Value<double?> litersPer100KmCity = const Value.absent(),
+    Value<double?> litersPer100KmTraffic = const Value.absent(),
+    int? periodsInWindow,
+  }) => VehicleConsumptionEstimateHistoryData(
+    id: id ?? this.id,
+    vehicleId: vehicleId ?? this.vehicleId,
+    anchorEndAt: anchorEndAt ?? this.anchorEndAt,
+    recordedAt: recordedAt ?? this.recordedAt,
+    reliability: reliability ?? this.reliability,
+    litersPer100Km: litersPer100Km ?? this.litersPer100Km,
+    litersPer100KmRoute: litersPer100KmRoute.present
+        ? litersPer100KmRoute.value
+        : this.litersPer100KmRoute,
+    litersPer100KmCity: litersPer100KmCity.present
+        ? litersPer100KmCity.value
+        : this.litersPer100KmCity,
+    litersPer100KmTraffic: litersPer100KmTraffic.present
+        ? litersPer100KmTraffic.value
+        : this.litersPer100KmTraffic,
+    periodsInWindow: periodsInWindow ?? this.periodsInWindow,
+  );
+  VehicleConsumptionEstimateHistoryData copyWithCompanion(
+    VehicleConsumptionEstimateHistoryCompanion data,
+  ) {
+    return VehicleConsumptionEstimateHistoryData(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      anchorEndAt: data.anchorEndAt.present
+          ? data.anchorEndAt.value
+          : this.anchorEndAt,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      reliability: data.reliability.present
+          ? data.reliability.value
+          : this.reliability,
+      litersPer100Km: data.litersPer100Km.present
+          ? data.litersPer100Km.value
+          : this.litersPer100Km,
+      litersPer100KmRoute: data.litersPer100KmRoute.present
+          ? data.litersPer100KmRoute.value
+          : this.litersPer100KmRoute,
+      litersPer100KmCity: data.litersPer100KmCity.present
+          ? data.litersPer100KmCity.value
+          : this.litersPer100KmCity,
+      litersPer100KmTraffic: data.litersPer100KmTraffic.present
+          ? data.litersPer100KmTraffic.value
+          : this.litersPer100KmTraffic,
+      periodsInWindow: data.periodsInWindow.present
+          ? data.periodsInWindow.value
+          : this.periodsInWindow,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleConsumptionEstimateHistoryData(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('anchorEndAt: $anchorEndAt, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('reliability: $reliability, ')
+          ..write('litersPer100Km: $litersPer100Km, ')
+          ..write('litersPer100KmRoute: $litersPer100KmRoute, ')
+          ..write('litersPer100KmCity: $litersPer100KmCity, ')
+          ..write('litersPer100KmTraffic: $litersPer100KmTraffic, ')
+          ..write('periodsInWindow: $periodsInWindow')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vehicleId,
+    anchorEndAt,
+    recordedAt,
+    reliability,
+    litersPer100Km,
+    litersPer100KmRoute,
+    litersPer100KmCity,
+    litersPer100KmTraffic,
+    periodsInWindow,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleConsumptionEstimateHistoryData &&
+          other.id == this.id &&
+          other.vehicleId == this.vehicleId &&
+          other.anchorEndAt == this.anchorEndAt &&
+          other.recordedAt == this.recordedAt &&
+          other.reliability == this.reliability &&
+          other.litersPer100Km == this.litersPer100Km &&
+          other.litersPer100KmRoute == this.litersPer100KmRoute &&
+          other.litersPer100KmCity == this.litersPer100KmCity &&
+          other.litersPer100KmTraffic == this.litersPer100KmTraffic &&
+          other.periodsInWindow == this.periodsInWindow);
+}
+
+class VehicleConsumptionEstimateHistoryCompanion
+    extends UpdateCompanion<VehicleConsumptionEstimateHistoryData> {
+  final Value<String> id;
+  final Value<String> vehicleId;
+  final Value<DateTime> anchorEndAt;
+  final Value<DateTime> recordedAt;
+  final Value<String> reliability;
+  final Value<double> litersPer100Km;
+  final Value<double?> litersPer100KmRoute;
+  final Value<double?> litersPer100KmCity;
+  final Value<double?> litersPer100KmTraffic;
+  final Value<int> periodsInWindow;
+  final Value<int> rowid;
+  const VehicleConsumptionEstimateHistoryCompanion({
+    this.id = const Value.absent(),
+    this.vehicleId = const Value.absent(),
+    this.anchorEndAt = const Value.absent(),
+    this.recordedAt = const Value.absent(),
+    this.reliability = const Value.absent(),
+    this.litersPer100Km = const Value.absent(),
+    this.litersPer100KmRoute = const Value.absent(),
+    this.litersPer100KmCity = const Value.absent(),
+    this.litersPer100KmTraffic = const Value.absent(),
+    this.periodsInWindow = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleConsumptionEstimateHistoryCompanion.insert({
+    required String id,
+    required String vehicleId,
+    required DateTime anchorEndAt,
+    required DateTime recordedAt,
+    required String reliability,
+    required double litersPer100Km,
+    this.litersPer100KmRoute = const Value.absent(),
+    this.litersPer100KmCity = const Value.absent(),
+    this.litersPer100KmTraffic = const Value.absent(),
+    required int periodsInWindow,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       vehicleId = Value(vehicleId),
+       anchorEndAt = Value(anchorEndAt),
+       recordedAt = Value(recordedAt),
+       reliability = Value(reliability),
+       litersPer100Km = Value(litersPer100Km),
+       periodsInWindow = Value(periodsInWindow);
+  static Insertable<VehicleConsumptionEstimateHistoryData> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleId,
+    Expression<DateTime>? anchorEndAt,
+    Expression<DateTime>? recordedAt,
+    Expression<String>? reliability,
+    Expression<double>? litersPer100Km,
+    Expression<double>? litersPer100KmRoute,
+    Expression<double>? litersPer100KmCity,
+    Expression<double>? litersPer100KmTraffic,
+    Expression<int>? periodsInWindow,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (anchorEndAt != null) 'anchor_end_at': anchorEndAt,
+      if (recordedAt != null) 'recorded_at': recordedAt,
+      if (reliability != null) 'reliability': reliability,
+      if (litersPer100Km != null) 'liters_per100_km': litersPer100Km,
+      if (litersPer100KmRoute != null)
+        'liters_per100_km_route': litersPer100KmRoute,
+      if (litersPer100KmCity != null)
+        'liters_per100_km_city': litersPer100KmCity,
+      if (litersPer100KmTraffic != null)
+        'liters_per100_km_traffic': litersPer100KmTraffic,
+      if (periodsInWindow != null) 'periods_in_window': periodsInWindow,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleConsumptionEstimateHistoryCompanion copyWith({
+    Value<String>? id,
+    Value<String>? vehicleId,
+    Value<DateTime>? anchorEndAt,
+    Value<DateTime>? recordedAt,
+    Value<String>? reliability,
+    Value<double>? litersPer100Km,
+    Value<double?>? litersPer100KmRoute,
+    Value<double?>? litersPer100KmCity,
+    Value<double?>? litersPer100KmTraffic,
+    Value<int>? periodsInWindow,
+    Value<int>? rowid,
+  }) {
+    return VehicleConsumptionEstimateHistoryCompanion(
+      id: id ?? this.id,
+      vehicleId: vehicleId ?? this.vehicleId,
+      anchorEndAt: anchorEndAt ?? this.anchorEndAt,
+      recordedAt: recordedAt ?? this.recordedAt,
+      reliability: reliability ?? this.reliability,
+      litersPer100Km: litersPer100Km ?? this.litersPer100Km,
+      litersPer100KmRoute: litersPer100KmRoute ?? this.litersPer100KmRoute,
+      litersPer100KmCity: litersPer100KmCity ?? this.litersPer100KmCity,
+      litersPer100KmTraffic:
+          litersPer100KmTraffic ?? this.litersPer100KmTraffic,
+      periodsInWindow: periodsInWindow ?? this.periodsInWindow,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (anchorEndAt.present) {
+      map['anchor_end_at'] = Variable<DateTime>(anchorEndAt.value);
+    }
+    if (recordedAt.present) {
+      map['recorded_at'] = Variable<DateTime>(recordedAt.value);
+    }
+    if (reliability.present) {
+      map['reliability'] = Variable<String>(reliability.value);
+    }
+    if (litersPer100Km.present) {
+      map['liters_per100_km'] = Variable<double>(litersPer100Km.value);
+    }
+    if (litersPer100KmRoute.present) {
+      map['liters_per100_km_route'] = Variable<double>(
+        litersPer100KmRoute.value,
+      );
+    }
+    if (litersPer100KmCity.present) {
+      map['liters_per100_km_city'] = Variable<double>(litersPer100KmCity.value);
+    }
+    if (litersPer100KmTraffic.present) {
+      map['liters_per100_km_traffic'] = Variable<double>(
+        litersPer100KmTraffic.value,
+      );
+    }
+    if (periodsInWindow.present) {
+      map['periods_in_window'] = Variable<int>(periodsInWindow.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleConsumptionEstimateHistoryCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('anchorEndAt: $anchorEndAt, ')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('reliability: $reliability, ')
+          ..write('litersPer100Km: $litersPer100Km, ')
+          ..write('litersPer100KmRoute: $litersPer100KmRoute, ')
+          ..write('litersPer100KmCity: $litersPer100KmCity, ')
+          ..write('litersPer100KmTraffic: $litersPer100KmTraffic, ')
+          ..write('periodsInWindow: $periodsInWindow, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -19941,6 +20801,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $VehicleMeterReadingsTable vehicleMeterReadings =
       $VehicleMeterReadingsTable(this);
   late final $VehicleUsesTable vehicleUses = $VehicleUsesTable(this);
+  late final $VehicleConsumptionEstimateHistoryTable
+  vehicleConsumptionEstimateHistory = $VehicleConsumptionEstimateHistoryTable(
+    this,
+  );
   late final $VehicleOdometerGapsTable vehicleOdometerGaps =
       $VehicleOdometerGapsTable(this);
   late final $FuelPurchasesTable fuelPurchases = $FuelPurchasesTable(this);
@@ -19988,6 +20852,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     vehicles,
     vehicleMeterReadings,
     vehicleUses,
+    vehicleConsumptionEstimateHistory,
     vehicleOdometerGaps,
     fuelPurchases,
     maintenanceEvents,
@@ -27522,6 +28387,9 @@ typedef $$VehicleUsesTableCreateCompanionBuilder =
       required String startReadingId,
       Value<String?> endReadingId,
       Value<int?> usageAmount,
+      Value<int?> drivingRoutePercent,
+      Value<int?> drivingCityPercent,
+      Value<int?> drivingTrafficPercent,
       Value<int> rowid,
     });
 typedef $$VehicleUsesTableUpdateCompanionBuilder =
@@ -27534,6 +28402,9 @@ typedef $$VehicleUsesTableUpdateCompanionBuilder =
       Value<String> startReadingId,
       Value<String?> endReadingId,
       Value<int?> usageAmount,
+      Value<int?> drivingRoutePercent,
+      Value<int?> drivingCityPercent,
+      Value<int?> drivingTrafficPercent,
       Value<int> rowid,
     });
 
@@ -27583,6 +28454,21 @@ class $$VehicleUsesTableFilterComposer
 
   ColumnFilters<int> get usageAmount => $composableBuilder(
     column: $table.usageAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get drivingRoutePercent => $composableBuilder(
+    column: $table.drivingRoutePercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get drivingCityPercent => $composableBuilder(
+    column: $table.drivingCityPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get drivingTrafficPercent => $composableBuilder(
+    column: $table.drivingTrafficPercent,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -27635,6 +28521,21 @@ class $$VehicleUsesTableOrderingComposer
     column: $table.usageAmount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get drivingRoutePercent => $composableBuilder(
+    column: $table.drivingRoutePercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get drivingCityPercent => $composableBuilder(
+    column: $table.drivingCityPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get drivingTrafficPercent => $composableBuilder(
+    column: $table.drivingTrafficPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehicleUsesTableAnnotationComposer
@@ -27675,6 +28576,21 @@ class $$VehicleUsesTableAnnotationComposer
 
   GeneratedColumn<int> get usageAmount => $composableBuilder(
     column: $table.usageAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get drivingRoutePercent => $composableBuilder(
+    column: $table.drivingRoutePercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get drivingCityPercent => $composableBuilder(
+    column: $table.drivingCityPercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get drivingTrafficPercent => $composableBuilder(
+    column: $table.drivingTrafficPercent,
     builder: (column) => column,
   );
 }
@@ -27718,6 +28634,9 @@ class $$VehicleUsesTableTableManager
                 Value<String> startReadingId = const Value.absent(),
                 Value<String?> endReadingId = const Value.absent(),
                 Value<int?> usageAmount = const Value.absent(),
+                Value<int?> drivingRoutePercent = const Value.absent(),
+                Value<int?> drivingCityPercent = const Value.absent(),
+                Value<int?> drivingTrafficPercent = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleUsesCompanion(
                 id: id,
@@ -27728,6 +28647,9 @@ class $$VehicleUsesTableTableManager
                 startReadingId: startReadingId,
                 endReadingId: endReadingId,
                 usageAmount: usageAmount,
+                drivingRoutePercent: drivingRoutePercent,
+                drivingCityPercent: drivingCityPercent,
+                drivingTrafficPercent: drivingTrafficPercent,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -27740,6 +28662,9 @@ class $$VehicleUsesTableTableManager
                 required String startReadingId,
                 Value<String?> endReadingId = const Value.absent(),
                 Value<int?> usageAmount = const Value.absent(),
+                Value<int?> drivingRoutePercent = const Value.absent(),
+                Value<int?> drivingCityPercent = const Value.absent(),
+                Value<int?> drivingTrafficPercent = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleUsesCompanion.insert(
                 id: id,
@@ -27750,6 +28675,9 @@ class $$VehicleUsesTableTableManager
                 startReadingId: startReadingId,
                 endReadingId: endReadingId,
                 usageAmount: usageAmount,
+                drivingRoutePercent: drivingRoutePercent,
+                drivingCityPercent: drivingCityPercent,
+                drivingTrafficPercent: drivingTrafficPercent,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -27775,6 +28703,336 @@ typedef $$VehicleUsesTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $VehicleUsesTable, VehicleUse>,
       ),
       VehicleUse,
+      PrefetchHooks Function()
+    >;
+typedef $$VehicleConsumptionEstimateHistoryTableCreateCompanionBuilder =
+    VehicleConsumptionEstimateHistoryCompanion Function({
+      required String id,
+      required String vehicleId,
+      required DateTime anchorEndAt,
+      required DateTime recordedAt,
+      required String reliability,
+      required double litersPer100Km,
+      Value<double?> litersPer100KmRoute,
+      Value<double?> litersPer100KmCity,
+      Value<double?> litersPer100KmTraffic,
+      required int periodsInWindow,
+      Value<int> rowid,
+    });
+typedef $$VehicleConsumptionEstimateHistoryTableUpdateCompanionBuilder =
+    VehicleConsumptionEstimateHistoryCompanion Function({
+      Value<String> id,
+      Value<String> vehicleId,
+      Value<DateTime> anchorEndAt,
+      Value<DateTime> recordedAt,
+      Value<String> reliability,
+      Value<double> litersPer100Km,
+      Value<double?> litersPer100KmRoute,
+      Value<double?> litersPer100KmCity,
+      Value<double?> litersPer100KmTraffic,
+      Value<int> periodsInWindow,
+      Value<int> rowid,
+    });
+
+class $$VehicleConsumptionEstimateHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleConsumptionEstimateHistoryTable> {
+  $$VehicleConsumptionEstimateHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get anchorEndAt => $composableBuilder(
+    column: $table.anchorEndAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reliability => $composableBuilder(
+    column: $table.reliability,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get litersPer100Km => $composableBuilder(
+    column: $table.litersPer100Km,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get litersPer100KmRoute => $composableBuilder(
+    column: $table.litersPer100KmRoute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get litersPer100KmCity => $composableBuilder(
+    column: $table.litersPer100KmCity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get litersPer100KmTraffic => $composableBuilder(
+    column: $table.litersPer100KmTraffic,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodsInWindow => $composableBuilder(
+    column: $table.periodsInWindow,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleConsumptionEstimateHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleConsumptionEstimateHistoryTable> {
+  $$VehicleConsumptionEstimateHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get anchorEndAt => $composableBuilder(
+    column: $table.anchorEndAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reliability => $composableBuilder(
+    column: $table.reliability,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get litersPer100Km => $composableBuilder(
+    column: $table.litersPer100Km,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get litersPer100KmRoute => $composableBuilder(
+    column: $table.litersPer100KmRoute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get litersPer100KmCity => $composableBuilder(
+    column: $table.litersPer100KmCity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get litersPer100KmTraffic => $composableBuilder(
+    column: $table.litersPer100KmTraffic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodsInWindow => $composableBuilder(
+    column: $table.periodsInWindow,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleConsumptionEstimateHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleConsumptionEstimateHistoryTable> {
+  $$VehicleConsumptionEstimateHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get anchorEndAt => $composableBuilder(
+    column: $table.anchorEndAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reliability => $composableBuilder(
+    column: $table.reliability,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get litersPer100Km => $composableBuilder(
+    column: $table.litersPer100Km,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get litersPer100KmRoute => $composableBuilder(
+    column: $table.litersPer100KmRoute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get litersPer100KmCity => $composableBuilder(
+    column: $table.litersPer100KmCity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get litersPer100KmTraffic => $composableBuilder(
+    column: $table.litersPer100KmTraffic,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodsInWindow => $composableBuilder(
+    column: $table.periodsInWindow,
+    builder: (column) => column,
+  );
+}
+
+class $$VehicleConsumptionEstimateHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleConsumptionEstimateHistoryTable,
+          VehicleConsumptionEstimateHistoryData,
+          $$VehicleConsumptionEstimateHistoryTableFilterComposer,
+          $$VehicleConsumptionEstimateHistoryTableOrderingComposer,
+          $$VehicleConsumptionEstimateHistoryTableAnnotationComposer,
+          $$VehicleConsumptionEstimateHistoryTableCreateCompanionBuilder,
+          $$VehicleConsumptionEstimateHistoryTableUpdateCompanionBuilder,
+          (
+            VehicleConsumptionEstimateHistoryData,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleConsumptionEstimateHistoryTable,
+              VehicleConsumptionEstimateHistoryData
+            >,
+          ),
+          VehicleConsumptionEstimateHistoryData,
+          PrefetchHooks Function()
+        > {
+  $$VehicleConsumptionEstimateHistoryTableTableManager(
+    _$AppDatabase db,
+    $VehicleConsumptionEstimateHistoryTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleConsumptionEstimateHistoryTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$VehicleConsumptionEstimateHistoryTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$VehicleConsumptionEstimateHistoryTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> vehicleId = const Value.absent(),
+                Value<DateTime> anchorEndAt = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<String> reliability = const Value.absent(),
+                Value<double> litersPer100Km = const Value.absent(),
+                Value<double?> litersPer100KmRoute = const Value.absent(),
+                Value<double?> litersPer100KmCity = const Value.absent(),
+                Value<double?> litersPer100KmTraffic = const Value.absent(),
+                Value<int> periodsInWindow = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleConsumptionEstimateHistoryCompanion(
+                id: id,
+                vehicleId: vehicleId,
+                anchorEndAt: anchorEndAt,
+                recordedAt: recordedAt,
+                reliability: reliability,
+                litersPer100Km: litersPer100Km,
+                litersPer100KmRoute: litersPer100KmRoute,
+                litersPer100KmCity: litersPer100KmCity,
+                litersPer100KmTraffic: litersPer100KmTraffic,
+                periodsInWindow: periodsInWindow,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String vehicleId,
+                required DateTime anchorEndAt,
+                required DateTime recordedAt,
+                required String reliability,
+                required double litersPer100Km,
+                Value<double?> litersPer100KmRoute = const Value.absent(),
+                Value<double?> litersPer100KmCity = const Value.absent(),
+                Value<double?> litersPer100KmTraffic = const Value.absent(),
+                required int periodsInWindow,
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleConsumptionEstimateHistoryCompanion.insert(
+                id: id,
+                vehicleId: vehicleId,
+                anchorEndAt: anchorEndAt,
+                recordedAt: recordedAt,
+                reliability: reliability,
+                litersPer100Km: litersPer100Km,
+                litersPer100KmRoute: litersPer100KmRoute,
+                litersPer100KmCity: litersPer100KmCity,
+                litersPer100KmTraffic: litersPer100KmTraffic,
+                periodsInWindow: periodsInWindow,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleConsumptionEstimateHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleConsumptionEstimateHistoryTable,
+      VehicleConsumptionEstimateHistoryData,
+      $$VehicleConsumptionEstimateHistoryTableFilterComposer,
+      $$VehicleConsumptionEstimateHistoryTableOrderingComposer,
+      $$VehicleConsumptionEstimateHistoryTableAnnotationComposer,
+      $$VehicleConsumptionEstimateHistoryTableCreateCompanionBuilder,
+      $$VehicleConsumptionEstimateHistoryTableUpdateCompanionBuilder,
+      (
+        VehicleConsumptionEstimateHistoryData,
+        BaseReferences<
+          _$AppDatabase,
+          $VehicleConsumptionEstimateHistoryTable,
+          VehicleConsumptionEstimateHistoryData
+        >,
+      ),
+      VehicleConsumptionEstimateHistoryData,
       PrefetchHooks Function()
     >;
 typedef $$VehicleOdometerGapsTableCreateCompanionBuilder =
@@ -30084,6 +31342,12 @@ class $AppDatabaseManager {
       $$VehicleMeterReadingsTableTableManager(_db, _db.vehicleMeterReadings);
   $$VehicleUsesTableTableManager get vehicleUses =>
       $$VehicleUsesTableTableManager(_db, _db.vehicleUses);
+  $$VehicleConsumptionEstimateHistoryTableTableManager
+  get vehicleConsumptionEstimateHistory =>
+      $$VehicleConsumptionEstimateHistoryTableTableManager(
+        _db,
+        _db.vehicleConsumptionEstimateHistory,
+      );
   $$VehicleOdometerGapsTableTableManager get vehicleOdometerGaps =>
       $$VehicleOdometerGapsTableTableManager(_db, _db.vehicleOdometerGaps);
   $$FuelPurchasesTableTableManager get fuelPurchases =>

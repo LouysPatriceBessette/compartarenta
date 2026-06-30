@@ -13,6 +13,7 @@ import '../../vehicle/vehicle_kind.dart';
 import '../../util/format_money.dart';
 import '../../vehicle/vehicle_fuel_log_display.dart';
 import '../../vehicle/vehicle_meter_reading_labels.dart';
+import '../../vehicle/vehicle_meter_photo_path.dart';
 import '../../vehicle/vehicle_stored_image.dart';
 import '../../widgets/screen_body_padding.dart';
 
@@ -150,7 +151,24 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
                   title: Text(l10n.vehicleFuelTankState),
                   subtitle: Text(formatMeterReadingTankStateLabel(data.reading)),
                 ),
-              if (data.reading.photoPath.isNotEmpty) ...[
+              if (isKnownUnchangedMeterPhotoPath(data.reading.photoPath)) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    l10n.vehicleOdometerPhotoLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Text(
+                    data.usesHorometer
+                        ? l10n.vehicleMeterKnownUnchangedNoPhotoHorometer
+                        : l10n.vehicleMeterKnownUnchangedNoPhotoOdometer,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ] else if (meterReadingHasDisplayablePhoto(data.reading.photoPath)) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
