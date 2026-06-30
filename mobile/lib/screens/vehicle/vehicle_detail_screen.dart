@@ -98,6 +98,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ),
             ),
           ListTile(
+            leading: const Icon(Icons.speed_outlined),
+            title: Text(l10n.vehicleQuickActionOdometer),
+            onTap: () => context.push('/vehicle/${v.id}/meter-reading'),
+          ),
+          ListTile(
             leading: const Icon(Icons.build_outlined),
             title: Text(l10n.vehicleQuickActionMaintenance),
             onTap: () => context.push('/vehicle/${v.id}/maintenance'),

@@ -331,15 +331,116 @@ class VehiclesRepository {
   }
 
   Future<int?> latestMeterValue(String vehicleId) async {
-    final rows = await (_db.select(_db.vehicleMeterReadings)
+    final anchor = await latestMeterAnchor(vehicleId);
+    return anchor?.value;
+  }
+
+  /// Most recent meter value across canonical readings, fuel purchases, and
+  /// maintenance events (by timestamp).
+  Future<({DateTime recordedAt, int value})?> latestMeterAnchor(
+    String vehicleId,
+  ) async {
+    ({DateTime recordedAt, int value})? best;
+
+    void consider(DateTime recordedAt, int? value) {
+      if (value == null) return;
+      if (best == null || recordedAt.isAfter(best!.recordedAt)) {
+        best = (recordedAt: recordedAt, value: value);
+      }
+    }
+
+    final reading = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([
             (t) => drift.OrderingTerm.desc(t.recordedAt),
             (t) => drift.OrderingTerm.desc(t.id),
           ])
           ..limit(1))
-        .get();
-    return rows.firstOrNull?.value;
+        .getSingleOrNull();
+    if (reading != null) {
+      consider(reading.recordedAt, reading.value);
+    }
+
+    final purchase = await (_db.select(_db.fuelPurchases)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) &
+                t.meterReadingValue.isNotNull(),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.purchasedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (purchase != null) {
+      consider(purchase.purchasedAt, purchase.meterReadingValue);
+    }
+
+    final maintenance = await (_db.select(_db.maintenanceEvents)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) & t.meterAtService.isNotNull(),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.servicedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (maintenance != null) {
+      consider(maintenance.servicedAt, maintenance.meterAtService);
+    }
+
+    return best;
+  }
+
+  /// Earliest meter value across canonical readings, fuel purchases, and
+  /// maintenance events (by timestamp).
+  Future<({DateTime recordedAt, int value})?> earliestMeterAnchor(
+    String vehicleId,
+  ) async {
+    ({DateTime recordedAt, int value})? best;
+
+    void consider(DateTime recordedAt, int? value) {
+      if (value == null) return;
+      if (best == null || recordedAt.isBefore(best!.recordedAt)) {
+        best = (recordedAt: recordedAt, value: value);
+      }
+    }
+
+    final reading = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId))
+          ..orderBy([
+            (t) => drift.OrderingTerm.asc(t.recordedAt),
+            (t) => drift.OrderingTerm.asc(t.id),
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+    if (reading != null) {
+      consider(reading.recordedAt, reading.value);
+    }
+
+    final purchase = await (_db.select(_db.fuelPurchases)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) &
+                t.meterReadingValue.isNotNull(),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.asc(t.purchasedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (purchase != null) {
+      consider(purchase.purchasedAt, purchase.meterReadingValue);
+    }
+
+    final maintenance = await (_db.select(_db.maintenanceEvents)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) & t.meterAtService.isNotNull(),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.asc(t.servicedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (maintenance != null) {
+      consider(maintenance.servicedAt, maintenance.meterAtService);
+    }
+
+    return best;
   }
 
   Future<DateTime> _nextMeterRecordedAt(String vehicleId) async {

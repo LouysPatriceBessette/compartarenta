@@ -33,6 +33,27 @@ This complements `agent-scope-discipline.mdc` (multi-state scope) and
 | **Empty / missing data** | Hide row, show “—”, omit section, or block navigation |
 | **Navigation** | Push vs go, which screen opens, back-stack behavior |
 | **Visual design** | Colors, opacity, fullscreen fit (cover vs contain), bar style |
+| **Referenced UI anchor missing** | See below — do not invent the anchor |
+
+## Referenced anchor missing (verify before implementing)
+
+When the user describes placement relative to an **existing** control (“sous le
+bouton X”, “à côté de Y”, “comme sur l’écran Z”), **read the target screen in
+code first** (or the file they named).
+
+If that control **is not** on that screen at that location:
+
+1. **Do not** add the missing control so the relative placement “makes sense”.
+2. **Do not** treat the user’s spatial reference as an implicit request to
+   create the anchor.
+3. **Stop and ask** one short question: which screen/attachment is the real
+   target, or whether they meant a different surface (e.g. hub vs détail véhicule).
+4. Implement **only** what they explicitly asked for **once** the anchor is
+   confirmed — e.g. add “Lecture d’odomètre” where they want it, without
+   backfilling “Achat de carburant” unless they confirm.
+
+A wrong spatial reference usually means the user misspoke; filling in missing UI
+from that reference ships **their mistake** as product behavior.
 
 ## Allowed without asking
 

@@ -1576,6 +1576,12 @@
   "vehicleLogMeterDetailTitle": "Reading details",
   "vehicleLogFuelTitle": "Log — fuel",
   "vehicleLogFuelDetailTitle": "Purchase details",
+  "vehicleFuelPurchaseMadeBy": "Purchased by: {name}",
+  "@vehicleFuelPurchaseMadeBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "vehicleLogMaintenanceTitle": "Maintenance",
   "vehicleLogMaintenanceDetailTitle": "Maintenance details",
   "vehicleLogViolationTitle": "Damage and violations",

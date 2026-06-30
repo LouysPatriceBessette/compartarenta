@@ -270,7 +270,7 @@ class VehicleFuelPurchaseDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return FutureBuilder<_FuelPurchaseDetailData?>(
-      future: _load(),
+      future: _load(l10n),
       builder: (context, snap) {
         if (!snap.hasData) {
           return Scaffold(
@@ -303,9 +303,19 @@ class VehicleFuelPurchaseDetailScreen extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Text(
-                  date,
-                  style: Theme.of(context).textTheme.titleMedium,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      date,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.vehicleFuelPurchaseMadeBy(data.recordedByName),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
               ),
               ListTile(
@@ -359,15 +369,21 @@ class VehicleFuelPurchaseDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<_FuelPurchaseDetailData?> _load() async {
+  Future<_FuelPurchaseDetailData?> _load(AppLocalizations l10n) async {
     final repo = VehiclesRepository(AppDatabase.processScope);
     final vehicle = await repo.getVehicle(vehicleId);
     final purchase = await repo.getFuelPurchase(purchaseId);
     if (vehicle == null || purchase == null) return null;
     final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    final recordedByName = await resolveVehicleContactDisplayName(
+      purchase.recordedByContactId,
+      prefs: prefs,
+      l10n: l10n,
+    );
     return _FuelPurchaseDetailData(
       purchase: purchase,
       usesHorometer: kind?.usesHorometer ?? false,
+      recordedByName: recordedByName,
     );
   }
 }
@@ -376,10 +392,12 @@ class _FuelPurchaseDetailData {
   const _FuelPurchaseDetailData({
     required this.purchase,
     required this.usesHorometer,
+    required this.recordedByName,
   });
 
   final FuelPurchase purchase;
   final bool usesHorometer;
+  final String recordedByName;
 }
 
 class VehicleMaintenanceLogScreen extends StatelessWidget {

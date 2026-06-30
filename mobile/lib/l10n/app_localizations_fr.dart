@@ -3555,6 +3555,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleLogFuelDetailTitle => 'Détail de l\'achat';
 
   @override
+  String vehicleFuelPurchaseMadeBy(String name) {
+    return 'Achat fait par: $name';
+  }
+
+  @override
   String get vehicleLogMaintenanceTitle => 'Entretien';
 
   @override
@@ -3579,7 +3584,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleKindBoat => 'Bateau';
 
   @override
-  String get vehicleQuickActionOdometer => 'Relevé d\'odomètre';
+  String get vehicleQuickActionOdometer => 'Lecture d\'odomètre';
 
   @override
   String get vehicleUseSessionStartAction =>

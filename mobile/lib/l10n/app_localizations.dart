@@ -5961,6 +5961,12 @@ abstract class AppLocalizations {
   /// **'Purchase details'**
   String get vehicleLogFuelDetailTitle;
 
+  /// No description provided for @vehicleFuelPurchaseMadeBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchased by: {name}'**
+  String vehicleFuelPurchaseMadeBy(String name);
+
   /// No description provided for @vehicleLogMaintenanceTitle.
   ///
   /// In en, this message translates to:

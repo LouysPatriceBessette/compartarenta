@@ -3519,6 +3519,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleLogFuelDetailTitle => 'Purchase details';
 
   @override
+  String vehicleFuelPurchaseMadeBy(String name) {
+    return 'Purchased by: $name';
+  }
+
+  @override
   String get vehicleLogMaintenanceTitle => 'Maintenance';
 
   @override

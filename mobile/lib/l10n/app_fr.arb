@@ -1414,6 +1414,12 @@
   "vehicleLogMeterDetailTitle": "Détail du relevé",
   "vehicleLogFuelTitle": "Journal — carburant",
   "vehicleLogFuelDetailTitle": "Détail de l'achat",
+  "vehicleFuelPurchaseMadeBy": "Achat fait par: {name}",
+  "@vehicleFuelPurchaseMadeBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "vehicleLogMaintenanceTitle": "Entretien",
   "vehicleLogMaintenanceDetailTitle": "Détail de l'entretien",
   "vehicleLogViolationTitle": "Dommages et infractions",
@@ -1422,7 +1428,7 @@
   "vehicleKindTruck": "Camion",
   "vehicleKindMotorcycle": "Moto",
   "vehicleKindBoat": "Bateau",
-  "vehicleQuickActionOdometer": "Relevé d'odomètre",
+  "vehicleQuickActionOdometer": "Lecture d'odomètre",
   "vehicleUseSessionStartAction": "Commencer une session d'utilisation",
   "vehicleUseSessionEndAction": "Terminer une session d'utilisation",
   "vehicleUseSessionStartedOn": "débutée le {dateTime}",

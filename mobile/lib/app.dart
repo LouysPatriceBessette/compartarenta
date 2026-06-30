@@ -588,6 +588,13 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                 ),
               ),
               GoRoute(
+                path: 'meter-reading',
+                builder: (context, state) => VehicleStandaloneMeterReadingScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+              ),
+              GoRoute(
                 path: 'maintenance',
                 builder: (context, state) => VehicleMaintenanceFormScreen(
                   vehicleId: state.pathParameters['vehicleId']!,

@@ -12,37 +12,50 @@ class VehicleTankFillFields extends StatelessWidget {
     required this.onFullTankChanged,
     required this.tankFillLevel,
     required this.onTankFillLevelChanged,
+    this.showFullTankSwitch = true,
+    this.sectionTitle,
   });
 
   final bool fullTank;
   final ValueChanged<bool> onFullTankChanged;
   final VehicleTankFillLevel tankFillLevel;
   final ValueChanged<VehicleTankFillLevel> onTankFillLevelChanged;
+  final bool showFullTankSwitch;
+  final String? sectionTitle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final showLevelSelector = !showFullTankSwitch || !fullTank;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
-            ),
-            child: Row(
-              children: [
-                Switch(
-                  value: fullTank,
-                  onChanged: onFullTankChanged,
-                ),
-                Expanded(child: Text(l10n.vehicleFuelFullTank)),
-              ],
+        if (showFullTankSwitch)
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
+              ),
+              child: Row(
+                children: [
+                  Switch(
+                    value: fullTank,
+                    onChanged: onFullTankChanged,
+                  ),
+                  Expanded(child: Text(l10n.vehicleFuelFullTank)),
+                ],
+              ),
             ),
           ),
-        ),
-        if (!fullTank) ...[
-          const SizedBox(height: 12),
+        if (showLevelSelector) ...[
+          if (showFullTankSwitch) const SizedBox(height: 12),
+          if (sectionTitle != null) ...[
+            Text(
+              sectionTitle!,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+          ],
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(

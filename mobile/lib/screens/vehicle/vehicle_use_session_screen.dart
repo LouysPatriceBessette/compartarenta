@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
-import '../../db/repositories/contacts_repository.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
@@ -109,6 +108,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       open = await repo.openUseForVehicle(v.id);
     }
     if (!mounted) return;
+    final endingSession = open != null;
     setState(() {
       _vehicles = owned;
       _selectedVehicleId = vehicleId;
@@ -117,7 +117,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       _openUse = open;
       _photoPath = null;
       _reading.clear();
-      _fullTank = true;
+      _fullTank = !endingSession;
       _tankFillLevel = VehicleTankFillLevel.defaultChoice;
       _loading = false;
     });
@@ -162,6 +162,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     final repo = VehiclesRepository(AppDatabase.processScope);
     try {
       final openUse = await repo.openUseForVehicle(v.id);
+      if (!mounted) return;
       final unit = repo.meterUnitForVehicle(v);
       final kind = VehicleKind.fromWire(v.vehicleKind);
       final usesHorometer = kind?.usesHorometer ?? false;
@@ -169,74 +170,23 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
           ? DistanceUnit.km
           : resolveDistanceUnit(widget.prefs!);
       final latest = await repo.latestMeterValue(v.id);
+      if (!mounted) return;
       final actingId = widget.usageContext.actingContactId;
 
-      if (latest != null && parsed < latest) {
-        if (widget.usageContext.isOwner) {
-          if (!mounted) return;
-          final choice = await showNegativeGapDialog(
-            context,
-            gapDisplay: formatStoredMeterDeltaForDisplay(
-              context,
-              parsed - latest,
-              usesHorometer: usesHorometer,
-              distanceUnit: distanceUnit,
-            ),
-          );
-          if (!mounted) return;
-          if (choice != NegativeGapChoice.maintain) {
-            return;
-          }
-        }
-      }
-
-      if (latest != null && parsed > latest && openUse == null) {
-        final ownerLinks = await repo.listActiveLinksAsOwner();
-        final borrowerIds = ownerLinks
-            .where((VehicleSharingLink l) => l.vehicleId == v.id)
-            .map((VehicleSharingLink l) => l.borrowerContactId)
-            .toList();
-        final contacts =
-            await ContactsRepository(AppDatabase.processScope).list();
-        final labels = {
-          for (final c in contacts) c.id: c.displayName,
-        };
-        if (!mounted) return;
-        final attributed = await showPositiveGapAttributionDialog(
-          context,
-          gapDisplay: formatStoredMeterDeltaForDisplay(
-            context,
-            parsed - latest,
-            usesHorometer: usesHorometer,
-            distanceUnit: distanceUnit,
-          ),
-          participants: gapAttributionParticipants(
-            l10n: l10n,
-            actingContactId: actingId,
-            ownerContactId: v.ownerContactId,
-            activeBorrowerContactIds: borrowerIds,
-            contactLabels: labels,
-          ),
-        );
-        if (!mounted || attributed == null) {
-          return;
-        }
-        await repo.recordPositiveGap(
-          vehicleId: v.id,
-          latestBefore: latest,
-          startAfter: parsed,
-          attributedContactId: attributed,
-          recordedByContactId: actingId,
-        );
-        if (gapRequiresOwnerNotification(
-          attributedContactId: attributed,
-          recordedByContactId: actingId,
-        )) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.vehicleGapOwnerNotified)),
-          );
-        }
+      final proceed = await confirmMeterGapsBeforeSave(
+        context: context,
+        l10n: l10n,
+        repo: repo,
+        vehicle: v,
+        parsedMeter: parsed,
+        actingContactId: actingId,
+        isOwnerContext: widget.usageContext.isOwner,
+        usesHorometer: usesHorometer,
+        distanceUnit: distanceUnit,
+        attributePositiveGap: openUse == null,
+      );
+      if (!proceed) {
+        return;
       }
 
       final reading = await repo.saveMeterReading(
@@ -250,8 +200,10 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
             : MeterReadingRole.sessionEnd,
         vehicleUseId: openUse?.id,
         negativeGapAcknowledged: latest != null && parsed < latest,
-        isFullTank: _fullTank,
-        tankFillFraction: _fullTank ? null : _tankFillLevel.percent,
+        isFullTank: _openUse == null ? _fullTank : false,
+        tankFillFraction: _openUse == null && _fullTank
+            ? null
+            : _tankFillLevel.percent,
       );
 
       if (openUse == null) {
@@ -324,11 +276,22 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                   : ListView(
                       padding: screenBodyScrollPadding(context),
                       children: [
-                        VehicleFormVehicleSelector(
-                          vehicles: _vehicles,
-                          selectedId: _selectedVehicleId,
-                          onSelected: _onVehicleSelected,
-                        ),
+                        if (_openUse == null)
+                          VehicleFormVehicleSelector(
+                            vehicles: _vehicles,
+                            selectedId: _selectedVehicleId,
+                            onSelected: _onVehicleSelected,
+                          )
+                        else
+                          InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: l10n.vehicleFormVehicleLabel,
+                            ),
+                            child: Text(
+                              v.displayLabel,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ),
                         const SizedBox(height: 16),
                         VehicleTankFillFields(
                           fullTank: _fullTank,
@@ -336,6 +299,10 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                           tankFillLevel: _tankFillLevel,
                           onTankFillLevelChanged: (v) =>
                               setState(() => _tankFillLevel = v),
+                          showFullTankSwitch: _openUse == null,
+                          sectionTitle: _openUse == null
+                              ? null
+                              : l10n.vehicleFuelTankState,
                         ),
                         const SizedBox(height: 12),
                         VehicleNarrowUnitField(

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
+import '../db/repositories/vehicles_repository.dart';
 import 'vehicle_kind.dart';
 
 /// Derived consumption metrics from stored fuel facts (not authoritative).
@@ -99,6 +100,14 @@ class VehicleConsumptionMetrics {
   }
 
   Future<int> totalLifetimeUsage(String vehicleId) async {
+    final repo = VehiclesRepository(_db);
+    final latest = await repo.latestMeterAnchor(vehicleId);
+    final earliest = await repo.earliestMeterAnchor(vehicleId);
+    if (latest != null && earliest != null) {
+      final delta = latest.value - earliest.value;
+      if (delta > 0) return delta;
+    }
+
     final uses = await (_db.select(_db.vehicleUses)
           ..where((t) => t.vehicleId.equals(vehicleId)))
         .get();

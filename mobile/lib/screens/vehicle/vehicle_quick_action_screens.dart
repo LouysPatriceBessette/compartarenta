@@ -8,6 +8,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/format_money.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
@@ -49,6 +50,7 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   Vehicle? _selectedVehicle;
   VehicleUsageAccessDenial? _denial;
   bool _loading = true;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -137,37 +139,62 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
   }
 
   Future<void> _save() async {
-    if (!_canSave) return;
+    if (!_canSave || _saving) return;
     final l10n = AppLocalizations.of(context);
     final costMajor = double.parse(_cost.text.replaceAll(',', '.'));
     final volume = double.parse(_volume.text.replaceAll(',', '.'));
     final meter = _parsedMeter()!;
+    final vehicle = _selectedVehicle!;
     final vehicleId = _selectedVehicleId!;
     final repo = VehiclesRepository(AppDatabase.processScope);
+    final kind = VehicleKind.fromWire(vehicle.vehicleKind);
+    final usesHorometer = kind?.usesHorometer ?? false;
+    final distanceUnit = resolveDistanceUnit(widget.prefs);
 
-    await repo.saveFuelPurchase(
-      vehicleId: vehicleId,
-      purchasedAt: DateTime.now().toUtc(),
-      costMinor: (costMajor * 100).round(),
-      currency: widget.prefs.currency,
-      isFullTank: _fullTank,
-      recordedByContactId: widget.usageContext.actingContactId,
-      volumeLiters: displayVolumeToLiters(
-        volume,
-        resolveLiquidVolumeUnit(widget.prefs),
-      ),
-      meterReadingValue: meter,
-      meterPhotoPath: _photoPath,
-      tankFillFraction: _fullTank ? null : _tankFillLevel.percent,
-    );
-
-    if (!mounted) return;
-    if (widget.usageContext.forwardsToOwner) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vehicleSharingForwarded)),
+    setState(() => _saving = true);
+    try {
+      final openUse = await repo.openUseForVehicle(vehicleId);
+      if (!mounted) return;
+      final proceed = await confirmMeterGapsBeforeSave(
+        context: context,
+        l10n: l10n,
+        repo: repo,
+        vehicle: vehicle,
+        parsedMeter: meter,
+        actingContactId: widget.usageContext.actingContactId,
+        isOwnerContext: widget.usageContext.isOwner,
+        usesHorometer: usesHorometer,
+        distanceUnit: distanceUnit,
+        attributePositiveGap: openUse == null,
       );
+      if (!proceed || !mounted) return;
+
+      await repo.saveFuelPurchase(
+        vehicleId: vehicleId,
+        purchasedAt: DateTime.now().toUtc(),
+        costMinor: (costMajor * 100).round(),
+        currency: widget.prefs.currency,
+        isFullTank: _fullTank,
+        recordedByContactId: widget.usageContext.actingContactId,
+        volumeLiters: displayVolumeToLiters(
+          volume,
+          resolveLiquidVolumeUnit(widget.prefs),
+        ),
+        meterReadingValue: meter,
+        meterPhotoPath: _photoPath,
+        tankFillFraction: _fullTank ? null : _tankFillLevel.percent,
+      );
+
+      if (!mounted) return;
+      if (widget.usageContext.forwardsToOwner) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vehicleSharingForwarded)),
+        );
+      }
+      context.pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    context.pop();
   }
 
   @override
@@ -256,11 +283,206 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: _canSave ? _save : null,
+                      onPressed: _saving || !_canSave ? null : _save,
                       child: Text(l10n.commonSave),
                     ),
                   ],
                 ),
+    );
+  }
+}
+
+class VehicleStandaloneMeterReadingScreen extends StatefulWidget {
+  const VehicleStandaloneMeterReadingScreen({
+    super.key,
+    required this.vehicleId,
+    required this.prefs,
+    this.usageContext = const VehicleUsageContext.owner(),
+  });
+
+  final String vehicleId;
+  final AppPreferences prefs;
+  final VehicleUsageContext usageContext;
+
+  @override
+  State<VehicleStandaloneMeterReadingScreen> createState() =>
+      _VehicleStandaloneMeterReadingScreenState();
+}
+
+class _VehicleStandaloneMeterReadingScreenState
+    extends State<VehicleStandaloneMeterReadingScreen> {
+  final _reading = TextEditingController();
+  String? _photoPath;
+  Vehicle? _vehicle;
+  VehicleUsageAccessDenial? _denial;
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reading.addListener(() => setState(() {}));
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _reading.dispose();
+    super.dispose();
+  }
+
+  bool get _formComplete {
+    final v = _vehicle;
+    if (v == null) return false;
+    final parsed = parseMeterInputToStoredTenths(
+      _reading.text,
+      usesHorometer:
+          VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false,
+      distanceUnit: resolveDistanceUnit(widget.prefs),
+    );
+    if (parsed == null) return false;
+    final photo = _photoPath;
+    return photo != null && photo.isNotEmpty;
+  }
+
+  Future<void> _load() async {
+    final v = await VehiclesRepository(AppDatabase.processScope)
+        .getVehicle(widget.vehicleId);
+    if (!mounted) return;
+    setState(() {
+      _vehicle = v;
+      _denial = denyVehicleUsageAccess(
+        vehicle: v,
+        context: widget.usageContext,
+      );
+      _loading = false;
+    });
+  }
+
+  Future<void> _pickPhoto() async {
+    final path = await pickAndStoreVehicleMeterPhoto(
+      context,
+      vehicleId: widget.vehicleId,
+    );
+    if (path != null && mounted) setState(() => _photoPath = path);
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_formComplete) return;
+    final l10n = AppLocalizations.of(context);
+    final v = _vehicle;
+    if (v == null || _denial != null) return;
+    final parsed = parseMeterInputToStoredTenths(
+      _reading.text,
+      usesHorometer: VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false,
+      distanceUnit: resolveDistanceUnit(widget.prefs),
+    );
+    if (parsed == null) return;
+    if (_photoPath == null || _photoPath!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
+      );
+      return;
+    }
+
+    setState(() => _saving = true);
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    try {
+      final kind = VehicleKind.fromWire(v.vehicleKind);
+      final usesHorometer = kind?.usesHorometer ?? false;
+      final distanceUnit = resolveDistanceUnit(widget.prefs);
+      final latest = await repo.latestMeterValue(v.id);
+      if (!mounted) return;
+      final actingId = widget.usageContext.actingContactId;
+
+      final proceed = await confirmMeterGapsBeforeSave(
+        context: context,
+        l10n: l10n,
+        repo: repo,
+        vehicle: v,
+        parsedMeter: parsed,
+        actingContactId: actingId,
+        isOwnerContext: widget.usageContext.isOwner,
+        usesHorometer: usesHorometer,
+        distanceUnit: distanceUnit,
+        attributePositiveGap: true,
+      );
+      if (!proceed || !mounted) return;
+
+      await repo.saveMeterReading(
+        vehicleId: v.id,
+        value: parsed,
+        unit: repo.meterUnitForVehicle(v),
+        photoPath: _photoPath!,
+        recordedByContactId: actingId,
+        role: MeterReadingRole.standalone,
+        negativeGapAcknowledged: latest != null && parsed < latest,
+      );
+
+      if (!mounted) return;
+      if (widget.usageContext.forwardsToOwner) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vehicleSharingForwarded)),
+        );
+      }
+      context.pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final v = _vehicle;
+    final kind = VehicleKind.fromWire(v?.vehicleKind);
+    final meterLabel = kind?.usesHorometer ?? false
+        ? l10n.vehicleHorometerLabel
+        : l10n.vehicleOdometerLabel;
+    final distanceUnit =
+        distanceUnitAbbrev(resolveDistanceUnit(widget.prefs));
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.vehicleQuickActionOdometer)),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _denial != null
+              ? vehicleUsageDenialBody(context, _denial!)
+              : v == null
+                  ? vehicleUsageDenialBody(
+                      context,
+                      VehicleUsageAccessDenial.vehicleNotFound,
+                    )
+                  : ListView(
+                      padding: screenBodyScrollPadding(context),
+                      children: [
+                        VehicleNarrowUnitField(
+                          controller: _reading,
+                          label: meterLabel,
+                          unitSuffix: kind?.usesHorometer ?? false
+                              ? 'h'
+                              : distanceUnit,
+                          decimal: true,
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: _saving ? null : _pickPhoto,
+                            icon: const Icon(Icons.photo_camera_outlined),
+                            label: Text(
+                              _photoPath == null
+                                  ? l10n.vehicleOdometerPhotoLabel
+                                  : l10n.vehicleMeterPhotoAttached,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: _saving || !_formComplete ? null : _save,
+                          child: Text(l10n.commonSave),
+                        ),
+                      ],
+                    ),
     );
   }
 }

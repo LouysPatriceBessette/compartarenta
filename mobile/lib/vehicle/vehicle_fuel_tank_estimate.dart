@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
+import '../db/repositories/vehicles_repository.dart';
 import 'vehicle_consumption_metrics.dart';
 import 'vehicle_kind.dart';
 
@@ -40,25 +41,6 @@ class VehicleFuelTankEstimate {
     final usesHorometer = kind?.usesHorometer ?? false;
     final metrics = await VehicleConsumptionMetrics(_db).forVehicle(vehicleId);
 
-    if (capacity == null ||
-        capacity <= 0 ||
-        !metrics.hasSufficientData ||
-        latest.meterReadingValue == null) {
-      return VehicleFuelTankSnapshot(volumeLiters: vol, isCalculated: false);
-    }
-
-    final currentMeter = await (_db.select(_db.vehicleMeterReadings)
-          ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.recordedAt),
-            (t) => OrderingTerm.desc(t.id),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
-    if (currentMeter == null) {
-      return VehicleFuelTankSnapshot(volumeLiters: vol, isCalculated: false);
-    }
-
     final levelAfterPurchase = _tankLevelAfterPurchase(
       capacityLiters: capacity,
       purchase: latest,
@@ -67,8 +49,55 @@ class VehicleFuelTankEstimate {
       return VehicleFuelTankSnapshot(volumeLiters: vol, isCalculated: false);
     }
 
-    final deltaTenths = currentMeter.value - latest.meterReadingValue!;
-    if (deltaTenths <= 0) {
+    final currentMeter =
+        await VehiclesRepository(_db).latestMeterValue(vehicleId);
+    final purchaseMeter = latest.meterReadingValue;
+
+    if (latest.isFullTank && capacity != null && capacity > 0) {
+      return _snapshotAfterDriving(
+        levelAfterPurchase: levelAfterPurchase,
+        purchaseMeter: purchaseMeter,
+        currentMeter: currentMeter,
+        capacity: capacity,
+        usesHorometer: usesHorometer,
+        metrics: metrics,
+      );
+    }
+
+    if (capacity == null ||
+        capacity <= 0 ||
+        !metrics.hasSufficientData ||
+        purchaseMeter == null) {
+      return VehicleFuelTankSnapshot(volumeLiters: vol, isCalculated: false);
+    }
+
+    return _snapshotAfterDriving(
+      levelAfterPurchase: levelAfterPurchase,
+      purchaseMeter: purchaseMeter,
+      currentMeter: currentMeter,
+      capacity: capacity,
+      usesHorometer: usesHorometer,
+      metrics: metrics,
+    );
+  }
+
+  VehicleFuelTankSnapshot _snapshotAfterDriving({
+    required double levelAfterPurchase,
+    required int? purchaseMeter,
+    required int? currentMeter,
+    required double capacity,
+    required bool usesHorometer,
+    required VehicleConsumptionSnapshot metrics,
+  }) {
+    if (purchaseMeter == null || currentMeter == null) {
+      return VehicleFuelTankSnapshot(
+        volumeLiters: levelAfterPurchase,
+        isCalculated: true,
+      );
+    }
+
+    final deltaTenths = currentMeter - purchaseMeter;
+    if (deltaTenths <= 0 || !metrics.hasSufficientData) {
       return VehicleFuelTankSnapshot(
         volumeLiters: levelAfterPurchase,
         isCalculated: true,
@@ -88,7 +117,10 @@ class VehicleFuelTankEstimate {
           );
 
     if (remaining == null) {
-      return VehicleFuelTankSnapshot(volumeLiters: vol, isCalculated: false);
+      return VehicleFuelTankSnapshot(
+        volumeLiters: levelAfterPurchase,
+        isCalculated: true,
+      );
     }
 
     return VehicleFuelTankSnapshot(
@@ -98,17 +130,21 @@ class VehicleFuelTankEstimate {
   }
 
   double? _tankLevelAfterPurchase({
-    required double capacityLiters,
+    required double? capacityLiters,
     required FuelPurchase purchase,
   }) {
     final added = purchase.volumeLiters ?? 0;
     if (purchase.isFullTank) {
-      return capacityLiters;
+      final capacity = capacityLiters;
+      if (capacity == null || capacity <= 0) return null;
+      return capacity;
     }
+    final capacity = capacityLiters;
+    if (capacity == null || capacity <= 0) return null;
     final percent = purchase.tankFillFraction;
     if (percent == null) return null;
-    final before = capacityLiters * (percent / 100.0);
-    return (before + added).clamp(0.0, capacityLiters);
+    final before = capacity * (percent / 100.0);
+    return (before + added).clamp(0.0, capacity);
   }
 
   double? _remainingForOdometer({

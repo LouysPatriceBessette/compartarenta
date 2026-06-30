@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../db/app_database.dart';
+import '../db/repositories/contacts_repository.dart';
 import '../db/repositories/vehicles_repository.dart';
 import '../l10n/app_localizations.dart';
+import '../prefs/app_preferences.dart';
+import '../util/vehicle_meter_display.dart';
 import '../vehicle/vehicle_owner_contact.dart';
 import '../widgets/app_dialog.dart';
 
@@ -111,4 +115,95 @@ bool gapRequiresOwnerNotification({
     return true;
   }
   return false;
+}
+
+/// Negative- and positive-gap prompts before persisting a new meter value.
+///
+/// When [attributePositiveGap] is false (e.g. fuel purchase during an open use
+/// session), positive-gap attribution is skipped.
+///
+/// Returns `false` if the user cancelled or the flow must abort.
+Future<bool> confirmMeterGapsBeforeSave({
+  required BuildContext context,
+  required AppLocalizations l10n,
+  required VehiclesRepository repo,
+  required Vehicle vehicle,
+  required int parsedMeter,
+  required String actingContactId,
+  required bool isOwnerContext,
+  required bool usesHorometer,
+  required DistanceUnit distanceUnit,
+  required bool attributePositiveGap,
+}) async {
+  final latest = await repo.latestMeterValue(vehicle.id);
+
+  if (latest != null && parsedMeter < latest) {
+    if (isOwnerContext) {
+      if (!context.mounted) return false;
+      final choice = await showNegativeGapDialog(
+        context,
+        gapDisplay: formatStoredMeterDeltaForDisplay(
+          context,
+          parsedMeter - latest,
+          usesHorometer: usesHorometer,
+          distanceUnit: distanceUnit,
+        ),
+      );
+      if (!context.mounted) return false;
+      if (choice != NegativeGapChoice.maintain) {
+        return false;
+      }
+    }
+  }
+
+  if (attributePositiveGap && latest != null && parsedMeter > latest) {
+    final ownerLinks = await repo.listActiveLinksAsOwner();
+    final borrowerIds = ownerLinks
+        .where((l) => l.vehicleId == vehicle.id)
+        .map((l) => l.borrowerContactId)
+        .toList();
+    final contacts =
+        await ContactsRepository(AppDatabase.processScope).list();
+    final labels = {
+      for (final c in contacts) c.id: c.displayName,
+    };
+    if (!context.mounted) return false;
+    final attributed = await showPositiveGapAttributionDialog(
+      context,
+      gapDisplay: formatStoredMeterDeltaForDisplay(
+        context,
+        parsedMeter - latest,
+        usesHorometer: usesHorometer,
+        distanceUnit: distanceUnit,
+      ),
+      participants: gapAttributionParticipants(
+        l10n: l10n,
+        actingContactId: actingContactId,
+        ownerContactId: vehicle.ownerContactId,
+        activeBorrowerContactIds: borrowerIds,
+        contactLabels: labels,
+      ),
+    );
+    if (!context.mounted || attributed == null) {
+      return false;
+    }
+    await repo.recordPositiveGap(
+      vehicleId: vehicle.id,
+      latestBefore: latest,
+      startAfter: parsedMeter,
+      attributedContactId: attributed,
+      recordedByContactId: actingContactId,
+    );
+    if (gapRequiresOwnerNotification(
+      attributedContactId: attributed,
+      recordedByContactId: actingContactId,
+    )) {
+      if (!context.mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleGapOwnerNotified)),
+      );
+    }
+  }
+
+  return true;
 }

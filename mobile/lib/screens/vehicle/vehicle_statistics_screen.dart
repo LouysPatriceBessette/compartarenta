@@ -4,6 +4,8 @@ import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../util/display_units.dart';
+import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../widgets/screen_body_padding.dart';
@@ -66,9 +68,15 @@ class _VehicleStatisticsScreenState extends State<VehicleStatisticsScreen> {
                         final total = snap.data;
                         final display = total == null
                             ? '…'
-                            : kind?.usesHorometer ?? false
-                                ? '${(total / 10).toStringAsFixed(1)} h'
-                                : '$total km';
+                            : formatStoredMeterDeltaForDisplay(
+                                context,
+                                total,
+                                usesHorometer:
+                                    kind?.usesHorometer ?? false,
+                                distanceUnit: resolveDistanceUnit(
+                                  widget.prefs,
+                                ),
+                              );
                         return ListTile(
                           title: Text(v.displayLabel),
                           subtitle: Text(display),
