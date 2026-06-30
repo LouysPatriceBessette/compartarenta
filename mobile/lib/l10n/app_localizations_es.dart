@@ -3699,6 +3699,53 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta estimación es muy fiable porque se basa en muchos datos que ha introducido.';
 
   @override
+  String get vehicleConsumptionEstimationModeTitle =>
+      'Modo de estimación del consumo de combustible';
+
+  @override
+  String get vehicleConsumptionEstimationModeSimpleTitle => 'Simple';
+
+  @override
+  String vehicleConsumptionEstimationModeSimpleDescription(
+    String distanceUnit,
+  ) {
+    return 'Solo litros por 100 $distanceUnit';
+  }
+
+  @override
+  String get vehicleConsumptionEstimationModeDetailedTitle => 'Detallado';
+
+  @override
+  String vehicleConsumptionEstimationModeDetailedDescription(
+    String distanceUnit,
+  ) {
+    return 'Litros por 100 $distanceUnit para conducción en carretera / ciudad / tráfico';
+  }
+
+  @override
+  String get vehicleDistanceUnitKilometres => 'kilómetros';
+
+  @override
+  String get vehicleDistanceUnitMiles => 'millas';
+
+  @override
+  String get vehicleConsumptionRequireDetailedForBorrowers =>
+      'Exigir a los prestatarios los porcentajes carretera / ciudad / tráfico';
+
+  @override
+  String vehicleConsumptionSimpleEstimate(String value) {
+    return 'Consumo: $value L/100 km';
+  }
+
+  @override
+  String get vehicleConsumptionInsufficientDetailedData =>
+      'No hay datos suficientes para una estimación detallada (carretera / ciudad / tráfico). Se muestra la estimación simple hasta que se registren más sesiones detalladas.';
+
+  @override
+  String get vehicleConsumptionCarriedFromDetailedMode =>
+      'Esta estimación procede de su modo detallado anterior. Se afinará con nuevos períodos entre repostajes completos en modo simple.';
+
+  @override
   String get vehicleStatisticsConsumptionHistoryTitle =>
       'Historial de estimaciones fiables';
 
@@ -3804,6 +3851,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get helpFaqVehicleFuelTankBody =>
       'La cantidad de combustible mostrada para un vehículo proviene del nivel de depósito más reciente que declare al finalizar una sesión de uso o al registrar una compra de combustible.\n\nSin una declaración de nivel, no se muestra cantidad.\n\nRefleja su declaración, no una medición real.';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationTitle =>
+      'Estimación del consumo de combustible';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationBody =>
+      'El consumo mostrado se calcula a partir de sus repostajes completos y, según el modo elegido, de sus declaraciones al finalizar una sesión.\n\nModo simple: un solo valor en L/100 km, sin desglose carretera / ciudad / tráfico.\n\nModo detallado: desglose por tipo de conducción cuando hay suficientes sesiones detalladas entre dos repostajes completos.\n\nLa fiabilidad solo cuenta los períodos entre repostajes completos registrados en el mismo modo que el seleccionado actualmente.\n\nSi el propietario no impone el modo detallado a los prestatarios, estos pueden terminar una sesión sin introducir los porcentajes carretera / ciudad / tráfico; sus kilómetros se asimilan entonces al perfil de conducción del propietario para la estimación detallada, lo que puede reducir la precisión si no todos los conductores tienen el mismo uso.\n\nCambiar de modo puede mostrar temporalmente una estimación heredada del otro modo hasta que haya suficientes períodos nuevos entre repostajes completos en el modo elegido.';
 
   @override
   String get vehicleMaintenanceCategory => 'Categoría';

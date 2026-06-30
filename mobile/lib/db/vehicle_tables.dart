@@ -12,6 +12,12 @@ class Vehicles extends Table {
   TextColumn get licensePlate => text().withDefault(const Constant(''))();
   TextColumn get vin => text().withDefault(const Constant(''))();
   RealColumn get fuelTankCapacityLiters => real().nullable()();
+  /// `simple` or `detailed` — road fuel consumption estimation style.
+  TextColumn get consumptionEstimationMode =>
+      text().withDefault(const Constant('detailed'))();
+  /// When owner uses detailed mode, optionally require borrowers to declare mix.
+  BoolColumn get requireDetailedDrivingMixForBorrowers =>
+      boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -56,6 +62,8 @@ class VehicleUses extends Table {
   IntColumn get drivingRoutePercent => integer().nullable()();
   IntColumn get drivingCityPercent => integer().nullable()();
   IntColumn get drivingTrafficPercent => integer().nullable()();
+  /// `simple` or `detailed` at session end; null on legacy rows.
+  TextColumn get sessionConsumptionMode => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

@@ -13584,6 +13584,33 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         type: DriftSqlType.double,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _consumptionEstimationModeMeta =
+      const VerificationMeta('consumptionEstimationMode');
+  @override
+  late final GeneratedColumn<String> consumptionEstimationMode =
+      GeneratedColumn<String>(
+        'consumption_estimation_mode',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('detailed'),
+      );
+  static const VerificationMeta _requireDetailedDrivingMixForBorrowersMeta =
+      const VerificationMeta('requireDetailedDrivingMixForBorrowers');
+  @override
+  late final GeneratedColumn<bool> requireDetailedDrivingMixForBorrowers =
+      GeneratedColumn<bool>(
+        'require_detailed_driving_mix_for_borrowers',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("require_detailed_driving_mix_for_borrowers" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -13619,6 +13646,8 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     licensePlate,
     vin,
     fuelTankCapacityLiters,
+    consumptionEstimationMode,
+    requireDetailedDrivingMixForBorrowers,
     createdAt,
     updatedAt,
   ];
@@ -13720,6 +13749,24 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         ),
       );
     }
+    if (data.containsKey('consumption_estimation_mode')) {
+      context.handle(
+        _consumptionEstimationModeMeta,
+        consumptionEstimationMode.isAcceptableOrUnknown(
+          data['consumption_estimation_mode']!,
+          _consumptionEstimationModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('require_detailed_driving_mix_for_borrowers')) {
+      context.handle(
+        _requireDetailedDrivingMixForBorrowersMeta,
+        requireDetailedDrivingMixForBorrowers.isAcceptableOrUnknown(
+          data['require_detailed_driving_mix_for_borrowers']!,
+          _requireDetailedDrivingMixForBorrowersMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -13789,6 +13836,14 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.double,
         data['${effectivePrefix}fuel_tank_capacity_liters'],
       ),
+      consumptionEstimationMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}consumption_estimation_mode'],
+      )!,
+      requireDetailedDrivingMixForBorrowers: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}require_detailed_driving_mix_for_borrowers'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -13818,6 +13873,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
   final String licensePlate;
   final String vin;
   final double? fuelTankCapacityLiters;
+
+  /// `simple` or `detailed` — road fuel consumption estimation style.
+  final String consumptionEstimationMode;
+
+  /// When owner uses detailed mode, optionally require borrowers to declare mix.
+  final bool requireDetailedDrivingMixForBorrowers;
   final DateTime createdAt;
   final DateTime updatedAt;
   const Vehicle({
@@ -13832,6 +13893,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     required this.licensePlate,
     required this.vin,
     this.fuelTankCapacityLiters,
+    required this.consumptionEstimationMode,
+    required this.requireDetailedDrivingMixForBorrowers,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -13855,6 +13918,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
         fuelTankCapacityLiters,
       );
     }
+    map['consumption_estimation_mode'] = Variable<String>(
+      consumptionEstimationMode,
+    );
+    map['require_detailed_driving_mix_for_borrowers'] = Variable<bool>(
+      requireDetailedDrivingMixForBorrowers,
+    );
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -13877,6 +13946,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       fuelTankCapacityLiters: fuelTankCapacityLiters == null && nullToAbsent
           ? const Value.absent()
           : Value(fuelTankCapacityLiters),
+      consumptionEstimationMode: Value(consumptionEstimationMode),
+      requireDetailedDrivingMixForBorrowers: Value(
+        requireDetailedDrivingMixForBorrowers,
+      ),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -13901,6 +13974,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       fuelTankCapacityLiters: serializer.fromJson<double?>(
         json['fuelTankCapacityLiters'],
       ),
+      consumptionEstimationMode: serializer.fromJson<String>(
+        json['consumptionEstimationMode'],
+      ),
+      requireDetailedDrivingMixForBorrowers: serializer.fromJson<bool>(
+        json['requireDetailedDrivingMixForBorrowers'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -13922,6 +14001,12 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       'fuelTankCapacityLiters': serializer.toJson<double?>(
         fuelTankCapacityLiters,
       ),
+      'consumptionEstimationMode': serializer.toJson<String>(
+        consumptionEstimationMode,
+      ),
+      'requireDetailedDrivingMixForBorrowers': serializer.toJson<bool>(
+        requireDetailedDrivingMixForBorrowers,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -13939,6 +14024,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     String? licensePlate,
     String? vin,
     Value<double?> fuelTankCapacityLiters = const Value.absent(),
+    String? consumptionEstimationMode,
+    bool? requireDetailedDrivingMixForBorrowers,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => Vehicle(
@@ -13955,6 +14042,11 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     fuelTankCapacityLiters: fuelTankCapacityLiters.present
         ? fuelTankCapacityLiters.value
         : this.fuelTankCapacityLiters,
+    consumptionEstimationMode:
+        consumptionEstimationMode ?? this.consumptionEstimationMode,
+    requireDetailedDrivingMixForBorrowers:
+        requireDetailedDrivingMixForBorrowers ??
+        this.requireDetailedDrivingMixForBorrowers,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -13981,6 +14073,13 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       fuelTankCapacityLiters: data.fuelTankCapacityLiters.present
           ? data.fuelTankCapacityLiters.value
           : this.fuelTankCapacityLiters,
+      consumptionEstimationMode: data.consumptionEstimationMode.present
+          ? data.consumptionEstimationMode.value
+          : this.consumptionEstimationMode,
+      requireDetailedDrivingMixForBorrowers:
+          data.requireDetailedDrivingMixForBorrowers.present
+          ? data.requireDetailedDrivingMixForBorrowers.value
+          : this.requireDetailedDrivingMixForBorrowers,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -14000,6 +14099,10 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           ..write('licensePlate: $licensePlate, ')
           ..write('vin: $vin, ')
           ..write('fuelTankCapacityLiters: $fuelTankCapacityLiters, ')
+          ..write('consumptionEstimationMode: $consumptionEstimationMode, ')
+          ..write(
+            'requireDetailedDrivingMixForBorrowers: $requireDetailedDrivingMixForBorrowers, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -14019,6 +14122,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     licensePlate,
     vin,
     fuelTankCapacityLiters,
+    consumptionEstimationMode,
+    requireDetailedDrivingMixForBorrowers,
     createdAt,
     updatedAt,
   );
@@ -14037,6 +14142,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           other.licensePlate == this.licensePlate &&
           other.vin == this.vin &&
           other.fuelTankCapacityLiters == this.fuelTankCapacityLiters &&
+          other.consumptionEstimationMode == this.consumptionEstimationMode &&
+          other.requireDetailedDrivingMixForBorrowers ==
+              this.requireDetailedDrivingMixForBorrowers &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -14053,6 +14161,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<String> licensePlate;
   final Value<String> vin;
   final Value<double?> fuelTankCapacityLiters;
+  final Value<String> consumptionEstimationMode;
+  final Value<bool> requireDetailedDrivingMixForBorrowers;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -14068,6 +14178,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.licensePlate = const Value.absent(),
     this.vin = const Value.absent(),
     this.fuelTankCapacityLiters = const Value.absent(),
+    this.consumptionEstimationMode = const Value.absent(),
+    this.requireDetailedDrivingMixForBorrowers = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -14084,6 +14196,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.licensePlate = const Value.absent(),
     this.vin = const Value.absent(),
     this.fuelTankCapacityLiters = const Value.absent(),
+    this.consumptionEstimationMode = const Value.absent(),
+    this.requireDetailedDrivingMixForBorrowers = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -14105,6 +14219,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<String>? licensePlate,
     Expression<String>? vin,
     Expression<double>? fuelTankCapacityLiters,
+    Expression<String>? consumptionEstimationMode,
+    Expression<bool>? requireDetailedDrivingMixForBorrowers,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -14122,6 +14238,11 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       if (vin != null) 'vin': vin,
       if (fuelTankCapacityLiters != null)
         'fuel_tank_capacity_liters': fuelTankCapacityLiters,
+      if (consumptionEstimationMode != null)
+        'consumption_estimation_mode': consumptionEstimationMode,
+      if (requireDetailedDrivingMixForBorrowers != null)
+        'require_detailed_driving_mix_for_borrowers':
+            requireDetailedDrivingMixForBorrowers,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -14140,6 +14261,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<String>? licensePlate,
     Value<String>? vin,
     Value<double?>? fuelTankCapacityLiters,
+    Value<String>? consumptionEstimationMode,
+    Value<bool>? requireDetailedDrivingMixForBorrowers,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -14157,6 +14280,11 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       vin: vin ?? this.vin,
       fuelTankCapacityLiters:
           fuelTankCapacityLiters ?? this.fuelTankCapacityLiters,
+      consumptionEstimationMode:
+          consumptionEstimationMode ?? this.consumptionEstimationMode,
+      requireDetailedDrivingMixForBorrowers:
+          requireDetailedDrivingMixForBorrowers ??
+          this.requireDetailedDrivingMixForBorrowers,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -14201,6 +14329,16 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
         fuelTankCapacityLiters.value,
       );
     }
+    if (consumptionEstimationMode.present) {
+      map['consumption_estimation_mode'] = Variable<String>(
+        consumptionEstimationMode.value,
+      );
+    }
+    if (requireDetailedDrivingMixForBorrowers.present) {
+      map['require_detailed_driving_mix_for_borrowers'] = Variable<bool>(
+        requireDetailedDrivingMixForBorrowers.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -14227,6 +14365,10 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           ..write('licensePlate: $licensePlate, ')
           ..write('vin: $vin, ')
           ..write('fuelTankCapacityLiters: $fuelTankCapacityLiters, ')
+          ..write('consumptionEstimationMode: $consumptionEstimationMode, ')
+          ..write(
+            'requireDetailedDrivingMixForBorrowers: $requireDetailedDrivingMixForBorrowers, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -15219,6 +15361,17 @@ class $VehicleUsesTable extends VehicleUses
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sessionConsumptionModeMeta =
+      const VerificationMeta('sessionConsumptionMode');
+  @override
+  late final GeneratedColumn<String> sessionConsumptionMode =
+      GeneratedColumn<String>(
+        'session_consumption_mode',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -15232,6 +15385,7 @@ class $VehicleUsesTable extends VehicleUses
     drivingRoutePercent,
     drivingCityPercent,
     drivingTrafficPercent,
+    sessionConsumptionMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -15339,6 +15493,15 @@ class $VehicleUsesTable extends VehicleUses
         ),
       );
     }
+    if (data.containsKey('session_consumption_mode')) {
+      context.handle(
+        _sessionConsumptionModeMeta,
+        sessionConsumptionMode.isAcceptableOrUnknown(
+          data['session_consumption_mode']!,
+          _sessionConsumptionModeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -15392,6 +15555,10 @@ class $VehicleUsesTable extends VehicleUses
         DriftSqlType.int,
         data['${effectivePrefix}driving_traffic_percent'],
       ),
+      sessionConsumptionMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_consumption_mode'],
+      ),
     );
   }
 
@@ -15416,6 +15583,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
   final int? drivingRoutePercent;
   final int? drivingCityPercent;
   final int? drivingTrafficPercent;
+
+  /// `simple` or `detailed` at session end; null on legacy rows.
+  final String? sessionConsumptionMode;
   const VehicleUse({
     required this.id,
     required this.vehicleId,
@@ -15428,6 +15598,7 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     this.drivingRoutePercent,
     this.drivingCityPercent,
     this.drivingTrafficPercent,
+    this.sessionConsumptionMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -15454,6 +15625,11 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     }
     if (!nullToAbsent || drivingTrafficPercent != null) {
       map['driving_traffic_percent'] = Variable<int>(drivingTrafficPercent);
+    }
+    if (!nullToAbsent || sessionConsumptionMode != null) {
+      map['session_consumption_mode'] = Variable<String>(
+        sessionConsumptionMode,
+      );
     }
     return map;
   }
@@ -15483,6 +15659,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       drivingTrafficPercent: drivingTrafficPercent == null && nullToAbsent
           ? const Value.absent()
           : Value(drivingTrafficPercent),
+      sessionConsumptionMode: sessionConsumptionMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sessionConsumptionMode),
     );
   }
 
@@ -15509,6 +15688,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       drivingTrafficPercent: serializer.fromJson<int?>(
         json['drivingTrafficPercent'],
       ),
+      sessionConsumptionMode: serializer.fromJson<String?>(
+        json['sessionConsumptionMode'],
+      ),
     );
   }
   @override
@@ -15526,6 +15708,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       'drivingRoutePercent': serializer.toJson<int?>(drivingRoutePercent),
       'drivingCityPercent': serializer.toJson<int?>(drivingCityPercent),
       'drivingTrafficPercent': serializer.toJson<int?>(drivingTrafficPercent),
+      'sessionConsumptionMode': serializer.toJson<String?>(
+        sessionConsumptionMode,
+      ),
     };
   }
 
@@ -15541,6 +15726,7 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     Value<int?> drivingRoutePercent = const Value.absent(),
     Value<int?> drivingCityPercent = const Value.absent(),
     Value<int?> drivingTrafficPercent = const Value.absent(),
+    Value<String?> sessionConsumptionMode = const Value.absent(),
   }) => VehicleUse(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -15559,6 +15745,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     drivingTrafficPercent: drivingTrafficPercent.present
         ? drivingTrafficPercent.value
         : this.drivingTrafficPercent,
+    sessionConsumptionMode: sessionConsumptionMode.present
+        ? sessionConsumptionMode.value
+        : this.sessionConsumptionMode,
   );
   VehicleUse copyWithCompanion(VehicleUsesCompanion data) {
     return VehicleUse(
@@ -15587,6 +15776,9 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
       drivingTrafficPercent: data.drivingTrafficPercent.present
           ? data.drivingTrafficPercent.value
           : this.drivingTrafficPercent,
+      sessionConsumptionMode: data.sessionConsumptionMode.present
+          ? data.sessionConsumptionMode.value
+          : this.sessionConsumptionMode,
     );
   }
 
@@ -15603,7 +15795,8 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
           ..write('usageAmount: $usageAmount, ')
           ..write('drivingRoutePercent: $drivingRoutePercent, ')
           ..write('drivingCityPercent: $drivingCityPercent, ')
-          ..write('drivingTrafficPercent: $drivingTrafficPercent')
+          ..write('drivingTrafficPercent: $drivingTrafficPercent, ')
+          ..write('sessionConsumptionMode: $sessionConsumptionMode')
           ..write(')'))
         .toString();
   }
@@ -15621,6 +15814,7 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
     drivingRoutePercent,
     drivingCityPercent,
     drivingTrafficPercent,
+    sessionConsumptionMode,
   );
   @override
   bool operator ==(Object other) =>
@@ -15636,7 +15830,8 @@ class VehicleUse extends DataClass implements Insertable<VehicleUse> {
           other.usageAmount == this.usageAmount &&
           other.drivingRoutePercent == this.drivingRoutePercent &&
           other.drivingCityPercent == this.drivingCityPercent &&
-          other.drivingTrafficPercent == this.drivingTrafficPercent);
+          other.drivingTrafficPercent == this.drivingTrafficPercent &&
+          other.sessionConsumptionMode == this.sessionConsumptionMode);
 }
 
 class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
@@ -15651,6 +15846,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
   final Value<int?> drivingRoutePercent;
   final Value<int?> drivingCityPercent;
   final Value<int?> drivingTrafficPercent;
+  final Value<String?> sessionConsumptionMode;
   final Value<int> rowid;
   const VehicleUsesCompanion({
     this.id = const Value.absent(),
@@ -15664,6 +15860,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     this.drivingRoutePercent = const Value.absent(),
     this.drivingCityPercent = const Value.absent(),
     this.drivingTrafficPercent = const Value.absent(),
+    this.sessionConsumptionMode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehicleUsesCompanion.insert({
@@ -15678,6 +15875,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     this.drivingRoutePercent = const Value.absent(),
     this.drivingCityPercent = const Value.absent(),
     this.drivingTrafficPercent = const Value.absent(),
+    this.sessionConsumptionMode = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        vehicleId = Value(vehicleId),
@@ -15696,6 +15894,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     Expression<int>? drivingRoutePercent,
     Expression<int>? drivingCityPercent,
     Expression<int>? drivingTrafficPercent,
+    Expression<String>? sessionConsumptionMode,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -15714,6 +15913,8 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
         'driving_city_percent': drivingCityPercent,
       if (drivingTrafficPercent != null)
         'driving_traffic_percent': drivingTrafficPercent,
+      if (sessionConsumptionMode != null)
+        'session_consumption_mode': sessionConsumptionMode,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15730,6 +15931,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
     Value<int?>? drivingRoutePercent,
     Value<int?>? drivingCityPercent,
     Value<int?>? drivingTrafficPercent,
+    Value<String?>? sessionConsumptionMode,
     Value<int>? rowid,
   }) {
     return VehicleUsesCompanion(
@@ -15745,6 +15947,8 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
       drivingCityPercent: drivingCityPercent ?? this.drivingCityPercent,
       drivingTrafficPercent:
           drivingTrafficPercent ?? this.drivingTrafficPercent,
+      sessionConsumptionMode:
+          sessionConsumptionMode ?? this.sessionConsumptionMode,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15789,6 +15993,11 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
         drivingTrafficPercent.value,
       );
     }
+    if (sessionConsumptionMode.present) {
+      map['session_consumption_mode'] = Variable<String>(
+        sessionConsumptionMode.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15809,6 +16018,7 @@ class VehicleUsesCompanion extends UpdateCompanion<VehicleUse> {
           ..write('drivingRoutePercent: $drivingRoutePercent, ')
           ..write('drivingCityPercent: $drivingCityPercent, ')
           ..write('drivingTrafficPercent: $drivingTrafficPercent, ')
+          ..write('sessionConsumptionMode: $sessionConsumptionMode, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -27629,6 +27839,8 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       Value<String> licensePlate,
       Value<String> vin,
       Value<double?> fuelTankCapacityLiters,
+      Value<String> consumptionEstimationMode,
+      Value<bool> requireDetailedDrivingMixForBorrowers,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -27646,6 +27858,8 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<String> licensePlate,
       Value<String> vin,
       Value<double?> fuelTankCapacityLiters,
+      Value<String> consumptionEstimationMode,
+      Value<bool> requireDetailedDrivingMixForBorrowers,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -27714,6 +27928,17 @@ class $$VehiclesTableFilterComposer
     column: $table.fuelTankCapacityLiters,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get consumptionEstimationMode => $composableBuilder(
+    column: $table.consumptionEstimationMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requireDetailedDrivingMixForBorrowers =>
+      $composableBuilder(
+        column: $table.requireDetailedDrivingMixForBorrowers,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
@@ -27790,6 +28015,17 @@ class $$VehiclesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get consumptionEstimationMode => $composableBuilder(
+    column: $table.consumptionEstimationMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get requireDetailedDrivingMixForBorrowers =>
+      $composableBuilder(
+        column: $table.requireDetailedDrivingMixForBorrowers,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -27853,6 +28089,17 @@ class $$VehiclesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get consumptionEstimationMode => $composableBuilder(
+    column: $table.consumptionEstimationMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get requireDetailedDrivingMixForBorrowers =>
+      $composableBuilder(
+        column: $table.requireDetailedDrivingMixForBorrowers,
+        builder: (column) => column,
+      );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -27899,6 +28146,9 @@ class $$VehiclesTableTableManager
                 Value<String> licensePlate = const Value.absent(),
                 Value<String> vin = const Value.absent(),
                 Value<double?> fuelTankCapacityLiters = const Value.absent(),
+                Value<String> consumptionEstimationMode = const Value.absent(),
+                Value<bool> requireDetailedDrivingMixForBorrowers =
+                    const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -27914,6 +28164,9 @@ class $$VehiclesTableTableManager
                 licensePlate: licensePlate,
                 vin: vin,
                 fuelTankCapacityLiters: fuelTankCapacityLiters,
+                consumptionEstimationMode: consumptionEstimationMode,
+                requireDetailedDrivingMixForBorrowers:
+                    requireDetailedDrivingMixForBorrowers,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -27931,6 +28184,9 @@ class $$VehiclesTableTableManager
                 Value<String> licensePlate = const Value.absent(),
                 Value<String> vin = const Value.absent(),
                 Value<double?> fuelTankCapacityLiters = const Value.absent(),
+                Value<String> consumptionEstimationMode = const Value.absent(),
+                Value<bool> requireDetailedDrivingMixForBorrowers =
+                    const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -27946,6 +28202,9 @@ class $$VehiclesTableTableManager
                 licensePlate: licensePlate,
                 vin: vin,
                 fuelTankCapacityLiters: fuelTankCapacityLiters,
+                consumptionEstimationMode: consumptionEstimationMode,
+                requireDetailedDrivingMixForBorrowers:
+                    requireDetailedDrivingMixForBorrowers,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -28390,6 +28649,7 @@ typedef $$VehicleUsesTableCreateCompanionBuilder =
       Value<int?> drivingRoutePercent,
       Value<int?> drivingCityPercent,
       Value<int?> drivingTrafficPercent,
+      Value<String?> sessionConsumptionMode,
       Value<int> rowid,
     });
 typedef $$VehicleUsesTableUpdateCompanionBuilder =
@@ -28405,6 +28665,7 @@ typedef $$VehicleUsesTableUpdateCompanionBuilder =
       Value<int?> drivingRoutePercent,
       Value<int?> drivingCityPercent,
       Value<int?> drivingTrafficPercent,
+      Value<String?> sessionConsumptionMode,
       Value<int> rowid,
     });
 
@@ -28469,6 +28730,11 @@ class $$VehicleUsesTableFilterComposer
 
   ColumnFilters<int> get drivingTrafficPercent => $composableBuilder(
     column: $table.drivingTrafficPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionConsumptionMode => $composableBuilder(
+    column: $table.sessionConsumptionMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -28536,6 +28802,11 @@ class $$VehicleUsesTableOrderingComposer
     column: $table.drivingTrafficPercent,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get sessionConsumptionMode => $composableBuilder(
+    column: $table.sessionConsumptionMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehicleUsesTableAnnotationComposer
@@ -28593,6 +28864,11 @@ class $$VehicleUsesTableAnnotationComposer
     column: $table.drivingTrafficPercent,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get sessionConsumptionMode => $composableBuilder(
+    column: $table.sessionConsumptionMode,
+    builder: (column) => column,
+  );
 }
 
 class $$VehicleUsesTableTableManager
@@ -28637,6 +28913,7 @@ class $$VehicleUsesTableTableManager
                 Value<int?> drivingRoutePercent = const Value.absent(),
                 Value<int?> drivingCityPercent = const Value.absent(),
                 Value<int?> drivingTrafficPercent = const Value.absent(),
+                Value<String?> sessionConsumptionMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleUsesCompanion(
                 id: id,
@@ -28650,6 +28927,7 @@ class $$VehicleUsesTableTableManager
                 drivingRoutePercent: drivingRoutePercent,
                 drivingCityPercent: drivingCityPercent,
                 drivingTrafficPercent: drivingTrafficPercent,
+                sessionConsumptionMode: sessionConsumptionMode,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -28665,6 +28943,7 @@ class $$VehicleUsesTableTableManager
                 Value<int?> drivingRoutePercent = const Value.absent(),
                 Value<int?> drivingCityPercent = const Value.absent(),
                 Value<int?> drivingTrafficPercent = const Value.absent(),
+                Value<String?> sessionConsumptionMode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleUsesCompanion.insert(
                 id: id,
@@ -28678,6 +28957,7 @@ class $$VehicleUsesTableTableManager
                 drivingRoutePercent: drivingRoutePercent,
                 drivingCityPercent: drivingCityPercent,
                 drivingTrafficPercent: drivingTrafficPercent,
+                sessionConsumptionMode: sessionConsumptionMode,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

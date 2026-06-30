@@ -1247,6 +1247,8 @@
   "helpFaqHousingInviteParticipantBody": "Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D'ici là, l'application conserve une entente stable pour tous.",
   "helpFaqVehicleFuelTankTitle": "Essence dans le réservoir",
   "helpFaqVehicleFuelTankBody": "La quantité d'essence affichée pour un véhicule provient du niveau de réservoir le plus récent que vous déclarez à la fin d'une session d'utilisation ou lors d'un achat d'essence.\n\nSans déclaration de niveau, aucune quantité n'est affichée.\n\nIl s'agit de votre déclaration, pas d'une mesure réelle.",
+  "helpFaqVehicleConsumptionEstimationTitle": "Estimation de la consommation d'essence",
+  "helpFaqVehicleConsumptionEstimationBody": "La consommation affichée est calculée à partir de vos pleins d'essence et, selon le mode choisi, de vos déclarations en fin de session.\n\nMode simple : une seule valeur en L/100 km, sans répartition route / ville / trafic.\n\nMode détaillé : répartition par type de conduite lorsque suffisamment de sessions détaillées ont été enregistrées entre deux pleins.\n\nLa fiabilité ne tient compte que des périodes entre pleins enregistrées dans le même mode que celui actuellement sélectionné.\n\nSi le propriétaire n'impose pas le mode détaillé à ses emprunteurs, ceux-ci peuvent terminer une session sans saisir les pourcentages route / ville / trafic ; leurs kilomètres sont alors assimilés au profil de conduite du propriétaire pour l'estimation détaillée, ce qui peut réduire la précision si tous les conducteurs n'ont pas le même usage.\n\nChanger de mode peut temporairement afficher une estimation héritée de l'autre mode jusqu'à ce qu'assez de nouvelles périodes entre pleins soient disponibles dans le mode choisi.",
   "housingVoteRefusedByAgreementExpiration": "Refusé par expiration de l'entente",
   "contactsDisconnectBlockedByPlansTitle": "Impossible de déconnecter ce contact pour l'instant",
   "contactsDisconnectBlockedByPlansBody": "Ce contact fait partie d'une entente active ou d'un vote ouvert sur cet appareil : {plans}. Terminez ou réglez cette activité avant de déconnecter.",
@@ -1466,6 +1468,32 @@
   "vehicleConsumptionReliabilityPreliminary": "Cette estimation est préliminaire. Elle se précisera avec plus de données.",
   "vehicleConsumptionReliabilityReliable": "Cette estimation est fiable, selon la formule de calcul utilisée et les données que vous avez entrées.",
   "vehicleConsumptionReliabilityVeryReliable": "Cette estimation est très fiable car elle repose sur beaucoup de données que vous avez entrées.",
+  "vehicleConsumptionEstimationModeTitle": "Mode d'estimation de la consommation d'essence",
+  "vehicleConsumptionEstimationModeSimpleTitle": "Simple",
+  "vehicleConsumptionEstimationModeSimpleDescription": "Seulement le nombre de litres par 100 {distanceUnit}",
+  "@vehicleConsumptionEstimationModeSimpleDescription": {
+    "placeholders": {
+      "distanceUnit": { "type": "String" }
+    }
+  },
+  "vehicleConsumptionEstimationModeDetailedTitle": "Détaillée",
+  "vehicleConsumptionEstimationModeDetailedDescription": "Litres par 100 {distanceUnit} pour la conduite sur route / en ville / dans le traffic",
+  "@vehicleConsumptionEstimationModeDetailedDescription": {
+    "placeholders": {
+      "distanceUnit": { "type": "String" }
+    }
+  },
+  "vehicleDistanceUnitKilometres": "kilomètres",
+  "vehicleDistanceUnitMiles": "miles",
+  "vehicleConsumptionRequireDetailedForBorrowers": "Imposer aux emprunteurs la saisie des pourcentages route / ville / trafic",
+  "vehicleConsumptionSimpleEstimate": "Consommation : {value} L/100 km",
+  "@vehicleConsumptionSimpleEstimate": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "vehicleConsumptionInsufficientDetailedData": "Il n'y a pas assez de données pour produire l'estimation détaillée (route / ville / trafic). L'estimation simple ci-dessous est affichée en attendant davantage de sessions détaillées.",
+  "vehicleConsumptionCarriedFromDetailedMode": "Cette estimation provient de votre ancien mode détaillé. Elle se précisera avec de nouvelles périodes entre pleins en mode simple.",
   "vehicleStatisticsConsumptionHistoryTitle": "Historique des estimations fiables",
   "vehicleConsumptionHistoryBlended": "{date} : {value} L/100 km",
   "vehicleSessionEndTankConfirmTitle": "Confirmer l'état du réservoir",

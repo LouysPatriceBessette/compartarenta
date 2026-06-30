@@ -9,6 +9,7 @@ import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_meter_photo_path.dart';
 import '../../vehicle/vehicle_known_tank_state.dart';
+import '../../vehicle/vehicle_consumption_mode_policy.dart';
 import '../../vehicle/vehicle_tank_session_flow.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
@@ -141,6 +142,15 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     return !(VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false);
   }
 
+  bool get _requiresDetailedDrivingMix {
+    final v = _vehicle;
+    if (v == null || !_endingRoadSession) return false;
+    return shouldCollectDetailedDrivingMix(
+      vehicle: v,
+      usageContext: widget.usageContext,
+    );
+  }
+
   bool get _formComplete {
     final v = _vehicle;
     if (v == null) return false;
@@ -150,7 +160,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       final photo = _photoPath;
       if (photo == null || photo.isEmpty) return false;
     }
-    if (_endingRoadSession &&
+    if (_requiresDetailedDrivingMix &&
         !drivingMixFieldsCompleteAndValid(
           routeText: _routePercent.text,
           cityText: _cityPercent.text,
@@ -361,18 +371,22 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         return;
       }
 
+      final collectedDetailedMix = _requiresDetailedDrivingMix;
       await repo.closeUseSession(
         useId: openUse.id,
         endReadingId: reading.id,
-        drivingRoutePercent: _endingRoadSession
+        drivingRoutePercent: collectedDetailedMix
             ? parseDrivingMixPercent(_routePercent.text)
             : null,
-        drivingCityPercent: _endingRoadSession
+        drivingCityPercent: collectedDetailedMix
             ? parseDrivingMixPercent(_cityPercent.text)
             : null,
-        drivingTrafficPercent: _endingRoadSession
+        drivingTrafficPercent: collectedDetailedMix
             ? parseDrivingMixPercent(_trafficPercent.text)
             : null,
+        sessionConsumptionMode: sessionConsumptionModeForClose(
+          collectedDetailedMix: collectedDetailedMix,
+        ),
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -472,7 +486,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                               ? l10n.vehicleOdometerPhotoLabel
                               : l10n.vehicleMeterPhotoAttached,
                         ),
-                        if (_endingRoadSession) ...[
+                        if (_requiresDetailedDrivingMix) ...[
                           const SizedBox(height: 16),
                           VehicleDrivingConditionMixFields(
                             routeController: _routePercent,

@@ -9,6 +9,7 @@ import 'package:compartarenta/navigation/app_navigation.dart';
 abstract final class HelpFaqAnchors {
   static const housingInviteParticipant = 'housing-invite-participant';
   static const vehicleFuelTank = 'vehicle-fuel-tank';
+  static const vehicleConsumptionEstimation = 'vehicle-consumption-estimation';
 }
 
 /// One FAQ accordion section. Add entries in [_buildFaqSections] only.
@@ -39,6 +40,11 @@ List<_FaqSectionData> _buildFaqSections(AppLocalizations l10n) => [
     anchor: HelpFaqAnchors.vehicleFuelTank,
     title: l10n.helpFaqVehicleFuelTankTitle,
     children: [Text(l10n.helpFaqVehicleFuelTankBody)],
+  ),
+  _FaqSectionData(
+    anchor: HelpFaqAnchors.vehicleConsumptionEstimation,
+    title: l10n.helpFaqVehicleConsumptionEstimationTitle,
+    children: [Text(l10n.helpFaqVehicleConsumptionEstimationBody)],
   ),
 ];
 

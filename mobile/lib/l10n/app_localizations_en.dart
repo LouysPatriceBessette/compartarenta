@@ -3661,6 +3661,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'This estimate is very reliable because it is based on a large amount of data you entered.';
 
   @override
+  String get vehicleConsumptionEstimationModeTitle =>
+      'Fuel consumption estimation mode';
+
+  @override
+  String get vehicleConsumptionEstimationModeSimpleTitle => 'Simple';
+
+  @override
+  String vehicleConsumptionEstimationModeSimpleDescription(
+    String distanceUnit,
+  ) {
+    return 'Only liters per 100 $distanceUnit';
+  }
+
+  @override
+  String get vehicleConsumptionEstimationModeDetailedTitle => 'Detailed';
+
+  @override
+  String vehicleConsumptionEstimationModeDetailedDescription(
+    String distanceUnit,
+  ) {
+    return 'Liters per 100 $distanceUnit for driving on highway / in city / in traffic';
+  }
+
+  @override
+  String get vehicleDistanceUnitKilometres => 'kilometres';
+
+  @override
+  String get vehicleDistanceUnitMiles => 'miles';
+
+  @override
+  String get vehicleConsumptionRequireDetailedForBorrowers =>
+      'Require borrowers to declare highway / city / traffic percentages';
+
+  @override
+  String vehicleConsumptionSimpleEstimate(String value) {
+    return 'Consumption: $value L/100 km';
+  }
+
+  @override
+  String get vehicleConsumptionInsufficientDetailedData =>
+      'Not enough data yet for a detailed estimate (highway / city / traffic). The simple estimate below is shown until more detailed sessions are recorded.';
+
+  @override
+  String get vehicleConsumptionCarriedFromDetailedMode =>
+      'This estimate is carried over from your previous detailed mode. It will refine as you record more full-tank periods in simple mode.';
+
+  @override
   String get vehicleStatisticsConsumptionHistoryTitle =>
       'Reliable consumption history';
 
@@ -3763,6 +3810,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpFaqVehicleFuelTankBody =>
       'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationTitle =>
+      'Fuel consumption estimation';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationBody =>
+      'Displayed consumption is calculated from your full-tank fuel purchases and, depending on the selected mode, from your end-of-session declarations.\n\nSimple mode: a single L/100 km value with no highway / city / traffic split.\n\nDetailed mode: a split by driving condition when enough detailed sessions between full tanks have been recorded.\n\nReliability counts only full-tank periods recorded in the same mode as the one currently selected.\n\nIf the owner does not require detailed mode for borrowers, they may end a session without entering highway / city / traffic percentages; their distance is then treated like the owner\'s driving profile for the detailed estimate, which may reduce accuracy when drivers do not share the same usage.\n\nSwitching modes may temporarily show an estimate carried over from the other mode until enough new full-tank periods are available in the chosen mode.';
 
   @override
   String get vehicleMaintenanceCategory => 'Category';

@@ -12,6 +12,8 @@ import '../../vehicle/vehicle_oil_change_interval.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
+import '../../vehicle/vehicle_consumption_estimation_mode.dart';
+import '../../widgets/vehicle_consumption_estimation_mode_fields.dart';
 import 'vehicle_add_gallery_section.dart';
 
 class VehicleEditDetailsScreen extends StatefulWidget {
@@ -40,6 +42,8 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
   bool _saving = false;
   bool _oilChangeIntervalBlurred = false;
   bool _usesHorometer = false;
+  VehicleConsumptionEstimationMode _consumptionMode =
+      VehicleConsumptionEstimationMode.detailed;
 
   @override
   void initState() {
@@ -86,6 +90,9 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
       _color.text = vehicle?.color ?? '';
       _licensePlate.text = vehicle?.licensePlate ?? '';
       _usesHorometer = usesHorometer;
+      _consumptionMode = VehicleConsumptionEstimationMode.fromWire(
+        vehicle?.consumptionEstimationMode,
+      );
       if (interval != null) {
         _oilChangeInterval.text = formatOilChangeIntervalForDisplay(
           storedTenths: interval,
@@ -149,6 +156,8 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
       color: _color.text.trim(),
       licensePlate: _licensePlate.text.trim(),
       oilChangeIntervalAmount: _parsedOilChangeInterval!,
+      consumptionEstimationMode:
+          _usesHorometer ? null : _consumptionMode,
     );
     final drafts =
         _newGalleries.where((g) => g.photos.isNotEmpty).toList();
@@ -210,6 +219,13 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          if (!_usesHorometer)
+            VehicleConsumptionEstimationModeFields(
+              mode: _consumptionMode,
+              onModeChanged: (m) => setState(() => _consumptionMode = m),
+              prefs: widget.prefs,
+            ),
+          if (!_usesHorometer) const SizedBox(height: 24),
           VehicleAddGallerySection(
             galleries: _newGalleries,
             showSectionHeader: false,

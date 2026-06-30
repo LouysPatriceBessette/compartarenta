@@ -7,6 +7,7 @@ import '../app_database.dart';
 import '../../vehicle/vehicle_gallery_storage.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
+import '../../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
 
@@ -101,6 +102,9 @@ class VehiclesRepository {
     required int oilChangeIntervalAmount,
     required int initialMeterValue,
     required String initialMeterPhotoPath,
+    VehicleConsumptionEstimationMode consumptionEstimationMode =
+        VehicleConsumptionEstimationMode.detailed,
+    bool requireDetailedDrivingMixForBorrowers = false,
     List<VehicleGalleryDraft> galleries = const [],
   }) async {
     final now = DateTime.now().toUtc();
@@ -118,6 +122,11 @@ class VehiclesRepository {
             licensePlate: drift.Value(licensePlate.trim()),
             vin: drift.Value(vin.trim()),
             fuelTankCapacityLiters: drift.Value(fuelTankCapacityLiters),
+            consumptionEstimationMode:
+                drift.Value(consumptionEstimationMode.wire),
+            requireDetailedDrivingMixForBorrowers: drift.Value(
+              requireDetailedDrivingMixForBorrowers,
+            ),
             createdAt: now,
             updatedAt: now,
           ),
@@ -210,6 +219,8 @@ class VehiclesRepository {
     required String color,
     String licensePlate = '',
     required int oilChangeIntervalAmount,
+    VehicleConsumptionEstimationMode? consumptionEstimationMode,
+    bool? requireDetailedDrivingMixForBorrowers,
   }) async {
     final now = DateTime.now().toUtc();
     await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId))).write(
@@ -217,6 +228,13 @@ class VehiclesRepository {
             displayLabel: drift.Value(displayLabel.trim()),
             color: drift.Value(color.trim()),
             licensePlate: drift.Value(licensePlate.trim()),
+            consumptionEstimationMode: consumptionEstimationMode == null
+                ? const drift.Value.absent()
+                : drift.Value(consumptionEstimationMode.wire),
+            requireDetailedDrivingMixForBorrowers:
+                requireDetailedDrivingMixForBorrowers == null
+                    ? const drift.Value.absent()
+                    : drift.Value(requireDetailedDrivingMixForBorrowers),
             updatedAt: drift.Value(now),
           ),
         );
@@ -638,6 +656,7 @@ class VehiclesRepository {
     int? drivingRoutePercent,
     int? drivingCityPercent,
     int? drivingTrafficPercent,
+    VehicleConsumptionEstimationMode? sessionConsumptionMode,
   }) async {
     final use = await (_db.select(_db.vehicleUses)
           ..where((t) => t.id.equals(useId)))
@@ -657,6 +676,7 @@ class VehiclesRepository {
         drivingRoutePercent: drift.Value(drivingRoutePercent),
         drivingCityPercent: drift.Value(drivingCityPercent),
         drivingTrafficPercent: drift.Value(drivingTrafficPercent),
+        sessionConsumptionMode: drift.Value(sessionConsumptionMode?.wire),
       ),
     );
     return (await (_db.select(_db.vehicleUses)..where((t) => t.id.equals(useId)))

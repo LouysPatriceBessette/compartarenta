@@ -3701,6 +3701,53 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette estimation est très fiable car elle repose sur beaucoup de données que vous avez entrées.';
 
   @override
+  String get vehicleConsumptionEstimationModeTitle =>
+      'Mode d\'estimation de la consommation d\'essence';
+
+  @override
+  String get vehicleConsumptionEstimationModeSimpleTitle => 'Simple';
+
+  @override
+  String vehicleConsumptionEstimationModeSimpleDescription(
+    String distanceUnit,
+  ) {
+    return 'Seulement le nombre de litres par 100 $distanceUnit';
+  }
+
+  @override
+  String get vehicleConsumptionEstimationModeDetailedTitle => 'Détaillée';
+
+  @override
+  String vehicleConsumptionEstimationModeDetailedDescription(
+    String distanceUnit,
+  ) {
+    return 'Litres par 100 $distanceUnit pour la conduite sur route / en ville / dans le traffic';
+  }
+
+  @override
+  String get vehicleDistanceUnitKilometres => 'kilomètres';
+
+  @override
+  String get vehicleDistanceUnitMiles => 'miles';
+
+  @override
+  String get vehicleConsumptionRequireDetailedForBorrowers =>
+      'Imposer aux emprunteurs la saisie des pourcentages route / ville / trafic';
+
+  @override
+  String vehicleConsumptionSimpleEstimate(String value) {
+    return 'Consommation : $value L/100 km';
+  }
+
+  @override
+  String get vehicleConsumptionInsufficientDetailedData =>
+      'Il n\'y a pas assez de données pour produire l\'estimation détaillée (route / ville / trafic). L\'estimation simple ci-dessous est affichée en attendant davantage de sessions détaillées.';
+
+  @override
+  String get vehicleConsumptionCarriedFromDetailedMode =>
+      'Cette estimation provient de votre ancien mode détaillé. Elle se précisera avec de nouvelles périodes entre pleins en mode simple.';
+
+  @override
   String get vehicleStatisticsConsumptionHistoryTitle =>
       'Historique des estimations fiables';
 
@@ -3805,6 +3852,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get helpFaqVehicleFuelTankBody =>
       'La quantité d\'essence affichée pour un véhicule provient du niveau de réservoir le plus récent que vous déclarez à la fin d\'une session d\'utilisation ou lors d\'un achat d\'essence.\n\nSans déclaration de niveau, aucune quantité n\'est affichée.\n\nIl s\'agit de votre déclaration, pas d\'une mesure réelle.';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationTitle =>
+      'Estimation de la consommation d\'essence';
+
+  @override
+  String get helpFaqVehicleConsumptionEstimationBody =>
+      'La consommation affichée est calculée à partir de vos pleins d\'essence et, selon le mode choisi, de vos déclarations en fin de session.\n\nMode simple : une seule valeur en L/100 km, sans répartition route / ville / trafic.\n\nMode détaillé : répartition par type de conduite lorsque suffisamment de sessions détaillées ont été enregistrées entre deux pleins.\n\nLa fiabilité ne tient compte que des périodes entre pleins enregistrées dans le même mode que celui actuellement sélectionné.\n\nSi le propriétaire n\'impose pas le mode détaillé à ses emprunteurs, ceux-ci peuvent terminer une session sans saisir les pourcentages route / ville / trafic ; leurs kilomètres sont alors assimilés au profil de conduite du propriétaire pour l\'estimation détaillée, ce qui peut réduire la précision si tous les conducteurs n\'ont pas le même usage.\n\nChanger de mode peut temporairement afficher une estimation héritée de l\'autre mode jusqu\'à ce qu\'assez de nouvelles périodes entre pleins soient disponibles dans le mode choisi.';
 
   @override
   String get vehicleMaintenanceCategory => 'Catégorie';

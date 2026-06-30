@@ -6213,6 +6213,74 @@ abstract class AppLocalizations {
   /// **'This estimate is very reliable because it is based on a large amount of data you entered.'**
   String get vehicleConsumptionReliabilityVeryReliable;
 
+  /// No description provided for @vehicleConsumptionEstimationModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel consumption estimation mode'**
+  String get vehicleConsumptionEstimationModeTitle;
+
+  /// No description provided for @vehicleConsumptionEstimationModeSimpleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple'**
+  String get vehicleConsumptionEstimationModeSimpleTitle;
+
+  /// No description provided for @vehicleConsumptionEstimationModeSimpleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Only liters per 100 {distanceUnit}'**
+  String vehicleConsumptionEstimationModeSimpleDescription(String distanceUnit);
+
+  /// No description provided for @vehicleConsumptionEstimationModeDetailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get vehicleConsumptionEstimationModeDetailedTitle;
+
+  /// No description provided for @vehicleConsumptionEstimationModeDetailedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Liters per 100 {distanceUnit} for driving on highway / in city / in traffic'**
+  String vehicleConsumptionEstimationModeDetailedDescription(
+    String distanceUnit,
+  );
+
+  /// No description provided for @vehicleDistanceUnitKilometres.
+  ///
+  /// In en, this message translates to:
+  /// **'kilometres'**
+  String get vehicleDistanceUnitKilometres;
+
+  /// No description provided for @vehicleDistanceUnitMiles.
+  ///
+  /// In en, this message translates to:
+  /// **'miles'**
+  String get vehicleDistanceUnitMiles;
+
+  /// No description provided for @vehicleConsumptionRequireDetailedForBorrowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Require borrowers to declare highway / city / traffic percentages'**
+  String get vehicleConsumptionRequireDetailedForBorrowers;
+
+  /// No description provided for @vehicleConsumptionSimpleEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumption: {value} L/100 km'**
+  String vehicleConsumptionSimpleEstimate(String value);
+
+  /// No description provided for @vehicleConsumptionInsufficientDetailedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet for a detailed estimate (highway / city / traffic). The simple estimate below is shown until more detailed sessions are recorded.'**
+  String get vehicleConsumptionInsufficientDetailedData;
+
+  /// No description provided for @vehicleConsumptionCarriedFromDetailedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'This estimate is carried over from your previous detailed mode. It will refine as you record more full-tank periods in simple mode.'**
+  String get vehicleConsumptionCarriedFromDetailedMode;
+
   /// No description provided for @vehicleStatisticsConsumptionHistoryTitle.
   ///
   /// In en, this message translates to:
@@ -6398,6 +6466,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.'**
   String get helpFaqVehicleFuelTankBody;
+
+  /// No description provided for @helpFaqVehicleConsumptionEstimationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel consumption estimation'**
+  String get helpFaqVehicleConsumptionEstimationTitle;
+
+  /// No description provided for @helpFaqVehicleConsumptionEstimationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Displayed consumption is calculated from your full-tank fuel purchases and, depending on the selected mode, from your end-of-session declarations.\n\nSimple mode: a single L/100 km value with no highway / city / traffic split.\n\nDetailed mode: a split by driving condition when enough detailed sessions between full tanks have been recorded.\n\nReliability counts only full-tank periods recorded in the same mode as the one currently selected.\n\nIf the owner does not require detailed mode for borrowers, they may end a session without entering highway / city / traffic percentages; their distance is then treated like the owner\'s driving profile for the detailed estimate, which may reduce accuracy when drivers do not share the same usage.\n\nSwitching modes may temporarily show an estimate carried over from the other mode until enough new full-tank periods are available in the chosen mode.'**
+  String get helpFaqVehicleConsumptionEstimationBody;
 
   /// No description provided for @vehicleMaintenanceCategory.
   ///

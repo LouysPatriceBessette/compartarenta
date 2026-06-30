@@ -77,3 +77,12 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 ## 11. Vehicle notifications (deferred)
 
 - [ ] 11.1 **Suspicious session-end tank (borrower)**: when an Emprunteur ends a session with the highest declared tank level after high mileage since the last fuel purchase and confirms the declaration anyway, notify the Propriétaire (relay/push when vehicle notification infrastructure ships).
+
+## 12. Consumption estimation mode
+
+- [x] 12.1 Vehicle setting: simple vs detailed consumption estimation mode (add vehicle + edit details); default detailed
+- [x] 12.2 Simple mode: single L/100 km on hub card; reliability from same-mode plein→plein periods only
+- [x] 12.3 Detailed mode: route / city / traffic breakdown when enough same-mode detailed sessions; borrower mix optional unless owner requires it (owner must use detailed)
+- [x] 12.4 Mode transitions: carry reliable detailed average into simple; show simple estimate with insufficient-data message when switching to detailed
+- [x] 12.5 FAQ: estimation limitations when not all users declare detailed driving mix (`helpFaqVehicleConsumptionEstimation`)
+- [ ] 12.6 **Per-borrower detailed mix** (vehicle sharing module): switch to require route / city / traffic per emprunteur per vehicle; wire `shouldCollectDetailedDrivingMix` to sharing link instead of vehicle-level `requireDetailedDrivingMixForBorrowers`

@@ -15,6 +15,8 @@ import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/vehicle_meter_photo_button.dart';
 import '../../widgets/vehicle_narrow_unit_field.dart';
+import '../../vehicle/vehicle_consumption_estimation_mode.dart';
+import '../../widgets/vehicle_consumption_estimation_mode_fields.dart';
 import 'vehicle_add_gallery_section.dart';
 
 class VehicleAddScreen extends StatefulWidget {
@@ -39,6 +41,8 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   final _licensePlate = TextEditingController();
   final _vin = TextEditingController();
   VehicleKind _kind = VehicleKind.car;
+  VehicleConsumptionEstimationMode _consumptionMode =
+      VehicleConsumptionEstimationMode.detailed;
   String? _meterPhotoPath;
   final _galleries = <VehicleGalleryDraft>[];
   bool _saving = false;
@@ -182,6 +186,9 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       oilChangeIntervalAmount: _parsedOilChangeInterval!,
       initialMeterValue: _parsedMeter!,
       initialMeterPhotoPath: _meterPhotoPath!,
+      consumptionEstimationMode: _kind.usesHorometer
+          ? VehicleConsumptionEstimationMode.simple
+          : _consumptionMode,
       galleries: _galleries.where((g) => g.photos.isNotEmpty).toList(),
     );
     if (!mounted) return;
@@ -230,6 +237,10 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
                 setState(() {
                   _kind = v;
                   _oilChangeIntervalBlurred = false;
+                  if (v.usesHorometer) {
+                    _consumptionMode =
+                        VehicleConsumptionEstimationMode.simple;
+                  }
                 });
               }
             },
@@ -317,6 +328,14 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
             galleries: _galleries,
             onChanged: _refresh,
           ),
+          if (!_kind.usesHorometer) ...[
+            const SizedBox(height: 24),
+            VehicleConsumptionEstimationModeFields(
+              mode: _consumptionMode,
+              onModeChanged: (m) => setState(() => _consumptionMode = m),
+              prefs: widget.prefs,
+            ),
+          ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _canSave ? _save : null,

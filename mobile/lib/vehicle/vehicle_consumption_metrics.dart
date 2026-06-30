@@ -5,6 +5,8 @@ import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
 import '../db/repositories/vehicles_repository.dart';
+import 'vehicle_consumption_estimation_mode.dart';
+import 'vehicle_consumption_mode_policy.dart';
 import 'vehicle_consumption_reliability.dart';
 import 'vehicle_driving_condition_consumption.dart';
 import 'vehicle_kind.dart';
@@ -19,6 +21,7 @@ class FullTankConsumptionInterval {
     required this.routeKm,
     required this.cityKm,
     required this.trafficKm,
+    required this.homogeneousMode,
   });
 
   final DateTime startAt;
@@ -28,8 +31,15 @@ class FullTankConsumptionInterval {
   final double routeKm;
   final double cityKm;
   final double trafficKm;
+  final VehicleConsumptionEstimationMode? homogeneousMode;
 
   bool get hasDrivingMix => routeKm + cityKm + trafficKm > 0;
+
+  bool get matchesDetailedMode =>
+      homogeneousMode == VehicleConsumptionEstimationMode.detailed;
+
+  bool get matchesSimpleMode =>
+      homogeneousMode == VehicleConsumptionEstimationMode.simple;
 
   DrivingConditionConsumptionInput? get modeInput {
     if (!hasDrivingMix) return null;
@@ -58,6 +68,8 @@ class VehicleConsumptionSnapshot {
     this.anchorEndAt,
     this.distanceInWindow,
     this.volumeInWindow,
+    this.showInsufficientDetailedDataMessage = false,
+    this.isCarriedFromOtherMode = false,
   });
 
   final bool hasSufficientData;
@@ -73,6 +85,8 @@ class VehicleConsumptionSnapshot {
   final DateTime? anchorEndAt;
   final int? distanceInWindow;
   final double? volumeInWindow;
+  final bool showInsufficientDetailedDataMessage;
+  final bool isCarriedFromOtherMode;
 }
 
 class VehicleConsumptionMetrics {
@@ -91,7 +105,7 @@ class VehicleConsumptionMetrics {
     if (kind?.usesHorometer ?? false) {
       return _forHorometerVehicle(vehicleId);
     }
-    final snapshot = await _forRoadVehicle(vehicleId);
+    final snapshot = await _forRoadVehicle(vehicle);
     await _maybeRecordReliableHistory(vehicleId: vehicleId, snapshot: snapshot);
     return snapshot;
   }
@@ -147,17 +161,56 @@ class VehicleConsumptionMetrics {
     );
   }
 
-  Future<VehicleConsumptionSnapshot> _forRoadVehicle(String vehicleId) async {
+  Future<VehicleConsumptionSnapshot> _forRoadVehicle(Vehicle vehicle) async {
+    final vehicleId = vehicle.id;
+    final estimationMode = VehicleConsumptionEstimationMode.fromWire(
+      vehicle.consumptionEstimationMode,
+    );
     final anchors = await _fullTankAnchorsNewestFirst(vehicleId);
-    final allIntervals = await _buildFullTankIntervals(vehicleId, anchors);
+    final allIntervals =
+        await _buildFullTankIntervals(vehicleId, anchors, estimationMode);
     if (allIntervals.isEmpty) {
       return const VehicleConsumptionSnapshot(hasSufficientData: false);
     }
 
-    final window = _rollingConsumptionWindow(allIntervals);
+    final modeIntervals = allIntervals
+        .where(
+          (i) =>
+              i.homogeneousMode != null && i.homogeneousMode == estimationMode,
+        )
+        .toList();
+
+    if (estimationMode == VehicleConsumptionEstimationMode.simple) {
+      return _simpleModeSnapshot(
+        vehicleId: vehicleId,
+        modeIntervals: modeIntervals,
+      );
+    }
+    return _detailedModeSnapshot(
+      vehicleId: vehicleId,
+      modeIntervals: modeIntervals,
+      allIntervals: allIntervals,
+    );
+  }
+
+  Future<VehicleConsumptionSnapshot> _simpleModeSnapshot({
+    required String vehicleId,
+    required List<FullTankConsumptionInterval> modeIntervals,
+  }) async {
+    final window = _rollingConsumptionWindow(modeIntervals);
     final periodsInWindow = window.length;
     final reliability = consumptionReliabilityFromPeriodCount(periodsInWindow);
+
     if (reliability == VehicleConsumptionReliability.none) {
+      final carryover = await _averageReliableHistoryBlended(vehicleId);
+      if (carryover != null) {
+        return VehicleConsumptionSnapshot(
+          hasSufficientData: true,
+          reliability: VehicleConsumptionReliability.preliminary,
+          litersPer100Km: carryover,
+          isCarriedFromOtherMode: true,
+        );
+      }
       return VehicleConsumptionSnapshot(
         hasSufficientData: false,
         reliability: reliability,
@@ -167,69 +220,162 @@ class VehicleConsumptionMetrics {
       );
     }
 
-    var totalDistanceTenths = 0;
-    var totalFuel = 0.0;
-    for (final interval in window) {
-      totalDistanceTenths += interval.distanceTenths;
-      totalFuel += interval.fuelLiters;
-    }
-    if (totalDistanceTenths <= 0 || totalFuel <= 0) {
+    final blended = _blendedLitersPer100Km(window);
+    if (blended == null) {
       return VehicleConsumptionSnapshot(
         hasSufficientData: false,
         reliability: reliability,
         periodsInWindow: periodsInWindow,
-        anchorStartAt: window.first.startAt,
-        anchorEndAt: window.last.endAt,
+        anchorStartAt: window.firstOrNull?.startAt,
+        anchorEndAt: window.lastOrNull?.endAt,
       );
-    }
-
-    final blended = (totalFuel / totalDistanceTenths) * 1000;
-    final modeIntervals = window
-        .map((i) => i.modeInput)
-        .whereType<DrivingConditionConsumptionInput>()
-        .toList();
-    final modeFit = solveDrivingConditionConsumption(modeIntervals);
-
-    if (modeFit == null) {
-      return VehicleConsumptionSnapshot(
-        hasSufficientData: true,
-        reliability: reliability,
-        periodsInWindow: periodsInWindow,
-        litersPer100Km: blended,
-        anchorStartAt: window.first.startAt,
-        anchorEndAt: window.last.endAt,
-        distanceInWindow: totalDistanceTenths,
-        volumeInWindow: totalFuel,
-      );
-    }
-
-    var totalRoute = 0.0;
-    var totalCity = 0.0;
-    var totalTraffic = 0.0;
-    for (final interval in modeIntervals) {
-      totalRoute += interval.routeKm;
-      totalCity += interval.cityKm;
-      totalTraffic += interval.trafficKm;
     }
 
     return VehicleConsumptionSnapshot(
       hasSufficientData: true,
       reliability: reliability,
       periodsInWindow: periodsInWindow,
-      litersPer100Km: modeFit.blendedLitersPer100Km(
-        totalRouteKm: totalRoute,
-        totalCityKm: totalCity,
-        totalTrafficKm: totalTraffic,
-      ),
-      litersPer100KmRoute: modeFit.litersPer100KmRoute,
-      litersPer100KmCity: modeFit.litersPer100KmCity,
-      litersPer100KmTraffic: modeFit.litersPer100KmTraffic,
-      hasModeBreakdown: true,
+      litersPer100Km: blended,
       anchorStartAt: window.first.startAt,
       anchorEndAt: window.last.endAt,
-      distanceInWindow: totalDistanceTenths,
-      volumeInWindow: totalFuel,
+      distanceInWindow: _totalDistanceTenths(window),
+      volumeInWindow: _totalFuel(window),
     );
+  }
+
+  Future<VehicleConsumptionSnapshot> _detailedModeSnapshot({
+    required String vehicleId,
+    required List<FullTankConsumptionInterval> modeIntervals,
+    required List<FullTankConsumptionInterval> allIntervals,
+  }) async {
+    final window = _rollingConsumptionWindow(modeIntervals);
+    final periodsInWindow = window.length;
+    final reliability = consumptionReliabilityFromPeriodCount(periodsInWindow);
+
+    final modeFitIntervals = window
+        .map((i) => i.modeInput)
+        .whereType<DrivingConditionConsumptionInput>()
+        .toList();
+    final modeFit = modeFitIntervals.length >=
+            kMinFullTankIntervalsForDrivingConditionConsumption
+        ? solveDrivingConditionConsumption(modeFitIntervals)
+        : null;
+
+    if (reliability != VehicleConsumptionReliability.none && modeFit != null) {
+      var totalRoute = 0.0;
+      var totalCity = 0.0;
+      var totalTraffic = 0.0;
+      for (final interval in modeFitIntervals) {
+        totalRoute += interval.routeKm;
+        totalCity += interval.cityKm;
+        totalTraffic += interval.trafficKm;
+      }
+
+      return VehicleConsumptionSnapshot(
+        hasSufficientData: true,
+        reliability: reliability,
+        periodsInWindow: periodsInWindow,
+        litersPer100Km: modeFit.blendedLitersPer100Km(
+          totalRouteKm: totalRoute,
+          totalCityKm: totalCity,
+          totalTrafficKm: totalTraffic,
+        ),
+        litersPer100KmRoute: modeFit.litersPer100KmRoute,
+        litersPer100KmCity: modeFit.litersPer100KmCity,
+        litersPer100KmTraffic: modeFit.litersPer100KmTraffic,
+        hasModeBreakdown: true,
+        anchorStartAt: window.first.startAt,
+        anchorEndAt: window.last.endAt,
+        distanceInWindow: _totalDistanceTenths(window),
+        volumeInWindow: _totalFuel(window),
+      );
+    }
+
+    if (reliability != VehicleConsumptionReliability.none) {
+      final blended = _blendedLitersPer100Km(window);
+      if (blended != null) {
+        return VehicleConsumptionSnapshot(
+          hasSufficientData: true,
+          reliability: reliability,
+          periodsInWindow: periodsInWindow,
+          litersPer100Km: blended,
+          showInsufficientDetailedDataMessage: true,
+          anchorStartAt: window.first.startAt,
+          anchorEndAt: window.last.endAt,
+          distanceInWindow: _totalDistanceTenths(window),
+          volumeInWindow: _totalFuel(window),
+        );
+      }
+    }
+
+    final simpleIntervals = allIntervals.where((i) => i.matchesSimpleMode).toList();
+    final simpleWindow = _rollingConsumptionWindow(simpleIntervals);
+    final simpleBlended = _blendedLitersPer100Km(simpleWindow);
+    if (simpleBlended != null) {
+      return VehicleConsumptionSnapshot(
+        hasSufficientData: true,
+        reliability: consumptionReliabilityFromPeriodCount(simpleWindow.length),
+        periodsInWindow: periodsInWindow,
+        litersPer100Km: simpleBlended,
+        showInsufficientDetailedDataMessage: true,
+        anchorStartAt: simpleWindow.firstOrNull?.startAt,
+        anchorEndAt: simpleWindow.lastOrNull?.endAt,
+        distanceInWindow: _totalDistanceTenths(simpleWindow),
+        volumeInWindow: _totalFuel(simpleWindow),
+      );
+    }
+
+    return VehicleConsumptionSnapshot(
+      hasSufficientData: false,
+      reliability: reliability,
+      periodsInWindow: periodsInWindow,
+      anchorStartAt: window.firstOrNull?.startAt,
+      anchorEndAt: window.lastOrNull?.endAt,
+    );
+  }
+
+  double? _blendedLitersPer100Km(List<FullTankConsumptionInterval> window) {
+    if (window.isEmpty) return null;
+    var totalDistanceTenths = 0;
+    var totalFuel = 0.0;
+    for (final interval in window) {
+      totalDistanceTenths += interval.distanceTenths;
+      totalFuel += interval.fuelLiters;
+    }
+    if (totalDistanceTenths <= 0 || totalFuel <= 0) return null;
+    return (totalFuel / totalDistanceTenths) * 1000;
+  }
+
+  int _totalDistanceTenths(List<FullTankConsumptionInterval> window) {
+    var total = 0;
+    for (final interval in window) {
+      total += interval.distanceTenths;
+    }
+    return total;
+  }
+
+  double _totalFuel(List<FullTankConsumptionInterval> window) {
+    var total = 0.0;
+    for (final interval in window) {
+      total += interval.fuelLiters;
+    }
+    return total;
+  }
+
+  Future<double?> _averageReliableHistoryBlended(String vehicleId) async {
+    final history = await listReliableEstimateHistory(vehicleId);
+    final values = <double>[];
+    for (final row in history) {
+      final reliability =
+          VehicleConsumptionReliability.fromWire(row.reliability);
+      if (reliability == null ||
+          !consumptionReliabilityIsReliableOrBetter(reliability)) {
+        continue;
+      }
+      values.add(row.litersPer100Km);
+    }
+    if (values.isEmpty) return null;
+    return values.reduce((a, b) => a + b) / values.length;
   }
 
   List<FullTankConsumptionInterval> _rollingConsumptionWindow(
@@ -247,6 +393,7 @@ class VehicleConsumptionMetrics {
     required String vehicleId,
     required VehicleConsumptionSnapshot snapshot,
   }) async {
+    if (snapshot.isCarriedFromOtherMode) return;
     if (!consumptionReliabilityIsReliableOrBetter(snapshot.reliability)) {
       return;
     }
@@ -290,21 +437,29 @@ class VehicleConsumptionMetrics {
         .get();
   }
 
+  VehicleConsumptionEstimationMode? _homogeneousModeForUses(
+    List<VehicleUse> uses,
+    VehicleConsumptionEstimationMode vehicleMode,
+  ) {
+    if (uses.isEmpty) {
+      return vehicleMode;
+    }
+    final modes = uses.map(effectiveSessionConsumptionMode).toSet();
+    if (modes.length != 1) return null;
+    return modes.first;
+  }
+
   Future<List<FullTankConsumptionInterval>> _buildFullTankIntervals(
     String vehicleId,
     List<FuelPurchase> anchorsNewestFirst,
+    VehicleConsumptionEstimationMode vehicleMode,
   ) async {
     if (anchorsNewestFirst.length < 2) return const [];
 
     final chronological = anchorsNewestFirst.reversed.toList();
     final uses = await (_db.select(_db.vehicleUses)
           ..where(
-            (t) =>
-                t.vehicleId.equals(vehicleId) &
-                t.endedAt.isNotNull() &
-                t.drivingRoutePercent.isNotNull() &
-                t.drivingCityPercent.isNotNull() &
-                t.drivingTrafficPercent.isNotNull(),
+            (t) => t.vehicleId.equals(vehicleId) & t.endedAt.isNotNull(),
           ))
         .get();
 
@@ -328,7 +483,7 @@ class VehicleConsumptionMetrics {
         if (ended == null) return false;
         return !ended.isBefore(start.purchasedAt) &&
             !ended.isAfter(end.purchasedAt);
-      });
+      }).toList();
 
       var routeKm = 0.0;
       var cityKm = 0.0;
@@ -370,6 +525,7 @@ class VehicleConsumptionMetrics {
           routeKm: routeKm,
           cityKm: cityKm,
           trafficKm: trafficKm,
+          homogeneousMode: _homogeneousModeForUses(windowUses, vehicleMode),
         ),
       );
     }

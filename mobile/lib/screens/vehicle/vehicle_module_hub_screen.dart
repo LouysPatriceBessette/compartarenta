@@ -9,6 +9,7 @@ import '../../util/display_date.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
+import '../../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../../vehicle/vehicle_consumption_reliability.dart';
 import '../../vehicle/vehicle_consumption_reliability_l10n.dart';
 import '../../vehicle/vehicle_fuel_tank_estimate.dart';
@@ -379,6 +380,9 @@ class _VehicleCardState extends State<_VehicleCard> {
         alerts: alerts,
         fuelTank: fuelTank,
         kind: kind,
+        estimationMode: VehicleConsumptionEstimationMode.fromWire(
+          widget.vehicle.consumptionEstimationMode,
+        ),
       );
     } catch (_) {
       return _VehicleCardData(
@@ -387,6 +391,9 @@ class _VehicleCardState extends State<_VehicleCard> {
         alerts: const [],
         fuelTank: null,
         kind: kind,
+        estimationMode: VehicleConsumptionEstimationMode.fromWire(
+          widget.vehicle.consumptionEstimationMode,
+        ),
       );
     }
   }
@@ -399,6 +406,7 @@ class _VehicleCardData {
     required this.alerts,
     required this.fuelTank,
     required this.kind,
+    required this.estimationMode,
   });
 
   final int meterValue;
@@ -406,6 +414,7 @@ class _VehicleCardData {
   final List<VehicleMaintenanceAlert> alerts;
   final VehicleFuelTankSnapshot? fuelTank;
   final VehicleKind? kind;
+  final VehicleConsumptionEstimationMode estimationMode;
 
   String fuelTankLabel(
     AppLocalizations l10n,
@@ -424,6 +433,12 @@ class _VehicleCardData {
 
   String consumptionReliabilityMessage(AppLocalizations l10n) {
     if (kind?.usesHorometer ?? false) return '';
+    if (consumption.showInsufficientDetailedDataMessage) {
+      return l10n.vehicleConsumptionInsufficientDetailedData;
+    }
+    if (consumption.isCarriedFromOtherMode) {
+      return l10n.vehicleConsumptionCarriedFromDetailedMode;
+    }
     return consumption.reliability.message(l10n);
   }
 
@@ -436,7 +451,8 @@ class _VehicleCardData {
       if (v == null) return '';
       return l10n.vehicleConsumptionPerHour(v.toStringAsFixed(2));
     }
-    if (consumption.hasModeBreakdown) {
+    if (consumption.hasModeBreakdown &&
+        estimationMode == VehicleConsumptionEstimationMode.detailed) {
       final route = consumption.litersPer100KmRoute;
       final city = consumption.litersPer100KmCity;
       final traffic = consumption.litersPer100KmTraffic;
@@ -450,6 +466,6 @@ class _VehicleCardData {
     }
     final v = consumption.litersPer100Km;
     if (v == null) return '';
-    return l10n.vehicleConsumptionPer100Km(v.toStringAsFixed(1));
+    return l10n.vehicleConsumptionSimpleEstimate(v.toStringAsFixed(1));
   }
 }

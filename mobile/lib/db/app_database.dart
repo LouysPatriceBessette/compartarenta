@@ -712,7 +712,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 29;
+  int get schemaVersion => 30;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1013,6 +1013,23 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 29) {
         await m.createTable(vehicleConsumptionEstimateHistory);
+      }
+      if (from < 30) {
+        await _migrateAddColumn(
+          m,
+          vehicles,
+          vehicles.consumptionEstimationMode,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicles,
+          vehicles.requireDetailedDrivingMixForBorrowers,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleUses,
+          vehicleUses.sessionConsumptionMode,
+        );
       }
     },
     beforeOpen: (details) async {
