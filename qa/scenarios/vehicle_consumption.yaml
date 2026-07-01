@@ -1,0 +1,7 @@
+id: vehicle_consumption
+description: Consommation d'essence — seed des sessions + achat plein, vérification hub
+device_date: "2027-06-15T09:00:00"
+timezone: America/Toronto
+seed: vehicle_consumption
+flow: qa/flows/vehicle_consumption.yaml
+screenshot_prefix: vehicle_consumption

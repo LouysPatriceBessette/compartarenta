@@ -30,6 +30,13 @@ const kQaVehicleCardQaCivicMeter = 'qa-vehicle-card-qa-civic-meter';
 /// Estimated fuel volume on [kQaVehicleCardQaCivic] (hub card body).
 const kQaVehicleCardQaCivicFuelTank = 'qa-vehicle-card-qa-civic-fuel-tank';
 
+/// Consumption estimate line on [kQaVehicleCardQaCivic] (hub card body).
+const kQaVehicleCardQaCivicConsumption = 'qa-vehicle-card-qa-civic-consumption';
+
+/// Consumption reliability / detailed-mode helper line on the hub card.
+const kQaVehicleCardQaCivicConsumptionReliability =
+    'qa-vehicle-card-qa-civic-consumption-reliability';
+
 const kQaVehicleFieldCost = 'qa-vehicle-field-cost';
 const kQaVehicleFieldVolume = 'qa-vehicle-field-volume';
 const kQaVehicleFieldFuelMeter = 'qa-vehicle-field-fuel-meter';

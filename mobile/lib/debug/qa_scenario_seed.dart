@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../db/repositories/vehicles_repository.dart';
+import '../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
@@ -19,6 +20,7 @@ import '../housing/settlement/housing_settlement_window.dart';
 import 'qa_e2e_environment.dart';
 import 'qa_e2e_meter_photo.dart';
 import 'qa_scenario_seed_helpers.dart';
+import 'qa_vehicle_consumption_seed.dart';
 import 'qa_vehicle_seed_helpers.dart';
 import 'web_dev_db_snapshot.dart';
 
@@ -44,6 +46,7 @@ const kQaScenarioIds = <String>{
   'vehicle_use_session',
   'vehicle_session_start_gap',
   'vehicle_standalone_meter_gap',
+  'vehicle_consumption',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -132,6 +135,8 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
     case 'vehicle_session_start_gap':
     case 'vehicle_standalone_meter_gap':
       await qaSeedE2eVehicle(db);
+    case 'vehicle_consumption':
+      await qaSeedVehicleConsumptionScenario(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -268,6 +273,8 @@ Future<void> assertQaScenarioPostconditions({
     case 'vehicle_session_start_gap':
     case 'vehicle_standalone_meter_gap':
       await _assertVehicleGapAttributionSeed(db);
+    case 'vehicle_consumption':
+      await _assertVehicleConsumptionSeed(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -331,7 +338,8 @@ Future<void> _assertPastHubTitleWhenPeriodClosed(
       scenarioId == 'vehicle_fuel_purchase' ||
       scenarioId == 'vehicle_use_session' ||
       scenarioId == 'vehicle_session_start_gap' ||
-      scenarioId == 'vehicle_standalone_meter_gap') {
+      scenarioId == 'vehicle_standalone_meter_gap' ||
+      scenarioId == 'vehicle_consumption') {
     return;
   }
   final planId = qaPlanIdForScenario(scenarioId);
@@ -599,6 +607,41 @@ Future<void> _assertVehicleUseSessionSeed(AppDatabase db) async {
   final open = await VehiclesRepository(db).findAnyOpenUse();
   if (open != null) {
     throw StateError('vehicle_use_session: seed must not have an open use');
+  }
+}
+
+Future<void> _assertVehicleConsumptionSeed(AppDatabase db) async {
+  await _assertVehicleE2eSeedVehicle(db);
+  final open = await VehiclesRepository(db).findAnyOpenUse();
+  if (open != null) {
+    throw StateError('vehicle_consumption: seed must not have an open use');
+  }
+  final uses = await (db.select(db.vehicleUses)).get();
+  if (uses.length != 13) {
+    throw StateError(
+      'vehicle_consumption: expected 13 closed sessions, got ${uses.length}',
+    );
+  }
+  final purchases = await (db.select(db.fuelPurchases)).get();
+  if (purchases.length != 4) {
+    throw StateError(
+      'vehicle_consumption: expected 4 full-tank purchases, got ${purchases.length}',
+    );
+  }
+  final meter =
+      await VehiclesRepository(db).latestMeterValue(uses.first.vehicleId);
+  if (meter != kQaVehicleConsumptionFinalMeterTenths) {
+    throw StateError(
+      'vehicle_consumption: expected final meter '
+      '$kQaVehicleConsumptionFinalMeterTenths, got $meter',
+    );
+  }
+  final vehicle = (await VehiclesRepository(db).listOwnedVehicles()).single;
+  final mode = VehicleConsumptionEstimationMode.fromWire(
+    vehicle.consumptionEstimationMode,
+  );
+  if (mode != VehicleConsumptionEstimationMode.detailed) {
+    throw StateError('vehicle_consumption: expected detailed consumption mode');
   }
 }
 

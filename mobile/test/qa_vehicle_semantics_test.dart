@@ -17,5 +17,10 @@ void main() {
       qaVehicleCardFuelTankSemanticsId(kQaVehicleE2eDisplayLabel),
       'qa-vehicle-card-qa-civic-fuel-tank',
     );
+    expect(kQaVehicleCardQaCivicConsumption, 'qa-vehicle-card-qa-civic-consumption');
+    expect(
+      kQaVehicleCardQaCivicConsumptionReliability,
+      'qa-vehicle-card-qa-civic-consumption-reliability',
+    );
   });
 }

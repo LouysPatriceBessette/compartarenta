@@ -78,7 +78,8 @@ DrivingConditionConsumptionResult? solveDrivingConditionConsumption(
   if (rows.length < kMinFullTankIntervalsForDrivingConditionConsumption) {
     return null;
   }
-  final coeffs = _nnls(rows, targets);
+  final requiredModes = _requiredModeIndices(rows);
+  final coeffs = _nnls(rows, targets, requiredModes: requiredModes);
   if (coeffs == null) return null;
   final route = coeffs[0];
   final city = coeffs[1];
@@ -92,10 +93,32 @@ DrivingConditionConsumptionResult? solveDrivingConditionConsumption(
   );
 }
 
+/// Mode indices whose total attributed km across intervals is positive.
+List<int> _requiredModeIndices(List<List<double>> rows) {
+  final n = rows.first.length;
+  final totals = List<double>.filled(n, 0);
+  for (final row in rows) {
+    for (var j = 0; j < n; j++) {
+      totals[j] += row[j];
+    }
+  }
+  final required = <int>[];
+  for (var j = 0; j < n; j++) {
+    if (totals[j] > 1e-9) required.add(j);
+  }
+  return required;
+}
+
 /// Non-negative least squares for `min ||Ax - b||²`, `x >= 0`.
 ///
-/// Enumerates active sets (feasible for [n] ≤ 8); exact for our three modes.
-List<double>? _nnls(List<List<double>> a, List<double> b) {
+/// When several fits tie on residual (common with fewer intervals than modes),
+/// prefer solutions that estimate every mode with non-zero attributed distance,
+/// then prefer more active coefficients, then minimum L2 norm.
+List<double>? _nnls(
+  List<List<double>> a,
+  List<double> b, {
+  required List<int> requiredModes,
+}) {
   final m = a.length;
   final n = a.first.length;
   if (m == 0 || n == 0 || a.any((row) => row.length != n) || b.length != m) {
@@ -104,6 +127,8 @@ List<double>? _nnls(List<List<double>> a, List<double> b) {
 
   List<double>? best;
   var bestResidual = double.infinity;
+  var bestRequiredCoverage = -1;
+  var bestActiveCount = -1;
   var bestNorm = double.infinity;
 
   for (var mask = 0; mask < (1 << n); mask++) {
@@ -114,17 +139,11 @@ List<double>? _nnls(List<List<double>> a, List<double> b) {
 
     final x = List<double>.filled(n, 0);
     if (active.isNotEmpty) {
-      final sub = _solveUnconstrainedLeastSquares(a, b, active);
+      final sub = _solveNonnegativeLeastSquaresForActive(a, b, active);
       if (sub == null) continue;
-      var feasible = true;
       for (var i = 0; i < active.length; i++) {
-        if (sub[i] < -1e-9) {
-          feasible = false;
-          break;
-        }
         x[active[i]] = sub[i];
       }
-      if (!feasible) continue;
     }
 
     var residual = 0.0;
@@ -136,20 +155,99 @@ List<double>? _nnls(List<List<double>> a, List<double> b) {
       final d = b[i] - pred;
       residual += d * d;
     }
-    if (residual < bestResidual - 1e-12) {
+
+    final requiredCoverage =
+        requiredModes.where((mode) => x[mode] > 1e-12).length;
+    final activeCount = x.where((v) => v > 1e-12).length;
+    final norm = _l2Norm(x);
+
+    final betterResidual = residual < bestResidual - 1e-12;
+    final tiedResidual = (residual - bestResidual).abs() <= 1e-12;
+    final betterRequired =
+        tiedResidual && requiredCoverage > bestRequiredCoverage;
+    final tiedRequired =
+        tiedResidual && requiredCoverage == bestRequiredCoverage;
+    final betterActive = tiedRequired && activeCount > bestActiveCount;
+    final tiedActive = tiedRequired && activeCount == bestActiveCount;
+    final betterNorm = tiedActive && norm < bestNorm - 1e-12;
+
+    if (betterResidual ||
+        betterRequired ||
+        betterActive ||
+        betterNorm ||
+        (tiedActive && (norm - bestNorm).abs() <= 1e-12 && best == null)) {
       bestResidual = residual;
-      bestNorm = _l2Norm(x);
+      bestRequiredCoverage = requiredCoverage;
+      bestActiveCount = activeCount;
+      bestNorm = norm;
       best = x;
-    } else if ((residual - bestResidual).abs() <= 1e-12) {
-      final norm = _l2Norm(x);
-      if (norm < bestNorm) {
-        bestNorm = norm;
-        best = x;
-      }
     }
   }
 
   return best;
+}
+
+/// Least-squares coefficients for [active] columns, non-negative when possible.
+///
+/// For underdetermined exact fits (`active.length > rowCount`), returns the
+/// minimum-Euclidean-norm solution to `Ax = b` so every attributed mode can
+/// receive fuel instead of being zeroed by a sparser alternate fit.
+List<double>? _solveNonnegativeLeastSquaresForActive(
+  List<List<double>> a,
+  List<double> b,
+  List<int> active,
+) {
+  final p = active.length;
+  if (p == 0) return const [];
+
+  if (p > a.length) {
+    return _minimumNormEqualitySolution(a, b, active);
+  }
+
+  final sub = _solveUnconstrainedLeastSquares(a, b, active);
+  if (sub == null) return null;
+  for (final v in sub) {
+    if (v < -1e-9) return null;
+  }
+  return sub;
+}
+
+/// Minimum-norm solution to `Ax = b` when [active] has more columns than rows.
+List<double>? _minimumNormEqualitySolution(
+  List<List<double>> a,
+  List<double> b,
+  List<int> active,
+) {
+  final m = a.length;
+  final p = active.length;
+  if (p <= m) return null;
+
+  final aat = List.generate(m, (_) => List<double>.filled(m, 0));
+  for (var i = 0; i < m; i++) {
+    for (var r = 0; r < m; r++) {
+      var sum = 0.0;
+      for (final col in active) {
+        sum += a[i][col] * a[r][col];
+      }
+      aat[i][r] = sum;
+    }
+  }
+  final y = _solveSymmetric(aat, List<double>.from(b));
+  if (y == null) return null;
+
+  final x = List<double>.filled(p, 0);
+  for (var j = 0; j < p; j++) {
+    final col = active[j];
+    var sum = 0.0;
+    for (var i = 0; i < m; i++) {
+      sum += a[i][col] * y[i];
+    }
+    x[j] = sum;
+  }
+  for (final v in x) {
+    if (v < -1e-9) return null;
+  }
+  return x;
 }
 
 double _l2Norm(List<double> x) {

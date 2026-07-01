@@ -25,6 +25,7 @@ void main() {
     'vehicle_use_session': DateTime(2027, 6, 15, 9),
     'vehicle_session_start_gap': DateTime(2027, 6, 15, 9),
     'vehicle_standalone_meter_gap': DateTime(2027, 6, 15, 9),
+    'vehicle_consumption': DateTime(2027, 6, 15, 9),
   };
 
   for (final entry in scenarios.entries) {

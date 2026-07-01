@@ -61,6 +61,75 @@ void main() {
         isNull,
       );
     });
+
+    test('two intervals attribute fuel to traffic when traffic km > 0', () {
+      final intervals = [
+        const DrivingConditionConsumptionInput(
+          routeKm: 500,
+          cityKm: 109,
+          trafficKm: 21,
+          fuelLiters: 43,
+        ),
+        const DrivingConditionConsumptionInput(
+          routeKm: 115,
+          cityKm: 103.5,
+          trafficKm: 36.5,
+          fuelLiters: 18,
+        ),
+      ];
+
+      final result = solveDrivingConditionConsumption(intervals);
+      expect(result, isNotNull);
+      expect(result!.litersPer100KmTraffic, greaterThan(0));
+      expect(
+        result.blendedLitersPer100Km(
+          totalRouteKm: 615,
+          totalCityKm: 212.5,
+          totalTrafficKm: 57.5,
+        ),
+        closeTo(6.9, 0.1),
+      );
+      expect(result.litersPer100KmRoute, closeTo(6.5, 0.2));
+      expect(result.litersPer100KmCity, closeTo(9.0, 0.2));
+      expect(result.litersPer100KmTraffic, closeTo(3.3, 0.2));
+    });
+
+    test('three intervals recover stable rates from user seed window', () {
+      final intervals = [
+        const DrivingConditionConsumptionInput(
+          routeKm: 500,
+          cityKm: 109,
+          trafficKm: 21,
+          fuelLiters: 43,
+        ),
+        const DrivingConditionConsumptionInput(
+          routeKm: 115,
+          cityKm: 103.5,
+          trafficKm: 36.5,
+          fuelLiters: 18,
+        ),
+        const DrivingConditionConsumptionInput(
+          routeKm: 384.4,
+          cityKm: 85.35,
+          trafficKm: 42.25,
+          fuelLiters: 35.4,
+        ),
+      ];
+
+      final result = solveDrivingConditionConsumption(intervals);
+      expect(result, isNotNull);
+      expect(result!.litersPer100KmRoute, closeTo(6.7, 0.1));
+      expect(result.litersPer100KmCity, closeTo(6.9, 0.1));
+      expect(result.litersPer100KmTraffic, closeTo(8.6, 0.1));
+      expect(
+        result.blendedLitersPer100Km(
+          totalRouteKm: 999.4,
+          totalCityKm: 297.85,
+          totalTrafficKm: 99.75,
+        ),
+        closeTo(6.9, 0.1),
+      );
+    });
   });
 
   group('modeKmFromSession', () {

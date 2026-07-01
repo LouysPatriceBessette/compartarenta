@@ -350,19 +350,43 @@ class _VehicleCardState extends State<_VehicleCard> {
                         ],
                       ),
                     if (data.consumptionReliabilityMessage(l10n).isNotEmpty)
-                      Text(
-                        data.consumptionReliabilityMessage(l10n),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: data.consumption.reliability ==
-                                      VehicleConsumptionReliability.preliminary
-                                  ? FontStyle.italic
-                                  : null,
+                      Builder(
+                        builder: (context) {
+                          final reliabilityMessage =
+                              data.consumptionReliabilityMessage(l10n);
+                          return qaVehicleSemantics(
+                            identifier:
+                                kQaVehicleCardQaCivicConsumptionReliability,
+                            label: reliabilityMessage,
+                            child: Text(
+                              reliabilityMessage,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    fontStyle: data.consumption.reliability ==
+                                            VehicleConsumptionReliability
+                                                .preliminary
+                                        ? FontStyle.italic
+                                        : null,
+                                  ),
                             ),
+                          );
+                        },
                       ),
                     if (data.consumptionLabel(l10n).isNotEmpty)
-                      Text(
-                        data.consumptionLabel(l10n),
-                        style: Theme.of(context).textTheme.bodySmall,
+                      Builder(
+                        builder: (context) {
+                          final consumptionLabel = data.consumptionLabel(l10n);
+                          return qaVehicleSemantics(
+                            identifier: kQaVehicleCardQaCivicConsumption,
+                            label: consumptionLabel,
+                            child: Text(
+                              consumptionLabel,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          );
+                        },
                       ),
                     if (data.alerts.isNotEmpty) ...[
                       const SizedBox(height: 8),
