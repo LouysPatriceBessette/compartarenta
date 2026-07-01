@@ -7,6 +7,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
 import 'config/app_config.dart';
 import 'debug/local_storage_startup_log.dart';
+import 'debug/qa_e2e_environment.dart';
+import 'debug/qa_e2e_meter_photo.dart';
 import 'debug/qa_scenario_seed.dart';
 import 'debug/web_dev_db_write_observer.dart';
 import 'debug/web_dev_host_session.dart';
@@ -58,7 +60,10 @@ Future<void> bootstrap() async {
       try {
         await appDb.warmUpStorage();
         if (kDebugMode && !kIsWeb) {
+          await restoreQaE2eEnvironmentIfPresent();
           await maybeApplyQaAndroidSeed(appDb);
+          await restoreQaE2eEnvironmentIfPresent();
+          await syncQaE2eFlagsFromPrefs();
         }
         if (kDebugMode && kIsWeb) {
           await restoreDevSessionFromHostIfNeeded(appDb);

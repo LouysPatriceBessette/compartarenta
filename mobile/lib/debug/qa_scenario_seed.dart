@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
+import '../db/repositories/vehicles_repository.dart';
 import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
@@ -15,7 +16,10 @@ import '../housing/proposals/housing_proposal_revision_state.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/settlement/housing_hub_expense_entry.dart';
 import '../housing/settlement/housing_settlement_window.dart';
+import 'qa_e2e_environment.dart';
+import 'qa_e2e_meter_photo.dart';
 import 'qa_scenario_seed_helpers.dart';
+import 'qa_vehicle_seed_helpers.dart';
 import 'web_dev_db_snapshot.dart';
 
 export 'qa_scenario_seed_helpers.dart' show kQaSettlementOpenPlanId;
@@ -35,6 +39,11 @@ const kQaScenarioIds = <String>{
   'voluntary_withdrawal_effective',
   'proposal_response_expired',
   'proposal_wizard_expenses',
+  'vehicle_add',
+  'vehicle_fuel_purchase',
+  'vehicle_use_session',
+  'vehicle_session_start_gap',
+  'vehicle_standalone_meter_gap',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -59,6 +68,7 @@ Future<String?> maybeApplyQaAndroidSeed(AppDatabase db) async {
   await clearDevOperationalTables(db);
   await applyQaScenario(db, scenarioId);
   await applyQaSharedPreferences(scenarioId);
+  await syncQaE2eFlagsFromPrefs();
   await db.syncWebStorageToDisk();
   debugPrint('qa seed: applied scenario $scenarioId');
   return scenarioId;
@@ -89,6 +99,9 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
     scenarioId != 'proposal_wizard_expenses',
   );
   await prefs.setString('prefs.languageCode', 'fr');
+  await prefs.setBool(kQaE2eMeterPhotoOptionalPrefKey, true);
+  QaE2eFlags.setMeterPhotoOptional(true);
+  await persistQaE2eEnvironment(scenarioId: scenarioId);
 }
 
 Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
@@ -112,6 +125,13 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
       await _seedProposalResponseExpired(db);
     case 'proposal_wizard_expenses':
       await _seedProposalWizardExpenses(db);
+    case 'vehicle_add':
+      break;
+    case 'vehicle_fuel_purchase':
+    case 'vehicle_use_session':
+    case 'vehicle_session_start_gap':
+    case 'vehicle_standalone_meter_gap':
+      await qaSeedE2eVehicle(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -239,6 +259,15 @@ Future<void> assertQaScenarioPostconditions({
       await _assertProposalResponseExpired(db, now);
     case 'proposal_wizard_expenses':
       await _assertProposalWizardExpenses(db);
+    case 'vehicle_add':
+      await _assertVehicleAdd(db);
+    case 'vehicle_fuel_purchase':
+      await _assertVehicleFuelPurchaseSeed(db);
+    case 'vehicle_use_session':
+      await _assertVehicleUseSessionSeed(db);
+    case 'vehicle_session_start_gap':
+    case 'vehicle_standalone_meter_gap':
+      await _assertVehicleGapAttributionSeed(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -297,7 +326,12 @@ Future<void> _assertPastHubTitleWhenPeriodClosed(
   DateTime now,
 ) async {
   if (scenarioId == 'proposal_response_expired' ||
-      scenarioId == 'proposal_wizard_expenses') {
+      scenarioId == 'proposal_wizard_expenses' ||
+      scenarioId == 'vehicle_add' ||
+      scenarioId == 'vehicle_fuel_purchase' ||
+      scenarioId == 'vehicle_use_session' ||
+      scenarioId == 'vehicle_session_start_gap' ||
+      scenarioId == 'vehicle_standalone_meter_gap') {
     return;
   }
   final planId = qaPlanIdForScenario(scenarioId);
@@ -546,5 +580,50 @@ Future<void> _assertProposalWizardExpenses(AppDatabase db) async {
       .getSingleOrNull();
   if (co?.contactId == null || co!.contactId!.isEmpty) {
     throw StateError('proposal_wizard_expenses: co-participant needs contactId');
+  }
+}
+
+Future<void> _assertVehicleAdd(AppDatabase db) async {
+  final vehicles = await VehiclesRepository(db).listOwnedVehicles();
+  if (vehicles.isNotEmpty) {
+    throw StateError('vehicle_add: seed must start with no vehicles');
+  }
+}
+
+Future<void> _assertVehicleFuelPurchaseSeed(AppDatabase db) async {
+  await _assertVehicleE2eSeedVehicle(db);
+}
+
+Future<void> _assertVehicleUseSessionSeed(AppDatabase db) async {
+  await _assertVehicleGapAttributionSeed(db);
+  final open = await VehiclesRepository(db).findAnyOpenUse();
+  if (open != null) {
+    throw StateError('vehicle_use_session: seed must not have an open use');
+  }
+}
+
+Future<void> _assertVehicleGapAttributionSeed(AppDatabase db) async {
+  await _assertVehicleE2eSeedVehicle(db);
+  final open = await VehiclesRepository(db).findAnyOpenUse();
+  if (open != null) {
+    throw StateError('vehicle gap seed: must not have an open use');
+  }
+  final gaps = await db.select(db.vehicleOdometerGaps).get();
+  if (gaps.isNotEmpty) {
+    throw StateError('vehicle gap seed: must not have odometer gaps yet');
+  }
+}
+
+Future<void> _assertVehicleE2eSeedVehicle(AppDatabase db) async {
+  final vehicles = await VehiclesRepository(db).listOwnedVehicles();
+  if (vehicles.length != 1) {
+    throw StateError(
+      'vehicle E2E seed: expected exactly one vehicle, got ${vehicles.length}',
+    );
+  }
+  if (vehicles.single.displayLabel != kQaVehicleE2eDisplayLabel) {
+    throw StateError(
+      'vehicle E2E seed: unexpected display label ${vehicles.single.displayLabel}',
+    );
   }
 }

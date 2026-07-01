@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../debug/qa_vehicle_semantics.dart';
 import '../db/repositories/vehicles_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
@@ -70,13 +72,21 @@ Future<bool> confirmSessionEndTankLevelIfNeeded({
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.vehicleSessionEndTankConfirmReview),
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleSessionEndTankReview : null,
+            container: true,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.vehicleSessionEndTankConfirmReview),
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.vehicleSessionEndTankConfirmProceed),
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleSessionEndTankConfirm : null,
+            container: true,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.vehicleSessionEndTankConfirmProceed),
+            ),
           ),
         ],
       );

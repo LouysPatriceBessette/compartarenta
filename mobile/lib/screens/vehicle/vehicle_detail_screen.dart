@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -68,9 +69,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final dateFmt = effectiveDateFormat(widget.prefs);
     return Scaffold(
       appBar: AppBar(title: Text(v.displayLabel)),
-      body: ListView(
-        padding: screenBodyScrollPadding(context),
-        children: [
+      body: qaVehicleSemantics(
+        identifier: kQaVehicleDetail,
+        child: ListView(
+          padding: screenBodyScrollPadding(context),
+          children: [
           if (summary.isNotEmpty)
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -97,10 +100,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 tooltip: l10n.vehicleEditDetailsTitle,
               ),
             ),
-          ListTile(
-            leading: const Icon(Icons.speed_outlined),
-            title: Text(l10n.vehicleQuickActionOdometer),
-            onTap: () => context.push('/vehicle/${v.id}/meter-reading'),
+          qaVehicleSemantics(
+            identifier: kQaVehicleDetailOdometerReading,
+            child: ListTile(
+              leading: const Icon(Icons.speed_outlined),
+              title: Text(l10n.vehicleQuickActionOdometer),
+              onTap: () => context.push('/vehicle/${v.id}/meter-reading'),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.build_outlined),
@@ -126,6 +132,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             dateFormat: dateFmt,
           ),
         ],
+        ),
       ),
     );
   }

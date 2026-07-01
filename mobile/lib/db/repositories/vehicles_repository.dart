@@ -6,9 +6,12 @@ import 'package:drift/drift.dart' as drift;
 import '../app_database.dart';
 import '../../vehicle/vehicle_gallery_storage.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
+import '../../vehicle/vehicle_meter_photo_path.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../../vehicle/vehicle_kind.dart';
+import '../../vehicle/vehicle_gap_correction.dart';
+import '../../vehicle/vehicle_meter_journal_sort.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
 
 const String kVehicleGapAttributionUnknown = 'unknown';
@@ -146,10 +149,12 @@ class VehiclesRepository {
       vehicleId: id,
       value: initialMeterValue,
       unit: meterUnitForKind(kind),
-      photoPath: await storeVehicleMeterPhotoFromSource(
-        vehicleId: id,
-        sourcePath: initialMeterPhotoPath,
-      ),
+      photoPath: isKnownUnchangedMeterPhotoPath(initialMeterPhotoPath)
+          ? initialMeterPhotoPath
+          : await storeVehicleMeterPhotoFromSource(
+              vehicleId: id,
+              sourcePath: initialMeterPhotoPath,
+            ),
       recordedByContactId: kVehicleOwnerSelfContactId,
       role: MeterReadingRole.standalone,
     );
@@ -291,11 +296,12 @@ class VehiclesRepository {
         );
   }
 
-  Future<List<VehicleMeterReading>> listMeterReadings(String vehicleId) {
-    return (_db.select(_db.vehicleMeterReadings)
-          ..where((t) => t.vehicleId.equals(vehicleId))
-          ..orderBy([(t) => drift.OrderingTerm.desc(t.recordedAt)]))
+  Future<List<VehicleMeterReading>> listMeterReadings(String vehicleId) async {
+    final rows = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.vehicleId.equals(vehicleId)))
         .get();
+    rows.sort(compareMeterReadingsNewestFirst);
+    return rows;
   }
 
   Future<VehicleMeterReading?> getMeterReading(String id) =>
@@ -529,6 +535,12 @@ class VehiclesRepository {
     return latest.add(const Duration(milliseconds: 1));
   }
 
+  /// Timestamp for the session-start or standalone reading that immediately
+  /// follows a gap correction. The correction row is stored one second earlier.
+  Future<DateTime> reserveGapCorrectionTimestamp(String vehicleId) async {
+    return _nextMeterRecordedAt(vehicleId);
+  }
+
   Future<VehicleMeterReading> saveMeterReading({
     required String vehicleId,
     required int value,
@@ -542,9 +554,10 @@ class VehiclesRepository {
     bool negativeGapAcknowledged = false,
     bool? isFullTank,
     int? tankFillFraction,
+    DateTime? recordedAt,
   }) async {
     final id = _newVehicleId('meter:');
-    final now = await _nextMeterRecordedAt(vehicleId);
+    final now = recordedAt ?? await _nextMeterRecordedAt(vehicleId);
     await _db.into(_db.vehicleMeterReadings).insert(
           VehicleMeterReadingsCompanion.insert(
             id: id,
@@ -568,6 +581,34 @@ class VehiclesRepository {
     return (await (_db.select(_db.vehicleMeterReadings)
               ..where((t) => t.id.equals(id)))
             .getSingle());
+  }
+
+  Future<VehicleMeterReading> saveGapCorrectionReading({
+    required Vehicle vehicle,
+    required int meterValue,
+    required int gapTenths,
+    required String photoPath,
+    required String recordedByContactId,
+    required GapCorrectionContext correctionContext,
+    String? vehicleUseId,
+    DateTime? recordedAt,
+  }) async {
+    final followUpAt = recordedAt ?? await _nextMeterRecordedAt(vehicle.id);
+    return saveMeterReading(
+      vehicleId: vehicle.id,
+      value: meterValue,
+      unit: meterUnitForVehicle(vehicle),
+      photoPath: photoPath,
+      recordedByContactId: recordedByContactId,
+      role: MeterReadingRole.correction,
+      vehicleUseId: vehicleUseId,
+      isCorrection: true,
+      correctionNote: encodeGapCorrectionNote(
+        gapTenths: gapTenths,
+        context: correctionContext,
+      ),
+      recordedAt: followUpAt.subtract(const Duration(seconds: 1)),
+    );
   }
 
   Future<VehicleOdometerGap> recordPositiveGap({
@@ -783,6 +824,25 @@ class VehiclesRepository {
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([(t) => drift.OrderingTerm.desc(t.purchasedAt)]))
         .get();
+  }
+
+  /// Sum of [FuelPurchase.volumeLiters] recorded since [use.startedAt].
+  Future<double> fuelLitersPurchasedDuringOpenUse(VehicleUse use) async {
+    final rows = await (_db.select(_db.fuelPurchases)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(use.vehicleId) &
+                t.purchasedAt.isBiggerOrEqualValue(use.startedAt),
+          ))
+        .get();
+    var total = 0.0;
+    for (final purchase in rows) {
+      final volume = purchase.volumeLiters;
+      if (volume != null && volume > 0) {
+        total += volume;
+      }
+    }
+    return total;
   }
 
   /// Positive odometer/horometer delta since the latest fuel purchase with a

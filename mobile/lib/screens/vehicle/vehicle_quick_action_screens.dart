@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../debug/qa_e2e_meter_photo.dart';
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -8,6 +10,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/format_money.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
@@ -135,7 +138,9 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     if (double.tryParse(_cost.text.replaceAll(',', '.')) == null) return false;
     if (double.tryParse(_volume.text.replaceAll(',', '.')) == null) return false;
     if (_parsedMeter() == null) return false;
-    if (_photoPath == null || _photoPath!.isEmpty) return false;
+    if (qaE2eMeterPhotoRequired(otherwiseRequired: true)) {
+      if (_photoPath == null || _photoPath!.isEmpty) return false;
+    }
     return true;
   }
 
@@ -156,7 +161,7 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
     try {
       final openUse = await repo.openUseForVehicle(vehicleId);
       if (!mounted) return;
-      final proceed = await confirmMeterGapsBeforeSave(
+      final gapResult = await confirmMeterGapsBeforeSave(
         context: context,
         l10n: l10n,
         repo: repo,
@@ -168,7 +173,10 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
         distanceUnit: distanceUnit,
         attributePositiveGap: openUse == null,
       );
-      if (!proceed || !mounted) return;
+      if (!gapResult.proceed || !mounted) return;
+
+      final photoPath = qaE2eEffectiveMeterPhotoPath(_photoPath);
+      if (photoPath == null) return;
 
       await repo.saveFuelPurchase(
         vehicleId: vehicleId,
@@ -182,7 +190,7 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
           resolveLiquidVolumeUnit(widget.prefs),
         ),
         meterReadingValue: meter,
-        meterPhotoPath: _photoPath,
+        meterPhotoPath: photoPath,
         tankFillFraction: _fullTank ? null : _tankFillLevel.percent,
       );
 
@@ -227,20 +235,26 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                       onSelected: _onVehicleSelected,
                     ),
                     const SizedBox(height: 16),
-                    VehicleNarrowUnitField(
-                      controller: _cost,
-                      label: l10n.vehicleFuelCost,
-                      unitSuffix: currencySymbol,
-                      decimal: true,
-                      onChanged: (_) => _refresh(),
+                    qaVehicleSemantics(
+                      identifier: kQaVehicleFieldCost,
+                      child: VehicleNarrowUnitField(
+                        controller: _cost,
+                        label: l10n.vehicleFuelCost,
+                        unitSuffix: currencySymbol,
+                        decimal: true,
+                        onChanged: (_) => _refresh(),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    VehicleNarrowUnitField(
-                      controller: _volume,
-                      label: l10n.vehicleFuelVolume,
-                      unitSuffix: volumeUnit,
-                      decimal: true,
-                      onChanged: (_) => _refresh(),
+                    qaVehicleSemantics(
+                      identifier: kQaVehicleFieldVolume,
+                      child: VehicleNarrowUnitField(
+                        controller: _volume,
+                        label: l10n.vehicleFuelVolume,
+                        unitSuffix: volumeUnit,
+                        decimal: true,
+                        onChanged: (_) => _refresh(),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     VehicleTankFillFields(
@@ -251,14 +265,17 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                           setState(() => _tankFillLevel = v),
                     ),
                     const SizedBox(height: 12),
-                    VehicleNarrowUnitField(
-                      controller: _meter,
-                      label: usesHorometer
-                          ? l10n.vehicleHorometerLabel
-                          : l10n.vehicleFuelMeter,
-                      unitSuffix: meterUnitSuffix,
-                      decimal: true,
-                      onChanged: (_) => _refresh(),
+                    qaVehicleSemantics(
+                      identifier: kQaVehicleFieldFuelMeter,
+                      child: VehicleNarrowUnitField(
+                        controller: _meter,
+                        label: usesHorometer
+                            ? l10n.vehicleHorometerLabel
+                            : l10n.vehicleFuelMeter,
+                        unitSuffix: meterUnitSuffix,
+                        decimal: true,
+                        onChanged: (_) => _refresh(),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     VehicleMeterPhotoButton(
@@ -280,9 +297,12 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
                           : l10n.vehicleMeterPhotoAttached,
                     ),
                     const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _saving || !_canSave ? null : _save,
-                      child: Text(l10n.commonSave),
+                    qaVehicleSemantics(
+                      identifier: kQaVehicleSave,
+                      child: FilledButton(
+                        onPressed: _saving || !_canSave ? null : _save,
+                        child: Text(l10n.commonSave),
+                      ),
                     ),
                   ],
                 ),
@@ -339,8 +359,11 @@ class _VehicleStandaloneMeterReadingScreenState
       distanceUnit: resolveDistanceUnit(widget.prefs),
     );
     if (parsed == null) return false;
-    final photo = _photoPath;
-    return photo != null && photo.isNotEmpty;
+    if (qaE2eMeterPhotoRequired(otherwiseRequired: true)) {
+      final photo = _photoPath;
+      if (photo == null || photo.isEmpty) return false;
+    }
+    return true;
   }
 
   Future<void> _load() async {
@@ -376,7 +399,8 @@ class _VehicleStandaloneMeterReadingScreenState
       distanceUnit: resolveDistanceUnit(widget.prefs),
     );
     if (parsed == null) return;
-    if (_photoPath == null || _photoPath!.isEmpty) {
+    final photoPath = qaE2eEffectiveMeterPhotoPath(_photoPath);
+    if (photoPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
       );
@@ -393,7 +417,7 @@ class _VehicleStandaloneMeterReadingScreenState
       if (!mounted) return;
       final actingId = widget.usageContext.actingContactId;
 
-      final proceed = await confirmMeterGapsBeforeSave(
+      final gapResult = await confirmMeterGapsBeforeSave(
         context: context,
         l10n: l10n,
         repo: repo,
@@ -405,16 +429,36 @@ class _VehicleStandaloneMeterReadingScreenState
         distanceUnit: distanceUnit,
         attributePositiveGap: true,
       );
-      if (!proceed || !mounted) return;
+      if (!gapResult.proceed || !mounted) return;
+
+      DateTime? followUpRecordedAt;
+
+      if (gapResult.positiveGapTenths != null && latest != null) {
+        final gapRecordedAt =
+            await repo.reserveGapCorrectionTimestamp(v.id);
+        await persistConfirmedPositiveGap(
+          repo: repo,
+          vehicle: v,
+          latestBefore: latest,
+          parsedMeter: parsed,
+          gapTenths: gapResult.positiveGapTenths!,
+          photoPath: photoPath,
+          actingContactId: actingId,
+          correctionContext: GapCorrectionContext.standalone,
+          correctionRecordedAt: gapRecordedAt,
+        );
+        followUpRecordedAt = gapRecordedAt;
+      }
 
       await repo.saveMeterReading(
         vehicleId: v.id,
         value: parsed,
         unit: repo.meterUnitForVehicle(v),
-        photoPath: _photoPath!,
+        photoPath: photoPath,
         recordedByContactId: actingId,
         role: MeterReadingRole.standalone,
         negativeGapAcknowledged: latest != null && parsed < latest,
+        recordedAt: followUpRecordedAt,
       );
 
       if (!mounted) return;
@@ -454,13 +498,16 @@ class _VehicleStandaloneMeterReadingScreenState
                   : ListView(
                       padding: screenBodyScrollPadding(context),
                       children: [
-                        VehicleNarrowUnitField(
-                          controller: _reading,
-                          label: meterLabel,
-                          unitSuffix: kind?.usesHorometer ?? false
-                              ? 'h'
-                              : distanceUnit,
-                          decimal: true,
+                        qaVehicleSemantics(
+                          identifier: kQaVehicleFieldStandaloneMeter,
+                          child: VehicleNarrowUnitField(
+                            controller: _reading,
+                            label: meterLabel,
+                            unitSuffix: kind?.usesHorometer ?? false
+                                ? 'h'
+                                : distanceUnit,
+                            decimal: true,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         VehicleMeterPhotoButton(
@@ -471,9 +518,12 @@ class _VehicleStandaloneMeterReadingScreenState
                               : l10n.vehicleMeterPhotoAttached,
                         ),
                         const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _saving || !_formComplete ? null : _save,
-                          child: Text(l10n.commonSave),
+                        qaVehicleSemantics(
+                          identifier: kQaVehicleSave,
+                          child: FilledButton(
+                            onPressed: _saving || !_formComplete ? null : _save,
+                            child: Text(l10n.commonSave),
+                          ),
                         ),
                       ],
                     ),

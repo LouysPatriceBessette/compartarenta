@@ -1394,6 +1394,40 @@
   "vehicleLogReadingRoleStandalone": "Lectura puntual",
   "vehicleLogReadingRoleFuelPurchase": "Compra de combustible",
   "vehicleLogReadingRoleCorrection": "Corrección",
+  "vehicleLogReadingRoleCorrectionBy": "Corrección por {userName}",
+  "@vehicleLogReadingRoleCorrectionBy": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionSessionStart": "Corrección por {userName} al inicio de sesión",
+  "@vehicleLogReadingRoleCorrectionSessionStart": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionStandalone": "Corrección por {userName} en una lectura puntual",
+  "@vehicleLogReadingRoleCorrectionStandalone": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionJournalSubtitle": "Corrección de odómetro por verificar",
+  "vehicleLogCorrectionLabel": "Corrección",
+  "vehicleLogCorrectionMustBeAttributed": "{gap} deben ser atribuidos",
+  "@vehicleLogCorrectionMustBeAttributed": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
   "vehicleLogMeterTitle": "Registro — odómetro",
   "vehicleLogMeterFuelTitle": "Odómetro y combustible",
   "vehicleLogMeterDetailTitle": "Detalle de la lectura",
@@ -1481,7 +1515,7 @@
   "vehicleConsumptionHistoryBlended": "{date}: {value} L/100 km",
   "vehicleSessionEndTankConfirmTitle": "Confirmar nivel del depósito",
   "vehicleSessionEndTankConfirmBody": "Ha declarado el depósito al {percent} % después de {distance} desde la última compra de combustible. Confirme que es correcto.",
-  "vehicleSessionEndTankConfirmReview": "Revisar",
+  "vehicleSessionEndTankConfirmReview": "Revisar la entrada",
   "vehicleSessionEndTankConfirmProceed": "Confirmar",
   "vehicleStatisticsTitle": "Estadísticas",
   "vehicleStatisticsMileageTitle": "Mi kilometraje",
@@ -1529,10 +1563,30 @@
   "vehicleGapAttributionUnknown": "No lo sé",
   "vehicleGapAttributionSelf": "Yo",
   "vehicleGapOwnerNotified": "Se notificará al propietario.",
+  "vehiclePositiveGapConfirmPrompt": "Se trata de una diferencia de {gap}. ¿Está seguro?",
+  "@vehiclePositiveGapConfirmPrompt": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclePositiveGapConfirmNo": "No",
+  "vehiclePositiveGapConfirmYes": "Sí",
   "vehicleNegativeGapTitle": "Lectura menor",
   "vehicleNegativeGapBody": "La nueva lectura es {gap} inferior a la última guardada.",
   "vehicleNegativeGapMaintain": "Mantener lectura, investigar después",
   "vehicleNegativeGapCancel": "Cancelar entrada",
+  "vehicleSuspiciousGapTitle": "Diferencia inusualmente grande",
+  "vehicleSuspiciousGapBody": "La diferencia de {gap} supera lo plausible con un tanque lleno ({maxGap}). Esta lectura puede ser incorrecta.",
+  "@vehicleSuspiciousGapBody": {
+    "placeholders": {
+      "gap": { "type": "String" },
+      "maxGap": { "type": "String" }
+    }
+  },
+  "vehicleSuspiciousGapConfirm": "Usar esta lectura de todos modos",
+  "vehicleSuspiciousGapCancel": "Revisar la entrada",
   "vehicleRoleOwner": "Propietario",
   "vehicleRoleBorrower": "Prestatario",
   "vehicleSharingAccessibleTitle": "Vehículos accesibles",

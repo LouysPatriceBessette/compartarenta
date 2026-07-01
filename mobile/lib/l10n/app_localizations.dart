@@ -5931,6 +5931,42 @@ abstract class AppLocalizations {
   /// **'Correction'**
   String get vehicleLogReadingRoleCorrection;
 
+  /// No description provided for @vehicleLogReadingRoleCorrectionBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction by {userName}'**
+  String vehicleLogReadingRoleCorrectionBy(String userName);
+
+  /// No description provided for @vehicleLogReadingRoleCorrectionSessionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction by {userName} at session start'**
+  String vehicleLogReadingRoleCorrectionSessionStart(String userName);
+
+  /// No description provided for @vehicleLogReadingRoleCorrectionStandalone.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction by {userName} during a one-time reading'**
+  String vehicleLogReadingRoleCorrectionStandalone(String userName);
+
+  /// No description provided for @vehicleLogCorrectionJournalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer correction to verify'**
+  String get vehicleLogCorrectionJournalSubtitle;
+
+  /// No description provided for @vehicleLogCorrectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get vehicleLogCorrectionLabel;
+
+  /// No description provided for @vehicleLogCorrectionMustBeAttributed.
+  ///
+  /// In en, this message translates to:
+  /// **'{gap} must be attributed'**
+  String vehicleLogCorrectionMustBeAttributed(String gap);
+
   /// No description provided for @vehicleLogMeterTitle.
   ///
   /// In en, this message translates to:
@@ -6308,7 +6344,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleSessionEndTankConfirmReview.
   ///
   /// In en, this message translates to:
-  /// **'Review'**
+  /// **'Review entry'**
   String get vehicleSessionEndTankConfirmReview;
 
   /// No description provided for @vehicleSessionEndTankConfirmProceed.
@@ -6587,6 +6623,24 @@ abstract class AppLocalizations {
   /// **'The owner will be notified.'**
   String get vehicleGapOwnerNotified;
 
+  /// No description provided for @vehiclePositiveGapConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a difference of {gap}. Are you sure?'**
+  String vehiclePositiveGapConfirmPrompt(String gap);
+
+  /// No description provided for @vehiclePositiveGapConfirmNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get vehiclePositiveGapConfirmNo;
+
+  /// No description provided for @vehiclePositiveGapConfirmYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get vehiclePositiveGapConfirmYes;
+
   /// No description provided for @vehicleNegativeGapTitle.
   ///
   /// In en, this message translates to:
@@ -6610,6 +6664,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel entry'**
   String get vehicleNegativeGapCancel;
+
+  /// No description provided for @vehicleSuspiciousGapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unusually large difference'**
+  String get vehicleSuspiciousGapTitle;
+
+  /// No description provided for @vehicleSuspiciousGapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The difference of {gap} exceeds what is plausible on one tank ({maxGap}). This reading may be incorrect.'**
+  String vehicleSuspiciousGapBody(String gap, String maxGap);
+
+  /// No description provided for @vehicleSuspiciousGapConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this reading anyway'**
+  String get vehicleSuspiciousGapConfirm;
+
+  /// No description provided for @vehicleSuspiciousGapCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Review entry'**
+  String get vehicleSuspiciousGapCancel;
 
   /// No description provided for @vehicleRoleOwner.
   ///

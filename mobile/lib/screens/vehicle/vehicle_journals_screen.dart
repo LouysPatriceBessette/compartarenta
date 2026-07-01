@@ -10,7 +10,9 @@ import '../../util/display_date.dart';
 import '../../util/display_units.dart';
 import '../../util/format_money.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_kind.dart';
+import '../../vehicle/vehicle_meter_journal_sort.dart';
 import '../../vehicle/vehicle_meter_reading_labels.dart';
 import '../../widgets/screen_body_padding.dart';
 
@@ -101,11 +103,13 @@ final class _MeterFuelJournalMeterRow extends _MeterFuelJournalRow {
   _MeterFuelJournalMeterRow({
     required this.reading,
     required this.roleLabel,
+    required this.isCorrectionEntry,
     required super.sortAt,
   });
 
   final VehicleMeterReading reading;
   final String roleLabel;
+  final bool isCorrectionEntry;
 }
 
 final class _MeterFuelJournalFuelRow extends _MeterFuelJournalRow {
@@ -151,7 +155,11 @@ class _MeterFuelJournalList extends StatelessWidget {
           itemBuilder: (context, index) {
             final row = data.rows[index];
             return switch (row) {
-              _MeterFuelJournalMeterRow(:final reading, :final roleLabel) =>
+              _MeterFuelJournalMeterRow(
+                :final reading,
+                :final roleLabel,
+                :final isCorrectionEntry,
+              ) =>
                 _journalTile(
                   context: context,
                   line1: formatStoredMeterForDisplay(
@@ -160,9 +168,12 @@ class _MeterFuelJournalList extends StatelessWidget {
                     usesHorometer: data.usesHorometer,
                     distanceUnit: distanceUnit,
                   ),
-                  line2: roleLabel,
+                  line2: isCorrectionEntry
+                      ? l10n.vehicleLogCorrectionJournalSubtitle
+                      : roleLabel,
                   line3: formatPreferenceDateTime(reading.recordedAt, dateFmt),
                   bodySmall: bodySmall,
+                  highlight: isCorrectionEntry,
                   onTap: () => context.push(
                     '/vehicle/$vehicleId/meter-log/${reading.id}',
                   ),
@@ -204,18 +215,22 @@ class _MeterFuelJournalList extends StatelessWidget {
     required String line3,
     required TextStyle? bodySmall,
     required VoidCallback onTap,
+    bool highlight = false,
   }) {
-    return ListTile(
-      title: Text(line1),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(line2),
-          Text(line3, style: bodySmall),
-        ],
+    return ColoredBox(
+      color: highlight ? Colors.orange.shade50 : Colors.transparent,
+      child: ListTile(
+        title: Text(line1),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(line2),
+            Text(line3, style: bodySmall),
+          ],
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
       ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 
@@ -239,6 +254,7 @@ class _MeterFuelJournalList extends StatelessWidget {
         _MeterFuelJournalMeterRow(
           reading: reading,
           roleLabel: roleLabel,
+          isCorrectionEntry: isGapCorrectionReading(reading),
           sortAt: reading.recordedAt,
         ),
       );
@@ -251,9 +267,23 @@ class _MeterFuelJournalList extends StatelessWidget {
         ),
       );
     }
-    rows.sort((a, b) => b.sortAt.compareTo(a.sortAt));
+    rows.sort(_compareMeterFuelJournalRows);
     return _MeterFuelJournalData(usesHorometer: usesHorometer, rows: rows);
   }
+}
+
+int _compareMeterFuelJournalRows(_MeterFuelJournalRow a, _MeterFuelJournalRow b) {
+  final byTime = b.sortAt.compareTo(a.sortAt);
+  if (byTime != 0) return byTime;
+  return _meterFuelJournalRank(b).compareTo(_meterFuelJournalRank(a));
+}
+
+int _meterFuelJournalRank(_MeterFuelJournalRow row) {
+  return switch (row) {
+    _MeterFuelJournalFuelRow() => 5,
+    _MeterFuelJournalMeterRow(:final reading) =>
+      meterReadingJournalRank(reading),
+  };
 }
 
 class _MeterFuelJournalData {

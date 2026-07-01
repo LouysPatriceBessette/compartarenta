@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../debug/qa_vehicle_semantics.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../util/display_units.dart';
@@ -12,11 +13,13 @@ class VehicleConsumptionEstimationModeFields extends StatelessWidget {
     required this.mode,
     required this.onModeChanged,
     required this.prefs,
+    this.simpleModeSemanticsId,
   });
 
   final VehicleConsumptionEstimationMode mode;
   final ValueChanged<VehicleConsumptionEstimationMode> onModeChanged;
   final AppPreferences prefs;
+  final String? simpleModeSemanticsId;
 
   String _distanceUnitWord(AppLocalizations l10n) {
     return switch (resolveDistanceUnit(prefs)) {
@@ -44,16 +47,19 @@ class VehicleConsumptionEstimationModeFields extends StatelessWidget {
           },
           child: Column(
             children: [
-              RadioListTile<VehicleConsumptionEstimationMode>(
-                value: VehicleConsumptionEstimationMode.simple,
-                title: Text(l10n.vehicleConsumptionEstimationModeSimpleTitle),
-                subtitle: Text(
-                  l10n.vehicleConsumptionEstimationModeSimpleDescription(
-                    distanceUnit,
+              _consumptionModeTile(
+                semanticsId: simpleModeSemanticsId,
+                child: RadioListTile<VehicleConsumptionEstimationMode>(
+                  value: VehicleConsumptionEstimationMode.simple,
+                  title: Text(l10n.vehicleConsumptionEstimationModeSimpleTitle),
+                  subtitle: Text(
+                    l10n.vehicleConsumptionEstimationModeSimpleDescription(
+                      distanceUnit,
+                    ),
                   ),
+                  isThreeLine: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                isThreeLine: true,
-                contentPadding: EdgeInsets.zero,
               ),
               RadioListTile<VehicleConsumptionEstimationMode>(
                 value: VehicleConsumptionEstimationMode.detailed,
@@ -71,5 +77,13 @@ class VehicleConsumptionEstimationModeFields extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _consumptionModeTile({
+    required String? semanticsId,
+    required Widget child,
+  }) {
+    if (semanticsId == null) return child;
+    return qaVehicleSemantics(identifier: semanticsId, child: child);
   }
 }

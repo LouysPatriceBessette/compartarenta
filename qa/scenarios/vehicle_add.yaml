@@ -1,0 +1,7 @@
+id: vehicle_add
+description: Ajout d'un véhicule (module véhicule)
+device_date: "2027-06-15T09:00:00"
+timezone: America/Toronto
+seed: vehicle_add
+flow: qa/flows/vehicle_add.yaml
+screenshot_prefix: vehicle_add

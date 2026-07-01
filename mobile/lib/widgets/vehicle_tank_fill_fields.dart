@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../debug/qa_vehicle_semantics.dart';
 import '../vehicle/vehicle_tank_fill_levels.dart';
 import 'vehicle_narrow_unit_field.dart';
 
@@ -14,6 +15,8 @@ class VehicleTankFillFields extends StatelessWidget {
     required this.onTankFillLevelChanged,
     this.showFullTankSwitch = true,
     this.sectionTitle,
+    this.fullTankSemanticsId,
+    this.tankLevelSemanticsId,
   });
 
   final bool fullTank;
@@ -22,6 +25,8 @@ class VehicleTankFillFields extends StatelessWidget {
   final ValueChanged<VehicleTankFillLevel> onTankFillLevelChanged;
   final bool showFullTankSwitch;
   final String? sectionTitle;
+  final String? fullTankSemanticsId;
+  final String? tankLevelSemanticsId;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +43,18 @@ class VehicleTankFillFields extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Switch(
-                    value: fullTank,
-                    onChanged: onFullTankChanged,
-                  ),
+                  fullTankSemanticsId == null
+                      ? Switch(
+                          value: fullTank,
+                          onChanged: onFullTankChanged,
+                        )
+                      : qaVehicleSemantics(
+                          identifier: fullTankSemanticsId!,
+                          child: Switch(
+                            value: fullTank,
+                            onChanged: onFullTankChanged,
+                          ),
+                        ),
                   Expanded(child: Text(l10n.vehicleFuelFullTank)),
                 ],
               ),
@@ -61,24 +74,46 @@ class VehicleTankFillFields extends StatelessWidget {
               constraints: const BoxConstraints(
                 maxWidth: VehicleNarrowUnitField.fieldMaxWidth,
               ),
-              child: DropdownButtonFormField<VehicleTankFillLevel>(
-                key: ValueKey(tankFillLevel.percent),
-                isExpanded: true,
-                initialValue: tankFillLevel,
-                decoration: InputDecoration(
-                  labelText: l10n.vehicleFuelApproximateLevel,
-                ),
-                items: [
-                  for (final level in VehicleTankFillLevel.choices)
-                    DropdownMenuItem(
-                      value: level,
-                      child: Text(level.label()),
+              child: tankLevelSemanticsId == null
+                  ? DropdownButtonFormField<VehicleTankFillLevel>(
+                      key: ValueKey(tankFillLevel.percent),
+                      isExpanded: true,
+                      initialValue: tankFillLevel,
+                      decoration: InputDecoration(
+                        labelText: l10n.vehicleFuelApproximateLevel,
+                      ),
+                      items: [
+                        for (final level in VehicleTankFillLevel.choices)
+                          DropdownMenuItem(
+                            value: level,
+                            child: Text(level.label()),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) onTankFillLevelChanged(value);
+                      },
+                    )
+                  : qaVehicleSemantics(
+                      identifier: tankLevelSemanticsId!,
+                      child: DropdownButtonFormField<VehicleTankFillLevel>(
+                        key: ValueKey(tankFillLevel.percent),
+                        isExpanded: true,
+                        initialValue: tankFillLevel,
+                        decoration: InputDecoration(
+                          labelText: l10n.vehicleFuelApproximateLevel,
+                        ),
+                        items: [
+                          for (final level in VehicleTankFillLevel.choices)
+                            DropdownMenuItem(
+                              value: level,
+                              child: Text(level.label()),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) onTankFillLevelChanged(value);
+                        },
+                      ),
                     ),
-                ],
-                onChanged: (value) {
-                  if (value != null) onTankFillLevelChanged(value);
-                },
-              ),
             ),
           ),
         ],

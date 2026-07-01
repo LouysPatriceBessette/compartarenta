@@ -1,0 +1,18 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-vehicle"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    id: "qa-home-vehicle"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-hub"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 5000

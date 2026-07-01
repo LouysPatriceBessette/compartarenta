@@ -9,6 +9,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../util/format_money.dart';
 import '../../vehicle/vehicle_fuel_log_display.dart';
@@ -126,6 +127,16 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
           usesHorometer: data.usesHorometer,
           distanceUnit: distanceUnit,
         );
+        final correctionLabel = data.correctionGapTenths == null
+            ? null
+            : l10n.vehicleLogCorrectionMustBeAttributed(
+                formatStoredMeterDeltaForDisplay(
+                  context,
+                  data.correctionGapTenths!,
+                  usesHorometer: data.usesHorometer,
+                  distanceUnit: distanceUnit,
+                ),
+              );
         return Scaffold(
           appBar: AppBar(title: Text(l10n.vehicleLogMeterDetailTitle)),
           body: ListView(
@@ -142,6 +153,11 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
                 title: Text(l10n.vehicleLogReadingRole),
                 subtitle: Text(data.roleLabel),
               ),
+              if (correctionLabel != null)
+                ListTile(
+                  title: Text(l10n.vehicleLogCorrectionLabel),
+                  subtitle: Text(correctionLabel),
+                ),
               ListTile(
                 title: Text(meterLabel),
                 subtitle: Text(meter),
@@ -201,10 +217,14 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
       reading: reading,
       repo: repo,
     );
+    final decoded = decodeGapCorrectionNote(reading.correctionNote);
     return _MeterReadingDetailData(
       reading: reading,
       roleLabel: roleLabel,
       usesHorometer: usesHorometer,
+      correctionGapTenths: isGapCorrectionReading(reading)
+          ? decoded?.gapTenths
+          : null,
     );
   }
 }
@@ -214,11 +234,13 @@ class _MeterReadingDetailData {
     required this.reading,
     required this.roleLabel,
     required this.usesHorometer,
+    this.correctionGapTenths,
   });
 
   final VehicleMeterReading reading;
   final String roleLabel;
   final bool usesHorometer;
+  final int? correctionGapTenths;
 }
 
 class VehicleFuelLogScreen extends StatelessWidget {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../debug/qa_e2e_meter_photo.dart';
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -112,6 +114,17 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
         distanceUnit: resolveDistanceUnit(widget.prefs),
       );
 
+  double? get _parsedTankCapacityLiters {
+    final tankText = _tankCapacity.text.trim();
+    if (tankText.isEmpty) return null;
+    final parsed = double.tryParse(tankText.replaceAll(',', '.'));
+    if (parsed == null || parsed <= 0) return null;
+    return displayVolumeToLiters(
+      parsed,
+      resolveLiquidVolumeUnit(widget.prefs),
+    );
+  }
+
   String? _oilChangeIntervalError(AppLocalizations l10n) {
     if (!_oilChangeIntervalBlurred) return null;
     final issue = oilChangeIntervalValidationIssue(
@@ -148,8 +161,11 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       return false;
     }
     if (_parsedMeter == null) return false;
+    if (_parsedTankCapacityLiters == null) return false;
     if (_parsedOilChangeInterval == null) return false;
-    if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) return false;
+    if (qaE2eMeterPhotoRequired(otherwiseRequired: true)) {
+      if (_meterPhotoPath == null || _meterPhotoPath!.isEmpty) return false;
+    }
     return true;
   }
 
@@ -161,18 +177,10 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   Future<void> _save() async {
     if (!_canSave) return;
     setState(() => _saving = true);
-    final tankText = _tankCapacity.text.trim();
-    double? tankLiters;
-    if (tankText.isNotEmpty) {
-      final parsed = double.tryParse(tankText.replaceAll(',', '.'));
-      if (parsed != null && parsed > 0) {
-        tankLiters = displayVolumeToLiters(
-          parsed,
-          resolveLiquidVolumeUnit(widget.prefs),
-        );
-      }
-    }
+    final tankLiters = _parsedTankCapacityLiters!;
     final repo = VehiclesRepository(AppDatabase.processScope);
+    final photoPath = qaE2eEffectiveMeterPhotoPath(_meterPhotoPath);
+    if (photoPath == null) return;
     await repo.createVehicle(
       kind: _kind,
       displayLabel: _label.text.trim(),
@@ -185,7 +193,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       fuelTankCapacityLiters: tankLiters,
       oilChangeIntervalAmount: _parsedOilChangeInterval!,
       initialMeterValue: _parsedMeter!,
-      initialMeterPhotoPath: _meterPhotoPath!,
+      initialMeterPhotoPath: photoPath,
       consumptionEstimationMode: _kind.usesHorometer
           ? VehicleConsumptionEstimationMode.simple
           : _consumptionMode,
@@ -216,9 +224,12 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       body: ListView(
         padding: screenBodyScrollPadding(context),
         children: [
-          AppTextField(
-            controller: _label,
-            decoration: InputDecoration(labelText: l10n.vehicleFieldLabel),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldLabel,
+            child: AppTextField(
+              controller: _label,
+              decoration: InputDecoration(labelText: l10n.vehicleFieldLabel),
+            ),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<VehicleKind>(
@@ -246,37 +257,52 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
             },
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _make,
-            decoration: InputDecoration(labelText: l10n.vehicleFieldMake),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldMake,
+            child: AppTextField(
+              controller: _make,
+              decoration: InputDecoration(labelText: l10n.vehicleFieldMake),
+            ),
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _model,
-            decoration: InputDecoration(labelText: l10n.vehicleFieldModel),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldModel,
+            child: AppTextField(
+              controller: _model,
+              decoration: InputDecoration(labelText: l10n.vehicleFieldModel),
+            ),
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _color,
-            decoration: InputDecoration(labelText: l10n.vehicleFieldColor),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldColor,
+            child: AppTextField(
+              controller: _color,
+              decoration: InputDecoration(labelText: l10n.vehicleFieldColor),
+            ),
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _year,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
-            ],
-            decoration: InputDecoration(labelText: l10n.vehicleFieldYear),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldYear,
+            child: AppTextField(
+              controller: _year,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(4),
+              ],
+              decoration: InputDecoration(labelText: l10n.vehicleFieldYear),
+            ),
           ),
           const SizedBox(height: 12),
-          VehicleNarrowUnitField(
-            controller: _meter,
-            label: _initialMeterLabel(l10n),
-            unitSuffix: _kind.usesHorometer ? 'h' : distanceUnitLabel,
-            decimal: true,
-            onChanged: (_) => _refresh(),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldMeter,
+            child: VehicleNarrowUnitField(
+              controller: _meter,
+              label: _initialMeterLabel(l10n),
+              unitSuffix: _kind.usesHorometer ? 'h' : distanceUnitLabel,
+              decimal: true,
+              onChanged: (_) => _refresh(),
+            ),
           ),
           const SizedBox(height: 8),
           VehicleMeterPhotoButton(
@@ -288,24 +314,30 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
                 : l10n.vehicleMeterPhotoAttached,
           ),
           const SizedBox(height: 12),
-          VehicleNarrowUnitField(
-            controller: _tankCapacity,
-            label: l10n.vehicleFieldFuelTankCapacity,
-            unitSuffix: volumeUnit,
-            decimal: true,
-            onChanged: (_) => _refresh(),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldTankCapacity,
+            child: VehicleNarrowUnitField(
+              controller: _tankCapacity,
+              label: l10n.vehicleFieldFuelTankCapacity,
+              unitSuffix: volumeUnit,
+              decimal: true,
+              onChanged: (_) => _refresh(),
+            ),
           ),
           const SizedBox(height: 12),
-          VehicleNarrowUnitField(
-            controller: _oilChangeInterval,
-            focusNode: _oilChangeIntervalFocus,
-            label: l10n.vehicleFieldFluidChangeFrequency,
-            unitSuffix: oilIntervalUnit,
-            allowDecimalWithoutDecimalKeyboard: !_kind.usesHorometer,
-            errorText: _oilChangeIntervalError(l10n),
-            onChanged: (_) => _refresh(),
-            onEditingComplete: () =>
-                setState(() => _oilChangeIntervalBlurred = true),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldOilInterval,
+            child: VehicleNarrowUnitField(
+              controller: _oilChangeInterval,
+              focusNode: _oilChangeIntervalFocus,
+              label: l10n.vehicleFieldFluidChangeFrequency,
+              unitSuffix: oilIntervalUnit,
+              allowDecimalWithoutDecimalKeyboard: !_kind.usesHorometer,
+              errorText: _oilChangeIntervalError(l10n),
+              onChanged: (_) => _refresh(),
+              onEditingComplete: () =>
+                  setState(() => _oilChangeIntervalBlurred = true),
+            ),
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -334,12 +366,16 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
               mode: _consumptionMode,
               onModeChanged: (m) => setState(() => _consumptionMode = m),
               prefs: widget.prefs,
+              simpleModeSemanticsId: kQaVehicleConsumptionModeSimple,
             ),
           ],
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _canSave ? _save : null,
-            child: Text(l10n.commonSave),
+          qaVehicleSemantics(
+            identifier: kQaVehicleSave,
+            child: FilledButton(
+              onPressed: _canSave ? _save : null,
+              child: Text(l10n.commonSave),
+            ),
           ),
         ],
       ),

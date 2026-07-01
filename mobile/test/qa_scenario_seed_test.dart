@@ -20,6 +20,11 @@ void main() {
     'voluntary_withdrawal_effective': DateTime(2027, 8, 11, 9),
     'proposal_response_expired': DateTime(2027, 8, 11, 9),
     'proposal_wizard_expenses': DateTime(2027, 6, 15, 9),
+    'vehicle_add': DateTime(2027, 6, 15, 9),
+    'vehicle_fuel_purchase': DateTime(2027, 6, 15, 9),
+    'vehicle_use_session': DateTime(2027, 6, 15, 9),
+    'vehicle_session_start_gap': DateTime(2027, 6, 15, 9),
+    'vehicle_standalone_meter_gap': DateTime(2027, 6, 15, 9),
   };
 
   for (final entry in scenarios.entries) {

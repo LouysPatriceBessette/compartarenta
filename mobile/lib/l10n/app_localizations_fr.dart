@@ -3540,6 +3540,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleLogReadingRoleCorrection => 'Correction';
 
   @override
+  String vehicleLogReadingRoleCorrectionBy(String userName) {
+    return 'Correction par $userName';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionSessionStart(String userName) {
+    return 'Correction par $userName en début de session';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionStandalone(String userName) {
+    return 'Correction par $userName lors d\'une lecture ponctuelle';
+  }
+
+  @override
+  String get vehicleLogCorrectionJournalSubtitle =>
+      'Correction d\'odomètre à vérifier';
+
+  @override
+  String get vehicleLogCorrectionLabel => 'Correction';
+
+  @override
+  String vehicleLogCorrectionMustBeAttributed(String gap) {
+    return '$gap doivent être attribués';
+  }
+
+  @override
   String get vehicleLogMeterTitle => 'Journal — odomètre';
 
   @override
@@ -3766,7 +3793,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get vehicleSessionEndTankConfirmReview => 'Revoir';
+  String get vehicleSessionEndTankConfirmReview => 'Revoir la saisie';
 
   @override
   String get vehicleSessionEndTankConfirmProceed => 'Confirmer';
@@ -3920,6 +3947,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleGapOwnerNotified => 'Le propriétaire sera notifié.';
 
   @override
+  String vehiclePositiveGapConfirmPrompt(String gap) {
+    return 'Il s\'agit d\'un différentiel de $gap. Êtes-vous certain?';
+  }
+
+  @override
+  String get vehiclePositiveGapConfirmNo => 'Non';
+
+  @override
+  String get vehiclePositiveGapConfirmYes => 'Oui';
+
+  @override
   String get vehicleNegativeGapTitle => 'Relevé en baisse';
 
   @override
@@ -3933,6 +3971,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vehicleNegativeGapCancel => 'Annuler la saisie';
+
+  @override
+  String get vehicleSuspiciousGapTitle => 'Différentiel inhabituellement élevé';
+
+  @override
+  String vehicleSuspiciousGapBody(String gap, String maxGap) {
+    return 'Le différentiel de $gap dépasse ce qui est plausible avec un plein ($maxGap). Ce relevé est peut-être erroné.';
+  }
+
+  @override
+  String get vehicleSuspiciousGapConfirm => 'Utiliser ce relevé quand même';
+
+  @override
+  String get vehicleSuspiciousGapCancel => 'Revoir la saisie';
 
   @override
   String get vehicleRoleOwner => 'Propriétaire';

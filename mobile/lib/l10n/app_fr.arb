@@ -1411,6 +1411,40 @@
   "vehicleLogReadingRoleStandalone": "Lecture ponctuelle",
   "vehicleLogReadingRoleFuelPurchase": "Achat de carburant",
   "vehicleLogReadingRoleCorrection": "Correction",
+  "vehicleLogReadingRoleCorrectionBy": "Correction par {userName}",
+  "@vehicleLogReadingRoleCorrectionBy": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionSessionStart": "Correction par {userName} en début de session",
+  "@vehicleLogReadingRoleCorrectionSessionStart": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionStandalone": "Correction par {userName} lors d'une lecture ponctuelle",
+  "@vehicleLogReadingRoleCorrectionStandalone": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionJournalSubtitle": "Correction d'odomètre à vérifier",
+  "vehicleLogCorrectionLabel": "Correction",
+  "vehicleLogCorrectionMustBeAttributed": "{gap} doivent être attribués",
+  "@vehicleLogCorrectionMustBeAttributed": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
   "vehicleLogMeterTitle": "Journal — odomètre",
   "vehicleLogMeterFuelTitle": "Odomètre et carburant",
   "vehicleLogMeterDetailTitle": "Détail du relevé",
@@ -1498,7 +1532,7 @@
   "vehicleConsumptionHistoryBlended": "{date} : {value} L/100 km",
   "vehicleSessionEndTankConfirmTitle": "Confirmer l'état du réservoir",
   "vehicleSessionEndTankConfirmBody": "Vous avez déclaré le réservoir à {percent} % plein après {distance} depuis le dernier achat d'essence. Veuillez confirmer que c'est exact.",
-  "vehicleSessionEndTankConfirmReview": "Revoir",
+  "vehicleSessionEndTankConfirmReview": "Revoir la saisie",
   "vehicleSessionEndTankConfirmProceed": "Confirmer",
   "vehicleStatisticsTitle": "Statistiques",
   "vehicleStatisticsMileageTitle": "Mon kilométrage",
@@ -1546,10 +1580,30 @@
   "vehicleGapAttributionUnknown": "Je ne sais pas",
   "vehicleGapAttributionSelf": "Moi",
   "vehicleGapOwnerNotified": "Le propriétaire sera notifié.",
+  "vehiclePositiveGapConfirmPrompt": "Il s'agit d'un différentiel de {gap}. Êtes-vous certain?",
+  "@vehiclePositiveGapConfirmPrompt": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclePositiveGapConfirmNo": "Non",
+  "vehiclePositiveGapConfirmYes": "Oui",
   "vehicleNegativeGapTitle": "Relevé en baisse",
   "vehicleNegativeGapBody": "Le nouveau relevé est inférieur de {gap} au dernier relevé enregistré.",
   "vehicleNegativeGapMaintain": "Conserver le relevé, vérifier plus tard",
   "vehicleNegativeGapCancel": "Annuler la saisie",
+  "vehicleSuspiciousGapTitle": "Différentiel inhabituellement élevé",
+  "vehicleSuspiciousGapBody": "Le différentiel de {gap} dépasse ce qui est plausible avec un plein ({maxGap}). Ce relevé est peut-être erroné.",
+  "@vehicleSuspiciousGapBody": {
+    "placeholders": {
+      "gap": { "type": "String" },
+      "maxGap": { "type": "String" }
+    }
+  },
+  "vehicleSuspiciousGapConfirm": "Utiliser ce relevé quand même",
+  "vehicleSuspiciousGapCancel": "Revoir la saisie",
   "vehicleRoleOwner": "Propriétaire",
   "vehicleRoleBorrower": "Emprunteur",
   "vehicleSharingAccessibleTitle": "Véhicules accessibles",

@@ -1571,6 +1571,40 @@
   "vehicleLogReadingRoleStandalone": "One-time reading",
   "vehicleLogReadingRoleFuelPurchase": "Fuel purchase",
   "vehicleLogReadingRoleCorrection": "Correction",
+  "vehicleLogReadingRoleCorrectionBy": "Correction by {userName}",
+  "@vehicleLogReadingRoleCorrectionBy": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionSessionStart": "Correction by {userName} at session start",
+  "@vehicleLogReadingRoleCorrectionSessionStart": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionStandalone": "Correction by {userName} during a one-time reading",
+  "@vehicleLogReadingRoleCorrectionStandalone": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionJournalSubtitle": "Odometer correction to verify",
+  "vehicleLogCorrectionLabel": "Correction",
+  "vehicleLogCorrectionMustBeAttributed": "{gap} must be attributed",
+  "@vehicleLogCorrectionMustBeAttributed": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
   "vehicleLogMeterTitle": "Log — odometer",
   "vehicleLogMeterFuelTitle": "Odometer and fuel",
   "vehicleLogMeterDetailTitle": "Reading details",
@@ -1672,7 +1706,7 @@
       "percent": { "type": "int" }
     }
   },
-  "vehicleSessionEndTankConfirmReview": "Review",
+  "vehicleSessionEndTankConfirmReview": "Review entry",
   "vehicleSessionEndTankConfirmProceed": "Confirm",
   "vehicleStatisticsTitle": "Statistics",
   "vehicleStatisticsMileageTitle": "My mileage",
@@ -1735,6 +1769,14 @@
   "vehicleGapAttributionUnknown": "I don't know",
   "vehicleGapAttributionSelf": "Myself",
   "vehicleGapOwnerNotified": "The owner will be notified.",
+  "vehiclePositiveGapConfirmPrompt": "This is a difference of {gap}. Are you sure?",
+  "@vehiclePositiveGapConfirmPrompt": {
+    "placeholders": {
+      "gap": { "type": "String" }
+    }
+  },
+  "vehiclePositiveGapConfirmNo": "No",
+  "vehiclePositiveGapConfirmYes": "Yes",
   "vehicleNegativeGapTitle": "Reading decreased",
   "vehicleNegativeGapBody": "The new reading is {gap} lower than the last stored reading.",
   "@vehicleNegativeGapBody": {
@@ -1744,6 +1786,16 @@
   },
   "vehicleNegativeGapMaintain": "Maintain reading, investigate later",
   "vehicleNegativeGapCancel": "Cancel entry",
+  "vehicleSuspiciousGapTitle": "Unusually large difference",
+  "vehicleSuspiciousGapBody": "The difference of {gap} exceeds what is plausible on one tank ({maxGap}). This reading may be incorrect.",
+  "@vehicleSuspiciousGapBody": {
+    "placeholders": {
+      "gap": { "type": "String" },
+      "maxGap": { "type": "String" }
+    }
+  },
+  "vehicleSuspiciousGapConfirm": "Use this reading anyway",
+  "vehicleSuspiciousGapCancel": "Review entry",
   "vehicleRoleOwner": "Owner",
   "vehicleRoleBorrower": "Borrower",
   "vehicleSharingAccessibleTitle": "Accessible vehicles",

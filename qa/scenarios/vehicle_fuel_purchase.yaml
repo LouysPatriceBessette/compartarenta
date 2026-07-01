@@ -1,0 +1,7 @@
+id: vehicle_fuel_purchase
+description: Achat de carburant sur un véhicule existant
+device_date: "2027-06-15T09:00:00"
+timezone: America/Toronto
+seed: vehicle_fuel_purchase
+flow: qa/flows/vehicle_fuel_purchase.yaml
+screenshot_prefix: vehicle_fuel_purchase

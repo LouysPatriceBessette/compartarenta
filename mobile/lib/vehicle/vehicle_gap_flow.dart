@@ -1,44 +1,165 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../debug/qa_vehicle_semantics.dart';
 import '../db/app_database.dart';
-import '../db/repositories/contacts_repository.dart';
 import '../db/repositories/vehicles_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
 import '../util/vehicle_meter_display.dart';
-import '../vehicle/vehicle_owner_contact.dart';
+import '../vehicle/vehicle_consumption_metrics.dart';
+import '../vehicle/vehicle_gap_correction.dart';
+import '../vehicle/vehicle_odometer_gap_plausibility.dart';
 import '../widgets/app_dialog.dart';
 
-/// Positive gap attribution choices for a vehicle use session start.
-Future<String?> showPositiveGapAttributionDialog(
+/// Result of gap prompts before persisting a new meter value.
+class MeterGapConfirmResult {
+  const MeterGapConfirmResult.cancel() : proceed = false, positiveGapTenths = null;
+
+  const MeterGapConfirmResult.ok({this.positiveGapTenths}) : proceed = true;
+
+  final bool proceed;
+  final int? positiveGapTenths;
+}
+
+/// Confirms a positive odometer gap before saving the reading.
+Future<bool> showPositiveGapConfirmDialog(
   BuildContext context, {
   required String gapDisplay,
-  required List<({String id, String label})> participants,
 }) async {
   final l10n = AppLocalizations.of(context);
-  return showAppDialog<String>(
+  final choice = await showAppDialog<bool>(
     context: context,
     guardKey: 'vehiclePositiveGap',
     builder: (ctx) {
       return AlertDialog(
-        title: Text(l10n.vehicleGapAttributionTitle),
-        content: Text(
-          l10n.vehicleGapAttributionPrompt(gapDisplay),
-        ),
+        content: Text(l10n.vehiclePositiveGapConfirmPrompt(gapDisplay)),
         actions: [
-          for (final p in participants)
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, p.id),
-              child: Text(p.label),
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleGapConfirmNo : null,
+            container: true,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.vehiclePositiveGapConfirmNo),
             ),
-          TextButton(
-            onPressed: () =>
-                Navigator.pop(ctx, kVehicleGapAttributionUnknown),
-            child: Text(l10n.vehicleGapAttributionUnknown),
+          ),
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleGapConfirmYes : null,
+            container: true,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.vehiclePositiveGapConfirmYes),
+            ),
           ),
         ],
       );
     },
+  );
+  return choice ?? false;
+}
+
+/// Confirms a positive odometer gap that exceeds one-tank plausibility.
+Future<bool> showSuspiciousPositiveGapDialog(
+  BuildContext context, {
+  required String gapDisplay,
+  required String maxGapDisplay,
+}) async {
+  final l10n = AppLocalizations.of(context);
+  final choice = await showAppDialog<bool>(
+    context: context,
+    guardKey: 'vehicleSuspiciousGap',
+    builder: (ctx) {
+      return AlertDialog(
+        title: Text(l10n.vehicleSuspiciousGapTitle),
+        content: Text(
+          l10n.vehicleSuspiciousGapBody(gapDisplay, maxGapDisplay),
+        ),
+        actions: [
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleGapSuspiciousCancel : null,
+            container: true,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.vehicleSuspiciousGapCancel),
+            ),
+          ),
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleGapSuspiciousConfirm : null,
+            container: true,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.vehicleSuspiciousGapConfirm),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+  return choice ?? false;
+}
+
+/// Session-end distance guard: one tank capacity at the guard consumption rate.
+///
+/// Uses the odometer delta since the latest fuel purchase with a meter reading
+/// when available; otherwise falls back to the session start reading.
+Future<bool> confirmSuspiciousSessionEndDistanceBeforeSave({
+  required BuildContext context,
+  required VehiclesRepository repo,
+  required Vehicle vehicle,
+  required int sessionStartMeterTenths,
+  required int parsedEndMeterTenths,
+  required double fuelLitersDuringSession,
+  required bool usesHorometer,
+  required DistanceUnit distanceUnit,
+}) async {
+  if (usesHorometer) {
+    return true;
+  }
+  final sinceFuelTenths = await repo.distanceTenthsSinceLastFuelPurchase(
+    vehicle.id,
+    currentMeterTenths: parsedEndMeterTenths,
+  );
+  final distanceTenths =
+      sinceFuelTenths ?? (parsedEndMeterTenths - sessionStartMeterTenths);
+  if (distanceTenths <= 0) {
+    return true;
+  }
+  final tankCapacity = vehicle.fuelTankCapacityLiters;
+  if (tankCapacity == null || tankCapacity <= 0) {
+    return true;
+  }
+
+  final snapshot = await VehicleConsumptionMetrics(AppDatabase.processScope)
+      .forVehicle(vehicle.id);
+  final guardL100 = guardConsumptionLitersPer100Km(snapshot);
+  final maxDistanceTenths = maxPlausibleSessionDistanceTenths(
+    tankCapacityLiters: tankCapacity,
+    fuelPurchasedLitersDuringSession: fuelLitersDuringSession,
+    guardLitersPer100Km: guardL100,
+  );
+  if (!isSuspiciousPositiveGap(
+    gapTenths: distanceTenths,
+    maxGapTenths: maxDistanceTenths,
+  )) {
+    return true;
+  }
+  if (!context.mounted) {
+    return false;
+  }
+  return showSuspiciousPositiveGapDialog(
+    context,
+    gapDisplay: formatStoredMeterDeltaForDisplay(
+      context,
+      distanceTenths,
+      usesHorometer: usesHorometer,
+      distanceUnit: distanceUnit,
+    ),
+    maxGapDisplay: formatStoredMeterDeltaForDisplay(
+      context,
+      maxDistanceTenths!,
+      usesHorometer: usesHorometer,
+      distanceUnit: distanceUnit,
+    ),
   );
 }
 
@@ -74,56 +195,11 @@ Future<NegativeGapChoice?> showNegativeGapDialog(
   );
 }
 
-List<({String id, String label})> gapAttributionParticipants({
-  required AppLocalizations l10n,
-  required String actingContactId,
-  required String ownerContactId,
-  required List<String> activeBorrowerContactIds,
-  required Map<String, String> contactLabels,
-}) {
-  final out = <({String id, String label})>[];
-  out.add((
-    id: actingContactId,
-    label: l10n.vehicleGapAttributionSelf,
-  ));
-  if (ownerContactId != actingContactId) {
-    out.add((
-      id: ownerContactId,
-      label: contactLabels[ownerContactId] ?? l10n.vehicleRoleOwner,
-    ));
-  }
-  for (final id in activeBorrowerContactIds) {
-    if (id == actingContactId) continue;
-    out.add((
-      id: id,
-      label: contactLabels[id] ?? l10n.vehicleRoleBorrower,
-    ));
-  }
-  return out;
-}
-
-bool gapRequiresOwnerNotification({
-  required String attributedContactId,
-  required String recordedByContactId,
-}) {
-  if (attributedContactId == kVehicleGapAttributionUnknown &&
-      !vehicleContactIsOwnerSelf(recordedByContactId)) {
-    return true;
-  }
-  if (attributedContactId != recordedByContactId &&
-      attributedContactId != kVehicleGapAttributionUnknown) {
-    return true;
-  }
-  return false;
-}
-
 /// Negative- and positive-gap prompts before persisting a new meter value.
 ///
 /// When [attributePositiveGap] is false (e.g. fuel purchase during an open use
-/// session), positive-gap attribution is skipped.
-///
-/// Returns `false` if the user cancelled or the flow must abort.
-Future<bool> confirmMeterGapsBeforeSave({
+/// session), positive-gap confirmation is skipped.
+Future<MeterGapConfirmResult> confirmMeterGapsBeforeSave({
   required BuildContext context,
   required AppLocalizations l10n,
   required VehiclesRepository repo,
@@ -139,7 +215,7 @@ Future<bool> confirmMeterGapsBeforeSave({
 
   if (latest != null && parsedMeter < latest) {
     if (isOwnerContext) {
-      if (!context.mounted) return false;
+      if (!context.mounted) return const MeterGapConfirmResult.cancel();
       final choice = await showNegativeGapDialog(
         context,
         gapDisplay: formatStoredMeterDeltaForDisplay(
@@ -149,26 +225,16 @@ Future<bool> confirmMeterGapsBeforeSave({
           distanceUnit: distanceUnit,
         ),
       );
-      if (!context.mounted) return false;
+      if (!context.mounted) return const MeterGapConfirmResult.cancel();
       if (choice != NegativeGapChoice.maintain) {
-        return false;
+        return const MeterGapConfirmResult.cancel();
       }
     }
   }
 
   if (attributePositiveGap && latest != null && parsedMeter > latest) {
-    final ownerLinks = await repo.listActiveLinksAsOwner();
-    final borrowerIds = ownerLinks
-        .where((l) => l.vehicleId == vehicle.id)
-        .map((l) => l.borrowerContactId)
-        .toList();
-    final contacts =
-        await ContactsRepository(AppDatabase.processScope).list();
-    final labels = {
-      for (final c in contacts) c.id: c.displayName,
-    };
-    if (!context.mounted) return false;
-    final attributed = await showPositiveGapAttributionDialog(
+    if (!context.mounted) return const MeterGapConfirmResult.cancel();
+    final confirmed = await showPositiveGapConfirmDialog(
       context,
       gapDisplay: formatStoredMeterDeltaForDisplay(
         context,
@@ -176,34 +242,45 @@ Future<bool> confirmMeterGapsBeforeSave({
         usesHorometer: usesHorometer,
         distanceUnit: distanceUnit,
       ),
-      participants: gapAttributionParticipants(
-        l10n: l10n,
-        actingContactId: actingContactId,
-        ownerContactId: vehicle.ownerContactId,
-        activeBorrowerContactIds: borrowerIds,
-        contactLabels: labels,
-      ),
     );
-    if (!context.mounted || attributed == null) {
-      return false;
+    if (!context.mounted || !confirmed) {
+      return const MeterGapConfirmResult.cancel();
     }
-    await repo.recordPositiveGap(
-      vehicleId: vehicle.id,
-      latestBefore: latest,
-      startAfter: parsedMeter,
-      attributedContactId: attributed,
-      recordedByContactId: actingContactId,
-    );
-    if (gapRequiresOwnerNotification(
-      attributedContactId: attributed,
-      recordedByContactId: actingContactId,
-    )) {
-      if (!context.mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vehicleGapOwnerNotified)),
-      );
-    }
+    return MeterGapConfirmResult.ok(positiveGapTenths: parsedMeter - latest);
   }
 
-  return true;
+  return const MeterGapConfirmResult.ok();
+}
+
+/// Persists the correction journal entry and gap record after user confirmation.
+Future<void> persistConfirmedPositiveGap({
+  required VehiclesRepository repo,
+  required Vehicle vehicle,
+  required int latestBefore,
+  required int parsedMeter,
+  required int gapTenths,
+  required String photoPath,
+  required String actingContactId,
+  required GapCorrectionContext correctionContext,
+  String? vehicleUseId,
+  DateTime? correctionRecordedAt,
+}) async {
+  await repo.saveGapCorrectionReading(
+    vehicle: vehicle,
+    meterValue: parsedMeter,
+    gapTenths: gapTenths,
+    photoPath: photoPath,
+    recordedByContactId: actingContactId,
+    correctionContext: correctionContext,
+    vehicleUseId: vehicleUseId,
+    recordedAt: correctionRecordedAt,
+  );
+  await repo.recordPositiveGap(
+    vehicleId: vehicle.id,
+    latestBefore: latestBefore,
+    startAfter: parsedMeter,
+    attributedContactId: kVehicleGapAttributionUnknown,
+    recordedByContactId: actingContactId,
+    vehicleUseId: vehicleUseId,
+  );
 }

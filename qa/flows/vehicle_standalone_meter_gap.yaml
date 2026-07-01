@@ -1,0 +1,44 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _enter_vehicle_hub.yaml
+- takeScreenshot: 01_vehicle_hub
+- scrollUntilVisible:
+    element:
+      id: "qa-vehicle-card-qa-civic"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-card-qa-civic"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-detail"
+    timeout: 30000
+- takeScreenshot: 02_vehicle_detail
+# --- First +100 km standalone gap → attribution only ---
+- tapOn:
+    id: "qa-vehicle-detail-odometer-reading"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-field-standalone-meter"
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-field-standalone-meter"
+- inputText: "50100"
+- runFlow:
+    file: _dismiss_ime_done.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-save"
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-save"
+    enabled: true
+- runFlow:
+    file: _vehicle_gap_confirm_yes.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-detail"
+    timeout: 30000
+- takeScreenshot: 03_standalone_gap_saved

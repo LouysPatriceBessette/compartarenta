@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../debug/qa_e2e_meter_photo.dart';
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -11,6 +13,7 @@ import '../../vehicle/vehicle_meter_photo_path.dart';
 import '../../vehicle/vehicle_known_tank_state.dart';
 import '../../vehicle/vehicle_consumption_mode_policy.dart';
 import '../../vehicle/vehicle_tank_session_flow.dart';
+import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
@@ -126,6 +129,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
   }
 
   bool get _photoRequired {
+    if (QaE2eFlags.meterPhotoOptional) return false;
     if (!_startingSession) return true;
     return _meterChangedFromBaseline;
   }
@@ -299,15 +303,20 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       } else if (_startingSession && !_meterChangedFromBaseline) {
         photoPath = kVehicleMeterPhotoKnownUnchangedSentinel;
       } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
-        );
-        return;
+        final qaPath = qaE2eEffectiveMeterPhotoPath(_photoPath);
+        if (qaPath != null) {
+          photoPath = qaPath;
+        } else {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.vehicleMeterPhotoRequired)),
+          );
+          return;
+        }
       }
 
       if (!mounted) return;
-      final proceed = await confirmMeterGapsBeforeSave(
+      final gapResult = await confirmMeterGapsBeforeSave(
         context: context,
         l10n: l10n,
         repo: repo,
@@ -319,8 +328,32 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         distanceUnit: distanceUnit,
         attributePositiveGap: openUse == null,
       );
-      if (!proceed) {
+      if (!gapResult.proceed) {
         return;
+      }
+
+      if (openUse != null) {
+        final startReading =
+            await repo.getMeterReading(openUse.startReadingId);
+        if (startReading == null) {
+          return;
+        }
+        final fuelDuringSession =
+            await repo.fuelLitersPurchasedDuringOpenUse(openUse);
+        if (!mounted) return;
+        final distanceOk = await confirmSuspiciousSessionEndDistanceBeforeSave(
+          context: context,
+          repo: repo,
+          vehicle: v,
+          sessionStartMeterTenths: startReading.value,
+          parsedEndMeterTenths: parsed,
+          fuelLitersDuringSession: fuelDuringSession,
+          usesHorometer: usesHorometer,
+          distanceUnit: distanceUnit,
+        );
+        if (!distanceOk) {
+          return;
+        }
       }
 
       if (openUse != null) {
@@ -340,6 +373,27 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         }
       }
 
+      DateTime? readingRecordedAt;
+
+      if (openUse == null &&
+          gapResult.positiveGapTenths != null &&
+          latest != null) {
+        final gapRecordedAt =
+            await repo.reserveGapCorrectionTimestamp(v.id);
+        await persistConfirmedPositiveGap(
+          repo: repo,
+          vehicle: v,
+          latestBefore: latest,
+          parsedMeter: parsed,
+          gapTenths: gapResult.positiveGapTenths!,
+          photoPath: photoPath,
+          actingContactId: actingId,
+          correctionContext: GapCorrectionContext.sessionStart,
+          correctionRecordedAt: gapRecordedAt,
+        );
+        readingRecordedAt = gapRecordedAt;
+      }
+
       final reading = await repo.saveMeterReading(
         vehicleId: v.id,
         value: parsed,
@@ -355,6 +409,7 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
         tankFillFraction: _openUse == null && _fullTank
             ? null
             : _tankFillLevel.percent,
+        recordedAt: readingRecordedAt,
       );
 
       if (openUse == null) {
@@ -467,15 +522,22 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                           sectionTitle: _openUse == null
                               ? null
                               : l10n.vehicleFuelTankState,
+                          fullTankSemanticsId: _openUse == null
+                              ? kQaVehicleFieldSessionFullTank
+                              : null,
+                          tankLevelSemanticsId: kQaVehicleFieldSessionTankLevel,
                         ),
                         const SizedBox(height: 12),
-                        VehicleNarrowUnitField(
-                          controller: _reading,
-                          label: meterLabel,
-                          unitSuffix: kind?.usesHorometer ?? false
-                              ? 'h'
-                              : distanceUnit,
-                          decimal: true,
+                        qaVehicleSemantics(
+                          identifier: kQaVehicleFieldSessionMeter,
+                          child: VehicleNarrowUnitField(
+                            controller: _reading,
+                            label: meterLabel,
+                            unitSuffix: kind?.usesHorometer ?? false
+                                ? 'h'
+                                : distanceUnit,
+                            decimal: true,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         VehicleMeterPhotoButton(
@@ -496,9 +558,12 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
                           ),
                         ],
                         const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _saving || !_formComplete ? null : _save,
-                          child: Text(l10n.commonSave),
+                        qaVehicleSemantics(
+                          identifier: kQaVehicleSave,
+                          child: FilledButton(
+                            onPressed: _saving || !_formComplete ? null : _save,
+                            child: Text(l10n.commonSave),
+                          ),
                         ),
                       ],
                     ),

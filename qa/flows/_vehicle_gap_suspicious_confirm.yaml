@@ -1,0 +1,8 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-gap-suspicious-confirm"
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-gap-suspicious-confirm"

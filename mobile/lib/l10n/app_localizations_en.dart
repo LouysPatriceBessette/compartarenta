@@ -3504,6 +3504,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleLogReadingRoleCorrection => 'Correction';
 
   @override
+  String vehicleLogReadingRoleCorrectionBy(String userName) {
+    return 'Correction by $userName';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionSessionStart(String userName) {
+    return 'Correction by $userName at session start';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionStandalone(String userName) {
+    return 'Correction by $userName during a one-time reading';
+  }
+
+  @override
+  String get vehicleLogCorrectionJournalSubtitle =>
+      'Odometer correction to verify';
+
+  @override
+  String get vehicleLogCorrectionLabel => 'Correction';
+
+  @override
+  String vehicleLogCorrectionMustBeAttributed(String gap) {
+    return '$gap must be attributed';
+  }
+
+  @override
   String get vehicleLogMeterTitle => 'Log — odometer';
 
   @override
@@ -3725,7 +3752,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get vehicleSessionEndTankConfirmReview => 'Review';
+  String get vehicleSessionEndTankConfirmReview => 'Review entry';
 
   @override
   String get vehicleSessionEndTankConfirmProceed => 'Confirm';
@@ -3878,6 +3905,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleGapOwnerNotified => 'The owner will be notified.';
 
   @override
+  String vehiclePositiveGapConfirmPrompt(String gap) {
+    return 'This is a difference of $gap. Are you sure?';
+  }
+
+  @override
+  String get vehiclePositiveGapConfirmNo => 'No';
+
+  @override
+  String get vehiclePositiveGapConfirmYes => 'Yes';
+
+  @override
   String get vehicleNegativeGapTitle => 'Reading decreased';
 
   @override
@@ -3891,6 +3929,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleNegativeGapCancel => 'Cancel entry';
+
+  @override
+  String get vehicleSuspiciousGapTitle => 'Unusually large difference';
+
+  @override
+  String vehicleSuspiciousGapBody(String gap, String maxGap) {
+    return 'The difference of $gap exceeds what is plausible on one tank ($maxGap). This reading may be incorrect.';
+  }
+
+  @override
+  String get vehicleSuspiciousGapConfirm => 'Use this reading anyway';
+
+  @override
+  String get vehicleSuspiciousGapCancel => 'Review entry';
 
   @override
   String get vehicleRoleOwner => 'Owner';

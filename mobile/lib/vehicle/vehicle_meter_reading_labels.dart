@@ -3,6 +3,7 @@ import '../db/repositories/contacts_repository.dart';
 import '../db/repositories/vehicles_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
+import 'vehicle_gap_correction.dart';
 import 'vehicle_owner_contact.dart';
 
 Future<String> resolveVehicleContactDisplayName(
@@ -39,6 +40,17 @@ Future<String> meterReadingRoleLabel({
     l10n: l10n,
   );
 
+  if (role == MeterReadingRole.correction || reading.isCorrection) {
+    final decoded = decodeGapCorrectionNote(reading.correctionNote);
+    return switch (decoded?.context) {
+      GapCorrectionContext.sessionStart =>
+        l10n.vehicleLogReadingRoleCorrectionSessionStart(userName),
+      GapCorrectionContext.standalone =>
+        l10n.vehicleLogReadingRoleCorrectionStandalone(userName),
+      null => l10n.vehicleLogReadingRoleCorrectionBy(userName),
+    };
+  }
+
   return switch (role) {
     MeterReadingRole.sessionEnd =>
       l10n.vehicleLogReadingRoleSessionEnd(userName),
@@ -46,7 +58,7 @@ Future<String> meterReadingRoleLabel({
       l10n.vehicleLogReadingRoleSessionStart(userName),
     MeterReadingRole.standalone => l10n.vehicleLogReadingRoleStandalone,
     MeterReadingRole.fuelPurchase => l10n.vehicleLogReadingRoleFuelPurchase,
-    MeterReadingRole.correction => l10n.vehicleLogReadingRoleCorrection,
+    MeterReadingRole.correction => l10n.vehicleLogReadingRoleCorrectionBy(userName),
     null => reading.readingRole,
   };
 }

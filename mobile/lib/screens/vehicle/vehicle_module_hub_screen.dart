@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -85,27 +86,33 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final created = await context.push<bool>('/vehicle/add');
-          if (created == true) _reload();
-        },
-        icon: const Icon(Icons.add),
-        label: Text(l10n.vehicleAddVehicle),
+      floatingActionButton: qaVehicleSemantics(
+        identifier: kQaVehicleAddFab,
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final created = await context.push<bool>('/vehicle/add');
+            if (created == true) _reload();
+          },
+          icon: const Icon(Icons.add),
+          label: Text(l10n.vehicleAddVehicle),
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _reload,
-              child: ListView(
-                padding: screenBodyScrollPadding(context),
-                children: [
+              child: qaVehicleSemantics(
+                identifier: kQaVehicleHub,
+                child: ListView(
+                  padding: screenBodyScrollPadding(context),
+                  children: [
                   Text(
                     l10n.vehicleQuickActionsTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   _QuickActionsRow(
+                    sessionOpen: _openUse != null,
                     sessionPrimaryLabel: _openUse == null
                         ? l10n.vehicleUseSessionStartAction
                         : l10n.vehicleUseSessionEndAction,
@@ -140,6 +147,7 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 
@@ -164,12 +172,14 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
 
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow({
+    required this.sessionOpen,
     required this.sessionPrimaryLabel,
     required this.sessionSecondaryLine,
     required this.onSession,
     required this.onFuel,
   });
 
+  final bool sessionOpen;
   final String sessionPrimaryLabel;
   final String? sessionSecondaryLine;
   final VoidCallback onSession;
@@ -184,23 +194,31 @@ class _QuickActionsRow extends StatelessWidget {
       children: [
         ActionChip(
           avatar: const Icon(Icons.speed_outlined, size: 18),
-          label: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(sessionPrimaryLabel),
-              if (sessionSecondaryLine != null)
-                Text(
-                  sessionSecondaryLine!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-            ],
+          label: qaVehicleSemantics(
+            identifier: sessionOpen
+                ? kQaVehicleQuickActionSessionEnd
+                : kQaVehicleQuickActionSessionStart,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(sessionPrimaryLabel),
+                if (sessionSecondaryLine != null)
+                  Text(
+                    sessionSecondaryLine!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
           ),
           onPressed: onSession,
         ),
         ActionChip(
           avatar: const Icon(Icons.local_gas_station_outlined, size: 18),
-          label: Text(l10n.vehicleQuickActionFuel),
+          label: qaVehicleSemantics(
+            identifier: kQaVehicleQuickActionFuel,
+            child: Text(l10n.vehicleQuickActionFuel),
+          ),
           onPressed: onFuel,
         ),
       ],
@@ -256,7 +274,9 @@ class _VehicleCardState extends State<_VehicleCard> {
         final distanceUnit = resolveDistanceUnit(widget.prefs);
         final liquidUnit = resolveLiquidVolumeUnit(widget.prefs);
         final locale = Localizations.localeOf(context).toString();
-        return Card(
+        return qaVehicleSemantics(
+          identifier: qaVehicleCardSemanticsId(widget.vehicle.displayLabel),
+          child: Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
             onTap: widget.onTap,
@@ -274,22 +294,49 @@ class _VehicleCardState extends State<_VehicleCard> {
                   if (snap.hasError)
                     const SizedBox.shrink()
                   else if (data != null) ...[
-                    Text(
-                      formatStoredMeterForDisplay(
-                        context,
-                        data.meterValue,
-                        usesHorometer: usesHorometer,
-                        distanceUnit: distanceUnit,
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Builder(
+                      builder: (context) {
+                        final meterDisplay = formatStoredMeterForDisplay(
+                          context,
+                          data.meterValue,
+                          usesHorometer: usesHorometer,
+                          distanceUnit: distanceUnit,
+                        );
+                        return qaVehicleSemantics(
+                          identifier: qaVehicleCardMeterSemanticsId(
+                            widget.vehicle.displayLabel,
+                          ),
+                          label: meterDisplay,
+                          child: Text(
+                            meterDisplay,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        );
+                      },
                     ),
                     if (data.fuelTankLabel(l10n, locale, liquidUnit).isNotEmpty)
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              data.fuelTankLabel(l10n, locale, liquidUnit),
-                              style: Theme.of(context).textTheme.bodySmall,
+                            child: Builder(
+                              builder: (context) {
+                                final fuelTankLabel = data.fuelTankLabel(
+                                  l10n,
+                                  locale,
+                                  liquidUnit,
+                                );
+                                return qaVehicleSemantics(
+                                  identifier: qaVehicleCardFuelTankSemanticsId(
+                                    widget.vehicle.displayLabel,
+                                  ),
+                                  label: fuelTankLabel,
+                                  child: Text(
+                                    fuelTankLabel,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           IconButton(
@@ -358,6 +405,7 @@ class _VehicleCardState extends State<_VehicleCard> {
               ),
             ),
           ),
+        ),
         );
       },
     );
