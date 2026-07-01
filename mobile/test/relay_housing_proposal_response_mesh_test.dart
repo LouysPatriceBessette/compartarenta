@@ -322,5 +322,7 @@ void main() {
           .firstOrNull;
       expect(roberrResponse, ProposalResponseStatus.accepted.name);
     },
+    // Three handshakes + mesh proposal/response; ~25–45s isolated, can exceed 30s in full suite.
+    timeout: const Timeout(Duration(seconds: 90)),
   );
 }

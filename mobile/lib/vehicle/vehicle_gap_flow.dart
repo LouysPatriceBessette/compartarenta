@@ -14,12 +14,13 @@ import '../widgets/app_dialog.dart';
 
 /// Result of gap prompts before persisting a new meter value.
 class MeterGapConfirmResult {
-  const MeterGapConfirmResult.cancel() : proceed = false, positiveGapTenths = null;
+  const MeterGapConfirmResult.cancel() : proceed = false, divergenceTenths = null;
 
-  const MeterGapConfirmResult.ok({this.positiveGapTenths}) : proceed = true;
+  const MeterGapConfirmResult.ok({this.divergenceTenths}) : proceed = true;
 
   final bool proceed;
-  final int? positiveGapTenths;
+  /// Signed odometer delta (positive or negative) when readings diverge.
+  final int? divergenceTenths;
 }
 
 /// Confirms a positive odometer gap before saving the reading.
@@ -229,7 +230,9 @@ Future<MeterGapConfirmResult> confirmMeterGapsBeforeSave({
       if (choice != NegativeGapChoice.maintain) {
         return const MeterGapConfirmResult.cancel();
       }
+      return MeterGapConfirmResult.ok(divergenceTenths: parsedMeter - latest);
     }
+    return MeterGapConfirmResult.ok(divergenceTenths: parsedMeter - latest);
   }
 
   if (attributePositiveGap && latest != null && parsedMeter > latest) {
@@ -246,13 +249,66 @@ Future<MeterGapConfirmResult> confirmMeterGapsBeforeSave({
     if (!context.mounted || !confirmed) {
       return const MeterGapConfirmResult.cancel();
     }
-    return MeterGapConfirmResult.ok(positiveGapTenths: parsedMeter - latest);
+    return MeterGapConfirmResult.ok(divergenceTenths: parsedMeter - latest);
   }
 
   return const MeterGapConfirmResult.ok();
 }
 
-/// Persists the correction journal entry and gap record after user confirmation.
+/// Persists verification journal entry and gap record after user confirmation.
+Future<({
+  VehicleMeterReading correctionReading,
+  VehicleOdometerGap gap,
+})> persistConfirmedMeterDivergence({
+  required VehiclesRepository repo,
+  required Vehicle vehicle,
+  required VehicleMeterReading previousReading,
+  required int parsedMeter,
+  required int divergenceTenths,
+  required String photoPath,
+  required String actingContactId,
+  required GapCorrectionContext correctionContext,
+  String? vehicleUseId,
+  DateTime? correctionRecordedAt,
+}) async {
+  final correctionReading = await repo.saveGapCorrectionReading(
+    vehicle: vehicle,
+    meterValue: parsedMeter,
+    gapTenths: divergenceTenths,
+    photoPath: photoPath,
+    recordedByContactId: actingContactId,
+    correctionContext: correctionContext,
+    vehicleUseId: vehicleUseId,
+    recordedAt: correctionRecordedAt,
+  );
+  final gap = await repo.recordPositiveGap(
+    vehicleId: vehicle.id,
+    latestBefore: previousReading.value,
+    startAfter: parsedMeter,
+    attributedContactId: kVehicleGapAttributionUnknown,
+    recordedByContactId: actingContactId,
+    vehicleUseId: vehicleUseId,
+    correctionReadingId: correctionReading.id,
+    previousReadingId: previousReading.id,
+  );
+  return (correctionReading: correctionReading, gap: gap);
+}
+
+Future<void> linkGapTriggerReading({
+  required VehiclesRepository repo,
+  required String gapId,
+  required String correctionReadingId,
+  required String previousReadingId,
+  required String triggerReadingId,
+}) =>
+    repo.linkOdometerGapReadings(
+      gapId: gapId,
+      correctionReadingId: correctionReadingId,
+      previousReadingId: previousReadingId,
+      triggerReadingId: triggerReadingId,
+    );
+
+/// @deprecated Use [persistConfirmedMeterDivergence].
 Future<void> persistConfirmedPositiveGap({
   required VehiclesRepository repo,
   required Vehicle vehicle,

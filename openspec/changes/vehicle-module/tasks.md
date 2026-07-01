@@ -1,6 +1,6 @@
 ## Implementation status (2026-07-01)
 
-Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). Remaining gaps: full positive-gap **participant** attribution UI, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration, boat consumption model.
+Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration, boat consumption model (wishlist non-blocking for store release).
 
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
@@ -16,9 +16,9 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 - [x] 2.1 Owner use flow: start/end odometer with required photo, distance derivation
 - [x] 2.2 Monotonic / negative-gap flow per `vehicle-odometer-gap-attribution`
 - [x] 2.3 Attribute uses to Propriétaire or Emprunteur Contact (sharing path)
-- [x] 2.4a Positive gap detection, confirm dialog, correction journal entry, and default `unknown` gap record at session start / standalone (`vehicle-odometer-gap-attribution` partial)
-- [ ] 2.4b Participant attribution dialog (Self / approved Emprunteur / Unknown) before finalizing positive gaps
-- [ ] 2.4c Propriétaire notification when gap is attributed to Unknown; Emprunteur negative-gap path notifies Propriétaire (strings exist; not wired)
+- [x] 2.4a Positive/negative gap detection, confirm dialog, `unknown` gap record, verification journal entry, **Corrections en attente** (owner), resolution forms (correct previous/trigger reading, add/split sessions), **Correction appliquée** journal, `resolvedAt` + gap delete on resolve (2026-07-01)
+- [ ] 2.4b Participant attribution dialog at detection time (Self / approved Emprunteur / Unknown) — product choice: auto-`unknown` + owner resolves later
+- [ ] 2.4c Propriétaire notification when Emprunteur confirms gap; relay sync of superseding corrections to remote devices (deferred §5.2 / notifications)
 
 ## 3. Fuel & owner metrics
 

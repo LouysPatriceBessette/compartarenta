@@ -3531,6 +3531,92 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String vehicleLogCorrectionGapMustBeAdded(String gap) {
+    return '$gap must be added';
+  }
+
+  @override
+  String vehicleLogCorrectionGapMustBeRemoved(String gap) {
+    return '$gap must be removed';
+  }
+
+  @override
+  String get vehiclePendingCorrectionsTitle => 'Pending corrections';
+
+  @override
+  String get vehiclePendingCorrectionsEmpty => 'No pending corrections.';
+
+  @override
+  String get vehiclePendingCorrectionDetailTitle => 'Odometer correction';
+
+  @override
+  String vehicleCorrectReadingButton(String date) {
+    return 'Correct entry from $date';
+  }
+
+  @override
+  String get vehicleAddMissingSessionButton => 'Add a use session';
+
+  @override
+  String get vehicleSplitSessionButton => 'Split session';
+
+  @override
+  String get vehicleGapResolutionSubmit => 'Submit';
+
+  @override
+  String get vehicleLogReadingRoleCorrectionApplied => 'Correction applied';
+
+  @override
+  String vehicleLogCorrectionAppliedSummary(String km, String name) {
+    return '$km were attributed to $name';
+  }
+
+  @override
+  String vehicleLogCorrectionAppliedSplitSummary(String km) {
+    return '$km were attributed (split)';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionReplaces(String label) {
+    return 'Correction — replaces $label';
+  }
+
+  @override
+  String vehicleLogCorrectionAppliedDivergence(String gap) {
+    return 'Observed gap: $gap';
+  }
+
+  @override
+  String get vehicleGapResolutionPreviousReading => 'Previous reading';
+
+  @override
+  String get vehicleGapResolutionTriggerReading => 'Subsequent reading';
+
+  @override
+  String get vehicleGapResolutionValidationMonotonicity =>
+      'This value would conflict with another reading.';
+
+  @override
+  String get vehicleGapResolutionValidationSegment =>
+      'Segments do not cover the gap correctly.';
+
+  @override
+  String get vehicleGapResolutionValidationDateOverlap =>
+      'Segment dates overlap.';
+
+  @override
+  String get vehicleGapResolutionAssignTo => 'Assign to';
+
+  @override
+  String get vehicleGapResolutionDates => 'Date(s)';
+
+  @override
+  String get vehicleGapResolutionStartMeter => 'Start odometer';
+
+  @override
+  String get vehicleGapResolutionEndMeter => 'End odometer';
+
+  @override
   String get vehicleLogMeterTitle => 'Log — odometer';
 
   @override

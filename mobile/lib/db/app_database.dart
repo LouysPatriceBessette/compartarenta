@@ -712,7 +712,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 30;
+  int get schemaVersion => 32;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1029,6 +1029,35 @@ class AppDatabase extends _$AppDatabase {
           m,
           vehicleUses,
           vehicleUses.sessionConsumptionMode,
+        );
+      }
+      if (from < 31) {
+        await _migrateAddColumn(
+          m,
+          vehicleMeterReadings,
+          vehicleMeterReadings.resolvedAt,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleOdometerGaps,
+          vehicleOdometerGaps.correctionReadingId,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleOdometerGaps,
+          vehicleOdometerGaps.previousReadingId,
+        );
+        await _migrateAddColumn(
+          m,
+          vehicleOdometerGaps,
+          vehicleOdometerGaps.triggerReadingId,
+        );
+      }
+      if (from < 32) {
+        await _migrateAddColumn(
+          m,
+          vehicleMeterReadings,
+          vehicleMeterReadings.supersedesReadingId,
         );
       }
     },

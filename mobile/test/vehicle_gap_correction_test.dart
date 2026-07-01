@@ -27,6 +27,15 @@ void main() {
           GapCorrectionContext.standalone);
     });
 
+    test('round-trip negative gap', () {
+      final note = encodeGapCorrectionNote(
+        gapTenths: -1000,
+        context: GapCorrectionContext.sessionStart,
+      );
+      expect(note, '-1000|sessionStart');
+      expect(decodeGapCorrectionNote(note)?.gapTenths, -1000);
+    });
+
     test('invalid note returns null', () {
       expect(decodeGapCorrectionNote(''), isNull);
       expect(decodeGapCorrectionNote('abc|sessionStart'), isNull);
@@ -51,6 +60,8 @@ void main() {
         negativeGapAcknowledged: false,
         isFullTank: null,
         tankFillFraction: null,
+        resolvedAt: null,
+        supersedesReadingId: null,
       );
       expect(isGapCorrectionReading(reading), isTrue);
     });
@@ -75,6 +86,8 @@ void main() {
         negativeGapAcknowledged: false,
         isFullTank: null,
         tankFillFraction: null,
+        resolvedAt: null,
+        supersedesReadingId: null,
       );
       final sessionStart = correction.copyWith(
         id: 's1',
@@ -107,6 +120,8 @@ void main() {
         negativeGapAcknowledged: false,
         isFullTank: null,
         tankFillFraction: null,
+        resolvedAt: null,
+        supersedesReadingId: null,
       );
       final sessionStart = correction.copyWith(
         id: 's1',

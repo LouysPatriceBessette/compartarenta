@@ -374,24 +374,30 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
       }
 
       DateTime? readingRecordedAt;
+      VehicleOdometerGap? pendingGap;
+      VehicleMeterReading? previousReading;
 
-      if (openUse == null &&
-          gapResult.positiveGapTenths != null &&
-          latest != null) {
-        final gapRecordedAt =
-            await repo.reserveGapCorrectionTimestamp(v.id);
-        await persistConfirmedPositiveGap(
-          repo: repo,
-          vehicle: v,
-          latestBefore: latest,
-          parsedMeter: parsed,
-          gapTenths: gapResult.positiveGapTenths!,
-          photoPath: photoPath,
-          actingContactId: actingId,
-          correctionContext: GapCorrectionContext.sessionStart,
-          correctionRecordedAt: gapRecordedAt,
-        );
-        readingRecordedAt = gapRecordedAt;
+      if (gapResult.divergenceTenths != null) {
+        previousReading = await repo.latestNonCorrectionMeterReading(v.id);
+        if (previousReading != null) {
+          final gapRecordedAt =
+              await repo.reserveGapCorrectionTimestamp(v.id);
+          final persisted = await persistConfirmedMeterDivergence(
+            repo: repo,
+            vehicle: v,
+            previousReading: previousReading,
+            parsedMeter: parsed,
+            divergenceTenths: gapResult.divergenceTenths!,
+            photoPath: photoPath,
+            actingContactId: actingId,
+            correctionContext: openUse == null
+                ? GapCorrectionContext.sessionStart
+                : GapCorrectionContext.sessionEnd,
+            correctionRecordedAt: gapRecordedAt,
+          );
+          pendingGap = persisted.gap;
+          readingRecordedAt = gapRecordedAt;
+        }
       }
 
       final reading = await repo.saveMeterReading(
@@ -411,6 +417,16 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
             : _tankFillLevel.percent,
         recordedAt: readingRecordedAt,
       );
+
+      if (pendingGap != null && previousReading != null) {
+        await linkGapTriggerReading(
+          repo: repo,
+          gapId: pendingGap.id,
+          correctionReadingId: pendingGap.correctionReadingId!,
+          previousReadingId: previousReading.id,
+          triggerReadingId: reading.id,
+        );
+      }
 
       if (openUse == null) {
         await repo.openUseSession(

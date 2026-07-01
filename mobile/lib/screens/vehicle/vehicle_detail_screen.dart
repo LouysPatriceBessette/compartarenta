@@ -7,6 +7,7 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../vehicle/vehicle_kind.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'vehicle_detail_gallery.dart';
 
@@ -28,6 +29,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Vehicle? _vehicle;
   bool _loading = true;
   int _galleryReloadToken = 0;
+  int _pendingCorrections = 0;
 
   @override
   void initState() {
@@ -36,11 +38,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Future<void> _load() async {
-    final v = await VehiclesRepository(AppDatabase.processScope)
-        .getVehicle(widget.vehicleId);
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    final v = await repo.getVehicle(widget.vehicleId);
+    final pending = v == null
+        ? 0
+        : await repo.countPendingGapVerifications(widget.vehicleId);
     if (!mounted) return;
     setState(() {
       _vehicle = v;
+      _pendingCorrections = pending;
       _loading = false;
     });
   }
@@ -67,6 +73,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     }
     final summary = vehicleModelColorSummary(l10n, v);
     final dateFmt = effectiveDateFormat(widget.prefs);
+    final usesHorometer =
+        VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false;
     return Scaffold(
       appBar: AppBar(title: Text(v.displayLabel)),
       body: qaVehicleSemantics(
@@ -125,6 +133,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/vehicle/${v.id}/journals'),
           ),
+          if (!usesHorometer)
+            ListTile(
+              leading: const Icon(Icons.fact_check_outlined),
+              title: Text(l10n.vehiclePendingCorrectionsTitle),
+              trailing: _pendingCorrections > 0
+                  ? Badge.count(
+                      count: _pendingCorrections,
+                      child: const Icon(Icons.chevron_right),
+                    )
+                  : const Icon(Icons.chevron_right),
+              onTap: () async {
+                await context.push('/vehicle/${v.id}/pending-corrections');
+                if (mounted) await _load();
+              },
+            ),
           const Divider(),
           VehicleDetailGalleryView(
             key: ValueKey('gallery-$_galleryReloadToken'),

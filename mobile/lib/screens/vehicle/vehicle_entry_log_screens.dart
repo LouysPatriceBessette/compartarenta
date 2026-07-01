@@ -127,16 +127,41 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
           usesHorometer: data.usesHorometer,
           distanceUnit: distanceUnit,
         );
+        final applied = decodeAppliedGapCorrectionNote(data.reading.correctionNote);
+        final isApplied = applied != null;
         final correctionLabel = data.correctionGapTenths == null
             ? null
-            : l10n.vehicleLogCorrectionMustBeAttributed(
-                formatStoredMeterDeltaForDisplay(
-                  context,
-                  data.correctionGapTenths!,
-                  usesHorometer: data.usesHorometer,
-                  distanceUnit: distanceUnit,
-                ),
-              );
+            : data.appliedSplit
+                ? l10n.vehicleLogCorrectionAppliedSplitSummary(
+                    formatStoredMeterDeltaForDisplay(
+                      context,
+                      data.correctionGapTenths!,
+                      usesHorometer: data.usesHorometer,
+                      distanceUnit: distanceUnit,
+                    ),
+                  )
+                : data.appliedAttributionName != null
+                    ? l10n.vehicleLogCorrectionAppliedSummary(
+                        formatStoredMeterDeltaForDisplay(
+                          context,
+                          data.correctionGapTenths!,
+                          usesHorometer: data.usesHorometer,
+                          distanceUnit: distanceUnit,
+                        ),
+                        data.appliedAttributionName!,
+                      )
+                    : data.isPendingVerification
+                        ? pendingGapCorrectionSummaryLabel(
+                            l10n: l10n,
+                            gapDisplay: formatStoredMeterDeltaForDisplay(
+                              context,
+                              data.correctionGapTenths!,
+                              usesHorometer: data.usesHorometer,
+                              distanceUnit: distanceUnit,
+                            ),
+                            gapTenths: data.correctionGapTenths!,
+                          )
+                        : null;
         return Scaffold(
           appBar: AppBar(title: Text(l10n.vehicleLogMeterDetailTitle)),
           body: ListView(
@@ -158,43 +183,64 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
                   title: Text(l10n.vehicleLogCorrectionLabel),
                   subtitle: Text(correctionLabel),
                 ),
-              ListTile(
-                title: Text(meterLabel),
-                subtitle: Text(meter),
-              ),
-              if (formatMeterReadingTankStateLabel(data.reading).isNotEmpty)
-                ListTile(
-                  title: Text(l10n.vehicleFuelTankState),
-                  subtitle: Text(formatMeterReadingTankStateLabel(data.reading)),
-                ),
-              if (isKnownUnchangedMeterPhotoPath(data.reading.photoPath)) ...[
+              if (isApplied &&
+                  data.appliedDivergenceTenths != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Text(
-                    l10n.vehicleOdometerPhotoLabel,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Text(
-                    data.usesHorometer
-                        ? l10n.vehicleMeterKnownUnchangedNoPhotoHorometer
-                        : l10n.vehicleMeterKnownUnchangedNoPhotoOdometer,
+                    l10n.vehicleLogCorrectionAppliedDivergence(
+                      formatStoredMeterDeltaForDisplay(
+                        context,
+                        data.appliedDivergenceTenths!,
+                        usesHorometer: data.usesHorometer,
+                        distanceUnit: distanceUnit,
+                      ),
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-              ] else if (meterReadingHasDisplayablePhoto(data.reading.photoPath)) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    l10n.vehicleOdometerPhotoLabel,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+              if (!isApplied) ...[
+                ListTile(
+                  title: Text(meterLabel),
+                  subtitle: Text(meter),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: VehicleStoredImage(path: data.reading.photoPath),
+                if (formatMeterReadingTankStateLabel(data.reading).isNotEmpty)
+                  ListTile(
+                    title: Text(l10n.vehicleFuelTankState),
+                    subtitle:
+                        Text(formatMeterReadingTankStateLabel(data.reading)),
+                  ),
+                ..._meterReadingPhotoSection(
+                  context: context,
+                  l10n: l10n,
+                  reading: data.reading,
+                  usesHorometer: data.usesHorometer,
+                ),
+              ],
+              if (isApplied && data.appliedPreviousReading != null) ...[
+                const Divider(height: 24),
+                _appliedContextReadingSection(
+                  context: context,
+                  l10n: l10n,
+                  title: l10n.vehicleGapResolutionPreviousReading,
+                  roleLabel: data.appliedPreviousRoleLabel ?? '—',
+                  reading: data.appliedPreviousReading!,
+                  usesHorometer: data.usesHorometer,
+                  distanceUnit: distanceUnit,
+                  dateFmt: dateFmt,
+                ),
+              ],
+              if (isApplied && data.appliedTriggerReading != null) ...[
+                const Divider(height: 24),
+                _appliedContextReadingSection(
+                  context: context,
+                  l10n: l10n,
+                  title: l10n.vehicleGapResolutionTriggerReading,
+                  roleLabel: data.appliedTriggerRoleLabel ?? '—',
+                  reading: data.appliedTriggerReading!,
+                  usesHorometer: data.usesHorometer,
+                  distanceUnit: distanceUnit,
+                  dateFmt: dateFmt,
                 ),
               ],
             ],
@@ -218,15 +264,143 @@ class VehicleMeterReadingDetailScreen extends StatelessWidget {
       repo: repo,
     );
     final decoded = decodeGapCorrectionNote(reading.correctionNote);
+    final applied = decodeAppliedGapCorrectionNote(reading.correctionNote);
+    int? verificationGapTenths;
+    if (isGapVerificationCorrectionReading(reading)) {
+      final gap = await repo.getOdometerGapByCorrectionReadingId(reading.id);
+      verificationGapTenths = gap?.gapAmount ?? decoded?.gapTenths;
+    }
+    String? appliedAttributionName;
+    VehicleMeterReading? appliedPrevious;
+    VehicleMeterReading? appliedTrigger;
+    String? appliedPreviousRoleLabel;
+    String? appliedTriggerRoleLabel;
+    int? appliedDivergenceTenths;
+    if (applied != null &&
+        applied.attributedContactId != 'split' &&
+        applied.attributedContactId.isNotEmpty) {
+      appliedAttributionName = await resolveVehicleContactDisplayName(
+        applied.attributedContactId,
+        prefs: prefs,
+        l10n: l10n,
+      );
+    }
+    if (applied != null) {
+      appliedPrevious = await repo.getMeterReading(applied.previousReadingId);
+      appliedTrigger = await repo.getMeterReading(applied.triggerReadingId);
+      if (appliedPrevious != null && appliedTrigger != null) {
+        appliedDivergenceTenths = appliedTrigger.value - appliedPrevious.value;
+        appliedPreviousRoleLabel = await meterReadingRoleLabel(
+          l10n: l10n,
+          prefs: prefs,
+          reading: appliedPrevious,
+          repo: repo,
+        );
+        appliedTriggerRoleLabel = await meterReadingRoleLabel(
+          l10n: l10n,
+          prefs: prefs,
+          reading: appliedTrigger,
+          repo: repo,
+        );
+      }
+    }
     return _MeterReadingDetailData(
       reading: reading,
       roleLabel: roleLabel,
       usesHorometer: usesHorometer,
-      correctionGapTenths: isGapCorrectionReading(reading)
-          ? decoded?.gapTenths
-          : null,
+      correctionGapTenths: applied?.kmAppliedTenths ?? verificationGapTenths,
+      appliedAttributionName: appliedAttributionName,
+      appliedSplit: applied?.attributedContactId == 'split',
+      isPendingVerification: isGapVerificationCorrectionReading(reading),
+      appliedPreviousReading: appliedPrevious,
+      appliedTriggerReading: appliedTrigger,
+      appliedPreviousRoleLabel: appliedPreviousRoleLabel,
+      appliedTriggerRoleLabel: appliedTriggerRoleLabel,
+      appliedDivergenceTenths: appliedDivergenceTenths,
     );
   }
+}
+
+List<Widget> _meterReadingPhotoSection({
+  required BuildContext context,
+  required AppLocalizations l10n,
+  required VehicleMeterReading reading,
+  required bool usesHorometer,
+}) {
+  if (isKnownUnchangedMeterPhotoPath(reading.photoPath)) {
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          l10n.vehicleOdometerPhotoLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Text(
+          usesHorometer
+              ? l10n.vehicleMeterKnownUnchangedNoPhotoHorometer
+              : l10n.vehicleMeterKnownUnchangedNoPhotoOdometer,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    ];
+  }
+  if (!meterReadingHasDisplayablePhoto(reading.photoPath)) {
+    return [];
+  }
+  return [
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        l10n.vehicleOdometerPhotoLabel,
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+    ),
+    Padding(
+      padding: const EdgeInsets.all(16),
+      child: VehicleStoredImage(path: reading.photoPath),
+    ),
+  ];
+}
+
+Widget _appliedContextReadingSection({
+  required BuildContext context,
+  required AppLocalizations l10n,
+  required String title,
+  required String roleLabel,
+  required VehicleMeterReading reading,
+  required bool usesHorometer,
+  required DistanceUnit distanceUnit,
+  required String dateFmt,
+}) {
+  final meter = formatStoredMeterForDisplay(
+    context,
+    reading.value,
+    usesHorometer: usesHorometer,
+    distanceUnit: distanceUnit,
+  );
+  final date = formatPreferenceDateTime(reading.recordedAt, dateFmt);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+      ),
+      ListTile(
+        title: Text(roleLabel),
+        subtitle: Text('$meter · $date'),
+      ),
+      ..._meterReadingPhotoSection(
+        context: context,
+        l10n: l10n,
+        reading: reading,
+        usesHorometer: usesHorometer,
+      ),
+    ],
+  );
 }
 
 class _MeterReadingDetailData {
@@ -235,12 +409,28 @@ class _MeterReadingDetailData {
     required this.roleLabel,
     required this.usesHorometer,
     this.correctionGapTenths,
+    this.appliedAttributionName,
+    this.appliedSplit = false,
+    this.isPendingVerification = false,
+    this.appliedPreviousReading,
+    this.appliedTriggerReading,
+    this.appliedPreviousRoleLabel,
+    this.appliedTriggerRoleLabel,
+    this.appliedDivergenceTenths,
   });
 
   final VehicleMeterReading reading;
   final String roleLabel;
   final bool usesHorometer;
   final int? correctionGapTenths;
+  final String? appliedAttributionName;
+  final bool appliedSplit;
+  final bool isPendingVerification;
+  final VehicleMeterReading? appliedPreviousReading;
+  final VehicleMeterReading? appliedTriggerReading;
+  final String? appliedPreviousRoleLabel;
+  final String? appliedTriggerRoleLabel;
+  final int? appliedDivergenceTenths;
 }
 
 class VehicleFuelLogScreen extends StatelessWidget {

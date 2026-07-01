@@ -254,7 +254,7 @@ class _MeterFuelJournalList extends StatelessWidget {
         _MeterFuelJournalMeterRow(
           reading: reading,
           roleLabel: roleLabel,
-          isCorrectionEntry: isGapCorrectionReading(reading),
+          isCorrectionEntry: isGapVerificationCorrectionReading(reading),
           sortAt: reading.recordedAt,
         ),
       );

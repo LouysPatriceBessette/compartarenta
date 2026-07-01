@@ -1605,6 +1605,69 @@
       }
     }
   },
+  "vehicleLogCorrectionGapMustBeAdded": "{gap} must be added",
+  "@vehicleLogCorrectionGapMustBeAdded": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionGapMustBeRemoved": "{gap} must be removed",
+  "@vehicleLogCorrectionGapMustBeRemoved": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclePendingCorrectionsTitle": "Pending corrections",
+  "vehiclePendingCorrectionsEmpty": "No pending corrections.",
+  "vehiclePendingCorrectionDetailTitle": "Odometer correction",
+  "vehicleCorrectReadingButton": "Correct entry from {date}",
+  "@vehicleCorrectReadingButton": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "vehicleAddMissingSessionButton": "Add a use session",
+  "vehicleSplitSessionButton": "Split session",
+  "vehicleGapResolutionSubmit": "Submit",
+  "vehicleLogReadingRoleCorrectionApplied": "Correction applied",
+  "vehicleLogCorrectionAppliedSummary": "{km} were attributed to {name}",
+  "@vehicleLogCorrectionAppliedSummary": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedSplitSummary": "{km} were attributed (split)",
+  "@vehicleLogCorrectionAppliedSplitSummary": {
+    "placeholders": {
+      "km": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionReplaces": "Correction — replaces {label}",
+  "@vehicleLogReadingRoleCorrectionReplaces": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedDivergence": "Observed gap: {gap}",
+  "@vehicleLogCorrectionAppliedDivergence": {
+    "placeholders": {
+      "gap": { "type": "String" }
+    }
+  },
+  "vehicleGapResolutionPreviousReading": "Previous reading",
+  "vehicleGapResolutionTriggerReading": "Subsequent reading",
+  "vehicleGapResolutionValidationMonotonicity": "This value would conflict with another reading.",
+  "vehicleGapResolutionValidationSegment": "Segments do not cover the gap correctly.",
+  "vehicleGapResolutionValidationDateOverlap": "Segment dates overlap.",
+  "vehicleGapResolutionAssignTo": "Assign to",
+  "vehicleGapResolutionDates": "Date(s)",
+  "vehicleGapResolutionStartMeter": "Start odometer",
+  "vehicleGapResolutionEndMeter": "End odometer",
   "vehicleLogMeterTitle": "Log — odometer",
   "vehicleLogMeterFuelTitle": "Odometer and fuel",
   "vehicleLogMeterDetailTitle": "Reading details",

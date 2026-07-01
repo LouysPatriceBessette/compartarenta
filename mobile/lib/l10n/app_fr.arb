@@ -1445,6 +1445,69 @@
       }
     }
   },
+  "vehicleLogCorrectionGapMustBeAdded": "{gap} doivent être ajoutés",
+  "@vehicleLogCorrectionGapMustBeAdded": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionGapMustBeRemoved": "{gap} doivent être retirés",
+  "@vehicleLogCorrectionGapMustBeRemoved": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclePendingCorrectionsTitle": "Corrections en attente",
+  "vehiclePendingCorrectionsEmpty": "Aucune correction en attente.",
+  "vehiclePendingCorrectionDetailTitle": "Correction d'odomètre",
+  "vehicleCorrectReadingButton": "Corriger l'entrée du {date}",
+  "@vehicleCorrectReadingButton": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "vehicleAddMissingSessionButton": "Ajouter une session d'utilisation",
+  "vehicleSplitSessionButton": "Scinder la session",
+  "vehicleGapResolutionSubmit": "Soumettre",
+  "vehicleLogReadingRoleCorrectionApplied": "Correction appliquée",
+  "vehicleLogCorrectionAppliedSummary": "{km} ont été attribués à {name}",
+  "@vehicleLogCorrectionAppliedSummary": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedSplitSummary": "{km} ont été attribués (répartition)",
+  "@vehicleLogCorrectionAppliedSplitSummary": {
+    "placeholders": {
+      "km": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionReplaces": "Correction — remplace {label}",
+  "@vehicleLogReadingRoleCorrectionReplaces": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedDivergence": "Écart constaté : {gap}",
+  "@vehicleLogCorrectionAppliedDivergence": {
+    "placeholders": {
+      "gap": { "type": "String" }
+    }
+  },
+  "vehicleGapResolutionPreviousReading": "Lecture précédente",
+  "vehicleGapResolutionTriggerReading": "Lecture subséquente",
+  "vehicleGapResolutionValidationMonotonicity": "Cette valeur créerait un écart avec une autre lecture.",
+  "vehicleGapResolutionValidationSegment": "Les segments ne couvrent pas l'écart correctement.",
+  "vehicleGapResolutionValidationDateOverlap": "Les dates des segments se chevauchent.",
+  "vehicleGapResolutionAssignTo": "Attribuer à",
+  "vehicleGapResolutionDates": "Date(s)",
+  "vehicleGapResolutionStartMeter": "Odomètre de départ",
+  "vehicleGapResolutionEndMeter": "Odomètre de fin",
   "vehicleLogMeterTitle": "Journal — odomètre",
   "vehicleLogMeterFuelTitle": "Odomètre et carburant",
   "vehicleLogMeterDetailTitle": "Détail du relevé",

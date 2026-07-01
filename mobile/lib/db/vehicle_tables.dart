@@ -43,6 +43,11 @@ class VehicleMeterReadings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get isFullTank => boolean().nullable()();
   IntColumn get tankFillFraction => integer().nullable()();
+  /// Set when a gap-verification correction row is resolved by the owner.
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+  /// When set, this reading replaces [supersedesReadingId] for usage metrics;
+  /// the superseded row stays in the journal unchanged.
+  TextColumn get supersedesReadingId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -95,6 +100,9 @@ class VehicleOdometerGaps extends Table {
   TextColumn get recordedByContactId => text()();
   DateTimeColumn get recordedAt => dateTime()();
   TextColumn get vehicleUseId => text().nullable()();
+  TextColumn get correctionReadingId => text().nullable()();
+  TextColumn get previousReadingId => text().nullable()();
+  TextColumn get triggerReadingId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

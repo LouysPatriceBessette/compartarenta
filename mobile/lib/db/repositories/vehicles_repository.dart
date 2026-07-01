@@ -12,6 +12,7 @@ import '../../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_meter_journal_sort.dart';
+import '../../vehicle/vehicle_meter_reading_effective.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
 
 const String kVehicleGapAttributionUnknown = 'unknown';
@@ -376,11 +377,11 @@ class VehiclesRepository {
           ..orderBy([
             (t) => drift.OrderingTerm.desc(t.recordedAt),
             (t) => drift.OrderingTerm.desc(t.id),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
-    if (reading != null) {
-      consider(reading.recordedAt, reading.value, reading.photoPath);
+          ]))
+        .get();
+    final effective = latestEffectiveMeterReading(reading);
+    if (effective != null) {
+      consider(effective.recordedAt, effective.value, effective.photoPath);
     }
 
     final purchase = await (_db.select(_db.fuelPurchases)
@@ -429,16 +430,16 @@ class VehiclesRepository {
       }
     }
 
-    final reading = await (_db.select(_db.vehicleMeterReadings)
+    final readings = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.vehicleId.equals(vehicleId))
           ..orderBy([
             (t) => drift.OrderingTerm.desc(t.recordedAt),
             (t) => drift.OrderingTerm.desc(t.id),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
-    if (reading != null) {
-      consider(reading.recordedAt, reading.value);
+          ]))
+        .get();
+    final effective = latestEffectiveMeterReading(readings);
+    if (effective != null) {
+      consider(effective.recordedAt, effective.value);
     }
 
     final purchase = await (_db.select(_db.fuelPurchases)
@@ -618,6 +619,9 @@ class VehiclesRepository {
     required String attributedContactId,
     required String recordedByContactId,
     String? vehicleUseId,
+    String? correctionReadingId,
+    String? previousReadingId,
+    String? triggerReadingId,
   }) async {
     final id = _newVehicleId('gap:');
     final now = DateTime.now().toUtc();
@@ -633,11 +637,232 @@ class VehiclesRepository {
             recordedByContactId: recordedByContactId,
             recordedAt: now,
             vehicleUseId: drift.Value(vehicleUseId),
+            correctionReadingId: drift.Value(correctionReadingId),
+            previousReadingId: drift.Value(previousReadingId),
+            triggerReadingId: drift.Value(triggerReadingId),
           ),
         );
     return (await (_db.select(_db.vehicleOdometerGaps)
               ..where((t) => t.id.equals(id)))
             .getSingle());
+  }
+
+  Future<VehicleMeterReading?> latestNonCorrectionMeterReading(
+    String vehicleId,
+  ) async {
+    final rows = await listMeterReadings(vehicleId);
+    return latestEffectiveMeterReading(rows);
+  }
+
+  Future<int> countPendingGapVerifications(String vehicleId) async {
+    final rows = await listMeterReadings(vehicleId);
+    return rows.where(isGapVerificationCorrectionReading).length;
+  }
+
+  Future<List<VehicleMeterReading>> listPendingGapVerifications(
+    String vehicleId,
+  ) async {
+    final rows = await listMeterReadings(vehicleId);
+    return rows.where(isGapVerificationCorrectionReading).toList();
+  }
+
+  Future<VehicleOdometerGap?> getOdometerGapByCorrectionReadingId(
+    String correctionReadingId,
+  ) =>
+      (_db.select(_db.vehicleOdometerGaps)
+            ..where((t) => t.correctionReadingId.equals(correctionReadingId)))
+          .getSingleOrNull();
+
+  /// Creates a replacement reading and keeps the superseded row unchanged.
+  Future<VehicleMeterReading> replaceMeterReading({
+    required VehicleMeterReading superseded,
+    required int newValue,
+    bool? isFullTank,
+    int? tankFillFraction,
+    required GapResolutionKind kind,
+  }) async {
+    final id = _newVehicleId('meter:');
+    final note = encodeMeterReadingReplacementNote(kind: kind);
+    await _db.into(_db.vehicleMeterReadings).insert(
+          VehicleMeterReadingsCompanion.insert(
+            id: id,
+            vehicleId: superseded.vehicleId,
+            value: newValue,
+            unit: superseded.unit,
+            photoPath: superseded.photoPath,
+            recordedAt: superseded.recordedAt,
+            recordedByContactId: superseded.recordedByContactId,
+            vehicleUseId: drift.Value(superseded.vehicleUseId),
+            readingRole: superseded.readingRole,
+            isCorrection: const drift.Value(true),
+            correctionNote: drift.Value(note),
+            supersedesReadingId: drift.Value(superseded.id),
+            isFullTank: isFullTank == null
+                ? drift.Value(superseded.isFullTank)
+                : drift.Value(isFullTank),
+            tankFillFraction: tankFillFraction == null
+                ? drift.Value(superseded.tankFillFraction)
+                : drift.Value(tankFillFraction),
+          ),
+        );
+    final replacement = (await getMeterReading(id))!;
+    await _repointUseSessionsFromReading(
+      oldReadingId: superseded.id,
+      newReadingId: replacement.id,
+    );
+    return replacement;
+  }
+
+  Future<void> _repointUseSessionsFromReading({
+    required String oldReadingId,
+    required String newReadingId,
+  }) async {
+    final startUses = await (_db.select(_db.vehicleUses)
+          ..where((t) => t.startReadingId.equals(oldReadingId)))
+        .get();
+    for (final use in startUses) {
+      await (_db.update(_db.vehicleUses)..where((t) => t.id.equals(use.id)))
+          .write(VehicleUsesCompanion(startReadingId: drift.Value(newReadingId)));
+      if (use.endReadingId != null) {
+        await _recomputeUseSessionAmount(use.id);
+      }
+    }
+    final endUses = await (_db.select(_db.vehicleUses)
+          ..where((t) => t.endReadingId.equals(oldReadingId)))
+        .get();
+    for (final use in endUses) {
+      await (_db.update(_db.vehicleUses)..where((t) => t.id.equals(use.id)))
+          .write(VehicleUsesCompanion(endReadingId: drift.Value(newReadingId)));
+      await _recomputeUseSessionAmount(use.id);
+    }
+  }
+
+  Future<void> _recomputeUseSessionAmount(String useId) async {
+    final use = await getVehicleUse(useId);
+    if (use == null || use.endReadingId == null) return;
+    final start = await getMeterReading(use.startReadingId);
+    final end = await getMeterReading(use.endReadingId!);
+    if (start == null || end == null) return;
+    await (_db.update(_db.vehicleUses)..where((t) => t.id.equals(useId))).write(
+      VehicleUsesCompanion(usageAmount: drift.Value(end.value - start.value)),
+    );
+  }
+
+  Future<void> linkOdometerGapReadings({
+    required String gapId,
+    required String correctionReadingId,
+    required String previousReadingId,
+    required String triggerReadingId,
+  }) async {
+    await (_db.update(_db.vehicleOdometerGaps)..where((t) => t.id.equals(gapId)))
+        .write(
+      VehicleOdometerGapsCompanion(
+        correctionReadingId: drift.Value(correctionReadingId),
+        previousReadingId: drift.Value(previousReadingId),
+        triggerReadingId: drift.Value(triggerReadingId),
+      ),
+    );
+  }
+
+  Future<void> deleteOdometerGap(String gapId) async {
+    await (_db.delete(_db.vehicleOdometerGaps)
+          ..where((t) => t.id.equals(gapId)))
+        .go();
+  }
+
+  Future<void> markGapVerificationResolved(String correctionReadingId) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.vehicleMeterReadings)
+          ..where((t) => t.id.equals(correctionReadingId)))
+        .write(VehicleMeterReadingsCompanion(resolvedAt: drift.Value(now)));
+  }
+
+  Future<VehicleMeterReading> saveAppliedGapCorrectionReading({
+    required Vehicle vehicle,
+    required int kmAppliedTenths,
+    required String attributedContactId,
+    required String previousReadingId,
+    required String triggerReadingId,
+    required GapResolutionKind kind,
+    required String recordedByContactId,
+    bool splitResolution = false,
+  }) async {
+    final note = encodeAppliedGapCorrectionNote(
+      kmAppliedTenths: kmAppliedTenths,
+      attributedContactId: splitResolution ? 'split' : attributedContactId,
+      previousReadingId: previousReadingId,
+      triggerReadingId: triggerReadingId,
+      kind: kind,
+    );
+    return saveMeterReading(
+      vehicleId: vehicle.id,
+      value: kmAppliedTenths,
+      unit: meterUnitForVehicle(vehicle),
+      photoPath: kVehicleMeterPhotoKnownUnchangedSentinel,
+      recordedByContactId: recordedByContactId,
+      role: MeterReadingRole.correction,
+      isCorrection: true,
+      correctionNote: note,
+    );
+  }
+
+  Future<List<String>> listVehicleParticipantContactIds(String vehicleId) async {
+    final out = <String>[kVehicleOwnerSelfContactId];
+    final links = await listSharingLinksForVehicle(vehicleId);
+    for (final link in links) {
+      if (link.status != VehicleSharingLinkStatus.active.wire) continue;
+      if (!out.contains(link.borrowerContactId)) {
+        out.add(link.borrowerContactId);
+      }
+    }
+    return out;
+  }
+
+  Future<({int route, int city, int traffic})?> averageDetailedDrivingMixForContact({
+    required String vehicleId,
+    required String contactId,
+  }) async {
+    final uses = await (_db.select(_db.vehicleUses)
+          ..where(
+            (t) =>
+                t.vehicleId.equals(vehicleId) &
+                t.attributedContactId.equals(contactId) &
+                t.endedAt.isNotNull(),
+          )
+          ..orderBy([(t) => drift.OrderingTerm.desc(t.endedAt)]))
+        .get();
+    var routeSum = 0;
+    var citySum = 0;
+    var trafficSum = 0;
+    var count = 0;
+    for (final use in uses) {
+      if (use.drivingRoutePercent == null ||
+          use.drivingCityPercent == null ||
+          use.drivingTrafficPercent == null) {
+        continue;
+      }
+      routeSum += use.drivingRoutePercent!;
+      citySum += use.drivingCityPercent!;
+      trafficSum += use.drivingTrafficPercent!;
+      count++;
+      if (count >= 10) break;
+    }
+    if (count == 0) return null;
+    return (
+      route: (routeSum / count).round(),
+      city: (citySum / count).round(),
+      traffic: (trafficSum / count).round(),
+    );
+  }
+
+  Future<DateTime?> previousSessionEndDateForReading(
+    VehicleMeterReading previousReading,
+  ) async {
+    if (previousReading.vehicleUseId == null) {
+      return previousReading.recordedAt;
+    }
+    final use = await getVehicleUse(previousReading.vehicleUseId!);
+    return use?.endedAt ?? previousReading.recordedAt;
   }
 
   Future<VehicleUse> openUseSession({
@@ -721,6 +946,46 @@ class VehiclesRepository {
       ),
     );
     return (await (_db.select(_db.vehicleUses)..where((t) => t.id.equals(useId)))
+        .getSingle());
+  }
+
+  /// Inserts a fully closed use session (gap resolution retroactive entry).
+  Future<VehicleUse> insertRetroactiveClosedUseSession({
+    required String vehicleId,
+    required String attributedContactId,
+    required String startReadingId,
+    required String endReadingId,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    int? drivingRoutePercent,
+    int? drivingCityPercent,
+    int? drivingTrafficPercent,
+    VehicleConsumptionEstimationMode? sessionConsumptionMode,
+  }) async {
+    final start = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.id.equals(startReadingId)))
+        .getSingle();
+    final end = await (_db.select(_db.vehicleMeterReadings)
+          ..where((t) => t.id.equals(endReadingId)))
+        .getSingle();
+    final id = _newVehicleId('use:');
+    await _db.into(_db.vehicleUses).insert(
+          VehicleUsesCompanion.insert(
+            id: id,
+            vehicleId: vehicleId,
+            attributedContactId: attributedContactId,
+            startedAt: startedAt,
+            startReadingId: startReadingId,
+            endedAt: drift.Value(endedAt),
+            endReadingId: drift.Value(endReadingId),
+            usageAmount: drift.Value(end.value - start.value),
+            drivingRoutePercent: drift.Value(drivingRoutePercent),
+            drivingCityPercent: drift.Value(drivingCityPercent),
+            drivingTrafficPercent: drift.Value(drivingTrafficPercent),
+            sessionConsumptionMode: drift.Value(sessionConsumptionMode?.wire),
+          ),
+        );
+    return (await (_db.select(_db.vehicleUses)..where((t) => t.id.equals(id)))
         .getSingle());
   }
 

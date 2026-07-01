@@ -6,6 +6,18 @@ import '../prefs/app_preferences.dart';
 import 'vehicle_gap_correction.dart';
 import 'vehicle_owner_contact.dart';
 
+/// Pending gap verification summary (signed gap; negative → removed, positive → added).
+String pendingGapCorrectionSummaryLabel({
+  required AppLocalizations l10n,
+  required String gapDisplay,
+  required int gapTenths,
+}) {
+  if (gapTenths < 0) {
+    return l10n.vehicleLogCorrectionGapMustBeRemoved(gapDisplay);
+  }
+  return l10n.vehicleLogCorrectionGapMustBeAdded(gapDisplay);
+}
+
 Future<String> resolveVehicleContactDisplayName(
   String contactId, {
   required AppPreferences prefs,
@@ -41,12 +53,32 @@ Future<String> meterReadingRoleLabel({
   );
 
   if (role == MeterReadingRole.correction || reading.isCorrection) {
+    if (isGapAppliedCorrectionReading(reading)) {
+      return l10n.vehicleLogReadingRoleCorrectionApplied;
+    }
+    if (isMeterReadingReplacement(reading)) {
+      final superseded = reading.supersedesReadingId == null
+          ? null
+          : await repo.getMeterReading(reading.supersedesReadingId!);
+      if (superseded != null) {
+        final supersededLabel = await meterReadingRoleLabel(
+          l10n: l10n,
+          prefs: prefs,
+          reading: superseded,
+          repo: repo,
+        );
+        return l10n.vehicleLogReadingRoleCorrectionReplaces(supersededLabel);
+      }
+    }
     final decoded = decodeGapCorrectionNote(reading.correctionNote);
     return switch (decoded?.context) {
       GapCorrectionContext.sessionStart =>
         l10n.vehicleLogReadingRoleCorrectionSessionStart(userName),
+      GapCorrectionContext.sessionEnd =>
+        l10n.vehicleLogReadingRoleCorrectionSessionStart(userName),
       GapCorrectionContext.standalone =>
         l10n.vehicleLogReadingRoleCorrectionStandalone(userName),
+      GapCorrectionContext.applied => l10n.vehicleLogReadingRoleCorrectionApplied,
       null => l10n.vehicleLogReadingRoleCorrectionBy(userName),
     };
   }

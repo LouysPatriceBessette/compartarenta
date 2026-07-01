@@ -432,25 +432,31 @@ class _VehicleStandaloneMeterReadingScreenState
       if (!gapResult.proceed || !mounted) return;
 
       DateTime? followUpRecordedAt;
+      VehicleOdometerGap? pendingGap;
+      VehicleMeterReading? previousReading;
 
-      if (gapResult.positiveGapTenths != null && latest != null) {
-        final gapRecordedAt =
-            await repo.reserveGapCorrectionTimestamp(v.id);
-        await persistConfirmedPositiveGap(
-          repo: repo,
-          vehicle: v,
-          latestBefore: latest,
-          parsedMeter: parsed,
-          gapTenths: gapResult.positiveGapTenths!,
-          photoPath: photoPath,
-          actingContactId: actingId,
-          correctionContext: GapCorrectionContext.standalone,
-          correctionRecordedAt: gapRecordedAt,
-        );
-        followUpRecordedAt = gapRecordedAt;
+      if (gapResult.divergenceTenths != null) {
+        previousReading = await repo.latestNonCorrectionMeterReading(v.id);
+        if (previousReading != null) {
+          final gapRecordedAt =
+              await repo.reserveGapCorrectionTimestamp(v.id);
+          final persisted = await persistConfirmedMeterDivergence(
+            repo: repo,
+            vehicle: v,
+            previousReading: previousReading,
+            parsedMeter: parsed,
+            divergenceTenths: gapResult.divergenceTenths!,
+            photoPath: photoPath,
+            actingContactId: actingId,
+            correctionContext: GapCorrectionContext.standalone,
+            correctionRecordedAt: gapRecordedAt,
+          );
+          pendingGap = persisted.gap;
+          followUpRecordedAt = gapRecordedAt;
+        }
       }
 
-      await repo.saveMeterReading(
+      final triggerReading = await repo.saveMeterReading(
         vehicleId: v.id,
         value: parsed,
         unit: repo.meterUnitForVehicle(v),
@@ -460,6 +466,16 @@ class _VehicleStandaloneMeterReadingScreenState
         negativeGapAcknowledged: latest != null && parsed < latest,
         recordedAt: followUpRecordedAt,
       );
+
+      if (pendingGap != null && previousReading != null) {
+        await linkGapTriggerReading(
+          repo: repo,
+          gapId: pendingGap.id,
+          correctionReadingId: pendingGap.correctionReadingId!,
+          previousReadingId: previousReading.id,
+          triggerReadingId: triggerReading.id,
+        );
+      }
 
       if (!mounted) return;
       if (widget.usageContext.forwardsToOwner) {

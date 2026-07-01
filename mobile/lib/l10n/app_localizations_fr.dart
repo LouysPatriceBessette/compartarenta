@@ -3567,6 +3567,93 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String vehicleLogCorrectionGapMustBeAdded(String gap) {
+    return '$gap doivent être ajoutés';
+  }
+
+  @override
+  String vehicleLogCorrectionGapMustBeRemoved(String gap) {
+    return '$gap doivent être retirés';
+  }
+
+  @override
+  String get vehiclePendingCorrectionsTitle => 'Corrections en attente';
+
+  @override
+  String get vehiclePendingCorrectionsEmpty => 'Aucune correction en attente.';
+
+  @override
+  String get vehiclePendingCorrectionDetailTitle => 'Correction d\'odomètre';
+
+  @override
+  String vehicleCorrectReadingButton(String date) {
+    return 'Corriger l\'entrée du $date';
+  }
+
+  @override
+  String get vehicleAddMissingSessionButton =>
+      'Ajouter une session d\'utilisation';
+
+  @override
+  String get vehicleSplitSessionButton => 'Scinder la session';
+
+  @override
+  String get vehicleGapResolutionSubmit => 'Soumettre';
+
+  @override
+  String get vehicleLogReadingRoleCorrectionApplied => 'Correction appliquée';
+
+  @override
+  String vehicleLogCorrectionAppliedSummary(String km, String name) {
+    return '$km ont été attribués à $name';
+  }
+
+  @override
+  String vehicleLogCorrectionAppliedSplitSummary(String km) {
+    return '$km ont été attribués (répartition)';
+  }
+
+  @override
+  String vehicleLogReadingRoleCorrectionReplaces(String label) {
+    return 'Correction — remplace $label';
+  }
+
+  @override
+  String vehicleLogCorrectionAppliedDivergence(String gap) {
+    return 'Écart constaté : $gap';
+  }
+
+  @override
+  String get vehicleGapResolutionPreviousReading => 'Lecture précédente';
+
+  @override
+  String get vehicleGapResolutionTriggerReading => 'Lecture subséquente';
+
+  @override
+  String get vehicleGapResolutionValidationMonotonicity =>
+      'Cette valeur créerait un écart avec une autre lecture.';
+
+  @override
+  String get vehicleGapResolutionValidationSegment =>
+      'Les segments ne couvrent pas l\'écart correctement.';
+
+  @override
+  String get vehicleGapResolutionValidationDateOverlap =>
+      'Les dates des segments se chevauchent.';
+
+  @override
+  String get vehicleGapResolutionAssignTo => 'Attribuer à';
+
+  @override
+  String get vehicleGapResolutionDates => 'Date(s)';
+
+  @override
+  String get vehicleGapResolutionStartMeter => 'Odomètre de départ';
+
+  @override
+  String get vehicleGapResolutionEndMeter => 'Odomètre de fin';
+
+  @override
   String get vehicleLogMeterTitle => 'Journal — odomètre';
 
   @override

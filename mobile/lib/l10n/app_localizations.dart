@@ -5967,6 +5967,144 @@ abstract class AppLocalizations {
   /// **'{gap} must be attributed'**
   String vehicleLogCorrectionMustBeAttributed(String gap);
 
+  /// No description provided for @vehicleLogCorrectionGapMustBeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{gap} must be added'**
+  String vehicleLogCorrectionGapMustBeAdded(String gap);
+
+  /// No description provided for @vehicleLogCorrectionGapMustBeRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{gap} must be removed'**
+  String vehicleLogCorrectionGapMustBeRemoved(String gap);
+
+  /// No description provided for @vehiclePendingCorrectionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending corrections'**
+  String get vehiclePendingCorrectionsTitle;
+
+  /// No description provided for @vehiclePendingCorrectionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending corrections.'**
+  String get vehiclePendingCorrectionsEmpty;
+
+  /// No description provided for @vehiclePendingCorrectionDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer correction'**
+  String get vehiclePendingCorrectionDetailTitle;
+
+  /// No description provided for @vehicleCorrectReadingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct entry from {date}'**
+  String vehicleCorrectReadingButton(String date);
+
+  /// No description provided for @vehicleAddMissingSessionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a use session'**
+  String get vehicleAddMissingSessionButton;
+
+  /// No description provided for @vehicleSplitSessionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Split session'**
+  String get vehicleSplitSessionButton;
+
+  /// No description provided for @vehicleGapResolutionSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get vehicleGapResolutionSubmit;
+
+  /// No description provided for @vehicleLogReadingRoleCorrectionApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction applied'**
+  String get vehicleLogReadingRoleCorrectionApplied;
+
+  /// No description provided for @vehicleLogCorrectionAppliedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} were attributed to {name}'**
+  String vehicleLogCorrectionAppliedSummary(String km, String name);
+
+  /// No description provided for @vehicleLogCorrectionAppliedSplitSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} were attributed (split)'**
+  String vehicleLogCorrectionAppliedSplitSummary(String km);
+
+  /// No description provided for @vehicleLogReadingRoleCorrectionReplaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction — replaces {label}'**
+  String vehicleLogReadingRoleCorrectionReplaces(String label);
+
+  /// No description provided for @vehicleLogCorrectionAppliedDivergence.
+  ///
+  /// In en, this message translates to:
+  /// **'Observed gap: {gap}'**
+  String vehicleLogCorrectionAppliedDivergence(String gap);
+
+  /// No description provided for @vehicleGapResolutionPreviousReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous reading'**
+  String get vehicleGapResolutionPreviousReading;
+
+  /// No description provided for @vehicleGapResolutionTriggerReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Subsequent reading'**
+  String get vehicleGapResolutionTriggerReading;
+
+  /// No description provided for @vehicleGapResolutionValidationMonotonicity.
+  ///
+  /// In en, this message translates to:
+  /// **'This value would conflict with another reading.'**
+  String get vehicleGapResolutionValidationMonotonicity;
+
+  /// No description provided for @vehicleGapResolutionValidationSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Segments do not cover the gap correctly.'**
+  String get vehicleGapResolutionValidationSegment;
+
+  /// No description provided for @vehicleGapResolutionValidationDateOverlap.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment dates overlap.'**
+  String get vehicleGapResolutionValidationDateOverlap;
+
+  /// No description provided for @vehicleGapResolutionAssignTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to'**
+  String get vehicleGapResolutionAssignTo;
+
+  /// No description provided for @vehicleGapResolutionDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Date(s)'**
+  String get vehicleGapResolutionDates;
+
+  /// No description provided for @vehicleGapResolutionStartMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Start odometer'**
+  String get vehicleGapResolutionStartMeter;
+
+  /// No description provided for @vehicleGapResolutionEndMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'End odometer'**
+  String get vehicleGapResolutionEndMeter;
+
   /// No description provided for @vehicleLogMeterTitle.
   ///
   /// In en, this message translates to:

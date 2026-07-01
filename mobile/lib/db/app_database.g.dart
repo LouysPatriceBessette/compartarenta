@@ -14543,6 +14543,28 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _supersedesReadingIdMeta =
+      const VerificationMeta('supersedesReadingId');
+  @override
+  late final GeneratedColumn<String> supersedesReadingId =
+      GeneratedColumn<String>(
+        'supersedes_reading_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -14559,6 +14581,8 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
     negativeGapAcknowledged,
     isFullTank,
     tankFillFraction,
+    resolvedAt,
+    supersedesReadingId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14693,6 +14717,21 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
         ),
       );
     }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
+    }
+    if (data.containsKey('supersedes_reading_id')) {
+      context.handle(
+        _supersedesReadingIdMeta,
+        supersedesReadingId.isAcceptableOrUnknown(
+          data['supersedes_reading_id']!,
+          _supersedesReadingIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14758,6 +14797,14 @@ class $VehicleMeterReadingsTable extends VehicleMeterReadings
         DriftSqlType.int,
         data['${effectivePrefix}tank_fill_fraction'],
       ),
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
+      supersedesReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supersedes_reading_id'],
+      ),
     );
   }
 
@@ -14783,6 +14830,13 @@ class VehicleMeterReading extends DataClass
   final bool negativeGapAcknowledged;
   final bool? isFullTank;
   final int? tankFillFraction;
+
+  /// Set when a gap-verification correction row is resolved by the owner.
+  final DateTime? resolvedAt;
+
+  /// When set, this reading replaces [supersedesReadingId] for usage metrics;
+  /// the superseded row stays in the journal unchanged.
+  final String? supersedesReadingId;
   const VehicleMeterReading({
     required this.id,
     required this.vehicleId,
@@ -14798,6 +14852,8 @@ class VehicleMeterReading extends DataClass
     required this.negativeGapAcknowledged,
     this.isFullTank,
     this.tankFillFraction,
+    this.resolvedAt,
+    this.supersedesReadingId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14821,6 +14877,12 @@ class VehicleMeterReading extends DataClass
     }
     if (!nullToAbsent || tankFillFraction != null) {
       map['tank_fill_fraction'] = Variable<int>(tankFillFraction);
+    }
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    if (!nullToAbsent || supersedesReadingId != null) {
+      map['supersedes_reading_id'] = Variable<String>(supersedesReadingId);
     }
     return map;
   }
@@ -14847,6 +14909,12 @@ class VehicleMeterReading extends DataClass
       tankFillFraction: tankFillFraction == null && nullToAbsent
           ? const Value.absent()
           : Value(tankFillFraction),
+      resolvedAt: resolvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedAt),
+      supersedesReadingId: supersedesReadingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supersedesReadingId),
     );
   }
 
@@ -14874,6 +14942,10 @@ class VehicleMeterReading extends DataClass
       ),
       isFullTank: serializer.fromJson<bool?>(json['isFullTank']),
       tankFillFraction: serializer.fromJson<int?>(json['tankFillFraction']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+      supersedesReadingId: serializer.fromJson<String?>(
+        json['supersedesReadingId'],
+      ),
     );
   }
   @override
@@ -14896,6 +14968,8 @@ class VehicleMeterReading extends DataClass
       ),
       'isFullTank': serializer.toJson<bool?>(isFullTank),
       'tankFillFraction': serializer.toJson<int?>(tankFillFraction),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+      'supersedesReadingId': serializer.toJson<String?>(supersedesReadingId),
     };
   }
 
@@ -14914,6 +14988,8 @@ class VehicleMeterReading extends DataClass
     bool? negativeGapAcknowledged,
     Value<bool?> isFullTank = const Value.absent(),
     Value<int?> tankFillFraction = const Value.absent(),
+    Value<DateTime?> resolvedAt = const Value.absent(),
+    Value<String?> supersedesReadingId = const Value.absent(),
   }) => VehicleMeterReading(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -14932,6 +15008,10 @@ class VehicleMeterReading extends DataClass
     tankFillFraction: tankFillFraction.present
         ? tankFillFraction.value
         : this.tankFillFraction,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+    supersedesReadingId: supersedesReadingId.present
+        ? supersedesReadingId.value
+        : this.supersedesReadingId,
   );
   VehicleMeterReading copyWithCompanion(VehicleMeterReadingsCompanion data) {
     return VehicleMeterReading(
@@ -14967,6 +15047,12 @@ class VehicleMeterReading extends DataClass
       tankFillFraction: data.tankFillFraction.present
           ? data.tankFillFraction.value
           : this.tankFillFraction,
+      resolvedAt: data.resolvedAt.present
+          ? data.resolvedAt.value
+          : this.resolvedAt,
+      supersedesReadingId: data.supersedesReadingId.present
+          ? data.supersedesReadingId.value
+          : this.supersedesReadingId,
     );
   }
 
@@ -14986,7 +15072,9 @@ class VehicleMeterReading extends DataClass
           ..write('correctionNote: $correctionNote, ')
           ..write('negativeGapAcknowledged: $negativeGapAcknowledged, ')
           ..write('isFullTank: $isFullTank, ')
-          ..write('tankFillFraction: $tankFillFraction')
+          ..write('tankFillFraction: $tankFillFraction, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('supersedesReadingId: $supersedesReadingId')
           ..write(')'))
         .toString();
   }
@@ -15007,6 +15095,8 @@ class VehicleMeterReading extends DataClass
     negativeGapAcknowledged,
     isFullTank,
     tankFillFraction,
+    resolvedAt,
+    supersedesReadingId,
   );
   @override
   bool operator ==(Object other) =>
@@ -15025,7 +15115,9 @@ class VehicleMeterReading extends DataClass
           other.correctionNote == this.correctionNote &&
           other.negativeGapAcknowledged == this.negativeGapAcknowledged &&
           other.isFullTank == this.isFullTank &&
-          other.tankFillFraction == this.tankFillFraction);
+          other.tankFillFraction == this.tankFillFraction &&
+          other.resolvedAt == this.resolvedAt &&
+          other.supersedesReadingId == this.supersedesReadingId);
 }
 
 class VehicleMeterReadingsCompanion
@@ -15044,6 +15136,8 @@ class VehicleMeterReadingsCompanion
   final Value<bool> negativeGapAcknowledged;
   final Value<bool?> isFullTank;
   final Value<int?> tankFillFraction;
+  final Value<DateTime?> resolvedAt;
+  final Value<String?> supersedesReadingId;
   final Value<int> rowid;
   const VehicleMeterReadingsCompanion({
     this.id = const Value.absent(),
@@ -15060,6 +15154,8 @@ class VehicleMeterReadingsCompanion
     this.negativeGapAcknowledged = const Value.absent(),
     this.isFullTank = const Value.absent(),
     this.tankFillFraction = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.supersedesReadingId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehicleMeterReadingsCompanion.insert({
@@ -15077,6 +15173,8 @@ class VehicleMeterReadingsCompanion
     this.negativeGapAcknowledged = const Value.absent(),
     this.isFullTank = const Value.absent(),
     this.tankFillFraction = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.supersedesReadingId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        vehicleId = Value(vehicleId),
@@ -15101,6 +15199,8 @@ class VehicleMeterReadingsCompanion
     Expression<bool>? negativeGapAcknowledged,
     Expression<bool>? isFullTank,
     Expression<int>? tankFillFraction,
+    Expression<DateTime>? resolvedAt,
+    Expression<String>? supersedesReadingId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -15120,6 +15220,9 @@ class VehicleMeterReadingsCompanion
         'negative_gap_acknowledged': negativeGapAcknowledged,
       if (isFullTank != null) 'is_full_tank': isFullTank,
       if (tankFillFraction != null) 'tank_fill_fraction': tankFillFraction,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+      if (supersedesReadingId != null)
+        'supersedes_reading_id': supersedesReadingId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15139,6 +15242,8 @@ class VehicleMeterReadingsCompanion
     Value<bool>? negativeGapAcknowledged,
     Value<bool?>? isFullTank,
     Value<int?>? tankFillFraction,
+    Value<DateTime?>? resolvedAt,
+    Value<String?>? supersedesReadingId,
     Value<int>? rowid,
   }) {
     return VehicleMeterReadingsCompanion(
@@ -15157,6 +15262,8 @@ class VehicleMeterReadingsCompanion
           negativeGapAcknowledged ?? this.negativeGapAcknowledged,
       isFullTank: isFullTank ?? this.isFullTank,
       tankFillFraction: tankFillFraction ?? this.tankFillFraction,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      supersedesReadingId: supersedesReadingId ?? this.supersedesReadingId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15210,6 +15317,14 @@ class VehicleMeterReadingsCompanion
     if (tankFillFraction.present) {
       map['tank_fill_fraction'] = Variable<int>(tankFillFraction.value);
     }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    if (supersedesReadingId.present) {
+      map['supersedes_reading_id'] = Variable<String>(
+        supersedesReadingId.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15233,6 +15348,8 @@ class VehicleMeterReadingsCompanion
           ..write('negativeGapAcknowledged: $negativeGapAcknowledged, ')
           ..write('isFullTank: $isFullTank, ')
           ..write('tankFillFraction: $tankFillFraction, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('supersedesReadingId: $supersedesReadingId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -16808,6 +16925,40 @@ class $VehicleOdometerGapsTable extends VehicleOdometerGaps
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _correctionReadingIdMeta =
+      const VerificationMeta('correctionReadingId');
+  @override
+  late final GeneratedColumn<String> correctionReadingId =
+      GeneratedColumn<String>(
+        'correction_reading_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _previousReadingIdMeta = const VerificationMeta(
+    'previousReadingId',
+  );
+  @override
+  late final GeneratedColumn<String> previousReadingId =
+      GeneratedColumn<String>(
+        'previous_reading_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _triggerReadingIdMeta = const VerificationMeta(
+    'triggerReadingId',
+  );
+  @override
+  late final GeneratedColumn<String> triggerReadingId = GeneratedColumn<String>(
+    'trigger_reading_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -16819,6 +16970,9 @@ class $VehicleOdometerGapsTable extends VehicleOdometerGaps
     recordedByContactId,
     recordedAt,
     vehicleUseId,
+    correctionReadingId,
+    previousReadingId,
+    triggerReadingId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -16914,6 +17068,33 @@ class $VehicleOdometerGapsTable extends VehicleOdometerGaps
         ),
       );
     }
+    if (data.containsKey('correction_reading_id')) {
+      context.handle(
+        _correctionReadingIdMeta,
+        correctionReadingId.isAcceptableOrUnknown(
+          data['correction_reading_id']!,
+          _correctionReadingIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('previous_reading_id')) {
+      context.handle(
+        _previousReadingIdMeta,
+        previousReadingId.isAcceptableOrUnknown(
+          data['previous_reading_id']!,
+          _previousReadingIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('trigger_reading_id')) {
+      context.handle(
+        _triggerReadingIdMeta,
+        triggerReadingId.isAcceptableOrUnknown(
+          data['trigger_reading_id']!,
+          _triggerReadingIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -16959,6 +17140,18 @@ class $VehicleOdometerGapsTable extends VehicleOdometerGaps
         DriftSqlType.string,
         data['${effectivePrefix}vehicle_use_id'],
       ),
+      correctionReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}correction_reading_id'],
+      ),
+      previousReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}previous_reading_id'],
+      ),
+      triggerReadingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trigger_reading_id'],
+      ),
     );
   }
 
@@ -16979,6 +17172,9 @@ class VehicleOdometerGap extends DataClass
   final String recordedByContactId;
   final DateTime recordedAt;
   final String? vehicleUseId;
+  final String? correctionReadingId;
+  final String? previousReadingId;
+  final String? triggerReadingId;
   const VehicleOdometerGap({
     required this.id,
     required this.vehicleId,
@@ -16989,6 +17185,9 @@ class VehicleOdometerGap extends DataClass
     required this.recordedByContactId,
     required this.recordedAt,
     this.vehicleUseId,
+    this.correctionReadingId,
+    this.previousReadingId,
+    this.triggerReadingId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -17003,6 +17202,15 @@ class VehicleOdometerGap extends DataClass
     map['recorded_at'] = Variable<DateTime>(recordedAt);
     if (!nullToAbsent || vehicleUseId != null) {
       map['vehicle_use_id'] = Variable<String>(vehicleUseId);
+    }
+    if (!nullToAbsent || correctionReadingId != null) {
+      map['correction_reading_id'] = Variable<String>(correctionReadingId);
+    }
+    if (!nullToAbsent || previousReadingId != null) {
+      map['previous_reading_id'] = Variable<String>(previousReadingId);
+    }
+    if (!nullToAbsent || triggerReadingId != null) {
+      map['trigger_reading_id'] = Variable<String>(triggerReadingId);
     }
     return map;
   }
@@ -17020,6 +17228,15 @@ class VehicleOdometerGap extends DataClass
       vehicleUseId: vehicleUseId == null && nullToAbsent
           ? const Value.absent()
           : Value(vehicleUseId),
+      correctionReadingId: correctionReadingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(correctionReadingId),
+      previousReadingId: previousReadingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previousReadingId),
+      triggerReadingId: triggerReadingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(triggerReadingId),
     );
   }
 
@@ -17046,6 +17263,13 @@ class VehicleOdometerGap extends DataClass
       ),
       recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
       vehicleUseId: serializer.fromJson<String?>(json['vehicleUseId']),
+      correctionReadingId: serializer.fromJson<String?>(
+        json['correctionReadingId'],
+      ),
+      previousReadingId: serializer.fromJson<String?>(
+        json['previousReadingId'],
+      ),
+      triggerReadingId: serializer.fromJson<String?>(json['triggerReadingId']),
     );
   }
   @override
@@ -17061,6 +17285,9 @@ class VehicleOdometerGap extends DataClass
       'recordedByContactId': serializer.toJson<String>(recordedByContactId),
       'recordedAt': serializer.toJson<DateTime>(recordedAt),
       'vehicleUseId': serializer.toJson<String?>(vehicleUseId),
+      'correctionReadingId': serializer.toJson<String?>(correctionReadingId),
+      'previousReadingId': serializer.toJson<String?>(previousReadingId),
+      'triggerReadingId': serializer.toJson<String?>(triggerReadingId),
     };
   }
 
@@ -17074,6 +17301,9 @@ class VehicleOdometerGap extends DataClass
     String? recordedByContactId,
     DateTime? recordedAt,
     Value<String?> vehicleUseId = const Value.absent(),
+    Value<String?> correctionReadingId = const Value.absent(),
+    Value<String?> previousReadingId = const Value.absent(),
+    Value<String?> triggerReadingId = const Value.absent(),
   }) => VehicleOdometerGap(
     id: id ?? this.id,
     vehicleId: vehicleId ?? this.vehicleId,
@@ -17085,6 +17315,15 @@ class VehicleOdometerGap extends DataClass
     recordedByContactId: recordedByContactId ?? this.recordedByContactId,
     recordedAt: recordedAt ?? this.recordedAt,
     vehicleUseId: vehicleUseId.present ? vehicleUseId.value : this.vehicleUseId,
+    correctionReadingId: correctionReadingId.present
+        ? correctionReadingId.value
+        : this.correctionReadingId,
+    previousReadingId: previousReadingId.present
+        ? previousReadingId.value
+        : this.previousReadingId,
+    triggerReadingId: triggerReadingId.present
+        ? triggerReadingId.value
+        : this.triggerReadingId,
   );
   VehicleOdometerGap copyWithCompanion(VehicleOdometerGapsCompanion data) {
     return VehicleOdometerGap(
@@ -17109,6 +17348,15 @@ class VehicleOdometerGap extends DataClass
       vehicleUseId: data.vehicleUseId.present
           ? data.vehicleUseId.value
           : this.vehicleUseId,
+      correctionReadingId: data.correctionReadingId.present
+          ? data.correctionReadingId.value
+          : this.correctionReadingId,
+      previousReadingId: data.previousReadingId.present
+          ? data.previousReadingId.value
+          : this.previousReadingId,
+      triggerReadingId: data.triggerReadingId.present
+          ? data.triggerReadingId.value
+          : this.triggerReadingId,
     );
   }
 
@@ -17123,7 +17371,10 @@ class VehicleOdometerGap extends DataClass
           ..write('attributedContactId: $attributedContactId, ')
           ..write('recordedByContactId: $recordedByContactId, ')
           ..write('recordedAt: $recordedAt, ')
-          ..write('vehicleUseId: $vehicleUseId')
+          ..write('vehicleUseId: $vehicleUseId, ')
+          ..write('correctionReadingId: $correctionReadingId, ')
+          ..write('previousReadingId: $previousReadingId, ')
+          ..write('triggerReadingId: $triggerReadingId')
           ..write(')'))
         .toString();
   }
@@ -17139,6 +17390,9 @@ class VehicleOdometerGap extends DataClass
     recordedByContactId,
     recordedAt,
     vehicleUseId,
+    correctionReadingId,
+    previousReadingId,
+    triggerReadingId,
   );
   @override
   bool operator ==(Object other) =>
@@ -17152,7 +17406,10 @@ class VehicleOdometerGap extends DataClass
           other.attributedContactId == this.attributedContactId &&
           other.recordedByContactId == this.recordedByContactId &&
           other.recordedAt == this.recordedAt &&
-          other.vehicleUseId == this.vehicleUseId);
+          other.vehicleUseId == this.vehicleUseId &&
+          other.correctionReadingId == this.correctionReadingId &&
+          other.previousReadingId == this.previousReadingId &&
+          other.triggerReadingId == this.triggerReadingId);
 }
 
 class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
@@ -17165,6 +17422,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
   final Value<String> recordedByContactId;
   final Value<DateTime> recordedAt;
   final Value<String?> vehicleUseId;
+  final Value<String?> correctionReadingId;
+  final Value<String?> previousReadingId;
+  final Value<String?> triggerReadingId;
   final Value<int> rowid;
   const VehicleOdometerGapsCompanion({
     this.id = const Value.absent(),
@@ -17176,6 +17436,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
     this.recordedByContactId = const Value.absent(),
     this.recordedAt = const Value.absent(),
     this.vehicleUseId = const Value.absent(),
+    this.correctionReadingId = const Value.absent(),
+    this.previousReadingId = const Value.absent(),
+    this.triggerReadingId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehicleOdometerGapsCompanion.insert({
@@ -17188,6 +17451,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
     required String recordedByContactId,
     required DateTime recordedAt,
     this.vehicleUseId = const Value.absent(),
+    this.correctionReadingId = const Value.absent(),
+    this.previousReadingId = const Value.absent(),
+    this.triggerReadingId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        vehicleId = Value(vehicleId),
@@ -17207,6 +17473,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
     Expression<String>? recordedByContactId,
     Expression<DateTime>? recordedAt,
     Expression<String>? vehicleUseId,
+    Expression<String>? correctionReadingId,
+    Expression<String>? previousReadingId,
+    Expression<String>? triggerReadingId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -17223,6 +17492,10 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
         'recorded_by_contact_id': recordedByContactId,
       if (recordedAt != null) 'recorded_at': recordedAt,
       if (vehicleUseId != null) 'vehicle_use_id': vehicleUseId,
+      if (correctionReadingId != null)
+        'correction_reading_id': correctionReadingId,
+      if (previousReadingId != null) 'previous_reading_id': previousReadingId,
+      if (triggerReadingId != null) 'trigger_reading_id': triggerReadingId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -17237,6 +17510,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
     Value<String>? recordedByContactId,
     Value<DateTime>? recordedAt,
     Value<String?>? vehicleUseId,
+    Value<String?>? correctionReadingId,
+    Value<String?>? previousReadingId,
+    Value<String?>? triggerReadingId,
     Value<int>? rowid,
   }) {
     return VehicleOdometerGapsCompanion(
@@ -17250,6 +17526,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
       recordedByContactId: recordedByContactId ?? this.recordedByContactId,
       recordedAt: recordedAt ?? this.recordedAt,
       vehicleUseId: vehicleUseId ?? this.vehicleUseId,
+      correctionReadingId: correctionReadingId ?? this.correctionReadingId,
+      previousReadingId: previousReadingId ?? this.previousReadingId,
+      triggerReadingId: triggerReadingId ?? this.triggerReadingId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -17292,6 +17571,17 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
     if (vehicleUseId.present) {
       map['vehicle_use_id'] = Variable<String>(vehicleUseId.value);
     }
+    if (correctionReadingId.present) {
+      map['correction_reading_id'] = Variable<String>(
+        correctionReadingId.value,
+      );
+    }
+    if (previousReadingId.present) {
+      map['previous_reading_id'] = Variable<String>(previousReadingId.value);
+    }
+    if (triggerReadingId.present) {
+      map['trigger_reading_id'] = Variable<String>(triggerReadingId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -17310,6 +17600,9 @@ class VehicleOdometerGapsCompanion extends UpdateCompanion<VehicleOdometerGap> {
           ..write('recordedByContactId: $recordedByContactId, ')
           ..write('recordedAt: $recordedAt, ')
           ..write('vehicleUseId: $vehicleUseId, ')
+          ..write('correctionReadingId: $correctionReadingId, ')
+          ..write('previousReadingId: $previousReadingId, ')
+          ..write('triggerReadingId: $triggerReadingId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -28247,6 +28540,8 @@ typedef $$VehicleMeterReadingsTableCreateCompanionBuilder =
       Value<bool> negativeGapAcknowledged,
       Value<bool?> isFullTank,
       Value<int?> tankFillFraction,
+      Value<DateTime?> resolvedAt,
+      Value<String?> supersedesReadingId,
       Value<int> rowid,
     });
 typedef $$VehicleMeterReadingsTableUpdateCompanionBuilder =
@@ -28265,6 +28560,8 @@ typedef $$VehicleMeterReadingsTableUpdateCompanionBuilder =
       Value<bool> negativeGapAcknowledged,
       Value<bool?> isFullTank,
       Value<int?> tankFillFraction,
+      Value<DateTime?> resolvedAt,
+      Value<String?> supersedesReadingId,
       Value<int> rowid,
     });
 
@@ -28344,6 +28641,16 @@ class $$VehicleMeterReadingsTableFilterComposer
 
   ColumnFilters<int> get tankFillFraction => $composableBuilder(
     column: $table.tankFillFraction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supersedesReadingId => $composableBuilder(
+    column: $table.supersedesReadingId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -28426,6 +28733,16 @@ class $$VehicleMeterReadingsTableOrderingComposer
     column: $table.tankFillFraction,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get supersedesReadingId => $composableBuilder(
+    column: $table.supersedesReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehicleMeterReadingsTableAnnotationComposer
@@ -28496,6 +28813,16 @@ class $$VehicleMeterReadingsTableAnnotationComposer
     column: $table.tankFillFraction,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supersedesReadingId => $composableBuilder(
+    column: $table.supersedesReadingId,
+    builder: (column) => column,
+  );
 }
 
 class $$VehicleMeterReadingsTableTableManager
@@ -28555,6 +28882,8 @@ class $$VehicleMeterReadingsTableTableManager
                 Value<bool> negativeGapAcknowledged = const Value.absent(),
                 Value<bool?> isFullTank = const Value.absent(),
                 Value<int?> tankFillFraction = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<String?> supersedesReadingId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleMeterReadingsCompanion(
                 id: id,
@@ -28571,6 +28900,8 @@ class $$VehicleMeterReadingsTableTableManager
                 negativeGapAcknowledged: negativeGapAcknowledged,
                 isFullTank: isFullTank,
                 tankFillFraction: tankFillFraction,
+                resolvedAt: resolvedAt,
+                supersedesReadingId: supersedesReadingId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -28589,6 +28920,8 @@ class $$VehicleMeterReadingsTableTableManager
                 Value<bool> negativeGapAcknowledged = const Value.absent(),
                 Value<bool?> isFullTank = const Value.absent(),
                 Value<int?> tankFillFraction = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<String?> supersedesReadingId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleMeterReadingsCompanion.insert(
                 id: id,
@@ -28605,6 +28938,8 @@ class $$VehicleMeterReadingsTableTableManager
                 negativeGapAcknowledged: negativeGapAcknowledged,
                 isFullTank: isFullTank,
                 tankFillFraction: tankFillFraction,
+                resolvedAt: resolvedAt,
+                supersedesReadingId: supersedesReadingId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -29326,6 +29661,9 @@ typedef $$VehicleOdometerGapsTableCreateCompanionBuilder =
       required String recordedByContactId,
       required DateTime recordedAt,
       Value<String?> vehicleUseId,
+      Value<String?> correctionReadingId,
+      Value<String?> previousReadingId,
+      Value<String?> triggerReadingId,
       Value<int> rowid,
     });
 typedef $$VehicleOdometerGapsTableUpdateCompanionBuilder =
@@ -29339,6 +29677,9 @@ typedef $$VehicleOdometerGapsTableUpdateCompanionBuilder =
       Value<String> recordedByContactId,
       Value<DateTime> recordedAt,
       Value<String?> vehicleUseId,
+      Value<String?> correctionReadingId,
+      Value<String?> previousReadingId,
+      Value<String?> triggerReadingId,
       Value<int> rowid,
     });
 
@@ -29393,6 +29734,21 @@ class $$VehicleOdometerGapsTableFilterComposer
 
   ColumnFilters<String> get vehicleUseId => $composableBuilder(
     column: $table.vehicleUseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get correctionReadingId => $composableBuilder(
+    column: $table.correctionReadingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get previousReadingId => $composableBuilder(
+    column: $table.previousReadingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get triggerReadingId => $composableBuilder(
+    column: $table.triggerReadingId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -29450,6 +29806,21 @@ class $$VehicleOdometerGapsTableOrderingComposer
     column: $table.vehicleUseId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get correctionReadingId => $composableBuilder(
+    column: $table.correctionReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get previousReadingId => $composableBuilder(
+    column: $table.previousReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get triggerReadingId => $composableBuilder(
+    column: $table.triggerReadingId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehicleOdometerGapsTableAnnotationComposer
@@ -29497,6 +29868,21 @@ class $$VehicleOdometerGapsTableAnnotationComposer
 
   GeneratedColumn<String> get vehicleUseId => $composableBuilder(
     column: $table.vehicleUseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get correctionReadingId => $composableBuilder(
+    column: $table.correctionReadingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get previousReadingId => $composableBuilder(
+    column: $table.previousReadingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get triggerReadingId => $composableBuilder(
+    column: $table.triggerReadingId,
     builder: (column) => column,
   );
 }
@@ -29553,6 +29939,9 @@ class $$VehicleOdometerGapsTableTableManager
                 Value<String> recordedByContactId = const Value.absent(),
                 Value<DateTime> recordedAt = const Value.absent(),
                 Value<String?> vehicleUseId = const Value.absent(),
+                Value<String?> correctionReadingId = const Value.absent(),
+                Value<String?> previousReadingId = const Value.absent(),
+                Value<String?> triggerReadingId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleOdometerGapsCompanion(
                 id: id,
@@ -29564,6 +29953,9 @@ class $$VehicleOdometerGapsTableTableManager
                 recordedByContactId: recordedByContactId,
                 recordedAt: recordedAt,
                 vehicleUseId: vehicleUseId,
+                correctionReadingId: correctionReadingId,
+                previousReadingId: previousReadingId,
+                triggerReadingId: triggerReadingId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -29577,6 +29969,9 @@ class $$VehicleOdometerGapsTableTableManager
                 required String recordedByContactId,
                 required DateTime recordedAt,
                 Value<String?> vehicleUseId = const Value.absent(),
+                Value<String?> correctionReadingId = const Value.absent(),
+                Value<String?> previousReadingId = const Value.absent(),
+                Value<String?> triggerReadingId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehicleOdometerGapsCompanion.insert(
                 id: id,
@@ -29588,6 +29983,9 @@ class $$VehicleOdometerGapsTableTableManager
                 recordedByContactId: recordedByContactId,
                 recordedAt: recordedAt,
                 vehicleUseId: vehicleUseId,
+                correctionReadingId: correctionReadingId,
+                previousReadingId: previousReadingId,
+                triggerReadingId: triggerReadingId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

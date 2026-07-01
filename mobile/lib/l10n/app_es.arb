@@ -1428,6 +1428,69 @@
       }
     }
   },
+  "vehicleLogCorrectionGapMustBeAdded": "{gap} deben ser añadidos",
+  "@vehicleLogCorrectionGapMustBeAdded": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleLogCorrectionGapMustBeRemoved": "{gap} deben ser retirados",
+  "@vehicleLogCorrectionGapMustBeRemoved": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclePendingCorrectionsTitle": "Correcciones pendientes",
+  "vehiclePendingCorrectionsEmpty": "No hay correcciones pendientes.",
+  "vehiclePendingCorrectionDetailTitle": "Corrección de odómetro",
+  "vehicleCorrectReadingButton": "Corregir la entrada del {date}",
+  "@vehicleCorrectReadingButton": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "vehicleAddMissingSessionButton": "Añadir una sesión de uso",
+  "vehicleSplitSessionButton": "Dividir la sesión",
+  "vehicleGapResolutionSubmit": "Enviar",
+  "vehicleLogReadingRoleCorrectionApplied": "Corrección aplicada",
+  "vehicleLogCorrectionAppliedSummary": "{km} se atribuyeron a {name}",
+  "@vehicleLogCorrectionAppliedSummary": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedSplitSummary": "{km} se atribuyeron (reparto)",
+  "@vehicleLogCorrectionAppliedSplitSummary": {
+    "placeholders": {
+      "km": { "type": "String" }
+    }
+  },
+  "vehicleLogReadingRoleCorrectionReplaces": "Corrección — reemplaza {label}",
+  "@vehicleLogReadingRoleCorrectionReplaces": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "vehicleLogCorrectionAppliedDivergence": "Diferencia observada: {gap}",
+  "@vehicleLogCorrectionAppliedDivergence": {
+    "placeholders": {
+      "gap": { "type": "String" }
+    }
+  },
+  "vehicleGapResolutionPreviousReading": "Lectura anterior",
+  "vehicleGapResolutionTriggerReading": "Lectura subsiguiente",
+  "vehicleGapResolutionValidationMonotonicity": "Este valor entraría en conflicto con otra lectura.",
+  "vehicleGapResolutionValidationSegment": "Los segmentos no cubren correctamente la diferencia.",
+  "vehicleGapResolutionValidationDateOverlap": "Las fechas de los segmentos se solapan.",
+  "vehicleGapResolutionAssignTo": "Atribuir a",
+  "vehicleGapResolutionDates": "Fecha(s)",
+  "vehicleGapResolutionStartMeter": "Odómetro de inicio",
+  "vehicleGapResolutionEndMeter": "Odómetro de fin",
   "vehicleLogMeterTitle": "Registro — odómetro",
   "vehicleLogMeterFuelTitle": "Odómetro y combustible",
   "vehicleLogMeterDetailTitle": "Detalle de la lectura",

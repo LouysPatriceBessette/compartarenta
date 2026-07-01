@@ -28,6 +28,7 @@ import 'screens/vehicle/vehicle_detail_screen.dart';
 import 'screens/vehicle/vehicle_statistics_screen.dart';
 import 'screens/vehicle/vehicle_edit_details_screen.dart';
 import 'screens/vehicle/vehicle_entry_log_screens.dart';
+import 'screens/vehicle/vehicle_pending_corrections_screens.dart';
 import 'screens/vehicle/vehicle_journals_screen.dart';
 import 'screens/vehicle/vehicle_use_session_screen.dart';
 import 'screens/vehicle/vehicle_quick_action_screens.dart';
@@ -506,6 +507,26 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
                   vehicleId: state.pathParameters['vehicleId']!,
                   prefs: prefs,
                 ),
+              ),
+              GoRoute(
+                path: 'pending-corrections',
+                builder: (context, state) =>
+                    VehiclePendingCorrectionsListScreen(
+                  vehicleId: state.pathParameters['vehicleId']!,
+                  prefs: prefs,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':correctionReadingId',
+                    builder: (context, state) =>
+                        VehiclePendingCorrectionDetailScreen(
+                      vehicleId: state.pathParameters['vehicleId']!,
+                      correctionReadingId:
+                          state.pathParameters['correctionReadingId']!,
+                      prefs: prefs,
+                    ),
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'meter-log',
