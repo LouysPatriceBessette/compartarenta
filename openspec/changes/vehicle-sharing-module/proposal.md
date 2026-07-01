@@ -27,6 +27,7 @@ This change **supersedes** the sharing, allocation, and group semantics of `car-
 - `vehicle-expense-sharing`: Category-based allocation (fuel, maintenance, violations, payments), proposals and acceptance.
 - `vehicle-sharing-licensing-and-delinquency`: EV/PP/PE entitlement roles, 1-week grace, delinquency effects per role.
 - `vehicle-sharing-hub-ui`: Accessible vehicles, statistics, quick actions (forward routing), offer path.
+- `vehicle-usage-role-separation`: One DB per installation; owner vs borrower path by navigation and vehicle ownership; forbid self-borrow; accessible vehicles require other installations + relay.
 
 ### Modified Capabilities
 

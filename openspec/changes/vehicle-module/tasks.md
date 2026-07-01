@@ -1,3 +1,9 @@
+## Implementation status (2026-07-01)
+
+Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). Remaining gaps: full positive-gap **participant** attribution UI, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration, boat consumption model.
+
+See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
+
 ## 1. Domain model & storage
 
 - [x] 1.1 Define Vehicle, VehicleUse, FuelPurchase, MaintenanceEvent, TrafficViolation entities with fixed owner
@@ -10,7 +16,9 @@
 - [x] 2.1 Owner use flow: start/end odometer with required photo, distance derivation
 - [x] 2.2 Monotonic / negative-gap flow per `vehicle-odometer-gap-attribution`
 - [x] 2.3 Attribute uses to Propriétaire or Emprunteur Contact (sharing path)
-- [x] 2.4 Gap attribution at session start (`vehicle-odometer-gap-attribution`)
+- [x] 2.4a Positive gap detection, confirm dialog, correction journal entry, and default `unknown` gap record at session start / standalone (`vehicle-odometer-gap-attribution` partial)
+- [ ] 2.4b Participant attribution dialog (Self / approved Emprunteur / Unknown) before finalizing positive gaps
+- [ ] 2.4c Propriétaire notification when gap is attributed to Unknown; Emprunteur negative-gap path notifies Propriétaire (strings exist; not wired)
 
 ## 3. Fuel & owner metrics
 
@@ -41,7 +49,8 @@
 
 - [x] 7.1 Vehicle sharing hub shell (`vehicle-sharing-hub-ui`) wired to same quick-action forms (forward routing)
 - [x] 7.2 Remove prototype: `/car` route, `CarSharingPlanScreen`, `CarSharingPlanDraft` prefs (`vehicle-legacy-code-removal`)
-- [ ] 7.3 Migrate legacy app-private odometer photos; enforce `user-owned-media-storage` on all new writes
+- [x] 7.3a Enforce `user-owned-media-storage` on all new odometer and gallery writes (`storeVehicleMeterPhotoFromSource`, `storeVehicleGalleryPhotoFromSource` → public `Documents/Compartarenta/Car/…`)
+- [ ] 7.3b Migrate legacy app-private `vehicle_meter_photos/` references to public storage keys (read fallback remains)
 
 ## 8. Consumption estimate validation & correction (fuel purchase anchors)
 
@@ -91,3 +100,12 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 - [x] 13.4 Mode transitions: carry reliable detailed average into simple; show simple estimate with insufficient-data message when switching to detailed
 - [x] 13.5 FAQ: estimation limitations when not all users declare detailed driving mix (`helpFaqVehicleConsumptionEstimation`)
 - [ ] 13.6 **Per-borrower detailed mix** (vehicle sharing module): switch to require route / city / traffic per emprunteur per vehicle; wire `shouldCollectDetailedDrivingMix` to sharing link instead of vehicle-level `requireDetailedDrivingMixForBorrowers`
+
+## 14. Android E2E QA (Maestro, debug Android)
+
+Single-device scenarios after programmatic seed + clock push (`docs/qa-android-e2e.md`). Multi-device sharing and relay flows remain manual or future scenarios.
+
+- [x] 14.1 Scenario manifests + flows: `vehicle_add`, `vehicle_fuel_purchase`, `vehicle_use_session`, `vehicle_session_start_gap`, `vehicle_standalone_meter_gap`, `vehicle_consumption` (`qa/scenarios/`, `qa/flows/`).
+- [x] 14.2 Vehicle seed helpers + postconditions (`qa_vehicle_seed_helpers.dart`, `qa_vehicle_consumption_seed.dart`, `qa_scenario_seed.dart`, matching tests).
+- [x] 14.3 Hub semantics for consumption reliability and per-condition breakdown (`qa_vehicle_semantics.dart`, `vehicle_module_hub_screen.dart`).
+- [ ] 14.4 Sharing-hub and multi-role scenarios (invite, accept, borrower session, gap notify).

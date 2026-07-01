@@ -29,6 +29,12 @@ See `vehicle-sharing-licensing-and-delinquency` for EV/PP/PE delinquency rules a
 
 ## Decisions
 
+- **Usage role separation (canonical spec: `vehicle-usage-role-separation`)**
+  - **Decision**: on each installation, **one local database** holds owner-path and borrower-path vehicle data. The active role is chosen by **navigation** (Vehicle hub vs Vehicle sharing hub), not by splitting storage.
+  - **Decision**: the local user MUST NEVER be Emprunteur on a vehicle they own — including QA seeds and E2E tests.
+  - **Decision**: **Accessible vehicles** are owned by participants on **other installations**; cross-participant sharing requires **relay**. An empty accessible list with only self-owned vehicles locally is correct until sync delivers external owners' vehicles.
+  - **Rationale**: prevents conflating "same DB on one phone" with "sharing works without relay across Monica / Louys / Roberr".
+
 - **Propriétaire-only offer path**
   - **Decision**: only the Propriétaire can offer a **specific** vehicle; Emprunteurs cannot browse a Propriétaire's fleet to request access.
   - **Rationale**: avoids ambiguous multi-vehicle discovery; matches Contacts-based invite flow.

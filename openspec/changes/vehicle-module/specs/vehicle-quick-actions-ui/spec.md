@@ -20,17 +20,23 @@ Implementation MAY use bottom sheets, full-screen routes, or hub-embedded shortc
 - **THEN** field validation rules match `fuel-purchase-tracking`
 
 ### Requirement: Vehicle hub saves quick actions locally on owned vehicles
-On the **Vehicle module hub**, quick-action submissions for a **owned** vehicle SHALL persist **locally** on the Propriétaire's device as canonical vehicle facts (no relay forward unless a separate sharing sync rule applies to already-owned data).
+On the **Vehicle module hub**, quick-action submissions for a **owned** vehicle SHALL persist **locally** on the Propriétaire's device as canonical vehicle facts. This is the **owner path** per `vehicle-usage-role-separation`. No relay forward is required for owner-path facts on owned vehicles.
 
 #### Scenario: Owner fuel purchase is local
 - **WHEN** the Propriétaire submits **Fuel purchase** from the Vehicle hub for their car
 - **THEN** the purchase is stored on the owned vehicle record immediately
 - **THEN** consumption and alert-tile logic can react on the next hub refresh
 
-### Requirement: Vehicle sharing hub forwards quick actions to the Propriétaire
-On the **Vehicle sharing hub**, quick-action submissions for an **accessible** (shared) vehicle SHALL be **sent to the Propriétaire** (relay / sync path) so facts land on the Propriétaire's canonical vehicle record. The Emprunteur MUST NOT treat the submission as a second owner ledger.
+### Requirement: Vehicle sharing hub uses the borrower path and forwards to the Propriétaire
+On the **Vehicle sharing hub**, quick-action submissions apply only to **accessible** vehicles whose owner is **not** the local user (`vehicle-usage-role-separation`). This is the **borrower path**.
+
+Submissions SHALL be **sent to the Propriétaire's installation** via the **relay / sync path** so facts join the Propriétaire's canonical vehicle record. The Emprunteur MUST NOT treat the submission as owning a second ledger. A temporary local row or outbound queue on the Emprunteur device does **not** replace relay delivery.
 
 The UI SHALL make clear that the entry is **for** a shared vehicle owned by someone else (Propriétaire identity visible).
+
+#### Scenario: Borrower path refused on own vehicle
+- **WHEN** the user opens a borrower-path quick action for a vehicle they own on this installation
+- **THEN** the form refuses to save and directs the user to the **Vehicle** hub
 
 #### Scenario: Borrower odometer reading is forwarded
 - **WHEN** an Emprunteur submits an odometer reading from the Vehicle sharing hub

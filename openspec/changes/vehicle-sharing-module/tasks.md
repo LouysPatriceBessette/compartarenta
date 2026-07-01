@@ -1,15 +1,20 @@
+## Implementation status (2026-07-01)
+
+**`vehicle-sharing`**: hub shell, invite/accept APIs, borrower-path UI with owner-path guards per `vehicle-usage-role-separation`. **Relay sync not shipped** — cross-installation sharing is incomplete until §5.2 lands.
+
 ## 1. Sharing domain
 
 - [x] 1.1 Define VehicleSharingLink (vehicle, owner, borrower, status)
 - [x] 1.2 Owner invite flow (requires `vehicle` + `vehicle-sharing`)
-- [x] 1.3 Borrower accept / owner revoke flows (accept + local revoke API; revoke UI deferred)
+- [x] 1.3a Borrower accept flow (`acceptSharingLink`)
+- [ ] 1.3b Owner revoke UI (`revokeSharingLink` API exists; no hub control yet)
 - [x] 1.4 Multi-vehicle and multi-borrower list surfaces (basic hub lists)
 
 ## 2. Borrower usage
 
 - [x] 2.1 Borrower use session UI on shared vehicles (start/end readings)
-- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`) — in-app snackbar only; relay/push deferred
-- [x] 2.3 Quick-action forward path (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui` (local same-device; relay forward deferred)
+- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`) — not wired (`vehicleGapOwnerNotified` l10n only); relay/push deferred
+- [ ] 2.3 Borrower-path quick actions (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui` and `vehicle-usage-role-separation` — UI + guards shipped; **relay forward** deferred (§5.2)
 - [x] 2.4 Emprunteur hub does not show Propriétaire-only alert tiles or lifetime owner metrics
 
 ## 3. Metrics & reconciliation
@@ -32,3 +37,10 @@
 - [ ] 5.3 Gate borrowing on `vehicle-sharing`; gate sharing out on both modules (debug-only stub)
 - [x] 5.4 Vehicle sharing hub (`vehicle-sharing-hub-ui`): accessible vehicles, statistics, quick actions
 - [x] 5.5 Remove any sharing-side dependencies on prototype `car_sharing` screens (`vehicle-legacy-code-removal`)
+
+## 6. Usage role separation (spec `vehicle-usage-role-separation`)
+
+- [x] 6.1 Spec written: one DB per installation, navigation-derived role, forbid self-borrow, accessible = other installations + relay.
+- [x] 6.2 Code: exclude self-owned vehicles from Emprunteur accessible/pending lists; `denyVehicleUsageAccess` on borrower path for own vehicles; `VehicleUsageContext` from hub routes.
+- [ ] 6.3 Enforce at API layer: `createSharingOffer` / seeds MUST NOT create self-borrow links; add unit tests for denial paths.
+- [ ] 6.4 QA: document that current vehicle Maestro scenarios are **owner-path only**; Emprunteur E2E waits on relay fixtures (see `vehicle-module` tasks §14.4).

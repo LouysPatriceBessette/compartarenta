@@ -3,12 +3,18 @@
 ### Requirement: Approved Emprunteurs and Propriétaires log vehicle uses
 The system SHALL allow the **Propriétaire** or an **approved Emprunteur** to create a vehicle use session on a shared vehicle with meter readings before/after (odometer or horometer per `odometer-logging`), attributed to the acting Contact.
 
+**Role and ownership rules** (`vehicle-usage-role-separation`):
+
+- **Propriétaire** on installation A uses the **owner path** on vehicles A owns.
+- **Emprunteur** B on installation B uses the **borrower path** only on vehicles whose fixed owner is **another installation** (e.g., A). B MUST NOT use the borrower path on B's own vehicles.
+
 Distance for a session is derived only from **actual start/end readings**, not from estimates. **Gap attribution** when a session start exceeds the latest reading is defined in `vehicle-odometer-gap-attribution`.
 
 #### Scenario: Emprunteur starts and completes a use
-- **WHEN** an approved Emprunteur starts a use on a shared vehicle and saves before/after readings
-- **THEN** the use is stored on the **Propriétaire's canonical vehicle record**
+- **WHEN** an approved Emprunteur on installation B starts a use on A's shared vehicle and saves before/after readings
+- **THEN** the use is stored on the **Propriétaire's canonical vehicle record** on installation A (via relay)
 - **THEN** the use is attributed to the Emprunteur Contact
+- **THEN** B does not satisfy this scenario by saving only on B's device without cross-installation delivery
 
 ### Requirement: Emprunteur usage facts do not grant Propriétaire hub privileges
 Emprunteur-entered uses MUST NOT allow editing Propriétaire-only settings, viewing alert tiles meant for the Propriétaire, or changing the vehicle owner. **Maintenance performed** from the sharing hub forwards a report to the Propriétaire rather than opening the Propriétaire maintenance editor on the Emprunteur device.

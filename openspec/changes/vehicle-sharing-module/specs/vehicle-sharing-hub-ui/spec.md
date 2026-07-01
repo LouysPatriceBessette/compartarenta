@@ -6,12 +6,13 @@ When the user taps **Vehicle sharing** on the app home and holds effective **`ve
 **Navigation:** `App home → Vehicle sharing → Vehicle sharing hub` (see `vehicle-app-home-navigation`). Vehicle sharing is **not** nested under the **Vehicle** home affordance.
 
 ### Requirement: Hub section — Accessible vehicles
-The hub SHALL include an **Accessible vehicles** section listing vehicles the user may use:
+The hub SHALL include an **Accessible vehicles** section listing vehicles the local user may use as **Emprunteur** through an active sharing link, where the vehicle's **fixed owner is another participant on another app installation** (see `vehicle-usage-role-separation`).
 
-- as **Emprunteur** (active sharing link), and/or
-- as **Propriétaire** previewing sharing balance on vehicles they own (when PP applies).
+The list MUST NOT include vehicles owned by the **local user** on this installation. Pending offers and active links on self-owned vehicles MUST NOT surface here as Emprunteur entries.
 
-For each accessible vehicle, the card SHOULD surface at minimum:
+When PP settlement preview is implemented, owned vehicles MAY appear in **separate** Propriétaire settlement surfaces — not as duplicates of **My vehicles** on the Vehicle hub and not as Emprunteur-accessible rows.
+
+For each Emprunteur-accessible vehicle, the card SHOULD surface at minimum:
 
 - **Amount owed or credit** (settlement position from `vehicle-expense-sharing` with detail level TBD in implementation — summary amount on card, breakdown on drill-down is acceptable for first pass)
 - Vehicle label and **Propriétaire** identity when the viewer is Emprunteur
@@ -19,12 +20,13 @@ For each accessible vehicle, the card SHOULD surface at minimum:
 Cards SHALL NOT show Propriétaire-only lifetime consumption or maintenance alert tiles.
 
 #### Scenario: Borrower sees shared vehicle balance
-- **WHEN** an Emprunteur has an active link on A's car
+- **WHEN** an Emprunteur on installation B has an active link on A's car (A is another installation)
 - **THEN** the car appears under **Accessible vehicles** with owed/credit summary when allocation data exists
 
-#### Scenario: Owner does not list owned vehicles under accessible unless sharing context applies
-- **WHEN** a Propriétaire opens the Vehicle sharing hub
-- **THEN** owned vehicles appear here only when showing **sharing settlement** context (amounts owed by/to Emprunteurs), not as duplicates of **My vehicles** on the Vehicle hub
+#### Scenario: Locally owned vehicles never listed as Emprunteur accessible
+- **WHEN** the local user opens the Vehicle sharing hub and owns car V on this installation
+- **THEN** V does not appear under **Accessible vehicles** as an Emprunteur row
+- **THEN** the user records owner-path usage on V only through the **Vehicle** hub
 
 ### Requirement: Hub section — Statistics
 The hub SHALL include **Statistics** scoped to **accessible vehicles** and **Emprunteur windows** (per `vehicle-sharing-usage-metrics`):

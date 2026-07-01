@@ -43,6 +43,10 @@ Constraints:
   - **Decision**: borrower-entered use sessions (specified in `vehicle-sharing-module`) append odometer/fuel **usage facts** to the same vehicle record the owner maintains; the owner's app holds the canonical ledger.
   - **Rationale**: one odometer timeline per vehicle; owner retains full history.
 
+- **Owner vs borrower path on one installation (see `vehicle-usage-role-separation`)**
+  - **Decision**: this module's hub and `/vehicle/…` routes imply the **owner path** for locally owned vehicles. The local user MUST NOT use the Vehicle sharing borrower path on those same vehicles.
+  - **Decision**: one local database per installation; role separation is by **vehicle ownership** and **navigation**, not separate databases.
+
 - **Owner-only maintenance reminders**
   - **Decision**: scheduled service reminders (distance- or time-based) fire only on the **owner's** device.
   - **Rationale**: borrower is not responsible for fleet maintenance scheduling.

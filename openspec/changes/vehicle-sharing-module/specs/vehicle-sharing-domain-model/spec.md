@@ -68,3 +68,19 @@ When a Propriétaire revokes a sharing link, the Emprunteur MUST NOT log new usa
 - **WHEN** the Propriétaire revokes an active link with B
 - **THEN** B can no longer start new uses on that vehicle
 - **THEN** past uses attributed to B remain on the Propriétaire's vehicle record
+
+### Requirement: Local user cannot be Emprunteur on a vehicle they own
+On any installation, the **local user** (onboarding identity / self) MUST NOT act as **Emprunteur** on a vehicle whose **fixed owner** is that same local user. See `vehicle-usage-role-separation` for navigation rules, UI blocks, and the **no-exceptions** rule for QA seeds and E2E tests.
+
+#### Scenario: Self-borrow is forbidden
+- **WHEN** the local user attempts a borrower-path save on a vehicle they own
+- **THEN** the save is refused
+- **THEN** the vehicle does not appear under **Accessible vehicles** as an Emprunteur entry
+
+### Requirement: Accessible vehicles are owned on other installations
+A vehicle that a local user may use as **Emprunteur** MUST have a fixed owner who is a **different local participant** on **another app installation**, introduced through connected Contacts and **relay sync**. Self-owned vehicles MUST NOT appear as Emprunteur-accessible vehicles.
+
+#### Scenario: Empty accessible list without cross-installation sync
+- **WHEN** the database contains only vehicles owned by the local user and no synced sharing data from other installations
+- **THEN** the Emprunteur **Accessible vehicles** list is empty
+- **THEN** this is correct product behavior, not an incomplete local simulation of sharing

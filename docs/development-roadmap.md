@@ -12,7 +12,7 @@ Three things shifted the order:
 2. Participants will be modeled as **Contacts** in a new top-level area. Modules will reference Contacts rather than author inline temporary participant rows. This becomes the first product feature that requires the encrypted relay to actually be running end-to-end.
 3. The relay (already specified at the product-semantics level in `privacy-first-sync-architecture`) needs its concrete deployment plus a public audit posture before any feature can use it. That work is captured in the new `relay-server-infrastructure-and-audit` change.
 
-The vehicle modules are **not advanced enough** to spend time on implementation now; **spec restructuring** (split into `vehicle-module` and `vehicle-sharing-module`, terminology `vehicle` / `vehicle-sharing`) landed in 2026-06-27. Code implementation remains deferred until after the housing module is complete.
+**Spec restructuring** (split into `vehicle-module` and `vehicle-sharing-module`, terminology `vehicle` / `vehicle-sharing`) landed in 2026-06-27. **Owner-side `vehicle`** implementation is in progress (hubs, local persistence, consumption metrics, six Android Maestro E2E scenarios as of 2026-07-01). **`vehicle-sharing`**: hub shell and role-separation guards per `vehicle-usage-role-separation`; relay sync and allocations remain open. Housing remains the primary shipping focus; vehicle owner-path work continues in parallel for local/dev validation.
 
 ## Sequence
 
@@ -79,7 +79,7 @@ After Steps 1 and 2 land, attention focuses on completing housing:
 - Finish the partially-implemented `licensing-trial-and-plan-entitlement` work scoped to housing.
 - Finish the partially-implemented `expense-plan-contract-model` flows (some tasks remain).
 - Apply the per-module licensing layer defined in `per-module-licensing-and-bundles` to housing as its canonical instance.
-- Vehicle work remains paused.
+- Vehicle owner-side features may continue in parallel; vehicle **relay sync and store licensing** stay gated on contacts + per-module entitlement maturity.
 
 ## Modular licensing — where it sits in the order
 
@@ -99,8 +99,8 @@ After Steps 1 and 2 land, attention focuses on completing housing:
 | `expense-plan-contract-model`                     | Belongs to Step 5 (complete housing).                                                                                                                            | In progress |
 | `licensing-trial-and-plan-entitlement`            | Belongs to Step 5 (complete housing). Now treated as the housing **instance** of the per-module model.                                                          | Not started |
 | `car-sharing-module`                              | **Superseded** by `vehicle-module` + `vehicle-sharing-module`. Spec only; not implemented.                                                                       | Superseded (2026-06-27) |
-| `vehicle-module`                                  | Step 3 — owner-side vehicle domain.                                                                                                                              | Specified, not implemented |
-| `vehicle-sharing-module`                          | Step 3 — sharing, borrower usage, allocations.                                                                                                                   | Specified, not implemented |
+| `vehicle-module`                                  | Step 3 — owner-side vehicle domain.                                                                                                                              | In progress (owner flows + E2E; export/import and notifications open) |
+| `vehicle-sharing-module`                          | Step 3 — sharing, borrower usage, allocations.                                                                                                                   | In progress (local hub/invite; relay sync and allocations open) |
 | `ui-localization-fr-en-es`                        | Cross-cutting; tracked separately.                                                                                                                                | In progress |
 | **NEW** `contacts-module`                         | Step 1.                                                                                                                                                          | Proposed |
 | **NEW** `relay-server-infrastructure-and-audit`   | Step 4 (with dev-environment deployment in parallel with Step 1).                                                                                                | Proposed |
