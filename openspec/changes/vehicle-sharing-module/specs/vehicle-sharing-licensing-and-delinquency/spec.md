@@ -9,7 +9,7 @@ A sharing relationship between a **Propriétaire** (owner) and an **Emprunteur**
 | **PP** | Propriétaire-side sharing (offer, receive borrower data) | `vehicle-sharing` | Propriétaire |
 | **PE** | Emprunteur-side sharing (accept offer, submit usage data) | `vehicle-sharing` | Emprunteur |
 
-`vehicle-sharing` is one purchasable module; **PP** and **PE** are role-specific gates on the Propriétaire and Emprunteur devices respectively.
+`vehicle-sharing` is one purchasable module; **PP** and **PE** are role-specific gates on the Propriétaire and Emprunteur devices respectively. **`vehicle-sharing` has no trial period** — see `vehicle-module-licensing`.
 
 ### Requirement: Delinquency grace is one week per module
 When any of EV, PP, or PE enters delinquency (unpaid after renewal), that module instance SHALL enter a **1-week grace period** consistent with `delinquency-grace-readonly-and-export`, then transition to the module-specific restrictions below. Accumulated local data SHALL remain exportable at all times (same rule as housing).

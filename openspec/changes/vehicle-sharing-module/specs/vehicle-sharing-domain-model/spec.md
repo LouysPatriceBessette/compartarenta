@@ -36,14 +36,14 @@ The system MUST NOT provide a flow where an Emprunteur browses or requests acces
 - **THEN** the Emprunteur must wait for a Propriétaire-initiated offer for a specific vehicle
 
 ### Requirement: Offering sharing requires both vehicle modules on the Propriétaire
-The system MUST NOT allow a Propriétaire to publish a vehicle offer unless they have effective entitlement on **`vehicle` and `vehicle-sharing`** (EV + PP), except during the vehicle trial waiver in `vehicle-module-licensing`.
+The system MUST NOT allow a Propriétaire to publish a vehicle offer unless they have effective entitlement on **`vehicle` and `vehicle-sharing`** (EV + PP).
 
 #### Scenario: Propriétaire with vehicle only cannot offer
-- **WHEN** a user has `vehicle` but not `vehicle-sharing` (and no trial waiver)
+- **WHEN** a user has `vehicle` but not `vehicle-sharing`
 - **THEN** the offer action is unavailable or blocked with guidance to subscribe to `vehicle-sharing`
 
 ### Requirement: Borrowing requires vehicle-sharing on the Emprunteur device
-An **Emprunteur** SHALL log usage only when they have effective **PE** (`vehicle-sharing` entitlement or trial waiver) and an **active** sharing link for that vehicle.
+An **Emprunteur** SHALL log usage only when they have effective **PE** (`vehicle-sharing` paid entitlement or bundle coverage) and an **active** sharing link for that vehicle.
 
 #### Scenario: Emprunteur without vehicle subscription uses shared vehicle
 - **WHEN** participant B has `vehicle-sharing` only (PE) and an active link on A's vehicle

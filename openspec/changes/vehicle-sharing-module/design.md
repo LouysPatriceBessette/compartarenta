@@ -8,7 +8,7 @@ Two-module licensing model using product roles **Propriétaire** and **Emprunteu
 | **Emprunteur** | `vehicle-sharing` only | PE |
 | **Propriétaire solo** | `vehicle` only | EV |
 
-See `vehicle-sharing-licensing-and-delinquency` for EV/PP/PE delinquency rules and `vehicle-module-licensing` for the 2-week vehicle trial (sharing waived during vehicle trial).
+See `vehicle-sharing-licensing-and-delinquency` for EV/PP/PE delinquency rules and `vehicle-module-licensing` for the 2-week **`vehicle`** trial. **`vehicle-sharing` has no trial period.**
 
 ## Goals / Non-Goals
 

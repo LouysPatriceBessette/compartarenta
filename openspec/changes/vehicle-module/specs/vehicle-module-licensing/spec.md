@@ -7,31 +7,25 @@ The `vehicle` module (`EV`) SHALL use a **2-week** trial period, consistent with
 - **WHEN** a user's `vehicle` module enters active trial
 - **THEN** the trial length is 2 weeks, not 6 weeks
 
-### Requirement: Vehicle-sharing has no standalone trial
-The `vehicle-sharing` module (`PP` / `PE`) SHALL **not** start its own trial period when purchased or when a user first accepts or offers sharing.
+### Requirement: Vehicle-sharing has no trial period
+The `vehicle-sharing` module (`PP` / `PE`) SHALL **not** offer any trial period. It SHALL NOT start its own trial when purchased or when a user first accepts or offers sharing. An active **`vehicle` module trial SHALL NOT** waive, extend, or substitute for a paid **`vehicle-sharing`** subscription on any device.
+
+PP and PE operations require effective paid **`vehicle-sharing`** entitlement (or bundle coverage that includes `vehicle-sharing`) regardless of the Propriétaire's or Emprunteur's `vehicle` trial state.
 
 #### Scenario: Borrower-only subscriber has no sharing trial
-- **WHEN** an Emprunteur activates `vehicle-sharing` without owning `vehicle`
-- **THEN** no 2-week trial clock starts for `vehicle-sharing` alone
-- **THEN** paid entitlement (or bundle coverage) is required for PE operations after any applicable free tier rules
+- **WHEN** an Emprunteur activates or uses `vehicle-sharing` without owning `vehicle`
+- **THEN** no trial clock starts for `vehicle-sharing`
+- **THEN** paid `vehicle-sharing` entitlement (or bundle coverage) is required for PE operations
 
-### Requirement: Vehicle trial includes sharing at no extra charge
-While the Propriétaire's **`vehicle` module is in `active-trial`**, **PP and PE operations SHALL be permitted without a paid `vehicle-sharing` subscription** on the devices involved in that trial relationship. This applies to:
-
-- a Propriétaire exercising PP during their own vehicle trial;
-- an Emprunteur exercising PE on a vehicle offered by a Propriétaire who is in vehicle trial;
-- a **bundle** that includes both modules during the vehicle trial window.
-
-Once the vehicle trial ends without payment, normal paid rules for `vehicle` and `vehicle-sharing` apply independently per `vehicle-sharing-licensing-and-delinquency`.
-
-#### Scenario: Sharing works during owner vehicle trial without sharing subscription
+#### Scenario: Owner vehicle trial does not unlock sharing without vehicle-sharing subscription
 - **WHEN** a Propriétaire is in `active-trial` on `vehicle` and has not purchased `vehicle-sharing`
-- **THEN** the Propriétaire may offer a specific vehicle to a connected Emprunteur (PP)
-- **THEN** the Emprunteur may accept and log usage (PE) during the Propriétaire's vehicle trial without their own paid `vehicle-sharing` unless otherwise required after trial end
+- **THEN** PP operations (offer sharing) remain blocked until `vehicle-sharing` is paid
+- **THEN** an Emprunteur cannot accept or log usage (PE) on that vehicle without their own paid `vehicle-sharing` unless bundle coverage applies
 
 ### Requirement: Trial messaging uses consistent two-week copy
-All user-visible trial messaging for `vehicle` SHALL reference a **2-week** trial. No surface SHALL mention a 6-week vehicle or housing trial.
+All user-visible trial messaging for `vehicle` SHALL reference a **2-week** trial. No surface SHALL mention a 6-week vehicle or housing trial. No surface SHALL imply that `vehicle-sharing` has a trial or is included free during the `vehicle` trial.
 
 #### Scenario: Onboarding copy matches 2-week trial
 - **WHEN** onboarding or licensing screens mention the real-mode trial
 - **THEN** the duration stated is 2 weeks
+- **THEN** `vehicle-sharing` is not described as trial-eligible or covered by the `vehicle` trial

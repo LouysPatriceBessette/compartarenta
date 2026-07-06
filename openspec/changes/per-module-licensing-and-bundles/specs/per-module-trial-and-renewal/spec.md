@@ -21,6 +21,11 @@ Each module SHALL define its own product-specific event that constitutes "active
 - **THEN** that module SHALL remain in `free` until its trigger is specified and shipped
 - **THEN** the product does not silently start a trial for a module without a documented trigger
 
+#### Scenario: Vehicle-sharing never enters active-trial
+- **WHEN** a user first offers or accepts vehicle sharing
+- **THEN** `vehicle-sharing` does not transition to `active-trial`
+- **THEN** PP and PE require paid `vehicle-sharing` entitlement (or bundle coverage) regardless of `vehicle` trial state
+
 ### Requirement: Each module has its own monthly renewal anchor date
 Once a module is fully paid, its renewal anchor date SHALL be set per the rules in `per-participant-licenses-and-plan-renewal` applied **per module**. Renewal anchor dates SHALL NOT be shared across modules; each module's date is independent.
 

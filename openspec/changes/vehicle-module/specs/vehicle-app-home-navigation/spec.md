@@ -21,7 +21,7 @@ The app home (main shell) SHALL expose **separate, sibling** entry affordances f
 | App home affordance | Opens | Visible when |
 | --- | --- | --- |
 | **Vehicle** (localized; FR: *Véhicule*) | Vehicle module hub | User has effective **`vehicle`** entitlement (EV) and the module is enabled |
-| **Vehicle sharing** (localized; FR: *Partage de véhicule*) | Vehicle sharing hub | User has effective **`vehicle-sharing`** entitlement (PP/PE) or sharing is permitted during an active **`vehicle`** trial per `vehicle-module-licensing` |
+| **Vehicle sharing** (localized; FR: *Partage de véhicule*) | Vehicle sharing hub | User has effective **`vehicle-sharing`** entitlement (PP/PE) |
 
 #### Scenario: Navigation paths are direct from app home
 - **WHEN** the user taps **Vehicle** on the app home
@@ -51,7 +51,7 @@ When the user holds both modules (typical Propriétaire who shares), the app hom
 - **THEN** the app home shows **Vehicle** but not **Vehicle sharing**
 
 ### Requirement: Disabled or unentitled modules hide their home affordance
-When a module is disabled in settings or the user lacks effective entitlement (and no trial waiver applies), that module's app home affordance SHALL be hidden or replaced with licensing guidance — consistent with per-module enable/disable rules.
+When a module is disabled in settings or the user lacks effective entitlement, that module's app home affordance SHALL be hidden or replaced with licensing guidance — consistent with per-module enable/disable rules.
 
 #### Scenario: Disabled sharing hides sharing home entry
 - **WHEN** the user toggles `vehicle-sharing` off in settings

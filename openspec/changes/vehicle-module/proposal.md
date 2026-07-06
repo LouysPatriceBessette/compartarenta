@@ -35,7 +35,7 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 - `vehicle-hub-ui`: Propriétaire operations hub (My vehicles, statistics, quick actions).
 - `vehicle-quick-actions-ui`: Shared quick forms; local save vs forward-to-Propriétaire routing.
 - `vehicle-maintenance-alert-tiles`: Orange preview tiles; notification on threshold odometer read.
-- `vehicle-module-licensing`: 2-week trial on `vehicle` only; sharing free during vehicle trial; no standalone `vehicle-sharing` trial.
+- `vehicle-module-licensing`: 2-week trial on `vehicle` only; **`vehicle-sharing` has no trial period** (not covered by the `vehicle` trial).
 
 ### Modified Capabilities
 
