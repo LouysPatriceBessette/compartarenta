@@ -27,7 +27,7 @@ This change specifies **product behavior** for licensing, trials, and plan-level
 - **Grace then read-only**: if a required license becomes unpaid, the plan enters a 1-week grace period, then transitions to read-only, while always allowing export of historical data.
 - **Relay-enforced gating with minimal metadata**: the relay may enforce housing entitlement decisions using minimal visible metadata (`module`, `plan_id`, `revision_id` or `expense_id`, participant installation identity, decision kind, and request scope) without reading business payload ciphertext.
 - **No second housing trial once any participant consumed one**: a newly accepted housing plan is not trial-eligible if any participating installation identity previously consumed housing trial eligibility.
-- **Dispute-limited tooling**: if one participant’s payment blocks the group, the app produces a differential impact report and requires plan updates for remaining participants; the app does not adjudicate disputes.
+- **Dispute-limited tooling**: if one participant’s payment blocks the group, the app guides plan updates for remaining participants (ratio redistribution, inactive participant); it does not adjudicate disputes. A **differential impact report** (before/after projected obligations) is deferred to a future release — see `dev-ideas/2026-06-27-wish-list.md` § 3. Voluntary withdrawal and ejection plan adaptation is specified in `housing-participation-change-major-flow`.
 
 ## Relay / entitlement state model
 

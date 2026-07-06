@@ -17,10 +17,15 @@ The application and its maintainers do not provide legal advice. You are respons
 
 ## Participant removal due to non-payment
 
-If one participant’s unpaid license blocks the group while at least two other licenses remain active, the app supports the group by:
+When a required license is unpaid, the app applies grace-period notifications, then read-only mode, while export remains available (see `delinquency-grace-readonly-and-export` in OpenSpec).
 
-- guiding users to propose a modified plan for the remaining participants, and
-- producing a **differential impact report** showing how obligations change between the prior plan and the proposed replacement plan.
+If one participant’s unpaid license blocks the group while at least two other licenses remain active, the app guides the group to **adapt the plan** for the remaining participants (ratio redistribution, inactive participant for ledger settlement) via a modified plan proposal subject to unanimous acceptance.
+
+**Future release (planned):** a **differential impact report** showing how projected obligations change between the prior plan and the proposed replacement plan. Tracked in `dev-ideas/2026-06-27-wish-list.md` § 3.
+
+## Voluntary withdrawal and ejection
+
+Plan adaptation on departure (ratio redistribution, early-withdrawal penalty when due, inactive participant) is in scope for the initial release via `housing-participation-change-major-flow`. A formal before/after differential impact report is planned for a future release (same wish list § 3).
 
 ## Limits
 

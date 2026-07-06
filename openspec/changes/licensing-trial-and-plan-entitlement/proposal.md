@@ -9,7 +9,8 @@ The product is free and unlimited until a shared expense plan is **actively in u
 - Define license model: individual licenses, plan-level requirement that **all participants** are licensed, and plan-aligned monthly renewal date.
 - Define delinquency behavior: grace period notifications, read-only mode, and housing data export availability in read-only mode.
 - Define module-scoped import guard behavior for housing data and trial-consumption rules that persist across future housing plans.
-- Define “forced participant removal due to non-payment” behavior, including a plan diff artifact suitable for reference in disputes, and the product’s explicit limits (not legal advice).
+- Define delinquency and read-only behavior when a required license is unpaid (grace period, export).
+- Define forced participant removal due to non-payment: **plan must be adapted** for remaining participants (ratio redistribution, inactive participant). **Differential impact report only** is deferred to a future release (see wish list).
 
 ## Capabilities
 
@@ -19,8 +20,12 @@ The product is free and unlimited until a shared expense plan is **actively in u
 - `trial-notifications-and-timeline`: Trial length, notification schedule, and required UX.
 - `per-participant-licenses-and-plan-renewal`: Individual license requirement, collective responsibility, and shared renewal date.
 - `delinquency-grace-readonly-and-export`: Non-payment flows, grace period, read-only mode, and always-available export in read-only mode.
-- `plan-change-on-participant-removal-and-diff`: Required plan modifications and differential impact reporting when removing a participant due to payment failure.
+- `plan-change-on-participant-removal-and-diff`: Required plan modifications when removing a participant due to payment failure (initial release). Differential impact **report** deferred — see below.
 - `legal-disclosures-and-product-limits`: Documentation requirements for legal-related behavior and explicit product scope.
+
+### Deferred (future release — differential report only)
+
+- Differential impact report before/after participant removal (all cases: unpaid license, voluntary withdrawal, ejection). Tracked in `dev-ideas/2026-06-27-wish-list.md` § 3 (product decision 2026-07-06). Plan adaptation (ratios, inactive participant, early-withdrawal penalty) remains in scope for initial release.
 
 ### Modified Capabilities
 

@@ -17,6 +17,7 @@
 - [ ] 3.3 Implement entitlement-server canonical state for housing trial, accepted roster, and plan authorization.
 - [ ] 3.4 Implement relay-facing authorization for gated housing operations using signed assertions, online checks, or a documented hybrid.
 - [ ] 3.5 Treat store-supported promotional entitlements as valid housing licenses when store state is active.
+- [ ] 3.6 When unpaid license blocks the plan (≥ 2 other active licenses): “Modify plan for remaining participants” flow with ratio redistribution and inactive participant (align with `housing-participation-change-major-flow` mechanics; no differential report in initial release).
 
 ## 4. Export and legal documentation
 
@@ -29,4 +30,13 @@
 - [ ] 5.1 Unit tests for state machine transitions and time-based reminders.
 - [ ] 5.2 Integration tests: active use triggers trial; trial expiry gating; delinquency grace then read-only; export available when read-only.
 - [ ] 5.3 Integration tests: a new accepted housing plan with any `trial_consumed` installation identity receives no new trial; import refused without active paid store subscription (trial/grace/expired).
+
+## Deferred — differential impact report only (wish list)
+
+Not blocking initial Play / App Store release. Product decision 2026-07-06. Plan adaptation on removal (all cases) remains in scope. See `dev-ideas/2026-06-27-wish-list.md` § 3.
+
+- [ ] D.1 **Case A — unpaid license:** differential impact report (per-participant projected obligations before vs after).
+- [ ] D.2 **Case B — voluntary withdrawal / ejection:** before/after impact projection UI in Major change flows.
+- [ ] D.3 Legal copy and in-app disclosure for the differential report (when shipped).
+- [ ] D.4 Unit / integration tests for projection diff math and export.
 

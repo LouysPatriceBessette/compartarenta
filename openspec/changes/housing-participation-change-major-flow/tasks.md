@@ -27,3 +27,11 @@ Partial coverage via programmatic seed + hub assertions (not full vote/sync flow
 
 See `docs/qa-android-e2e.md`. Multi-participant relay mesh remains in
 `relay_housing_participation_change_mesh_test.dart` and manual QA.
+
+## Deferred — differential impact report only (wish list)
+
+Before/after projected-obligation report — not blocking initial release. Product decision 2026-07-06. **Plan adaptation** (ratio redistribution, inactive participant, early-withdrawal penalty) is implemented above. See `dev-ideas/2026-06-27-wish-list.md` § 3.
+
+- [ ] D.1 Differential impact report UI in voluntary withdrawal flow.
+- [ ] D.2 Differential impact report UI in ejection flow.
+- [ ] D.3 Tests for before/after obligation diff using `PlanProjection` rules.

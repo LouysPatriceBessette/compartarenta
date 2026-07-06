@@ -5,8 +5,8 @@ The repository SHALL include an English documentation page describing the app’
 
 - that the app is not a law firm and does not provide legal advice,
 - that participants are responsible for their own agreements,
-- what the app does in payment-failure scenarios (grace, read-only, export),
-- what the app does in participant-removal scenarios (differential impact report) and what it does not do (dispute adjudication).
+- what the app does in payment-failure scenarios (grace, read-only, export, plan adaptation for remaining participants when a license blocks the group),
+- that a **differential impact report** on participant removal is planned for a future release (not initial store release) and what the app does not do (dispute adjudication).
 
 #### Scenario: Documentation exists and is referenced from README
 - **WHEN** the repository is public

@@ -15,7 +15,7 @@ The hub **Major change** action previously forked a hidden draft plan — a poor
 ## Out of scope (this change)
 
 - Relay Go server changes.
-- Post-departure impact projections.
+- Post-departure **differential impact report** (before/after projected obligations) — **deferred to a future release** (wish list: `dev-ideas/2026-06-27-wish-list.md` § 3; product decision 2026-07-06). Plan adaptation on departure (ratio redistribution, inactive participant, early-withdrawal penalty) remains in scope.
 - Full journal merge with amendments (follow-up).
 
 ## Impact

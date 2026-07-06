@@ -26,6 +26,11 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 - [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
 
+- [ ] **Housing — differential impact report on participant removal** (deferred — future release).  
+  Before/after projected-obligation report only (cases: unpaid license, voluntary withdrawal, ejection).  
+  **Not blocking** initial store release (decision 2026-07-06). Plan adaptation (ratios, inactive participant, penalty) stays in scope.  
+  **Track:** `dev-ideas/2026-06-27-wish-list.md` § 3.
+
 - [ ] **Housing — post-activation onboarding swiper** (deferred UX).  
   Multi-card dismissible explainer after unanimous activation (expenses, proofs, peer review, balances, amendments, export). Card copy **not** in OpenSpec yet.  
   **Depends on:** hub implemented (`housing-active-agreement-operations`).  
