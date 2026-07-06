@@ -9,6 +9,7 @@
 - [x] 1.3a Borrower accept flow (`acceptSharingLink`)
 - [ ] 1.3b Owner revoke UI (`revokeSharingLink` API exists; no hub control yet)
 - [x] 1.4 Multi-vehicle and multi-borrower list surfaces (basic hub lists)
+- [ ] 1.5 Enforce cap of five distinct active Emprunteurs per Propriétaire (`vehicle-sharing-domain-model`)
 
 ## 2. Borrower usage
 

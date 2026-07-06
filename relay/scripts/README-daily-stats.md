@@ -47,4 +47,6 @@ Environment for the bare-metal script:
 
 Each appended line is terminated by a single newline: the relay's JSON encoder already ends the body with `\LF`; the scripts do not add a second newline (avoiding a spurious empty line in `wc -l` / JSONL consumers).
 
+After a successful append, both scripts wait one second, then run **`run-marketing-stats-data-rebuild.sh`**, which regenerates the marketing site's `assets/stats-data.json` from the JSONL file (see `compartarenta.incoherences.org/scripts/vps-daily-stats-rebuild.sh`). Set `STATS_DATA_REBUILD_SCRIPT` if the marketing site repo is not at a default path.
+
 This workflow keeps human operators away from direct SQL against the relay database while preserving an append-only audit trail suitable for selective publication.

@@ -34,3 +34,8 @@ mkdir -p "$(dirname "$STATS_FILE_PATH")"
 # trailing newline. Do not add a second one or `wc -l` will count an
 # extra blank line and JSONL parsers may see an empty record.
 cat "$tmp" >>"$STATS_FILE_PATH"
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ -x "$SCRIPT_DIR/run-marketing-stats-data-rebuild.sh" ]]; then
+  "$SCRIPT_DIR/run-marketing-stats-data-rebuild.sh"
+fi

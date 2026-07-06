@@ -9,6 +9,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 - [x] 1.1 Define Vehicle, VehicleUse, FuelPurchase, MaintenanceEvent, TrafficViolation entities with fixed owner
 - [x] 1.2 Support vehicle kinds (car, truck, motorcycle, boat) as metadata
 - [x] 1.3 Implement local persistence scoped by owner; multi-vehicle per owner
+- [ ] 1.3b Enforce cap of three owned vehicles per Propriétaire (`vehicle-domain-model`)
 - [x] 1.4 Implement audit-friendly odometer correction (flag + note)
 
 ## 2. Odometer & distance

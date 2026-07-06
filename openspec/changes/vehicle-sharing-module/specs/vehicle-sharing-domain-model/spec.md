@@ -50,16 +50,29 @@ An **Emprunteur** SHALL log usage only when they have effective **PE** (`vehicle
 - **THEN** B can log usage on that vehicle
 - **THEN** B cannot register a new owned vehicle
 
-### Requirement: Multiple vehicles and multiple Emprunteurs
+### Requirement: Multiple vehicles and multiple Emprunteurs within Propriétaire caps
 The system SHALL support:
-- one Propriétaire sharing **multiple vehicles** (each with separate pairwise links),
-- one Emprunteur using **multiple vehicles** (same or different Propriétaires),
+- one Propriétaire sharing **up to three owned vehicles** (each with separate pairwise links),
+- one Propriétaire having at most **five distinct active Emprunteurs** across all owned vehicles,
+- one Emprunteur using **multiple vehicles** (same or different Propriétaires, without a product cap on the Emprunteur side),
 - one Propriétaire **borrowing another Propriétaire's vehicle** while sharing their own.
+
+The system MUST NOT allow a Propriétaire to exceed **three** owned vehicles (see `vehicle-domain-model`) or to activate a sharing link with a **sixth distinct** Emprunteur while five others already have active links on that Propriétaire's fleet.
 
 #### Scenario: Propriétaire borrows while sharing out
 - **WHEN** A shares their car with B and also has an active link as Emprunteur on C's vehicle
 - **THEN** A can log owner uses on their car and Emprunteur uses on C's car
 - **THEN** B can log Emprunteur uses on A's car only
+
+#### Scenario: Same Emprunteur on two owned vehicles counts once toward the cap
+- **WHEN** Emprunteur B has active links on two vehicles owned by Propriétaire A
+- **THEN** B counts as one Emprunteur toward A's limit of five
+
+#### Scenario: Propriétaire cannot invite a sixth distinct Emprunteur
+- **WHEN** a Propriétaire already has five distinct Contacts with active sharing links on their owned vehicles
+- **AND** they attempt to offer a vehicle to a sixth distinct Contact
+- **THEN** the system blocks the new offer
+- **THEN** the user sees clear guidance that the limit is five Emprunteurs per Propriétaire
 
 ### Requirement: Revoking sharing stops new Emprunteur usage
 When a Propriétaire revokes a sharing link, the Emprunteur MUST NOT log new usage on that vehicle after revocation. Historical usage facts remain on the vehicle record for the Propriétaire's reconciliation.

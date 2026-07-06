@@ -8,7 +8,7 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 
 - Introduce the **`vehicle`** product module with stable identifier `vehicle` (replacing informal `car-sharing` / `car` naming).
 - Model **one fixed owner per vehicle**; ownership does not transfer inside the app (sale handled via export/import of vehicle data by the buyer).
-- Support **multiple vehicles per owner**.
+- Support **up to three vehicles per owner** (product cap in `vehicle-domain-model`).
 - Owner-side tracking:
   - fuel purchases and full-tank–anchored consumption (both Propriétaire and Emprunteur may mark full-tank anchors on shared vehicles — see `vehicle-sharing-module`)
   - odometer or **horometer** (boats) logs with **required photo per reading**, monotonic validation, positive/negative gap attribution

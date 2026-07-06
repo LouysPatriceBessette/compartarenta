@@ -2,7 +2,7 @@
 
 Sharing a vehicle fairly requires collaboration: owners invite borrowers, borrowers log usage, and participants reconcile shared costs. That collaboration is licensed separately from **`vehicle`** so a participant who only **borrows** (participant B) pays less than an owner (participant A) who maintains the asset and shares it.
 
-An owner who wants to **offer** their vehicle for sharing needs **both** `vehicle` and `vehicle-sharing`. A borrower needs only `vehicle-sharing` plus **acceptance** by the vehicle owner. Owners and borrowers may each use multiple vehicles; sharing one's own vehicle does not prevent borrowing another owner's vehicle.
+An owner who wants to **offer** their vehicle for sharing needs **both** `vehicle` and `vehicle-sharing`. A borrower needs only `vehicle-sharing` plus **acceptance** by the vehicle owner. A Propriétaire may own up to **three** vehicles and have up to **five** distinct active Emprunteurs; an Emprunteur may use multiple vehicles (same or different Propriétaires). Sharing one's own vehicle does not prevent borrowing another owner's vehicle.
 
 This change **supersedes** the sharing, allocation, and group semantics of `car-sharing-module`. Reservations are **deferred** (wish list).
 
@@ -10,7 +10,7 @@ This change **supersedes** the sharing, allocation, and group semantics of `car-
 
 - Introduce the **`vehicle-sharing`** product module (identifier `vehicle-sharing`).
 - Model **sharing relationships** per vehicle: owner (requires `vehicle` + `vehicle-sharing`) and approved borrowers (requires `vehicle-sharing` only).
-- Allow **multiple borrowers per vehicle** and **multiple vehicles per borrower** (same or different owners).
+- Allow **multiple borrowers per vehicle** and **multiple vehicles per borrower** (same or different owners), subject to Propriétaire caps (**three** owned vehicles, **five** distinct active Emprunteurs — see `vehicle-sharing-domain-model`).
 - Borrowers **add usage data** (odometer sessions, usage-scoped fuel facts) on the owner's vehicle record.
 - **Borrower-visible metrics**: usage statistics (distance, fuel) limited to their own usage windows — not the vehicle's lifetime history.
 - **Reconciliation data**: both owner and borrower see the facts needed to settle costs, but only for windows tied to the borrower's usage (and owner sees full reconciliation across all sharers).
