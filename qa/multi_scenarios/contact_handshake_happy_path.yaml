@@ -1,0 +1,14 @@
+id: contact_handshake_happy_path
+description: Contact handshake happy path — inviter (Monica) + invitee (Louys), both Android
+device_date: "2026-07-06T09:00:00"
+timezone: America/Toronto
+coordinator: contact_handshake
+mode: happy_path
+role_inviter:
+  avd: Monica-QA
+  seed: contact_handshake_inviter
+  flow: qa/flows/contact_handshake_inviter_generate.yaml
+role_invitee:
+  avd: Louys-QA
+  seed: contact_handshake_invitee
+  flow: qa/flows/contact_handshake_invitee_redeem_wait_connected.yaml

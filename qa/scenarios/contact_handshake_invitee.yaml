@@ -1,0 +1,6 @@
+id: contact_handshake_invitee
+description: Fresh Louys persona for contact handshake E2E (invitee role)
+device_date: "2026-07-06T09:00:00"
+timezone: America/Toronto
+seed: contact_handshake_invitee
+flow: qa/flows/contact_handshake_invitee_redeem_wait_connected.yaml

@@ -24,13 +24,30 @@ if [[ -z "${SCENARIO_ID}" ]]; then
 fi
 
 MANIFEST="${ROOT}/qa/scenarios/${SCENARIO_ID}.yaml"
-if [[ ! -f "${MANIFEST}" ]]; then
-  echo "Unknown scenario (missing manifest): ${MANIFEST}" >&2
-  exit 1
+if [[ -f "${MANIFEST}" ]]; then
+  SEED_ID="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" seed)"
+else
+  # Multi-device role seeds (qa/multi_scenarios) use kQaScenarioIds directly.
+  SEED_ID="${SCENARIO_ID}"
+  if ! python3 - "${SEED_ID}" "${ROOT}" <<'PY'
+import re, sys
+from pathlib import Path
+seed, root = sys.argv[1], Path(sys.argv[2])
+text = (root / "mobile/lib/debug/qa_scenario_seed.dart").read_text(encoding="utf-8")
+m = re.search(r"const kQaScenarioIds = <String>\{([^}]*)\}", text, re.DOTALL)
+ids = {x.group(1) for x in re.finditer(r"'([^']+)'", m.group(1))} if m else set()
+sys.exit(0 if seed in ids else 1)
+PY
+  then
+    echo "Unknown scenario or seed id: ${SCENARIO_ID}" >&2
+    exit 1
+  fi
 fi
-
-SEED_ID="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" seed)"
-SERIAL="$(qa_use_emulator_adb_serial)"
+if [[ -n "${ANDROID_SERIAL:-}" ]]; then
+  SERIAL="${ANDROID_SERIAL}"
+else
+  SERIAL="$(qa_use_emulator_adb_serial)"
+fi
 ADB=(adb -s "${SERIAL}")
 
 ACTIVITY="${COMPARTARENTA_QA_APP_ID}/com.compartarenta.compartarenta.MainActivity"

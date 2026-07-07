@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../contacts/invitation_code.dart';
+import '../../debug/qa_contact_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../notifications/contact_notification_service.dart';
@@ -356,23 +357,27 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              AppTextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  labelText: l10n.contactsEnterInviteCodeFieldLabel,
-                  hintText: 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.paste),
-                    tooltip: l10n.commonPaste,
-                    onPressed: _pasteFromClipboard,
+              qaContactSemantics(
+                identifier: kQaContactsRedeemCodeField,
+                label: l10n.contactsEnterInviteCodeFieldLabel,
+                child: AppTextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    labelText: l10n.contactsEnterInviteCodeFieldLabel,
+                    hintText: 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.paste),
+                      tooltip: l10n.commonPaste,
+                      onPressed: _pasteFromClipboard,
+                    ),
                   ),
-                ),
-                onChanged: (_) => _validate(),
-                textCapitalization: TextCapitalization.none,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  onChanged: (_) => _validate(),
+                  textCapitalization: TextCapitalization.none,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -404,21 +409,29 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               if (result is InvitationCodeBad) _BadResult(error: result.error),
               if (_dispatchError != null) ...[
                 const SizedBox(height: 8),
-                Card(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  child: ListTile(
-                    leading: const Icon(Icons.cloud_off_outlined),
-                    title: Text(_errorLabel(context, _dispatchError!)),
+                qaContactSemantics(
+                  identifier: kQaContactsHandshakeError,
+                  label: _errorLabel(context, _dispatchError!),
+                  child: Card(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: ListTile(
+                      leading: const Icon(Icons.cloud_off_outlined),
+                      title: Text(_errorLabel(context, _dispatchError!)),
+                    ),
                   ),
                 ),
               ],
               if (_dispatched) ...[
                 const SizedBox(height: 8),
-                Card(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  child: ListTile(
-                    leading: const Icon(Icons.hourglass_top_outlined),
-                    title: Text(l10n.contactsHandshakeDispatched),
+                qaContactSemantics(
+                  identifier: kQaContactsHandshakeDispatched,
+                  label: l10n.contactsHandshakeDispatched,
+                  child: Card(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    child: ListTile(
+                      leading: const Icon(Icons.hourglass_top_outlined),
+                      title: Text(l10n.contactsHandshakeDispatched),
+                    ),
                   ),
                 ),
               ],
@@ -434,36 +447,47 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               ],
               if (_completed) ...[
                 const SizedBox(height: 8),
-                Card(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: ListTile(
-                    leading: const Icon(Icons.check_circle_outline),
-                    title: Text(l10n.contactsHandshakeCompleted),
+                qaContactSemantics(
+                  identifier: kQaContactsHandshakeCompleted,
+                  label: l10n.contactsHandshakeCompleted,
+                  child: Card(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: ListTile(
+                      leading: const Icon(Icons.check_circle_outline),
+                      title: Text(l10n.contactsHandshakeCompleted),
+                    ),
                   ),
                 ),
               ],
               const SizedBox(height: 24),
-              FilledButton.icon(
-                icon: _dispatching
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send_outlined),
-                label: Text(
-                  _dispatching
-                      ? l10n.contactsHandshakeDispatching
-                      : l10n.contactsEnterInviteCodeSubmit,
+              qaContactSemantics(
+                identifier: kQaContactsRedeemSubmit,
+                label: _dispatching
+                    ? l10n.contactsHandshakeDispatching
+                    : l10n.contactsEnterInviteCodeSubmit,
+                button: true,
+                child: FilledButton.icon(
+                  icon: _dispatching
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_outlined),
+                  label: Text(
+                    _dispatching
+                        ? l10n.contactsHandshakeDispatching
+                        : l10n.contactsEnterInviteCodeSubmit,
+                  ),
+                  onPressed:
+                      (result is InvitationCodeOk &&
+                          !_dispatching &&
+                          !_dispatched &&
+                          !_completed &&
+                          !_rejected &&
+                          !codeExpired)
+                      ? () => _connect(result.code)
+                      : null,
                 ),
-                onPressed:
-                    (result is InvitationCodeOk &&
-                        !_dispatching &&
-                        !_dispatched &&
-                        !_completed &&
-                        !_rejected &&
-                        !codeExpired)
-                    ? () => _connect(result.code)
-                    : null,
               ),
             ],
           ),

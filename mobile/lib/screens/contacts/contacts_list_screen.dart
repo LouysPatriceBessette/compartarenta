@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../config/app_config.dart';
 import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
+import '../../debug/qa_contact_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -221,10 +222,15 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
             icon: const Icon(Icons.outgoing_mail),
             onPressed: () => navigateTo(context, '/contacts/invitations'),
           ),
-          IconButton(
-            tooltip: l10n.contactsEnterInviteCodeTitle,
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () => navigateTo(context, '/contacts/redeem'),
+          qaContactSemantics(
+            identifier: kQaContactsRedeemOpen,
+            label: l10n.contactsEnterInviteCodeTitle,
+            button: true,
+            child: IconButton(
+              tooltip: l10n.contactsEnterInviteCodeTitle,
+              icon: const Icon(Icons.qr_code_scanner),
+              onPressed: () => navigateTo(context, '/contacts/redeem'),
+            ),
           ),
           IconButton(
             tooltip: l10n.contactsRefreshIncomingTooltip,
@@ -239,10 +245,15 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.person_add),
-        label: Text(l10n.contactsAddContactAction),
-        onPressed: _openInviteContact,
+      floatingActionButton: qaContactSemantics(
+        identifier: kQaContactsInviteFab,
+        label: l10n.contactsAddContactAction,
+        button: true,
+        child: FloatingActionButton.extended(
+          icon: const Icon(Icons.person_add),
+          label: Text(l10n.contactsAddContactAction),
+          onPressed: _openInviteContact,
+        ),
       ),
       body: Column(
         children: [
@@ -256,7 +267,11 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                 }
                 final items = snapshot.data ?? const <Contact>[];
                 if (items.isEmpty) {
-                  return const _ContactsEmptyState();
+                  return qaContactSemantics(
+                    identifier: kQaContactsEmptyState,
+                    label: l10n.contactsEmptyTitle,
+                    child: const _ContactsEmptyState(),
+                  );
                 }
                 return ListView.separated(
                   itemCount: items.length,
@@ -295,26 +310,33 @@ class _IncomingBanner extends StatelessWidget {
       builder: (context, value, _) {
         if (value.isEmpty) return const SizedBox.shrink();
         final count = value.length;
-        return Material(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.notifications_active_outlined),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      count == 1
-                          ? l10n.contactsIncomingBannerOne
-                          : l10n.contactsIncomingBannerMany(count),
-                      style: Theme.of(context).textTheme.titleSmall,
+        return qaContactSemantics(
+          identifier: kQaContactsIncomingBanner,
+          label: count == 1
+              ? l10n.contactsIncomingBannerOne
+              : l10n.contactsIncomingBannerMany(count),
+          button: true,
+          child: Material(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.notifications_active_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        count == 1
+                            ? l10n.contactsIncomingBannerOne
+                            : l10n.contactsIncomingBannerMany(count),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.chevron_right),
-                ],
+                    const Icon(Icons.chevron_right),
+                  ],
+                ),
               ),
             ),
           ),
@@ -374,7 +396,10 @@ class _ContactTile extends StatelessWidget {
         : disconnected
         ? l10n.contactsKindDisconnected
         : l10n.contactsKindLocalOnly;
-    return ListTile(
+    final rowId = connected
+        ? qaContactsRowSemanticsId(contact.effectiveDisplayName)
+        : null;
+    final tile = ListTile(
       onTap: onTap,
       leading: CircleAvatar(
         backgroundColor: blocked
@@ -391,6 +416,13 @@ class _ContactTile extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             )
           : const Icon(Icons.chevron_right),
+    );
+    if (rowId == null) return tile;
+    return qaContactSemantics(
+      identifier: rowId,
+      label: contact.effectiveDisplayName,
+      button: true,
+      child: tile,
     );
   }
 }

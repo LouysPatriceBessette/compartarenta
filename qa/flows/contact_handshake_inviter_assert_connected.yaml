@@ -1,0 +1,8 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _return_to_contacts_list.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 120000

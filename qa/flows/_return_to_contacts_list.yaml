@@ -1,0 +1,23 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# From generate or "Codes d'invitation", back until the main Contacts hub is visible.
+- runFlow:
+    when:
+      notVisible:
+        id: "qa-contacts-invite-fab"
+    commands:
+      - back
+      - waitForAnimationToEnd:
+          timeout: 5000
+- runFlow:
+    when:
+      notVisible:
+        id: "qa-contacts-invite-fab"
+    commands:
+      - back
+      - waitForAnimationToEnd:
+          timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-invite-fab"
+    timeout: 30000

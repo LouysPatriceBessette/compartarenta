@@ -1,0 +1,11 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-handshake-error"
+    timeout: 8000
+    optional: true
+- assertVisible:
+    id: "qa-contacts-handshake-error"

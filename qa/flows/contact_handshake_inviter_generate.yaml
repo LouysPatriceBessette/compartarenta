@@ -1,0 +1,18 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _enter_contacts_hub.yaml
+- tapOn:
+    id: "qa-contacts-invite-fab"
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-generate-code"
+    timeout: 30000
+- tapOn:
+    id: "qa-contacts-generate-code"
+- runFlow:
+    file: _dismiss_notification_prompt.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-invitation-short-code"
+    timeout: 120000

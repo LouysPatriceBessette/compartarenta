@@ -1,0 +1,12 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 30000
+    optional: true
+- assertVisible:
+    id: "qa-contacts-row-louys-qa"
+    optional: true

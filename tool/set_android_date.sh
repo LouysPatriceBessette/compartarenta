@@ -27,7 +27,11 @@ TIMEZONE="${2:-${COMPARTARENTA_QA_DEFAULT_TIMEZONE}}"
 qa_export_android_sdk_paths
 qa_require_command adb
 
-SERIAL="$(qa_require_emulator_target)"
+if [[ -n "${ANDROID_SERIAL:-}" ]]; then
+  SERIAL="${ANDROID_SERIAL}"
+else
+  SERIAL="$(qa_require_emulator_target)"
+fi
 ADB=(adb -s "${SERIAL}")
 
 if ! date -d "${TARGET_ISO}" '+%Y-%m-%d %H:%M:%S' >/dev/null 2>&1; then

@@ -177,3 +177,9 @@ melos:
         qa/artifacts/run-<timestamp>/index.html aggregated report.
         Example: dart run melos run qa:run-all-scenarios
       run: chmod +x ./tool/run_all_scenarios.sh && ./tool/run_all_scenarios.sh "$@"
+
+    qa:run-multi-scenario:
+      description: |
+        Run a multi-device QA scenario (two emulators + coordinator script).
+        Example: ./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path --skip-build
+      run: chmod +x ./tool/run_multi_device_scenario.sh && ./tool/run_multi_device_scenario.sh "$@"

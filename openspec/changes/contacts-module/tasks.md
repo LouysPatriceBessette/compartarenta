@@ -69,7 +69,7 @@
 
 - [x] 7.1 Unit tests for code generation, checksum validation, expiry, single-use nonce consumption, and revocation. *(See `test/invitation_code_test.dart` and `test/contacts_repository_test.dart`.)*
 - [x] 7.2 Unit tests for de-duplication policy in the migration (identical name+avatar unify; otherwise distinct). *(See `test/contacts_migration_test.dart`.)*
-- [ ] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected). *(Wave B.)*
+- [ ] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected). *(Wave B.)* **Partial:** Android multi-device Maestro `contact_handshake_happy_path` (`./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path`).
 - [ ] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact). *(Wave B.)*
 - [ ] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect. *(Wave A delete-only path can be covered now; full disconnect path is Wave B.)*
 - [ ] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests). *(Wave B.)*
@@ -105,9 +105,9 @@ work.
 
 ## 9. Known bugs (backlog)
 
-- [ ] 9.1 **Bug (medium / non-blocking):** Contact handshake may report relay failure or expiry while the peer completes the connection — invitee left without a connected contact.
+- [x] 9.1 **Bug (medium / non-blocking):** Contact handshake may report relay failure or expiry while the peer completes the connection — invitee left without a connected contact. **CASE CLOSED (investigation complete, 2026-07-07):** Android multi-device Maestro probe `contact_handshake_bug_91` (10 attempts, Monica-QA + Louys-QA, prod relay) → `verdict=COULD_NOT_REPRODUCE` (`clean=10`, `infra=0`). Artifacts: `qa/artifacts/multi-contact_handshake_bug_91/20260707T040249Z/bug_91_result.txt`. Asymmetric signature (invitee relay error + empty list while inviter connected) not reproduced; web dev surface excluded from product scope. Product fixes landed during probe setup (inviter list refresh after auto-accept; E2E navigation). Reopen only if the original asymmetric symptom recurs with fresh evidence.
   - **Severity:** medium / non-blocking.
-  - **Reproducibility:** uncertain (observed once in dev, May 2026).
+  - **Reproducibility:** uncertain (observed once in dev, May 2026). **Android E2E probe:** `qa/multi_scenarios/contact_handshake_bug_91.yaml` via `./tool/melosw run qa:run-multi-scenario -- contact_handshake_bug_91` (10 attempts, Monica-QA + Louys-QA, prod relay). **Closure:** `bug_91_result.txt` reports `verdict=COULD_NOT_REPRODUCE` — **CASE CLOSED** (web dev surface excluded from product scope).
   - **Screenshots:**
     - [`assets/bugs/contact-handshake-relay-unreachable-2026-05-28.png`](assets/bugs/contact-handshake-relay-unreachable-2026-05-28.png) — redeem screen after first submit: valid code format, then *Relais injoignable. Vérifiez votre connexion et réessayez.*
     - [`assets/bugs/contact-handshake-code-expired-on-retry-2026-05-28.png`](assets/bugs/contact-handshake-code-expired-on-retry-2026-05-28.png) — resubmitting the same code: *Cette invitation a expiré.*

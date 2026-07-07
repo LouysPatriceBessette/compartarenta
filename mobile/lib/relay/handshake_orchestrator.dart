@@ -2323,6 +2323,9 @@ class HandshakeOrchestrator {
       addrInvitee: addrInvitee,
     );
     await refreshIncomingHandshakes();
+    // Auto-accept completes without surfacing [incomingHandshakes]; bump so
+    // contact list UIs reload promoted rows without a route change.
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     startPolling();
     requestClosedAppPushRegistrationSync();
   }
@@ -2377,6 +2380,7 @@ class HandshakeOrchestrator {
         ack.inviterLongTermPublicKey,
       ),
     );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     startPolling();
     requestClosedAppPushRegistrationSync();
   }

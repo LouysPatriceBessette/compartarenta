@@ -134,11 +134,41 @@ Options (pass after `--` with melos):
 
 Faster emulator resume (snapshot): `./tool/start_qa_emulator.sh --quick`
 
+### Multi-device scenarios (two emulators)
+
+Some flows (e.g. contact handshake) need **two Android emulators** coordinated by a shell orchestrator.
+
+**One-time:** create persona AVDs (in addition to `Compartarenta-QA`):
+
+```bash
+COMPARTARENTA_QA_AVD_NAME=Louys-QA ./tool/melosw run qa:create-avd
+COMPARTARENTA_QA_AVD_NAME=Monica-QA ./tool/melosw run qa:create-avd
+```
+
+**Happy path (inviter Monica-QA + invitee Louys-QA):**
+
+```bash
+./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path
+```
+
+**Bug 9.1 probe (10 attempts, writes `bug_91_result.txt`):**
+
+```bash
+./tool/melosw run qa:run-multi-scenario -- contact_handshake_bug_91
+```
+
+Manifests live under `qa/multi_scenarios/`. Each declares `role_*` blocks (AVD, seed, flow) and a `coordinator` script in `tool/coordinators/`. The inviter exports the invitation short code to `app_flutter/compartarenta_qa_handshake_code.txt` for the orchestrator to pass to the invitee Maestro flow (`INVITE_CODE`).
+
+**Relay / TLS note:** scenarios that hit the production relay (`https://sync.incoherences.org`) must keep `device_date` **inside the relay certificate validity window**. Housing settlement scenarios use 2027-08-11 for hub gating; contact-handshake manifests use the current calendar date instead — pushing the emulator past the cert `notAfter` yields `CERTIFICATE_VERIFY_FAILED: certificate has expired` on `establishRouting`, and Maestro will hang waiting for the invitation short code.
+
+Artifacts: `qa/artifacts/multi-<scenario-id>/<UTC-timestamp>/`.
+
 ## Repository layout
 
 ```
 qa/
-  scenarios/*.yaml     Scenario manifests (date, seed id, flow path)
+  scenarios/*.yaml       Single-device scenario manifests
+  multi_scenarios/*.yaml Multi-device manifests (roles + coordinator)
   flows/*.yaml           Maestro flows (UI steps, assertions, screenshots)
   artifacts/             Run output (gitignored)
   .local/                Clock restore state (gitignored)
@@ -149,6 +179,8 @@ mobile/lib/debug/
 
 tool/
   run_scenario.sh        One scenario end-to-end
+  run_multi_device_scenario.sh  Multi-emulator orchestrator entry point
+  coordinators/          Per-domain coordination scripts (contact handshake, …)
   run_all_scenarios.sh   All manifests + aggregated report
   seed_qa_scenario.sh    Seed only (used by run_scenario)
   qa_scenario_manifest.py   Parse / list / validate manifests

@@ -8,6 +8,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../contacts/contact_invitations_repository.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
+import '../../debug/qa_contact_semantics.dart';
+import '../../debug/qa_handshake_export.dart';
 import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
@@ -196,6 +198,7 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
         _generated = result;
         _generating = false;
       });
+      await qaExportHandshakeInvitationCode(r.shortCode);
       _startGeneratedPolling(orchestrator);
       unawaited(_completeIfInvitationRedeemed());
     } on HandshakeOrchestratorError catch (e) {
@@ -322,10 +325,15 @@ class _IntroForm extends StatelessWidget {
           ),
         ],
         const Spacer(),
-        FilledButton.icon(
-          icon: const Icon(Icons.send),
-          label: Text(l10n.contactsInviteGenerateAction),
-          onPressed: busy ? null : onGenerate,
+        qaContactSemantics(
+          identifier: kQaContactsGenerateCode,
+          label: l10n.contactsInviteGenerateAction,
+          button: true,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.send),
+            label: Text(l10n.contactsInviteGenerateAction),
+            onPressed: busy ? null : onGenerate,
+          ),
         ),
       ],
     );
@@ -411,15 +419,19 @@ class _GeneratedView extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                         const SizedBox(height: 8),
-                        SelectableText(
-                          shortCode,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                          textAlign: TextAlign.center,
+                        qaContactSemantics(
+                          identifier: kQaContactsInvitationShortCode,
+                          label: shortCode,
+                          child: SelectableText(
+                            shortCode,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Wrap(

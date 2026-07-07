@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- tapOn:
+    id: "qa-contacts-redeem-submit"
+    optional: true
+- runFlow:
+    file: _dismiss_notification_prompt.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-handshake-error"
+    timeout: 30000
+    optional: true

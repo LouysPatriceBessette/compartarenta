@@ -49,6 +49,8 @@ class HomeScreen extends StatelessWidget {
                 icon: MdiIcons.accountMultipleOutline,
                 label: l10n.homeModuleContacts,
                 onTap: () => navigateTo(context, '/contacts'),
+                semanticsIdentifier:
+                    kDebugMode ? 'qa-home-contacts' : null,
               ),
             ),
             SizedBox(

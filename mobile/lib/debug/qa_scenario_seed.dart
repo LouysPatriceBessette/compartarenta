@@ -47,6 +47,8 @@ const kQaScenarioIds = <String>{
   'vehicle_session_start_gap',
   'vehicle_standalone_meter_gap',
   'vehicle_consumption',
+  'contact_handshake_inviter',
+  'contact_handshake_invitee',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -88,10 +90,11 @@ Future<File?> _qaSeedMarkerFile() async {
 }
 
 Future<void> applyQaSharedPreferences(String scenarioId) async {
+  final persona = _qaPersonaForScenario(scenarioId);
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool('onboarding.complete', true);
-  await prefs.setString('profile.displayName', 'Monica QA');
-  await prefs.setString('profile.avatarId', 'mdi:0');
+  await prefs.setString('profile.displayName', persona.displayName);
+  await prefs.setString('profile.avatarId', persona.avatarId);
   await prefs.setString('prefs.currency', 'CAD');
   await prefs.setString('prefs.dateFormat', 'yyyy-MM-dd');
   await prefs.setString('prefs.distanceUnit', 'km');
@@ -105,6 +108,18 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
   await prefs.setBool(kQaE2eMeterPhotoOptionalPrefKey, true);
   QaE2eFlags.setMeterPhotoOptional(true);
   await persistQaE2eEnvironment(scenarioId: scenarioId);
+}
+
+({String displayName, String avatarId}) _qaPersonaForScenario(
+  String scenarioId,
+) {
+  return switch (scenarioId) {
+    'contact_handshake_invitee' => (
+      displayName: 'Louys QA',
+      avatarId: 'a02',
+    ),
+    _ => (displayName: 'Monica QA', avatarId: 'a01'),
+  };
 }
 
 Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
@@ -137,6 +152,9 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
       await qaSeedE2eVehicle(db);
     case 'vehicle_consumption':
       await qaSeedVehicleConsumptionScenario(db);
+    case 'contact_handshake_inviter':
+    case 'contact_handshake_invitee':
+      break;
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }

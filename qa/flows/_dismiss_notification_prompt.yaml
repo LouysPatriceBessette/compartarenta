@@ -1,0 +1,5 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- tapOn:
+    text: "Non, continuer"
+    optional: true

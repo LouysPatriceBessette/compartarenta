@@ -67,7 +67,7 @@ if ! [[ "${NUM_EMULATORS}" =~ ^[1-5]$ ]]; then
 fi
 
 APK="${COMPARTARENTA_QA_APK_PATH}"
-ALL_AVD_NAMES=("Louys-QA" "Monica-QA" "Roberr-QA" "Liuva-QA" "Leo-QA")
+ALL_AVD_NAMES=("${COMPARTARENTA_QA_PERSONA_AVD_NAMES[@]}")
 AVD_NAMES=("${ALL_AVD_NAMES[@]:0:${NUM_EMULATORS}}")
 BASE_PORT=5554
 EMULATOR_COMMON_ARGS=(-netdelay none -netspeed full -prop ro.setupwizard.mode=DISABLED)
@@ -181,6 +181,14 @@ if [[ "${INSTALL_APK}" == true ]]; then
     qa_install_qa_apk_on_serial "${serial}" "${APK}"
   done
 fi
+
+map_entries=()
+for avd_name in "${AVD_NAMES[@]}"; do
+  map_entries+=("${avd_name}=${AVD_TO_SERIAL[${avd_name}]}")
+done
+qa_write_avd_serials_map "${map_entries[@]}"
+echo
+echo "Wrote AVD serial map: ${COMPARTARENTA_QA_AVD_SERIALS_MAP}"
 
 echo
 echo "Run dev builds (one terminal per persona):"

@@ -1,0 +1,11 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-empty-state"
+    timeout: 8000
+    optional: true
+- assertVisible:
+    id: "qa-contacts-empty-state"

@@ -39,6 +39,9 @@ echo
 run_check "scenario manifests (qa/scenarios/*.yaml)" \
   python3 "${ROOT}/tool/qa_scenario_manifest.py" --validate
 
+run_check "multi-device manifests (qa/multi_scenarios/*.yaml)" \
+  python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" --validate
+
 run_check "Maestro ↔ Dart semantics (qa-* ids)" \
   python3 "${ROOT}/tool/verify_qa_semantics.py"
 

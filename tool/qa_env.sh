@@ -20,7 +20,17 @@ export COMPARTARENTA_QA_DEFAULT_TIMEZONE="${COMPARTARENTA_QA_DEFAULT_TIMEZONE:-A
 
 export COMPARTARENTA_QA_LOCAL_DIR="${COMPARTARENTA_ROOT}/qa/.local"
 export COMPARTARENTA_QA_CLOCK_STATE="${COMPARTARENTA_QA_LOCAL_DIR}/clock-restore.env"
+export COMPARTARENTA_QA_AVD_SERIALS_MAP="${COMPARTARENTA_QA_LOCAL_DIR}/avd-serials.map"
 export COMPARTARENTA_QA_APK_PATH="${COMPARTARENTA_QA_APK_PATH:-${COMPARTARENTA_ROOT}/mobile/build/app/outputs/flutter-apk/app-dev-debug.apk}"
+
+# Persona AVD order must match qa/run-emulators.sh fixed ports (5554, 5556, …).
+COMPARTARENTA_QA_PERSONA_AVD_NAMES=(
+  "Louys-QA"
+  "Monica-QA"
+  "Roberr-QA"
+  "Liuva-QA"
+  "Leo-QA"
+)
 
 # --- Android SDK resolution -------------------------------------------------
 
@@ -214,4 +224,114 @@ qa_prepare_for_maestro() {
   adb "${adb_args[@]}" shell am force-stop "${COMPARTARENTA_QA_APP_ID}" >/dev/null 2>&1 || true
   adb "${adb_args[@]}" shell input keyevent KEYCODE_BACK >/dev/null 2>&1 || true
   sleep 1
+}
+
+# --- Multi-device QA helpers --------------------------------------------------
+
+qa_write_avd_serials_map() {
+  # Usage: qa_write_avd_serials_map "Louys-QA=emulator-5554" "Monica-QA=emulator-5556"
+  qa_ensure_local_dir
+  : >"${COMPARTARENTA_QA_AVD_SERIALS_MAP}"
+  local entry avd serial
+  for entry in "$@"; do
+    avd="${entry%%=*}"
+    serial="${entry#*=}"
+    if [[ -z "${avd}" || -z "${serial}" || "${avd}" == "${serial}" ]]; then
+      echo "Invalid AVD serial map entry: ${entry}" >&2
+      return 1
+    fi
+    printf '%s=%s\n' "${avd}" "${serial}" >>"${COMPARTARENTA_QA_AVD_SERIALS_MAP}"
+  done
+}
+
+qa_serial_from_avd_map() {
+  local avd_name="$1"
+  local line name serial
+  if [[ ! -f "${COMPARTARENTA_QA_AVD_SERIALS_MAP}" ]]; then
+    return 1
+  fi
+  while IFS='=' read -r name serial; do
+    [[ -z "${name}" ]] && continue
+    if [[ "${name}" == "${avd_name}" && -n "${serial}" ]]; then
+      if adb devices | awk -v s="${serial}" '$1 == s && $2 == "device" { found=1 } END { exit !found }'; then
+        echo "${serial}"
+        return 0
+      fi
+    fi
+  done <"${COMPARTARENTA_QA_AVD_SERIALS_MAP}"
+  return 1
+}
+
+qa_serial_for_avd_by_fixed_port() {
+  local avd_name="$1"
+  local base_port=5554
+  local i=0
+  local name expected_serial
+  for name in "${COMPARTARENTA_QA_PERSONA_AVD_NAMES[@]}"; do
+    if [[ "${name}" == "${avd_name}" ]]; then
+      expected_serial="emulator-$((base_port + i * 2))"
+      if adb devices | awk -v s="${expected_serial}" '$1 == s && $2 == "device" { found=1 } END { exit !found }'; then
+        echo "${expected_serial}"
+        return 0
+      fi
+      return 1
+    fi
+    i=$((i + 1))
+  done
+  return 1
+}
+
+qa_serial_for_avd() {
+  local avd_name="$1"
+  local serial avd_on_device
+
+  if serial="$(qa_serial_from_avd_map "${avd_name}")"; then
+    echo "${serial}"
+    return 0
+  fi
+
+  while IFS= read -r serial; do
+    [[ -z "${serial}" ]] && continue
+    avd_on_device="$(adb -s "${serial}" emu avd name 2>/dev/null | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)"
+    if [[ -n "${avd_on_device}" && "${avd_on_device}" == "${avd_name}" ]]; then
+      echo "${serial}"
+      return 0
+    fi
+  done < <(adb devices | awk '/^emulator-[0-9]+\tdevice$/{print $1}')
+
+  if serial="$(qa_serial_for_avd_by_fixed_port "${avd_name}")"; then
+    echo "${serial}"
+    return 0
+  fi
+
+  return 1
+}
+
+qa_pull_handshake_invitation_code() {
+  local serial="$1"
+  adb -s "${serial}" shell \
+    "run-as ${COMPARTARENTA_QA_APP_ID} cat app_flutter/compartarenta_qa_handshake_code.txt" \
+    2>/dev/null | tr -d '\r'
+}
+
+qa_maestro_test_on_serial() {
+  local serial="$1"
+  local flow_path="$2"
+  local artifact_dir="$3"
+  shift 3
+  mkdir -p "${artifact_dir}"
+  maestro test --udid "${serial}" "${flow_path}" --test-output-dir "${artifact_dir}" "$@"
+}
+
+qa_seed_scenario_on_serial() {
+  local serial="$1"
+  local scenario_id="$2"
+  ANDROID_SERIAL="${serial}" "${COMPARTARENTA_ROOT}/tool/seed_qa_scenario.sh" "${scenario_id}"
+}
+
+qa_set_android_date_on_serial() {
+  local serial="$1"
+  local device_date="$2"
+  local timezone="$3"
+  ANDROID_SERIAL="${serial}" "${COMPARTARENTA_ROOT}/tool/set_android_date.sh" "${device_date}" "${timezone}"
 }
