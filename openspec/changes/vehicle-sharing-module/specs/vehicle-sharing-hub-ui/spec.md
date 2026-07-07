@@ -42,7 +42,7 @@ The hub SHALL include **Statistics** scoped to **accessible vehicles** and **Emp
 ### Requirement: Hub row — Quick actions
 The hub SHALL expose the same quick-action set as the Vehicle module hub (see `vehicle-quick-actions-ui`):
 
-- Odometer / horometer reading
+- Odometer reading
 - Fuel purchase
 - Maintenance performed
 - Damage or violation report

@@ -13,7 +13,7 @@ Constraints:
 
 - Local-first Flutter app; facts stored separately from derived metrics.
 - One **fixed owner** per vehicle record for the lifetime of that record in the app.
-- Vehicle kind is descriptive (car, truck, motorcycle, boat); behavior is shared unless a kind-specific rule is explicitly added later.
+- Vehicle kind is descriptive (car, truck, motorcycle at initial release; **boat deferred** — see Decisions).
 
 ## Goals / Non-Goals
 
@@ -26,6 +26,7 @@ Constraints:
 
 **Non-Goals:**
 
+- **Boat vehicles at initial release** (engine hour meter, marine consumption — deferred; see Decisions).
 - Reservations / advance booking (wish list).
 - Borrower-facing statistics (see `vehicle-sharing-module`).
 - Expense allocation and sharing ratios (see `vehicle-sharing-module`).
@@ -57,7 +58,12 @@ Constraints:
 
 - **Vehicle kind is metadata**
   - **Decision**: store `vehicleKind` enum/string; no separate module per kind.
-  - **Rationale**: user asked for one module covering car, truck, motorcycle, boat.
+  - **Rationale**: one module covers car, truck, motorcycle (and boat later without a new license).
+
+- **Boat vehicles deferred from initial release (2026-07-06)**
+  - **Decision**: the first public release of **`vehicle`** and **`vehicle-sharing`** supports **land vehicles only** — **car, truck, motorcycle** with **odometer** distance tracking. The **boat** kind with **engine hour meter (horomètre)** readings, boat-specific consumption modeling (tasks §10.5), hour-based maintenance intervals, and related UX are **deferred** to a future release.
+  - **Rationale**: aligns public product copy (marketing site lists land kinds only); land-vehicle flows are the v1 shipping scope; boat adds horometer UX, marine consumption patterns, and hour-based rules not yet product-complete.
+  - **Implementation note**: the domain model MAY retain an extensible `vehicleKind` value for `boat` for forward compatibility; **v1 product surfaces MUST NOT offer boat registration** until the deferred work ships (tasks §15).
 
 ## Risks / Trade-offs
 

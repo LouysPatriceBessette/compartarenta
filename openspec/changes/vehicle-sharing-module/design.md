@@ -45,14 +45,15 @@ See `vehicle-sharing-licensing-and-delinquency` for EV/PP/PE delinquency rules a
 
 - **Full-tank anchors by either party; no session fuel**
   - **Decision**: Propriétaire or Emprunteur may mark full-tank purchases; Emprunteurs do not log liters per session.
-  - **Rationale**: session-level consumption estimates are unreliable; odometer/horometer readings are factual.
+  - **Rationale**: session-level consumption estimates are unreliable; odometer readings are factual.
 
 - **Three functional licenses in a relationship (EV, PP, PE)**
   - **Decision**: documented in `vehicle-sharing-licensing-and-delinquency` with 1-week grace per module instance.
   - **Rationale**: independent delinquency on owner vs borrower devices.
 
-- **Boat horometer**
-  - **Decision**: boats use engine hour meter readings; land vehicles use odometer. See `odometer-logging` and user-facing terminology dictionary.
+- **Boat horometer deferred from initial release (2026-07-06)**
+  - **Decision**: initial **`vehicle-sharing`** release supports **land vehicles** (odometer) only. **Boat** with **engine hour meter (horomètre)** is deferred to a future release alongside `vehicle-module` boat work — see `vehicle-module` `design.md` § Decisions.
+  - **Future direction**: when boat ships, boats use engine hour meter readings; land vehicles use odometer. See deferred `odometer-logging` requirements and user-facing terminology dictionary.
 
 ## Risks / Trade-offs
 

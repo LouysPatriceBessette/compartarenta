@@ -1,6 +1,8 @@
 ## Why
 
-Compartarenta needs a **Vehicle** module (`vehicle`) that covers any personally owned conveyance — car, truck, motorcycle, boat, etc. — with accurate odometer, fuel, maintenance, and violation tracking. Vehicle data is **owned and maintained by one fixed owner** per vehicle. Sharing that vehicle with others is a separate licensed module (`vehicle-sharing`); this change defines owner-side capabilities only.
+Compartarenta needs a **Vehicle** module (`vehicle`) for personally owned **land conveyances** — car, truck, motorcycle — with accurate odometer, fuel, maintenance, and violation tracking. Vehicle data is **owned and maintained by one fixed owner** per vehicle. Sharing that vehicle with others is a separate licensed module (`vehicle-sharing`); this change defines owner-side capabilities only.
+
+**Boat** vehicles (engine hour meter / horomètre) are **deferred from the initial release** — see `design.md` § Decisions and tasks §10.5 / §15.
 
 This change **supersedes** the monolithic `car-sharing-module` change for all owner-side vehicle semantics. Reservation/booking is **deferred** (see `dev-ideas/2026-06-27-wish-list.md`).
 
@@ -9,12 +11,13 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 - Introduce the **`vehicle`** product module with stable identifier `vehicle` (replacing informal `car-sharing` / `car` naming).
 - Model **one fixed owner per vehicle**; ownership does not transfer inside the app (sale handled via export/import of vehicle data by the buyer).
 - Support **up to three vehicles per owner** (product cap in `vehicle-domain-model`).
-- Owner-side tracking:
+- Owner-side tracking (initial release — **land vehicles**):
   - fuel purchases and full-tank–anchored consumption (both Propriétaire and Emprunteur may mark full-tank anchors on shared vehicles — see `vehicle-sharing-module`)
-  - odometer or **horometer** (boats) logs with **required photo per reading**, monotonic validation, positive/negative gap attribution
+  - **odometer** logs with **meter photo when the reading changes** (known-unchanged shortcut at session start only), monotonic validation, positive/negative gap attribution
   - maintenance / repairs log with **owner-only** service reminders (e.g., oil change at N km)
   - traffic violations log
   - lifetime vehicle metrics (total distance, consumption history)
+- **Deferred (future release):** **boat** kind with **engine hour meter (horomètre)**, hour-based usage, and boat-specific consumption — see `design.md`.
 - **Vehicle sale export** strips sharing links, enterer attribution, and usage ratios; buyer import receives factual history only.
 - Keep derived metrics deterministic from stored facts.
 
@@ -22,7 +25,7 @@ This change **supersedes** the monolithic `car-sharing-module` change for all ow
 
 ### New Capabilities
 
-- `vehicle-domain-model`: Vehicles, fixed owner, vehicle kind (car, truck, motorcycle, boat, …), owner use sessions, owner-side expenses, facts vs derived metrics.
+- `vehicle-domain-model`: Vehicles, fixed owner, vehicle kind (**car, truck, motorcycle** at initial release; **boat** deferred), owner use sessions, owner-side expenses, facts vs derived metrics.
 - `odometer-logging`: Odometer before/after per use; monotonic validation per vehicle; distance derivation.
 - `vehicle-odometer-gap-attribution`: Positive gap prompt; Unknown durable + Propriétaire notify; negative gap + photo verify; Propriétaire-only revision (informational notifications).
 - `fuel-purchase-tracking`: Fuel purchase facts linked to the vehicle; full-tank anchors for consumption.

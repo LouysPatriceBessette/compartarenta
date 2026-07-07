@@ -1,20 +1,20 @@
 ## Implementation status (2026-07-01)
 
-Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration, boat consumption model (wishlist non-blocking for store release).
+Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration. **Boat kind and horometer UX deferred** from initial release (§10.5, §15).
 
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
 ## 1. Domain model & storage
 
 - [x] 1.1 Define Vehicle, VehicleUse, FuelPurchase, MaintenanceEvent, TrafficViolation entities with fixed owner
-- [x] 1.2 Support vehicle kinds (car, truck, motorcycle, boat) as metadata
+- [x] 1.2 Support vehicle kinds car, truck, motorcycle at initial release (`vehicle-domain-model`); **boat deferred** (§15)
 - [x] 1.3 Implement local persistence scoped by owner; multi-vehicle per owner
 - [ ] 1.3b Enforce cap of three owned vehicles per Propriétaire (`vehicle-domain-model`)
 - [x] 1.4 Implement audit-friendly odometer correction (flag + note)
 
 ## 2. Odometer & distance
 
-- [x] 2.1 Owner use flow: start/end odometer with required photo, distance derivation
+- [x] 2.1 Owner use flow: start/end meter readings with photo rules (known-unchanged sentinel at unchanged session start; photo always at session end), distance derivation
 - [x] 2.2 Monotonic / negative-gap flow per `vehicle-odometer-gap-attribution`
 - [x] 2.3 Attribute uses to Propriétaire or Emprunteur Contact (sharing path)
 - [x] 2.4a Positive/negative gap detection, confirm dialog, `unknown` gap record, verification journal entry, **Corrections en attente** (owner), resolution forms (correct previous/trigger reading, add/split sessions), **Correction appliquée** journal, `resolvedAt` + gap delete on resolve (2026-07-01)
@@ -74,7 +74,7 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 
 ## 9. Oil change interval (vehicle-specific)
 
-- [x] 9.1 Add-vehicle form: ×1000 km/miles (or 50–500 h boat), blur validation, store as interval tenths on `oil` maintenance rule only (`other_fluids` journal-only).
+- [x] 9.1 Add-vehicle form: ×1000 km/miles blur validation, store as interval tenths on `oil` maintenance rule only (`other_fluids` journal-only). Boat hour-interval validation (50–500 h) deferred with §15.
 
 ## 10. Driving-condition consumption (road vehicles)
 
@@ -82,7 +82,7 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 - [x] 10.2 Tank-to-tank NNLS fit for per-condition L/100 km (minimum two full-tank intervals with session mix data)
 - [x] 10.3 Rolling window of five plein→plein intervals; reliability gradation (none / preliminary / reliable / very reliable) with user-facing messages
 - [x] 10.4 Persist reliable+ estimate history (`VehicleConsumptionEstimateHistory`); show on statistics screen
-- [ ] 10.5 Boat-specific operating-condition mix and consumption model (horometer / marine use patterns — separate from road route/city/traffic)
+- [ ] 10.5 Boat-specific operating-condition mix and consumption model (horometer / marine use patterns — **deferred**; see `design.md` § Decisions)
 
 ## 11. Vehicle notifications (deferred)
 
@@ -110,3 +110,12 @@ Single-device scenarios after programmatic seed + clock push (`docs/qa-android-e
 - [x] 14.2 Vehicle seed helpers + postconditions (`qa_vehicle_seed_helpers.dart`, `qa_vehicle_consumption_seed.dart`, `qa_scenario_seed.dart`, matching tests).
 - [x] 14.3 Hub semantics for consumption reliability and per-condition breakdown (`qa_vehicle_semantics.dart`, `vehicle_module_hub_screen.dart`).
 - [ ] 14.4 Sharing-hub and multi-role scenarios (invite, accept, borrower session, gap notify).
+
+## 15. Boat vehicles (deferred from initial release)
+
+**Decision (2026-07-06):** initial store release supports **car, truck, motorcycle** only. Boat registration, horometer UX, hour-based maintenance preview, and boat consumption (§10.5) ship in a **future release**. Domain enum may retain `boat` for forward compatibility; v1 product surfaces must not offer boat until this section is delivered.
+
+- [x] 15.1 Hide **boat** in add-vehicle kind picker until boat release ships (`VehicleKind.userSelectableKinds`)
+- [ ] 15.2 Horometer labels, session forms, hub cards (engine hours), and sharing paths per deferred `odometer-logging` / `vehicle-domain-model` requirements
+- [ ] 15.3 Hour-based maintenance alert preview and oil-change interval validation (50–500 h)
+- [ ] 15.4 Boat consumption model (depends on §10.5)

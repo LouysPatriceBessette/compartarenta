@@ -8,7 +8,7 @@ When the user taps **Vehicle** on the app home and holds **`vehicle`** entitleme
 ### Requirement: Hub section — My vehicles
 The hub SHALL include a **My vehicles** section listing each **owned** vehicle as a card (or equivalent row). For each vehicle, the card SHOULD surface at minimum:
 
-- **Current mileage** (or **engine hours** for boats — horometer per `odometer-logging`)
+- **Current mileage** (odometer)
 - **Current average consumption** (when sufficient data exists; otherwise an explicit insufficient-data state per `vehicle-consumption-metrics`)
 - **Alert tiles** (see `vehicle-maintenance-alert-tiles`)
 
@@ -17,10 +17,6 @@ Tapping a vehicle card SHOULD open a **vehicle detail** surface (implementation-
 #### Scenario: Owner sees owned fleet summary
 - **WHEN** a Propriétaire with two owned vehicles opens the Vehicle module hub
 - **THEN** both vehicles appear under **My vehicles** with current mileage and consumption summary when data allows
-
-#### Scenario: Boat shows hours not km on card
-- **WHEN** the vehicle kind is boat
-- **THEN** the card shows engine hours using localized **Horomètre** / **Engine hour meter** / **Cronómetro del motor** labels
 
 ### Requirement: Hub section — Statistics
 The hub SHALL include a **Statistics** entry or section scoped to **all owned vehicles** (with optional per-vehicle filter in implementation). Statistics SHOULD expose at minimum:
@@ -38,7 +34,7 @@ Exact charts vs list rows are **not** prescribed; numbers must match domain spec
 ### Requirement: Hub row — Quick actions
 The hub SHALL expose quick-access actions that launch the shared forms in `vehicle-quick-actions-ui`:
 
-- Odometer / horometer reading
+- Odometer reading
 - Fuel purchase
 - Maintenance performed
 - Damage or violation report

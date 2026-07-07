@@ -7,7 +7,7 @@ Shared quick actions (localized labels; order MAY match hub layout):
 
 | Quick action | Purpose |
 | --- | --- |
-| **Odometer / horometer reading** | Before/after or standalone reading tied to a vehicle use or fuel event |
+| **Odometer reading** | Before/after or standalone reading tied to a vehicle use or fuel event |
 | **Fuel purchase** | Cost, volume optional, meter reading, full-tank flag |
 | **Maintenance performed** | Service event (category, cost, notes, optional attachment) |
 | **Damage or violation report** | Damage note and/or traffic violation facts |

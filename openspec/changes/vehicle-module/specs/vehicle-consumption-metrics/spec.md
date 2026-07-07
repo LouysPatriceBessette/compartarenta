@@ -2,8 +2,8 @@
 
 ### Requirement: Owner sees lifetime and windowed vehicle metrics
 On the **Propriétaire's** device, the system SHALL compute and display:
-- total usage over the vehicle lifetime (distance for land vehicles, engine hours for boats) and over selectable windows
-- consumption per km (land) or per engine-hour window (boat) using full-tank anchors (see `fuel-purchase-tracking`)
+- total distance over the vehicle lifetime and over selectable windows
+- consumption per km using full-tank anchors (see `fuel-purchase-tracking`)
 - methodology / explainability for each displayed metric
 
 These metrics SHALL include distance from **all** attributed uses (owner and approved borrowers).

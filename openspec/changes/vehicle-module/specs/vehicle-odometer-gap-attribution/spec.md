@@ -16,7 +16,7 @@ When the user saves a **session start** reading **greater than** the vehicle's *
 \text{gap} = \text{startReading} - \text{latestReading}
 \]
 
-using the vehicle's meter unit (km for odometer, engine hours for horometer).
+using the vehicle's odometer unit (km or mi per vehicle settings).
 
 If `gap` is zero, no attribution prompt is required.
 
@@ -32,7 +32,7 @@ If `gap` is zero, no attribution prompt is required.
 - **THEN** no gap attribution prompt is shown
 
 ### Requirement: Negative gap handling with photo verification
-When a new meter reading is **lower than** the vehicle's latest stored reading, the system SHALL treat this as a **negative gap** (reading decreased). Each reading MUST include a required odometer/horometer **photo** per `odometer-logging`; negative-gap handling relies on those photos for visual verification.
+When a new meter reading is **lower than** the vehicle's latest stored reading, the system SHALL treat this as a **negative gap** (reading decreased). The new reading MUST follow the meter photo rules in `odometer-logging` (photo file required when the value changed; session end always requires a photo). Negative-gap handling relies on those photos for visual verification when a photo file is present.
 
 If the acting user is **not** the Propriétaire, the app SHALL **notify the Propriétaire** so they can visually verify the odometer photos for the new reading and the prior reading. The notification MUST NOT be sent when the Propriétaire is the acting user (**no self-notification**).
 
@@ -45,7 +45,7 @@ The app MUST NOT provide an in-app contestation workflow; participants resolve d
 
 #### Scenario: Emprunteur enters lower reading
 - **WHEN** an Emprunteur saves a session reading lower than the latest stored reading
-- **THEN** the reading is saved with required photo(s)
+- **THEN** the reading is saved with a photo file per `odometer-logging` (value changed from baseline)
 - **THEN** the Propriétaire is notified to verify the photos for the new and prior readings
 
 #### Scenario: Propriétaire chooses to maintain lower reading

@@ -41,7 +41,7 @@ Depends on (will require, at the time the handshake actually runs):
 
 | Module | Identifier | Role |
 | --- | --- | --- |
-| **Véhicule** | `vehicle` | Owner: register vehicles (car, truck, motorcycle, boat, …), full history, maintenance reminders, export on sale |
+| **Véhicule** | `vehicle` | Owner: register land vehicles (car, truck, motorcycle), full history, maintenance reminders, export on sale (**boat deferred**) |
 | **Partage de véhicule** | `vehicle-sharing` | Collaboration: owners who share need `vehicle` + `vehicle-sharing`; borrowers may hold `vehicle-sharing` only |
 
 When this step starts:

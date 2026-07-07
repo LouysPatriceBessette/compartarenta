@@ -11,8 +11,8 @@ The system SHALL represent the **vehicle** module using at least:
 
 Borrower-attributed sessions and sharing links are defined in `vehicle-sharing-module`.
 
-#### Scenario: Owner creates a vehicle
-- **WHEN** a user with effective `vehicle` entitlement adds a new vehicle and selects its kind (e.g., car, truck, motorcycle, boat)
+#### Scenario: Owner creates a land vehicle
+- **WHEN** a user with effective `vehicle` entitlement adds a new vehicle and selects its kind (car, truck, or motorcycle)
 - **THEN** the system persists a vehicle record with that user as the **fixed owner**
 - **THEN** the vehicle is available for owner-side logging and, if the user also holds `vehicle-sharing`, for sharing setup
 
@@ -38,13 +38,10 @@ The system SHALL allow one owner to create and maintain at most **three** vehicl
 - **THEN** the system blocks creation
 - **THEN** the user sees clear guidance that the limit is three vehicles per Propriétaire
 
-### Requirement: Vehicle kinds select meter type
-The system SHALL record a **vehicle kind** (at minimum: car, truck, motorcycle, boat; extensible). Land kinds use **odometer** (km/mi). **Boat** uses **engine hour meter** (horometer) readings instead of road distance for usage and monotonic validation.
+### Requirement: Initial-release vehicle kinds use odometer
+At **initial release**, the system SHALL support **car**, **truck**, and **motorcycle** kinds. Each uses **odometer** readings (km or mi) for usage, monotonic validation, and distance derivation.
 
-#### Scenario: Boat uses engine hours not road odometer
-- **WHEN** an owner registers a boat
-- **THEN** use sessions record engine hour meter before/after readings
-- **THEN** consumption metrics use hours-based windows where applicable
+The domain model MAY remain **extensible** for additional kinds without a new product module.
 
 #### Scenario: Motorcycle uses odometer rules
 - **WHEN** an owner logs odometer readings for a motorcycle
@@ -64,3 +61,15 @@ Operational queries for the `vehicle` module SHALL return only vehicles owned by
 - **WHEN** a user views their owned vehicles
 - **THEN** vehicles owned by other Contacts are not listed as owned
 - **THEN** vehicles shared with the user appear only in the sharing module surfaces
+
+## DEFERRED Requirements (boat — future release)
+
+> **Decision (2026-07-06):** boat is **not** in scope for the initial release. See `design.md` § Decisions.
+
+### Requirement: Boat kind uses engine hour meter (deferred)
+When the boat release ships, the system SHALL support a **boat** vehicle kind. **Boat** uses **engine hour meter** (horometer) readings instead of road distance for usage and monotonic validation.
+
+#### Scenario: Boat uses engine hours not road odometer
+- **WHEN** an owner registers a boat
+- **THEN** use sessions record engine hour meter before/after readings
+- **THEN** consumption metrics use hours-based windows where applicable

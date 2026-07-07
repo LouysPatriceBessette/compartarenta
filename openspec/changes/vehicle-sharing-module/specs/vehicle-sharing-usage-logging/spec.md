@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Approved Emprunteurs and Propriétaires log vehicle uses
-The system SHALL allow the **Propriétaire** or an **approved Emprunteur** to create a vehicle use session on a shared vehicle with meter readings before/after (odometer or horometer per `odometer-logging`), attributed to the acting Contact.
+The system SHALL allow the **Propriétaire** or an **approved Emprunteur** to create a vehicle use session on a shared **land** vehicle with **odometer** readings before/after (per `odometer-logging`), attributed to the acting Contact.
 
 **Role and ownership rules** (`vehicle-usage-role-separation`):
 

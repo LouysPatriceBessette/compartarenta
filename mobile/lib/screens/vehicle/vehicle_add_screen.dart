@@ -235,7 +235,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
           DropdownButtonFormField<VehicleKind>(
             initialValue: _kind,
             decoration: InputDecoration(labelText: l10n.vehicleFieldKind),
-            items: VehicleKind.values
+            items: VehicleKind.userSelectableKinds
                 .map(
                   (k) => DropdownMenuItem(
                     value: k,

@@ -5,11 +5,13 @@ The system SHALL allow the **Propriétaire** or an **approved Emprunteur** on th
 - date/time
 - cost
 - optional volume
-- meter reading at purchase (odometer or horometer per vehicle kind)
+- meter reading at purchase (odometer)
 - full-tank boolean
 - vehicle association
 
 Both parties MAY mark a purchase as a **full-tank anchor** because anchors are critical for consumption calculations.
+
+When a fuel purchase records an odometer reading, the system SHALL require a **photo of the odometer display** at save time (same proof rule as `odometer-logging` for standalone readings).
 
 #### Scenario: Propriétaire records a fuel purchase
 - **WHEN** the Propriétaire saves a fuel purchase for their vehicle
@@ -25,7 +27,7 @@ Both parties MAY mark a purchase as a **full-tank anchor** because anchors are c
 - **THEN** the system stores the purchase as a full-tank anchor for consumption calculations
 
 ### Requirement: Full-tank anchors drive consumption calculations
-The system SHALL treat full-tank entries as anchors for consumption per km (or per hour for boats) across the **vehicle lifetime** on the Propriétaire's view and within Emprunteur reconciliation windows on the sharing side.
+The system SHALL treat full-tank entries as anchors for consumption per km across the **vehicle lifetime** on the Propriétaire's view and within Emprunteur reconciliation windows on the sharing side.
 
 #### Scenario: Consumption uses the last two full-tank anchors
 - **WHEN** a vehicle has at least two fuel purchases marked full tank
