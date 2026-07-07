@@ -1,0 +1,24 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Runs after proposer send — missing delivery shows empty wizard, not invitee accept.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 45000
+- tapOn:
+    id: "qa-home-housing"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-invite-recipient-accept"
+    timeout: 15000
+    optional: true
+- assertNotVisible:
+    id: "qa-housing-invite-recipient-accept"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-choose-contact"
+    timeout: 45000
+- assertVisible:
+    id: "qa-housing-wizard-choose-contact"

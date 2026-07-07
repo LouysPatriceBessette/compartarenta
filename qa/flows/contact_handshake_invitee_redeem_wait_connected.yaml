@@ -24,4 +24,4 @@ appId: com.compartarenta.compartarenta.dev
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-monica-qa"
-    timeout: 120000
+    timeout: 45000

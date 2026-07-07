@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../contacts/avatar_palette.dart';
 import '../../contacts/contact_display.dart';
 import '../../db/app_database.dart';
+import '../../debug/qa_contact_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/app_dialog.dart';
 import 'generate_invitation_screen.dart';
@@ -60,9 +61,13 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            qaContactSemantics(
+              identifier: kQaContactsPickerSheet,
+              header: true,
+              child: Text(
               l10n.contactsPickerTitle,
               style: Theme.of(context).textTheme.titleLarge,
+            ),
             ),
             const SizedBox(height: 8),
             Flexible(
@@ -82,7 +87,12 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
                     separatorBuilder: (_, _) => const Divider(height: 0),
                     itemBuilder: (context, index) {
                       final contact = contacts[index];
-                      return ListTile(
+                      return qaContactSemantics(
+                        identifier: qaContactsRowSemanticsId(
+                          contact.effectiveDisplayName,
+                        ),
+                        button: true,
+                        child: ListTile(
                         leading: CircleAvatar(
                           child: Icon(AvatarPalette.iconFor(contact.avatarId)),
                         ),
@@ -90,6 +100,7 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
                         subtitle: Text(_kindLabel(l10n, contact)),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.of(context).pop(contact),
+                      ),
                       );
                     },
                   );

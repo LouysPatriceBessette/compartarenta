@@ -1,0 +1,26 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Recipient received proposal — invite screen with accept button (no accept tap).
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 45000
+- tapOn:
+    id: "qa-home-housing"
+- extendedWaitUntil:
+    visible: "Proposition d'invitation"
+    timeout: 90000
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-invite-recipient-accept"
+    direction: DOWN
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-invite-recipient-accept"
+    timeout: 30000
+- assertNotVisible:
+    id: "qa-housing-wizard-choose-contact"
+- takeScreenshot: proposal_received

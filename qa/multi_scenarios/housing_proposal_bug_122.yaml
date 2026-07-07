@@ -1,0 +1,15 @@
+id: housing_proposal_bug_122
+description: Probe bug 1.22 — duplicate Monica and/or missing proposal after proposer identity drift (3 attempts)
+device_date: "2026-07-07T09:00:00"
+timezone: America/Toronto
+coordinator: housing_proposal
+mode: bug_122_probe
+attempts: 3
+role_proposer:
+  avd: Monica-QA
+  seed: contact_handshake_inviter
+  flow: qa/flows/housing_proposal_proposer_send.yaml
+role_recipient:
+  avd: Louys-QA
+  seed: contact_handshake_invitee
+  flow: qa/flows/housing_proposal_recipient_wait_received.yaml

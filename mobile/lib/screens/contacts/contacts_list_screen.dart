@@ -273,17 +273,50 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                     child: const _ContactsEmptyState(),
                   );
                 }
-                return ListView.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const Divider(height: 0),
-                  itemBuilder: (context, index) {
-                    final contact = items[index];
-                    return _ContactTile(
-                      contact: contact,
-                      onTap: () =>
-                          navigateTo(context, '/contacts/${contact.id}'),
-                    );
-                  },
+                final duplicateConnectedRowIds =
+                    _duplicateConnectedRowSemanticsIds(items);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final rowId in duplicateConnectedRowIds)
+                      qaContactSemantics(
+                        identifier:
+                            qaContactsDuplicateConnectedSemanticsId(rowId),
+                        label: rowId,
+                        child: Material(
+                          color:
+                              Theme.of(context).colorScheme.errorContainer,
+                          child: ListTile(
+                            dense: true,
+                            title: Text(
+                              'QA duplicate connected contact ($rowId)',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const Divider(height: 0),
+                        itemBuilder: (context, index) {
+                          final contact = items[index];
+                          return _ContactTile(
+                            contact: contact,
+                            onTap: () => navigateTo(
+                              context,
+                              '/contacts/${contact.id}',
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -344,6 +377,20 @@ class _IncomingBanner extends StatelessWidget {
       },
     );
   }
+}
+
+/// Connected contacts that share a display-name slug (bug 1.22: duplicate Monica).
+List<String> _duplicateConnectedRowSemanticsIds(List<Contact> items) {
+  final counts = <String, int>{};
+  for (final contact in items) {
+    if (contact.kind != 'connected') continue;
+    final rowId = qaContactsRowSemanticsId(contact.effectiveDisplayName);
+    counts[rowId] = (counts[rowId] ?? 0) + 1;
+  }
+  return counts.entries
+      .where((e) => e.value > 1)
+      .map((e) => e.key)
+      .toList(growable: false);
 }
 
 class _ContactsEmptyState extends StatelessWidget {

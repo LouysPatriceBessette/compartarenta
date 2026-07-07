@@ -1,0 +1,13 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-invite-recipient-accept"
+    direction: DOWN
+    timeout: 90000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-invite-recipient-accept"
+    timeout: 30000

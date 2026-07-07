@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# After drift, clean state: exactly one connected Monica row (no second index).
+- runFlow:
+    file: _on_contacts_hub.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-monica-qa"
+    timeout: 30000
+- assertNotVisible:
+    id: "qa-contacts-row-monica-qa"
+    index: 1
+- assertNotVisible:
+    id: "qa-contacts-duplicate-connected-monica-qa"

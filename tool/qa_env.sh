@@ -314,6 +314,31 @@ qa_pull_handshake_invitation_code() {
     2>/dev/null | tr -d '\r'
 }
 
+qa_clear_logcat_on_serial() {
+  local serial="$1"
+  adb -s "${serial}" logcat -c >/dev/null 2>&1 || true
+}
+
+qa_logcat_matches_on_serial() {
+  local serial="$1"
+  local pattern="$2"
+  adb -s "${serial}" logcat -d 2>/dev/null | grep -Fq "${pattern}"
+}
+
+qa_wait_for_logcat_on_serial() {
+  local serial="$1"
+  local pattern="$2"
+  local timeout_sec="${3:-120}"
+  local attempt
+  for attempt in $(seq 1 "${timeout_sec}"); do
+    if qa_logcat_matches_on_serial "${serial}" "${pattern}"; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
 qa_maestro_test_on_serial() {
   local serial="$1"
   local flow_path="$2"
@@ -321,6 +346,25 @@ qa_maestro_test_on_serial() {
   shift 3
   mkdir -p "${artifact_dir}"
   maestro test --udid "${serial}" "${flow_path}" --test-output-dir "${artifact_dir}" "$@"
+}
+
+# Maestro --test-output-dir: avoid doubling COMPARTARENTA_MULTI_ARTIFACT_ROOT when the
+# label is already an absolute path under that root (e.g. attempt-002/... passed as
+# ${ARTIFACT_ROOT}/attempt-002/...).
+qa_maestro_artifact_dir() {
+  local label="$1"
+  local root="${COMPARTARENTA_MULTI_ARTIFACT_ROOT:-}"
+  if [[ -z "${root}" ]]; then
+    echo "${label}"
+    return 0
+  fi
+  if [[ "${label}" == "${root}/"* || "${label}" == "${root}" ]]; then
+    echo "${label}"
+  elif [[ "${label}" == /* ]]; then
+    echo "${label}"
+  else
+    echo "${root}/${label}"
+  fi
 }
 
 qa_seed_scenario_on_serial() {

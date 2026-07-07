@@ -1,0 +1,24 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Bug 1.22: TWO connected Monica-QA rows on Louys after proposer identity drift.
+- runFlow:
+    file: _on_contacts_hub.yaml
+- takeScreenshot: contacts_list
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-duplicate-connected-monica-qa"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: "qa-contacts-row-monica-qa"
+      index: 1
+    direction: DOWN
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-monica-qa"
+      index: 1
+    timeout: 30000
+- assertVisible:
+    text: "Monica QA"
+    index: 1

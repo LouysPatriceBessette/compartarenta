@@ -27,8 +27,10 @@ _run_maestro() {
   local serial="$2"
   local flow="$3"
   shift 3
-  local out="${ARTIFACT_ROOT}/${label}"
-  echo "  maestro [${serial}] ${flow} $*"
+  local out
+  out="$(qa_maestro_artifact_dir "${label}")"
+  mkdir -p "${out}"
+  echo "  maestro [${serial}] ${flow} -> ${out}"
   timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" "$@"
 }
 
@@ -37,10 +39,11 @@ _run_maestro_probe() {
   local label="$1"
   local serial="$2"
   local flow="$3"
-  local out="${ARTIFACT_ROOT}/${label}"
+  local out
+  out="$(qa_maestro_artifact_dir "${label}")"
   local log="${out}/probe.log"
   mkdir -p "${out}"
-  echo "  probe [${serial}] ${flow}"
+  echo "  probe [${serial}] ${flow} -> ${out}"
   if timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" \
     >"${log}" 2>&1; then
     echo "  probe ${label}: symptom present"

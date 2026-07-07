@@ -157,6 +157,37 @@ COMPARTARENTA_QA_AVD_NAME=Monica-QA ./tool/melosw run qa:create-avd
 ./tool/melosw run qa:run-multi-scenario -- contact_handshake_bug_91
 ```
 
+**Housing proposal happy path (proposer Monica-QA + recipient Louys-QA, both Android):**
+
+The coordinator runs **sequentially**: Monica completes the full plan wizard and sends;
+Louys opens Housing, accepts the proposal, and lands on the **active agreement hub**
+(`qa-housing-active-hub`). Monica then asserts the same hub — not an invite screen
+showing “Louys Accepté” (unanimous activation remounts both devices to the hub).
+
+Rebuild the debug APK after changing QA semantics or flows (do not use `--skip-build`
+until a successful run with a fresh build):
+
+```bash
+./tool/melosw run qa:run-multi-scenario -- housing_proposal_happy_path
+```
+
+**Bug 1.22 probe (3 attempts, proposer identity drift, writes `bug_122_result.txt`):**
+
+After drift + reconnect, the coordinator asserts Louys has **two** connected Monica-QA
+rows (`qa-contacts-row-monica-qa` index **1**, plus banner
+`qa-contacts-duplicate-connected-monica-qa`) — not merely one visible row. Then sends
+the housing proposal. Reproduced when duplicate Monica and/or missing proposal UI. On first repro the
+coordinator **completes that attempt** (send + recipient artifacts) then **stops** — remaining
+attempts are not run.
+
+Maestro debug output is written under short paths such as
+`qa/artifacts/multi-housing_proposal_bug_122/<stamp>/attempt-001/handshake-after-drift/…`
+(no doubled artifact root).
+
+```bash
+./tool/melosw run qa:run-multi-scenario -- housing_proposal_bug_122
+```
+
 Manifests live under `qa/multi_scenarios/`. Each declares `role_*` blocks (AVD, seed, flow) and a `coordinator` script in `tool/coordinators/`. The inviter exports the invitation short code to `app_flutter/compartarenta_qa_handshake_code.txt` for the orchestrator to pass to the invitee Maestro flow (`INVITE_CODE`).
 
 **Relay / TLS note:** scenarios that hit the production relay (`https://sync.incoherences.org`) must keep `device_date` **inside the relay certificate validity window**. Housing settlement scenarios use 2027-08-11 for hub gating; contact-handshake manifests use the current calendar date instead — pushing the emulator past the cert `notAfter` yields `CERTIFICATE_VERIFY_FAILED: certificate has expired` on `establishRouting`, and Maestro will hang waiting for the invitation short code.

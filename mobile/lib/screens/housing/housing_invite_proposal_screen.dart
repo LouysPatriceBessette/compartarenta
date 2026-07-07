@@ -20,6 +20,7 @@ import 'housing_invite_sunburst.dart';
 import 'housing_proposal_expenses_detail_screen.dart';
 import '../../housing/housing_module_exit.dart';
 import '../../l10n/app_localizations.dart';
+import '../../debug/qa_housing_proposal_semantics.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
@@ -443,7 +444,7 @@ class _HousingInviteProposalScreenState
         l10n.housingInviteStatusRejected,
     };
 
-    return ChoiceChip(
+    final chip = ChoiceChip(
       selected: selected,
       onSelected: enabled
           ? (v) {
@@ -483,6 +484,16 @@ class _HousingInviteProposalScreenState
         ),
       ),
     );
+
+    if (showParticipantStatus &&
+        !isAuthorRoster &&
+        status == HousingInviteParticipantUiStatus.accepted) {
+      return qaHousingProposalSemantics(
+        identifier: qaHousingInviteParticipantAcceptedSemanticsId(label),
+        child: chip,
+      );
+    }
+    return chip;
   }
 
   @override
@@ -768,7 +779,9 @@ class _HousingInviteProposalScreenState
                     if (!isAuthor && canRespond && !hasActivePlan) ...[
                       const SizedBox(height: 24),
                       if (!_negotiateExpanded) ...[
-                        FilledButton(
+                        qaHousingProposalSemantics(
+                          identifier: kQaHousingInviteRecipientAccept,
+                          child: FilledButton(
                           onPressed: canRespond
                               ? (hasMissingPeerContacts
                                     ? _openMissingContactsHub
@@ -782,6 +795,7 @@ class _HousingInviteProposalScreenState
                                 ? l10n.housingInviteMissingContactsAction
                                 : l10n.housingInviteAcceptFull,
                           ),
+                        ),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(

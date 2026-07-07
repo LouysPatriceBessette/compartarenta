@@ -5,17 +5,17 @@ appId: com.compartarenta.compartarenta.dev
 - extendedWaitUntil:
     visible:
       id: "qa-home-contacts"
-    timeout: 90000
+    timeout: 45000
 - waitForAnimationToEnd:
-    timeout: 5000
+    timeout: 3000
 - tapOn:
     id: "qa-home-contacts"
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-empty-state"
-    timeout: 90000
+    timeout: 45000
     optional: true
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-invite-fab"
-    timeout: 90000
+    timeout: 45000

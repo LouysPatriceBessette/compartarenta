@@ -63,6 +63,7 @@
     - Participant `contactId` pointing at an obsolete handshake row while another row has the current peer key (related to **1.21**).
     - Android app sleep / cold start before poll (push wake not relied on in dev; Firebase API key errors on Android dev flavor).
     - Author looking at `housing:default` on the recipient device instead of `received:…` or workbench (UX confusion, not always transport failure).
+  - **Reproduced (Jul 2026, Android E2E):** Multi-device Maestro scenario `housing_proposal_bug_122` (`qa/multi_scenarios/housing_proposal_bug_122.yaml`, coordinator `tool/coordinators/housing_proposal.sh`). After proposer-only identity drift (Monica re-seeded and re-handshaken; Louys keeps prior contact rows), recipient shows **two connected Monica-QA contact rows** (`qa-contacts-duplicate-connected-monica-qa` banner). Verdict `REPRODUCED` on attempt 001 (`bug_122_result.txt`); same attempt completed send + recipient proposal UI. Run: `./tool/melosw run qa:run-multi-scenario -- housing_proposal_bug_122`. See `docs/qa-android-e2e.md`.
   - **Repro when still broken (drift):**
     1. Android and web connected through the relay.
     2. Restart `run:dev:web` and lose web-side data (or reset web DB / identity without matching Android contact cleanup).

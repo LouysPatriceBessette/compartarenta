@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# App already running — open Contacts list without cold start.
+- runFlow:
+    when:
+      visible:
+        id: "qa-home-contacts"
+    commands:
+      - tapOn:
+          id: "qa-home-contacts"
+      - waitForAnimationToEnd:
+          timeout: 3000
+- runFlow:
+    file: _return_to_contacts_list.yaml

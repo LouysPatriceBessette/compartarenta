@@ -9,6 +9,7 @@ import '../../housing/settlement/housing_settlement_window.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/proposals/plan_agreement_proposal_service.dart';
+import '../../debug/qa_housing_proposal_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../widgets/screen_body_padding.dart';
@@ -417,11 +418,14 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
                 ),
                 const SizedBox(height: 8),
                 for (final r in pending)
-                  _planCard(
+                  qaHousingProposalSemantics(
+                    identifier: kQaHousingWorkbenchPendingRow,
+                    child: _planCard(
                     context,
                     title: _pendingRowTitle(l10n, r),
                     date: r.sortDate,
                     onTap: () => _openInvitePreview(r.plan.id),
+                  ),
                   ),
                 const SizedBox(height: 24),
               ],

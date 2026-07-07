@@ -25,6 +25,7 @@ import '../../housing/housing_response_deadline_dialog.dart';
 import '../../housing/proposals/housing_agreement_period_conflict.dart';
 import '../../activity/relay_activity_log_service.dart';
 import '../../debug/web_dev_host_session.dart';
+import '../../debug/qa_housing_proposal_semantics.dart';
 import '../../debug/qa_wizard_expense_semantics.dart';
 import '../../housing/proposals/housing_proposal_transport_service.dart';
 import '../../housing/expense_form/expense_plan_line_form_screen.dart';
@@ -1530,9 +1531,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                           else
                             Expanded(
                               child: Semantics(
-                                identifier: kDebugMode && _stepIndex == 2
-                                    ? 'qa-housing-wizard-expenses-step'
-                                    : null,
+                                identifier: qaHousingWizardStepHeaderId(_stepIndex),
                                 header: true,
                                 child: Text(
                                 _housingStepTitles(l10n)[_stepIndex],
@@ -1808,7 +1807,10 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   Widget _stepParticipants() {
     final l10n = AppLocalizations.of(context);
     final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
-    return ListView(
+    return qaHousingProposalSemantics(
+      identifier: kQaHousingWizardParticipantsStep,
+      header: true,
+      child: ListView(
       padding: screenBodyScrollPadding(context),
       children: [
         if (_otherParticipantCount > 1) ...[
@@ -1840,6 +1842,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           onChooseContact: () => _chooseContactForParticipant(i),
         ),
       ],
+    ),
     );
   }
 
@@ -3389,7 +3392,9 @@ class _HousingContactParticipantCard extends StatelessWidget {
                   color: theme.colorScheme.error,
                 ),
               ),
-            FilledButton.icon(
+            qaHousingProposalSemantics(
+              identifier: kQaHousingWizardChooseContact,
+              child: FilledButton.icon(
               icon: const Icon(Icons.contacts),
               label: Text(
                 hasContact
@@ -3397,6 +3402,7 @@ class _HousingContactParticipantCard extends StatelessWidget {
                     : l10n.housingPlanChooseContactAction,
               ),
               onPressed: onChooseContact,
+            ),
             ),
           ],
         ),
@@ -3688,6 +3694,7 @@ class _SummaryViewState extends State<_SummaryView> {
         return Semantics(
           identifier: kDebugMode ? 'qa-housing-wizard-summary' : null,
           container: true,
+          explicitChildNodes: true,
           child: Column(
           children: [
             Expanded(
@@ -3951,9 +3958,12 @@ class _SummaryViewState extends State<_SummaryView> {
                       child: Text(l10n.housingPlanSummaryEditPlan),
                     ),
                     const SizedBox(height: 8),
-                    FilledButton(
+                    qaHousingProposalSemantics(
+                      identifier: kQaHousingWizardSummarySubmit,
+                      child: FilledButton(
                       onPressed: widget.onInvite,
                       child: Text(l10n.housingPlanSummaryInvite),
+                    ),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(

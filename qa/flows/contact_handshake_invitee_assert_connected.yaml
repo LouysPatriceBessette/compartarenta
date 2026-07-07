@@ -1,8 +1,7 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-- runFlow:
-    file: _return_to_contacts_list.yaml
+# Invitee redeem already showed the connected row — no back navigation.
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-monica-qa"
-    timeout: 120000
+    timeout: 45000

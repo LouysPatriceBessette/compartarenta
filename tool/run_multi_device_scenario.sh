@@ -226,6 +226,23 @@ if [[ "${MODE}" == "bug_91_probe" && -f "${ARTIFACT_ROOT}/bug_91_result.txt" ]];
       fi
       ;;
   esac
+elif [[ "${MODE}" == "bug_122_probe" && -f "${ARTIFACT_ROOT}/bug_122_result.txt" ]]; then
+  VERDICT="$(grep -E '^verdict=' "${ARTIFACT_ROOT}/bug_122_result.txt" | head -1 | cut -d= -f2-)"
+  case "${VERDICT}" in
+    COULD_NOT_REPRODUCE)
+      echo "Test PASSED | ${SCENARIO_ID} (verdict: COULD_NOT_REPRODUCE — delivery OK after drift)"
+      ;;
+    REPRODUCED)
+      echo "Test FAILED | ${SCENARIO_ID} (verdict: REPRODUCED — bug 1.22 missing proposal delivery)"
+      ;;
+    *)
+      if [[ "${COORD_EXIT}" -eq 0 ]]; then
+        echo "Test PASSED | ${SCENARIO_ID}"
+      else
+        echo "Test FAILED | ${SCENARIO_ID} (exit ${COORD_EXIT})"
+      fi
+      ;;
+  esac
 elif [[ "${COORD_EXIT}" -eq 0 ]]; then
   echo "Test PASSED | ${SCENARIO_ID}"
 else

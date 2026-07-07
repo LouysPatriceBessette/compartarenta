@@ -3,7 +3,7 @@ appId: com.compartarenta.compartarenta.dev
 - launchApp:
     stopApp: false
 - runFlow:
-    file: _return_to_contacts_list.yaml
+    file: _on_contacts_hub.yaml
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-louys-qa"

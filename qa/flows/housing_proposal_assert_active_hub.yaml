@@ -1,0 +1,13 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# App must already be running (stopApp: false). After unanimous acceptance both
+# co-participants land on the operational agreement hub — not the invite screen.
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-active-hub"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: active_hub

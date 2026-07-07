@@ -1,8 +1,7 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-- runFlow:
-    file: _return_to_contacts_list.yaml
+# Inviter standby/redeem already navigated here — row check only.
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-louys-qa"
-    timeout: 120000
+    timeout: 45000

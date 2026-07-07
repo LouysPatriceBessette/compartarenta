@@ -9,10 +9,10 @@ appId: com.compartarenta.compartarenta.dev
 - extendedWaitUntil:
     notVisible:
       id: "qa-contacts-invitation-short-code"
-    timeout: 180000
+    timeout: 60000
 - runFlow:
     file: _return_to_contacts_list.yaml
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-louys-qa"
-    timeout: 120000
+    timeout: 45000

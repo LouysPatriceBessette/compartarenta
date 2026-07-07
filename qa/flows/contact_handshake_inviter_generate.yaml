@@ -15,4 +15,4 @@ appId: com.compartarenta.compartarenta.dev
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-invitation-short-code"
-    timeout: 120000
+    timeout: 60000

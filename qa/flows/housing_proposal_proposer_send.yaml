@@ -1,0 +1,85 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 45000
+- tapOn:
+    id: "qa-home-housing"
+# Step 0 — pick co-participant from the contact picker bottom sheet.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-choose-contact"
+    timeout: 45000
+- tapOn:
+    text: "Choisir un contact"
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-picker-sheet"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 30000
+- tapOn:
+    id: "qa-contacts-row-louys-qa"
+- extendedWaitUntil:
+    notVisible:
+      id: "qa-contacts-picker-sheet"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-dates-step"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-add-expense"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-expense-form"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-expense-name"
+- inputText: "Loyer"
+- tapOn:
+    id: "qa-housing-expense-amount"
+- inputText: "1000"
+- runFlow:
+    file: _save_expense_line.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-rules-step"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-next"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-summary"
+    timeout: 30000
+- tapOn:
+    text: "Soumettre mon plan"
+- extendedWaitUntil:
+    visible: "Délai de réponse"
+    timeout: 30000
+- tapOn: "Continuer"
+- runFlow:
+    file: _dismiss_notification_prompt.yaml
+# Send completion is verified by the coordinator via logcat (snackbar text is
+# "Proposition envoyée à N participant(s)." and may dismiss before Maestro sees it).
