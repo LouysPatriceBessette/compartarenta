@@ -1,0 +1,133 @@
+---
+description: QA scenarios — understand the bug first, Maestro occurrence traps, read reference scenario before copying fixes
+alwaysApply: true
+---
+
+# QA scenario reference and objective discipline
+
+## I must always understand the problem I am trying to fix
+
+Before editing product code, coordinators, flows, or closing a bug:
+
+1. **State the bug in one sentence** — symptom, setup, surface (which role, which screen), **not** the fix you plan to ship.
+2. **State what “reproduced” and “fixed” mean** in observable terms for that bug.
+3. If I cannot do (1)–(2), **read** OpenSpec task, probe flows, coordinator comments, and `docs/qa-android-e2e.md` — **do not patch**.
+
+**Forbidden:** treating a delivery/happy-path pass as proof when the bug is on another surface (contacts list, routing, duplicate rows, etc.).
+
+### Bug 1.22 — binding definition (do not re-litigate)
+
+| | Definition |
+|---|---|
+| **Setup** | Louys keeps contacts; Monica is re-seeded (new crypto identity) and re-handshaken. |
+| **Bug** | Louys shows **two** connected « Monica QA » rows (old + new identity) — **not** “Monica visible”, not “proposal received”, not “hub OK”. |
+| **Repro** | Banner `qa-contacts-duplicate-connected-monica-qa` **and/or** `qa-contacts-row-monica-qa` at **index 1**. |
+| **Fixed** | Exactly **one** Monica row (`index 1` **not** visible, no banner) **then** housing delivery like `housing_proposal_happy_path`. |
+
+User correction (**7 Jul 2026**, session `65163901`): *« Maestro ne compte qu’une occurrence »* — after **two** failed probe versions in the same coordinator (v1: no duplicate check; v2: one `qa-contacts-row-monica-qa` visible treated as clean). **Do not repeat in a later session.**
+
+## Maestro: one visible match ≠ the bug symptom
+
+When several UI nodes share the same semantics id:
+
+- `assertVisible` / `extendedWaitUntil` on `id: "qa-contacts-row-monica-qa"` **without `index`** succeeds if **any one** row matches.
+- Duplicate-row bugs require **`index: 1`** (second occurrence), a **visible** duplicate banner id, or an explicit `assertNotVisible` on `index: 1` for the clean path.
+
+Before writing or interpreting a probe: ask *“Does this assertion distinguish one occurrence from two?”* If no → wrong test.
+
+## Restate the full test objective before editing
+
+For regression scenarios that add guards **before** a reference flow, the objective has **two** parts:
+
+1. **Symptom guard** — what must not happen (e.g. duplicate Monica).
+2. **Expected end state** — what must happen (e.g. same sequential delivery as `housing_proposal_happy_path`).
+
+If the user says “when the bug is gone, it’s the happy path”, part (2) is **reuse happy-path coordinator functions** (`_run_proposal_happy_path_once`), not a new partial path or probe-only delivery.
+
+## “Fix B like A was fixed” — mandatory checklist
+
+When the user says *« applique les correctifs du happy path sur bug_122 »* (or any “copy reference scenario”):
+
+1. **Read** reference manifest + `tool/coordinators/*.sh` + `docs/qa-android-e2e.md` for scenario **A** — **before** editing B.
+2. **Grep** both mode branches (`happy_path`, `bug_122`, `bug_122_continued`) for divergences: `inviter_pid`, `standby`, `sequential`, `_run_proposal_happy_path_once`, `recipient_pid`, parallel `&`.
+3. **List** every happy-path fix from the reference session (delivery order, logcat gates, scroll/accept, hub, handshake pattern) and tick each as **reused in B** or **intentionally different** (with reason).
+4. **Reuse** shared helpers; do not invent `_tolerant`, parallel standby with ignored failure, or partial delivery unless the user scoped probe-only.
+
+**Shared coordinator trap:** fixing a function used by happy path does **not** fix B if B’s `_run_*_once` still calls a different handshake, skips phases, or uses a different “clean” definition.
+
+## Parallel Maestro handshake — do not keep by default
+
+Do **not** use background `inviter-standby` + foreground `invitee-redeem` (`inviter_pid`, `sleep 1`, `wait`) when extending housing/contact scenarios.
+
+Established pattern: **`_connect_handshake_sequential`** — generate → redeem → inviter connected assert (invitee redeem authoritative; inviter assert may warn-only).
+
+Removing redundant `inviter-assert` / `invitee-assert` **while keeping parallel standby** is **not** this fix — that only hides flakes; it does not remove the race.
+
+Apply sequential handshake to **happy_path**, **bug_122**, and **bug_122_continued** unless a written, user-approved exception exists.
+
+## Probe vs full path — do not conflate “clean” definitions
+
+| Scenario kind | “Clean” means |
+|---|---|
+| **Regression probe** (`bug_122`) | Symptom absent (single Monica) + minimal delivery proof (proposal visible), **or** full happy path if user asked for parity — never “hub OK” alone when the bug is on contacts |
+| **Continued / post-fix** (`bug_122_continued`) | Symptom guard **then** `_run_proposal_happy_path_once` (send → accept → hub) |
+| **Happy path** | `_run_proposal_happy_path_once` only |
+
+Do not classify **delivery + hub** as “not bug 1.22” when **duplicate Monica** was never asserted.
+
+## Repro lifecycle
+
+When repro is detected mid-attempt:
+
+1. **Finish the current attempt** (send + recipient artifacts for evidence).
+2. **Stop** — do not run remaining attempts (`break` after `REPRODUCED`).
+
+## Closure and PASS claims
+
+No **resolved** / **PASS** when the log lacks the scenario’s **final phases** (e.g. no `delivery/`, no happy-path hub for continued mode). Probe “symptom absent” after infra/navigation failure is **not** a clean negative.
+
+---
+
+## Session lesson — `65163901` (7 Jul 2026): happy path fixed, bug_122 not
+
+Both scenarios were created **together**; happy path was corrected **turn by turn** with user logs; bug_122 **did not** inherit the same understanding.
+
+### Chronology of failures (same session)
+
+| When | What happened | Mistake |
+|---|---|---|
+| **Creation** | `bug_122` repro = missing proposal UI / logcat only | **Wrong symptom** — bug is **two Monica rows** on Louys contacts, not housing wizard empty |
+| **Delivery fix** (user: invité trop tôt) | Sequential send → recipient in `_run_proposal_send_*` | Shared — OK for delivery order |
+| **Happy path extended** | Accept + active hub (`_run_proposal_happy_path_once`) | `bug_122` still judged “clean” on delivery/hub, **not** duplicate contacts |
+| **User: « applique les correctifs happy path sur bug_122 »** (16:07) | Ported accept + hub into `bug_122` | **Did not** re-read handshake pattern; **did not** add duplicate probe; parallel `inviter-standby` **unchanged** |
+| **User saw 2× Monica on screen** | Attempts 1–2 classified **clean** | Sonde cherchait livraison/hub, pas doublons |
+| **Duplicate probe v1** | Banner id only / wrong navigation | Still not **two occurrences** |
+| **User: « Maestro ne compte qu’une occurrence »** | `invitee-assert` + probe without `index: 1` | **Second** comprehension failure on the **same** bug definition |
+| **Late “cleanup”** | Removed redundant handshake asserts | **Kept parallel standby** — user later had to name this as the **main** happy-path fix that was never ported |
+
+### What “apply happy path to bug_122” should have meant
+
+After duplicate probe exists and bug is absent:
+
+- `_connect_handshake_sequential` (not parallel standby)
+- `_run_proposal_happy_path_once` for end state (or explicit probe-only scope from user)
+- Same Maestro flows / logcat gates / scroll patterns as happy path
+- **Clean** = `assert_no_duplicate` + happy path completion — not “Monica visible once”
+
+### Promised vs delivered (do not repeat)
+
+| Said / implied | Actually shipped (65163901) |
+|---|---|
+| bug_122 aligned with happy path | Delivery phases partially shared; handshake still parallel; repro criterion wrong for hours |
+| Duplicate detection added | v1 missing; v2 inadequate (`visible` once); v3 only after user quote |
+| Apply happy path fixes | Accept/hub copied; **sequential handshake not copied** until a later session |
+
+---
+
+## Session lesson — `c3471a3a` (8 Jul 2026): `bug_122_continued`
+
+**Asked:** keep banner probe; when bug gone, run to end like happy path.
+
+**Failed:** `_connect_handshake_tolerant` reintroduced parallel standby; partial delivery instead of `_run_proposal_happy_path_once`; ignored prior *« Maestro ne compte qu’une occurrence »* from 65163901.
+
+**Required:** drift → duplicate probe (`index: 1` + banner) → **`_connect_handshake_sequential`** → **`_run_proposal_happy_path_once`**.
