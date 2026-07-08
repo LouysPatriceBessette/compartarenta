@@ -8,6 +8,8 @@ import 'package:compartarenta/app_root_navigator.dart';
 import 'package:compartarenta/housing/housing_navigation_intent.dart';
 import 'package:compartarenta/housing/proposals/housing_proposal_transport_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/device_binding_test_support.dart';
 import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.dart';
 import 'package:compartarenta/notifications/contact_notification_service.dart';
 import 'package:compartarenta/relay/handshake_orchestrator.dart';
@@ -204,6 +206,7 @@ Future<HousingPlanNavigationE2EContext> setUpHousingPlanNavigationE2E({
     invitations: ContactInvitationsRepository(db),
     contactNotifications: _FakeContactNotificationSink(),
     pollInterval: const Duration(days: 1),
+    deviceBinding: deviceBindingForTest(),
   );
   HandshakeOrchestrator.installForTesting(orchestrator);
 

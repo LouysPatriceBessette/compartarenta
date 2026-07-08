@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/device_binding_test_support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:compartarenta/contacts/contact_invitations_repository.dart';
@@ -239,6 +241,7 @@ void main() {
       contacts: ContactsRepository(louysDb),
       invitations: ContactInvitationsRepository(louysDb),
       contactNotifications: _FakeContactNotificationSink(),
+      deviceBinding: deviceBindingForTest('louys'),
     );
 
     await louysOrch.sendPlanPeerEstablishmentRequest(
@@ -253,6 +256,7 @@ void main() {
       contacts: ContactsRepository(roberrDb),
       invitations: ContactInvitationsRepository(roberrDb),
       contactNotifications: _FakeContactNotificationSink(),
+      deviceBinding: deviceBindingForTest('roberr'),
     );
     await roberrOrch.pollSteadyStateInboxes();
 
@@ -357,6 +361,7 @@ void main() {
       contacts: ContactsRepository(db),
       invitations: ContactInvitationsRepository(db),
       contactNotifications: _FakeContactNotificationSink(),
+      deviceBinding: deviceBindingForTest('orch'),
     );
     await orch.pollSteadyStateInboxes();
 

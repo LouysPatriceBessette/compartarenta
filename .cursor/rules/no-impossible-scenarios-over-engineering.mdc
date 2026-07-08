@@ -1,0 +1,34 @@
+---
+description: Pre-release app — do not over-engineer for backward compatibility or impossible legacy scenarios.
+alwaysApply: true
+---
+
+# No impossible-scenario over-engineering
+
+Compartarenta is in **embryonic pre-release development**. The app has **never** been shipped to production users. There is **no** installed base that requires migration from older protocol versions, envelope layouts, or database schemas beyond forward-only Drift upgrades on the developer's own devices.
+
+## Hard rule
+
+Do **not** add backward-compatibility branches, optional-field fallbacks, dual code paths, or "legacy run" handling for scenarios that **cannot exist yet** (e.g. "old clients still in the wild", "users on v1 envelope format", "upgrade from shipped build N-1").
+
+When the user or a task says to change a wire format, DB column, or API shape:
+
+- **Change it directly.** Update all call sites and tests in the same diff.
+- Do **not** keep readers that accept both old and new shapes unless the user explicitly asks for a transition window **and** states that older builds are actually in use somewhere.
+
+## What to do instead
+
+| Situation | Response |
+| --- | --- |
+| New required envelope field | Require it everywhere; update tests; no "missing field OK" decrypt path |
+| Schema bump | Forward-only Drift migration; no dual-read of old column names |
+| Agent tempted to cite "backward compat" | Stop — state that pre-release status makes it unnecessary |
+
+## Exceptions (rare; user must confirm)
+
+- **Relay** protocol changes that affect a **deployed** VPS relay binary (see `relay-changes-minimize.mdc`) — not the same as app backward compat.
+- User explicitly describes a **real** multi-version coexistence need (beta testers on two builds, etc.).
+
+## Agent self-check
+
+Before adding `if (oldFormat) … else …` or optional deprecated APIs: ask **"Is there evidence anyone runs the old shape?"** If no → implement the new shape only.

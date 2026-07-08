@@ -18,6 +18,8 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/device_binding_test_support.dart';
+
 class _DbForTesting extends AppDatabase {
   _DbForTesting(super.e) : super.forTesting();
 }
@@ -161,6 +163,7 @@ Future<ParticipationChangeMeshSide> spawnParticipationChangeMeshSide({
     invitations: invitations,
     contactNotifications: _FakeContactNotificationSink(),
     pollInterval: const Duration(seconds: 60),
+    deviceBinding: deviceBindingForTest(),
   );
   return ParticipationChangeMeshSide(
     db: db,

@@ -24,6 +24,8 @@ After re-reading, **state internally** (do not paste a checklist to the user unl
 
 ## User's test topology (binding facts)
 
+**Production product:** Android + iOS only. Flutter **web is not a production platform** — it exists solely so the developer can run extra app instances during local QA (`run:dev:web`). Agents must **not** design features, device identity, or bug fixes primarily for web unless the user explicitly asks about web dev QA in that message.
+
 Three machines. **Do not collapse them into one “dev machine”.**
 
 ### PC #1 (two terminals)

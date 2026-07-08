@@ -15,6 +15,8 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/device_binding_test_support.dart';
+
 /// QA topology: Monica (web inviter) uses `contact:handshake:*` rows; Louys and
 /// Roberr (invitees) use `contact:redeemed:*`. This test uses inviter-side
 /// handshake contact ids on the author's plan — matching production UI picks.
@@ -78,6 +80,7 @@ Future<_Side> _spawnSide({
     invitations: ContactInvitationsRepository(db),
     contactNotifications: _FakeContactNotificationSink(),
     pollInterval: const Duration(seconds: 60),
+    deviceBinding: deviceBindingForTest(),
   );
   return _Side(db: db, dbFile: dbFile, orchestrator: orchestrator);
 }

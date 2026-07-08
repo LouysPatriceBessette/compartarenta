@@ -7,6 +7,7 @@ import 'package:compartarenta/contacts/invitation_code.dart';
 import 'package:compartarenta/db/app_database.dart';
 import 'package:compartarenta/db/repositories/contacts_repository.dart';
 import 'package:compartarenta/notifications/contact_notification_service.dart';
+import 'package:compartarenta/device/device_binding_service.dart';
 import 'package:compartarenta/relay/envelopes.dart';
 import 'package:compartarenta/relay/handshake_orchestrator.dart';
 import 'package:compartarenta/relay/identity_keystore.dart';
@@ -47,6 +48,7 @@ Future<_Side> _spawnSide({
   Duration pollInterval = const Duration(seconds: 60),
   Future<({String displayName, String avatarId})> Function()?
   ackProfileForAutoAccept,
+  String? deviceBindingId,
 }) async {
   final id = _relayDbFileSeq++;
   final dbFile = File(
@@ -68,6 +70,9 @@ Future<_Side> _spawnSide({
     invitations: invitations,
     contactNotifications: notifications,
     pollInterval: pollInterval,
+    deviceBinding: DeviceBindingService(
+      fixedIdForTesting: deviceBindingId ?? 'binding-test-$id',
+    ),
   );
   orchestrator.ackProfileForAutoAccept = ackProfileForAutoAccept;
   return _Side(
@@ -605,6 +610,7 @@ void main() {
         displayName: 'Spoof',
         avatarId: 'spoof',
         echoedNonce: hexNonce,
+        deviceBindingId: 'binding-replay-test',
       ),
       invitationNonce: hexNonce,
       inviteeLongTermPrivateKey: await invitee.identity
@@ -683,6 +689,69 @@ void main() {
       );
     },
   );
+
+  test('re-handshake with same device binding merges connected contact', () async {
+    final relay = FakeRelayClient();
+    const sharedBinding = 'monica-device-binding-shared';
+    final inviter = await _spawnSide(
+      relay: relay,
+      identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      deviceBindingId: 'louys-binding',
+      ackProfileForAutoAccept: () async => (
+        displayName: 'Louys',
+        avatarId: 'mdi:louys',
+      ),
+    );
+    final inviteeFirst = await _spawnSide(
+      relay: relay,
+      identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => 0x20 + i)),
+      deviceBindingId: sharedBinding,
+    );
+
+    final invite = await inviter.orchestrator.generateInvitation(
+      validFor: const Duration(hours: 1),
+      stubDisplayName: 'Monica',
+      stubAvatarId: 'mdi:monica',
+    );
+    final code = (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+    await inviteeFirst.orchestrator.redeemInvitation(
+      code: code,
+      selfDisplayName: 'Monica',
+      selfAvatarId: 'mdi:monica',
+    );
+    await inviter.orchestrator.processAllPendingHandshakes();
+    await inviteeFirst.orchestrator.processAllPendingHandshakes();
+
+    final firstContacts = await inviter.contacts.list();
+    expect(firstContacts.where((c) => c.kind == 'connected').length, 1);
+    final firstContactId = firstContacts.first.id;
+
+    final inviteeSecond = await _spawnSide(
+      relay: relay,
+      identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => 0x40 + i)),
+      deviceBindingId: sharedBinding,
+    );
+    final invite2 = await inviter.orchestrator.generateInvitation(
+      validFor: const Duration(hours: 1),
+      stubDisplayName: 'Monica',
+      stubAvatarId: 'mdi:monica',
+    );
+    final code2 =
+        (parseInvitationCode(invite2.shortCode) as InvitationCodeOk).code;
+    await inviteeSecond.orchestrator.redeemInvitation(
+      code: code2,
+      selfDisplayName: 'Monica',
+      selfAvatarId: 'mdi:monica',
+    );
+    await inviter.orchestrator.processAllPendingHandshakes();
+    await inviteeSecond.orchestrator.processAllPendingHandshakes();
+
+    final after = await inviter.contacts.list();
+    final connected = after.where((c) => c.kind == 'connected').toList();
+    expect(connected.length, 1);
+    expect(connected.single.id, firstContactId);
+    expect(connected.single.peerDeviceBindingId, sharedBinding);
+  });
 }
 
 List<int> _hexDecode(String hex) {

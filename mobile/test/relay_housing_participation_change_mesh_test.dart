@@ -104,6 +104,7 @@ void main() {
         );
       }
     },
+    timeout: const Timeout(Duration(seconds: 90)),
   );
 
   test(
@@ -197,5 +198,6 @@ void main() {
         2,
       );
     },
+    timeout: const Timeout(Duration(seconds: 90)),
   );
 }

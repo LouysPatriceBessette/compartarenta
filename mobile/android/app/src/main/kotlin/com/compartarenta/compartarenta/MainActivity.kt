@@ -14,10 +14,19 @@ import java.io.OutputStream
 class MainActivity : FlutterActivity() {
     companion object {
         private const val CHANNEL = "com.compartarenta/public_documents"
+        private const val DEVICE_BINDING_CHANNEL = "com.compartarenta/device_binding"
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEVICE_BINDING_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "collectSignals" ->
+                        result.success(DeviceBindingSignals.collect(applicationContext))
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {

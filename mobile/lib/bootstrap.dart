@@ -20,6 +20,7 @@ import 'debug/web_storage_flush.dart';
 import 'contacts/contact_invitations_repository.dart';
 import 'db/app_database.dart';
 import 'db/repositories/contacts_repository.dart';
+import 'device/device_binding_service.dart';
 import 'notifications/notification_permission_gate.dart';
 import 'notifications/push_notification_service.dart';
 import 'notifications/push_background_registration_stub.dart'
@@ -134,6 +135,7 @@ Future<void> bootstrap() async {
             contacts: ContactsRepository(appDb),
             invitations: ContactInvitationsRepository(appDb),
             entitlement: entitlementCoordinator,
+            deviceBinding: DeviceBindingService(),
           );
           HandshakeOrchestrator.install(orchestrator);
           if (kDebugMode) {

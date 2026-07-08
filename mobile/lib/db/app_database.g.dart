@@ -5821,6 +5821,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _peerDeviceBindingIdMeta =
+      const VerificationMeta('peerDeviceBindingId');
+  @override
+  late final GeneratedColumn<String> peerDeviceBindingId =
+      GeneratedColumn<String>(
+        'peer_device_binding_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _disconnectedAtMeta = const VerificationMeta(
     'disconnectedAt',
   );
@@ -5878,6 +5889,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     peerPublicMaterial,
     localDisplayLabel,
     theirLabelForMe,
+    peerDeviceBindingId,
     disconnectedAt,
     createdAt,
     updatedAt,
@@ -5975,6 +5987,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('peer_device_binding_id')) {
+      context.handle(
+        _peerDeviceBindingIdMeta,
+        peerDeviceBindingId.isAcceptableOrUnknown(
+          data['peer_device_binding_id']!,
+          _peerDeviceBindingIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('disconnected_at')) {
       context.handle(
         _disconnectedAtMeta,
@@ -6055,6 +6076,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.string,
         data['${effectivePrefix}their_label_for_me'],
       ),
+      peerDeviceBindingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_device_binding_id'],
+      ),
       disconnectedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}disconnected_at'],
@@ -6113,6 +6138,9 @@ class Contact extends DataClass implements Insertable<Contact> {
   /// unknown or never shared.
   final String? theirLabelForMe;
 
+  /// Opaque device-binding hash reported by the peer during handshake.
+  final String? peerDeviceBindingId;
+
   /// Set when a previously `connected` contact was demoted after disconnect.
   /// Null for stubs that were never connected.
   final DateTime? disconnectedAt;
@@ -6134,6 +6162,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.peerPublicMaterial,
     this.localDisplayLabel,
     this.theirLabelForMe,
+    this.peerDeviceBindingId,
     this.disconnectedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -6159,6 +6188,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     if (!nullToAbsent || theirLabelForMe != null) {
       map['their_label_for_me'] = Variable<String>(theirLabelForMe);
+    }
+    if (!nullToAbsent || peerDeviceBindingId != null) {
+      map['peer_device_binding_id'] = Variable<String>(peerDeviceBindingId);
     }
     if (!nullToAbsent || disconnectedAt != null) {
       map['disconnected_at'] = Variable<DateTime>(disconnectedAt);
@@ -6191,6 +6223,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       theirLabelForMe: theirLabelForMe == null && nullToAbsent
           ? const Value.absent()
           : Value(theirLabelForMe),
+      peerDeviceBindingId: peerDeviceBindingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(peerDeviceBindingId),
       disconnectedAt: disconnectedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(disconnectedAt),
@@ -6222,6 +6257,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         json['localDisplayLabel'],
       ),
       theirLabelForMe: serializer.fromJson<String?>(json['theirLabelForMe']),
+      peerDeviceBindingId: serializer.fromJson<String?>(
+        json['peerDeviceBindingId'],
+      ),
       disconnectedAt: serializer.fromJson<DateTime?>(json['disconnectedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -6242,6 +6280,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'peerPublicMaterial': serializer.toJson<String?>(peerPublicMaterial),
       'localDisplayLabel': serializer.toJson<String?>(localDisplayLabel),
       'theirLabelForMe': serializer.toJson<String?>(theirLabelForMe),
+      'peerDeviceBindingId': serializer.toJson<String?>(peerDeviceBindingId),
       'disconnectedAt': serializer.toJson<DateTime?>(disconnectedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -6260,6 +6299,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<String?> peerPublicMaterial = const Value.absent(),
     Value<String?> localDisplayLabel = const Value.absent(),
     Value<String?> theirLabelForMe = const Value.absent(),
+    Value<String?> peerDeviceBindingId = const Value.absent(),
     Value<DateTime?> disconnectedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -6283,6 +6323,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     theirLabelForMe: theirLabelForMe.present
         ? theirLabelForMe.value
         : this.theirLabelForMe,
+    peerDeviceBindingId: peerDeviceBindingId.present
+        ? peerDeviceBindingId.value
+        : this.peerDeviceBindingId,
     disconnectedAt: disconnectedAt.present
         ? disconnectedAt.value
         : this.disconnectedAt,
@@ -6312,6 +6355,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       theirLabelForMe: data.theirLabelForMe.present
           ? data.theirLabelForMe.value
           : this.theirLabelForMe,
+      peerDeviceBindingId: data.peerDeviceBindingId.present
+          ? data.peerDeviceBindingId.value
+          : this.peerDeviceBindingId,
       disconnectedAt: data.disconnectedAt.present
           ? data.disconnectedAt.value
           : this.disconnectedAt,
@@ -6334,6 +6380,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('peerPublicMaterial: $peerPublicMaterial, ')
           ..write('localDisplayLabel: $localDisplayLabel, ')
           ..write('theirLabelForMe: $theirLabelForMe, ')
+          ..write('peerDeviceBindingId: $peerDeviceBindingId, ')
           ..write('disconnectedAt: $disconnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6354,6 +6401,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     peerPublicMaterial,
     localDisplayLabel,
     theirLabelForMe,
+    peerDeviceBindingId,
     disconnectedAt,
     createdAt,
     updatedAt,
@@ -6373,6 +6421,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.peerPublicMaterial == this.peerPublicMaterial &&
           other.localDisplayLabel == this.localDisplayLabel &&
           other.theirLabelForMe == this.theirLabelForMe &&
+          other.peerDeviceBindingId == this.peerDeviceBindingId &&
           other.disconnectedAt == this.disconnectedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -6390,6 +6439,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<String?> peerPublicMaterial;
   final Value<String?> localDisplayLabel;
   final Value<String?> theirLabelForMe;
+  final Value<String?> peerDeviceBindingId;
   final Value<DateTime?> disconnectedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -6406,6 +6456,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.peerPublicMaterial = const Value.absent(),
     this.localDisplayLabel = const Value.absent(),
     this.theirLabelForMe = const Value.absent(),
+    this.peerDeviceBindingId = const Value.absent(),
     this.disconnectedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -6423,6 +6474,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.peerPublicMaterial = const Value.absent(),
     this.localDisplayLabel = const Value.absent(),
     this.theirLabelForMe = const Value.absent(),
+    this.peerDeviceBindingId = const Value.absent(),
     this.disconnectedAt = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -6445,6 +6497,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<String>? peerPublicMaterial,
     Expression<String>? localDisplayLabel,
     Expression<String>? theirLabelForMe,
+    Expression<String>? peerDeviceBindingId,
     Expression<DateTime>? disconnectedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -6463,6 +6516,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'peer_public_material': peerPublicMaterial,
       if (localDisplayLabel != null) 'local_display_label': localDisplayLabel,
       if (theirLabelForMe != null) 'their_label_for_me': theirLabelForMe,
+      if (peerDeviceBindingId != null)
+        'peer_device_binding_id': peerDeviceBindingId,
       if (disconnectedAt != null) 'disconnected_at': disconnectedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -6482,6 +6537,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<String?>? peerPublicMaterial,
     Value<String?>? localDisplayLabel,
     Value<String?>? theirLabelForMe,
+    Value<String?>? peerDeviceBindingId,
     Value<DateTime?>? disconnectedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -6499,6 +6555,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       peerPublicMaterial: peerPublicMaterial ?? this.peerPublicMaterial,
       localDisplayLabel: localDisplayLabel ?? this.localDisplayLabel,
       theirLabelForMe: theirLabelForMe ?? this.theirLabelForMe,
+      peerDeviceBindingId: peerDeviceBindingId ?? this.peerDeviceBindingId,
       disconnectedAt: disconnectedAt ?? this.disconnectedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -6540,6 +6597,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (theirLabelForMe.present) {
       map['their_label_for_me'] = Variable<String>(theirLabelForMe.value);
     }
+    if (peerDeviceBindingId.present) {
+      map['peer_device_binding_id'] = Variable<String>(
+        peerDeviceBindingId.value,
+      );
+    }
     if (disconnectedAt.present) {
       map['disconnected_at'] = Variable<DateTime>(disconnectedAt.value);
     }
@@ -6571,6 +6633,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('peerPublicMaterial: $peerPublicMaterial, ')
           ..write('localDisplayLabel: $localDisplayLabel, ')
           ..write('theirLabelForMe: $theirLabelForMe, ')
+          ..write('peerDeviceBindingId: $peerDeviceBindingId, ')
           ..write('disconnectedAt: $disconnectedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7165,6 +7228,18 @@ class $PendingHandshakesTable extends PendingHandshakes
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _peerDeviceBindingIdMeta =
+      const VerificationMeta('peerDeviceBindingId');
+  @override
+  late final GeneratedColumn<String> peerDeviceBindingId =
+      GeneratedColumn<String>(
+        'peer_device_binding_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
   static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta(
     'lastErrorCode',
   );
@@ -7221,6 +7296,7 @@ class $PendingHandshakesTable extends PendingHandshakes
     peerLongTermPublicMaterialB64,
     peerDisplayName,
     peerAvatarId,
+    peerDeviceBindingId,
     lastErrorCode,
     createdAt,
     updatedAt,
@@ -7316,6 +7392,15 @@ class $PendingHandshakesTable extends PendingHandshakes
         ),
       );
     }
+    if (data.containsKey('peer_device_binding_id')) {
+      context.handle(
+        _peerDeviceBindingIdMeta,
+        peerDeviceBindingId.isAcceptableOrUnknown(
+          data['peer_device_binding_id']!,
+          _peerDeviceBindingIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('last_error_code')) {
       context.handle(
         _lastErrorCodeMeta,
@@ -7394,6 +7479,10 @@ class $PendingHandshakesTable extends PendingHandshakes
         DriftSqlType.string,
         data['${effectivePrefix}peer_avatar_id'],
       )!,
+      peerDeviceBindingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_device_binding_id'],
+      )!,
       lastErrorCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}last_error_code'],
@@ -7461,6 +7550,9 @@ class PendingHandshake extends DataClass
   /// Self-reported avatar id from the peer.
   final String peerAvatarId;
 
+  /// Device-binding hash from the peer's hello or ack.
+  final String peerDeviceBindingId;
+
   /// Last error code captured by the orchestrator (for diagnostics).
   /// Empty string when no error.
   final String lastErrorCode;
@@ -7477,6 +7569,7 @@ class PendingHandshake extends DataClass
     this.peerLongTermPublicMaterialB64,
     required this.peerDisplayName,
     required this.peerAvatarId,
+    required this.peerDeviceBindingId,
     required this.lastErrorCode,
     required this.createdAt,
     required this.updatedAt,
@@ -7498,6 +7591,7 @@ class PendingHandshake extends DataClass
     }
     map['peer_display_name'] = Variable<String>(peerDisplayName);
     map['peer_avatar_id'] = Variable<String>(peerAvatarId);
+    map['peer_device_binding_id'] = Variable<String>(peerDeviceBindingId);
     map['last_error_code'] = Variable<String>(lastErrorCode);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -7519,6 +7613,7 @@ class PendingHandshake extends DataClass
           : Value(peerLongTermPublicMaterialB64),
       peerDisplayName: Value(peerDisplayName),
       peerAvatarId: Value(peerAvatarId),
+      peerDeviceBindingId: Value(peerDeviceBindingId),
       lastErrorCode: Value(lastErrorCode),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -7543,6 +7638,9 @@ class PendingHandshake extends DataClass
       ),
       peerDisplayName: serializer.fromJson<String>(json['peerDisplayName']),
       peerAvatarId: serializer.fromJson<String>(json['peerAvatarId']),
+      peerDeviceBindingId: serializer.fromJson<String>(
+        json['peerDeviceBindingId'],
+      ),
       lastErrorCode: serializer.fromJson<String>(json['lastErrorCode']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -7564,6 +7662,7 @@ class PendingHandshake extends DataClass
       ),
       'peerDisplayName': serializer.toJson<String>(peerDisplayName),
       'peerAvatarId': serializer.toJson<String>(peerAvatarId),
+      'peerDeviceBindingId': serializer.toJson<String>(peerDeviceBindingId),
       'lastErrorCode': serializer.toJson<String>(lastErrorCode),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -7581,6 +7680,7 @@ class PendingHandshake extends DataClass
     Value<String?> peerLongTermPublicMaterialB64 = const Value.absent(),
     String? peerDisplayName,
     String? peerAvatarId,
+    String? peerDeviceBindingId,
     String? lastErrorCode,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -7597,6 +7697,7 @@ class PendingHandshake extends DataClass
         : this.peerLongTermPublicMaterialB64,
     peerDisplayName: peerDisplayName ?? this.peerDisplayName,
     peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+    peerDeviceBindingId: peerDeviceBindingId ?? this.peerDeviceBindingId,
     lastErrorCode: lastErrorCode ?? this.lastErrorCode,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -7623,6 +7724,9 @@ class PendingHandshake extends DataClass
       peerAvatarId: data.peerAvatarId.present
           ? data.peerAvatarId.value
           : this.peerAvatarId,
+      peerDeviceBindingId: data.peerDeviceBindingId.present
+          ? data.peerDeviceBindingId.value
+          : this.peerDeviceBindingId,
       lastErrorCode: data.lastErrorCode.present
           ? data.lastErrorCode.value
           : this.lastErrorCode,
@@ -7646,6 +7750,7 @@ class PendingHandshake extends DataClass
           )
           ..write('peerDisplayName: $peerDisplayName, ')
           ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('peerDeviceBindingId: $peerDeviceBindingId, ')
           ..write('lastErrorCode: $lastErrorCode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7665,6 +7770,7 @@ class PendingHandshake extends DataClass
     peerLongTermPublicMaterialB64,
     peerDisplayName,
     peerAvatarId,
+    peerDeviceBindingId,
     lastErrorCode,
     createdAt,
     updatedAt,
@@ -7684,6 +7790,7 @@ class PendingHandshake extends DataClass
               this.peerLongTermPublicMaterialB64 &&
           other.peerDisplayName == this.peerDisplayName &&
           other.peerAvatarId == this.peerAvatarId &&
+          other.peerDeviceBindingId == this.peerDeviceBindingId &&
           other.lastErrorCode == this.lastErrorCode &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -7700,6 +7807,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
   final Value<String?> peerLongTermPublicMaterialB64;
   final Value<String> peerDisplayName;
   final Value<String> peerAvatarId;
+  final Value<String> peerDeviceBindingId;
   final Value<String> lastErrorCode;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -7715,6 +7823,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
     this.peerLongTermPublicMaterialB64 = const Value.absent(),
     this.peerDisplayName = const Value.absent(),
     this.peerAvatarId = const Value.absent(),
+    this.peerDeviceBindingId = const Value.absent(),
     this.lastErrorCode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -7731,6 +7840,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
     this.peerLongTermPublicMaterialB64 = const Value.absent(),
     this.peerDisplayName = const Value.absent(),
     this.peerAvatarId = const Value.absent(),
+    this.peerDeviceBindingId = const Value.absent(),
     this.lastErrorCode = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -7755,6 +7865,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
     Expression<String>? peerLongTermPublicMaterialB64,
     Expression<String>? peerDisplayName,
     Expression<String>? peerAvatarId,
+    Expression<String>? peerDeviceBindingId,
     Expression<String>? lastErrorCode,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -7772,6 +7883,8 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
         'peer_long_term_public_material_b64': peerLongTermPublicMaterialB64,
       if (peerDisplayName != null) 'peer_display_name': peerDisplayName,
       if (peerAvatarId != null) 'peer_avatar_id': peerAvatarId,
+      if (peerDeviceBindingId != null)
+        'peer_device_binding_id': peerDeviceBindingId,
       if (lastErrorCode != null) 'last_error_code': lastErrorCode,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -7790,6 +7903,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
     Value<String?>? peerLongTermPublicMaterialB64,
     Value<String>? peerDisplayName,
     Value<String>? peerAvatarId,
+    Value<String>? peerDeviceBindingId,
     Value<String>? lastErrorCode,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -7807,6 +7921,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
           peerLongTermPublicMaterialB64 ?? this.peerLongTermPublicMaterialB64,
       peerDisplayName: peerDisplayName ?? this.peerDisplayName,
       peerAvatarId: peerAvatarId ?? this.peerAvatarId,
+      peerDeviceBindingId: peerDeviceBindingId ?? this.peerDeviceBindingId,
       lastErrorCode: lastErrorCode ?? this.lastErrorCode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -7847,6 +7962,11 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
     if (peerAvatarId.present) {
       map['peer_avatar_id'] = Variable<String>(peerAvatarId.value);
     }
+    if (peerDeviceBindingId.present) {
+      map['peer_device_binding_id'] = Variable<String>(
+        peerDeviceBindingId.value,
+      );
+    }
     if (lastErrorCode.present) {
       map['last_error_code'] = Variable<String>(lastErrorCode.value);
     }
@@ -7879,6 +7999,7 @@ class PendingHandshakesCompanion extends UpdateCompanion<PendingHandshake> {
           )
           ..write('peerDisplayName: $peerDisplayName, ')
           ..write('peerAvatarId: $peerAvatarId, ')
+          ..write('peerDeviceBindingId: $peerDeviceBindingId, ')
           ..write('lastErrorCode: $lastErrorCode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -24274,6 +24395,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<String?> peerPublicMaterial,
       Value<String?> localDisplayLabel,
       Value<String?> theirLabelForMe,
+      Value<String?> peerDeviceBindingId,
       Value<DateTime?> disconnectedAt,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -24292,6 +24414,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String?> peerPublicMaterial,
       Value<String?> localDisplayLabel,
       Value<String?> theirLabelForMe,
+      Value<String?> peerDeviceBindingId,
       Value<DateTime?> disconnectedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -24355,6 +24478,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get theirLabelForMe => $composableBuilder(
     column: $table.theirLabelForMe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24438,6 +24566,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get disconnectedAt => $composableBuilder(
     column: $table.disconnectedAt,
     builder: (column) => ColumnOrderings(column),
@@ -24508,6 +24641,11 @@ class $$ContactsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get disconnectedAt => $composableBuilder(
     column: $table.disconnectedAt,
     builder: (column) => column,
@@ -24561,6 +24699,7 @@ class $$ContactsTableTableManager
                 Value<String?> peerPublicMaterial = const Value.absent(),
                 Value<String?> localDisplayLabel = const Value.absent(),
                 Value<String?> theirLabelForMe = const Value.absent(),
+                Value<String?> peerDeviceBindingId = const Value.absent(),
                 Value<DateTime?> disconnectedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -24577,6 +24716,7 @@ class $$ContactsTableTableManager
                 peerPublicMaterial: peerPublicMaterial,
                 localDisplayLabel: localDisplayLabel,
                 theirLabelForMe: theirLabelForMe,
+                peerDeviceBindingId: peerDeviceBindingId,
                 disconnectedAt: disconnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -24595,6 +24735,7 @@ class $$ContactsTableTableManager
                 Value<String?> peerPublicMaterial = const Value.absent(),
                 Value<String?> localDisplayLabel = const Value.absent(),
                 Value<String?> theirLabelForMe = const Value.absent(),
+                Value<String?> peerDeviceBindingId = const Value.absent(),
                 Value<DateTime?> disconnectedAt = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -24611,6 +24752,7 @@ class $$ContactsTableTableManager
                 peerPublicMaterial: peerPublicMaterial,
                 localDisplayLabel: localDisplayLabel,
                 theirLabelForMe: theirLabelForMe,
+                peerDeviceBindingId: peerDeviceBindingId,
                 disconnectedAt: disconnectedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -24905,6 +25047,7 @@ typedef $$PendingHandshakesTableCreateCompanionBuilder =
       Value<String?> peerLongTermPublicMaterialB64,
       Value<String> peerDisplayName,
       Value<String> peerAvatarId,
+      Value<String> peerDeviceBindingId,
       Value<String> lastErrorCode,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -24922,6 +25065,7 @@ typedef $$PendingHandshakesTableUpdateCompanionBuilder =
       Value<String?> peerLongTermPublicMaterialB64,
       Value<String> peerDisplayName,
       Value<String> peerAvatarId,
+      Value<String> peerDeviceBindingId,
       Value<String> lastErrorCode,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -24980,6 +25124,11 @@ class $$PendingHandshakesTableFilterComposer
 
   ColumnFilters<String> get peerAvatarId => $composableBuilder(
     column: $table.peerAvatarId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25059,6 +25208,11 @@ class $$PendingHandshakesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lastErrorCode => $composableBuilder(
     column: $table.lastErrorCode,
     builder: (column) => ColumnOrderings(column),
@@ -25127,6 +25281,11 @@ class $$PendingHandshakesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get peerDeviceBindingId => $composableBuilder(
+    column: $table.peerDeviceBindingId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get lastErrorCode => $composableBuilder(
     column: $table.lastErrorCode,
     builder: (column) => column,
@@ -25192,6 +25351,7 @@ class $$PendingHandshakesTableTableManager
                     const Value.absent(),
                 Value<String> peerDisplayName = const Value.absent(),
                 Value<String> peerAvatarId = const Value.absent(),
+                Value<String> peerDeviceBindingId = const Value.absent(),
                 Value<String> lastErrorCode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -25207,6 +25367,7 @@ class $$PendingHandshakesTableTableManager
                 peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64,
                 peerDisplayName: peerDisplayName,
                 peerAvatarId: peerAvatarId,
+                peerDeviceBindingId: peerDeviceBindingId,
                 lastErrorCode: lastErrorCode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -25225,6 +25386,7 @@ class $$PendingHandshakesTableTableManager
                     const Value.absent(),
                 Value<String> peerDisplayName = const Value.absent(),
                 Value<String> peerAvatarId = const Value.absent(),
+                Value<String> peerDeviceBindingId = const Value.absent(),
                 Value<String> lastErrorCode = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -25240,6 +25402,7 @@ class $$PendingHandshakesTableTableManager
                 peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64,
                 peerDisplayName: peerDisplayName,
                 peerAvatarId: peerAvatarId,
+                peerDeviceBindingId: peerDeviceBindingId,
                 lastErrorCode: lastErrorCode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

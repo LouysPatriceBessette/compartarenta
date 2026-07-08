@@ -12,6 +12,7 @@ import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../device/device_binding_service.dart';
 import '../entitlement/entitlement_coordinator.dart';
 import '../relay/relay_http_policy.dart';
 import '../housing/housing_participant_profile_sync.dart';
@@ -180,6 +181,7 @@ class HandshakeOrchestrator {
     required ContactsRepository contacts,
     required ContactInvitationsRepository invitations,
     EntitlementCoordinator? entitlement,
+    DeviceBindingService? deviceBinding,
     ContactNotificationSink contactNotifications =
         const DefaultContactNotificationSink(),
     Duration pollInterval = RelayHttpPolicy.pollInterval,
@@ -193,6 +195,7 @@ class HandshakeOrchestrator {
        _contacts = contacts,
        _invitations = invitations,
        _entitlement = entitlement ?? EntitlementCoordinator.maybeInstance,
+       _deviceBinding = deviceBinding ?? DeviceBindingService(),
        _contactNotifications = contactNotifications,
        _pollInterval = pollInterval,
        _helloTtl = helloTtl,
@@ -217,6 +220,7 @@ class HandshakeOrchestrator {
   final ContactsRepository _contacts;
   final ContactInvitationsRepository _invitations;
   final EntitlementCoordinator? _entitlement;
+  final DeviceBindingService _deviceBinding;
   final ContactNotificationSink _contactNotifications;
   final Duration _pollInterval;
   final Duration _helloTtl;
@@ -511,6 +515,7 @@ class HandshakeOrchestrator {
       peerPubBytes: RelayRouting.unb64(peerPubB64),
       peerDisplayName: row.peerDisplayName,
       peerAvatarId: row.peerAvatarId,
+      peerDeviceBindingId: row.peerDeviceBindingId,
       selfDisplayName: selfDisplayName,
       selfAvatarId: selfAvatarId,
     );
@@ -553,12 +558,14 @@ class HandshakeOrchestrator {
     }
     final inviterLongTermPub = await _identity.publicKey();
     final inviteePub = RelayRouting.unb64(peerPubB64);
+    final selfBindingId = await _deviceBinding.loadOrComputeId();
 
     final ackFrame = await EnvelopeCodec.encryptAck(
       envelope: AckEnvelope(
         invitationId: invitationIdBytes,
         inviterLongTermPublicKey: inviterLongTermPub,
         accepted: false,
+        deviceBindingId: selfBindingId,
         displayName: displayName,
         avatarId: avatarId,
       ),
@@ -722,6 +729,7 @@ class HandshakeOrchestrator {
       invitationId: invitationIdBytes,
       nonce: nonceBytes,
     );
+    final deviceBindingId = await _deviceBinding.loadOrComputeId();
 
     final helloFrame = await EnvelopeCodec.encryptHello(
       envelope: HelloEnvelope(
@@ -730,6 +738,7 @@ class HandshakeOrchestrator {
         displayName: contact.displayName,
         avatarId: contact.avatarId,
         echoedNonce: nonceBytes,
+        deviceBindingId: deviceBindingId,
       ),
       invitationNonce: nonceBytes,
       inviteeLongTermPrivateKey: inviteePriv,
@@ -2118,6 +2127,7 @@ class HandshakeOrchestrator {
       ),
       peerDisplayName: hello.displayName,
       peerAvatarId: hello.avatarId,
+      peerDeviceBindingId: hello.deviceBindingId,
     );
 
     await _relay.ackEnvelope(
@@ -2162,6 +2172,7 @@ class HandshakeOrchestrator {
         peerPubBytes: RelayRouting.unb64(peerPubB64),
         peerDisplayName: row.peerDisplayName,
         peerAvatarId: row.peerAvatarId,
+        peerDeviceBindingId: row.peerDeviceBindingId,
         selfDisplayName: profile.displayName,
         selfAvatarId: profile.avatarId,
       );
@@ -2241,6 +2252,7 @@ class HandshakeOrchestrator {
     required Uint8List peerPubBytes,
     required String peerDisplayName,
     required String peerAvatarId,
+    required String peerDeviceBindingId,
     required String selfDisplayName,
     required String selfAvatarId,
   }) async {
@@ -2251,6 +2263,7 @@ class HandshakeOrchestrator {
       nonce: nonceBytes,
     );
     final inviterLongTermPub = await _identity.publicKey();
+    final selfBindingId = await _deviceBinding.loadOrComputeId();
 
     // Encrypt the ack with our LONG-TERM pub in the header so the invitee
     // learns it for the first time. The plaintext carries our chosen
@@ -2261,6 +2274,7 @@ class HandshakeOrchestrator {
         invitationId: invitationIdBytes,
         inviterLongTermPublicKey: inviterLongTermPub,
         accepted: true,
+        deviceBindingId: selfBindingId,
         displayName: selfDisplayName,
         avatarId: selfAvatarId,
       ),
@@ -2309,13 +2323,24 @@ class HandshakeOrchestrator {
     }
 
     // Promote the stub Contact and write peer material + routing.
+    final promoteContactId = await _resolveHandshakePromoteContactId(
+      defaultStubId: handshakeRow.contactStubId,
+      peerPublicMaterialB64: RelayRouting.b64(peerPubBytes),
+      peerDeviceBindingId: peerDeviceBindingId,
+      displayName: peerDisplayName,
+      avatarId: peerAvatarId,
+    );
     await _contacts.promoteToConnected(
-      id: handshakeRow.contactStubId,
+      id: promoteContactId,
       relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
       peerPublicMaterialB64: RelayRouting.b64(peerPubBytes),
       displayName: peerDisplayName,
       avatarId: peerAvatarId,
+      peerDeviceBindingId: peerDeviceBindingId,
     );
+    if (promoteContactId != handshakeRow.contactStubId) {
+      await _contacts.deleteLocally(handshakeRow.contactStubId);
+    }
 
     await _markHandshake(handshakeRow.id, state: HandshakeState.completed);
     await _decommissionHandshakeAddresses(
@@ -2356,18 +2381,20 @@ class HandshakeOrchestrator {
     final peerPublicMaterialB64 = RelayRouting.b64(
       ack.inviterLongTermPublicKey,
     );
-    final reconnectCandidate = await _contacts.disconnectedReconnectCandidate(
+    final promoteContactId = await _resolveHandshakePromoteContactId(
+      defaultStubId: row.contactStubId,
       peerPublicMaterialB64: peerPublicMaterialB64,
+      peerDeviceBindingId: ack.deviceBindingId,
       displayName: ack.displayName.isEmpty ? null : ack.displayName,
       avatarId: ack.avatarId.isEmpty ? null : ack.avatarId,
     );
-    final promoteContactId = reconnectCandidate?.id ?? row.contactStubId;
     await _contacts.promoteToConnected(
       id: promoteContactId,
       relayRoutingIdB64: RelayRouting.b64(peerListenAddr),
       peerPublicMaterialB64: peerPublicMaterialB64,
       displayName: ack.displayName.isEmpty ? null : ack.displayName,
       avatarId: ack.avatarId.isEmpty ? null : ack.avatarId,
+      peerDeviceBindingId: ack.deviceBindingId,
     );
     if (promoteContactId != row.contactStubId) {
       await _contacts.deleteLocally(row.contactStubId);
@@ -3638,6 +3665,7 @@ class HandshakeOrchestrator {
     String? peerLongTermPublicMaterialB64,
     String? peerDisplayName,
     String? peerAvatarId,
+    String? peerDeviceBindingId,
     String? lastErrorCode,
   }) async {
     final now = _now().toUtc();
@@ -3655,12 +3683,38 @@ class HandshakeOrchestrator {
         peerAvatarId: peerAvatarId == null
             ? const drift.Value.absent()
             : drift.Value(peerAvatarId),
+        peerDeviceBindingId: peerDeviceBindingId == null
+            ? const drift.Value.absent()
+            : drift.Value(peerDeviceBindingId),
         lastErrorCode: lastErrorCode == null
             ? const drift.Value.absent()
             : drift.Value(lastErrorCode),
         updatedAt: drift.Value(now),
       ),
     );
+  }
+
+  Future<String> _resolveHandshakePromoteContactId({
+    required String defaultStubId,
+    required String peerPublicMaterialB64,
+    required String peerDeviceBindingId,
+    String? displayName,
+    String? avatarId,
+  }) async {
+    if (peerDeviceBindingId.isNotEmpty) {
+      final connected = await _contacts.connectedByDeviceBinding(
+        peerDeviceBindingId,
+      );
+      if (connected != null && connected.id != defaultStubId) {
+        return connected.id;
+      }
+    }
+    final disconnected = await _contacts.disconnectedReconnectCandidate(
+      peerPublicMaterialB64: peerPublicMaterialB64,
+      displayName: displayName,
+      avatarId: avatarId,
+    );
+    return disconnected?.id ?? defaultStubId;
   }
 
   Future<IncomingHandshakeView?> incomingHandshakeForContact(

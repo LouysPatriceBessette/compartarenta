@@ -7,8 +7,19 @@ alwaysApply: true
 
 ## Product scope
 
-- Compartarenta is **mobile-only in production**. Flutter **web** is a **development surface only** — not a production target.
+- Compartarenta is **mobile-only in production** (Android + iOS). There is **no** production web app, web deployment, or web store target.
+- Flutter **web exists only as a developer convenience** for local multi-device QA (`run:dev:web` on a dev machine). It was **never** planned for end-user production use.
 - Specs, OpenSpec requirements, and agent answers MUST describe **the same application behavior on Android and iOS** unless a platform literally cannot support a capability (document that exception once, in implementation notes — not as a permanent spec fork).
+
+## Web is dev-only — agent discipline (binding)
+
+When the user asks about product behavior, device identity, sync, entitlement, billing, or bug fixes **without explicitly scoping web**:
+
+1. **Answer for Android and iOS only.** Do not propose web-specific fingerprinting, web storage, browser APIs, or “web vs native” production paths.
+2. **Do not** treat Flutter web as a third production platform, a fallback deployment, or a parity target alongside Android/iOS.
+3. **Do not** suggest web workarounds (CORS, Chrome profile, IndexedDB, canvas fingerprint, `run:dev:web` recovery) unless the user **explicitly** names web dev QA in that turn.
+4. Multi-device QA may **use** web builds on a dev PC (see `session-test-topology-bootstrap.mdc`); that topology fact does **not** make web a product surface.
+5. If a feature is irrelevant on web dev builds, say **“web dev out of scope”** once and continue with mobile — do not re-ask whether web should be included.
 
 ## Store billing parity
 

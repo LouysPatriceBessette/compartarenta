@@ -171,14 +171,15 @@ until a successful run with a fresh build):
 ./tool/melosw run qa:run-multi-scenario -- housing_proposal_happy_path
 ```
 
-**Bug 1.22 probe (3 attempts, proposer identity drift, writes `bug_122_result.txt`):**
+**Bug 1.22 probe (3 attempts, proposer identity drift, writes `bug_122_result.txt`) — resolved Jul 2026:**
 
-After drift + reconnect, the coordinator asserts Louys has **two** connected Monica-QA
-rows (`qa-contacts-row-monica-qa` index **1**, plus banner
-`qa-contacts-duplicate-connected-monica-qa`) — not merely one visible row. Then sends
-the housing proposal. Reproduced when duplicate Monica and/or missing proposal UI. On first repro the
-coordinator **completes that attempt** (send + recipient artifacts) then **stops** — remaining
-attempts are not run.
+Regression guard for proposer-only identity drift (Monica re-seeded; Louys keeps prior
+contact rows). **PASS** = `COULD_NOT_REPRODUCE`: single connected Monica-QA row (no
+`qa-contacts-duplicate-connected-monica-qa` banner, no `qa-contacts-row-monica-qa` index **1**)
+and recipient proposal UI after send. **REPRODUCED** when duplicate Monica and/or missing
+proposal UI. On first repro the coordinator **completes that attempt** (send + recipient
+artifacts) then **stops** — remaining attempts are not run. Fix: mobile `deviceBindingId`
+merge on handshake reconnect (see OpenSpec task **1.22**).
 
 Maestro debug output is written under short paths such as
 `qa/artifacts/multi-housing_proposal_bug_122/<stamp>/attempt-001/handshake-after-drift/…`

@@ -41,11 +41,8 @@ const int _framingVersion = 1;
 ///    aead_nonce(12) | aead_ciphertext_with_tag ]`
 ///
 /// The AEAD plaintext is a JSON object:
-/// `{ "display_name": "...", "avatar_id": "...", "echo_nonce_b64": "..." }`
-///
-/// The AEAD associated data is the entire header (everything before the
-/// AEAD output), so the relay's view of the addresses cannot be silently
-/// swapped without making decryption fail.
+/// `{ "display_name": "...", "avatar_id": "...", "echo_nonce_b64": "...",
+///    "device_binding_id": "..." }`
 class HelloEnvelope {
   HelloEnvelope({
     required this.invitationId,
@@ -53,17 +50,17 @@ class HelloEnvelope {
     required this.displayName,
     required this.avatarId,
     required this.echoedNonce,
+    required this.deviceBindingId,
   });
 
   final Uint8List invitationId;
   final Uint8List inviteeLongTermPublicKey;
   final String displayName;
   final String avatarId;
-
-  /// Copy of the invitation nonce as received in the code. The inviter's
-  /// device cross-checks this against its locally stored nonce before
-  /// accepting the envelope.
   final Uint8List echoedNonce;
+
+  /// Opaque hash of Tier A + Tier B device signals from the invitee device.
+  final String deviceBindingId;
 }
 
 /// Ack envelope: inviter -> invitee, encrypted under the same shared
@@ -75,6 +72,7 @@ class HelloEnvelope {
 ///
 /// The AEAD plaintext is a JSON object:
 /// `{ "decision": "accepted"|"rejected",
+///    "device_binding_id": "...",
 ///    "display_name": "...",     # omitted when decision=rejected
 ///    "avatar_id": "..." }`
 class AckEnvelope {
@@ -82,6 +80,7 @@ class AckEnvelope {
     required this.invitationId,
     required this.inviterLongTermPublicKey,
     required this.accepted,
+    required this.deviceBindingId,
     this.displayName = '',
     this.avatarId = '',
   });
@@ -89,6 +88,7 @@ class AckEnvelope {
   final Uint8List invitationId;
   final Uint8List inviterLongTermPublicKey;
   final bool accepted;
+  final String deviceBindingId;
   final String displayName;
   final String avatarId;
 }
@@ -336,6 +336,7 @@ class EnvelopeCodec {
         'display_name': envelope.displayName,
         'avatar_id': envelope.avatarId,
         'echo_nonce_b64': RelayRouting.b64(envelope.echoedNonce),
+        'device_binding_id': envelope.deviceBindingId,
       }),
     );
     final aeadNonce = header.sublist(header.length - 12);
@@ -401,12 +402,17 @@ class EnvelopeCodec {
     if (!_constantTimeEquals(echoed, invitationNonce)) {
       throw const EnvelopeDecryptionError('echoed_nonce_mismatch');
     }
+    final bindingId = json['device_binding_id'] as String?;
+    if (bindingId == null || bindingId.isEmpty) {
+      throw const EnvelopeDecryptionError('missing_device_binding_id');
+    }
     return HelloEnvelope(
       invitationId: header.invitationId,
       inviteeLongTermPublicKey: header.inviteeLongTermPublicKey,
       displayName: (json['display_name'] as String?) ?? '',
       avatarId: (json['avatar_id'] as String?) ?? '',
       echoedNonce: echoed,
+      deviceBindingId: bindingId,
     );
   }
 
@@ -436,6 +442,7 @@ class EnvelopeCodec {
     final body = utf8.encode(
       jsonEncode({
         'decision': envelope.accepted ? 'accepted' : 'rejected',
+        'device_binding_id': envelope.deviceBindingId,
         if (envelope.accepted) ...{
           'display_name': envelope.displayName,
           'avatar_id': envelope.avatarId,
@@ -507,10 +514,15 @@ class EnvelopeCodec {
     );
     final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
     final accepted = (json['decision'] as String? ?? '') == 'accepted';
+    final bindingId = json['device_binding_id'] as String?;
+    if (bindingId == null || bindingId.isEmpty) {
+      throw const EnvelopeDecryptionError('missing_device_binding_id');
+    }
     return AckEnvelope(
       invitationId: header.invitationId,
       inviterLongTermPublicKey: header.inviterLongTermPublicKey,
       accepted: accepted,
+      deviceBindingId: bindingId,
       displayName: (json['display_name'] as String?) ?? '',
       avatarId: (json['avatar_id'] as String?) ?? '',
     );

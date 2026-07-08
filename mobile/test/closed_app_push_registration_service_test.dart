@@ -14,6 +14,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/device_binding_test_support.dart';
+
 class _DbForTesting extends AppDatabase {
   _DbForTesting(super.e) : super.forTesting();
 }
@@ -76,6 +78,7 @@ void main() {
         contacts: ContactsRepository(db),
         invitations: ContactInvitationsRepository(db),
         pollInterval: const Duration(days: 1),
+        deviceBinding: deviceBindingForTest(),
       );
       HandshakeOrchestrator.install(orch);
       ClosedAppPushRegistrationService.install(

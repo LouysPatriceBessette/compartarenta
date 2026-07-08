@@ -46,7 +46,7 @@
 - [ ] 1.18 Wire checklist [`housing-plan-entry-spec-conformance-checklist.md`](../expense-plan-contract-model/housing-plan-entry-spec-conformance-checklist.md) rows for home selector / workbench when implemented.
 - [x] 1.19 Archive invalidated proposals with response summary messages; prompt Negotiate responders to fork; prevent Refuse responders from forking the refused revision.
 - [x] 1.20 Housing entry archive/new-plan page before step 1; eligible archive opens editable fork, ineligible archive opens read-only review.
-- [x] 1.20b **Android E2E (partial):** expired proposal visible in archive list — Maestro scenario `proposal_response_expired` (`qa-housing-archive-expired`). Does **not** cover send/receive, multi-device sync, or drift cases (**1.22**).
+- [x] 1.20b **Android E2E (partial):** expired proposal visible in archive list — Maestro scenario `proposal_response_expired` (`qa-housing-archive-expired`). Does **not** cover send/receive or multi-device sync; drift regression guard is **`housing_proposal_bug_122`** (**1.22**, resolved Jul 2026).
 - [ ] 1.21 Wishlist: detect and retire stale connected contacts after a peer reinstalls / loses local data and reconnects under a new identity, so proposal sends do not need fallback fan-out.
 - [ ] 1.25 Wishlist: revisit the order of the 4 plan-draft wizard steps to add entry for pre-existing inter-participant debt before activation.
 - [x] 1.23 **Unanimous activation notification** (spec: `housing-plan-proposal-offer-flow` — *Unanimous activation notifies all participants from the last acceptor device*).
@@ -55,24 +55,16 @@
   - Dedupe per `revisionId` on devices that already recorded activation locally.
   - Activity log: **agreement activated** on emitter.
   - *(See `housing_activation_notification_service.dart`, hooks in `handshake_orchestrator.dart`, `housing_proposal_transport_service.dart`, `housing_invite_proposal_screen.dart`; test `housing_activation_notification_service_test.dart`.)*
-- [ ] 1.22 Bug: Housing proposal delivery/notification unreliable after identity drift (web resets, stale contacts, reconnects). **Not closed** — happy path validated May 2026; drift scenarios still open.
-  - **Validated (May 2026, dev):** Fresh handshake on both sides (no stale/disconnected rows); same relay URL; web `housing_proposal posted` + `delivered`; Android `steady inbox fetched` + `housing_proposal imported` + local notification; proposal in a `received:…` plan (not the author’s `housing:default`). Web plan draft survives `CTRL+C` on `run:dev:web` (persistent Chrome profile + draft backup) — reduces how often step 2 below is needed.
-  - **Validated (May 2026, dev):** In-force **amendment** send/accept across web (proposer) + Android (invitee): `housing_proposal_response` delivery, activation on proposer hub, decision notification on web; Android hub UX after accept. Export/import hub action not exercised.
-  - **Still uncertain / not proven fixed:**
-    - Web local data wipe + new identity without a clean reciprocal handshake on Android (stale `connected` rows, mismatched `peerPublicMaterial`, `no_routing_relationship`, or poll on wrong steady inbox → `steady inbox empty` on all contacts).
-    - Participant `contactId` pointing at an obsolete handshake row while another row has the current peer key (related to **1.21**).
-    - Android app sleep / cold start before poll (push wake not relied on in dev; Firebase API key errors on Android dev flavor).
-    - Author looking at `housing:default` on the recipient device instead of `received:…` or workbench (UX confusion, not always transport failure).
-  - **Reproduced (Jul 2026, Android E2E):** Multi-device Maestro scenario `housing_proposal_bug_122` (`qa/multi_scenarios/housing_proposal_bug_122.yaml`, coordinator `tool/coordinators/housing_proposal.sh`). After proposer-only identity drift (Monica re-seeded and re-handshaken; Louys keeps prior contact rows), recipient shows **two connected Monica-QA contact rows** (`qa-contacts-duplicate-connected-monica-qa` banner). Verdict `REPRODUCED` on attempt 001 (`bug_122_result.txt`); same attempt completed send + recipient proposal UI. Run: `./tool/melosw run qa:run-multi-scenario -- housing_proposal_bug_122`. See `docs/qa-android-e2e.md`.
-  - **Repro when still broken (drift):**
-    1. Android and web connected through the relay.
-    2. Restart `run:dev:web` and lose web-side data (or reset web DB / identity without matching Android contact cleanup).
-    3. Recreate web user and reconnect; repeat until Android has multiple contact rows or mismatched ids (`contact:handshake:…` vs `contact:redeemed:…` with different peer keys).
-    4. From web, send a housing proposal.
-    5. On Android: no `housing_proposal imported` and/or empty Housing module for the invitee role.
-  - **Log triage:** Web: `posted` / `delivered` vs `failed` / `no_routing_relationship`. Android: `steady inbox poll skipped: no peer keys` vs `steady inbox empty for …` (wrong inbox) vs `fetched` without `imported` (decrypt / sender key mismatch) vs `imported from contact:…` (success). See `dev-ideas/2026-05-20-housing-bug-1-22-investigation.md`.
-  - **Mitigations already in app (do not close 1.22):** `establishRouting` before proposal POST; abandon pending revision on total send failure + resend; poll all contacts with `peerPublicMaterial`; sender-key reconciliation on import; housing entry poll on resume / inbox tick.
-  - **Expected behavior:** Current Android identity receives, imports, and displays the proposal; local notification when prefs allow.
+- [x] 1.22 Bug: Housing proposal delivery/notification unreliable after identity drift (proposer reinstall/re-seed, stale contacts, reconnects). **Resolved Jul 2026.**
+  - **Root cause (Jul 2026 repro):** After proposer-only identity drift (Monica re-seeded and re-handshaken; recipient keeps prior contact rows), the recipient accumulated **two connected Monica-QA contact rows** (`qa-contacts-duplicate-connected-monica-qa`) instead of merging the reconnect onto the existing contact. Duplicate/stale rows broke reliable routing and proposal delivery.
+  - **Fix:** Tier A+B mobile `deviceBindingId` in handshake hello/ack; handshake promote merges on `connectedByDeviceBinding()` (`device_binding_service.dart`, `handshake_orchestrator.dart`, schema v33 `peerDeviceBindingId`). Client-only; no relay change.
+  - **Validated (Jul 2026, Android E2E):** `housing_proposal_bug_122` after fix — proposer-only drift + re-handshake; duplicate Monica probe **symptom absent**; `assert-no-duplicate` passed (single `qa-contacts-row-monica-qa`, no duplicate banner). Artifacts `20260708T012504Z`. Interpretation: `dev-ideas/2026-07-07-Solution-de-figerprinting-implémentée-interprétation-du-résultat.md`. Regression guard: `./tool/melosw run qa:run-multi-scenario -- housing_proposal_bug_122` (PASS = `COULD_NOT_REPRODUCE`).
+  - **Previously reproduced (Jul 2026, pre-fix):** Same scenario — verdict `REPRODUCED` on attempt 001; duplicate Monica banner; send + recipient proposal UI on same attempt. Artifacts `20260707T215044Z`. See `docs/qa-android-e2e.md`.
+  - **Previously validated (May 2026, dev):** Fresh handshake on both sides (no stale/disconnected rows); same relay URL; web `housing_proposal posted` + `delivered`; Android `steady inbox fetched` + `housing_proposal imported` + local notification; proposal in a `received:…` plan (not the author’s `housing:default`). Web plan draft survives `CTRL+C` on `run:dev:web` (persistent Chrome profile + draft backup).
+  - **Previously validated (May 2026, dev):** In-force **amendment** send/accept across web (proposer) + Android (invitee): `housing_proposal_response` delivery, activation on proposer hub, decision notification on web; Android hub UX after accept. Export/import hub action not exercised.
+  - **Log triage (historical):** Web: `posted` / `delivered` vs `failed` / `no_routing_relationship`. Android: `steady inbox poll skipped: no peer keys` vs `steady inbox empty for …` (wrong inbox) vs `fetched` without `imported` (decrypt / sender key mismatch) vs `imported from contact:…` (success). See `dev-ideas/2026-05-20-housing-bug-1-22-investigation.md`.
+  - **Related mitigations (retained):** `establishRouting` before proposal POST; abandon pending revision on total send failure + resend; poll all contacts with `peerPublicMaterial`; sender-key reconciliation on import; housing entry poll on resume / inbox tick.
+  - **Expected behavior:** Reconnect after proposer drift merges onto the existing contact row (same device binding); current peer identity receives, imports, and displays proposals; local notification when prefs allow.
 
 - [x] 1.24 **Bug (high / likely):** Participant identity drift across profile rename and missing-contact establishment.
   - **Policy (Jun 2026):**
@@ -86,4 +78,4 @@
     4. **Before send** scenario: **B** renames, **A**’s draft roster updates with contact.
     5. **Edge:** rename/proposal race → plan-mediated handshake reconciles by public key on invitation/response.
   - **Implementation:** `profile_rename_policy.dart`, `housing_participant_profile_sync.dart`, `housing_plan_peer_identity_reconcile.dart`, `handshake_orchestrator.dart`, `profile_identity_settings_screen.dart`, `app.dart`.
-  - **Related:** **1.22**, **1.21**, contacts-module missing-contacts flow, `user-profile-and-contact-display-labels`.
+  - **Related:** **1.21**, contacts-module missing-contacts flow, `user-profile-and-contact-display-labels`. (**1.22** resolved — device-binding merge on drift reconnect.)

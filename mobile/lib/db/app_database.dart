@@ -229,6 +229,9 @@ class Contacts extends Table {
   /// unknown or never shared.
   TextColumn get theirLabelForMe => text().nullable()();
 
+  /// Opaque device-binding hash reported by the peer during handshake.
+  TextColumn get peerDeviceBindingId => text().nullable()();
+
   /// Set when a previously `connected` contact was demoted after disconnect.
   /// Null for stubs that were never connected.
   DateTimeColumn get disconnectedAt => dateTime().nullable()();
@@ -324,6 +327,9 @@ class PendingHandshakes extends Table {
 
   /// Self-reported avatar id from the peer.
   TextColumn get peerAvatarId => text().withDefault(const Constant(''))();
+
+  /// Device-binding hash from the peer's hello or ack.
+  TextColumn get peerDeviceBindingId => text().withDefault(const Constant(''))();
 
   /// Last error code captured by the orchestrator (for diagnostics).
   /// Empty string when no error.
@@ -712,7 +718,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1058,6 +1064,14 @@ class AppDatabase extends _$AppDatabase {
           m,
           vehicleMeterReadings,
           vehicleMeterReadings.supersedesReadingId,
+        );
+      }
+      if (from < 33) {
+        await _migrateAddColumn(m, contacts, contacts.peerDeviceBindingId);
+        await _migrateAddColumn(
+          m,
+          pendingHandshakes,
+          pendingHandshakes.peerDeviceBindingId,
         );
       }
     },

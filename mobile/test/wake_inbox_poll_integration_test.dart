@@ -14,6 +14,8 @@ import 'package:drift/native.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/device_binding_test_support.dart';
+
 class _DbForTesting extends AppDatabase {
   _DbForTesting(super.e) : super.forTesting();
 }
@@ -75,6 +77,7 @@ void main() {
       invitations: ContactInvitationsRepository(inviterDb),
       contactNotifications: notifications,
       pollInterval: const Duration(days: 1),
+      deviceBinding: deviceBindingForTest('inviter'),
     );
     inviter.autoAcceptIncomingHandshakes = false;
 
@@ -87,6 +90,7 @@ void main() {
       contacts: ContactsRepository(inviteeDb),
       invitations: ContactInvitationsRepository(inviteeDb),
       pollInterval: const Duration(days: 1),
+      deviceBinding: deviceBindingForTest('invitee'),
     );
 
     final invite = await inviter.generateInvitation(

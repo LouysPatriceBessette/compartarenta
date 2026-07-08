@@ -51,6 +51,18 @@ class ContactsRepository {
     return null;
   }
 
+  /// Connected contact on this device with the same peer device-binding hash
+  /// (bug 1.22: identity drift / re-handshake on the same physical device).
+  Future<Contact?> connectedByDeviceBinding(String peerDeviceBindingId) async {
+    if (peerDeviceBindingId.isEmpty) return null;
+    final rows = await list(includeDeleted: false);
+    for (final c in rows) {
+      if (c.kind != 'connected') continue;
+      if (c.peerDeviceBindingId == peerDeviceBindingId) return c;
+    }
+    return null;
+  }
+
   Future<void> upsertLocalOnly({
     required String id,
     required String displayName,
@@ -193,6 +205,7 @@ class ContactsRepository {
     required String peerPublicMaterialB64,
     String? displayName,
     String? avatarId,
+    String? peerDeviceBindingId,
   }) async {
     final now = DateTime.now().toUtc();
     await (_db.update(_db.contacts)..where((t) => t.id.equals(id))).write(
@@ -206,6 +219,9 @@ class ContactsRepository {
         avatarId: avatarId == null
             ? const drift.Value.absent()
             : drift.Value(avatarId),
+        peerDeviceBindingId: peerDeviceBindingId == null
+            ? const drift.Value.absent()
+            : drift.Value(peerDeviceBindingId),
         disconnectedAt: const drift.Value(null),
         theirLabelForMe: const drift.Value(null),
         updatedAt: drift.Value(now),
