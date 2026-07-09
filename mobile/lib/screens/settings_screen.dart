@@ -13,6 +13,7 @@ import '../notifications/developer_test_notification_result.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import '../relay/identity_keystore.dart';
+import '../util/product_legal_urls.dart';
 import 'package:compartarenta/navigation/app_navigation.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -26,13 +27,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static final Uri _privacyPolicyUrl = Uri.parse(
-    'https://example.invalid/privacy',
-  );
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final privacyPolicyUrl = privacyPolicyUrlForLocale(
+      Localizations.localeOf(context),
+    );
     final showDevTools = widget.config.environment != AppEnvironment.prod;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -105,10 +105,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ListTile(
             title: Text(l10n.settingsPrivacyPolicyTitle),
-            subtitle: Text(_privacyPolicyUrl.toString()),
+            subtitle: Text(privacyPolicyUrl.toString()),
             onTap: () async {
               await launchUrl(
-                _privacyPolicyUrl,
+                privacyPolicyUrl,
                 mode: LaunchMode.externalApplication,
               );
             },

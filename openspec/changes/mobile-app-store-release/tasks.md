@@ -56,7 +56,9 @@
 
 ## 9. Privacy and compliance readiness
 
-- [ ] 9.1 Produce and publish privacy policy and link it in-app and in both store listings
+- [x] 9.1.1 Publish privacy policy on the marketing site and link it from in-app Settings. *(Live at `compartarenta.incoherences.org`; locale-aware URL via `product_legal_urls.dart` — Jul 2026.)*
+- [ ] 9.1.2 Set privacy policy URL on the **Google Play** store listing. *(Repo metadata `mobile/store/listing/*/privacy_policy_url.txt` ready; Play Console entry pending — near-term.)*
+- [ ] 9.1.3 Set privacy policy URL on the **App Store** listing. *(Deferred for this initial release — iOS store submission later.)*
 - [ ] 9.2 Create a data inventory for app + third-party SDKs (collection, sharing, retention)
 - [ ] 9.3 Populate Apple privacy labels and Play data safety disclosures from the data inventory
 - [ ] 9.4 Add any required consent flows (only if app behavior requires consent)
