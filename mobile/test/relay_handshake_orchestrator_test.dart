@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:compartarenta/activity/relay_activity_log_service.dart';
+import 'package:compartarenta/contacts/contact_duplicate_handshake_dialog_state.dart';
+import 'package:compartarenta/contacts/contact_duplicate_module_anchor.dart';
 import 'package:compartarenta/contacts/contact_invitations_repository.dart';
 import 'package:compartarenta/contacts/invitation_code.dart';
 import 'package:compartarenta/db/app_database.dart';
@@ -90,6 +92,7 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
   final addedViaInvitation = <String>[];
   final addRequestResolutions = <({String displayName, bool accepted})>[];
   final addRequestFailures = <String>[];
+  final duplicateModuleAnchorRejections = <void>[];
   final disconnections = <String>[];
 
   @override
@@ -113,6 +116,11 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
   @override
   Future<void> contactAddRequestFailed({required String errorCode}) async {
     addRequestFailures.add(errorCode);
+  }
+
+  @override
+  Future<void> contactDuplicateModuleAnchorRejected() async {
+    duplicateModuleAnchorRejections.add(null);
   }
 
   @override
@@ -751,7 +759,160 @@ void main() {
     expect(connected.length, 1);
     expect(connected.single.id, firstContactId);
     expect(connected.single.peerDeviceBindingId, sharedBinding);
+    expect(
+      inviter.orchestrator.pendingContactDuplicateDialog.value?.kind,
+      ContactDuplicateDialogKind.inviterMerged,
+    );
   });
+
+  test(
+    're-handshake with same device binding rejects when housing plan anchors contact',
+    () async {
+      final relay = FakeRelayClient();
+      const sharedBinding = 'monica-device-binding-housing';
+      final inviter = await _spawnSide(
+        relay: relay,
+        identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => i + 2)),
+        deviceBindingId: 'louys-binding-housing',
+        ackProfileForAutoAccept: () async => (
+          displayName: 'Louys',
+          avatarId: 'mdi:louys',
+        ),
+      );
+      final inviteeFirst = await _spawnSide(
+        relay: relay,
+        identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => 0x30 + i)),
+        deviceBindingId: sharedBinding,
+      );
+
+      final invite = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'Monica',
+        stubAvatarId: 'mdi:monica',
+      );
+      final code =
+          (parseInvitationCode(invite.shortCode) as InvitationCodeOk).code;
+      await inviteeFirst.orchestrator.redeemInvitation(
+        code: code,
+        selfDisplayName: 'Monica',
+        selfAvatarId: 'mdi:monica',
+      );
+      await inviter.orchestrator.processAllPendingHandshakes();
+      await inviteeFirst.orchestrator.processAllPendingHandshakes();
+
+      final firstContactId = (await inviter.contacts.list()).first.id;
+      await _seedActiveHousingPlanForContact(
+        inviter.db,
+        planId: 'plan:monica-anchor',
+        contactId: firstContactId,
+      );
+
+      final inviteeSecond = await _spawnSide(
+        relay: relay,
+        identitySeed: Uint8List.fromList(List<int>.generate(32, (i) => 0x50 + i)),
+        deviceBindingId: sharedBinding,
+      );
+      final invite2 = await inviter.orchestrator.generateInvitation(
+        validFor: const Duration(hours: 1),
+        stubDisplayName: 'Monica',
+        stubAvatarId: 'mdi:monica',
+      );
+      final code2 =
+          (parseInvitationCode(invite2.shortCode) as InvitationCodeOk).code;
+      final redeem2 = await inviteeSecond.orchestrator.redeemInvitation(
+        code: code2,
+        selfDisplayName: 'Monica',
+        selfAvatarId: 'mdi:monica',
+      );
+      await inviter.orchestrator.processAllPendingHandshakes();
+      await inviteeSecond.orchestrator.processAllPendingHandshakes();
+
+      final connected = (await inviter.contacts.list())
+          .where((c) => c.kind == 'connected')
+          .toList();
+      expect(connected.length, 1);
+      expect(connected.single.id, firstContactId);
+
+      expect(
+        inviter.orchestrator.pendingContactDuplicateDialog.value?.kind,
+        ContactDuplicateDialogKind.inviterRejectedAnchor,
+      );
+      expect(
+        inviter.orchestrator.pendingContactDuplicateDialog.value?.anchorKind,
+        DuplicateModuleAnchorKind.housing,
+      );
+      expect(
+        await inviteeSecond.orchestrator.pendingHandshakeState(
+          redeem2.handshakeId,
+        ),
+        HandshakeState.rejected,
+      );
+      expect(inviteeSecond.notifications.duplicateModuleAnchorRejections.length, 1);
+      expect(inviteeSecond.notifications.addRequestResolutions, isEmpty);
+      expect(
+        inviteeSecond.orchestrator.pendingContactDuplicateDialog.value?.kind,
+        ContactDuplicateDialogKind.inviteeRejectedAnchor,
+      );
+    },
+  );
+}
+
+Future<void> _seedActiveHousingPlanForContact(
+  AppDatabase db, {
+  required String planId,
+  required String contactId,
+}) async {
+  await db.upsertPlan(
+    PlansCompanion.insert(
+      id: planId,
+      type: 'housing',
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  await db.upsertParticipant(
+    ParticipantsCompanion.insert(
+      id: '$planId:self',
+      displayName: 'Self',
+      avatarId: 'a01',
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  await db.upsertParticipant(
+    ParticipantsCompanion.insert(
+      id: '$planId:p1',
+      displayName: 'Monica',
+      avatarId: 'a01',
+      contactId: Value(contactId),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  await db.upsertAgreement(
+    AgreementsCompanion.insert(
+      id: 'agr:$planId',
+      planId: planId,
+      periodStart: DateTime.utc(2026, 1, 1),
+      periodEnd: DateTime.utc(2026, 12, 31),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  await db.into(db.proposalPackages).insert(
+    ProposalPackagesCompanion.insert(
+      id: 'pkg:$planId',
+      planId: planId,
+      activeRevisionId: const Value('rev:active'),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  await db.into(db.proposalRevisions).insert(
+    ProposalRevisionsCompanion.insert(
+      id: 'rev:active',
+      packageId: 'pkg:$planId',
+      contentHash: 'hash:active',
+      proposerParticipantId: '$planId:self',
+      payloadJson: '{"lifecycleState":"active"}',
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
 }
 
 List<int> _hexDecode(String hex) {

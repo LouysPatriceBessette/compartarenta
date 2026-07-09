@@ -2154,6 +2154,51 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationContactDuplicateModuleAnchorRejectedBody =>
+      'The person you tried to connect with already has your contact on file, but you must restore your data before reconnecting.';
+
+  @override
+  String get contactsDuplicateDialogOk => 'OK';
+
+  @override
+  String get contactsDuplicateReadMore => 'Read more about this';
+
+  @override
+  String get contactsDuplicateAnchorHousingActive => 'an active housing plan';
+
+  @override
+  String get contactsDuplicateAnchorVehicleSharing => 'a vehicle sharing link';
+
+  @override
+  String get contactsDuplicateAnchorHousingAndVehicle =>
+      'Text to be determined for the Housing AND Vehicle case';
+
+  @override
+  String contactsDuplicateInviterRejectedIntro(String anchor) {
+    return 'The contact who just used an invitation code was already in your contacts. This is a duplicate. The existing contact is linked to $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviterNotAdded => 'The contact was NOT added.';
+
+  @override
+  String get contactsDuplicateInviterInformRestore =>
+      'Tell them they must restore their data on their device to reconnect with you.';
+
+  @override
+  String get contactsDuplicateInviterMergedBody =>
+      'The contact who just used an invitation code was already in your contacts. They were merged into the existing contact.';
+
+  @override
+  String contactsDuplicateInviteeRejectedIntro(String anchor) {
+    return 'The person you tried to connect with already has your contact. You are linked to $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviteeMustRestore =>
+      'You MUST restore your data. That is what you need to do to reconnect properly.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Your connection request with $name was accepted.';
   }

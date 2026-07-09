@@ -13,9 +13,9 @@ mocks, ARB strings):
 ## Hard rule
 
 **Do not take initiative** on product choices the user did not specify. When a
-reasonable implementation could go more than one way, **stop and ask** — in chat
-or via a short structured question — **before** editing UI code, ARB files, or
-routes.
+reasonable implementation could go more than one way, **stop and ask in chat**
+(in plain text — see `agent-scope-discipline.mdc`) — **before** editing UI code,
+ARB files, or routes.
 
 This complements `agent-scope-discipline.mdc` (multi-state scope) and
 `ui-restoration-no-new-variants.mdc` (regressions). This rule applies even to

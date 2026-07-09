@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/app_config.dart';
 import '../../contacts/avatar_palette.dart';
+import '../../contacts/contact_duplicate_handshake_dialog.dart';
 import '../../contacts/contact_display.dart';
 import '../../debug/qa_contact_semantics.dart';
 import '../../db/app_database.dart';
@@ -68,6 +69,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   /// the list reflects [ContactsRepository.promoteToConnected] without leaving
   /// the screen.
   int _lastIncomingHandshakesCount = -1;
+  bool _duplicateDialogInFlight = false;
 
   GoRouter? _router;
 
@@ -91,10 +93,14 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
       _lastIncomingHandshakesCount = orch.incomingHandshakes.value.length;
       orch.incomingHandshakes.addListener(_onIncomingChanged);
       orch.steadyStateInboxTick.addListener(_onSteadyInboxTick);
+      orch.pendingContactDuplicateDialog.addListener(_onPendingDuplicateDialog);
       unawaited(() async {
         await orch.processAllPendingHandshakes();
         await orch.refreshIncomingHandshakes();
       }());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_maybeShowPendingDuplicateDialog());
+      });
     }
   }
 
@@ -103,7 +109,29 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
     _router?.routerDelegate.removeListener(_onRouterChanged);
     _orchestrator?.incomingHandshakes.removeListener(_onIncomingChanged);
     _orchestrator?.steadyStateInboxTick.removeListener(_onSteadyInboxTick);
+    _orchestrator?.pendingContactDuplicateDialog.removeListener(
+      _onPendingDuplicateDialog,
+    );
     super.dispose();
+  }
+
+  void _onPendingDuplicateDialog() {
+    if (!mounted) return;
+    unawaited(_maybeShowPendingDuplicateDialog());
+  }
+
+  Future<void> _maybeShowPendingDuplicateDialog() async {
+    if (!mounted || _duplicateDialogInFlight) return;
+    final orch = _orchestrator;
+    final pending = orch?.pendingContactDuplicateDialog.value;
+    if (pending == null) return;
+    _duplicateDialogInFlight = true;
+    try {
+      await showContactDuplicateHandshakeDialog(context, pending: pending);
+    } finally {
+      orch?.pendingContactDuplicateDialog.value = null;
+      _duplicateDialogInFlight = false;
+    }
   }
 
   void _onSteadyInboxTick() {

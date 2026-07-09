@@ -17,4 +17,16 @@ When a request mixes UI, navigation, local state, transport/sync, screenshots, o
 8. **Retest and recovery instructions:** If the delivery mentions what the user should tap or redo across roles, read the proposal/response gates and resend preconditions in code first (see `no-blind-patching-evidence-first.mdc`). Do not attach a “test plan” with unverified steps.
 9. **UI/UX product choices:** See `ui-ux-no-initiative.mdc` — do not assume optional/required, defaults, copy, layout, or validation UX when the user did not specify; ask first.
 
+## Blocking questions — chat text only
+
+When product scope, protocol behavior, or acceptance criteria are ambiguous and you
+must stop before editing:
+
+- **Ask in the chat reply** as plain Markdown (numbered list, short options per
+  item). The developer answers in their next message.
+- **Do not** invoke Cursor's **Question** UI (`AskQuestion` tool / multiple-choice
+  question cards). This project treats that flow as disruptive; text questions
+  are the only approved channel unless the user explicitly requests the
+  Question UI in that turn.
+
 Prefer a smaller, verified change over a broader speculative fix.

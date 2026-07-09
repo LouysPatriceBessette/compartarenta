@@ -74,7 +74,9 @@ class HelloEnvelope {
 /// `{ "decision": "accepted"|"rejected",
 ///    "device_binding_id": "...",
 ///    "display_name": "...",     # omitted when decision=rejected
-///    "avatar_id": "..." }`
+///    "avatar_id": "...",        # omitted when decision=rejected
+///    "rejection_reason": "...", # optional when decision=rejected
+///    "anchor_kind": "..." }`    # optional; duplicate_module_anchor only
 class AckEnvelope {
   AckEnvelope({
     required this.invitationId,
@@ -83,6 +85,8 @@ class AckEnvelope {
     required this.deviceBindingId,
     this.displayName = '',
     this.avatarId = '',
+    this.rejectionReason,
+    this.duplicateAnchorKind,
   });
 
   final Uint8List invitationId;
@@ -91,6 +95,12 @@ class AckEnvelope {
   final String deviceBindingId;
   final String displayName;
   final String avatarId;
+
+  /// Present on some rejected acks (e.g. duplicate module anchor).
+  final String? rejectionReason;
+
+  /// [DuplicateModuleAnchorKind] when [rejectionReason] is duplicate anchor.
+  final String? duplicateAnchorKind;
 }
 
 /// Steady-state profile update sent between two connected contacts.
@@ -447,6 +457,10 @@ class EnvelopeCodec {
           'display_name': envelope.displayName,
           'avatar_id': envelope.avatarId,
         },
+        if (!envelope.accepted && envelope.rejectionReason != null)
+          'rejection_reason': envelope.rejectionReason,
+        if (!envelope.accepted && envelope.duplicateAnchorKind != null)
+          'anchor_kind': envelope.duplicateAnchorKind,
       }),
     );
     final aeadNonce = header.sublist(header.length - 12);
@@ -525,6 +539,8 @@ class EnvelopeCodec {
       deviceBindingId: bindingId,
       displayName: (json['display_name'] as String?) ?? '',
       avatarId: (json['avatar_id'] as String?) ?? '',
+      rejectionReason: json['rejection_reason'] as String?,
+      duplicateAnchorKind: json['anchor_kind'] as String?,
     );
   }
 

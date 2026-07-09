@@ -12,3 +12,13 @@ Uri privacyPolicyUrlForLocale(Locale locale) {
   };
   return Uri.parse('$_legalSiteOrigin$path');
 }
+
+/// FAQ anchor for duplicate-contact / restore-data flows (bug 1.22 extension).
+Uri contactDuplicateFaqUrlForLocale(Locale locale) {
+  final path = switch (locale.languageCode) {
+    'fr' => '/fr/modules/contacts/faq/#reject',
+    'es' => '/es/modules/contacts/faq/#reject',
+    _ => '/en/modules/contacts/faq/#reject',
+  };
+  return Uri.parse('$_legalSiteOrigin$path');
+}

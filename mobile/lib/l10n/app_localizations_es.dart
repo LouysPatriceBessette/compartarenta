@@ -2183,6 +2183,54 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationContactDuplicateModuleAnchorRejectedBody =>
+      'La persona con la que intentaste conectarte ya tiene tu contacto. Debes restaurar tus datos antes de volver a conectarte.';
+
+  @override
+  String get contactsDuplicateDialogOk => 'OK';
+
+  @override
+  String get contactsDuplicateReadMore => 'Leer más sobre esto';
+
+  @override
+  String get contactsDuplicateAnchorHousingActive =>
+      'un plan de vivienda activo';
+
+  @override
+  String get contactsDuplicateAnchorVehicleSharing =>
+      'un uso compartido de vehículo';
+
+  @override
+  String get contactsDuplicateAnchorHousingAndVehicle =>
+      'Texto por determinar para el caso Vivienda Y Vehículo';
+
+  @override
+  String contactsDuplicateInviterRejectedIntro(String anchor) {
+    return 'El contacto que acaba de usar un código de invitación ya estaba en tus contactos. Es un duplicado. El contacto existente está vinculado a $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviterNotAdded =>
+      'El contacto NO se ha añadido.';
+
+  @override
+  String get contactsDuplicateInviterInformRestore =>
+      'Indícale que debe restaurar sus datos en su dispositivo para restablecer la conexión contigo.';
+
+  @override
+  String get contactsDuplicateInviterMergedBody =>
+      'El contacto que acaba de usar un código de invitación ya estaba en tus contactos. Se ha asociado al contacto existente.';
+
+  @override
+  String contactsDuplicateInviteeRejectedIntro(String anchor) {
+    return 'La persona con la que intentaste conectarte ya tiene tu contacto. Estás vinculado a $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviteeMustRestore =>
+      'DEBES restaurar tus datos. Eso es lo que debes hacer para restablecer correctamente el contacto.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Tu solicitud de conexión con $name fue aceptada.';
   }

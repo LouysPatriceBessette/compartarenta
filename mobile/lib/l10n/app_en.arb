@@ -996,6 +996,24 @@
   "@pushNotificationContactAddedViaInvitationBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactDuplicateModuleAnchorRejectedBody": "The person you tried to connect with already has your contact on file, but you must restore your data before reconnecting.",
+  "contactsDuplicateDialogOk": "OK",
+  "contactsDuplicateReadMore": "Read more about this",
+  "contactsDuplicateAnchorHousingActive": "an active housing plan",
+  "contactsDuplicateAnchorVehicleSharing": "a vehicle sharing link",
+  "contactsDuplicateAnchorHousingAndVehicle": "Text to be determined for the Housing AND Vehicle case",
+  "contactsDuplicateInviterRejectedIntro": "The contact who just used an invitation code was already in your contacts. This is a duplicate. The existing contact is linked to {anchor}.",
+  "@contactsDuplicateInviterRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviterNotAdded": "The contact was NOT added.",
+  "contactsDuplicateInviterInformRestore": "Tell them they must restore their data on their device to reconnect with you.",
+  "contactsDuplicateInviterMergedBody": "The contact who just used an invitation code was already in your contacts. They were merged into the existing contact.",
+  "contactsDuplicateInviteeRejectedIntro": "The person you tried to connect with already has your contact. You are linked to {anchor}.",
+  "@contactsDuplicateInviteeRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviteeMustRestore": "You MUST restore your data. That is what you need to do to reconnect properly.",
   "pushNotificationContactAddRequestAcceptedBody": "Your connection request with {name} was accepted.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }

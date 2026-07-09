@@ -862,6 +862,24 @@
   "@pushNotificationContactAddedViaInvitationBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactDuplicateModuleAnchorRejectedBody": "La personne avec qui vous avez tenté de vous connecter possède déjà votre contact. Vous devez restaurer vos données avant de pouvoir rétablir la connexion.",
+  "contactsDuplicateDialogOk": "Ok",
+  "contactsDuplicateReadMore": "Lire plus à ce sujet",
+  "contactsDuplicateAnchorHousingActive": "un plan de logement actif",
+  "contactsDuplicateAnchorVehicleSharing": "un partage de véhicule",
+  "contactsDuplicateAnchorHousingAndVehicle": "Texte à déterminer pour le cas Véhicule ET Logement",
+  "contactsDuplicateInviterRejectedIntro": "Le contact qui vient d'utiliser un code d'invitation était déjà présent dans vos contacts. Il s'agit d'un doublon. Le contact déjà existant est lié à {anchor}.",
+  "@contactsDuplicateInviterRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviterNotAdded": "Le contact n'a PAS été ajouté.",
+  "contactsDuplicateInviterInformRestore": "Informez la personne qu'elle doit restaurer ses données de son coté afin de rétablir la connexion avec vous.",
+  "contactsDuplicateInviterMergedBody": "Le contact qui vient d'utiliser un code d'invitation était déjà présent dans vos contacts. Ce contact a été associé au contact pré-existant.",
+  "contactsDuplicateInviteeRejectedIntro": "La personne avec qui vous avez tenté de vous connecter possède déjà votre contact. Vous êtes lié à {anchor}.",
+  "@contactsDuplicateInviteeRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviteeMustRestore": "Vous DEVEZ restaurer vos données. C'est ce qui doit être fait pour correctement rétablir le contact.",
   "pushNotificationContactAddRequestAcceptedBody": "Votre demande de connexion avec {name} a été acceptée.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }

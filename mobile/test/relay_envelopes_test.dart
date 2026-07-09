@@ -219,6 +219,50 @@ void main() {
       expect(decoded.accepted, isFalse);
       expect(decoded.displayName, isEmpty);
       expect(decoded.avatarId, isEmpty);
+      expect(decoded.rejectionReason, isNull);
+      expect(decoded.duplicateAnchorKind, isNull);
+    });
+
+    test('round-trips rejected ack with duplicate module anchor reason', () async {
+      final inviterKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => 0x80 + i)),
+      );
+      final inviteeKeystore = InMemoryIdentityKeystore(
+        seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 1)),
+      );
+
+      final inviterPub = await inviterKeystore.publicKey();
+      final inviteePriv = await inviteeKeystore.loadOrCreatePrivateKey();
+      final inviteePub = await inviteeKeystore.publicKey();
+
+      final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
+        invitationId: invitationId,
+        nonce: invitationNonce,
+      );
+
+      final frame = await EnvelopeCodec.encryptAck(
+        envelope: AckEnvelope(
+          invitationId: invitationId,
+          inviterLongTermPublicKey: inviterPub,
+          accepted: false,
+          deviceBindingId: 'binding-inviter-test',
+          rejectionReason: 'duplicate_module_anchor',
+          duplicateAnchorKind: 'housing',
+        ),
+        invitationNonce: invitationNonce,
+        inviterHandshakePrivateKey: inviterHandshakePriv,
+        inviteeLongTermPublicKey: inviteePub,
+      );
+
+      final decoded = await EnvelopeCodec.decryptAck(
+        frame: frame,
+        invitationId: invitationId,
+        invitationNonce: invitationNonce,
+        inviteeLongTermPrivateKey: inviteePriv,
+      );
+      expect(decoded.accepted, isFalse);
+      expect(decoded.rejectionReason, 'duplicate_module_anchor');
+      expect(decoded.duplicateAnchorKind, 'housing');
     });
   });
 

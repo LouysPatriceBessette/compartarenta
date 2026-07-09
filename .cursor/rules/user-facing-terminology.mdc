@@ -26,6 +26,12 @@ the developer.
 | odometer gap / differential | Do not use developer jargon in the prompt; no in-app dispute workflow. | **FR:** « À qui le différentiel de {amount} est-il attribuable ? »; **Unknown:** **Inconnu** / **Je ne sais pas**; **EN/ES:** locale-appropriate equivalent |
 | meter reading photo | Required for every reading; supports negative-gap verification. | **FR:** Photo de l'odomètre (or **Horomètre** for boats) — required, not optional |
 
+**Vehicle sharing topology (agent discipline):** see
+`vehicle-sharing-domain-discipline.mdc`. A Propriétaire never borrows their own
+vehicle; Emprunteur is always a real contact (`borrowerContactId`). Do not
+conflate “lending to a contact” with a separate owner-side anchor — lending to
+contact X means X is Emprunteur.
+
 ## Rule Of Thumb
 
 If the text is for a real-world user, prefer product language over developer

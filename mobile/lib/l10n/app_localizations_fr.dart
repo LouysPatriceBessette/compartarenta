@@ -2179,6 +2179,53 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationContactDuplicateModuleAnchorRejectedBody =>
+      'La personne avec qui vous avez tenté de vous connecter possède déjà votre contact. Vous devez restaurer vos données avant de pouvoir rétablir la connexion.';
+
+  @override
+  String get contactsDuplicateDialogOk => 'Ok';
+
+  @override
+  String get contactsDuplicateReadMore => 'Lire plus à ce sujet';
+
+  @override
+  String get contactsDuplicateAnchorHousingActive =>
+      'un plan de logement actif';
+
+  @override
+  String get contactsDuplicateAnchorVehicleSharing => 'un partage de véhicule';
+
+  @override
+  String get contactsDuplicateAnchorHousingAndVehicle =>
+      'Texte à déterminer pour le cas Véhicule ET Logement';
+
+  @override
+  String contactsDuplicateInviterRejectedIntro(String anchor) {
+    return 'Le contact qui vient d\'utiliser un code d\'invitation était déjà présent dans vos contacts. Il s\'agit d\'un doublon. Le contact déjà existant est lié à $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviterNotAdded =>
+      'Le contact n\'a PAS été ajouté.';
+
+  @override
+  String get contactsDuplicateInviterInformRestore =>
+      'Informez la personne qu\'elle doit restaurer ses données de son coté afin de rétablir la connexion avec vous.';
+
+  @override
+  String get contactsDuplicateInviterMergedBody =>
+      'Le contact qui vient d\'utiliser un code d\'invitation était déjà présent dans vos contacts. Ce contact a été associé au contact pré-existant.';
+
+  @override
+  String contactsDuplicateInviteeRejectedIntro(String anchor) {
+    return 'La personne avec qui vous avez tenté de vous connecter possède déjà votre contact. Vous êtes lié à $anchor.';
+  }
+
+  @override
+  String get contactsDuplicateInviteeMustRestore =>
+      'Vous DEVEZ restaurer vos données. C\'est ce qui doit être fait pour correctement rétablir le contact.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Votre demande de connexion avec $name a été acceptée.';
   }

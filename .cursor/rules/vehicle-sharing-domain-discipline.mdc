@@ -1,0 +1,55 @@
+---
+description: Vehicle sharing roles and module-anchor checks — binding product model
+alwaysApply: true
+---
+
+# Vehicle sharing domain discipline
+
+Agents repeatedly confuse **Propriétaire** vs **Emprunteur** and invent invalid
+sharing topologies. This rule is **binding** for specs, contact/module-anchor
+logic, duplicate-contact handling, and any question about “vehicle sharing
+linked to a contact”.
+
+## Roles on one device instance
+
+| Role | Meaning on this device | Storage |
+| --- | --- | --- |
+| **Propriétaire (local)** | The local user owns vehicles registered here | `kVehicleOwnerSelfContactId` (`vehicle:owner:self`) — **not** a `Contact` row |
+| **Emprunteur** | A connected peer who may use a vehicle the local user owns | Real `Contact.id` on `VehicleSharingLink.borrowerContactId` |
+| **Propriétaire (peer)** | A connected peer who owns a vehicle this device tracks as external | `Vehicle.ownerContactId` pointing at that peer's `Contact.id` |
+
+Code references: `mobile/lib/vehicle/vehicle_owner_contact.dart`,
+`VehiclesRepository.createSharingOffer` (owner is always `kVehicleOwnerSelfContactId`,
+borrower is the invited contact).
+
+## Hard invariant
+
+**A Propriétaire never borrows their own vehicle.**
+
+- No `VehicleSharingLink` may treat the owner as borrower of the same vehicle.
+- Do **not** propose checks that equate “I lend this contact a vehicle” with a
+  second, parallel anchor distinct from “this contact is `borrowerContactId`”.
+  On the lender's device, lending **to** contact X **is** X as Emprunteur.
+- Do **not** ask whether the local user could be Emprunteur of their own
+  vehicle — that scenario is **invalid by design**.
+
+## Module anchor on a contact (duplicate re-handshake, deletion gates, etc.)
+
+When the product asks whether a **contact** is tied to vehicle sharing:
+
+| Question | Correct check | Forbidden mistake |
+| --- | --- | --- |
+| Is this contact an Emprunteur on an **active** share? | `VehicleSharingLink` with `status == active` and `borrowerContactId == contactId` | Checking `ownerContactId == contactId` as a substitute for “I lent them a car” |
+| Did I lend them a vehicle? | Same as above — they are `borrowerContactId` | Inventing a separate “lender-side” anchor case |
+| Peer owns a vehicle I use | `Vehicle.ownerContactId == contactId` (external owner) | Treating this as equivalent to Emprunteur anchor unless the user **explicitly** scoped external-owner scenarios |
+
+**Pending** offers: only count when the user or spec explicitly includes
+`pending` status. Default for duplicate-contact blocking (bug 1.22 extension):
+**active** links only, Emprunteur role via `borrowerContactId`.
+
+## Before suggesting vehicle-sharing logic
+
+1. State which device instance owns the vehicle row.
+2. Name whether the contact is Propriétaire (peer), Emprunteur, or unrelated.
+3. If tempted to offer multiple-choice options about owner-as-borrower, **stop**
+   — the model does not allow it.

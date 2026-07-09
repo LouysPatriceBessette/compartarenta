@@ -55,6 +55,9 @@ final class _FakeContactNotificationSink implements ContactNotificationSink {
   Future<void> contactAddRequestFailed({required String errorCode}) async {}
 
   @override
+  Future<void> contactDuplicateModuleAnchorRejected() async {}
+
+  @override
   Future<void> contactDisconnected({required String displayName}) async {}
 
   @override

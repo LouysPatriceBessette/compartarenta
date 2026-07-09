@@ -8,6 +8,8 @@ import 'package:http/http.dart' show ClientException;
 
 import '../activity/relay_activity_log_service.dart';
 import '../contacts/contact_display.dart';
+import '../contacts/contact_duplicate_handshake_dialog_state.dart';
+import '../contacts/contact_duplicate_module_anchor.dart';
 import '../contacts/contact_invitations_repository.dart';
 import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
@@ -102,6 +104,12 @@ class ProfileLabelConflict {
   final String contactId;
   final String newCanonicalDisplayName;
   final String localDisplayLabel;
+}
+
+enum InviterHandshakeFinalizeResult {
+  accepted,
+  acceptedMergedDuplicate,
+  rejectedDuplicateModuleAnchor,
 }
 
 /// Result of a redeem attempt on the invitee side.
@@ -298,12 +306,20 @@ class HandshakeOrchestrator {
   final ValueNotifier<ProfileLabelConflict?> profileLabelConflict =
       ValueNotifier<ProfileLabelConflict?>(null);
 
+  /// One-shot duplicate-handshake dialog for inviter or invitee; consumed on
+  /// [ContactsListScreen].
+  final ValueNotifier<PendingContactDuplicateDialog?>
+  pendingContactDuplicateDialog = ValueNotifier<PendingContactDuplicateDialog?>(
+    null,
+  );
+
   /// Disposes timers + notifiers. Mostly useful in tests.
   void dispose() {
     stopPolling();
     incomingHandshakes.dispose();
     steadyStateInboxTick.dispose();
     profileLabelConflict.dispose();
+    pendingContactDuplicateDialog.dispose();
   }
 
   /// Starts the periodic polling loop. Safe to call multiple times.
@@ -2215,6 +2231,29 @@ class HandshakeOrchestrator {
 
     if (ack.accepted) {
       await _finalizeInviteeAccept(row: row, ack: ack);
+      final notificationDisplayName = ack.displayName.isEmpty
+          ? 'Unknown'
+          : ack.displayName;
+      await _contactNotifications.contactAddRequestResolved(
+        displayName: notificationDisplayName,
+        accepted: true,
+      );
+    } else if (ack.rejectionReason ==
+        AckRejectionReason.duplicateModuleAnchor) {
+      await _contacts.deleteLocally(row.contactStubId);
+      await _markHandshake(
+        row.id,
+        state: HandshakeState.rejected,
+        peerLongTermPublicMaterialB64: RelayRouting.b64(
+          ack.inviterLongTermPublicKey,
+        ),
+      );
+      await _contactNotifications.contactDuplicateModuleAnchorRejected();
+      pendingContactDuplicateDialog.value = PendingContactDuplicateDialog(
+        kind: ContactDuplicateDialogKind.inviteeRejectedAnchor,
+        anchorKind:
+            ack.duplicateAnchorKind ?? DuplicateModuleAnchorKind.housing,
+      );
     } else {
       // Inviter rejected: drop the local stub, mark row rejected.
       await _contacts.deleteLocally(row.contactStubId);
@@ -2225,14 +2264,14 @@ class HandshakeOrchestrator {
           ack.inviterLongTermPublicKey,
         ),
       );
+      final notificationDisplayName = ack.displayName.isEmpty
+          ? 'Unknown'
+          : ack.displayName;
+      await _contactNotifications.contactAddRequestResolved(
+        displayName: notificationDisplayName,
+        accepted: false,
+      );
     }
-    final notificationDisplayName = ack.displayName.isEmpty
-        ? 'Unknown'
-        : ack.displayName;
-    await _contactNotifications.contactAddRequestResolved(
-      displayName: notificationDisplayName,
-      accepted: ack.accepted,
-    );
     await _relay.ackEnvelope(
       envelopeId: envelope.envelopeId,
       recipient: listenAddr,
@@ -2247,7 +2286,7 @@ class HandshakeOrchestrator {
   // Inviter accept finalisation
   // ---------------------------------------------------------------------
 
-  Future<void> _finalizeInviterAccept({
+  Future<InviterHandshakeFinalizeResult> _finalizeInviterAccept({
     required PendingHandshake handshakeRow,
     required Uint8List peerPubBytes,
     required String peerDisplayName,
@@ -2256,6 +2295,25 @@ class HandshakeOrchestrator {
     required String selfDisplayName,
     required String selfAvatarId,
   }) async {
+    final duplicateExistingId = await _deviceBindingDuplicateContactId(
+      defaultStubId: handshakeRow.contactStubId,
+      peerDeviceBindingId: peerDeviceBindingId,
+    );
+    if (duplicateExistingId != null) {
+      final anchorKind = await detectContactDuplicateModuleAnchorKind(
+        _db,
+        duplicateExistingId,
+      );
+      if (anchorKind != null) {
+        await _finalizeInviterRejectDuplicateModuleAnchor(
+          handshakeRow: handshakeRow,
+          peerPubBytes: peerPubBytes,
+          anchorKind: anchorKind,
+        );
+        return InviterHandshakeFinalizeResult.rejectedDuplicateModuleAnchor;
+      }
+    }
+
     final invitationIdBytes = _hexDecode(handshakeRow.invitationIdHex);
     final nonceBytes = _hexDecode(handshakeRow.nonceHex);
     final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
@@ -2352,6 +2410,78 @@ class HandshakeOrchestrator {
     // contact list UIs reload promoted rows without a route change.
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     startPolling();
+    requestClosedAppPushRegistrationSync();
+
+    if (promoteContactId != handshakeRow.contactStubId) {
+      pendingContactDuplicateDialog.value = PendingContactDuplicateDialog(
+        kind: ContactDuplicateDialogKind.inviterMerged,
+      );
+      return InviterHandshakeFinalizeResult.acceptedMergedDuplicate;
+    }
+    return InviterHandshakeFinalizeResult.accepted;
+  }
+
+  Future<void> _finalizeInviterRejectDuplicateModuleAnchor({
+    required PendingHandshake handshakeRow,
+    required Uint8List peerPubBytes,
+    required String anchorKind,
+  }) async {
+    final invitationIdBytes = _hexDecode(handshakeRow.invitationIdHex);
+    final nonceBytes = _hexDecode(handshakeRow.nonceHex);
+    final inviterHandshakePriv = await RelayRouting.handshakePrivateKey(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+    final inviterLongTermPub = await _identity.publicKey();
+    final selfBindingId = await _deviceBinding.loadOrComputeId();
+
+    final ackFrame = await EnvelopeCodec.encryptAck(
+      envelope: AckEnvelope(
+        invitationId: invitationIdBytes,
+        inviterLongTermPublicKey: inviterLongTermPub,
+        accepted: false,
+        deviceBindingId: selfBindingId,
+        rejectionReason: AckRejectionReason.duplicateModuleAnchor,
+        duplicateAnchorKind: anchorKind,
+      ),
+      invitationNonce: nonceBytes,
+      inviterHandshakePrivateKey: inviterHandshakePriv,
+      inviteeLongTermPublicKey: peerPubBytes,
+    );
+    final addrInviter = await RelayRouting.inviterHandshakeAddress(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+    final addrInvitee = await RelayRouting.inviteeHandshakeAddress(
+      invitationId: invitationIdBytes,
+      nonce: nonceBytes,
+    );
+
+    try {
+      await _relay.postEnvelope(
+        senderIdentity: addrInviter,
+        recipientIdentity: addrInvitee,
+        idempotencyKey: _randomBytes(16),
+        ciphertext: ackFrame,
+        kind: EnvelopeKind.ack,
+        ttl: _ackTtl,
+      );
+    } on RelayClientError catch (e) {
+      throw HandshakeOrchestratorError('relay_error', e);
+    }
+
+    await _contacts.deleteLocally(handshakeRow.contactStubId);
+    await _markHandshake(handshakeRow.id, state: HandshakeState.rejected);
+    await _decommissionHandshakeAddresses(
+      addrInviter: addrInviter,
+      addrInvitee: addrInvitee,
+    );
+    await refreshIncomingHandshakes();
+    pendingContactDuplicateDialog.value = PendingContactDuplicateDialog(
+      kind: ContactDuplicateDialogKind.inviterRejectedAnchor,
+      anchorKind: anchorKind,
+    );
+    steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     requestClosedAppPushRegistrationSync();
   }
 
@@ -3694,6 +3824,20 @@ class HandshakeOrchestrator {
     );
   }
 
+  Future<String?> _deviceBindingDuplicateContactId({
+    required String defaultStubId,
+    required String peerDeviceBindingId,
+  }) async {
+    if (peerDeviceBindingId.isEmpty) return null;
+    final connected = await _contacts.connectedByDeviceBinding(
+      peerDeviceBindingId,
+    );
+    if (connected != null && connected.id != defaultStubId) {
+      return connected.id;
+    }
+    return null;
+  }
+
   Future<String> _resolveHandshakePromoteContactId({
     required String defaultStubId,
     required String peerPublicMaterialB64,
@@ -3701,13 +3845,12 @@ class HandshakeOrchestrator {
     String? displayName,
     String? avatarId,
   }) async {
-    if (peerDeviceBindingId.isNotEmpty) {
-      final connected = await _contacts.connectedByDeviceBinding(
-        peerDeviceBindingId,
-      );
-      if (connected != null && connected.id != defaultStubId) {
-        return connected.id;
-      }
+    final duplicateId = await _deviceBindingDuplicateContactId(
+      defaultStubId: defaultStubId,
+      peerDeviceBindingId: peerDeviceBindingId,
+    );
+    if (duplicateId != null) {
+      return duplicateId;
     }
     final disconnected = await _contacts.disconnectedReconnectCandidate(
       peerPublicMaterialB64: peerPublicMaterialB64,

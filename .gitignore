@@ -1,6 +1,9 @@
 # Personal dev notes (not tracked)
 dev-ideas/
 
+# Personal Cursor helper rules (not app-specific; invoke via @)
+.cursor/rules/helpers/
+
 # dev
 relay/deploy/landing/dev/
 

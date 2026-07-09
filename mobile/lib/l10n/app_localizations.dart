@@ -3689,6 +3689,78 @@ abstract class AppLocalizations {
   /// **'{name} is now in your contacts.'**
   String pushNotificationContactAddedViaInvitationBody(String name);
 
+  /// No description provided for @pushNotificationContactDuplicateModuleAnchorRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The person you tried to connect with already has your contact on file, but you must restore your data before reconnecting.'**
+  String get pushNotificationContactDuplicateModuleAnchorRejectedBody;
+
+  /// No description provided for @contactsDuplicateDialogOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get contactsDuplicateDialogOk;
+
+  /// No description provided for @contactsDuplicateReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more about this'**
+  String get contactsDuplicateReadMore;
+
+  /// No description provided for @contactsDuplicateAnchorHousingActive.
+  ///
+  /// In en, this message translates to:
+  /// **'an active housing plan'**
+  String get contactsDuplicateAnchorHousingActive;
+
+  /// No description provided for @contactsDuplicateAnchorVehicleSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'a vehicle sharing link'**
+  String get contactsDuplicateAnchorVehicleSharing;
+
+  /// No description provided for @contactsDuplicateAnchorHousingAndVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text to be determined for the Housing AND Vehicle case'**
+  String get contactsDuplicateAnchorHousingAndVehicle;
+
+  /// No description provided for @contactsDuplicateInviterRejectedIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact who just used an invitation code was already in your contacts. This is a duplicate. The existing contact is linked to {anchor}.'**
+  String contactsDuplicateInviterRejectedIntro(String anchor);
+
+  /// No description provided for @contactsDuplicateInviterNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact was NOT added.'**
+  String get contactsDuplicateInviterNotAdded;
+
+  /// No description provided for @contactsDuplicateInviterInformRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell them they must restore their data on their device to reconnect with you.'**
+  String get contactsDuplicateInviterInformRestore;
+
+  /// No description provided for @contactsDuplicateInviterMergedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact who just used an invitation code was already in your contacts. They were merged into the existing contact.'**
+  String get contactsDuplicateInviterMergedBody;
+
+  /// No description provided for @contactsDuplicateInviteeRejectedIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The person you tried to connect with already has your contact. You are linked to {anchor}.'**
+  String contactsDuplicateInviteeRejectedIntro(String anchor);
+
+  /// No description provided for @contactsDuplicateInviteeMustRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'You MUST restore your data. That is what you need to do to reconnect properly.'**
+  String get contactsDuplicateInviteeMustRestore;
+
   /// No description provided for @pushNotificationContactAddRequestAcceptedBody.
   ///
   /// In en, this message translates to:

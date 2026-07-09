@@ -22,6 +22,10 @@ abstract class ContactNotificationSink {
 
   Future<void> contactAddRequestFailed({required String errorCode});
 
+  /// Invitee-side: inviter rejected a duplicate reconnect because module
+  /// work is anchored on the pre-existing contact (bug 1.22 extension).
+  Future<void> contactDuplicateModuleAnchorRejected();
+
   Future<void> contactDisconnected({required String displayName});
 
   /// Target-side notification for plan-mediated establishment.
@@ -112,6 +116,29 @@ class DefaultContactNotificationSink implements ContactNotificationSink {
         _connectionRequestFailureBody(l10n, errorCode),
       ),
       playSound: prefs.notificationSoundEnabled,
+    );
+  }
+
+  @override
+  Future<void> contactDuplicateModuleAnchorRejected() async {
+    final prefs = await AppPreferences.load();
+    if (!prefs.notificationsEnabled || !prefs.notificationContactAddRequests) {
+      return;
+    }
+    if (!await _systemAllowsNotifications()) return;
+
+    final l10n = l10nForNotificationLocale(prefs: prefs);
+    await impl.showContactNotification(
+      title: notificationQaPrefix(
+        19,
+        l10n.pushNotificationContactAddRequestTitle,
+      ),
+      body: notificationQaPrefix(
+        19,
+        l10n.pushNotificationContactDuplicateModuleAnchorRejectedBody,
+      ),
+      playSound: prefs.notificationSoundEnabled,
+      payload: 'contacts',
     );
   }
 

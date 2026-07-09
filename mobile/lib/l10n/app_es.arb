@@ -845,6 +845,24 @@
   "@pushNotificationContactAddedViaInvitationBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationContactDuplicateModuleAnchorRejectedBody": "La persona con la que intentaste conectarte ya tiene tu contacto. Debes restaurar tus datos antes de volver a conectarte.",
+  "contactsDuplicateDialogOk": "OK",
+  "contactsDuplicateReadMore": "Leer más sobre esto",
+  "contactsDuplicateAnchorHousingActive": "un plan de vivienda activo",
+  "contactsDuplicateAnchorVehicleSharing": "un uso compartido de vehículo",
+  "contactsDuplicateAnchorHousingAndVehicle": "Texto por determinar para el caso Vivienda Y Vehículo",
+  "contactsDuplicateInviterRejectedIntro": "El contacto que acaba de usar un código de invitación ya estaba en tus contactos. Es un duplicado. El contacto existente está vinculado a {anchor}.",
+  "@contactsDuplicateInviterRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviterNotAdded": "El contacto NO se ha añadido.",
+  "contactsDuplicateInviterInformRestore": "Indícale que debe restaurar sus datos en su dispositivo para restablecer la conexión contigo.",
+  "contactsDuplicateInviterMergedBody": "El contacto que acaba de usar un código de invitación ya estaba en tus contactos. Se ha asociado al contacto existente.",
+  "contactsDuplicateInviteeRejectedIntro": "La persona con la que intentaste conectarte ya tiene tu contacto. Estás vinculado a {anchor}.",
+  "@contactsDuplicateInviteeRejectedIntro": {
+    "placeholders": { "anchor": { "type": "String" } }
+  },
+  "contactsDuplicateInviteeMustRestore": "DEBES restaurar tus datos. Eso es lo que debes hacer para restablecer correctamente el contacto.",
   "pushNotificationContactAddRequestAcceptedBody": "Tu solicitud de conexión con {name} fue aceptada.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }
