@@ -1,0 +1,23 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Proposer: seeded draft at summary — submit only (FCM wake manual QA).
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 45000
+- tapOn:
+    id: "qa-home-housing"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-summary-submit"
+    timeout: 45000
+- tapOn:
+    id: "qa-housing-wizard-summary-submit"
+- extendedWaitUntil:
+    visible: "Délai de réponse"
+    timeout: 30000
+- tapOn: "Continuer"
+- runFlow:
+    file: _dismiss_notification_prompt.yaml

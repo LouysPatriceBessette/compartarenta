@@ -195,6 +195,39 @@ Manifests live under `qa/multi_scenarios/`. Each declares `role_*` blocks (AVD, 
 
 Artifacts: `qa/artifacts/multi-<scenario-id>/<UTC-timestamp>/`.
 
+### FCM wake push (emulator + physical device)
+
+Manual check for **closed-app FCM wake** only. Setup is **seeded** (paired contacts +
+housing draft on Monica); automation is **kill recipient process → submit plan**
+(`am kill`, not `am force-stop` — force-stop blocks FCM delivery on Android).
+
+**Prerequisites:**
+
+1. Physical phone (`R3CY202HKYL` by default), USB debugging, Firebase in the dev flavor.
+2. Monica-QA AVD; relay FCM wake enabled on VPS.
+
+The script **builds and installs** the current dev debug APK on **both** emulator and phone
+(arm64 + x86_64 fat APK). Recipient `pm clear` wipes app data; the runner **re-grants**
+`POST_NOTIFICATIONS` via adb before the seed cold start (Android 13+).
+
+**Run:**
+
+```bash
+./tool/melosw run qa:run-fcm-wake-push
+```
+
+Pipeline:
+
+1. Seed Monica (`fcm_wake_push_proposer`) — DB + housing draft
+2. `tool/qa_fcm_wake_establish_relay_routing.sh` — `handshake/establish` on VPS (**before** recipient cold start)
+3. Seed phone (`fcm_wake_push_recipient`) — shell waits for `routing_push.last_refresh_ms` in prefs **before** `am kill`
+4. `am kill` on phone (process ended; app not force-stopped — FCM can still wake)
+5. Monica taps **Soumettre** (submit-only Maestro flow)
+6. Operator watches phone ~45s; relay must not log `push.wake.send_failed`
+
+Manifest: `qa/multi_scenarios/fcm_wake_push_emulator_physical.yaml`. Coordinator:
+`tool/coordinators/fcm_wake_push.sh`.
+
 ## Repository layout
 
 ```
@@ -212,6 +245,7 @@ mobile/lib/debug/
 tool/
   run_scenario.sh        One scenario end-to-end
   run_multi_device_scenario.sh  Multi-emulator orchestrator entry point
+  run_fcm_wake_push_scenario.sh Emulator + physical FCM wake manual scenario
   coordinators/          Per-domain coordination scripts (contact handshake, …)
   run_all_scenarios.sh   All manifests + aggregated report
   seed_qa_scenario.sh    Seed only (used by run_scenario)
@@ -301,6 +335,7 @@ Prefer `./tool/melosw` over `dart run melos` (avoids redundant `pub get`).
 | `qa:seed` | Seed one scenario (`-- <id>`) |
 | `qa:run-scenario` | One full scenario (`-- <id> [options]`) |
 | `qa:run-all-scenarios` | All scenarios + `index.html` |
+| `qa:run-fcm-wake-push` | FCM wake manual (Monica emulator + physical phone) |
 
 Examples:
 

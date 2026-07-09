@@ -24,6 +24,13 @@ Future<void> runWakeInboxPollOnce() async {
   if (config.apiBaseUrl.host == 'example.invalid') return;
 
   final appDb = AppDatabase();
+  AppDatabase? scopeBeforeWake;
+  try {
+    scopeBeforeWake = AppDatabase.processScope;
+  } on StateError {
+    scopeBeforeWake = null;
+  }
+  AppDatabase.bindProcessScope(appDb);
   try {
     final identity = IdentityKeystore.secureStorage();
     final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
@@ -41,6 +48,11 @@ Future<void> runWakeInboxPollOnce() async {
   } catch (e, st) {
     debugPrint('runWakeInboxPollOnce failed: $e\n$st');
   } finally {
+    if (scopeBeforeWake != null) {
+      AppDatabase.bindProcessScope(scopeBeforeWake);
+    } else {
+      AppDatabase.clearProcessScopeIfReferencing(appDb);
+    }
     await appDb.close();
   }
 }

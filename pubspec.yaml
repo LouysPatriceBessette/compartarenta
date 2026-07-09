@@ -183,3 +183,10 @@ melos:
         Run a multi-device QA scenario (two emulators + coordinator script).
         Example: ./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path --skip-build
       run: chmod +x ./tool/run_multi_device_scenario.sh && ./tool/run_multi_device_scenario.sh "$@"
+
+    qa:run-fcm-wake-push:
+      description: |
+        FCM wake manual QA — Monica emulator sends; physical recipient (default R3CY202HKYL)
+        with app closed. Sequential steps; operator confirms notification visually.
+        Example: ./tool/melosw run qa:run-fcm-wake-push -- --skip-build
+      run: chmod +x ./tool/run_fcm_wake_push_scenario.sh && ./tool/run_fcm_wake_push_scenario.sh "$@"

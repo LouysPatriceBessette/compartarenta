@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- tapOn:
+    text: "Oui, les activer et continuer"
+    optional: true
+- tapOn:
+    text: "Autoriser"
+    optional: true
+- tapOn:
+    text: "AUTORISER"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true

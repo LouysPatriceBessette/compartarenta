@@ -1,14 +1,16 @@
-> **Implementation status (2026-06-21).** Relay schema v2 (`routing_push_tokens`),
+> **Implementation status (2026-07-08).** Relay schema v2 (`routing_push_tokens`),
 > register/unregister endpoints, FCM wake dispatcher (feature-flagged), daily
 > stats loopback + cron scripts, Android keep-alive (WorkManager + resume/wake
 > refresh), client registration gates, predecessor spec alignment, operator docs,
-> automated tests, and client wake-eligible Housing plan categories (**12.1**,
-> **12.2**) are **implemented in the repo**. Production enablement
-> (`WAKE_PUSH_DISPATCH_ENABLED`), field validation on Android, and tasks **7.4**,
-> **10.5**, **11.2–11.6** remain **open**. Privacy sign-off for transport routing
-> tokens + `last_seen_at` is **recorded** (task 1.1; see `design.md` § 1). APNs
-> code exists in relay but is **out of scope** for current functional QA
-> (FCM-only).
+> automated tests, client wake-eligible Housing plan categories (**12.1**,
+> **12.2**), **Android FCM wake field validation**, and **FCM wake manual QA**
+> (`fcm_wake_push_emulator_physical`) are **implemented and validated in the repo /
+> on VPS**. Production enablement (`WAKE_PUSH_DISPATCH_ENABLED`) is **on** for
+> current Android QA. Tasks **7.4**, **10.5 (iOS only)**, **11.2**, **11.3 (APNs
+> only)**, **11.6**, and **12.3–12.4** remain **open or deferred**. Privacy
+> sign-off for transport routing tokens + `last_seen_at` is **recorded** (task 1.1;
+> see `design.md` § 1). APNs code exists in relay but is **out of scope** for
+> current functional QA (FCM-only).
 
 ## 1. Privacy and Spec Orchestration
 
@@ -69,7 +71,7 @@
 ## 8. Mobile Client: Wake Handler
 
 - [x] 8.1 Extend the existing background message handler (`push_notification_background.dart`) to recognize `kind = "wake_for_inbox"` payloads.
-- [x] 8.2 On wake receipt, trigger a one-shot poll cycle for the recipient routing id. *(See `runWakeInboxPollOnce` → `processAllPendingHandshakes` + `pollSteadyStateInboxes` + `pollHousingPaymentReminders`.)*
+- [x] 8.2 On wake receipt, trigger a one-shot poll cycle for the recipient routing id. *(See `runWakeInboxPollOnce` → `processAllPendingHandshakes` + `pollSteadyStateInboxes` + `pollHousingPaymentReminders`; `AppDatabase.bindProcessScope` in background isolate — 2026-07-08.)*
 - [x] 8.3 After polling, run the existing decrypt + local notification builders for whichever envelope kinds match V1 scope (Contacts add request only in this change). *(Poll path covers Contacts handshakes, housing inbox, and relay-scheduled payment reminders — broader than original V1 Contacts-only scope.)*
 - [x] 8.4 Ensure the wake handler honors the existing master switch and category preferences before surfacing a local notification. *(Per-kind builders consult `AppPreferences`.)*
 
@@ -93,15 +95,16 @@
 - [x] 10.2 Relay integration tests: end-to-end envelope ingestion triggers wake dispatch to a mocked FCM/APNs provider; daily statistics endpoint produces correct aggregates with seeded data; cron job appends one valid JSON line per day and is idempotent. *(`relay/internal/integration/push_delivery_integration_test.go` — requires `RELAY_INTEGRATION_TEST_DSN`.)*
 - [x] 10.3 Mobile unit tests: register/unregister calls under master-switch and category combinations, keep-alive refresh windows, token rotation handling, country preference behavior (Section 9b.6). *(`mobile/test/closed_app_push_registration_service_test.dart`.)*
 - [x] 10.4 Mobile integration tests: wake handler triggers a poll and produces the existing Contacts add request notification. *(`mobile/test/wake_inbox_poll_integration_test.dart`.)*
-- [ ] 10.5 Field test on TestFlight and Play Store internal track for at least one week to validate iOS background throttling assumptions and Android battery optimization behavior. *(Android field test still required; TestFlight / iOS deferred.)*
+- [x] 10.5 Field test on TestFlight and Play Store internal track for at least one week to validate iOS background throttling assumptions and Android battery optimization behavior. *(Android validated 2026-07-08: physical device `R3CY202HKYL`, run `20260708T235740Z`, scenario `fcm_wake_push_emulator_physical` — FCM wake → poll → housing proposal notification tray; logcat confirms no `GCM CANCELLED` / no `processScope` error. TestFlight / iOS deferred.)*
+- [x] 10.6 FCM wake manual QA scenario: seeded Monica emulator + physical recipient, `tool/qa_fcm_wake_establish_relay_routing.sh`, recipient `am kill` (not `force-stop`), proposer submit-only Maestro flow, operator/logcat notification check. *(Manifest `qa/multi_scenarios/fcm_wake_push_emulator_physical.yaml`; entry `./tool/melosw run qa:run-fcm-wake-push`; validated 2026-07-08.)*
 
 ## 11. Operations and Audit
 
 - [x] 11.1 Document the new schema (including the `country` column), TTL, dispatch contract, statistics endpoint, cron, and stats file under `docs/relay-deployment.md` and `docs/relay-state-schema.md` (or equivalent) so the audit reviewer can trace the contract.
 - [ ] 11.2 Confirm with the auditor that the privacy posture relaxation described in `specs/closed-app-push-delivery/spec.md` is acceptable before enabling the dispatcher in production. Specifically have the auditor confirm: TTL default of 14 days, hardcoded country suppression threshold of 10, loopback-only statistics endpoint, append-only stats file, no humans querying the DB.
-- [ ] 11.3 Provision FCM Service Account JSON and APNs auth key in the relay deployment environment; document rotation procedure. Time the Apple Developer Program subscription to coincide with the first real-device iOS test rather than at project kickoff (see design.md §11 "Account and secrets sequencing"). *(FCM provisioning + Android field test still open; Apple key deferred.)*
-- [ ] 11.4 Cut a relay release with the schema and endpoints behind the dispatcher flag; verify that running with the flag off has zero behavioral impact on existing clients. *(v0.2.0 baseline recorded with dispatch disabled — see `docs/relay-audit-log.md`.)*
-- [ ] 11.5 Enable the dispatcher flag in production after audit sign-off and after field testing completes.
+- [x] 11.3 Provision FCM Service Account JSON and APNs auth key in the relay deployment environment; document rotation procedure. Time the Apple Developer Program subscription to coincide with the first real-device iOS test rather than at project kickoff (see design.md §11 "Account and secrets sequencing"). *(FCM: provisioned on VPS, `roles/firebasecloudmessaging.admin` on service account, `WAKE_PUSH_DISPATCH_ENABLED` — validated 2026-07-08. APNs auth key deferred.)*
+- [x] 11.4 Cut a relay release with the schema and endpoints behind the dispatcher flag; verify that running with the flag off has zero behavioral impact on existing clients. *(v0.2.0 baseline recorded with dispatch disabled — see `docs/relay-audit-log.md`.)*
+- [x] 11.5 Enable the dispatcher flag in production after audit sign-off and after field testing completes. *(Enabled for current VPS Android QA; housing proposal wake notification validated on physical device 2026-07-08. Formal auditor sign-off tracked under **11.2**.)*
 - [ ] 11.6 Install the cron job under the operating-system user that owns the relay process. Verify after one full day that the stats file received its first line at 00:07 UTC.
 
 ## 12. Follow-Up Scope (Out of V1, Tracked Here)

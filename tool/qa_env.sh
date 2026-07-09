@@ -143,14 +143,28 @@ qa_apk_contains_libflutter_for_abi() {
     | grep -Fxq "lib/${lib_abi}/libflutter.so"
 }
 
-# Install the QA debug APK on one emulator. Uninstalls first so a prior
-# `flutter run` on another ABI cannot leave arm64 libflutter.so in app_lib/.
+# Grant Android 13+ POST_NOTIFICATIONS after pm clear (until revoked in system settings).
+qa_grant_post_notifications_on_serial() {
+  local serial="$1"
+  local app_id="${2:-${COMPARTARENTA_QA_APP_ID}}"
+  local sdk
+  sdk="$(adb -s "${serial}" shell getprop ro.build.version.sdk | tr -d '\r')"
+  if [[ -z "${sdk}" || "${sdk}" -lt 33 ]]; then
+    return 0
+  fi
+  echo "Granting POST_NOTIFICATIONS on ${serial} (${app_id})..."
+  adb -s "${serial}" shell pm grant "${app_id}" android.permission.POST_NOTIFICATIONS
+}
+
+# Install the QA debug APK. Uninstalls first so a prior `flutter run` on another
+# ABI cannot leave stale native libs in app_lib/.
 qa_install_qa_apk_on_serial() {
   local serial="$1"
   local apk="${2:-${COMPARTARENTA_QA_APK_PATH}}"
 
-  if [[ "${serial}" != emulator-* ]]; then
+  if [[ "${serial}" != emulator-* && "${COMPARTARENTA_QA_ALLOW_USB_APK_INSTALL:-0}" != "1" ]]; then
     echo "Refusing to install QA APK on a non-emulator device (${serial})." >&2
+    echo "Set COMPARTARENTA_QA_ALLOW_USB_APK_INSTALL=1 for explicit USB installs (FCM wake scenario)." >&2
     return 1
   fi
   if [[ ! -f "${apk}" ]]; then
@@ -169,8 +183,13 @@ qa_install_qa_apk_on_serial() {
   fi
   if ! qa_apk_contains_libflutter_for_abi "${apk}" "${lib_abi}"; then
     echo "APK missing lib/${lib_abi}/libflutter.so required by ${serial}." >&2
+    if [[ "${lib_abi}" == "x86_64" ]] \
+      && qa_apk_contains_libflutter_for_abi "${apk}" arm64-v8a; then
+      echo "The APK on disk is arm64-only (typical after FLUTTER_DEVICE=… ./tool/melosw run run:dev)." >&2
+      echo "Emulators need the x86_64 QA build — do not use --skip-build until qa:build-apk has run." >&2
+    fi
     echo "Rebuild: ./tool/melosw run qa:build-apk" >&2
-    echo "(QA APK targets android-x64 for x86_64 emulators.)" >&2
+    echo "(QA APK must include lib/${lib_abi}/libflutter.so — build uses android-arm64 + android-x64.)" >&2
     return 1
   fi
 
@@ -309,9 +328,34 @@ qa_serial_for_avd() {
 
 qa_pull_handshake_invitation_code() {
   local serial="$1"
+  # Missing file must not abort callers (set -e + pipefail).
   adb -s "${serial}" shell \
     "run-as ${COMPARTARENTA_QA_APP_ID} cat app_flutter/compartarenta_qa_handshake_code.txt" \
-    2>/dev/null | tr -d '\r'
+    2>/dev/null | tr -d '\r' || true
+}
+
+qa_pull_qa_seed_applied_id() {
+  local serial="$1"
+  # Poll loop: seed_applied.txt does not exist until bootstrap finishes.
+  adb -s "${serial}" shell \
+    "run-as ${COMPARTARENTA_QA_APP_ID} cat app_flutter/compartarenta_qa_seed_applied.txt" \
+    2>/dev/null | tr -d '\r' || true
+}
+
+qa_verify_routing_push_refresh_on_serial() {
+  local serial="$1"
+  adb -s "${serial}" shell \
+    "run-as ${COMPARTARENTA_QA_APP_ID} cat shared_prefs/FlutterSharedPreferences.xml" \
+    2>/dev/null \
+    | grep -qE 'name="flutter\.routing_push\.last_refresh_ms"'
+}
+
+qa_verify_onboarding_complete_pref_on_serial() {
+  local serial="$1"
+  adb -s "${serial}" shell \
+    "run-as ${COMPARTARENTA_QA_APP_ID} cat shared_prefs/FlutterSharedPreferences.xml" \
+    2>/dev/null \
+    | grep -qE 'name="flutter\.onboarding\.complete" value="true"'
 }
 
 qa_clear_logcat_on_serial() {
@@ -378,4 +422,64 @@ qa_set_android_date_on_serial() {
   local device_date="$2"
   local timezone="$3"
   ANDROID_SERIAL="${serial}" "${COMPARTARENTA_ROOT}/tool/set_android_date.sh" "${device_date}" "${timezone}"
+}
+
+qa_avd_port_for_name() {
+  local avd_name="$1"
+  local base_port=5554
+  local i=0
+  local name
+  for name in "${COMPARTARENTA_QA_PERSONA_AVD_NAMES[@]}"; do
+    if [[ "${name}" == "${avd_name}" ]]; then
+      echo $((base_port + i * 2))
+      return 0
+    fi
+    i=$((i + 1))
+  done
+  return 1
+}
+
+qa_ensure_named_avd_running() {
+  local avd_name="$1"
+  local serial port
+  if serial="$(qa_serial_for_avd "${avd_name}")"; then
+    qa_wait_for_boot_completed "${serial}"
+    echo "${serial}"
+    return 0
+  fi
+  port="$(qa_avd_port_for_name "${avd_name}")" || {
+    echo "Unknown QA persona AVD: ${avd_name}" >&2
+    return 1
+  }
+  if ! avdmanager list avd | grep -Fq "Name: ${avd_name}"; then
+    COMPARTARENTA_QA_AVD_NAME="${avd_name}" "${COMPARTARENTA_ROOT}/tool/create_qa_avd.sh"
+  fi
+  serial="emulator-${port}"
+  echo "Starting ${avd_name} -> ${serial}..." >&2
+  nohup emulator -avd "${avd_name}" -port "${port}" \
+    -netdelay none -netspeed full -prop ro.setupwizard.mode=DISABLED >/dev/null 2>&1 &
+  qa_wait_for_boot_completed "${serial}"
+  echo "${serial}"
+}
+
+qa_require_usb_serial() {
+  local serial="$1"
+  if [[ "${serial}" == emulator-* ]]; then
+    echo "Expected a physical adb serial, got emulator: ${serial}" >&2
+    return 1
+  fi
+  if ! adb devices | awk -v s="${serial}" '$1 == s && $2 == "device" { found=1 } END { exit !found }'; then
+    echo "Physical device ${serial} not in 'device' state. Run: adb devices" >&2
+    return 1
+  fi
+}
+
+qa_require_app_installed_on_serial() {
+  local serial="$1"
+  local app_id="${2:-${COMPARTARENTA_QA_APP_ID}}"
+  if ! adb -s "${serial}" shell pm path "${app_id}" 2>/dev/null | grep -q .; then
+    echo "App ${app_id} not installed on ${serial}." >&2
+    echo "Install dev debug first, e.g. FLUTTER_DEVICE=${serial} ./tool/melosw run run:dev" >&2
+    return 1
+  fi
 }

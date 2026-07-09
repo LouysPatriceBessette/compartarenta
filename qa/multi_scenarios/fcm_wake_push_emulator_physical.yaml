@@ -1,0 +1,14 @@
+id: fcm_wake_push_emulator_physical
+description: FCM wake manual — seeded contacts + plan; kill recipient process; proposer submit; operator confirms notification
+device_date: "2026-07-08T12:00:00"
+timezone: America/Toronto
+coordinator: fcm_wake_push
+mode: manual_wake
+role_proposer:
+  avd: Monica-QA
+  seed: fcm_wake_push_proposer
+  flow: qa/flows/housing_proposal_proposer_submit_only.yaml
+role_recipient:
+  avd: Louys-QA
+  seed: fcm_wake_push_recipient
+  flow: qa/flows/fcm_wake_recipient_prepared_by_seed.yaml

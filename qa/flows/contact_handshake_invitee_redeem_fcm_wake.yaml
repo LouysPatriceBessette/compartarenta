@@ -1,0 +1,26 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _enter_contacts_hub.yaml
+- tapOn:
+    id: "qa-contacts-redeem-open"
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-redeem-code-field"
+    timeout: 30000
+- tapOn:
+    id: "qa-contacts-redeem-code-field"
+- inputText: ${INVITE_CODE}
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-redeem-submit"
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: "qa-contacts-redeem-submit"
+- runFlow:
+    file: _accept_notification_prompt.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-monica-qa"
+    timeout: 45000

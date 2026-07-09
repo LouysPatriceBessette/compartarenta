@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../db/repositories/vehicles_repository.dart';
+import '../prefs/app_preferences.dart';
 import '../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
@@ -19,6 +20,7 @@ import '../housing/settlement/housing_hub_expense_entry.dart';
 import '../housing/settlement/housing_settlement_window.dart';
 import 'qa_e2e_environment.dart';
 import 'qa_e2e_meter_photo.dart';
+import 'qa_fcm_wake_push_seed.dart';
 import 'qa_scenario_seed_helpers.dart';
 import 'qa_vehicle_consumption_seed.dart';
 import 'qa_vehicle_seed_helpers.dart';
@@ -28,6 +30,9 @@ export 'qa_scenario_seed_helpers.dart' show kQaSettlementOpenPlanId;
 
 /// File name under the app documents directory, written by [tool/seed_qa_scenario.sh].
 const kQaAndroidSeedMarkerFileName = 'compartarenta_qa_seed';
+
+/// Written after a successful [maybeApplyQaAndroidSeed] for shell polling (avoids stale logcat).
+const kQaAndroidSeedAppliedFileName = 'compartarenta_qa_seed_applied.txt';
 
 /// Scenario ids supported by [applyQaScenario].
 const kQaScenarioIds = <String>{
@@ -49,6 +54,8 @@ const kQaScenarioIds = <String>{
   'vehicle_consumption',
   'contact_handshake_inviter',
   'contact_handshake_invitee',
+  'fcm_wake_push_proposer',
+  'fcm_wake_push_recipient',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -75,8 +82,20 @@ Future<String?> maybeApplyQaAndroidSeed(AppDatabase db) async {
   await applyQaSharedPreferences(scenarioId);
   await syncQaE2eFlagsFromPrefs();
   await db.syncWebStorageToDisk();
+  await _writeQaSeedAppliedMarker(scenarioId);
   debugPrint('qa seed: applied scenario $scenarioId');
   return scenarioId;
+}
+
+Future<void> _writeQaSeedAppliedMarker(String scenarioId) async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    await File('${dir.path}/$kQaAndroidSeedAppliedFileName').writeAsString(
+      scenarioId,
+    );
+  } catch (e) {
+    debugPrint('qa seed: could not write applied marker: $e');
+  }
 }
 
 Future<File?> _qaSeedMarkerFile() async {
@@ -91,23 +110,29 @@ Future<File?> _qaSeedMarkerFile() async {
 
 Future<void> applyQaSharedPreferences(String scenarioId) async {
   final persona = _qaPersonaForScenario(scenarioId);
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('onboarding.complete', true);
-  await prefs.setString('profile.displayName', persona.displayName);
-  await prefs.setString('profile.avatarId', persona.avatarId);
-  await prefs.setString('prefs.currency', 'CAD');
-  await prefs.setString('prefs.dateFormat', 'yyyy-MM-dd');
-  await prefs.setString('prefs.distanceUnit', 'km');
-  await prefs.setStringList('plans.enabled', const ['housing']);
-  await prefs.setBool('notifications.enabled', false);
-  await prefs.setBool(
-    'housing.defaultPlanSummaryReached',
+  final prefs = await AppPreferences.load();
+  await prefs.setDisplayName(persona.displayName);
+  await prefs.setAvatarId(persona.avatarId);
+  await prefs.setCurrency('CAD');
+  await prefs.setDateFormat('yyyy-MM-dd');
+  await prefs.setDistanceUnit(DistanceUnit.km);
+  await prefs.setPlanTypes({PlanType.housing});
+  await prefs.setNotificationsEnabled(
+    _qaNotificationsEnabledForScenario(scenarioId),
+  );
+  await prefs.setHousingDefaultPlanSummaryReached(
     scenarioId != 'proposal_wizard_expenses',
   );
-  await prefs.setString('prefs.languageCode', 'fr');
-  await prefs.setBool(kQaE2eMeterPhotoOptionalPrefKey, true);
+  await prefs.setLanguageCode('fr');
+  await prefs.completeOnboarding();
+  final rawPrefs = await SharedPreferences.getInstance();
+  await rawPrefs.setBool(kQaE2eMeterPhotoOptionalPrefKey, true);
   QaE2eFlags.setMeterPhotoOptional(true);
   await persistQaE2eEnvironment(scenarioId: scenarioId);
+}
+
+bool _qaNotificationsEnabledForScenario(String scenarioId) {
+  return scenarioId == 'fcm_wake_push_recipient';
 }
 
 ({String displayName, String avatarId}) _qaPersonaForScenario(
@@ -117,6 +142,14 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
     'contact_handshake_invitee' => (
       displayName: 'Louys QA',
       avatarId: 'a02',
+    ),
+    'fcm_wake_push_recipient' => (
+      displayName: 'Louys QA',
+      avatarId: 'a02',
+    ),
+    'fcm_wake_push_proposer' => (
+      displayName: 'Monica QA',
+      avatarId: 'a01',
     ),
     _ => (displayName: 'Monica QA', avatarId: 'a01'),
   };
@@ -155,6 +188,10 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
     case 'contact_handshake_inviter':
     case 'contact_handshake_invitee':
       break;
+    case 'fcm_wake_push_proposer':
+      await seedQaFcmWakePushProposer(db);
+    case 'fcm_wake_push_recipient':
+      await seedQaFcmWakePushRecipient(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }

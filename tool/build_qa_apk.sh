@@ -26,13 +26,13 @@ cd "${MOBILE}"
 VERSION_FLAGS="$("./tool/compute_version.sh")"
 
 echo "Building dev debug APK (API_BASE_URL=${API_BASE_URL_VALUE})"
-echo "Target: android-x64 only (x86_64 QA emulators; first build may download the Flutter engine)."
+echo "Target: android-arm64 + android-x64 (physical phones + x86_64 QA emulators)."
 # shellcheck disable=SC2086
 ./tool/flutterw build apk --debug --flavor dev \
   --dart-define=ENV=dev \
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}" \
   --dart-define="ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}" \
-  --target-platform android-x64 \
+  --target-platform android-arm64,android-x64 \
   ${VERSION_FLAGS}
 
 APK="${MOBILE}/build/app/outputs/flutter-apk/app-dev-debug.apk"
@@ -43,7 +43,10 @@ fi
 
 if ! qa_apk_contains_libflutter_for_abi "${APK}" x86_64; then
   echo "ERROR: ${APK} is missing lib/x86_64/libflutter.so after build." >&2
-  echo "Re-run ./tool/melosw run qa:build-apk once (first android-x64 engine download can take several minutes)." >&2
+  exit 1
+fi
+if ! qa_apk_contains_libflutter_for_abi "${APK}" arm64-v8a; then
+  echo "ERROR: ${APK} is missing lib/arm64-v8a/libflutter.so after build." >&2
   exit 1
 fi
 

@@ -1,51 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "compartarenta-placeholder",
-    "storage_bucket": "compartarenta-placeholder.appspot.com"
+    "project_number": "371195804616",
+    "project_id": "compararenta-app",
+    "storage_bucket": "compararenta-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:aaaaaaaaaaaaaaaa",
-        "android_client_info": {
-          "package_name": "com.compartarenta.compartarenta.dev"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:bbbbbbbbbbbbbbbb",
-        "android_client_info": {
-          "package_name": "com.compartarenta.compartarenta.staging"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:cccccccccccccccc",
+        "mobilesdk_app_id": "1:371195804616:android:d9207fa88154241099defd",
         "android_client_info": {
           "package_name": "com.compartarenta.compartarenta"
         }
@@ -53,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "REPLACE_WITH_ANDROID_API_KEY"
+          "current_key": "AIzaSyA7CUooClPYS9r-xc8thhgosktav6xJ_Xw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:371195804616:android:ef9fcfb26ab5603a99defd",
+        "android_client_info": {
+          "package_name": "com.compartarenta.compartarenta.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7CUooClPYS9r-xc8thhgosktav6xJ_Xw"
         }
       ],
       "services": {

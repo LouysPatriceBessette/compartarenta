@@ -1,0 +1,38 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Enable app + system notification permission and wake-eligible housing category.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-contacts"
+    timeout: 45000
+- tapOn:
+    text: "Paramètres"
+- extendedWaitUntil:
+    visible: "Notifications"
+    timeout: 30000
+- tapOn:
+    text: "Notifications"
+- extendedWaitUntil:
+    visible: "Autoriser les notifications de l’app"
+    timeout: 30000
+- tapOn:
+    text: "Autoriser les notifications de l’app"
+- tapOn:
+    text: "Autoriser"
+    optional: true
+- tapOn:
+    text: "AUTORISER"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+- scrollUntilVisible:
+    element:
+      text: "Soumission d’un plan reçue"
+    direction: DOWN
+    timeout: 45000
+- tapOn:
+    text: "Soumission d’un plan reçue"
+    optional: true
