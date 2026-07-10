@@ -4,11 +4,11 @@
 
 <a id="fr"></a>
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> est une application mobile qui aide les colocataires à modéliser une entente, négocier à l'unanimité chaque détail et tenir les comptes par la suite. Le site web descriptif de l'application est <a href="https://compartarenta.incoherences.org" target="_blank">https://compartarenta.incoherences.org</a>.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ est une application mobile qui aide les colocataires à modéliser une entente, négocier à l'unanimité chaque détail et tenir les comptes par la suite. Le site web descriptif de l'application est <a href="https://compartarenta.incoherences.org" target="_blank">https://compartarenta.incoherences.org</a>.
 
 ## Architecture
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> est **local-first** : l'entente, les dépenses et les comptes vivent d'abord sur le téléphone de chaque participant. Rien n'est « centralisé dans le cloud » au sens d'une base de données partagée que le serveur pourrait lire.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ est **local-first** : l'entente, les dépenses et les comptes vivent d'abord sur le téléphone de chaque participant. Rien n'est « centralisé dans le cloud » au sens d'une base de données partagée que le serveur pourrait lire.
 
 Quand les participants doivent se mettre d'accord ou se tenir à jour, leurs applications échangent des **messages chiffrés** via un **relais** sur Internet. Le relais fait office de boîte aux lettres : il achemine les enveloppes sans en lire le contenu, puis les efface une fois livrées.
 
@@ -48,11 +48,11 @@ Voir `getting-started.md` pour la structure du dépôt et le démarrage de l'app
 
 **[Français](#fr)** · **[Español](#es)**
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://compartarenta.incoherences.org/en/" target="_blank">https://compartarenta.incoherences.org</a>.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://compartarenta.incoherences.org/en/" target="_blank">https://compartarenta.incoherences.org</a>.
 
 ## Architecture
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
 
 When participants need to agree or stay in sync, their apps exchange **encrypted messages** through an Internet **relay**. The relay acts as a mailbox: it forwards envelopes without reading their contents, then deletes them once delivered.
 
@@ -92,11 +92,11 @@ See `getting-started.md` for repository layout and getting the Flutter app runni
 
 **[Français](#fr)** · **[English](#en)**
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> es una aplicación móvil que ayuda a los compañeros de piso a modelar un acuerdo, negociar cada detalle por unanimidad y llevar las cuentas después. El sitio web descriptivo de la aplicación es <a href="https://compartarenta.incoherences.org/es/" target="_blank">https://compartarenta.incoherences.org</a>.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ es una aplicación móvil que ayuda a los compañeros de piso a modelar un acuerdo, negociar cada detalle por unanimidad y llevar las cuentas después. El sitio web descriptivo de la aplicación es <a href="https://compartarenta.incoherences.org/es/" target="_blank">https://compartarenta.incoherences.org</a>.
 
 ## Arquitectura
 
-<span style="font-weight:700">Comparta<span style="color:#35a0dd">renta</span></span> es **local-first**: el acuerdo, los gastos y las cuentas viven primero en el teléfono de cada participante. Nada está « centralizado en la nube » en el sentido de una base de datos compartida que el servidor pudiera leer.
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ es **local-first**: el acuerdo, los gastos y las cuentas viven primero en el teléfono de cada participante. Nada está « centralizado en la nube » en el sentido de una base de datos compartida que el servidor pudiera leer.
 
 Cuando los participantes deben ponerse de acuerdo o mantenerse al día, sus aplicaciones intercambian **mensajes cifrados** a través de un **relé** en Internet. El relé hace de buzón: reenvía los sobres sin leer su contenido y los borra una vez entregados.
 
