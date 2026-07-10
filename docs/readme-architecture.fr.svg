@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 700" role="img" aria-label="Schema d'architecture Compartarenta">
+  <defs>
+    <marker id="arrow-end" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2E5984"/>
+    </marker>
+    <marker id="arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2E5984"/>
+    </marker>
+    <style type="text/css"><![CDATA[
+      .box { fill: #fff; stroke: #2E5984; stroke-width: 2; }
+      .box-sand { fill: #FBF4EA; stroke: #C9A56A; stroke-width: 2; }
+      .box-blue { fill: #EAF5FC; stroke: #35a0dd; stroke-width: 2; }
+      .title { font: 700 15px 'Segoe UI', system-ui, sans-serif; fill: #1A1A1B; }
+      .small { font: 11px 'Segoe UI', system-ui, sans-serif; fill: #5d5d68; }
+      .set-housing { fill: none; stroke: #7FB3D5; stroke-width: 2; stroke-dasharray: 7 5; }
+      .set-vehicle { fill: none; stroke: #C9A56A; stroke-width: 2; stroke-dasharray: 7 5; }
+      .line-bi { stroke: #2E5984; stroke-width: 2; fill: none; marker-start: url(#arrow-start); marker-end: url(#arrow-end); }
+      .line-down { stroke: #2E5984; stroke-width: 2; fill: none; marker-end: url(#arrow-end); }
+      .caption { font: 12px 'Segoe UI', system-ui, sans-serif; fill: #2E5984; }
+      .caption-sand { font: 12px 'Segoe UI', system-ui, sans-serif; fill: #9A7B42; }
+    ]]></style>
+  </defs>
+
+  <!-- Step 1: ensemble shifted (+26, -48). Step 2: bottom stack x unchanged (net +0 on x). -->
+
+  <path class="set-housing" d="M 630 70
+    L 630 210
+    C 474 226, 318 226, 98 210
+    A 60 70 0 0 1 98 70
+    C 318 54, 474 54, 630 70 Z"/>
+  <path class="set-vehicle" d="M 238 70
+    L 238 210
+    C 394 226, 550 226, 770 210
+    A 60 70 0 0 0 770 70
+    C 550 54, 394 54, 238 70 Z"/>
+  <text class="caption" x="116" y="60" text-anchor="middle">Plan logement</text>
+  <text class="caption-sand" x="748" y="60" text-anchor="middle">Partage v&#233;hicule</text>
+
+  <rect class="box" x="76" y="100" width="132" height="96" rx="10"/>
+  <text class="title" x="142" y="130" text-anchor="middle">A</text>
+  <text class="small" x="142" y="152" text-anchor="middle">t&#233;l&#233;phone</text>
+  <text class="small" x="142" y="170" text-anchor="middle">donn&#233;es locales</text>
+
+  <rect class="box" x="268" y="100" width="132" height="96" rx="10"/>
+  <text class="title" x="334" y="130" text-anchor="middle">B</text>
+  <text class="small" x="334" y="152" text-anchor="middle">t&#233;l&#233;phone</text>
+  <text class="small" x="334" y="170" text-anchor="middle">emprunteur v&#233;hicule</text>
+
+  <rect class="box" x="460" y="100" width="132" height="96" rx="10"/>
+  <text class="title" x="526" y="130" text-anchor="middle">C</text>
+  <text class="small" x="526" y="152" text-anchor="middle">t&#233;l&#233;phone</text>
+  <text class="small" x="526" y="170" text-anchor="middle">propri&#233;taire v&#233;hicule</text>
+
+  <rect class="box" x="668" y="100" width="132" height="96" rx="10"/>
+  <text class="title" x="734" y="130" text-anchor="middle">D</text>
+  <text class="small" x="734" y="152" text-anchor="middle">t&#233;l&#233;phone</text>
+  <text class="small" x="734" y="170" text-anchor="middle">emprunteur v&#233;hicule</text>
+
+  <rect class="box-blue" x="230" y="292" width="400" height="82" rx="10"/>
+  <text class="title" x="430" y="316" text-anchor="middle">Relais</text>
+  <text class="small" x="430" y="334" text-anchor="middle">transmet des messages chiffr&#233;s &#183; ne lit pas le contenu</text>
+  <text class="small" x="430" y="352" text-anchor="middle">synchronisation chiffr&#233;e de bout en bout</text>
+
+  <rect class="box-blue" x="272" y="452" width="316" height="58" rx="10"/>
+  <text class="title" x="430" y="478" text-anchor="middle">Serveur d&apos;entitlement</text>
+  <text class="small" x="430" y="496" text-anchor="middle">confirme les abonnements actifs (sans voir vos comptes)</text>
+
+  <rect class="box-sand" x="272" y="588" width="316" height="52" rx="10"/>
+  <text class="title" x="430" y="610" text-anchor="middle">Google Play &#183; App Store</text>
+  <text class="small" x="430" y="628" text-anchor="middle">t&#233;l&#233;chargement de l&apos;app &#183; paiement des abonnements</text>
+
+  <path class="line-bi" d="M224 204 L370 284"/>
+  <path class="line-bi" d="M360 210 L410 284"/>
+  <path class="line-bi" d="M500 210 L450 284"/>
+  <path class="line-bi" d="M652 204 L490 284"/>
+
+  <path class="line-bi" d="M430 394 L430 444"/>
+  <text class="small" x="442" y="417" text-anchor="start">permission de livraison</text>
+
+  <path class="line-down" d="M430 580 L430 518"/>
+  <text class="small" x="442" y="553" text-anchor="start">re&#231;us d&apos;achat</text>
+</svg>
