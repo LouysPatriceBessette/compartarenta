@@ -1,6 +1,6 @@
 # Compartarenta
 
-**[English](#en)** · **[Español](#es)**
+**[Español](#es)** · **[English](#en)**
 
 <a id="fr"></a>
 
@@ -22,17 +22,21 @@ Exemple : **A**, **B** et **C** partagent un plan logement ; **C** (propriétair
   <img src="./docs/readme-architecture.fr.svg" alt="Schéma : téléphones A, B, C et D, relais, serveur d'entitlement, Google Play et App Store" width="860">
 </p>
 
+## Audit de sécurité et conformité
+
+Les serveurs de relais et entitlement sont audités (aux 90 jours ou moins) afin de démontrer que leurs déploiements reflètent bien le code public hébergé par GitHub. Vous pouvez consulter le journal d'audit [`relay-audit-log.md`](./docs/relay-audit-log.md) (anglais seulement).
+
 ## Licence
 
-Ce projet est publié sous la Elastic License 2.0 (ELv2). Voir `LICENSE`.
+Ce projet est publié sous la Elastic License 2.0 (ELv2). Voir [`LICENSE`](./LICENSE) (anglais seulement).
 
 En termes simples : vous pouvez utiliser, étudier, modifier et partager ce logiciel librement, y compris à des fins personnelles ou internes. En revanche, vous ne pouvez pas proposer ce logiciel (ou une version dérivée) comme service en ligne payant ou géré pour d'autres personnes — par exemple en l'hébergeant pour des clients qui n'installent pas l'application eux-mêmes.
 
 ## Informations juridiques et litiges
 
-Voir `docs/legal-and-disputes.md` pour la transparence sur la licence, le comportement en cas de défaut de paiement et la portée limitée du produit en matière de litiges.
+Voir [`legal-and-disputes.md`](./docs/legal-and-disputes.md) (anglais seulement) pour la transparence sur la licence, le comportement en cas de défaut de paiement et la portée limitée du produit en matière de litiges.
 
-Pour plus de détails mis à jour plus régulièrement, consultez les liens suivants :
+Pour plus de détails **mis à jour plus régulièrement**, consultez les liens suivants :
 
 - [Divulgations produit](https://compartarenta.incoherences.org/fr/legal/divulgations/)
 - [Politique de confidentialité](https://compartarenta.incoherences.org/fr/legal/confidentialite/)
@@ -40,51 +44,9 @@ Pour plus de détails mis à jour plus régulièrement, consultez les liens suiv
 
 ## Développeurs
 
-Voir `getting-started.md` pour la structure du dépôt et le démarrage de l'application Flutter.
+Voir [`getting-started.md`](./getting-started.md) pour la structure du dépôt et le démarrage de l'application Flutter.
 
----
-
-<a id="en"></a>
-
-**[Français](#fr)** · **[Español](#es)**
-
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://compartarenta.incoherences.org/en/" target="_blank">https://compartarenta.incoherences.org</a>.
-
-## Architecture
-
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
-
-When participants need to agree or stay in sync, their apps exchange **encrypted messages** through an Internet **relay**. The relay acts as a mailbox: it forwards envelopes without reading their contents, then deletes them once delivered.
-
-Some actions (for example an active housing plan) require a **valid subscription**. The app then relies on an **entitlement server** that simply confirms whether the license is active — still without access to your account details.
-
-You **install** the app and **pay** for the subscription via **Google Play** (Android) or the **App Store** (iOS). The stores handle payment; the entitlement server validates that purchase to authorize, when applicable, the relay to forward certain messages.
-
-Example: **A**, **B**, and **C** share a housing plan; **C** (owner) also lends their car to **B** and **D** (borrowers) — **A** is in housing only, **D** is in vehicle sharing only, **B** and **C** are in both.
-
-<p align="center">
-  <img src="./docs/readme-architecture.en.svg" alt="Diagram: phones A, B, C and D, relay, entitlement server, Google Play and App Store" width="860">
-</p>
-
-## License
-
-This project is released under the Elastic License 2.0 (ELv2). See `LICENSE`.
-
-In plain terms: you may use, study, modify, and share this software freely, including for personal or internal purposes. However, you may not offer this software (or a derivative version) as a paid or managed online service for other people — for example by hosting it for clients who do not install the app themselves.
-
-## Legal information and disputes
-
-See `docs/legal-and-disputes.md` for transparency on licensing, payment-failure behavior, and the product's limited scope regarding disputes.
-
-For more detail, updated more regularly, see:
-
-- [Product disclosures](https://compartarenta.incoherences.org/en/legal/divulgations/)
-- [Privacy policy](https://compartarenta.incoherences.org/en/legal/confidentialite/)
-- [Terms of use](https://compartarenta.incoherences.org/en/legal/conditions/)
-
-## Developers
-
-See `getting-started.md` for repository layout and getting the Flutter app running.
+<br /><br /><br /><br />
 
 ---
 
@@ -110,17 +72,21 @@ Ejemplo: **A**, **B** y **C** comparten un plan de vivienda; **C** (propietario)
   <img src="./docs/readme-architecture.es.svg" alt="Diagrama: teléfonos A, B, C y D, relé, servidor de licencias, Google Play y App Store" width="860">
 </p>
 
+## Auditoría de seguridad y conformidad
+
+Los servidores de relé y de licencias se auditan (cada 90 días o menos) para demostrar que sus despliegues reflejan fielmente el código público alojado en GitHub. Puede consultar el registro de auditoría [`relay-audit-log.md`](./docs/relay-audit-log.md) (solo en inglés).
+
 ## Licencia
 
-Este proyecto se publica bajo la Elastic License 2.0 (ELv2). Vea `LICENSE`.
+Este proyecto se publica bajo la Elastic License 2.0 (ELv2). Vea [`LICENSE`](./LICENSE) (solo en inglés).
 
 En términos sencillos: puede usar, estudiar, modificar y compartir este software libremente, incluso con fines personales o internos. En cambio, no puede ofrecer este software (o una versión derivada) como servicio en línea de pago o gestionado para otras personas — por ejemplo alojándolo para clientes que no instalan la aplicación ellos mismos.
 
 ## Información jurídica y litigios
 
-Consulte `docs/legal-and-disputes.md` para la transparencia sobre la licencia, el comportamiento en caso de impago y el alcance limitado del producto en materia de litigios.
+Consulte [`legal-and-disputes.md`](./docs/legal-and-disputes.md) (solo en inglés) para la transparencia sobre la licencia, el comportamiento en caso de impago y el alcance limitado del producto en materia de litigios.
 
-Para más detalles, actualizados con mayor frecuencia, consulte:
+Para más detalles, **actualizados con mayor frecuencia**, consulte:
 
 - [Divulgaciones del producto](https://compartarenta.incoherences.org/es/legal/divulgations/)
 - [Política de privacidad](https://compartarenta.incoherences.org/es/legal/confidentialite/)
@@ -128,4 +94,54 @@ Para más detalles, actualizados con mayor frecuencia, consulte:
 
 ## Desarrolladores
 
-Consulte `getting-started.md` para la estructura del repositorio y el arranque de la aplicación Flutter.
+Consulte [`getting-started.md`](./getting-started.md) para la estructura del repositorio y el arranque de la aplicación Flutter.
+
+<br /><br /><br /><br />
+
+---
+
+<a id="en"></a>
+
+**[Français](#fr)** · **[Español](#es)**
+
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://compartarenta.incoherences.org/en/" target="_blank">https://compartarenta.incoherences.org</a>.
+
+## Architecture
+
+$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
+
+When participants need to agree or stay in sync, their apps exchange **encrypted messages** through an Internet **relay**. The relay acts as a mailbox: it forwards envelopes without reading their contents, then deletes them once delivered.
+
+Some actions (for example an active housing plan) require a **valid subscription**. The app then relies on an **entitlement server** that simply confirms whether the license is active — still without access to your account details.
+
+You **install** the app and **pay** for the subscription via **Google Play** (Android) or the **App Store** (iOS). The stores handle payment; the entitlement server validates that purchase to authorize, when applicable, the relay to forward certain messages.
+
+Example: **A**, **B**, and **C** share a housing plan; **C** (owner) also lends their car to **B** and **D** (borrowers) — **A** is in housing only, **D** is in vehicle sharing only, **B** and **C** are in both.
+
+<p align="center">
+  <img src="./docs/readme-architecture.en.svg" alt="Diagram: phones A, B, C and D, relay, entitlement server, Google Play and App Store" width="860">
+</p>
+
+## Security and compliance audit
+
+The relay and entitlement servers are audited (every 90 days or less) to demonstrate that their deployments faithfully reflect the public code hosted on GitHub. You can consult the audit log [`relay-audit-log.md`](./docs/relay-audit-log.md).
+
+## License
+
+This project is released under the Elastic License 2.0 (ELv2). See [`LICENSE`](./LICENSE).
+
+In plain terms: you may use, study, modify, and share this software freely, including for personal or internal purposes. However, you may not offer this software (or a derivative version) as a paid or managed online service for other people — for example by hosting it for clients who do not install the app themselves.
+
+## Legal information and disputes
+
+See [`legal-and-disputes.md`](./docs/legal-and-disputes.md) for transparency on licensing, payment-failure behavior, and the product's limited scope regarding disputes.
+
+For more detail, **updated more regularly**, see:
+
+- [Product disclosures](https://compartarenta.incoherences.org/en/legal/divulgations/)
+- [Privacy policy](https://compartarenta.incoherences.org/en/legal/confidentialite/)
+- [Terms of use](https://compartarenta.incoherences.org/en/legal/conditions/)
+
+## Developers
+
+See [`getting-started.md`](./getting-started.md) for repository layout and getting the Flutter app running.

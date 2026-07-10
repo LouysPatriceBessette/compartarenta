@@ -1,6 +1,6 @@
 # Pour commencer
 
-**[English](#en)** · **[Español](#es)**
+**[Español](#es)** · **[English](#en)**
 
 <a id="fr"></a>
 
@@ -35,44 +35,6 @@ Notes :
 ---
 
 **Je sais!** cette page manque d'amour. Sa mise à jour est sur ma liste de tâches à compléter.
-
----
-
-<a id="en"></a>
-
-**[Français](#fr)** · **[Español](#es)**
-
-## Repository layout
-
-- `mobile/`: Flutter application (Android, iOS, Web, Windows, Linux, macOS)
-- `openspec/`: specifications and change-tracking artifacts
-- `tools/`: tooling (includes the Flutter SDK and bundled tools)
-
-## Getting started (Flutter app)
-
-Prerequisites:
-
-- A Flutter SDK on your machine, **or** the tooling under `tools/`
-
-From the repository root:
-
-```bash
-cd mobile
-flutter pub get
-flutter run --flavor dev
-```
-
-Notes:
-
-- This app defines Android product flavors (`dev`, `staging`, `prod`). Running without `--flavor` may cause Gradle to build `assembleDebug` (no flavor), which will not produce an APK.
-- Prefer the helper scripts:
-  - `./tool/run_dev.sh`
-  - `./tool/run_staging.sh`
-  - `./tool/run_prod.sh`
-
----
-
-**I know!** this page is lacking love. Updating it is on my to-do list to complete.
 
 ---
 
@@ -111,3 +73,43 @@ Notas:
 ---
 
 **¡Lo sé!** a esta página le falta cariño. Actualizarla está en mi lista de tareas pendientes.
+
+<br /><br /><br /><br />
+
+---
+
+<a id="en"></a>
+
+**[Français](#fr)** · **[Español](#es)**
+
+## Repository layout
+
+- `mobile/`: Flutter application (Android, iOS, Web, Windows, Linux, macOS)
+- `openspec/`: specifications and change-tracking artifacts
+- `tools/`: tooling (includes the Flutter SDK and bundled tools)
+
+## Getting started (Flutter app)
+
+Prerequisites:
+
+- A Flutter SDK on your machine, **or** the tooling under `tools/`
+
+From the repository root:
+
+```bash
+cd mobile
+flutter pub get
+flutter run --flavor dev
+```
+
+Notes:
+
+- This app defines Android product flavors (`dev`, `staging`, `prod`). Running without `--flavor` may cause Gradle to build `assembleDebug` (no flavor), which will not produce an APK.
+- Prefer the helper scripts:
+  - `./tool/run_dev.sh`
+  - `./tool/run_staging.sh`
+  - `./tool/run_prod.sh`
+
+---
+
+**I know!** this page is lacking love. Updating it is on my to-do list to complete.

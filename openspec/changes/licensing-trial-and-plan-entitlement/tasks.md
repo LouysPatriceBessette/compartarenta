@@ -22,7 +22,7 @@
 ## 4. Export and legal documentation
 
 - [ ] 4.1 Implement export flows that remain available in read-only mode so participants can always retrieve their history.
-- [ ] 4.2 Add a legal/disclosures document describing dispute-limited behavior and that the app is not legal advice.
+- [x] 4.2 Add a legal/disclosures document describing dispute-limited behavior and that the app is not legal advice. *(`docs/legal-and-disputes.md`; linked from `README.md` FR/EN/ES — Jul 2026.)*
 - [ ] 4.3 Import gate: active store subscription (housing standalone or bundle) per `device-data-import-restore`; export always available. Entitlement server does not gate import.
 
 ## 5. Tests
