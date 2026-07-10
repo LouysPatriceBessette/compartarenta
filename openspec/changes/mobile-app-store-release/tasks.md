@@ -67,6 +67,7 @@
 
 - [x] 10.1 Create a pre-submission checklist aligned to the specs (assets, metadata, disclosures, quality gates)
 - [ ] 10.2 Run end-to-end release rehearsal to produce store-ready artifacts for both platforms
+- [ ] 10.2.1 Apply Google Cloud **application restrictions** on the Firebase Android and iOS API keys before any beta with external/unknown testers (Play internal testing, TestFlight, or equivalent). Register every environment `applicationId` / bundle identifier and both **debug** and **release** signing fingerprints (see §2 and §4). API restrictions (Firebase-only, ~25 APIs) are already configured; solo dev may defer application restrictions until this gate. Client keys are committed in `mobile/lib/firebase_options.dart` and `mobile/android/app/google-services.json` on the public repo — restrict before widening the tester pool beyond the core dev team.
 - [ ] 10.3 Perform beta validation and resolve any high-severity issues before production submission
 - [ ] 10.4 Submit to both stores and track review outcomes; iterate on any rejection feedback
 
