@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "maestro": {
+      "command": "bash",
+      "args": ["tool/maestro_mcp.sh"],
+      "env": {
+        "MAESTRO_CLI_NO_ANALYTICS": "1"
+      }
+    }
+  }
+}

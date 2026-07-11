@@ -400,6 +400,23 @@ Default artifact path when `--artifact-dir` is omitted:
 
 ## Maestro
 
+### Maestro MCP (Cursor / AI agents)
+
+Maestro 2.6+ ships an MCP server so agents can inspect a live emulator and run
+flows before editing YAML. This repo configures it in `.cursor/mcp.json` (wrapper:
+`tool/maestro_mcp.sh`).
+
+1. Install CLI: `./tool/melosw run qa:install-maestro`
+2. In Cursor: **Settings → Tools & MCP** — enable the **maestro** server (or restart
+   Cursor after pulling `.cursor/mcp.json`).
+3. Start QA emulators (`qa:run-multi-scenario` bootstrap or `qa/run-emulators.sh`).
+4. Use MCP to list devices, inspect hierarchy, and trial-run a flow on `--udid`.
+
+MCP does **not** replace multi-device shell coordinators (`tool/coordinators/`).
+Project-specific agent guidance: `.cursor/skills/maestro-compartarenta/`.
+
+Official docs: [Maestro MCP](https://docs.maestro.dev/get-started/maestro-mcp).
+
 ### Application id
 
 Every flow must declare the **dev** package:

@@ -1,9 +1,17 @@
 ---
 name: patrol-e2e-testing
-description: "Create, maintain, and run end-to-end tests for Flutter apps using Patrol 4.x. Use when writing E2E tests, adding integration test coverage, testing native interactions like permissions or system dialogs, capturing UI bug regressions, or validating cross-platform behavior on Android, iOS, and Web."
+description: >-
+  Create Patrol 4.x integration tests (patrol_test/). NOT used for Compartarenta
+  Android QA — that toolchain is Maestro YAML under qa/flows (see skill
+  maestro-compartarenta). Use Patrol only when the user explicitly asks for
+  Patrol, not for qa:run-scenario or multi-device Maestro coordinators.
 ---
 
 # Patrol E2E Testing Skill
+
+> **Compartarenta:** Production Android QA is **Maestro** (`qa/flows/`, `tool/coordinators/`).
+> Use skill **`maestro-compartarenta`** + **`maestro-e2e`** for scenario work here.
+> Use this Patrol skill only for Patrol-specific tasks.
 
 Design, implement, and run end-to-end (E2E) tests using Patrol 4.x in Flutter projects.
 

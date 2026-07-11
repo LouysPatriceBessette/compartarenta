@@ -1,6 +1,9 @@
 # Personal dev notes (not tracked)
 dev-ideas/
 
+# npx skills CLI install stub (canonical copy: .cursor/skills/)
+.agents/
+
 # Personal Cursor helper rules (not app-specific; invoke via @)
 .cursor/rules/helpers/
 
