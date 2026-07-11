@@ -1,6 +1,6 @@
 # Tasks — housing plan peer contact establishment
 
-**Status:** Implemented (client). Manual QA validated Jun 2026: two participants who were not directly connected were linked via **Contacts manquants** / **Establish contact**, using `peerPublicMaterialB64` from the housing proposal payload. Closed-app push wake (2.4) still depends on `closed-app-push-delivery`.
+**Status:** Implemented (client). Manual QA validated Jun 2026: two participants who were not directly connected were linked via **Contacts manquants** / **Establish contact**, using `peerPublicMaterialB64` from the housing proposal payload.
 
 ## 1. Payload and import
 
@@ -13,7 +13,7 @@
 - [x] 2.1 Add envelope kinds `contactEstablishmentRequest` / `contactEstablishmentResponse` in `envelopes.dart` with steady-state encryption.
 - [x] 2.2 Implement send request (requester) and send response (target) in `HandshakeOrchestrator` or dedicated service.
 - [x] 2.3 Handle inbound request (target UI + Accept/Refuse) and inbound response (requester promote or refusal timestamp).
-- [ ] 2.4 Wire closed-app push wake for both kinds on watch-list addresses.
+- [x] 2.4 Wire closed-app push wake for both kinds on watch-list addresses. *(Watch-list steady-state addresses in `routingWakeRecipientIdentities`; wake poll handles `contactEstablishmentRequest` / `contactEstablishmentResponse`; immediate push re-registration after `syncWatchListForPlan` on plan import.)*
 
 ## 3. UI
 

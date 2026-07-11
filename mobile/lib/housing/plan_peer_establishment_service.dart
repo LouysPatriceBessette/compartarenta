@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
+import '../relay/handshake_orchestrator.dart';
 import 'housing_plan_peer_contacts.dart';
 
 /// Persists and queries plan-mediated peer contact establishment state
@@ -92,6 +93,8 @@ class PlanPeerEstablishmentService {
         await _db.deletePlanPeerEstablishment(row.id);
       }
     }
+
+    HandshakeOrchestrator.requestClosedAppPushRegistrationSync();
   }
 
   Future<PlanPeerEstablishment?> rowForParticipant({
