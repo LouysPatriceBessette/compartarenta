@@ -148,8 +148,10 @@ export COMPARTARENTA_ROLE_PROPOSER_FLOW="${PROPOSER_FLOW}"
 export COMPARTARENTA_ROLE_RECIPIENT_FLOW="${RECIPIENT_FLOW}"
 
 echo "Running FCM wake coordinator ${COORDINATOR} (recipient=${RECIPIENT_SERIAL})"
+set +e
 "${COORDINATOR_SCRIPT}"
 COORD_EXIT=$?
+set -e
 
 if [[ "${SKIP_RESTORE}" -eq 0 ]]; then
   ANDROID_SERIAL="${PROPOSER_SERIAL}" "${ROOT}/tool/restore_android_date.sh" || true

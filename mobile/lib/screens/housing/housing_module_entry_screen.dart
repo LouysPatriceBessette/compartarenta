@@ -52,6 +52,7 @@ class _HousingEntrySnapshot {
   const _HousingEntrySnapshot({
     required this.plans,
     this.package,
+    this.pendingRevisionId,
     this.hasArchives = false,
     this.primaryActivePlan,
     this.primaryActivePackage,
@@ -61,6 +62,7 @@ class _HousingEntrySnapshot {
 
   final List<Plan> plans;
   final ProposalPackage? package;
+  final String? pendingRevisionId;
   final bool hasArchives;
   /// When exactly one housing plan has an in-force agreement, open its hub.
   final Plan? primaryActivePlan;
@@ -422,9 +424,12 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
         break;
       }
       primaryActivePlan = plan;
-      primaryActivePackage = await (db.select(db.proposalPackages)
-            ..where((t) => t.planId.equals(plan.id)))
-          .getSingleOrNull();
+      final packageId = await transport.primaryPackageIdForPlan(plan.id);
+      primaryActivePackage = packageId == null
+          ? null
+          : await (db.select(db.proposalPackages)
+                ..where((t) => t.id.equals(packageId)))
+              .getSingleOrNull();
       final membership = HousingParticipationMembershipService(db);
       await membership.ensureMembershipsForPlan(plan.id);
       primaryActivePlanIsPastForSelf = !await membership.isActiveMember(
@@ -451,15 +456,20 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       );
     }
     final planId = plans.single.id;
-    final pkg = await (db.select(
-      db.proposalPackages,
-    )..where((t) => t.planId.equals(planId))).getSingleOrNull();
-    final hasArchives = await HousingProposalTransportService(
-      db,
-    ).planHasArchives(planId);
+    final packageId = await transport.primaryPackageIdForPlan(planId);
+    final pkg = packageId == null
+        ? null
+        : await (db.select(db.proposalPackages)
+              ..where((t) => t.id.equals(packageId)))
+            .getSingleOrNull();
+    final pendingRevisionId = await transport.resolvePendingRevisionIdForPlan(
+      planId,
+    );
+    final hasArchives = await transport.planHasArchives(planId);
     return _HousingEntrySnapshot(
       plans: plans,
       package: pkg,
+      pendingRevisionId: pendingRevisionId,
       hasArchives: hasArchives,
       primaryActivePlan: primaryActivePlan,
       primaryActivePackage: primaryActivePackage,
@@ -549,8 +559,7 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
               planId: draftId,
             );
           }
-          final pkg = entry.package;
-          if (pkg?.pendingRevisionId != null) {
+          if (entry.pendingRevisionId != null) {
             return FutureBuilder<bool>(
               future: pendingRevisionIsAmendment(
                 AppDatabase.processScope,

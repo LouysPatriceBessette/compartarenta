@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Coordinator for housing-proposal multi-device QA (happy path + bug 1.22 probe).
+# Coordinator for housing-proposal multi-device QA (happy path + bug 1.22 regression).
 #
 # Expects env from tool/run_multi_device_scenario.sh:
 #   COMPARTARENTA_ROLE_PROPOSER_SERIAL, COMPARTARENTA_ROLE_RECIPIENT_SERIAL, flows, etc.
@@ -23,29 +23,53 @@ FLOWS_DIR="${ROOT}/qa/flows"
 MAESTRO_TIMEOUT="${COMPARTARENTA_QA_MAESTRO_TIMEOUT_SEC:-600}"
 HANDSHAKE_INVITER_GENERATE="${FLOWS_DIR}/contact_handshake_inviter_generate.yaml"
 HANDSHAKE_INVITEE_REDEEM="${FLOWS_DIR}/contact_handshake_invitee_redeem_wait_connected.yaml"
-HANDSHAKE_INVITER_STANDBY="${FLOWS_DIR}/contact_handshake_inviter_standby.yaml"
+
+_qa_avd_for_serial() {
+  local serial="$1"
+  case "${serial}" in
+    "${PROPOSER_SERIAL}") echo "Monica-QA" ;;
+    "${RECIPIENT_SERIAL}") echo "Louys-QA" ;;
+    *) echo "${serial}" ;;
+  esac
+}
+
+_log_phase_banner() {
+  local phase="$1"
+  echo "==="
+  echo "=== Phase ${phase}"
+  echo "==="
+}
 
 _run_maestro() {
   local label="$1"
   local serial="$2"
   local flow="$3"
   shift 3
-  local out
+  local out avd
   out="$(qa_maestro_artifact_dir "${label}")"
+  avd="$(_qa_avd_for_serial "${serial}")"
   mkdir -p "${out}"
-  echo "  maestro [${serial}] ${flow} -> ${out}"
-  timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" "$@"
+  echo "  maestro device=${avd} serial=${serial}"
+  echo "  maestro flow=$(basename "${flow}") -> ${out}"
+  echo "  (Maestro assertions below run on ${avd} only)"
+  if ! timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" "$@"; then
+    echo "  maestro FAILED on ${avd}: ${label} ($(basename "${flow}"))" >&2
+    return 1
+  fi
 }
 
 _run_maestro_probe() {
   local label="$1"
   local serial="$2"
   local flow="$3"
-  local out
+  local out avd
   out="$(qa_maestro_artifact_dir "${label}")"
+  avd="$(_qa_avd_for_serial "${serial}")"
   local log="${out}/probe.log"
   mkdir -p "${out}"
-  echo "  probe [${serial}] ${flow} -> ${out}"
+  echo "  probe device=${avd} serial=${serial}"
+  echo "  probe flow=$(basename "${flow}") -> ${out}"
+  echo "  (Maestro probe below runs on ${avd} only)"
   if timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" \
     >"${log}" 2>&1; then
     echo "  probe ${label}: symptom present"
@@ -71,9 +95,12 @@ _assert_bug_122_no_duplicate_monica() {
 
 _check_bug_122_duplicate_monica() {
   local attempt_dir="$1"
+  local probe_rc no_dup_rc
 
+  # Keep errexit off for probe/assert and non-zero return codes (symptom absent = 1).
+  set +e
   _detect_bug_122_duplicate_monica "${attempt_dir}"
-  local probe_rc=$?
+  probe_rc=$?
   if [[ "${probe_rc}" -eq 0 ]]; then
     return 0
   fi
@@ -81,10 +108,8 @@ _check_bug_122_duplicate_monica() {
     return 2
   fi
 
-  set +e
   _assert_bug_122_no_duplicate_monica "${attempt_dir}"
-  local no_dup_rc=$?
-  set -e
+  no_dup_rc=$?
   if [[ "${no_dup_rc}" -ne 0 ]]; then
     echo "  duplicate Monica: positive via failed assert_no_duplicate (second row present)"
     return 0
@@ -133,28 +158,68 @@ _attempt_rel() {
   echo "$(_attempt_root_dir "${attempt_dir}")/${suffix}"
 }
 
-_connect_handshake() {
+_connect_handshake_sequential() {
   local label_prefix="$1"
   local invite_code
 
   _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
-    "${HANDSHAKE_INVITER_GENERATE}"
+    "${HANDSHAKE_INVITER_GENERATE}" || return 1
 
-  invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")"
+  invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
   echo "  invitation code: ${invite_code}"
 
-  (
-    _run_maestro "${label_prefix}/inviter-standby" "${PROPOSER_SERIAL}" \
-      "${HANDSHAKE_INVITER_STANDBY}"
-  ) &
-  local inviter_pid=$!
-  sleep 1
+  _run_maestro "${label_prefix}/invitee-redeem" "${RECIPIENT_SERIAL}" \
+    "${HANDSHAKE_INVITEE_REDEEM}" -e "INVITE_CODE=${invite_code}" || return 1
+}
+
+_connect_handshake_sequential_merge_dialog() {
+  local label_prefix="$1"
+  local invite_code
+
+  _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
+    "${HANDSHAKE_INVITER_GENERATE}" || return 1
+
+  invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
+  echo "  invitation code: ${invite_code}"
 
   _run_maestro "${label_prefix}/invitee-redeem" "${RECIPIENT_SERIAL}" \
-    "${HANDSHAKE_INVITEE_REDEEM}" -e "INVITE_CODE=${invite_code}"
+    "${HANDSHAKE_INVITEE_REDEEM}" -e "INVITE_CODE=${invite_code}" || return 1
 
-  wait "${inviter_pid}"
-  # Standby + redeem flows already assert Louys / Monica connected rows.
+  _run_maestro "${label_prefix}/inviter-merge-dialog" "${PROPOSER_SERIAL}" \
+    "${FLOWS_DIR}/contact_handshake_inviter_dismiss_merge_dialog.yaml" || return 1
+}
+
+_connect_handshake_sequential_anchor_reject() {
+  local label_prefix="$1"
+  local invite_code
+
+  _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
+    "${HANDSHAKE_INVITER_GENERATE}" || return 1
+
+  invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
+  echo "  invitation code: ${invite_code}"
+
+  _run_maestro "${label_prefix}/invitee-redeem-rejected" "${RECIPIENT_SERIAL}" \
+    "${FLOWS_DIR}/contact_handshake_invitee_redeem_anchor_rejected.yaml" \
+    -e "INVITE_CODE=${invite_code}" || return 1
+
+  _run_maestro "${label_prefix}/inviter-rejected-dialog" "${PROPOSER_SERIAL}" \
+    "${FLOWS_DIR}/contact_handshake_inviter_dismiss_rejected_anchor_dialog.yaml" || return 1
+
+  _run_maestro "${label_prefix}/invitee-notification" "${RECIPIENT_SERIAL}" \
+    "${FLOWS_DIR}/contact_handshake_invitee_assert_duplicate_anchor_notification.yaml" || return 1
+}
+
+_proposer_identity_drift_only() {
+  echo "  identity drift: re-seed proposer only (recipient keeps prior contact rows)"
+  qa_seed_scenario_on_serial "${PROPOSER_SERIAL}" "${COMPARTARENTA_ROLE_PROPOSER_SEED}"
+  qa_prepare_for_maestro "${PROPOSER_SERIAL}"
+}
+
+_recipient_identity_drift_only() {
+  echo "  identity drift: re-seed recipient only (proposer keeps prior contact rows)"
+  qa_seed_scenario_on_serial "${RECIPIENT_SERIAL}" "${COMPARTARENTA_ROLE_RECIPIENT_SEED}"
+  qa_prepare_for_maestro "${RECIPIENT_SERIAL}"
 }
 
 _proposer_delivered_proposal() {
@@ -174,7 +239,7 @@ _run_proposal_send_only() {
   qa_clear_logcat_on_serial "${RECIPIENT_SERIAL}"
 
   echo "  phase 1/2: proposer completes plan wizard and sends proposal"
-  _run_maestro "${base}/proposer-send" "${PROPOSER_SERIAL}" "${PROPOSER_SEND_FLOW}"
+  _run_maestro "${base}/proposer-send" "${PROPOSER_SERIAL}" "${PROPOSER_SEND_FLOW}" || return 1
   if ! qa_wait_for_logcat_on_serial "${PROPOSER_SERIAL}" "housing_proposal delivered" 90; then
     echo "  proposer send: timed out waiting for logcat housing_proposal delivered" >&2
     adb -s "${PROPOSER_SERIAL}" logcat -d 2>/dev/null | grep -E 'housing_proposal' | tail -20 >&2 || true
@@ -189,7 +254,7 @@ _run_proposal_recipient_accept_and_hub() {
   base="$(_delivery_rel "${attempt_dir}")"
 
   echo "  phase 2/3: recipient opens housing, accepts proposal (2-participant plan)"
-  _run_maestro "${base}/recipient-accept" "${RECIPIENT_SERIAL}" "${RECIPIENT_FLOW}"
+  _run_maestro "${base}/recipient-accept" "${RECIPIENT_SERIAL}" "${RECIPIENT_FLOW}" || return 1
   if ! qa_wait_for_logcat_on_serial "${RECIPIENT_SERIAL}" "housing_proposal_response posted" 120; then
     echo "  recipient accept: timed out waiting for logcat housing_proposal_response posted" >&2
     adb -s "${RECIPIENT_SERIAL}" logcat -d 2>/dev/null | grep -E 'housing_proposal_response' | tail -20 >&2 || true
@@ -203,9 +268,17 @@ _run_proposal_proposer_active_hub() {
   local base
   base="$(_delivery_rel "${attempt_dir}")"
 
+  echo "  phase 3/3: wait for unanimous activation on Monica (logcat)"
+  if ! qa_wait_for_logcat_on_serial "${PROPOSER_SERIAL}" "housing: activated revision=" 120; then
+    echo "  proposer hub: timed out waiting for activation on Monica" >&2
+    adb -s "${PROPOSER_SERIAL}" logcat -d 2>/dev/null | grep -E 'housing:' | tail -30 >&2 || true
+    return 1
+  fi
+  echo "  proposer hub: activation seen on Monica (logcat)"
+
   echo "  phase 3/3: proposer lands on active agreement hub (not invite status chips)"
   _run_maestro "${base}/proposer-active-hub" "${PROPOSER_SERIAL}" \
-    "${FLOWS_DIR}/housing_proposal_assert_active_hub.yaml"
+    "${FLOWS_DIR}/housing_proposal_assert_active_hub.yaml" || return 1
 }
 
 _run_proposal_happy_path_once() {
@@ -267,25 +340,21 @@ _run_happy_path_once() {
   mkdir -p "${attempt_dir}"
 
   _prepare_fresh_pair
-  _connect_handshake "$(_attempt_rel "${attempt_dir}" "handshake")"
-  _run_proposal_happy_path_once "${attempt_dir}"
+  _connect_handshake_sequential "$(_attempt_rel "${attempt_dir}" "handshake")" || return 1
+  _run_proposal_happy_path_once "${attempt_dir}" || return 1
 }
 
-_run_bug_122_probe_once() {
+_run_bug_122_regression_once() {
   local attempt_dir="$1"
-  local repro_reason=""
   mkdir -p "${attempt_dir}"
 
+  _log_phase_banner 1
+  echo "  Monica drift — Louys keeps contacts; assert no duplicate Monica row."
   _prepare_fresh_pair
-  _connect_handshake "$(_attempt_rel "${attempt_dir}" "handshake-initial")"
+  _connect_handshake_sequential "$(_attempt_rel "${attempt_dir}" "handshake-initial")" || return 3
+  _proposer_identity_drift_only
+  _connect_handshake_sequential "$(_attempt_rel "${attempt_dir}" "handshake-after-monica-drift")" || return 3
 
-  echo "  identity drift: re-seed proposer only (recipient keeps prior contact rows)"
-  qa_seed_scenario_on_serial "${PROPOSER_SERIAL}" "${COMPARTARENTA_ROLE_PROPOSER_SEED}"
-  qa_prepare_for_maestro "${PROPOSER_SERIAL}"
-
-  _connect_handshake "$(_attempt_rel "${attempt_dir}" "handshake-after-drift")"
-
-  echo "  post-drift: probe for duplicate connected Monica-QA (must be 2 rows, not 1)"
   set +e
   _check_bug_122_duplicate_monica "${attempt_dir}"
   local dup_rc=$?
@@ -294,47 +363,33 @@ _run_bug_122_probe_once() {
     return 3
   fi
   if [[ "${dup_rc}" -eq 0 ]]; then
-    repro_reason="duplicate_connected_monica"
-    echo "  BUG 1.22 symptom: duplicate Monica-QA on Louys — finishing this attempt (send + recipient), then stop"
-  fi
-
-  if ! _run_proposal_send_only "${attempt_dir}"; then
-    if [[ -n "${repro_reason}" ]]; then
-      echo "BUG 1.22 REPRODUCED: ${repro_reason} (send failed; partial artifacts in ${attempt_dir})"
-      return 2
-    fi
-    return 3
-  fi
-
-  set +e
-  _run_proposal_recipient_received_only "${attempt_dir}"
-  local recipient_rc=$?
-  set -e
-
-  if [[ -n "${repro_reason}" ]]; then
-    echo "BUG 1.22 REPRODUCED: ${repro_reason} (attempt ${attempt_dir##*/} completed)"
+    echo "BUG 1.22 REPRODUCED: duplicate Monica-QA after Monica drift"
     return 2
   fi
+  # dup_rc=1: probe symptom absent; assert-no-duplicate already ran in _check.
 
-  if [[ "${recipient_rc}" -eq 0 ]]; then
-    return 0
-  fi
+  _log_phase_banner 2
+  echo "  Louys drift — merge duplicate + informative dialog on Monica (no active plan)."
+  _recipient_identity_drift_only
+  _connect_handshake_sequential_merge_dialog \
+    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-merge")" || return 3
 
-  set +e
-  _check_bug_122_duplicate_monica "${attempt_dir}"
-  dup_rc=$?
-  set -e
-  if [[ "${dup_rc}" -eq 0 ]]; then
-    echo "BUG 1.22 REPRODUCED: duplicate connected Monica-QA (attempt ${attempt_dir##*/} completed)"
-    return 2
-  fi
+  _log_phase_banner 3
+  echo "  Housing happy path — send, accept, active hub (active plan on Monica)."
+  _run_proposal_happy_path_once "${attempt_dir}" || return 3
 
-  if _detect_bug_122_missing_delivery "${attempt_dir}"; then
-    echo "BUG 1.22 REPRODUCED: proposer delivered, recipient missing proposal UI (attempt completed)"
-    return 2
-  fi
+  _log_phase_banner 4
+  echo "  Louys drift with active plan — anchor reject dialog, notification #19, invitee dialog."
+  _recipient_identity_drift_only
+  qa_grant_post_notifications_on_serial "${RECIPIENT_SERIAL}"
+  _connect_handshake_sequential_anchor_reject \
+    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-anchor")" || return 3
 
-  return 3
+  return 0
+}
+
+_run_bug_122_probe_once() {
+  _run_bug_122_regression_once "$@"
 }
 
 case "${MODE}" in
@@ -342,26 +397,28 @@ case "${MODE}" in
     echo "=== Housing proposal happy path (Android + Android) ==="
     _run_happy_path_once "${ARTIFACT_ROOT}/run-001"
     ;;
-  bug_122_probe)
-    echo "=== Housing proposal bug 1.22 probe (${ATTEMPTS} attempts) ==="
-    echo "Each attempt: drift + reconnect, then assert TWO Monica rows on Louys (index 1)."
-    echo "Reproduced: duplicate Monica and/or missing proposal — finish current attempt, skip rest."
-    echo "Clean: single Monica row + proposal visible (no accept/hub)."
+  bug_122_probe|bug_122_regression)
+    echo "=== Housing proposal bug 1.22 regression (${ATTEMPTS} attempt(s)) ==="
+    echo "Roles: Monica-QA=${PROPOSER_SERIAL} (proposer/inviter), Louys-QA=${RECIPIENT_SERIAL} (recipient/invitee)"
+    echo "Phase 1 — Monica drift, duplicate guard on Louys contacts list."
+    echo "Phase 2 — Louys drift, merge dialog on Monica."
+    echo "Phase 3 — housing happy path."
+    echo "Phase 4 — Louys drift + anchor reject + notification on Louys."
     reproduced=0
-    clean=0
+    completed=0
     infra_fail=0
     attempt=1
     while [[ "${attempt}" -le "${ATTEMPTS}" ]]; do
       echo "--- Attempt ${attempt}/${ATTEMPTS} ---"
       attempt_dir="${ARTIFACT_ROOT}/attempt-$(printf '%03d' "${attempt}")"
       set +e
-      _run_bug_122_probe_once "${attempt_dir}"
+      _run_bug_122_regression_once "${attempt_dir}"
       rc=$?
       set -e
       case "${rc}" in
         0)
-          clean=$((clean + 1))
-          echo "Attempt ${attempt}: proposal delivered after drift (not bug 1.22)"
+          completed=$((completed + 1))
+          echo "Attempt ${attempt}: all regression phases completed"
           ;;
         2)
           reproduced=1
@@ -370,7 +427,7 @@ case "${MODE}" in
           ;;
         *)
           infra_fail=$((infra_fail + 1))
-          echo "Attempt ${attempt}: inconclusive (exit ${rc}) — excluded from repro count"
+          echo "Attempt ${attempt}: inconclusive (exit ${rc})"
           ;;
       esac
       attempt=$((attempt + 1))
@@ -382,25 +439,38 @@ case "${MODE}" in
         echo "verdict=REPRODUCED"
         echo "scenario=${SCENARIO_ID}"
         echo "attempts_run=${attempt}"
-        echo "clean=${clean}"
+        echo "completed=${completed}"
         echo "infra_fail=${infra_fail}"
-        echo "note=Stopped after first repro; attempt completed through delivery phases when possible"
+        echo "note=Duplicate Monica after Monica drift (phase 1)"
       } >"${RESULT_FILE}"
       echo "Bug 1.22 REPRODUCED — see ${RESULT_FILE}"
       exit 2
     fi
 
+    if [[ "${completed}" -ge 1 ]]; then
+      {
+        echo "verdict=COMPLETED"
+        echo "scenario=${SCENARIO_ID}"
+        echo "attempts_requested=${ATTEMPTS}"
+        echo "completed=${completed}"
+        echo "infra_fail=${infra_fail}"
+        echo "note=Monica-drift guard, Louys-drift merge, happy path, Louys-drift anchor reject+notification"
+      } >"${RESULT_FILE}"
+      echo "Bug 1.22 regression COMPLETED (completed=${completed}, infra_fail=${infra_fail})"
+      echo "Result: ${RESULT_FILE}"
+      exit 0
+    fi
+
     {
-      echo "verdict=COULD_NOT_REPRODUCE"
+      echo "verdict=INCONCLUSIVE"
       echo "scenario=${SCENARIO_ID}"
       echo "attempts_requested=${ATTEMPTS}"
-      echo "clean=${clean}"
+      echo "completed=${completed}"
       echo "infra_fail=${infra_fail}"
-      echo "note=No duplicate Monica or missing delivery after drift in ${ATTEMPTS} probe runs (web N/A)"
     } >"${RESULT_FILE}"
-    echo "Bug 1.22 COULD NOT REPRODUCE after ${ATTEMPTS} attempts (clean=${clean}, infra=${infra_fail})"
+    echo "Bug 1.22 regression INCONCLUSIVE (infra_fail=${infra_fail})"
     echo "Result: ${RESULT_FILE}"
-    exit 0
+    exit 3
     ;;
   *)
     echo "Unknown housing_proposal coordinator mode: ${MODE}" >&2

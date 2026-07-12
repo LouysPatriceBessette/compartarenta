@@ -1014,6 +1014,7 @@
     "placeholders": { "anchor": { "type": "String" } }
   },
   "contactsDuplicateInviteeMustRestore": "You MUST restore your data. That is what you need to do to reconnect properly.",
+  "contactsDuplicateInviteeRejectedBannerBody": "A reconnection cannot be established this way because you participate in a sharing plan.",
   "pushNotificationContactAddRequestAcceptedBody": "Your connection request with {name} was accepted.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }

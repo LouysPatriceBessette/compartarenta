@@ -2231,6 +2231,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'DEBES restaurar tus datos. Eso es lo que debes hacer para restablecer correctamente el contacto.';
 
   @override
+  String get contactsDuplicateInviteeRejectedBannerBody =>
+      'No se puede restablecer la conexión de esta manera porque participas en un plan de uso compartido.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Tu solicitud de conexión con $name fue aceptada.';
   }

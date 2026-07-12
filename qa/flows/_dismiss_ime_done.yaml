@@ -1,9 +1,10 @@
 appId: com.compartarenta.compartarenta.dev
 ---
 # Gboard IME checkmark (bottom-right) on Compartarenta-QA / Pixel 7.
-- tapOn:
-    id: ".*key_pos_ime_action.*"
-    optional: true
-- tapOn:
-    point: "92%, 90%"
-    optional: true
+- runFlow:
+    when:
+      visible:
+        id: ".*key_pos_ime_action.*"
+    commands:
+      - tapOn:
+          id: ".*key_pos_ime_action.*"

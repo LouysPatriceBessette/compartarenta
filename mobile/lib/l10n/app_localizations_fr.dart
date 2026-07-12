@@ -2226,6 +2226,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous DEVEZ restaurer vos données. C\'est ce qui doit être fait pour correctement rétablir le contact.';
 
   @override
+  String get contactsDuplicateInviteeRejectedBannerBody =>
+      'Une re-connexion ne peut être établie de cette façon, car vous participez à un plan de partage.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Votre demande de connexion avec $name a été acceptée.';
   }

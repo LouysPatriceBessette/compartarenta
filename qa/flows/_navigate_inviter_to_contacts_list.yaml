@@ -1,6 +1,15 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# App already running — open Contacts list without cold start.
+# Inviter-only: reach main contacts list (robust backs; works from invite / codes hub).
+- repeat:
+    times: 4
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              id: "qa-contacts-invite-fab"
+          commands:
+            - back
 - runFlow:
     when:
       visible:

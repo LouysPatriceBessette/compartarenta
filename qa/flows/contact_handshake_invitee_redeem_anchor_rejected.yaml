@@ -1,5 +1,6 @@
 appId: com.compartarenta.compartarenta.dev
 ---
+# Invitee (Louys): redeem when inviter rejects duplicate_module_anchor — no new row.
 - runFlow:
     file: _enter_contacts_hub.yaml
 - tapOn:
@@ -20,12 +21,10 @@ appId: com.compartarenta.compartarenta.dev
     id: "qa-contacts-redeem-submit"
 - runFlow:
     file: _accept_notification_prompt.yaml
-# Redeem pops back to Contacts when the handshake completes.
+# Anchor reject: dialog overlays redeem (contacts list listener) — not redeem-open.
 - extendedWaitUntil:
     visible:
-      id: "qa-contacts-redeem-open"
+      id: "qa-contacts-duplicate-dialog-invitee-rejected-anchor"
     timeout: 60000
-- extendedWaitUntil:
-    visible:
-      id: "qa-contacts-row-monica-qa"
-    timeout: 45000
+- tapOn:
+    id: "qa-contacts-duplicate-dialog-ok"

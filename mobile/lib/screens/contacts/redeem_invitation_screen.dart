@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/app_text_field.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../contacts/contact_duplicate_handshake_dialog_state.dart';
 import '../../contacts/invitation_code.dart';
 import '../../debug/qa_contact_semantics.dart';
 import '../../l10n/app_localizations.dart';
@@ -16,6 +19,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/deadline_remaining.dart';
 import '../../util/display_date.dart';
+import '../../util/product_legal_urls.dart';
 
 /// Screen for the invitee to enter a received invitation code.
 ///
@@ -51,6 +55,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
   bool _dispatched = false;
   bool _completed = false;
   bool _rejected = false;
+  bool _duplicateAnchorRejectBanner = false;
   String? _redeemHandshakeId;
   Timer? _outcomePollTimer;
   bool _outcomePollInFlight = false;
@@ -97,7 +102,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _dispatchError = null;
       _dispatched = false;
       _completed = false;
-      _rejected = false;
+      // Keep _rejected / _duplicateAnchorRejectBanner until navigation or retry.
       _outcomePollTimer?.cancel();
       _outcomePollTimer = null;
       _redeemHandshakeId = null;
@@ -149,6 +154,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
       _dispatched = false;
       _completed = false;
       _rejected = false;
+      _duplicateAnchorRejectBanner = false;
     });
     try {
       final selfName = prefs.displayName.isEmpty
@@ -257,8 +263,13 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
 
   void _onHandshakeRejected() {
     _outcomePollTimer?.cancel();
+    final pending =
+        HandshakeOrchestrator.maybeInstance?.pendingContactDuplicateDialog.value;
+    final anchorReject =
+        pending?.kind == ContactDuplicateDialogKind.inviteeRejectedAnchor;
     setState(() {
       _rejected = true;
+      _duplicateAnchorRejectBanner = anchorReject;
       _completed = false;
       _dispatched = false;
     });
@@ -435,7 +446,10 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                   ),
                 ),
               ],
-              if (_rejected) ...[
+              if (_duplicateAnchorRejectBanner) ...[
+                const SizedBox(height: 8),
+                const _DuplicateAnchorRejectBanner(),
+              ] else if (_rejected) ...[
                 const SizedBox(height: 8),
                 Card(
                   color: Theme.of(context).colorScheme.errorContainer,
@@ -560,6 +574,71 @@ class _InvitationQrScannerScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DuplicateAnchorRejectBanner extends StatefulWidget {
+  const _DuplicateAnchorRejectBanner();
+
+  @override
+  State<_DuplicateAnchorRejectBanner> createState() =>
+      _DuplicateAnchorRejectBannerState();
+}
+
+class _DuplicateAnchorRejectBannerState
+    extends State<_DuplicateAnchorRejectBanner> {
+  late final TapGestureRecognizer _readMoreRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _readMoreRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        final locale = Localizations.localeOf(context);
+        unawaited(
+          launchUrl(
+            contactDuplicateFaqUrlForLocale(locale),
+            mode: LaunchMode.externalApplication,
+          ),
+        );
+      };
+  }
+
+  @override
+  void dispose() {
+    _readMoreRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return qaContactSemantics(
+      identifier: kQaContactsDuplicateAnchorRejectBanner,
+      child: Card(
+        color: Theme.of(context).colorScheme.errorContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text.rich(
+            TextSpan(
+              style: Theme.of(context).textTheme.bodyMedium,
+              children: [
+                TextSpan(text: l10n.contactsDuplicateInviteeRejectedBannerBody),
+                const TextSpan(text: ' '),
+                TextSpan(
+                  text: l10n.contactsDuplicateReadMore,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: _readMoreRecognizer,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,0 +1,15 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Inviter (Monica): anchor-reject dialog — dismiss before navigation.
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-duplicate-dialog-inviter-rejected-anchor"
+    timeout: 45000
+- tapOn:
+    id: "qa-contacts-duplicate-dialog-ok"
+- runFlow:
+    file: _navigate_inviter_to_contacts_list.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 45000

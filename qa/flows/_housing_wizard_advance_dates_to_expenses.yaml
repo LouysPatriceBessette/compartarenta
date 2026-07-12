@@ -1,0 +1,33 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Dates step: allow contact/period persist to settle before advancing to expenses.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-dates-step"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- repeat:
+    times: 3
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "qa-housing-wizard-dates-step"
+          commands:
+            - tapOn:
+                id: "qa-housing-wizard-next"
+            - waitForAnimationToEnd:
+                timeout: 3000
+      - runFlow:
+          when:
+            visible:
+              id: "qa-housing-wizard-dates-step"
+          commands:
+            - tapOn: "Suivant"
+            - waitForAnimationToEnd:
+                timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-expenses-step"
+    timeout: 45000

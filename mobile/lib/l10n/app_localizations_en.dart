@@ -2199,6 +2199,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You MUST restore your data. That is what you need to do to reconnect properly.';
 
   @override
+  String get contactsDuplicateInviteeRejectedBannerBody =>
+      'A reconnection cannot be established this way because you participate in a sharing plan.';
+
+  @override
   String pushNotificationContactAddRequestAcceptedBody(String name) {
     return 'Your connection request with $name was accepted.';
   }

@@ -1,0 +1,10 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Invitee: anchor-reject banner on redeem (persists until navigation).
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-duplicate-anchor-reject-banner"
+    timeout: 10000
+- takeScreenshot: anchor_reject_banner

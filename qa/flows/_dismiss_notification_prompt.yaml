@@ -1,5 +1,5 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-- tapOn:
-    text: "Non, continuer"
-    optional: true
+# QA scenarios enable notifications (dialogs + system permission).
+- runFlow:
+    file: _accept_notification_prompt.yaml

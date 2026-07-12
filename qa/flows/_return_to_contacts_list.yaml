@@ -7,8 +7,6 @@ appId: com.compartarenta.compartarenta.dev
         id: "qa-contacts-invite-fab"
     commands:
       - back
-      - waitForAnimationToEnd:
-          timeout: 3000
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-invite-fab"

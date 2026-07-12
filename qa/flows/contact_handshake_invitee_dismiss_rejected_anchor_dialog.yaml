@@ -1,0 +1,14 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Invitee (Louys): optional cleanup when dialog was not dismissed in redeem flow.
+# Phase 4 coordinator dismisses Ok in contact_handshake_invitee_redeem_anchor_rejected.yaml.
+- back
+- runFlow:
+    file: _on_contacts_hub.yaml
+- runFlow:
+    when:
+      visible:
+        id: "qa-contacts-duplicate-dialog-invitee-rejected-anchor"
+    commands:
+      - tapOn:
+          id: "qa-contacts-duplicate-dialog-ok"

@@ -1,14 +1,17 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-- tapOn:
-    text: "Oui, les activer et continuer"
-    optional: true
-- tapOn:
-    text: "Autoriser"
-    optional: true
-- tapOn:
-    text: "AUTORISER"
-    optional: true
-- tapOn:
-    text: "Allow"
-    optional: true
+# QA seeds use fr (app_fr.arb). Only tap when the dialog is on screen.
+- runFlow:
+    when:
+      visible:
+        text: "Oui, les activer et continuer"
+    commands:
+      - tapOn:
+          text: "Oui, les activer et continuer"
+- runFlow:
+    when:
+      visible:
+        text: "Autoriser"
+    commands:
+      - tapOn:
+          text: "Autoriser"

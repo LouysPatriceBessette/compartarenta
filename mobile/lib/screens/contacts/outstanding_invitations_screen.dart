@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../contacts/contact_invitations_repository.dart';
+import '../../debug/qa_contact_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
@@ -58,7 +59,14 @@ class _OutstandingInvitationsScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.contactsInvitationsTitle)),
+      appBar: AppBar(
+        title: qaContactSemantics(
+          identifier: kQaContactsInvitationsHub,
+          label: l10n.contactsInvitationsTitle,
+          header: true,
+          child: Text(l10n.contactsInvitationsTitle),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add),
         label: Text(l10n.contactsAddContactAction),

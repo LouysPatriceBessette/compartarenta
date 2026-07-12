@@ -3761,6 +3761,12 @@ abstract class AppLocalizations {
   /// **'You MUST restore your data. That is what you need to do to reconnect properly.'**
   String get contactsDuplicateInviteeMustRestore;
 
+  /// No description provided for @contactsDuplicateInviteeRejectedBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A reconnection cannot be established this way because you participate in a sharing plan.'**
+  String get contactsDuplicateInviteeRejectedBannerBody;
+
   /// No description provided for @pushNotificationContactAddRequestAcceptedBody.
   ///
   /// In en, this message translates to:

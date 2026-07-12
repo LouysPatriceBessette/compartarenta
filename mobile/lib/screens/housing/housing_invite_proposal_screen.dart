@@ -43,12 +43,14 @@ enum HousingInviteParticipantUiStatus {
 class _ProposalUiState {
   const _ProposalUiState({
     required this.revisionId,
+    required this.activeRevisionId,
     required this.proposerParticipantId,
     required this.responsesByParticipantId,
     required this.payload,
   });
 
   final String? revisionId;
+  final String? activeRevisionId;
   final String proposerParticipantId;
   final Map<String, ProposalResponse> responsesByParticipantId;
   final Map<String, dynamic> payload;
@@ -222,18 +224,43 @@ class _HousingInviteProposalScreenState
     };
   }
 
+  bool _allRosterParticipantsAccepted(
+    List<Participant> roster,
+    _ProposalUiState proposal,
+  ) {
+    if (proposal.revisionId == null || roster.isEmpty) return false;
+    for (final participant in roster) {
+      final status = proposal.responsesByParticipantId[participant.id]?.status;
+      if (status != ProposalResponseStatus.accepted.name) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  String? _settledRevisionId(_ProposalUiState proposal) {
+    final active = proposal.activeRevisionId;
+    if (active != null && active.isNotEmpty) return active;
+    return proposal.revisionId;
+  }
+
   Future<_ProposalUiState> _loadProposalUiState() async {
-    final pkg = await (widget.db.select(
-      widget.db.proposalPackages,
-    )..where((t) => t.planId.equals(widget.planId))).getSingleOrNull();
+    final transport = HousingProposalTransportService(widget.db);
+    final activeRevisionId = await transport.resolveActiveRevisionIdForPlan(
+      widget.planId,
+    );
+    final pendingRevisionId = await transport.resolvePendingRevisionIdForPlan(
+      widget.planId,
+    );
     final revisionId =
         widget.revisionId ??
-        _displayRevisionId ??
-        pkg?.pendingRevisionId ??
-        pkg?.activeRevisionId;
+        activeRevisionId ??
+        pendingRevisionId ??
+        _displayRevisionId;
     if (revisionId == null) {
       return const _ProposalUiState(
         revisionId: null,
+        activeRevisionId: null,
         proposerParticipantId: '',
         responsesByParticipantId: <String, ProposalResponse>{},
         payload: <String, dynamic>{},
@@ -252,6 +279,7 @@ class _HousingInviteProposalScreenState
     )..where((t) => t.revisionId.equals(revisionId))).get();
     return _ProposalUiState(
       revisionId: revisionId,
+      activeRevisionId: activeRevisionId,
       proposerParticipantId: revision.proposerParticipantId,
       responsesByParticipantId: {
         for (final response in responses) response.participantId: response,
@@ -580,18 +608,18 @@ class _HousingInviteProposalScreenState
           final expiresUtc = revisionState.responseExpiresAtUtc;
           final forkFromId = revisionState.forkedFromRevisionId;
           final showParticipantStatus = proposal.revisionId != null;
-          final hasActivePlan =
-              proposal.revisionId != null &&
-              proposal.responsesByParticipantId.values.isNotEmpty &&
-              proposal.responsesByParticipantId.values.every(
-                (r) => r.status == ProposalResponseStatus.accepted.name,
-              );
-          if (hasActivePlan) {
+          final settledRevisionId = _settledRevisionId(proposal);
+          final unanimousAccepted = _allRosterParticipantsAccepted(
+            roster,
+            proposal,
+          );
+          if (settledRevisionId != null &&
+              (proposal.activeRevisionId != null || unanimousAccepted)) {
             return _HousingUnanimousActiveGate(
               db: widget.db,
               planId: widget.planId,
               prefs: widget.prefs,
-              revisionId: proposal.revisionId!,
+              revisionId: settledRevisionId,
             );
           }
           _statusByRosterIndex
@@ -776,7 +804,7 @@ class _HousingInviteProposalScreenState
                         Localizations.localeOf(context),
                       ),
                     ),
-                    if (!isAuthor && canRespond && !hasActivePlan) ...[
+                    if (!isAuthor && canRespond) ...[
                       const SizedBox(height: 24),
                       if (!_negotiateExpanded) ...[
                         qaHousingProposalSemantics(
@@ -942,6 +970,24 @@ class _HousingUnanimousActiveGateState extends State<_HousingUnanimousActiveGate
   void initState() {
     super.initState();
     _readyFuture = _resolveActivePackage();
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _onSteadyInboxTick,
+    );
+  }
+
+  @override
+  void dispose() {
+    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+      _onSteadyInboxTick,
+    );
+    super.dispose();
+  }
+
+  void _onSteadyInboxTick() {
+    if (!mounted) return;
+    setState(() {
+      _readyFuture = _resolveActivePackage();
+    });
   }
 
   Future<({String packageId, bool ready})> _resolveActivePackage() async {

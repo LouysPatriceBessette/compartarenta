@@ -1,13 +1,11 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# App must already be running (stopApp: false). After unanimous acceptance both
-# co-participants land on the operational agreement hub — not the invite screen.
-- launchApp:
-    stopApp: false
+# App already in foreground (post-accept or post-activation). Do not call
+# launchApp stopApp: false — it can hang on emulator while the hub is visible.
+- waitForAnimationToEnd:
+    timeout: 3000
 - extendedWaitUntil:
     visible:
       id: "qa-housing-active-hub"
-    timeout: 90000
-- waitForAnimationToEnd:
-    timeout: 3000
+    timeout: 10000
 - takeScreenshot: active_hub

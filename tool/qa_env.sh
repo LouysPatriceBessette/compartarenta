@@ -417,6 +417,16 @@ qa_seed_scenario_on_serial() {
   ANDROID_SERIAL="${serial}" "${COMPARTARENTA_ROOT}/tool/seed_qa_scenario.sh" "${scenario_id}"
 }
 
+qa_resolve_device_date() {
+  local device_date="$1"
+  local timezone="$2"
+  if [[ "${device_date}" == "current" ]]; then
+    TZ="${timezone}" date '+%Y-%m-%dT09:00:00'
+  else
+    printf '%s' "${device_date}"
+  fi
+}
+
 qa_set_android_date_on_serial() {
   local serial="$1"
   local device_date="$2"

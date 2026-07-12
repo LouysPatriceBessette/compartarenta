@@ -1,0 +1,15 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Inviter (Monica): merge dialog appears over invite screen — dismiss before navigation.
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-duplicate-dialog-inviter-merged"
+    timeout: 45000
+- tapOn:
+    id: "qa-contacts-duplicate-dialog-ok"
+- runFlow:
+    file: _navigate_inviter_to_contacts_list.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 45000

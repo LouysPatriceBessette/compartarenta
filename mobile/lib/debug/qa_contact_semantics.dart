@@ -15,6 +15,7 @@ const kQaContactsHandshakeError = 'qa-contacts-handshake-error';
 const kQaContactsHandshakeDispatched = 'qa-contacts-handshake-dispatched';
 const kQaContactsHandshakeCompleted = 'qa-contacts-handshake-completed';
 const kQaContactsEmptyState = 'qa-contacts-empty-state';
+const kQaContactsInvitationsHub = 'qa-contacts-invitations-hub';
 const kQaContactsPickerSheet = 'qa-contacts-picker-sheet';
 
 /// Stable list-row id for a connected contact tile (display name slug).
@@ -42,6 +43,17 @@ String qaContactsDuplicateConnectedSemanticsId(String rowSemanticsId) {
 
 const kQaContactsDuplicateConnectedMonicaQa =
     'qa-contacts-duplicate-connected-monica-qa';
+
+/// Duplicate device-binding handshake dialogs ([showContactDuplicateHandshakeDialog]).
+const kQaContactsDuplicateDialogInviterMerged =
+    'qa-contacts-duplicate-dialog-inviter-merged';
+const kQaContactsDuplicateDialogInviterRejectedAnchor =
+    'qa-contacts-duplicate-dialog-inviter-rejected-anchor';
+const kQaContactsDuplicateDialogInviteeRejectedAnchor =
+    'qa-contacts-duplicate-dialog-invitee-rejected-anchor';
+const kQaContactsDuplicateDialogOk = 'qa-contacts-duplicate-dialog-ok';
+const kQaContactsDuplicateAnchorRejectBanner =
+    'qa-contacts-duplicate-anchor-reject-banner';
 
 Widget qaContactSemantics({
   required String identifier,

@@ -848,6 +848,11 @@ void main() {
         HandshakeState.rejected,
       );
       expect(inviteeSecond.notifications.duplicateModuleAnchorRejections.length, 1);
+      await Future.wait([
+        inviteeSecond.orchestrator.processAllPendingHandshakes(),
+        inviteeSecond.orchestrator.processAllPendingHandshakes(),
+      ]);
+      expect(inviteeSecond.notifications.duplicateModuleAnchorRejections.length, 1);
       expect(inviteeSecond.notifications.addRequestResolutions, isEmpty);
       expect(
         inviteeSecond.orchestrator.pendingContactDuplicateDialog.value?.kind,

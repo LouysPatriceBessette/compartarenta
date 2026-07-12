@@ -19,8 +19,6 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-contacts-picker-sheet"
     timeout: 30000
-- waitForAnimationToEnd:
-    timeout: 3000
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-row-louys-qa"
@@ -31,18 +29,16 @@ appId: com.compartarenta.compartarenta.dev
     notVisible:
       id: "qa-contacts-picker-sheet"
     timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
 - tapOn:
     id: "qa-housing-wizard-next"
 - extendedWaitUntil:
     visible:
       id: "qa-housing-wizard-dates-step"
     timeout: 30000
-- tapOn:
-    id: "qa-housing-wizard-next"
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-wizard-expenses-step"
-    timeout: 30000
+- runFlow:
+    file: _housing_wizard_advance_dates_to_expenses.yaml
 - tapOn:
     id: "qa-housing-wizard-add-expense"
 - extendedWaitUntil:

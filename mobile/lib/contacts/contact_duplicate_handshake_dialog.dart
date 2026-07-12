@@ -6,9 +6,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../contacts/contact_duplicate_handshake_dialog_state.dart';
 import '../contacts/contact_duplicate_module_anchor.dart';
+import '../debug/qa_contact_semantics.dart';
 import '../l10n/app_localizations.dart';
 import '../util/product_legal_urls.dart';
 import '../widgets/app_dialog.dart';
+
+String qaContactDuplicateDialogSemanticsId(ContactDuplicateDialogKind kind) {
+  return switch (kind) {
+    ContactDuplicateDialogKind.inviterMerged =>
+      kQaContactsDuplicateDialogInviterMerged,
+    ContactDuplicateDialogKind.inviterRejectedAnchor =>
+      kQaContactsDuplicateDialogInviterRejectedAnchor,
+    ContactDuplicateDialogKind.inviteeRejectedAnchor =>
+      kQaContactsDuplicateDialogInviteeRejectedAnchor,
+  };
+}
 
 String duplicateModuleAnchorLabel(AppLocalizations l10n, String anchorKind) {
   return switch (anchorKind) {
@@ -102,11 +114,18 @@ Future<void> showContactDuplicateHandshakeDialog(
       context: context,
       guardKey: 'contactDuplicateHandshake.${pending.kind.name}',
       builder: (ctx) => AlertDialog(
-        content: SingleChildScrollView(child: content),
+        content: qaContactSemantics(
+          identifier: qaContactDuplicateDialogSemanticsId(pending.kind),
+          child: SingleChildScrollView(child: content),
+        ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.contactsDuplicateDialogOk),
+            child: qaContactSemantics(
+              identifier: kQaContactsDuplicateDialogOk,
+              button: true,
+              child: Text(l10n.contactsDuplicateDialogOk),
+            ),
           ),
         ],
       ),

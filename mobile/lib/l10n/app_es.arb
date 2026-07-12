@@ -863,6 +863,7 @@
     "placeholders": { "anchor": { "type": "String" } }
   },
   "contactsDuplicateInviteeMustRestore": "DEBES restaurar tus datos. Eso es lo que debes hacer para restablecer correctamente el contacto.",
+  "contactsDuplicateInviteeRejectedBannerBody": "No se puede restablecer la conexión de esta manera porque participas en un plan de uso compartido.",
   "pushNotificationContactAddRequestAcceptedBody": "Tu solicitud de conexión con {name} fue aceptada.",
   "@pushNotificationContactAddRequestAcceptedBody": {
     "placeholders": { "name": { "type": "String" } }

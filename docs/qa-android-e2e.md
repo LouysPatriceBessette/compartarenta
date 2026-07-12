@@ -171,19 +171,19 @@ until a successful run with a fresh build):
 ./tool/melosw run qa:run-multi-scenario -- housing_proposal_happy_path
 ```
 
-**Bug 1.22 probe (3 attempts, proposer identity drift, writes `bug_122_result.txt`) — resolved Jul 2026:**
+**Bug 1.22 regression (1 attempt, four phases, writes `bug_122_result.txt`) — resolved Jul 2026:**
 
-Regression guard for proposer-only identity drift (Monica re-seeded; Louys keeps prior
-contact rows). **PASS** = `COULD_NOT_REPRODUCE`: single connected Monica-QA row (no
-`qa-contacts-duplicate-connected-monica-qa` banner, no `qa-contacts-row-monica-qa` index **1**)
-and recipient proposal UI after send. **REPRODUCED** when duplicate Monica and/or missing
-proposal UI. On first repro the coordinator **completes that attempt** (send + recipient
-artifacts) then **stops** — remaining attempts are not run. Fix: mobile `deviceBindingId`
-merge on handshake reconnect (see OpenSpec task **1.22**).
+Regression guard and duplicate-handshake outcomes after device-binding merge (commit `4489d77`).
 
-Maestro debug output is written under short paths such as
-`qa/artifacts/multi-housing_proposal_bug_122/<stamp>/attempt-001/handshake-after-drift/…`
-(no doubled artifact root).
+1. **Monica drift** — Louys keeps contacts; assert **no** duplicate Monica (`index: 1`, no
+   `qa-contacts-duplicate-connected-monica-qa`). **REPRODUCED** if duplicate returns.
+2. **Louys drift (no active plan)** — Monica shows **merge** informative dialog
+   (`qa-contacts-duplicate-dialog-inviter-merged`).
+3. **Housing happy path** — send, accept, active hub (establishes active plan on Monica).
+4. **Louys drift (active plan)** — Monica shows **anchor reject** dialog; Louys receives
+   notification **#19** and **invitee** informative dialog (must restore data).
+
+**PASS** = `verdict=COMPLETED` in `bug_122_result.txt`.
 
 ```bash
 ./tool/melosw run qa:run-multi-scenario -- housing_proposal_bug_122

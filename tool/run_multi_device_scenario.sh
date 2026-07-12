@@ -91,8 +91,12 @@ fi
 
 COORDINATOR="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" coordinator)"
 MODE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" mode 2>/dev/null || true)"
-DEVICE_DATE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" device_date)"
+DEVICE_DATE_RAW="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" device_date)"
 TIMEZONE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" timezone)"
+DEVICE_DATE="$(qa_resolve_device_date "${DEVICE_DATE_RAW}" "${TIMEZONE}")"
+if [[ "${DEVICE_DATE_RAW}" == "current" ]]; then
+  echo "device_date=current resolved to ${DEVICE_DATE} (${TIMEZONE})"
+fi
 MANIFEST_ATTEMPTS="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" attempts 2>/dev/null || true)"
 ROLES="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" roles)"
 
@@ -198,8 +202,10 @@ for role in "${ROLE_NAMES[@]}"; do
 done
 
 echo "Running multi-device coordinator ${COORDINATOR} (mode=${MODE:-default}, attempts=${ATTEMPTS})"
+set +e
 "${COORDINATOR_SCRIPT}"
 COORD_EXIT=$?
+set -e
 
 if [[ "${SKIP_RESTORE}" -eq 0 ]]; then
   "${ROOT}/tool/restore_android_date.sh" || true
@@ -226,14 +232,14 @@ if [[ "${MODE}" == "bug_91_probe" && -f "${ARTIFACT_ROOT}/bug_91_result.txt" ]];
       fi
       ;;
   esac
-elif [[ "${MODE}" == "bug_122_probe" && -f "${ARTIFACT_ROOT}/bug_122_result.txt" ]]; then
+elif [[ "${MODE}" == "bug_122_probe" || "${MODE}" == "bug_122_regression" ]] && [[ -f "${ARTIFACT_ROOT}/bug_122_result.txt" ]]; then
   VERDICT="$(grep -E '^verdict=' "${ARTIFACT_ROOT}/bug_122_result.txt" | head -1 | cut -d= -f2-)"
   case "${VERDICT}" in
-    COULD_NOT_REPRODUCE)
-      echo "Test PASSED | ${SCENARIO_ID} (verdict: COULD_NOT_REPRODUCE — delivery OK after drift)"
+    COMPLETED|COULD_NOT_REPRODUCE)
+      echo "Test PASSED | ${SCENARIO_ID} (verdict: ${VERDICT})"
       ;;
     REPRODUCED)
-      echo "Test FAILED | ${SCENARIO_ID} (verdict: REPRODUCED — bug 1.22 missing proposal delivery)"
+      echo "Test FAILED | ${SCENARIO_ID} (verdict: REPRODUCED — bug 1.22 duplicate Monica or regression failure)"
       ;;
     *)
       if [[ "${COORD_EXIT}" -eq 0 ]]; then

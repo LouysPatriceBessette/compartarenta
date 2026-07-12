@@ -17,6 +17,7 @@ import '../db/repositories/contacts_repository.dart';
 import '../device/device_binding_service.dart';
 import '../entitlement/entitlement_coordinator.dart';
 import '../relay/relay_http_policy.dart';
+import '../housing/housing_navigation_intent.dart';
 import '../housing/housing_participant_profile_sync.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/housing_plan_peer_identity_reconcile.dart';
@@ -2240,14 +2241,20 @@ class HandshakeOrchestrator {
       );
     } else if (ack.rejectionReason ==
         AckRejectionReason.duplicateModuleAnchor) {
-      await _contacts.deleteLocally(row.contactStubId);
-      await _markHandshake(
+      final peerB64 = RelayRouting.b64(ack.inviterLongTermPublicKey);
+      if (!await _claimHandshakeStateIf(
         row.id,
+        expected: HandshakeState.awaitingAck,
         state: HandshakeState.rejected,
-        peerLongTermPublicMaterialB64: RelayRouting.b64(
-          ack.inviterLongTermPublicKey,
-        ),
-      );
+        peerLongTermPublicMaterialB64: peerB64,
+      )) {
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: listenAddr,
+        );
+        return;
+      }
+      await _contacts.deleteLocally(row.contactStubId);
       await _contactNotifications.contactDuplicateModuleAnchorRejected();
       pendingContactDuplicateDialog.value = PendingContactDuplicateDialog(
         kind: ContactDuplicateDialogKind.inviteeRejectedAnchor,
@@ -2255,15 +2262,20 @@ class HandshakeOrchestrator {
             ack.duplicateAnchorKind ?? DuplicateModuleAnchorKind.housing,
       );
     } else {
-      // Inviter rejected: drop the local stub, mark row rejected.
-      await _contacts.deleteLocally(row.contactStubId);
-      await _markHandshake(
+      final peerB64 = RelayRouting.b64(ack.inviterLongTermPublicKey);
+      if (!await _claimHandshakeStateIf(
         row.id,
+        expected: HandshakeState.awaitingAck,
         state: HandshakeState.rejected,
-        peerLongTermPublicMaterialB64: RelayRouting.b64(
-          ack.inviterLongTermPublicKey,
-        ),
-      );
+        peerLongTermPublicMaterialB64: peerB64,
+      )) {
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: listenAddr,
+        );
+        return;
+      }
+      await _contacts.deleteLocally(row.contactStubId);
       final notificationDisplayName = ack.displayName.isEmpty
           ? 'Unknown'
           : ack.displayName;
@@ -3611,6 +3623,7 @@ class HandshakeOrchestrator {
             planId: pkg.planId,
             revisionId: revision.id,
           );
+          HousingNavigationIntent.requestOpenActiveHub(pkg.planId);
         }
       } else {
         await transport.archiveInvalidatedProposal(
@@ -3787,6 +3800,29 @@ class HandshakeOrchestrator {
     } on RelayClientError catch (e) {
       debugPrint('handshake decommission (inviter->invitee) failed: $e');
     }
+  }
+
+  /// Atomically moves a handshake from [expected] to [state]. Returns false when
+  /// another poll already handled the same ack (prevents duplicate notifications).
+  Future<bool> _claimHandshakeStateIf(
+    String id, {
+    required String expected,
+    required String state,
+    String? peerLongTermPublicMaterialB64,
+  }) async {
+    final now = _now().toUtc();
+    final updated = await (_db.update(_db.pendingHandshakes)
+          ..where((t) => t.id.equals(id) & t.state.equals(expected)))
+        .write(
+      PendingHandshakesCompanion(
+        state: drift.Value(state),
+        peerLongTermPublicMaterialB64: peerLongTermPublicMaterialB64 == null
+            ? const drift.Value.absent()
+            : drift.Value(peerLongTermPublicMaterialB64),
+        updatedAt: drift.Value(now),
+      ),
+    );
+    return updated > 0;
   }
 
   Future<void> _markHandshake(

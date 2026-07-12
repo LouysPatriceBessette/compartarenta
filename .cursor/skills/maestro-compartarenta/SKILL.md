@@ -54,13 +54,9 @@ MCP validates **single-device** flows. Multi-device timing stays in bash coordin
 
 After inviter **generate**, handshake complete pops to **Codes d'invitation**, not Contacts.
 
-Pattern for inviter flows that need Contacts or duplicate dialogs:
+Pattern for **invitee** flows that need Contacts:
 
 ```yaml
-- extendedWaitUntil:
-    notVisible:
-      id: "qa-contacts-invitation-short-code"
-    timeout: 60000
 - runFlow:
     file: _return_to_contacts_list.yaml
 - extendedWaitUntil:
@@ -69,17 +65,26 @@ Pattern for inviter flows that need Contacts or duplicate dialogs:
     timeout: 45000
 ```
 
-`_return_to_contacts_list.yaml`: home → tap `qa-home-contacts` if needed; back from
-`qa-contacts-invitations-hub`; wait `qa-contacts-redeem-open`.
+`_return_to_contacts_list.yaml`: one `back` when `qa-contacts-invite-fab` is not visible; wait `qa-contacts-invite-fab`.
+
+**Inviter duplicate dialogs** (merge / anchor reject): **wait dialog → Ok first** (dialog may overlay
+the invite screen), then `_navigate_inviter_to_contacts_list.yaml`, then assert peer row. Do **not**
+navigate before Ok — `_navigate_inviter_to_contacts_list` will fail on `qa-contacts-invite-fab` while
+the modal is open.
 
 Duplicate handshake dialogs render only on **`ContactsListScreen`** — never assert
 dialog ids while still on invitation screens.
 
 ### Notifications in QA flows
 
-Use **`_accept_notification_prompt.yaml`** (enable notifications + system allow).
-Do not use `_dismiss_notification_prompt` for scenarios that test dialogs and
-notifications (project policy: always accept in QA).
+Use **`_accept_notification_prompt.yaml`** — taps only when visible (`when:`), with exact
+**fr** strings from `app_fr.arb`:
+
+- In-app: `Oui, les activer et continuer` (`notificationFlowPermissionEnableAction`)
+- Android system (FR emulator): `Autoriser`
+
+Do **not** use blind `optional: true` taps on `Autoriser` / `AUTORISER` / `Allow` — they add
+WARNED steps when permission is already granted.
 
 ### Duplicate contact probes (bug 1.22)
 
