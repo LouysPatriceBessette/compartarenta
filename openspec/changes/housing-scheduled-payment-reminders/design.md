@@ -11,8 +11,8 @@ Notifications **not** fired directly by a peer envelope arriving in the inbox (t
 | 1 | … | **Before-date** | … | … | Tiered: W&lt;20 → J−2,**J**; 20–40 → J−4,J−2,**J**; W&gt;40 → J−6,J−2,**J**; all **14:00** local | **Relay cron** |
 | 2 | `housing-unified-expense-entry` design | **Overdue** payment reminder | Per payment-responsible rules | Uncovered after due date | **14:00** local, day after due | **Relay cron** |
 | 3 | `housing-plan-proposal-offer-and-responses` tasks **1.4b** | Proposal **response deadline** reminder | Open `revisionId`: recipients and/or author per product table | Before `expiresAt` | **Indéfini** — product table | **Relay cron** (replaces local; author registers on dispatch) |
-| 4 | `contacts-module` tasks **3.7** | **Invitation expiry** reminder (outgoing pending) | Inviter | Before invitation `expiresAt` | **Indéfini** | **Relay cron** (replaces local; inviter registers on create) |
-| 5 | `notification-permission-management` tasks | **Invitation expiration** (unconsumed) | Inviter | At expiration moment | **Indéfini** — "scheduled local or backend/push" | Not chosen |
+| 4 | `contacts-module` tasks **3.7** | **Invitation expiry** reminder (`before_expiry`, outgoing pending) | Inviter | Before invitation `expiresAt` | Validity 3h→T−30m; 8h→T−1h; 24h→T−2h; 48h→T−4h (wall-clock from `expiresAt`) | **Relay cron** (inviter registers `fires[]` on create) — **client + ingest deferred** |
+| 5 | `notification-permission-management` / Contacts Settings | **Invitation expiration** (`expired`, unconsumed) | Inviter | Exactly at `expiresAt` | Same registration as #4; `reminder_kind=expired` | **Relay cron** — **client + ingest deferred** |
 | 6 | `licensing-trial-and-plan-entitlement` `trial-notifications-and-timeline` | Trial start | Relevant participants | First qualifying realized-expense sync starts trial | At trial start | **Indéfini** (client-side implied) |
 | 7 | Same | Trial **one-week** reminder | Relevant participants | Trial has **7 days** remaining | Once at −7d | **Defined** |
 | 8 | Same | Trial **final three days** | Relevant participants | Days 3, 2, 1 remaining inclusive | Daily | **Defined** |
@@ -26,7 +26,7 @@ Notifications **not** fired directly by a peer envelope arriving in the inbox (t
 - `closed-app-push-delivery`: wake payloads are `v` + `kind` + routing id only; web has **no** closed-app push.
 - Housing plan lines and recurrence live in **client ciphertext** today; task `housing-active-agreement-operations` **3.9** (relay-visible metadata for expense decisions) is still **open**.
 - Coverage math exists client-side for **calendar-month chart** (`expense_payment_chart_carry.dart`); reminder coverage needs **sliding recurrence periods** with carry adapted from that model.
-- **No** `zonedSchedule` / local scheduling implementation exists in the codebase today; 1.4b and 3.7 are spec-only.
+- **No** `zonedSchedule` / local scheduling implementation exists in the codebase today; 1.4b remains product-table unfinished; invitation expiry (#4–#5) lead times and copy are **specified** (2026-07-13) but **client + relay `fires[]` ingest are deferred**.
 
 ## Goals / Non-Goals
 
@@ -76,6 +76,21 @@ Overdue processing also appends an **orange non-navigable card** to the local **
 ### D3 — Cron couples to existing sweeper infrastructure
 
 Add `reminder_cron` (or extend `sweeper.Loop` with a second ticker) on a documented cadence (e.g. every 1–5 minutes). Query `scheduled_notification_fires WHERE status = 'pending' AND fire_at <= now()` with `FOR UPDATE SKIP LOCKED`, mark `fired`, dispatch wake push per recipient.
+
+### D-invitation — Invitation expiry fire times (client-supplied)
+
+Unlike housing payment (relay computes 14:00 local from `due_at` + W), domain `contacts_invitation_expiry` uses **client-computed wall-clock** `fire_at` values relative to invitation `expiresAt`:
+
+| Validity | `before_expiry` | `expired` |
+|----------|-----------------|-----------|
+| 3h | `expiresAt − 30m` | `expiresAt` |
+| 8h | `expiresAt − 1h` | `expiresAt` |
+| 24h | `expiresAt − 2h` | `expiresAt` |
+| 48h | `expiresAt − 4h` | `expiresAt` |
+
+Omit past fires at registration. Cancel on used/revoked. Both kinds share Settings `notificationContactInvitationExpiration`.
+
+**Implementation status:** product decisions locked in `scheduling-deadline-and-invitation-reminders`. Relay still needs a generic (or domain-specific) ingest that accepts client `fires[]` (schema `0003` already allows domain `contacts_invitation_expiry`). Ship in a later relay release + client work; not part of the housing-payment client path already shipped.
 
 ### D6 — Housing payment fire-time rules
 
@@ -258,6 +273,7 @@ Used to compute **14:00 local** fire instants per recipient. IANA id only — no
 | 6 | **Resolved** — `unitMinor` + sliding period + carry |
 | 7 | **Resolved** — sliding window for `everyNDays` |
 | 8 | **Resolved** — unanimity-establishing client only (housing); author/inviter for other domains |
+| 9 | **Resolved (2026-07-13)** — invitation `before_expiry` / `expired` lead times + FR/EN copy (see D-invitation); **implementation deferred** pending relay `fires[]` ingest |
 
 ## Appendix — local scheduling vs relay (Q1)
 
@@ -265,7 +281,7 @@ Used to compute **14:00 local** fire instants per recipient. IANA id only — no
 
 **Nuanced answer:**
 
-1. **Not implemented today** — no `zonedSchedule` / shared local scheduling service exists; 1.4b and 3.7 are task text only.
+1. **Not implemented today** — no `zonedSchedule` / shared local scheduling service exists; 1.4b lead times still open; invitation expiry (#4–#5) is **specified** but client/relay ingest deferred.
 2. **If implemented with OS-scheduled local notifications** (`flutter_local_notifications` `zonedSchedule` on Android/iOS), the OS **can** fire at the right time while the app is killed — so the June 20→22 slip is **not inherent** to “local” on native.
 3. **Remaining local-scheduling weaknesses** that motivate relay anyway:
    - **Cancel/reschedule** on shared state change (response submitted, invitation revoked, amendment accepted) only runs when **your** app executes — stale alarms can still fire.

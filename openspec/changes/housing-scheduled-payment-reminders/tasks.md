@@ -46,6 +46,21 @@
 - [ ] 3.3 Integration: activation → fire → wake → notification (native). *(Relay cron → FCM wake path — not covered by 3.4.)*
 - [x] 3.4 **Android E2E QA (Maestro):** inventory **#10** before_due (J−4, J−2, due day J) + **#11** overdue — simulated local notification display + shade tap + Accepted expenses journal asserts; no relay. *(Manifest `qa/multi_scenarios/housing_payment_reminder_before_due.yaml`; `./tool/melosw run qa:run-payment-reminder`; QA’ed 2026-07-13.)*
 
+## 4. Invitation expiry (deferred)
+
+> Product decisions for `contacts_invitation_expiry` (`before_expiry` +
+> `expired`, lead-time table, FR/EN copy, Settings gating) are locked in
+> `specs/scheduling-deadline-and-invitation-reminders/spec.md` and design
+> **D-invitation** (2026-07-13). **Do not implement** until a relay release
+> adds client-supplied `fires[]` ingest (may share with proposal deadline
+> `housing_proposal_deadline`). No new SQL migration expected (`0003` already
+> allows the domain).
+
+- [ ] 4.1 Relay: authenticated upsert/cancel for domain `contacts_invitation_expiry` accepting client `fires[]` (`fire_at` wall-clock); skip/no-op for past instants already handled client-side; cancel by invitation `scope_key`.
+- [ ] 4.2 Client: on invitation create, register `before_expiry` + `expired` per validity table; cancel on used/revoked/extend; deliver via pending-deliveries → local notification; gate on `notificationContactInvitationExpiration`; deep link to outstanding invitations; EN/FR/ES ARB.
+- [ ] 4.3 Tests: lead-time helper unit tests; revoke/use cancel; notification copy; optional Maestro simulated display later.
+- [ ] 4.4 Mark `contacts-module` task **3.7** done when 4.1–4.2 land; update operator docs if new HTTP paths are added.
+
 ## Dependencies
 
 - `closed-app-push-delivery`

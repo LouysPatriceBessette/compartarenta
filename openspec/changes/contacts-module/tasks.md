@@ -33,11 +33,39 @@
 - [x] 3.5 Implement the outstanding-invitations list with statuses (pending, used, expired, revoked) and a revoke action.
 - [x] 3.6 Implement invitee entry UI (paste, type, scan QR) with locally-validated checksum before any relay call.
 - [ ] 3.7 **Invitation expiry reminder** notifications (outgoing pending invitation codes).
-  - For each **pending** invitation created on this device (`expiresAt` on the invitation row, code not yet consumed), schedule one or more reminders before expiry via relay scheduled notifications (domain `contacts_invitation_expiry`).
-  - **Lead times** depend on the invitation validity duration / preset (document when fixed).
-  - **Cancel / reschedule** when the invitation is used, revoked, or expires; reschedule if validity is extended.
-  - Respect app-level master notification switch and the Contacts category for **invitation expiration**.
-  - **Not** the same as the “incoming handshake request” notification; copy MUST distinguish invitation **expiring soon** vs **new connection request**.
+  - **Deferred (2026-07-13):** product lead times + copy are locked in
+    `housing-scheduled-payment-reminders` /
+    `scheduling-deadline-and-invitation-reminders` (and D-invitation in that
+    change's design). Implementation waits on relay ingest that accepts
+    client-supplied `fires[]` for domain `contacts_invitation_expiry` (schema
+    `0003` already allows the domain) plus a client register/cancel/deliver path.
+  - For each **pending** invitation created on this device (`expiresAt` on the
+    invitation row, code not yet consumed), register relay scheduled fires
+    (domain `contacts_invitation_expiry`, recipient = inviter) with kinds
+    `before_expiry` and `expired`:
+
+    | Validity | `before_expiry` | `expired` |
+    |----------|-----------------|-----------|
+    | 3h | `expiresAt − 30m` | exactly `expiresAt` |
+    | 8h | `expiresAt − 1h` | exactly `expiresAt` |
+    | 24h | `expiresAt − 2h` | exactly `expiresAt` |
+    | 48h | `expiresAt − 4h` | exactly `expiresAt` |
+
+    Omit any fire already past at registration. Client computes wall-clock
+    `fires[]` (not housing 14:00-local rules).
+  - **Cancel / reschedule** when the invitation is used, revoked, or expires;
+    reschedule if validity is extended.
+  - Respect app-level master notification switch and Contacts
+    `notificationContactInvitationExpiration` for **both** kinds.
+  - **Copy** (not the incoming-handshake-request notification):
+
+    | Kind | FR title / body | EN title / body |
+    |------|-----------------|-----------------|
+    | `before_expiry` | Invitation bientôt expirée / Une invitation en attente **expirera** bientôt. | Invitation expiring soon / A pending invitation will expire soon. |
+    | `expired` | Invitation expirée / Une invitation n’a pas été utilisée et a expiré. | Invitation expired / An invitation was not used and has expired. |
+
+    ES: same meaning, locale-appropriate at implementation. Tap → outstanding
+    outgoing invitations list.
   - Log reminder-fired events in the Settings activity log when that store exists.
 
 ## 4. Handshake protocol over the relay

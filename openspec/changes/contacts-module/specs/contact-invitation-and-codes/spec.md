@@ -52,6 +52,19 @@ The Contacts area SHALL show the inviter the list of **outstanding outgoing invi
 - **THEN** the area surfaces all outstanding invitations and their status
 - **THEN** revoked or expired invitations can be cleared from view at the user's request
 
+### Requirement: Inviter receives expiry reminders for unconsumed invitations
+For each **pending** outgoing invitation this device created, the system SHALL notify the **inviter** via relay-scheduled notifications (domain `contacts_invitation_expiry`) both **before** `expiresAt` and **at** `expiresAt` if the code remains unused. Lead times, reminder kinds (`before_expiry` / `expired`), Settings gating, localized copy, and deep link SHALL follow `scheduling-deadline-and-invitation-reminders` in change `housing-scheduled-payment-reminders`.
+
+Validity presets are the standard invitation durations (3h, 8h, 24h, 48h). Fires are wall-clock offsets from `expiresAt` (not housing payment 14:00 rules). Pending fires SHALL be cancelled when the invitation is used or revoked.
+
+#### Scenario: Soon and at-expiry fires for a 24h invitation
+- **WHEN** the inviter creates a pending invitation with 24h validity ending at T
+- **THEN** the system schedules a soon reminder at T−2h and an unconsumed-expiration notification at T
+
+#### Scenario: Used invitation does not fire at expiry
+- **WHEN** the invitee redeems the code before T
+- **THEN** pending `before_expiry` and `expired` fires for that invitation are cancelled
+
 ### Requirement: The invitee enters a code via clear UI affordances
 The app SHALL provide UI for the invitee to enter or scan an invitation code (paste, scan QR, type with checksum-aware feedback). The flow SHALL preview the contact's information (chosen by the inviter at handshake time) before persisting any connection.
 
