@@ -228,13 +228,18 @@ Pipeline:
 Manifest: `qa/multi_scenarios/fcm_wake_push_emulator_physical.yaml`. Coordinator:
 `tool/coordinators/fcm_wake_push.sh`.
 
-### Housing payment reminder (#10 before-due, simulated)
+### Housing payment reminders (#10 before-due ×2 + #11 overdue, simulated)
 
-Single **Monica-QA** emulator — **no relay** (client notification display + tap only):
+Single **Monica-QA** emulator — **no relay** (client notification display + tap only).
 
-1. Emulator date set to the first before-due fire (J−4 @ 14:00 local for monthly Loyer day 1),
-   computed from `device_date: current` via `tool/qa_housing_payment_reminder_dates.py`.
-2. Seed in-force plan + debug hook simulating `#10`; open notification shade; tap; assert active hub.
+1. Compute monthly Loyer schedule from `device_date: current`
+   (`tool/qa_housing_payment_reminder_dates.py`: J−4, J−2, overdue = J+1 @ 14:00 local).
+2. **Seed once** (active plan) on J−4 — do **not** `pm clear` between phases so journal
+   rows accumulate.
+3. **Phase 1** — schedule `#10` (J−4), cold start, shade tap → one before-due journal card.
+4. **Phase 2** — advance clock to J−2, schedule another `#10` → two before-due cards.
+5. **Phase 3** — advance to overdue day, schedule `#11` → red overdue card; month-prev still
+   shows both before-due cards.
 
 **Run:**
 

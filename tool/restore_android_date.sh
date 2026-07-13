@@ -30,9 +30,29 @@ else
   PREV_TIMEZONE="${COMPARTARENTA_QA_DEFAULT_TIMEZONE}"
 fi
 
+# Never leave the emulator parked on a frozen QA wall-clock. A prior run may have
+# saved AUTO_TIME=0 into clock-restore.env; restoring that would keep Aug/J-date.
+if [[ "${COMPARTARENTA_QA_KEEP_MANUAL_CLOCK:-0}" != "1" ]]; then
+  if [[ "${AUTO_TIME}" == "0" || "${AUTO_TIME}" == "null" || -z "${AUTO_TIME}" ]]; then
+    AUTO_TIME=1
+  fi
+  if [[ "${AUTO_TIME_ZONE}" == "0" || "${AUTO_TIME_ZONE}" == "null" || -z "${AUTO_TIME_ZONE}" ]]; then
+    AUTO_TIME_ZONE=1
+  fi
+fi
+
 "${ADB[@]}" shell settings put global auto_time "${AUTO_TIME}"
 "${ADB[@]}" shell settings put global auto_time_zone "${AUTO_TIME_ZONE}"
 "${ADB[@]}" shell setprop persist.sys.timezone "${PREV_TIMEZONE}"
+
+# Immediate wall-clock nudge from the host (NTP may take a beat after auto_time=1).
+if [[ "${COMPARTARENTA_QA_KEEP_MANUAL_CLOCK:-0}" != "1" ]]; then
+  HOST_WALL="$(date '+%Y-%m-%d %H:%M:%S')"
+  HOST_ADB="$(date '+%m%d%H%M%Y.%S')"
+  if ! "${ADB[@]}" shell date -s "${HOST_WALL}" >/dev/null 2>&1; then
+    "${ADB[@]}" shell date "${HOST_ADB}" >/dev/null 2>&1 || true
+  fi
+fi
 
 "${ADB[@]}" shell am broadcast -a android.intent.action.TIME_SET >/dev/null 2>&1 || true
 "${ADB[@]}" shell am broadcast -a android.intent.action.TIMEZONE_CHANGED >/dev/null 2>&1 || true

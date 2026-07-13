@@ -1,0 +1,31 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Tap #11 overdue → red overdue card; then prior month still has both #10 cards.
+- extendedWaitUntil:
+    visible: ".*#11 Paiement en retard.*"
+    timeout: 30000
+- takeScreenshot: phase3_notification_shade
+- tapOn: ".*#11 Paiement en retard.*"
+- takeScreenshot: phase3_after_notification_tap
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 90000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-overdue-journal-card"
+    timeout: 30000
+- takeScreenshot: phase3_overdue_journal_card
+- tapOn:
+    id: "qa-housing-expenses-month-prev"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 1
+    timeout: 30000
+- takeScreenshot: phase3_prior_month_before_due_persisted

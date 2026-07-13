@@ -193,6 +193,7 @@ melos:
 
     qa:run-payment-reminder:
       description: |
-        Housing payment reminder #10 — single Monica emulator (simulated notification + tap, no relay).
+        Housing payment reminders #10 (J−4, J−2) + #11 overdue — single Monica emulator
+        (simulated notifications + journal persistence, no relay).
         Example: ./tool/melosw run qa:run-payment-reminder -- --skip-build
       run: chmod +x ./tool/run_housing_payment_reminder_scenario.sh && ./tool/run_housing_payment_reminder_scenario.sh "$@"

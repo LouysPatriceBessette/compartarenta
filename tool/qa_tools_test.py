@@ -8,7 +8,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from qa_housing_payment_reminder_dates import first_before_due_fire_iso
+from qa_housing_payment_reminder_dates import (
+    first_before_due_fire_iso,
+    schedule_for_anchor,
+)
 from qa_run_report import render_html
 from qa_scenario_manifest import list_scenario_ids, parse_manifest, validate_scenarios
 from verify_qa_semantics import collect_dart_ids, collect_maestro_ids, verify_semantics
@@ -123,6 +126,20 @@ class QaHousingPaymentReminderDatesTest(unittest.TestCase):
             recurrence_day=1,
         )
         self.assertTrue(fire.startswith("2026-07-28T14:05:00"))
+
+    def test_schedule_includes_j2_and_overdue(self) -> None:
+        schedule = schedule_for_anchor(
+            anchor_iso="2026-07-13T09:00:00",
+            timezone="America/Toronto",
+            recurrence_day=1,
+        )
+        fires = schedule["before_due"]
+        assert isinstance(fires, list)
+        self.assertEqual(len(fires), 2)
+        self.assertTrue(str(fires[0]).startswith("2026-07-28T14:05:00"))
+        self.assertTrue(str(fires[1]).startswith("2026-07-30T14:05:00"))
+        self.assertTrue(str(schedule["overdue"]).startswith("2026-08-02T14:05:00"))
+        self.assertTrue(str(schedule["due"]).startswith("2026-08-01T00:00:00"))
 
 
 class QaRunReportTest(unittest.TestCase):

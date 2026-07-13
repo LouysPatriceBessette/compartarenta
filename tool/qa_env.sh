@@ -393,6 +393,25 @@ qa_collapse_notification_shade_on_serial() {
   adb -s "${serial}" shell cmd statusbar collapse >/dev/null 2>&1 || true
 }
 
+# Write a one-shot post-action marker (no pm clear). Consumed on next cold start.
+# Args: serial kind(before_due|overdue) due_ms_utc [plan_id]
+qa_schedule_payment_reminder_post_action_on_serial() {
+  local serial="$1"
+  local kind="$2"
+  local due_ms="$3"
+  local plan_id="${4:-housing:qa-payment-reminder}"
+  local app_id="${COMPARTARENTA_QA_APP_ID}"
+  if [[ -z "${kind}" || -z "${due_ms}" ]]; then
+    echo "qa_schedule_payment_reminder_post_action_on_serial: kind and due_ms required" >&2
+    return 1
+  fi
+  adb -s "${serial}" shell "run-as ${app_id} mkdir app_flutter" >/dev/null 2>&1 || true
+  if ! adb -s "${serial}" shell "run-as ${app_id} sh -c 'printf \"%s\\n%s\\n%s\\n\" \"${kind}\" \"${due_ms}\" \"${plan_id}\" > app_flutter/compartarenta_qa_post_action'"; then
+    echo "Failed to write post-action marker on ${serial}" >&2
+    return 1
+  fi
+}
+
 qa_maestro_test_on_serial() {
   local serial="$1"
   local flow_path="$2"

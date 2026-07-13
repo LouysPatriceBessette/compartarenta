@@ -23,7 +23,10 @@ const kQaHousingInviteParticipantLouysQaAccepted =
 const kQaHousingActiveHub = 'qa-housing-active-hub';
 const kQaHousingHubBack = 'qa-housing-hub-back';
 const kQaHousingBeforeDueJournalCard = 'qa-housing-before-due-journal-card';
+const kQaHousingOverdueJournalCard = 'qa-housing-overdue-journal-card';
 const kQaHousingMonthlyExpensesScreen = 'qa-housing-monthly-expenses-screen';
+const kQaHousingExpensesMonthPrev = 'qa-housing-expenses-month-prev';
+const kQaHousingExpensesMonthNext = 'qa-housing-expenses-month-next';
 
 /// Stable chip id when [displayName] has accepted (invitation status row).
 String qaHousingInviteParticipantAcceptedSemanticsId(String displayName) {

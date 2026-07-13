@@ -1,6 +1,6 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# Phase 2a — cold start (simulated #10 post-seed); wait until home is ready.
+# Cold start (one-shot post-action simulates notification); wait until home is ready.
 - launchApp:
     stopApp: true
 - runFlow:
@@ -9,4 +9,4 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-home-housing"
     timeout: 90000
-- takeScreenshot: phase2_app_ready
+- takeScreenshot: payment_reminder_app_ready

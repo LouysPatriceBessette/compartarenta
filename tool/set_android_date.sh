@@ -48,6 +48,17 @@ if [[ ! -f "${COMPARTARENTA_QA_CLOCK_STATE}" ]]; then
   AUTO_TIME="$("${ADB[@]}" shell settings get global auto_time | tr -d '\r')"
   AUTO_TIME_ZONE="$("${ADB[@]}" shell settings get global auto_time_zone | tr -d '\r')"
   PREV_TIMEZONE="$("${ADB[@]}" shell getprop persist.sys.timezone | tr -d '\r')"
+  # If the emulator is already left in manual-clock mode from a prior QA run,
+  # remember the intended restore as network time — not the broken AUTO_TIME=0.
+  if [[ "${AUTO_TIME}" == "0" || "${AUTO_TIME}" == "null" || -z "${AUTO_TIME}" ]]; then
+    AUTO_TIME=1
+  fi
+  if [[ "${AUTO_TIME_ZONE}" == "0" || "${AUTO_TIME_ZONE}" == "null" || -z "${AUTO_TIME_ZONE}" ]]; then
+    AUTO_TIME_ZONE=1
+  fi
+  if [[ -z "${PREV_TIMEZONE}" || "${PREV_TIMEZONE}" == "null" ]]; then
+    PREV_TIMEZONE="${COMPARTARENTA_QA_DEFAULT_TIMEZONE}"
+  fi
   cat >"${COMPARTARENTA_QA_CLOCK_STATE}" <<EOF
 AUTO_TIME=${AUTO_TIME}
 AUTO_TIME_ZONE=${AUTO_TIME_ZONE}

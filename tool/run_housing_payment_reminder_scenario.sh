@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Housing payment reminder QA — single Monica-QA emulator (#10 simulated, no relay).
+# Housing payment reminder QA — single Monica-QA emulator (#10×2 + #11, simulated, no relay).
 #
 # Usage:
 #   ./tool/run_housing_payment_reminder_scenario.sh
 #   ./tool/run_housing_payment_reminder_scenario.sh --skip-build --skip-install
 #
-# Anchor date = current (for J−4 math). Emulator is set to the first before-due
-# fire (J−4 @ 14:00 local for monthly Loyer day 1). No relay.
+# Seed once on J−4, then one phase per fire (J−4, J−2, overdue) without pm clear
+# so journal rows accumulate.
 
 set -euo pipefail
 
@@ -23,6 +23,17 @@ SKIP_INSTALL=0
 SKIP_RESTORE=0
 ARTIFACT_DIR_OVERRIDE=""
 AVD="${COMPARTARENTA_PAYMENT_REMINDER_AVD:-Monica-QA}"
+
+# Prevent overlapping runs (same AVD) — e.g. agent leftover + operator Ctrl+C race.
+LOCK_FILE="${COMPARTARENTA_QA_LOCAL_DIR:-${ROOT}/qa/.local}/payment-reminder.lock"
+mkdir -p "$(dirname "${LOCK_FILE}")"
+exec 9>"${LOCK_FILE}"
+if ! flock -n 9; then
+  echo "ERROR: another housing payment reminder scenario is already running." >&2
+  echo "  Lock: ${LOCK_FILE}" >&2
+  echo "  If stale: pgrep -af run_housing_payment_reminder ; kill that PID; retry." >&2
+  exit 1
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -71,14 +82,23 @@ fi
 TIMEZONE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" timezone)"
 ANCHOR_DATE_RAW="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" device_date)"
 ANCHOR_DATE="$(qa_resolve_device_date "${ANCHOR_DATE_RAW}" "${TIMEZONE}")"
-NOTIFICATION_DATE="$(python3 "${ROOT}/tool/qa_housing_payment_reminder_dates.py" \
-  --anchor "${ANCHOR_DATE}" \
-  --timezone "${TIMEZONE}")"
-FLOW_LAUNCH="${ROOT}/$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" flow_launch)"
-FLOW_TAP="${ROOT}/$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" flow_tap)"
+
+DATES_PY=(python3 "${ROOT}/tool/qa_housing_payment_reminder_dates.py"
+  --anchor "${ANCHOR_DATE}"
+  --timezone "${TIMEZONE}")
+DUE_MS="$("${DATES_PY[@]}" --field due_ms)"
+FIRE_J4="$("${DATES_PY[@]}" --field before_due_0)"
+FIRE_J2="$("${DATES_PY[@]}" --field before_due_1)"
+FIRE_OVERDUE="$("${DATES_PY[@]}" --field overdue)"
+
+FLOW_LAUNCH="${ROOT}/qa/flows/housing_payment_reminder_launch.yaml"
+FLOW_TAP_J4="${ROOT}/qa/flows/housing_payment_reminder_tap_before_due_first.yaml"
+FLOW_TAP_J2="${ROOT}/qa/flows/housing_payment_reminder_tap_before_due_second.yaml"
+FLOW_TAP_OVERDUE="${ROOT}/qa/flows/housing_payment_reminder_tap_overdue.yaml"
 
 echo "Calendar anchor: ${ANCHOR_DATE} (${TIMEZONE})"
-echo "Notification date (computed): ${NOTIFICATION_DATE}"
+echo "Due ms: ${DUE_MS}"
+echo "Fires: J-4=${FIRE_J4} | J-2=${FIRE_J2} | overdue=${FIRE_OVERDUE}"
 
 COORDINATOR_SCRIPT="${ROOT}/tool/coordinators/housing_payment_reminder.sh"
 chmod +x "${COORDINATOR_SCRIPT}"
@@ -107,9 +127,14 @@ export COMPARTARENTA_PAYMENT_REMINDER_SERIAL="${SERIAL}"
 export COMPARTARENTA_MULTI_ARTIFACT_ROOT="${ARTIFACT_ROOT}"
 export COMPARTARENTA_MULTI_TIMEZONE="${TIMEZONE}"
 export COMPARTARENTA_PAYMENT_REMINDER_ANCHOR_DATE="${ANCHOR_DATE}"
-export COMPARTARENTA_PAYMENT_REMINDER_NOTIFICATION_DATE="${NOTIFICATION_DATE}"
+export COMPARTARENTA_PAYMENT_REMINDER_DUE_MS="${DUE_MS}"
+export COMPARTARENTA_PAYMENT_REMINDER_FIRE_J4="${FIRE_J4}"
+export COMPARTARENTA_PAYMENT_REMINDER_FIRE_J2="${FIRE_J2}"
+export COMPARTARENTA_PAYMENT_REMINDER_FIRE_OVERDUE="${FIRE_OVERDUE}"
 export COMPARTARENTA_PAYMENT_REMINDER_FLOW_LAUNCH="${FLOW_LAUNCH}"
-export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP="${FLOW_TAP}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_J4="${FLOW_TAP_J4}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_J2="${FLOW_TAP_J2}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_OVERDUE="${FLOW_TAP_OVERDUE}"
 
 # shellcheck disable=SC1090
 source "${ROOT}/tool/qa_env.sh"

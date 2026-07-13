@@ -131,11 +131,20 @@ class _HousingMonthlyExpensesScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: currentMonth.isAfter(window.firstMonth)
+                      Semantics(
+                        identifier:
+                            kDebugMode ? kQaHousingExpensesMonthPrev : null,
+                        button: true,
+                        onTap: currentMonth.isAfter(window.firstMonth)
                             ? () => _shiftMonth(window, -1)
                             : null,
-                        icon: const Icon(Icons.chevron_left),
+                        excludeSemantics: true,
+                        child: IconButton(
+                          onPressed: currentMonth.isAfter(window.firstMonth)
+                              ? () => _shiftMonth(window, -1)
+                              : null,
+                          icon: const Icon(Icons.chevron_left),
+                        ),
                       ),
                       Expanded(
                         child: Text(
@@ -144,11 +153,20 @@ class _HousingMonthlyExpensesScreenState
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                      IconButton(
-                        onPressed: currentMonth.isBefore(window.lastMonth)
+                      Semantics(
+                        identifier:
+                            kDebugMode ? kQaHousingExpensesMonthNext : null,
+                        button: true,
+                        onTap: currentMonth.isBefore(window.lastMonth)
                             ? () => _shiftMonth(window, 1)
                             : null,
-                        icon: const Icon(Icons.chevron_right),
+                        excludeSemantics: true,
+                        child: IconButton(
+                          onPressed: currentMonth.isBefore(window.lastMonth)
+                              ? () => _shiftMonth(window, 1)
+                              : null,
+                          icon: const Icon(Icons.chevron_right),
+                        ),
                       ),
                     ],
                   ),
@@ -294,13 +312,19 @@ class _HousingMonthlyExpensesScreenState
       );
     }
 
-    return Card(
-      color: Colors.orange.shade50,
-      child: ListTile(
-        enabled: false,
-        title: Text(
-          l10n.housingOverdueJournalCardBody(lineTitle),
-          style: TextStyle(color: Colors.orange.shade900),
+    final receivedDate = _formatJournalDate(entry.recordedAt, dateFmt);
+    return Semantics(
+      identifier: kDebugMode ? kQaHousingOverdueJournalCard : null,
+      container: true,
+      child: Card(
+        color: Colors.red.shade50,
+        child: ListTile(
+          enabled: false,
+          title: Text(
+            l10n.housingOverdueJournalCardBody(lineTitle),
+            style: TextStyle(color: Colors.red.shade900),
+          ),
+          subtitle: Text(receivedDate),
         ),
       ),
     );

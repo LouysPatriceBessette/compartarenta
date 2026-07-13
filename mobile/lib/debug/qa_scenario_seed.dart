@@ -155,7 +155,6 @@ Future<void> _persistQaE2eForScenario(String scenarioId) async {
     case 'housing_payment_reminder_simulate_before_due':
       await persistQaE2eEnvironment(
         scenarioId: scenarioId,
-        postSeedAction: 'payment_reminder_simulate_before_due',
         paymentReminderPlanId: kQaPaymentReminderPlanId,
       );
     default:

@@ -10,6 +10,7 @@ import '../navigation/app_navigation.dart';
 import '../db/app_database.dart';
 import '../housing/amendment/housing_amendment_summary.dart';
 import '../housing/housing_navigation_intent.dart';
+import '../housing/reminders/payment_reminder_journal_id.dart';
 import '../firebase_options.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
@@ -265,7 +266,14 @@ class PushNotificationService {
     }
     final periodDueAt = DateTime.fromMillisecondsSinceEpoch(dueMs, isUtc: true);
     final periodKey = '$dueMs';
-    final id = '$planId:$lineId:$periodKey:$kind';
+    final recordedAt = DateTime.now().toUtc();
+    final id = housingPaymentReminderJournalId(
+      planId: planId,
+      planLineId: lineId,
+      periodKey: periodKey,
+      reminderKind: kind,
+      recordedAt: recordedAt,
+    );
     try {
       await AppDatabase.processScope.upsertHousingPaymentOverdueJournalEntry(
         id: id,
@@ -273,7 +281,7 @@ class PushNotificationService {
         planLineId: lineId,
         periodKey: periodKey,
         periodDueAt: periodDueAt,
-        recordedAt: DateTime.now().toUtc(),
+        recordedAt: recordedAt,
         reminderKind: kind,
       );
     } catch (e, st) {

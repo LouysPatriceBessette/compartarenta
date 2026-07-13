@@ -545,9 +545,9 @@ class HousingInactiveParticipants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Local payment-reminder journal cards (orange, non-navigable) on Accepted expenses.
+/// Local payment-reminder journal cards on Accepted expenses.
 ///
-/// [reminderKind] is `before_due` (#10) or `overdue` (#11).
+/// [reminderKind] is `before_due` (#10, orange) or `overdue` (#11, red).
 class HousingPaymentOverdueJournalEntries extends Table {
   TextColumn get id => text()();
   TextColumn get planId => text()();
