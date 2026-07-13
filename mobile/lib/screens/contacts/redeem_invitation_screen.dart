@@ -371,6 +371,7 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
               qaContactSemantics(
                 identifier: kQaContactsRedeemCodeField,
                 label: l10n.contactsEnterInviteCodeFieldLabel,
+                textField: true,
                 child: AppTextField(
                   controller: _controller,
                   decoration: InputDecoration(
@@ -474,34 +475,39 @@ class _RedeemInvitationScreenState extends State<RedeemInvitationScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              qaContactSemantics(
-                identifier: kQaContactsRedeemSubmit,
-                label: _dispatching
-                    ? l10n.contactsHandshakeDispatching
-                    : l10n.contactsEnterInviteCodeSubmit,
-                button: true,
-                child: FilledButton.icon(
-                  icon: _dispatching
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send_outlined),
-                  label: Text(
-                    _dispatching
+              Builder(
+                builder: (context) {
+                  final canSubmit = result is InvitationCodeOk &&
+                      !_dispatching &&
+                      !_dispatched &&
+                      !_completed &&
+                      !_rejected &&
+                      !codeExpired;
+                  final submit = canSubmit ? () => _connect(result.code) : null;
+                  return qaContactSemantics(
+                    identifier: kQaContactsRedeemSubmit,
+                    label: _dispatching
                         ? l10n.contactsHandshakeDispatching
                         : l10n.contactsEnterInviteCodeSubmit,
-                  ),
-                  onPressed:
-                      (result is InvitationCodeOk &&
-                          !_dispatching &&
-                          !_dispatched &&
-                          !_completed &&
-                          !_rejected &&
-                          !codeExpired)
-                      ? () => _connect(result.code)
-                      : null,
-                ),
+                    button: true,
+                    enabled: canSubmit,
+                    onTap: submit,
+                    child: FilledButton.icon(
+                      icon: _dispatching
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.send_outlined),
+                      label: Text(
+                        _dispatching
+                            ? l10n.contactsHandshakeDispatching
+                            : l10n.contactsEnterInviteCodeSubmit,
+                      ),
+                      onPressed: submit,
+                    ),
+                  );
+                },
               ),
             ],
           ),

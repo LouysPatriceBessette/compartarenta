@@ -92,6 +92,7 @@ class _ContactPickerSheetState extends State<ContactPickerSheet> {
                           contact.effectiveDisplayName,
                         ),
                         button: true,
+                        onTap: () => Navigator.of(context).pop(contact),
                         child: ListTile(
                         leading: CircleAvatar(
                           child: Icon(AvatarPalette.iconFor(contact.avatarId)),

@@ -3,8 +3,8 @@ appId: com.compartarenta.compartarenta.dev
 # Runs only after the proposer flow finished sending (coordinator phase 2).
 - runFlow:
     file: housing_proposal_recipient_assert_proposal_received.yaml
-- tapOn:
-    text: "J'accepte en totalité"
+- runFlow:
+    file: _housing_invite_recipient_accept.yaml
 - runFlow:
     file: _dismiss_notification_prompt.yaml
 - runFlow:

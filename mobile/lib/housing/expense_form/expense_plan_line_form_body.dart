@@ -143,6 +143,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         Semantics(
           identifier: kDebugMode ? 'qa-housing-expense-name' : null,
           textField: true,
+          excludeSemantics: true,
           child: AppTextField(
           controller: titleController,
           decoration: InputDecoration(
@@ -232,6 +233,7 @@ class ExpensePlanLineFormBody extends StatelessWidget {
         Semantics(
           identifier: kDebugMode ? 'qa-housing-expense-amount' : null,
           textField: true,
+          excludeSemantics: true,
           child: AppDecimalTextField(
           controller: amountController!,
           fractionDigits: 2,

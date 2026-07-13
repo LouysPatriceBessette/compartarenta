@@ -399,6 +399,7 @@ class _SplitRowState extends State<_SplitRow> {
             child: Semantics(
               identifier: pctSemanticsId,
               textField: true,
+              excludeSemantics: true,
               child: AppTextField(
               controller: _pctCtrl,
               focusNode: _pctFocusNode,

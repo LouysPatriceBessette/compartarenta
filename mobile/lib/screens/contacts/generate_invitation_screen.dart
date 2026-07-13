@@ -329,6 +329,7 @@ class _IntroForm extends StatelessWidget {
           identifier: kQaContactsGenerateCode,
           label: l10n.contactsInviteGenerateAction,
           button: true,
+          onTap: busy ? null : onGenerate,
           child: FilledButton.icon(
             icon: const Icon(Icons.send),
             label: Text(l10n.contactsInviteGenerateAction),

@@ -1,17 +1,10 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# QA seeds use fr (app_fr.arb). Only tap when the dialog is on screen.
+# In-app notification permission prompt (POST_NOTIFICATIONS granted via adb in coordinator).
 - runFlow:
     when:
       visible:
-        text: "Oui, les activer et continuer"
+        id: "qa-notification-flow-permission-enable"
     commands:
       - tapOn:
-          text: "Oui, les activer et continuer"
-- runFlow:
-    when:
-      visible:
-        text: "Autoriser"
-    commands:
-      - tapOn:
-          text: "Autoriser"
+          id: "qa-notification-flow-permission-enable"

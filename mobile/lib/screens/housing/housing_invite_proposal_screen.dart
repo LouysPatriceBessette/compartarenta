@@ -534,7 +534,13 @@ class _HousingInviteProposalScreenState
       builder: (context, snap) {
         if (!snap.hasData) {
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            appBar: AppBar(
+                title: qaHousingProposalSemantics(
+                  identifier: kQaHousingInviteProposalScreen,
+                  header: true,
+                  child: Text(l10n.housingInviteProposalAppBarTitle),
+                ),
+              ),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -550,7 +556,11 @@ class _HousingInviteProposalScreenState
           if (agr == null || roster.isEmpty) {
             return Scaffold(
               appBar: AppBar(
-                title: Text(l10n.housingInviteProposalAppBarTitle),
+                title: qaHousingProposalSemantics(
+                  identifier: kQaHousingInviteProposalScreen,
+                  header: true,
+                  child: Text(l10n.housingInviteProposalAppBarTitle),
+                ),
               ),
               body: Center(
                 child: Text(l10n.housingPlanSummaryMissingAgreement),
@@ -646,7 +656,13 @@ class _HousingInviteProposalScreenState
           );
 
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            appBar: AppBar(
+                title: qaHousingProposalSemantics(
+                  identifier: kQaHousingInviteProposalScreen,
+                  header: true,
+                  child: Text(l10n.housingInviteProposalAppBarTitle),
+                ),
+              ),
             body: Column(
             children: [
               Expanded(
@@ -807,23 +823,31 @@ class _HousingInviteProposalScreenState
                     if (!isAuthor && canRespond) ...[
                       const SizedBox(height: 24),
                       if (!_negotiateExpanded) ...[
-                        qaHousingProposalSemantics(
-                          identifier: kQaHousingInviteRecipientAccept,
-                          child: FilledButton(
-                          onPressed: canRespond
-                              ? (hasMissingPeerContacts
-                                    ? _openMissingContactsHub
-                                    : () => _submitResponse(
-                                        ProposalResponseStatus.accepted,
-                                        revisionId: proposal.revisionId,
-                                      ))
-                              : null,
-                          child: Text(
-                            hasMissingPeerContacts
-                                ? l10n.housingInviteMissingContactsAction
-                                : l10n.housingInviteAcceptFull,
-                          ),
-                        ),
+                        Builder(
+                          builder: (context) {
+                            final acceptAction = canRespond
+                                ? (hasMissingPeerContacts
+                                      ? _openMissingContactsHub
+                                      : () => _submitResponse(
+                                          ProposalResponseStatus.accepted,
+                                          revisionId: proposal.revisionId,
+                                        ))
+                                : null;
+                            return qaHousingProposalSemantics(
+                              identifier: kQaHousingInviteRecipientAccept,
+                              button: true,
+                              enabled: canRespond,
+                              onTap: acceptAction,
+                              child: FilledButton(
+                                onPressed: acceptAction,
+                                child: Text(
+                                  hasMissingPeerContacts
+                                      ? l10n.housingInviteMissingContactsAction
+                                      : l10n.housingInviteAcceptFull,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton(
@@ -1033,7 +1057,13 @@ class _HousingUnanimousActiveGateState extends State<_HousingUnanimousActiveGate
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+            appBar: AppBar(
+                title: qaHousingProposalSemantics(
+                  identifier: kQaHousingInviteProposalScreen,
+                  header: true,
+                  child: Text(l10n.housingInviteProposalAppBarTitle),
+                ),
+              ),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -1046,7 +1076,13 @@ class _HousingUnanimousActiveGateState extends State<_HousingUnanimousActiveGate
           );
         }
         return Scaffold(
-          appBar: AppBar(title: Text(l10n.housingInviteProposalAppBarTitle)),
+          appBar: AppBar(
+                title: qaHousingProposalSemantics(
+                  identifier: kQaHousingInviteProposalScreen,
+                  header: true,
+                  child: Text(l10n.housingInviteProposalAppBarTitle),
+                ),
+              ),
           body: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),

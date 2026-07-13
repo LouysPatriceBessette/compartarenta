@@ -1,0 +1,15 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Summary submit + response deadline dialog (proposer send tail).
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-summary"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-wizard-summary-submit"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-invite-response-deadline-dialog"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-invite-response-deadline-continue"

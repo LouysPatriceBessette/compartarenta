@@ -8,35 +8,11 @@ appId: com.compartarenta.compartarenta.dev
     timeout: 45000
 - tapOn:
     id: "qa-home-housing"
-# Step 0 — pick co-participant from the contact picker bottom sheet.
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-wizard-choose-contact"
-    timeout: 45000
-- tapOn:
-    text: "Choisir un contact"
-- extendedWaitUntil:
-    visible:
-      id: "qa-contacts-picker-sheet"
-    timeout: 30000
-- extendedWaitUntil:
-    visible:
-      id: "qa-contacts-row-louys-qa"
-    timeout: 30000
-- tapOn:
-    id: "qa-contacts-row-louys-qa"
-- extendedWaitUntil:
-    notVisible:
-      id: "qa-contacts-picker-sheet"
-    timeout: 30000
-- waitForAnimationToEnd:
-    timeout: 5000
-- tapOn:
-    id: "qa-housing-wizard-next"
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-wizard-dates-step"
-    timeout: 30000
+# Step 0 — pick Louys from contact picker (open + select).
+- runFlow:
+    file: _housing_wizard_choose_louys_contact.yaml
+- runFlow:
+    file: _housing_wizard_advance_participants_to_dates.yaml
 - runFlow:
     file: _housing_wizard_advance_dates_to_expenses.yaml
 - tapOn:
@@ -69,12 +45,8 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-housing-wizard-summary"
     timeout: 30000
-- tapOn:
-    text: "Soumettre mon plan"
-- extendedWaitUntil:
-    visible: "Délai de réponse"
-    timeout: 30000
-- tapOn: "Continuer"
+- runFlow:
+    file: _housing_proposal_submit_plan.yaml
 - runFlow:
     file: _dismiss_notification_prompt.yaml
 # Send completion is verified by the coordinator via logcat (snackbar text is

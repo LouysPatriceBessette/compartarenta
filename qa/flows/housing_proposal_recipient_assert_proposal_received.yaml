@@ -10,7 +10,8 @@ appId: com.compartarenta.compartarenta.dev
 - tapOn:
     id: "qa-home-housing"
 - extendedWaitUntil:
-    visible: "Proposition d'invitation"
+    visible:
+      id: "qa-housing-invite-proposal-screen"
     timeout: 90000
 - scrollUntilVisible:
     element:

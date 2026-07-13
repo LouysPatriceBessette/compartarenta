@@ -1,0 +1,30 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Open housing contact picker — semantics onTap must mirror FilledButton onPressed.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-participants-step"
+    timeout: 45000
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-wizard-choose-contact"
+    direction: DOWN
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- repeat:
+    times: 3
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              id: "qa-contacts-picker-sheet"
+          commands:
+            - tapOn:
+                id: "qa-housing-wizard-choose-contact"
+            - waitForAnimationToEnd:
+                timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-picker-sheet"
+    timeout: 30000

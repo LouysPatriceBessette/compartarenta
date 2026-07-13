@@ -1,0 +1,24 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- scrollUntilVisible:
+    element:
+      id: "qa-housing-invite-recipient-accept"
+    direction: DOWN
+    timeout: 45000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-invite-recipient-accept"
+    timeout: 30000
+# Accept may settle on the first tap; stop when the button leaves (active hub).
+- repeat:
+    times: 5
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "qa-housing-invite-recipient-accept"
+          commands:
+            - tapOn:
+                id: "qa-housing-invite-recipient-accept"
+            - waitForAnimationToEnd:
+                timeout: 2000

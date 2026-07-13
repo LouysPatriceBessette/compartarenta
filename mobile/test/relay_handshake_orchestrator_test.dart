@@ -763,6 +763,22 @@ void main() {
       inviter.orchestrator.pendingContactDuplicateDialog.value?.kind,
       ContactDuplicateDialogKind.inviterMerged,
     );
+    expect(inviter.notifications.addedViaInvitation, ['Monica', 'Monica']);
+    await Future.wait([
+      inviter.orchestrator.processAllPendingHandshakes(),
+      inviter.orchestrator.processAllPendingHandshakes(),
+    ]);
+    expect(inviter.notifications.addedViaInvitation, ['Monica', 'Monica']);
+    expect(inviteeSecond.notifications.addRequestResolutions, [
+      (displayName: 'Louys', accepted: true),
+    ]);
+    await Future.wait([
+      inviteeSecond.orchestrator.processAllPendingHandshakes(),
+      inviteeSecond.orchestrator.processAllPendingHandshakes(),
+    ]);
+    expect(inviteeSecond.notifications.addRequestResolutions, [
+      (displayName: 'Louys', accepted: true),
+    ]);
   });
 
   test(

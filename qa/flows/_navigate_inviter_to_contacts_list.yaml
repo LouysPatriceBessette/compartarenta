@@ -1,22 +1,32 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# Inviter-only: reach main contacts list (robust backs; works from invite / codes hub).
+# Inviter-only: reach main contacts list from housing hub, invite flows, or home.
+# Never back past qa-home-contacts (that exits the app to the launcher).
 - repeat:
-    times: 4
+    times: 6
     commands:
       - runFlow:
           when:
             notVisible:
               id: "qa-contacts-invite-fab"
           commands:
-            - back
-- runFlow:
-    when:
-      visible:
-        id: "qa-home-contacts"
-    commands:
-      - tapOn:
-          id: "qa-home-contacts"
+            - runFlow:
+                when:
+                  visible:
+                    id: "qa-home-contacts"
+                commands:
+                  - tapOn:
+                      id: "qa-home-contacts"
+                  - waitForAnimationToEnd:
+                      timeout: 2000
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "qa-home-contacts"
+                commands:
+                  - back
+                  - waitForAnimationToEnd:
+                      timeout: 2000
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-invite-fab"

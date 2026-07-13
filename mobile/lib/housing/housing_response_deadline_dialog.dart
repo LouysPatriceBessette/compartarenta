@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../debug/qa_housing_proposal_semantics.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/dialog_tap_guard.dart';
 import '../widgets/standard_validity_duration_bar.dart';
@@ -16,7 +17,11 @@ Future<Duration?> showHousingResponseDeadlineDialog(BuildContext context) async 
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: Text(l10n.housingInviteResponseWindowTitle),
+            title: qaHousingProposalSemantics(
+              identifier: kQaHousingInviteResponseDeadlineDialog,
+              header: true,
+              child: Text(l10n.housingInviteResponseWindowTitle),
+            ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -36,9 +41,14 @@ Future<Duration?> showHousingResponseDeadlineDialog(BuildContext context) async 
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l10n.housingPlanCancel),
               ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.commonContinue),
+              qaHousingProposalSemantics(
+                identifier: kQaHousingInviteResponseDeadlineContinue,
+                button: true,
+                onTap: () => Navigator.pop(ctx, true),
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(l10n.commonContinue),
+                ),
               ),
             ],
           ),

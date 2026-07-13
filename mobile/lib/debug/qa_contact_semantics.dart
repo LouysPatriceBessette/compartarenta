@@ -55,19 +55,33 @@ const kQaContactsDuplicateDialogOk = 'qa-contacts-duplicate-dialog-ok';
 const kQaContactsDuplicateAnchorRejectBanner =
     'qa-contacts-duplicate-anchor-reject-banner';
 
+/// In-app notification permission prompt ([NotificationFlowPermissionTrigger]).
+const kQaNotificationFlowPermissionPrompt =
+    'qa-notification-flow-permission-prompt';
+const kQaNotificationFlowPermissionEnable =
+    'qa-notification-flow-permission-enable';
+
 Widget qaContactSemantics({
   required String identifier,
   required Widget child,
   String? label,
   bool button = false,
   bool header = false,
+  bool textField = false,
+  VoidCallback? onTap,
+  bool? enabled,
 }) {
   if (!kDebugMode) return child;
+  final semanticsEnabled = enabled ?? true;
   return Semantics(
     identifier: identifier,
     label: label,
     button: button,
     header: header,
+    textField: textField,
+    enabled: enabled,
+    excludeSemantics: button || textField,
+    onTap: (button || textField) && semanticsEnabled ? onTap : null,
     child: child,
   );
 }

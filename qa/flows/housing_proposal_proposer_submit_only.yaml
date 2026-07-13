@@ -13,11 +13,7 @@ appId: com.compartarenta.compartarenta.dev
     visible:
       id: "qa-housing-wizard-summary-submit"
     timeout: 45000
-- tapOn:
-    id: "qa-housing-wizard-summary-submit"
-- extendedWaitUntil:
-    visible: "Délai de réponse"
-    timeout: 30000
-- tapOn: "Continuer"
+- runFlow:
+    file: _housing_proposal_submit_plan.yaml
 - runFlow:
     file: _dismiss_notification_prompt.yaml

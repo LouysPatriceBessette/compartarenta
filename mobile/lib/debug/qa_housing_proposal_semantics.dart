@@ -4,10 +4,18 @@ import 'package:flutter/widgets.dart';
 /// Maestro-facing [Semantics.identifier] values for housing proposal E2E (debug Android).
 const kQaHousingWizardParticipantsStep = 'qa-housing-wizard-participants-step';
 const kQaHousingWizardChooseContact = 'qa-housing-wizard-choose-contact';
+const kQaHousingWizardNext = 'qa-housing-wizard-next';
+const kQaHousingWizardAddExpense = 'qa-housing-wizard-add-expense';
 const kQaHousingWizardDatesStep = 'qa-housing-wizard-dates-step';
 const kQaHousingWizardExpensesStep = 'qa-housing-wizard-expenses-step';
 const kQaHousingWizardRulesStep = 'qa-housing-wizard-rules-step';
 const kQaHousingWizardSummarySubmit = 'qa-housing-wizard-summary-submit';
+const kQaHousingWizardSummary = 'qa-housing-wizard-summary';
+const kQaHousingInviteProposalScreen = 'qa-housing-invite-proposal-screen';
+const kQaHousingInviteResponseDeadlineDialog =
+    'qa-housing-invite-response-deadline-dialog';
+const kQaHousingInviteResponseDeadlineContinue =
+    'qa-housing-invite-response-deadline-continue';
 const kQaHousingInviteRecipientAccept = 'qa-housing-invite-recipient-accept';
 const kQaHousingWorkbenchPendingRow = 'qa-housing-workbench-pending-row';
 const kQaHousingInviteParticipantLouysQaAccepted =
@@ -38,12 +46,18 @@ Widget qaHousingProposalSemantics({
   required Widget child,
   bool button = false,
   bool header = false,
+  VoidCallback? onTap,
+  bool? enabled,
 }) {
   if (!kDebugMode) return child;
+  final semanticsEnabled = enabled ?? true;
   return Semantics(
     identifier: identifier,
     button: button,
     header: header,
+    enabled: enabled,
+    excludeSemantics: button,
+    onTap: button && semanticsEnabled ? onTap : null,
     child: child,
   );
 }

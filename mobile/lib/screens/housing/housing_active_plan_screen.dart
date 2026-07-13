@@ -938,6 +938,7 @@ class _HubTile extends StatelessWidget {
       identifier: semanticsIdentifier,
       button: true,
       label: label,
+      excludeSemantics: true,
       child: tile,
     );
   }

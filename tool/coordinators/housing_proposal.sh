@@ -22,7 +22,9 @@ SCENARIO_ID="${COMPARTARENTA_MULTI_SCENARIO_ID:-housing_proposal}"
 FLOWS_DIR="${ROOT}/qa/flows"
 MAESTRO_TIMEOUT="${COMPARTARENTA_QA_MAESTRO_TIMEOUT_SEC:-600}"
 HANDSHAKE_INVITER_GENERATE="${FLOWS_DIR}/contact_handshake_inviter_generate.yaml"
+HANDSHAKE_INVITER_GENERATE_WARM="${FLOWS_DIR}/contact_handshake_inviter_generate_warm.yaml"
 HANDSHAKE_INVITEE_REDEEM="${FLOWS_DIR}/contact_handshake_invitee_redeem_wait_connected.yaml"
+HANDSHAKE_INVITEE_REDEEM_WARM="${FLOWS_DIR}/contact_handshake_invitee_redeem_wait_connected_warm.yaml"
 
 _qa_avd_for_serial() {
   local serial="$1"
@@ -52,7 +54,7 @@ _run_maestro() {
   echo "  maestro device=${avd} serial=${serial}"
   echo "  maestro flow=$(basename "${flow}") -> ${out}"
   echo "  (Maestro assertions below run on ${avd} only)"
-  if ! timeout "${MAESTRO_TIMEOUT}" maestro test --udid "${serial}" "${flow}" --test-output-dir "${out}" "$@"; then
+  if ! qa_maestro_test_on_serial "${serial}" "${flow}" "${out}" "$@"; then
     echo "  maestro FAILED on ${avd}: ${label} ($(basename "${flow}"))" >&2
     return 1
   fi
@@ -80,7 +82,7 @@ _run_maestro_probe() {
     tail -15 "${log}" >&2 || true
     return 2
   fi
-  echo "  probe ${label}: symptom absent"
+  echo "  probe ${label}: symptom absent (probe flow FAILED — expected when bug is absent)"
   tail -8 "${log}" >&2 || true
   return 1
 }
@@ -140,6 +142,12 @@ _prepare_fresh_pair() {
   qa_prepare_for_maestro "${RECIPIENT_SERIAL}"
 }
 
+# run_multi_device_scenario.sh already seeds both roles before the coordinator runs.
+_prepare_after_runner_seed() {
+  qa_prepare_for_maestro "${PROPOSER_SERIAL}"
+  qa_prepare_for_maestro "${RECIPIENT_SERIAL}"
+}
+
 _attempt_root_dir() {
   local path="$1"
   if [[ "$(basename "${path}")" == "delivery" ]]; then
@@ -160,30 +168,34 @@ _attempt_rel() {
 
 _connect_handshake_sequential() {
   local label_prefix="$1"
+  local inviter_flow="${2:-${HANDSHAKE_INVITER_GENERATE}}"
+  local invitee_flow="${3:-${HANDSHAKE_INVITEE_REDEEM}}"
   local invite_code
 
   _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
-    "${HANDSHAKE_INVITER_GENERATE}" || return 1
+    "${inviter_flow}" || return 1
 
   invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
   echo "  invitation code: ${invite_code}"
 
   _run_maestro "${label_prefix}/invitee-redeem" "${RECIPIENT_SERIAL}" \
-    "${HANDSHAKE_INVITEE_REDEEM}" -e "INVITE_CODE=${invite_code}" || return 1
+    "${invitee_flow}" -e "INVITE_CODE=${invite_code}" || return 1
 }
 
 _connect_handshake_sequential_merge_dialog() {
   local label_prefix="$1"
+  local inviter_flow="${2:-${HANDSHAKE_INVITER_GENERATE}}"
+  local invitee_flow="${3:-${HANDSHAKE_INVITEE_REDEEM}}"
   local invite_code
 
   _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
-    "${HANDSHAKE_INVITER_GENERATE}" || return 1
+    "${inviter_flow}" || return 1
 
   invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
   echo "  invitation code: ${invite_code}"
 
   _run_maestro "${label_prefix}/invitee-redeem" "${RECIPIENT_SERIAL}" \
-    "${HANDSHAKE_INVITEE_REDEEM}" -e "INVITE_CODE=${invite_code}" || return 1
+    "${invitee_flow}" -e "INVITE_CODE=${invite_code}" || return 1
 
   _run_maestro "${label_prefix}/inviter-merge-dialog" "${PROPOSER_SERIAL}" \
     "${FLOWS_DIR}/contact_handshake_inviter_dismiss_merge_dialog.yaml" || return 1
@@ -191,17 +203,18 @@ _connect_handshake_sequential_merge_dialog() {
 
 _connect_handshake_sequential_anchor_reject() {
   local label_prefix="$1"
+  local inviter_flow="${2:-${HANDSHAKE_INVITER_GENERATE}}"
+  local invitee_flow="${3:-${FLOWS_DIR}/contact_handshake_invitee_redeem_anchor_rejected.yaml}"
   local invite_code
 
   _run_maestro "${label_prefix}/inviter-generate" "${PROPOSER_SERIAL}" \
-    "${HANDSHAKE_INVITER_GENERATE}" || return 1
+    "${inviter_flow}" || return 1
 
   invite_code="$(_wait_for_handshake_code "${PROPOSER_SERIAL}")" || return 1
   echo "  invitation code: ${invite_code}"
 
   _run_maestro "${label_prefix}/invitee-redeem-rejected" "${RECIPIENT_SERIAL}" \
-    "${FLOWS_DIR}/contact_handshake_invitee_redeem_anchor_rejected.yaml" \
-    -e "INVITE_CODE=${invite_code}" || return 1
+    "${invitee_flow}" -e "INVITE_CODE=${invite_code}" || return 1
 
   _run_maestro "${label_prefix}/inviter-rejected-dialog" "${PROPOSER_SERIAL}" \
     "${FLOWS_DIR}/contact_handshake_inviter_dismiss_rejected_anchor_dialog.yaml" || return 1
@@ -212,14 +225,14 @@ _connect_handshake_sequential_anchor_reject() {
 
 _proposer_identity_drift_only() {
   echo "  identity drift: re-seed proposer only (recipient keeps prior contact rows)"
-  qa_seed_scenario_on_serial "${PROPOSER_SERIAL}" "${COMPARTARENTA_ROLE_PROPOSER_SEED}"
-  qa_prepare_for_maestro "${PROPOSER_SERIAL}"
+  qa_seed_scenario_on_serial "${PROPOSER_SERIAL}" "${COMPARTARENTA_ROLE_PROPOSER_SEED}" || return 1
+  qa_prepare_for_maestro "${PROPOSER_SERIAL}" || return 1
 }
 
 _recipient_identity_drift_only() {
   echo "  identity drift: re-seed recipient only (proposer keeps prior contact rows)"
-  qa_seed_scenario_on_serial "${RECIPIENT_SERIAL}" "${COMPARTARENTA_ROLE_RECIPIENT_SEED}"
-  qa_prepare_for_maestro "${RECIPIENT_SERIAL}"
+  qa_seed_scenario_on_serial "${RECIPIENT_SERIAL}" "${COMPARTARENTA_ROLE_RECIPIENT_SEED}" || return 1
+  qa_prepare_for_maestro "${RECIPIENT_SERIAL}" || return 1
 }
 
 _proposer_delivered_proposal() {
@@ -346,19 +359,25 @@ _run_happy_path_once() {
 
 _run_bug_122_regression_once() {
   local attempt_dir="$1"
+  local dup_rc
   mkdir -p "${attempt_dir}"
+  set +e
 
   _log_phase_banner 1
   echo "  Monica drift — Louys keeps contacts; assert no duplicate Monica row."
-  _prepare_fresh_pair
+  qa_grant_post_notifications_on_serial "${PROPOSER_SERIAL}"
+  qa_grant_post_notifications_on_serial "${RECIPIENT_SERIAL}"
+  _prepare_after_runner_seed
   _connect_handshake_sequential "$(_attempt_rel "${attempt_dir}" "handshake-initial")" || return 3
-  _proposer_identity_drift_only
-  _connect_handshake_sequential "$(_attempt_rel "${attempt_dir}" "handshake-after-monica-drift")" || return 3
+  _proposer_identity_drift_only || return 3
+  _connect_handshake_sequential \
+    "$(_attempt_rel "${attempt_dir}" "handshake-after-monica-drift")" \
+    "${HANDSHAKE_INVITER_GENERATE}" \
+    "${HANDSHAKE_INVITEE_REDEEM_WARM}" || return 3
 
   set +e
   _check_bug_122_duplicate_monica "${attempt_dir}"
-  local dup_rc=$?
-  set -e
+  dup_rc=$?
   if [[ "${dup_rc}" -eq 2 ]]; then
     return 3
   fi
@@ -367,12 +386,15 @@ _run_bug_122_regression_once() {
     return 2
   fi
   # dup_rc=1: probe symptom absent; assert-no-duplicate already ran in _check.
+  echo "  Phase 1 duplicate guard: CLEAN (probe absent, assert-no-duplicate passed)"
 
   _log_phase_banner 2
   echo "  Louys drift — merge duplicate + informative dialog on Monica (no active plan)."
-  _recipient_identity_drift_only
+  _recipient_identity_drift_only || return 3
   _connect_handshake_sequential_merge_dialog \
-    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-merge")" || return 3
+    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-merge")" \
+    "${HANDSHAKE_INVITER_GENERATE_WARM}" \
+    "${HANDSHAKE_INVITEE_REDEEM}" || return 3
 
   _log_phase_banner 3
   echo "  Housing happy path — send, accept, active hub (active plan on Monica)."
@@ -380,10 +402,12 @@ _run_bug_122_regression_once() {
 
   _log_phase_banner 4
   echo "  Louys drift with active plan — anchor reject dialog, notification #19, invitee dialog."
-  _recipient_identity_drift_only
+  _recipient_identity_drift_only || return 3
   qa_grant_post_notifications_on_serial "${RECIPIENT_SERIAL}"
   _connect_handshake_sequential_anchor_reject \
-    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-anchor")" || return 3
+    "$(_attempt_rel "${attempt_dir}" "handshake-louys-drift-anchor")" \
+    "${HANDSHAKE_INVITER_GENERATE_WARM}" \
+    "${FLOWS_DIR}/contact_handshake_invitee_redeem_anchor_rejected.yaml" || return 3
 
   return 0
 }
@@ -425,9 +449,13 @@ case "${MODE}" in
           echo "Attempt ${attempt}: BUG 1.22 reproduced — no further attempts"
           break
           ;;
+        1)
+          infra_fail=$((infra_fail + 1))
+          echo "Attempt ${attempt}: coordinator error (exit 1 — check seed/maestro stderr above)" >&2
+          ;;
         *)
           infra_fail=$((infra_fail + 1))
-          echo "Attempt ${attempt}: inconclusive (exit ${rc})"
+          echo "Attempt ${attempt}: inconclusive (exit ${rc})" >&2
           ;;
       esac
       attempt=$((attempt + 1))

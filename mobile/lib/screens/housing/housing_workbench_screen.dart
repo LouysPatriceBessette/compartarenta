@@ -420,6 +420,7 @@ class _HousingWorkbenchScreenState extends State<HousingWorkbenchScreen>
                 for (final r in pending)
                   qaHousingProposalSemantics(
                     identifier: kQaHousingWorkbenchPendingRow,
+                    button: true,
                     child: _planCard(
                     context,
                     title: _pendingRowTitle(l10n, r),

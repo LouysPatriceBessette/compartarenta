@@ -388,8 +388,33 @@ qa_maestro_test_on_serial() {
   local flow_path="$2"
   local artifact_dir="$3"
   shift 3
+  local log attempt rc
+  local timeout_sec="${COMPARTARENTA_QA_MAESTRO_TIMEOUT_SEC:-600}"
   mkdir -p "${artifact_dir}"
-  maestro test --udid "${serial}" "${flow_path}" --test-output-dir "${artifact_dir}" "$@"
+  for attempt in 1 2; do
+    log="$(mktemp)"
+    set +e
+    timeout "${timeout_sec}" maestro test --udid "${serial}" "${flow_path}" \
+      --test-output-dir "${artifact_dir}" "$@" >"${log}" 2>&1
+    rc=$?
+    # Do not `set -e` here — shell options leak to callers; a later `return 1`
+    # (e.g. duplicate probe clean path) would abort the coordinator with exit 1.
+    cat "${log}"
+    if [[ "${rc}" -eq 0 ]]; then
+      rm -f "${log}"
+      return 0
+    fi
+    if [[ "${attempt}" -eq 1 ]] && grep -qE 'UNAVAILABLE|Command failed \(tcp|device offline|not connected' "${log}"; then
+      echo "  maestro infra flake on ${serial}; adb reconnect + retry once" >&2
+      adb -s "${serial}" reconnect >/dev/null 2>&1 || true
+      sleep 2
+      rm -f "${log}"
+      continue
+    fi
+    rm -f "${log}"
+    return "${rc}"
+  done
+  return 1
 }
 
 # Maestro --test-output-dir: avoid doubling COMPARTARENTA_MULTI_ARTIFACT_ROOT when the

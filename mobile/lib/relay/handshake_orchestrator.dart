@@ -111,6 +111,7 @@ enum InviterHandshakeFinalizeResult {
   accepted,
   acceptedMergedDuplicate,
   rejectedDuplicateModuleAnchor,
+  alreadyHandled,
 }
 
 /// Result of a redeem attempt on the invitee side.
@@ -2184,7 +2185,7 @@ class HandshakeOrchestrator {
         : await _loadSelfProfileForAck();
 
     try {
-      await _finalizeInviterAccept(
+      final result = await _finalizeInviterAccept(
         handshakeRow: row,
         peerPubBytes: RelayRouting.unb64(peerPubB64),
         peerDisplayName: row.peerDisplayName,
@@ -2193,6 +2194,10 @@ class HandshakeOrchestrator {
         selfDisplayName: profile.displayName,
         selfAvatarId: profile.avatarId,
       );
+      if (result == InviterHandshakeFinalizeResult.alreadyHandled ||
+          result == InviterHandshakeFinalizeResult.rejectedDuplicateModuleAnchor) {
+        return;
+      }
       final notificationName = row.peerDisplayName.isEmpty
           ? 'Unknown'
           : row.peerDisplayName;
@@ -2231,7 +2236,14 @@ class HandshakeOrchestrator {
     }
 
     if (ack.accepted) {
-      await _finalizeInviteeAccept(row: row, ack: ack);
+      final accepted = await _finalizeInviteeAccept(row: row, ack: ack);
+      if (!accepted) {
+        await _relay.ackEnvelope(
+          envelopeId: envelope.envelopeId,
+          recipient: listenAddr,
+        );
+        return;
+      }
       final notificationDisplayName = ack.displayName.isEmpty
           ? 'Unknown'
           : ack.displayName;
@@ -2392,6 +2404,14 @@ class HandshakeOrchestrator {
       throw HandshakeOrchestratorError('relay_error', e);
     }
 
+    if (!await _claimHandshakeStateIf(
+      handshakeRow.id,
+      expected: HandshakeState.helloReceived,
+      state: HandshakeState.completed,
+    )) {
+      return InviterHandshakeFinalizeResult.alreadyHandled;
+    }
+
     // Promote the stub Contact and write peer material + routing.
     final promoteContactId = await _resolveHandshakePromoteContactId(
       defaultStubId: handshakeRow.contactStubId,
@@ -2412,7 +2432,6 @@ class HandshakeOrchestrator {
       await _contacts.deleteLocally(handshakeRow.contactStubId);
     }
 
-    await _markHandshake(handshakeRow.id, state: HandshakeState.completed);
     await _decommissionHandshakeAddresses(
       addrInviter: addrInviter,
       addrInvitee: addrInvitee,
@@ -2497,10 +2516,13 @@ class HandshakeOrchestrator {
     requestClosedAppPushRegistrationSync();
   }
 
-  Future<void> _finalizeInviteeAccept({
+  Future<bool> _finalizeInviteeAccept({
     required PendingHandshake row,
     required AckEnvelope ack,
   }) async {
+    final peerPublicMaterialB64 = RelayRouting.b64(
+      ack.inviterLongTermPublicKey,
+    );
     final inviteePub = await _identity.publicKey();
     final peerListenAddr = await RelayRouting.steadyStateAddress(
       firstPub: ack.inviterLongTermPublicKey,
@@ -2520,9 +2542,15 @@ class HandshakeOrchestrator {
       throw HandshakeOrchestratorError('relay_error', e);
     }
 
-    final peerPublicMaterialB64 = RelayRouting.b64(
-      ack.inviterLongTermPublicKey,
-    );
+    if (!await _claimHandshakeStateIf(
+      row.id,
+      expected: HandshakeState.awaitingAck,
+      state: HandshakeState.completed,
+      peerLongTermPublicMaterialB64: peerPublicMaterialB64,
+    )) {
+      return false;
+    }
+
     final promoteContactId = await _resolveHandshakePromoteContactId(
       defaultStubId: row.contactStubId,
       peerPublicMaterialB64: peerPublicMaterialB64,
@@ -2542,16 +2570,10 @@ class HandshakeOrchestrator {
       await _contacts.deleteLocally(row.contactStubId);
     }
 
-    await _markHandshake(
-      row.id,
-      state: HandshakeState.completed,
-      peerLongTermPublicMaterialB64: RelayRouting.b64(
-        ack.inviterLongTermPublicKey,
-      ),
-    );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
     startPolling();
     requestClosedAppPushRegistrationSync();
+    return true;
   }
 
   // ---------------------------------------------------------------------

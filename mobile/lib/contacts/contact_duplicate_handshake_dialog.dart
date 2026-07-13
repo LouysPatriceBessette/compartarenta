@@ -119,11 +119,12 @@ Future<void> showContactDuplicateHandshakeDialog(
           child: SingleChildScrollView(child: content),
         ),
         actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: qaContactSemantics(
-              identifier: kQaContactsDuplicateDialogOk,
-              button: true,
+          qaContactSemantics(
+            identifier: kQaContactsDuplicateDialogOk,
+            button: true,
+            onTap: () => Navigator.of(ctx).pop(),
+            child: FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
               child: Text(l10n.contactsDuplicateDialogOk),
             ),
           ),

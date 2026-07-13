@@ -388,6 +388,77 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     unawaited(_autosavePlanDraftToDb());
   }
 
+  bool get _wizardNextEnabled =>
+      !_agreementRulesStepFooterLocked && _validateStep(_stepIndex);
+
+  Future<void> _onWizardNextPressed() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    if (_stepIndex == 0) {
+      for (var j = 0; j < _otherParticipantCount; j++) {
+        final id = _contactIds[j]!;
+        final c = await _db.getContact(id);
+        if (c == null || c.kind != 'connected' || c.isBlocked) {
+          if (mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(l10n.housingPlanParticipantsMustBeConnected),
+              ),
+            );
+          }
+          return;
+        }
+      }
+    }
+    try {
+      if (_stepIndex == 0) {
+        await _persistParticipants();
+      }
+      if (_stepIndex == 1) {
+        await _persistPeriod();
+      }
+      if (_stepIndex == 2) {
+        if (!await _validateExpensesStep()) {
+          if (mounted) {
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.housingPlanAddAtLeastOneExpense)),
+            );
+          }
+          return;
+        }
+      }
+      if (_stepIndex == 3) {
+        await _persistAgreementRules();
+        if (!mounted) return;
+        if (widget.amendmentRulesOnly) {
+          Navigator.of(context).pop(widget.amendmentSubmitToGroup);
+          return;
+        }
+        await widget.prefs.setHousingDefaultPlanSummaryReached(true);
+        if (mounted) {
+          setState(() {
+            _showSummary = true;
+            _summaryReloadToken++;
+          });
+        }
+        return;
+      }
+      if (mounted) {
+        setState(() => _stepIndex++);
+      }
+    } catch (e, st) {
+      assert(() {
+        debugPrint('Housing plan Next: $e\n$st');
+        return true;
+      }());
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
+        );
+      }
+    }
+  }
+
   Future<void> _ensurePlanShell() async {
     final l10n = _lookupAppLocalizationsSync();
     await _db.upsertPlan(
@@ -554,9 +625,23 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _otherParticipantCount = coRows.length.clamp(1, 7);
       _resizeParticipantEditors(_otherParticipantCount);
       for (var i = 0; i < coRows.length; i++) {
-        _nameControllers[i].text = coRows[i].displayName;
-        _avatarIds[i] = coRows[i].avatarId;
-        _contactIds[i] = coRows[i].contactId;
+        final loadedContactId = coRows[i].contactId;
+        Contact? loadedContact;
+        if (loadedContactId != null) {
+          loadedContact = await _db.getContact(loadedContactId);
+        }
+        final contactOk = loadedContact != null &&
+            loadedContact.kind == 'connected' &&
+            !loadedContact.isBlocked;
+        if (contactOk) {
+          _contactIds[i] = loadedContactId;
+          _nameControllers[i].text = coRows[i].displayName;
+          _avatarIds[i] = coRows[i].avatarId;
+        } else {
+          _contactIds[i] = null;
+          _nameControllers[i].clear();
+          _avatarIds[i] = 'mdi:0';
+        }
       }
     }
 
@@ -1542,11 +1627,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                               ),
                             ),
                           if (_stepIndex == 2)
-                            Semantics(
-                              identifier: kDebugMode
-                                  ? 'qa-housing-wizard-add-expense'
-                                  : null,
+                            qaHousingProposalSemantics(
+                              identifier: kQaHousingWizardAddExpense,
                               button: true,
+                              onTap: () async {
+                                await _editLine(null);
+                                if (mounted) setState(() => _linesEpoch++);
+                              },
                               child: IconButton.filledTonal(
                               tooltip: l10n.housingPlanAddExpenseTooltip,
                               onPressed: () async {
@@ -1630,110 +1717,13 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                   : () => setState(() => _stepIndex--),
                               child: Text(l10n.housingPlanBack),
                             ),
-                          Semantics(
-                            identifier: kDebugMode
-                                ? 'qa-housing-wizard-next'
-                                : null,
+                          qaHousingProposalSemantics(
+                            identifier: kQaHousingWizardNext,
                             button: true,
+                            enabled: _wizardNextEnabled,
+                            onTap: _wizardNextEnabled ? _onWizardNextPressed : null,
                             child: FilledButton(
-                            onPressed: _agreementRulesStepFooterLocked
-                                ? null
-                                : (_validateStep(_stepIndex)
-                                      ? () async {
-                                          final messenger =
-                                              ScaffoldMessenger.of(context);
-                                          if (_stepIndex == 0) {
-                                            for (
-                                              var j = 0;
-                                              j < _otherParticipantCount;
-                                              j++
-                                            ) {
-                                              final id = _contactIds[j]!;
-                                              final c = await _db.getContact(
-                                                id,
-                                              );
-                                              if (c == null ||
-                                                  c.kind != 'connected' ||
-                                                  c.isBlocked) {
-                                                if (mounted) {
-                                                  messenger.showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        l10n.housingPlanParticipantsMustBeConnected,
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                                return;
-                                              }
-                                            }
-                                          }
-                                          try {
-                                            if (_stepIndex == 0) {
-                                              await _persistParticipants();
-                                            }
-                                            if (_stepIndex == 1) {
-                                              await _persistPeriod();
-                                            }
-                                            if (_stepIndex == 2) {
-                                              if (!await _validateExpensesStep()) {
-                                                if (mounted) {
-                                                  messenger.showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        l10n.housingPlanAddAtLeastOneExpense,
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                                return;
-                                              }
-                                            }
-                                            if (_stepIndex == 3) {
-                                              await _persistAgreementRules();
-                                              if (!context.mounted) return;
-                                              if (widget.amendmentRulesOnly) {
-                                                Navigator.of(context).pop(
-                                                  widget.amendmentSubmitToGroup,
-                                                );
-                                                return;
-                                              }
-                                              await widget.prefs
-                                                  .setHousingDefaultPlanSummaryReached(
-                                                    true,
-                                                  );
-                                              if (mounted) {
-                                                setState(() {
-                                                  _showSummary = true;
-                                                  _summaryReloadToken++;
-                                                });
-                                              }
-                                              return;
-                                            }
-                                            if (mounted) {
-                                              setState(() => _stepIndex++);
-                                            }
-                                          } catch (e, st) {
-                                            assert(() {
-                                              debugPrint(
-                                                'Housing plan Next: $e\n$st',
-                                              );
-                                              return true;
-                                            }());
-                                            if (mounted) {
-                                              messenger.showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    l10n.housingPlanCouldNotContinue(
-                                                      '$e',
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          }
-                                        }
-                                      : null),
+                            onPressed: _wizardNextEnabled ? _onWizardNextPressed : null,
                             child: Text(
                               _stepIndex == 3
                                   ? (widget.amendmentSubmitToGroup
@@ -1807,12 +1797,16 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   Widget _stepParticipants() {
     final l10n = AppLocalizations.of(context);
     final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
-    return qaHousingProposalSemantics(
-      identifier: kQaHousingWizardParticipantsStep,
-      header: true,
-      child: ListView(
+    return ListView(
       padding: screenBodyScrollPadding(context),
       children: [
+        // Maestro step anchor only — do not wrap interactive children in header
+        // semantics (breaks tapOn id for nested buttons; see _HomeActionCard).
+        qaHousingProposalSemantics(
+          identifier: kQaHousingWizardParticipantsStep,
+          header: true,
+          child: const SizedBox(width: 1, height: 1),
+        ),
         if (_otherParticipantCount > 1) ...[
           Row(
             children: [
@@ -1842,7 +1836,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           onChooseContact: () => _chooseContactForParticipant(i),
         ),
       ],
-    ),
     );
   }
 
@@ -3370,41 +3363,47 @@ class _HousingContactParticipantCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 12),
-            if (hasContact) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: Icon(avatarIconFor(avatarId))),
-                title: Text(displayName),
-                subtitle: Text(l10n.contactsTitle),
-              ),
-              const SizedBox(height: 8),
-            ] else
-              Text(
-                l10n.housingPlanContactRequired,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.error,
+      child: Semantics(
+        explicitChildNodes: true,
+        container: true,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(title, style: theme.textTheme.titleSmall),
+              const SizedBox(height: 12),
+              if (hasContact) ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(child: Icon(avatarIconFor(avatarId))),
+                  title: Text(displayName),
+                  subtitle: Text(l10n.contactsTitle),
+                ),
+                const SizedBox(height: 8),
+              ] else
+                Text(
+                  l10n.housingPlanContactRequired,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              qaHousingProposalSemantics(
+                identifier: kQaHousingWizardChooseContact,
+                button: true,
+                onTap: onChooseContact,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.contacts),
+                  label: Text(
+                    hasContact
+                        ? l10n.housingPlanChangeContactAction
+                        : l10n.housingPlanChooseContactAction,
+                  ),
+                  onPressed: onChooseContact,
                 ),
               ),
-            qaHousingProposalSemantics(
-              identifier: kQaHousingWizardChooseContact,
-              child: FilledButton.icon(
-              icon: const Icon(Icons.contacts),
-              label: Text(
-                hasContact
-                    ? l10n.housingPlanChangeContactAction
-                    : l10n.housingPlanChooseContactAction,
-              ),
-              onPressed: onChooseContact,
-            ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -3692,7 +3691,7 @@ class _SummaryViewState extends State<_SummaryView> {
             '${formatPreferenceDate(agr.periodStart, dateFmt)}${l10n.housingInviteDateRangeSeparator}${formatPreferenceDate(agr.periodEnd, dateFmt)}';
 
         return Semantics(
-          identifier: kDebugMode ? 'qa-housing-wizard-summary' : null,
+          identifier: kDebugMode ? kQaHousingWizardSummary : null,
           container: true,
           explicitChildNodes: true,
           child: Column(
@@ -3960,6 +3959,8 @@ class _SummaryViewState extends State<_SummaryView> {
                     const SizedBox(height: 8),
                     qaHousingProposalSemantics(
                       identifier: kQaHousingWizardSummarySubmit,
+                      button: true,
+                      onTap: widget.onInvite,
                       child: FilledButton(
                       onPressed: widget.onInvite,
                       child: Text(l10n.housingPlanSummaryInvite),

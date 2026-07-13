@@ -1,0 +1,23 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _housing_wizard_open_contact_picker.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-contacts-row-louys-qa"
+    timeout: 30000
+- tapOn:
+    id: "qa-contacts-row-louys-qa"
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    notVisible:
+      id: "qa-contacts-picker-sheet"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-wizard-next"
+      enabled: true
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000

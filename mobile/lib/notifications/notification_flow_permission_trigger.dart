@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../debug/qa_contact_semantics.dart';
 import '../widgets/app_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../prefs/app_preferences.dart';
@@ -45,7 +46,11 @@ class NotificationFlowPermissionTrigger {
       context: context,
       guardKey: 'notificationFlowPermissionPrompt',
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notificationFlowPermissionPromptTitle),
+        title: qaContactSemantics(
+          identifier: kQaNotificationFlowPermissionPrompt,
+          header: true,
+          child: Text(l10n.notificationFlowPermissionPromptTitle),
+        ),
         content: Text(l10n.notificationFlowPermissionPromptBody),
         actions: [
           TextButton(
@@ -60,10 +65,16 @@ class NotificationFlowPermissionTrigger {
                 Navigator.pop(ctx, _NotificationFlowPromptChoice.openSettings),
             child: Text(l10n.notificationFlowPermissionReviewAction),
           ),
-          FilledButton(
-            onPressed: () =>
+          qaContactSemantics(
+            identifier: kQaNotificationFlowPermissionEnable,
+            button: true,
+            onTap: () =>
                 Navigator.pop(ctx, _NotificationFlowPromptChoice.enable),
-            child: Text(l10n.notificationFlowPermissionEnableAction),
+            child: FilledButton(
+              onPressed: () =>
+                  Navigator.pop(ctx, _NotificationFlowPromptChoice.enable),
+              child: Text(l10n.notificationFlowPermissionEnableAction),
+            ),
           ),
         ],
       ),

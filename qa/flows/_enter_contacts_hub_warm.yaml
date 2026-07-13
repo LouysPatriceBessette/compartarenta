@@ -1,0 +1,6 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- launchApp:
+    stopApp: false
+- runFlow:
+    file: _on_contacts_hub.yaml

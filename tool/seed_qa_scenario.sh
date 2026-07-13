@@ -95,8 +95,12 @@ qa_start_seed_activity
 qa_wait_for_boot_completed "${SERIAL}"
 
 echo "  waiting for seed_applied marker (up to ~90s)..."
-for attempt in $(seq 1 45); do
+for attempt in $(seq 1 60); do
   applied="$(qa_pull_qa_seed_applied_id "${SERIAL}")"
+  if [[ -z "${applied}" ]] && "${ADB[@]}" logcat -d 2>/dev/null \
+    | grep -Fq "qa seed: applied scenario ${SEED_ID}"; then
+    applied="${SEED_ID}"
+  fi
   # String compare in [[ ]]; -eq is for integers only.
   if [[ "${applied}" == "${SEED_ID}" ]]; then
     if ! qa_verify_onboarding_complete_pref_on_serial "${SERIAL}"; then
@@ -138,8 +142,8 @@ for attempt in $(seq 1 45); do
     echo "Rebuild: ./tool/melosw run qa:build-apk and re-run without --skip-build." >&2
     exit 1
   fi
-  echo "  poll ${attempt}/45 applied=${applied:-<empty>}"
-  sleep 2
+  echo "  poll ${attempt}/60 applied=${applied:-<empty>}"
+  sleep 1
 done
 
 echo "Timed out waiting for QA seed log line on ${SERIAL}." >&2
