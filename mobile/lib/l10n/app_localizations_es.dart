@@ -2154,6 +2154,15 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String housingBeforeDueJournalCardBody(
+    String dueDate,
+    String lineTitle,
+    String amount,
+  ) {
+    return 'Recordatorio del vencimiento del $dueDate\n$lineTitle - $amount';
+  }
+
+  @override
   String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
       'El servidor de relevo no está disponible temporalmente.';
 

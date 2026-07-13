@@ -3647,6 +3647,16 @@ abstract class AppLocalizations {
   /// **'{lineTitle} was not completed for this period.'**
   String housingOverdueJournalCardBody(String lineTitle);
 
+  /// No description provided for @housingBeforeDueJournalCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment due reminder for {dueDate}\n{lineTitle} - {amount}'**
+  String housingBeforeDueJournalCardBody(
+    String dueDate,
+    String lineTitle,
+    String amount,
+  );
+
   /// No description provided for @pushNotificationHousingResponseFailureRelayUnavailableBody.
   ///
   /// In en, this message translates to:

@@ -545,7 +545,9 @@ class HousingInactiveParticipants extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Local overdue journal cards (orange, non-navigable) on Accepted expenses.
+/// Local payment-reminder journal cards (orange, non-navigable) on Accepted expenses.
+///
+/// [reminderKind] is `before_due` (#10) or `overdue` (#11).
 class HousingPaymentOverdueJournalEntries extends Table {
   TextColumn get id => text()();
   TextColumn get planId => text()();
@@ -553,6 +555,8 @@ class HousingPaymentOverdueJournalEntries extends Table {
   TextColumn get periodKey => text()();
   DateTimeColumn get periodDueAt => dateTime()();
   DateTimeColumn get recordedAt => dateTime()();
+  TextColumn get reminderKind =>
+      text().withDefault(const Constant('overdue'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -718,7 +722,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 33;
+  int get schemaVersion => 34;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1074,6 +1078,13 @@ class AppDatabase extends _$AppDatabase {
           pendingHandshakes.peerDeviceBindingId,
         );
       }
+      if (from < 34) {
+        await _migrateAddColumn(
+          m,
+          housingPaymentOverdueJournalEntries,
+          housingPaymentOverdueJournalEntries.reminderKind,
+        );
+      }
     },
     beforeOpen: (details) async {
       // Drift will run onCreate/onUpgrade automatically.
@@ -1157,6 +1168,7 @@ class AppDatabase extends _$AppDatabase {
     required String periodKey,
     required DateTime periodDueAt,
     required DateTime recordedAt,
+    String reminderKind = 'overdue',
   }) async {
     await into(housingPaymentOverdueJournalEntries).insertOnConflictUpdate(
       HousingPaymentOverdueJournalEntriesCompanion.insert(
@@ -1166,6 +1178,7 @@ class AppDatabase extends _$AppDatabase {
         periodKey: periodKey,
         periodDueAt: periodDueAt,
         recordedAt: recordedAt,
+        reminderKind: Value(reminderKind),
       ),
     );
   }

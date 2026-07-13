@@ -829,6 +829,14 @@
   "@housingOverdueJournalCardBody": {
     "placeholders": { "lineTitle": { "type": "String" } }
   },
+  "housingBeforeDueJournalCardBody": "Recordatorio del vencimiento del {dueDate}\n{lineTitle} - {amount}",
+  "@housingBeforeDueJournalCardBody": {
+    "placeholders": {
+      "dueDate": { "type": "String" },
+      "lineTitle": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

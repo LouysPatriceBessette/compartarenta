@@ -2150,6 +2150,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String housingBeforeDueJournalCardBody(
+    String dueDate,
+    String lineTitle,
+    String amount,
+  ) {
+    return 'Rappel de l\'échéance du $dueDate\n$lineTitle - $amount';
+  }
+
+  @override
   String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
       'Le serveur de relai est temporairement indisponible.';
 

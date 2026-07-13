@@ -287,6 +287,7 @@ class HousingPaymentReminderService {
         periodKey: utf8.decode(d.periodKeyBytes),
         periodDueAt: d.periodDueAt ?? DateTime.now().toUtc(),
         recordedAt: DateTime.now().toUtc(),
+        reminderKind: 'overdue',
       );
     }
 
@@ -294,6 +295,8 @@ class HousingPaymentReminderService {
       lineTitle: line.title,
       reminderKind: d.reminderKind,
       planId: planId,
+      planLineId: lineId,
+      periodDueAt: d.periodDueAt ?? DateTime.now().toUtc(),
     );
     if (kDebugMode) {
       final qaNumber = d.reminderKind == 'overdue' ? 11 : 10;

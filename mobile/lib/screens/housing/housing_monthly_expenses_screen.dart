@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../debug/qa_housing_proposal_semantics.dart';
+import '../../housing/reminders/payment_reminder_journal_month.dart';
 import '../../housing/settlement/housing_agreement_month_window.dart';
 import '../../housing/realized_expense/realized_expense_description_display.dart';
 import '../../housing/realized_expense/realized_expense_ledger_service.dart';
@@ -21,11 +24,15 @@ class HousingMonthlyExpensesScreen extends StatefulWidget {
     required this.packageId,
     required this.planId,
     this.prefs,
+    this.initialMonth,
   });
 
   final String packageId;
   final String planId;
   final AppPreferences? prefs;
+
+  /// When set (e.g. notification tap), open on this calendar month instead of now.
+  final DateTime? initialMonth;
 
   @override
   State<HousingMonthlyExpensesScreen> createState() =>
@@ -40,8 +47,8 @@ class _HousingMonthlyExpensesScreenState
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _month = DateTime(now.year, now.month);
+    final seed = widget.initialMonth ?? DateTime.now();
+    _month = DateTime(seed.year, seed.month);
     _windowFuture = _loadWindow();
     HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
       _onSteadyInboxTick,
@@ -100,95 +107,99 @@ class _HousingMonthlyExpensesScreenState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.housingMonthlyExpensesTitle)),
-      body: FutureBuilder<HousingAgreementMonthWindow?>(
-        future: _windowFuture,
-        builder: (context, windowSnap) {
-          if (windowSnap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final window = windowSnap.data;
-          if (window == null) {
-            return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
-          }
-          final currentMonth = window.clamp(_month);
-          final year = currentMonth.year;
-          final month = currentMonth.month;
+      body: Semantics(
+        identifier: kDebugMode ? kQaHousingMonthlyExpensesScreen : null,
+        container: true,
+        explicitChildNodes: true,
+        child: FutureBuilder<HousingAgreementMonthWindow?>(
+          future: _windowFuture,
+          builder: (context, windowSnap) {
+            if (windowSnap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final window = windowSnap.data;
+            if (window == null) {
+              return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
+            }
+            final currentMonth = window.clamp(_month);
+            final year = currentMonth.year;
+            final month = currentMonth.month;
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: currentMonth.isAfter(window.firstMonth)
-                          ? () => _shiftMonth(window, -1)
-                          : null,
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                    Expanded(
-                      child: Text(
-                        l10n.housingMonthlyExpensesMonthLabel(year, month),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: currentMonth.isAfter(window.firstMonth)
+                            ? () => _shiftMonth(window, -1)
+                            : null,
+                        icon: const Icon(Icons.chevron_left),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: currentMonth.isBefore(window.lastMonth)
-                          ? () => _shiftMonth(window, 1)
-                          : null,
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: FutureBuilder<_MonthExpenseLists>(
-                  future: _loadMonthExpenseLists(
-                    ledger: ledger,
-                    packageId: widget.packageId,
-                    planId: widget.planId,
-                    year: year,
-                    month: month,
-                  ),
-                  builder: (context, snap) {
-                    if (snap.connectionState != ConnectionState.done) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final lists = snap.data ?? const _MonthExpenseLists();
-                    if (lists.published.isEmpty && lists.overdue.isEmpty) {
-                      return SafeArea(
-                        top: false,
-                        child: Center(
-                          child: Text(l10n.housingMonthlyExpensesEmpty),
+                      Expanded(
+                        child: Text(
+                          l10n.housingMonthlyExpensesMonthLabel(year, month),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
-                      );
-                    }
-                    return FutureBuilder<AppPreferences>(
-                      future: widget.prefs != null
-                          ? Future.value(widget.prefs)
-                          : AppPreferences.load(),
-                      builder: (context, prefsSnap) {
-                        final prefs = prefsSnap.data;
-                        final dateFmt = prefs == null
-                            ? null
-                            : effectiveDateFormat(prefs);
-                        final children = <Widget>[
-                          for (final entry in lists.overdue)
-                            _buildOverdueJournalCard(
-                              context,
-                              entry: entry,
-                              lineTitle: lists.lineTitleById[entry.planLineId] ??
-                                  entry.planLineId,
-                            ),
-                          for (final expense in lists.published)
-                            _buildPublishedExpenseCard(
-                              context,
-                              expense: expense,
-                              dateFmt: dateFmt,
-                            ),
-                        ];
-                        return ListView.separated(
+                      ),
+                      IconButton(
+                        onPressed: currentMonth.isBefore(window.lastMonth)
+                            ? () => _shiftMonth(window, 1)
+                            : null,
+                        icon: const Icon(Icons.chevron_right),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: FutureBuilder<_MonthExpenseLists>(
+                    future: _loadMonthExpenseLists(
+                      ledger: ledger,
+                      packageId: widget.packageId,
+                      planId: widget.planId,
+                      year: year,
+                      month: month,
+                    ),
+                    builder: (context, snap) {
+                      if (snap.connectionState != ConnectionState.done) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final lists = snap.data ?? const _MonthExpenseLists();
+                      if (lists.published.isEmpty && lists.reminders.isEmpty) {
+                        return SafeArea(
+                          top: false,
+                          child: Center(
+                            child: Text(l10n.housingMonthlyExpensesEmpty),
+                          ),
+                        );
+                      }
+                      return FutureBuilder<AppPreferences>(
+                        future: widget.prefs != null
+                            ? Future.value(widget.prefs)
+                            : AppPreferences.load(),
+                        builder: (context, prefsSnap) {
+                          final prefs = prefsSnap.data;
+                          final dateFmt = prefs == null
+                              ? null
+                              : effectiveDateFormat(prefs);
+                          final children = <Widget>[
+                            for (final entry in lists.reminders)
+                              _buildReminderJournalCard(
+                                context,
+                                entry: entry,
+                                line: lists.lineById[entry.planLineId],
+                                dateFmt: dateFmt,
+                              ),
+                            for (final expense in lists.published)
+                              _buildPublishedExpenseCard(
+                                context,
+                                expense: expense,
+                                dateFmt: dateFmt,
+                              ),
+                          ];
+                          return ListView.separated(
                             padding: screenBodyScrollPadding(
                               context,
                               content: const EdgeInsets.fromLTRB(
@@ -203,14 +214,15 @@ class _HousingMonthlyExpensesScreenState
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) => children[index],
                           );
-                      },
-                    );
-                  },
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -228,28 +240,60 @@ class _HousingMonthlyExpensesScreenState
       month: month,
     );
     final db = AppDatabase.processScope;
-    final overdueAll = await db.listHousingPaymentOverdueJournalForPlan(planId);
-    final overdue = overdueAll.where((e) {
-      final d = e.periodDueAt.toLocal();
+    final reminderAll =
+        await db.listHousingPaymentOverdueJournalForPlan(planId);
+    final reminders = reminderAll.where((e) {
+      final d = journalMonthForHousingPaymentReminder(e);
       return d.year == year && d.month == month;
     }).toList(growable: false);
     final lines = await db.listPlanLines(planId);
-    final titles = <String, String>{
-      for (final line in lines) line.id: line.title,
+    final lineById = <String, PlanLine>{
+      for (final line in lines) line.id: line,
     };
     return _MonthExpenseLists(
       published: published,
-      overdue: overdue,
-      lineTitleById: titles,
+      reminders: reminders,
+      lineById: lineById,
     );
   }
 
-  Widget _buildOverdueJournalCard(
+  Widget _buildReminderJournalCard(
     BuildContext context, {
     required HousingPaymentOverdueJournalEntry entry,
-    required String lineTitle,
+    required PlanLine? line,
+    required String? dateFmt,
   }) {
     final l10n = AppLocalizations.of(context);
+    final isBeforeDue = entry.reminderKind == 'before_due';
+    final lineTitle = line?.title ?? entry.planLineId;
+    if (isBeforeDue) {
+      final dueDate = _formatJournalDate(entry.periodDueAt, dateFmt);
+      final receivedDate = _formatJournalDate(entry.recordedAt, dateFmt);
+      final amountMinor = line?.amountMinor ?? 0;
+      final currency = line?.currency ?? 'CAD';
+      final amount = formatMinorAsMoney(context, amountMinor, currency);
+      final titleText = l10n.housingBeforeDueJournalCardBody(
+        dueDate,
+        lineTitle,
+        amount,
+      );
+      return Semantics(
+        identifier: kDebugMode ? kQaHousingBeforeDueJournalCard : null,
+        container: true,
+        child: Card(
+          color: Colors.orange.shade50,
+          child: ListTile(
+            enabled: false,
+            title: Text(
+              titleText,
+              style: TextStyle(color: Colors.orange.shade900),
+            ),
+            subtitle: Text(receivedDate),
+          ),
+        ),
+      );
+    }
+
     return Card(
       color: Colors.orange.shade50,
       child: ListTile(
@@ -260,6 +304,16 @@ class _HousingMonthlyExpensesScreenState
         ),
       ),
     );
+  }
+
+  String _formatJournalDate(DateTime at, String? dateFmt) {
+    final local = at.toLocal();
+    if (dateFmt == null) {
+      return '${local.year.toString().padLeft(4, '0')}-'
+          '${local.month.toString().padLeft(2, '0')}-'
+          '${local.day.toString().padLeft(2, '0')}';
+    }
+    return formatPreferenceDate(local, dateFmt);
   }
 
   Widget _buildPublishedExpenseCard(
@@ -286,7 +340,8 @@ class _HousingMonthlyExpensesScreenState
             : Text(subtitleParts.join(' · ')),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          await navigateToRoute<void>(context, 
+          await navigateToRoute<void>(
+            context,
             MaterialPageRoute<void>(
               builder: (_) => HousingRealizedExpenseReviewScreen(
                 expenseId: expense.id,
@@ -308,11 +363,12 @@ class _HousingMonthlyExpensesScreenState
 class _MonthExpenseLists {
   const _MonthExpenseLists({
     this.published = const [],
-    this.overdue = const [],
-    this.lineTitleById = const {},
+    this.reminders = const [],
+    this.lineById = const {},
   });
 
   final List<RealizedExpense> published;
-  final List<HousingPaymentOverdueJournalEntry> overdue;
-  final Map<String, String> lineTitleById;
+  final List<HousingPaymentOverdueJournalEntry> reminders;
+  final Map<String, PlanLine> lineById;
 }
+

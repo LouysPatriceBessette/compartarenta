@@ -12275,6 +12275,18 @@ class $HousingPaymentOverdueJournalEntriesTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _reminderKindMeta = const VerificationMeta(
+    'reminderKind',
+  );
+  @override
+  late final GeneratedColumn<String> reminderKind = GeneratedColumn<String>(
+    'reminder_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('overdue'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -12283,6 +12295,7 @@ class $HousingPaymentOverdueJournalEntriesTable
     periodKey,
     periodDueAt,
     recordedAt,
+    reminderKind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -12347,6 +12360,15 @@ class $HousingPaymentOverdueJournalEntriesTable
     } else if (isInserting) {
       context.missing(_recordedAtMeta);
     }
+    if (data.containsKey('reminder_kind')) {
+      context.handle(
+        _reminderKindMeta,
+        reminderKind.isAcceptableOrUnknown(
+          data['reminder_kind']!,
+          _reminderKindMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -12383,6 +12405,10 @@ class $HousingPaymentOverdueJournalEntriesTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}recorded_at'],
       )!,
+      reminderKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_kind'],
+      )!,
     );
   }
 
@@ -12400,6 +12426,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
   final String periodKey;
   final DateTime periodDueAt;
   final DateTime recordedAt;
+  final String reminderKind;
   const HousingPaymentOverdueJournalEntry({
     required this.id,
     required this.planId,
@@ -12407,6 +12434,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
     required this.periodKey,
     required this.periodDueAt,
     required this.recordedAt,
+    required this.reminderKind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -12417,6 +12445,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
     map['period_key'] = Variable<String>(periodKey);
     map['period_due_at'] = Variable<DateTime>(periodDueAt);
     map['recorded_at'] = Variable<DateTime>(recordedAt);
+    map['reminder_kind'] = Variable<String>(reminderKind);
     return map;
   }
 
@@ -12428,6 +12457,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
       periodKey: Value(periodKey),
       periodDueAt: Value(periodDueAt),
       recordedAt: Value(recordedAt),
+      reminderKind: Value(reminderKind),
     );
   }
 
@@ -12443,6 +12473,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
       periodKey: serializer.fromJson<String>(json['periodKey']),
       periodDueAt: serializer.fromJson<DateTime>(json['periodDueAt']),
       recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
+      reminderKind: serializer.fromJson<String>(json['reminderKind']),
     );
   }
   @override
@@ -12455,6 +12486,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
       'periodKey': serializer.toJson<String>(periodKey),
       'periodDueAt': serializer.toJson<DateTime>(periodDueAt),
       'recordedAt': serializer.toJson<DateTime>(recordedAt),
+      'reminderKind': serializer.toJson<String>(reminderKind),
     };
   }
 
@@ -12465,6 +12497,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
     String? periodKey,
     DateTime? periodDueAt,
     DateTime? recordedAt,
+    String? reminderKind,
   }) => HousingPaymentOverdueJournalEntry(
     id: id ?? this.id,
     planId: planId ?? this.planId,
@@ -12472,6 +12505,7 @@ class HousingPaymentOverdueJournalEntry extends DataClass
     periodKey: periodKey ?? this.periodKey,
     periodDueAt: periodDueAt ?? this.periodDueAt,
     recordedAt: recordedAt ?? this.recordedAt,
+    reminderKind: reminderKind ?? this.reminderKind,
   );
   HousingPaymentOverdueJournalEntry copyWithCompanion(
     HousingPaymentOverdueJournalEntriesCompanion data,
@@ -12489,6 +12523,9 @@ class HousingPaymentOverdueJournalEntry extends DataClass
       recordedAt: data.recordedAt.present
           ? data.recordedAt.value
           : this.recordedAt,
+      reminderKind: data.reminderKind.present
+          ? data.reminderKind.value
+          : this.reminderKind,
     );
   }
 
@@ -12500,14 +12537,22 @@ class HousingPaymentOverdueJournalEntry extends DataClass
           ..write('planLineId: $planLineId, ')
           ..write('periodKey: $periodKey, ')
           ..write('periodDueAt: $periodDueAt, ')
-          ..write('recordedAt: $recordedAt')
+          ..write('recordedAt: $recordedAt, ')
+          ..write('reminderKind: $reminderKind')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, planId, planLineId, periodKey, periodDueAt, recordedAt);
+  int get hashCode => Object.hash(
+    id,
+    planId,
+    planLineId,
+    periodKey,
+    periodDueAt,
+    recordedAt,
+    reminderKind,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -12517,7 +12562,8 @@ class HousingPaymentOverdueJournalEntry extends DataClass
           other.planLineId == this.planLineId &&
           other.periodKey == this.periodKey &&
           other.periodDueAt == this.periodDueAt &&
-          other.recordedAt == this.recordedAt);
+          other.recordedAt == this.recordedAt &&
+          other.reminderKind == this.reminderKind);
 }
 
 class HousingPaymentOverdueJournalEntriesCompanion
@@ -12528,6 +12574,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
   final Value<String> periodKey;
   final Value<DateTime> periodDueAt;
   final Value<DateTime> recordedAt;
+  final Value<String> reminderKind;
   final Value<int> rowid;
   const HousingPaymentOverdueJournalEntriesCompanion({
     this.id = const Value.absent(),
@@ -12536,6 +12583,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
     this.periodKey = const Value.absent(),
     this.periodDueAt = const Value.absent(),
     this.recordedAt = const Value.absent(),
+    this.reminderKind = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   HousingPaymentOverdueJournalEntriesCompanion.insert({
@@ -12545,6 +12593,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
     required String periodKey,
     required DateTime periodDueAt,
     required DateTime recordedAt,
+    this.reminderKind = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        planId = Value(planId),
@@ -12559,6 +12608,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
     Expression<String>? periodKey,
     Expression<DateTime>? periodDueAt,
     Expression<DateTime>? recordedAt,
+    Expression<String>? reminderKind,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -12568,6 +12618,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
       if (periodKey != null) 'period_key': periodKey,
       if (periodDueAt != null) 'period_due_at': periodDueAt,
       if (recordedAt != null) 'recorded_at': recordedAt,
+      if (reminderKind != null) 'reminder_kind': reminderKind,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -12579,6 +12630,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
     Value<String>? periodKey,
     Value<DateTime>? periodDueAt,
     Value<DateTime>? recordedAt,
+    Value<String>? reminderKind,
     Value<int>? rowid,
   }) {
     return HousingPaymentOverdueJournalEntriesCompanion(
@@ -12588,6 +12640,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
       periodKey: periodKey ?? this.periodKey,
       periodDueAt: periodDueAt ?? this.periodDueAt,
       recordedAt: recordedAt ?? this.recordedAt,
+      reminderKind: reminderKind ?? this.reminderKind,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -12613,6 +12666,9 @@ class HousingPaymentOverdueJournalEntriesCompanion
     if (recordedAt.present) {
       map['recorded_at'] = Variable<DateTime>(recordedAt.value);
     }
+    if (reminderKind.present) {
+      map['reminder_kind'] = Variable<String>(reminderKind.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -12628,6 +12684,7 @@ class HousingPaymentOverdueJournalEntriesCompanion
           ..write('periodKey: $periodKey, ')
           ..write('periodDueAt: $periodDueAt, ')
           ..write('recordedAt: $recordedAt, ')
+          ..write('reminderKind: $reminderKind, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -27615,6 +27672,7 @@ typedef $$HousingPaymentOverdueJournalEntriesTableCreateCompanionBuilder =
       required String periodKey,
       required DateTime periodDueAt,
       required DateTime recordedAt,
+      Value<String> reminderKind,
       Value<int> rowid,
     });
 typedef $$HousingPaymentOverdueJournalEntriesTableUpdateCompanionBuilder =
@@ -27625,6 +27683,7 @@ typedef $$HousingPaymentOverdueJournalEntriesTableUpdateCompanionBuilder =
       Value<String> periodKey,
       Value<DateTime> periodDueAt,
       Value<DateTime> recordedAt,
+      Value<String> reminderKind,
       Value<int> rowid,
     });
 
@@ -27664,6 +27723,11 @@ class $$HousingPaymentOverdueJournalEntriesTableFilterComposer
 
   ColumnFilters<DateTime> get recordedAt => $composableBuilder(
     column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reminderKind => $composableBuilder(
+    column: $table.reminderKind,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -27706,6 +27770,11 @@ class $$HousingPaymentOverdueJournalEntriesTableOrderingComposer
     column: $table.recordedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get reminderKind => $composableBuilder(
+    column: $table.reminderKind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer
@@ -27738,6 +27807,11 @@ class $$HousingPaymentOverdueJournalEntriesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
     column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reminderKind => $composableBuilder(
+    column: $table.reminderKind,
     builder: (column) => column,
   );
 }
@@ -27794,6 +27868,7 @@ class $$HousingPaymentOverdueJournalEntriesTableTableManager
                 Value<String> periodKey = const Value.absent(),
                 Value<DateTime> periodDueAt = const Value.absent(),
                 Value<DateTime> recordedAt = const Value.absent(),
+                Value<String> reminderKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HousingPaymentOverdueJournalEntriesCompanion(
                 id: id,
@@ -27802,6 +27877,7 @@ class $$HousingPaymentOverdueJournalEntriesTableTableManager
                 periodKey: periodKey,
                 periodDueAt: periodDueAt,
                 recordedAt: recordedAt,
+                reminderKind: reminderKind,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -27812,6 +27888,7 @@ class $$HousingPaymentOverdueJournalEntriesTableTableManager
                 required String periodKey,
                 required DateTime periodDueAt,
                 required DateTime recordedAt,
+                Value<String> reminderKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HousingPaymentOverdueJournalEntriesCompanion.insert(
                 id: id,
@@ -27820,6 +27897,7 @@ class $$HousingPaymentOverdueJournalEntriesTableTableManager
                 periodKey: periodKey,
                 periodDueAt: periodDueAt,
                 recordedAt: recordedAt,
+                reminderKind: reminderKind,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

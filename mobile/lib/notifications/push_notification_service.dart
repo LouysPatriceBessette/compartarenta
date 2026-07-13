@@ -59,6 +59,7 @@ class PushNotificationService {
       'housing_participation_change:';
   static const String _planPeerEstablishmentPrefix = 'plan_peer_establishment:';
   static const String _housingActiveHubPrefix = 'housing_active_hub:';
+  static const String _housingPaymentReminderPrefix = 'housing_payment_reminder|';
   static const String _contactsPayload = 'contacts';
 
   static const List<String> _housingKinds = <String>[
@@ -238,11 +239,49 @@ class PushNotificationService {
       }
       return;
     }
+    if (payload.startsWith(_housingPaymentReminderPrefix)) {
+      unawaited(_handleHousingPaymentReminderTap(payload));
+      return;
+    }
     if (payload == _contactsPayload) {
       _navigateToContacts();
     }
   }
 
+  /// Payload: `housing_payment_reminder|{kind}|{planId}|{lineId}|{dueMs}`.
+  static Future<void> _handleHousingPaymentReminderTap(String payload) async {
+    final parts = payload.split('|');
+    if (parts.length < 5) {
+      _navigateToHousing();
+      return;
+    }
+    final kind = parts[1];
+    final planId = parts[2];
+    final lineId = parts[3];
+    final dueMs = int.tryParse(parts[4]);
+    if (planId.isEmpty || lineId.isEmpty || dueMs == null) {
+      _navigateToHousing();
+      return;
+    }
+    final periodDueAt = DateTime.fromMillisecondsSinceEpoch(dueMs, isUtc: true);
+    final periodKey = '$dueMs';
+    final id = '$planId:$lineId:$periodKey:$kind';
+    try {
+      await AppDatabase.processScope.upsertHousingPaymentOverdueJournalEntry(
+        id: id,
+        planId: planId,
+        planLineId: lineId,
+        periodKey: periodKey,
+        periodDueAt: periodDueAt,
+        recordedAt: DateTime.now().toUtc(),
+        reminderKind: kind,
+      );
+    } catch (e, st) {
+      debugPrint('housing payment reminder tap journal: $e\n$st');
+    }
+    HousingNavigationIntent.requestOpenAcceptedExpensesJournal(planId);
+    _navigateToHousing();
+  }
   static Future<void> _handleWakeForegroundMessage() async {
     await runWakeInboxPollOnce();
     await ClosedAppPushRegistrationService.maybeInstance?.sync(force: true);
@@ -484,6 +523,8 @@ class PushNotificationService {
     required String lineTitle,
     required String reminderKind,
     String? planId,
+    String? planLineId,
+    DateTime? periodDueAt,
   }) async {
     final prefs = await AppPreferences.load();
     if (!prefs.notificationsEnabled || !prefs.notificationHousingPaymentReminders) {
@@ -502,7 +543,15 @@ class PushNotificationService {
     final displayBody = notificationQaPrefix(qaNumber, body);
 
     var payload = _housingTapPayload;
-    if (planId != null && planId.isNotEmpty) {
+    if (planId != null &&
+        planId.isNotEmpty &&
+        planLineId != null &&
+        planLineId.isNotEmpty &&
+        periodDueAt != null) {
+      payload =
+          '$_housingPaymentReminderPrefix$reminderKind|$planId|$planLineId|'
+          '${periodDueAt.toUtc().millisecondsSinceEpoch}';
+    } else if (planId != null && planId.isNotEmpty) {
       payload = '$_housingTapPayload:$planId';
     }
 

@@ -12,6 +12,7 @@ import '../../housing/housing_module_exit.dart';
 import '../../housing/housing_navigation_intent.dart';
 import '../../housing/renewal/housing_renewal_fork_availability.dart';
 import '../../housing/renewal/housing_renewal_fork_navigation.dart';
+import '../../housing/reminders/payment_reminder_journal_month.dart';
 import '../../housing/settlement/housing_hub_expense_entry.dart';
 import '../../housing/participation/housing_participation_change_kind.dart';
 import '../../housing/participation/housing_participation_hub_gates.dart';
@@ -31,6 +32,7 @@ import 'housing_expense_payment_status_screen.dart';
 import '../../widgets/balanced_text.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'housing_journals_screen.dart';
+import 'housing_monthly_expenses_screen.dart';
 import 'housing_realized_expense_form_screen.dart';
 import 'housing_settlement_due_form_screen.dart';
 import 'housing_realized_expense_review_list_screen.dart';
@@ -73,6 +75,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   bool _openingPendingAmendment = false;
   bool _openingSettledAmendment = false;
   bool _openingParticipationChange = false;
+  bool _openingAcceptedExpenses = false;
 
   @override
   void initState() {
@@ -83,6 +86,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       _openPendingReviewIfAny();
       _openPendingAmendmentFromNotificationIfAny();
       _openSettledAmendmentFromNotificationIfAny();
+      _openAcceptedExpensesFromNotificationIfAny();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
@@ -99,6 +103,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       );
       HousingNavigationIntent.openParticipationChangeTick.addListener(
         _onOpenParticipationChangeIntent,
+      );
+      HousingNavigationIntent.openAcceptedExpensesTick.addListener(
+        _onOpenAcceptedExpensesIntent,
       );
       unawaited(_pollHubInboxOnce());
       unawaited(_syncPendingExpenseInboxOnce());
@@ -122,6 +129,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     );
     HousingNavigationIntent.openParticipationChangeTick.removeListener(
       _onOpenParticipationChangeIntent,
+    );
+    HousingNavigationIntent.openAcceptedExpensesTick.removeListener(
+      _onOpenAcceptedExpensesIntent,
     );
     super.dispose();
   }
@@ -221,6 +231,14 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _openPendingReviewIfAny();
+    });
+  }
+
+  void _onOpenAcceptedExpensesIntent() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _openAcceptedExpensesFromNotificationIfAny();
     });
   }
 
@@ -509,6 +527,39 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         .catchError((_) {
           _openingPendingReview = false;
         });
+  }
+
+  Future<void> _openAcceptedExpensesFromNotificationIfAny() async {
+    if (_openingAcceptedExpenses) return;
+    final planId =
+        HousingNavigationIntent.takePendingOpenAcceptedExpensesPlanId();
+    if (planId == null || planId != widget.planId || !mounted) return;
+    _openingAcceptedExpenses = true;
+    try {
+      final db = AppDatabase.processScope;
+      final prefs = widget.prefs ?? await AppPreferences.load();
+      final entries =
+          await db.listHousingPaymentOverdueJournalForPlan(widget.planId);
+      DateTime? focusMonth;
+      if (entries.isNotEmpty) {
+        focusMonth = journalMonthForHousingPaymentReminder(entries.first);
+      }
+      if (!mounted) return;
+      await navigateToChildRoute<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => HousingMonthlyExpensesScreen(
+            packageId: widget.packageId,
+            planId: widget.planId,
+            prefs: prefs,
+            initialMonth: focusMonth,
+          ),
+        ),
+      );
+    } finally {
+      _openingAcceptedExpenses = false;
+      if (mounted) _reload();
+    }
   }
 
   Future<void> _openReviewList(BuildContext context) async {

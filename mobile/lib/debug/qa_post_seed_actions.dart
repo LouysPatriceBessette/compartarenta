@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../db/app_database.dart';
+import '../housing/reminders/payment_period_coverage.dart';
 import '../notifications/push_notification_service.dart';
 import 'qa_e2e_environment.dart';
 import 'qa_payment_reminder_seed.dart';
@@ -24,14 +26,36 @@ Future<void> _qaSimulatePaymentReminderBeforeDue({
   required String planId,
 }) async {
   if (kIsWeb) return;
-  const lineTitle = 'Loyer';
+  final db = AppDatabase.processScope;
+  final lines = await db.listPlanLines(planId);
+  PlanLine? line;
+  for (final l in lines) {
+    if (l.id == kQaPaymentReminderLineId || l.title == 'Loyer') {
+      line = l;
+      break;
+    }
+  }
+  line ??= () {
+    for (final l in lines) {
+      if (l.isRecurring) return l;
+    }
+    return null;
+  }();
+  if (line == null) {
+    debugPrint('qa post-seed: no recurring line for payment reminder');
+    return;
+  }
+  final period = slidingPeriodContaining(line: line, atUtc: DateTime.now().toUtc());
+  final periodDueAt = period?.dueAtUtc ?? DateTime.now().toUtc();
   await PushNotificationService.showLocalHousingPaymentReminderNotification(
-    lineTitle: lineTitle,
+    lineTitle: line.title,
     reminderKind: 'before_due',
     planId: planId,
+    planLineId: line.id,
+    periodDueAt: periodDueAt,
   );
   debugPrint(
     'housingPaymentReminder: simulated kind=before_due qa=#10 '
-    'line=$lineTitle planId=$planId',
+    'line=${line.title} planId=$planId',
   );
 }

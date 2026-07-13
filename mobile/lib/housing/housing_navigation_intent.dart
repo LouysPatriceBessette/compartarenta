@@ -37,6 +37,10 @@ class HousingNavigationIntent {
   static String? pendingOpenActiveHubPlanId;
   static final ValueNotifier<int> openActiveHubTick = ValueNotifier<int>(0);
 
+  /// After a housing payment-reminder (#10/#11) notification tap: open Accepted expenses.
+  static String? pendingOpenAcceptedExpensesPlanId;
+  static final ValueNotifier<int> openAcceptedExpensesTick = ValueNotifier<int>(0);
+
   /// Bumps when [HousingModuleEntryScreen] should re-resolve hub / archive / plan.
   static final ValueNotifier<int> entryReloadTick = ValueNotifier<int>(0);
 
@@ -153,6 +157,11 @@ class HousingNavigationIntent {
     openActiveHubTick.value = openActiveHubTick.value + 1;
   }
 
+  static void requestOpenAcceptedExpensesJournal(String planId) {
+    pendingOpenAcceptedExpensesPlanId = planId;
+    openAcceptedExpensesTick.value = openAcceptedExpensesTick.value + 1;
+  }
+
   static String? takePendingReview() {
     final id = pendingRealizedExpenseReviewId;
     pendingRealizedExpenseReviewId = null;
@@ -208,6 +217,12 @@ class HousingNavigationIntent {
   static String? takePendingOpenActiveHubPlanId() {
     final id = pendingOpenActiveHubPlanId;
     pendingOpenActiveHubPlanId = null;
+    return id;
+  }
+
+  static String? takePendingOpenAcceptedExpensesPlanId() {
+    final id = pendingOpenAcceptedExpensesPlanId;
+    pendingOpenAcceptedExpensesPlanId = null;
     return id;
   }
 }

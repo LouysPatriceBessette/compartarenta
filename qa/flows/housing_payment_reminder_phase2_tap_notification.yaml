@@ -1,7 +1,6 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# Phase 2b — notification shade already open (coordinator: adb expand-notifications).
-# Title is "#10 Rappel de paiement" — use regex, not exact "#10".
+# Tap #10 in notification shade → Accepted expenses journal + before-due tile.
 - extendedWaitUntil:
     visible: ".*#10 Rappel de paiement.*"
     timeout: 30000
@@ -10,6 +9,10 @@ appId: com.compartarenta.compartarenta.dev
 - takeScreenshot: phase2_after_notification_tap
 - extendedWaitUntil:
     visible:
-      id: "qa-housing-active-hub"
+      id: "qa-housing-monthly-expenses-screen"
     timeout: 90000
-- takeScreenshot: phase2_housing_destination
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+    timeout: 30000
+- takeScreenshot: phase2_before_due_journal_card
