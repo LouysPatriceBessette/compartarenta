@@ -1,22 +1,11 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# Tap first #10 (J−4) → Accepted expenses + one before-due journal card.
+# OS shade only (before_due). Text tap allowed for Android system shade only —
+# match stable product title, never QA "#N" prefixes (temporary, will be removed).
+# Journal asserts: housing_payment_reminder_assert_before_due_first.yaml
 - extendedWaitUntil:
-    visible: ".*#10 Rappel de paiement.*"
+    visible: ".*Rappel de paiement.*"
     timeout: 30000
 - takeScreenshot: phase1_notification_shade
-- tapOn: ".*#10 Rappel de paiement.*"
+- tapOn: ".*Rappel de paiement.*"
 - takeScreenshot: phase1_after_notification_tap
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-monthly-expenses-screen"
-    timeout: 90000
-- extendedWaitUntil:
-    visible:
-      id: "qa-housing-before-due-journal-card"
-      index: 0
-    timeout: 30000
-- assertNotVisible:
-    id: "qa-housing-before-due-journal-card"
-    index: 1
-- takeScreenshot: phase1_before_due_journal_card

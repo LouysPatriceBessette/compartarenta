@@ -129,7 +129,7 @@ appId: com.compartarenta.compartarenta.dev
 
 Rules while writing:
 
-- **`id:` only** for taps and asserts — not `text:` (user binding).
+- **`id:` only** for in-app taps and asserts — not `text:` (user binding). **Exception:** Android **system notification shade** may use product title/body text (never temporary `#N` QA prefixes) — see Non-negotiable → Selectors.
 - **`inputText`**: ASCII only in typed values.
 - **Dialogs**: `extendedWaitUntil` dialog id → `tapOn` dialog button id → **then** navigate.
 - **Duplicates / repeated rows**: `index: 1` when testing a second occurrence — one `assertVisible` without index is not enough.
@@ -200,7 +200,12 @@ Rebuild APK when `mobile/` changed; `--skip-build` only for YAML/bash-only edits
 
 ### Selectors, time, seed
 
-- **Ne jamais targetter d'élément en se basant sur le texte affiché.** Utiliser des ID sémantiques.
+- **Ne jamais targetter d'élément in-app en se basant sur le texte affiché.** Utiliser des ID sémantiques (`qa-*`).
+- **Exception — Android system notification shade only:** the OS shade has no Flutter `Semantics(identifier:)`. For **that panel alone**, Maestro MAY `extendedWaitUntil` / `tapOn` **product** notification title/body text (locale copy from ARB, e.g. `Rappel de paiement`, `Paiement en retard`).
+  - **Never** match temporary QA inventory prefixes (`#10`, `#11`, or any `#N ` from `notificationQaPrefix`) — those will be removed.
+  - Prefer a regex on the stable product substring (`.*Rappel de paiement.*`) so runs keep working with or without a prefix while it still exists.
+  - After the tap, **do not** treat Maestro `COMPLETED` as proof — prove outcome with `qa-*` (and/or coordinator artifacts such as shade-closed MD5). In-app journal steps stay `id:` only.
+  - This exception does **not** authorize `text:` taps on Flutter UI.
 - **Ne jamais forcer une date autre que la date actuelle**, sauf si le scénario a l'objectif spécifique de tester un évènement futur.
   - Manifest `device_date` for period/scenario logic is OK; for **default** runs prefer today.
   - If TLS fails with `certificate is not yet valid`: emulator clock is outside cert `notBefore` — fix date, not Maestro steps.
@@ -262,7 +267,7 @@ New scenario checklist: manifest fields (`id`, `device_date`, `seed`, `flow`) ma
 
 **Maestro**
 
-- [ ] No `text:` for taps/asserts (ids only)
+- [ ] No `text:` for taps/asserts (ids only) — except OS notification shade product title/body (never `#N` QA prefixes)
 - [ ] No `optional: true` permission tap spam → WARNED minutes
 - [ ] No assert before prerequisite action (dialog Ok before back)
 - [ ] No `index` forgotten when testing duplicate rows

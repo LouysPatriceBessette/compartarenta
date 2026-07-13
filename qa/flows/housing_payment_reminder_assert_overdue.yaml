@@ -1,0 +1,30 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Journal checks after overdue reminder.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-overdue-journal-card"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- takeScreenshot: phase4_overdue_journal_card
+- tapOn:
+    id: "qa-housing-expenses-month-prev"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 1
+    timeout: 30000
+- takeScreenshot: phase4_prior_month_before_due_persisted

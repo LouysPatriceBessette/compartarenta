@@ -1,0 +1,7 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Short probe: Accepted expenses title visible after OS notification tap.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 8000

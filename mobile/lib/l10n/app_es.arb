@@ -837,6 +837,13 @@
       "amount": { "type": "String" }
     }
   },
+  "housingDueDayJournalCardBody": "Recordatorio del vencimiento de hoy\n{lineTitle} - {amount}",
+  "@housingDueDayJournalCardBody": {
+    "placeholders": {
+      "lineTitle": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

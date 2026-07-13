@@ -988,6 +988,13 @@
       "amount": { "type": "String" }
     }
   },
+  "housingDueDayJournalCardBody": "Reminder: due today\n{lineTitle} - {amount}",
+  "@housingDueDayJournalCardBody": {
+    "placeholders": {
+      "lineTitle": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

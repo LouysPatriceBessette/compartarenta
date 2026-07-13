@@ -854,6 +854,13 @@
       "amount": { "type": "String" }
     }
   },
+  "housingDueDayJournalCardBody": "Rappel de l'échéance d'aujourd'hui\n{lineTitle} - {amount}",
+  "@housingDueDayJournalCardBody": {
+    "placeholders": {
+      "lineTitle": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
   "@pushNotificationHousingDecisionBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },

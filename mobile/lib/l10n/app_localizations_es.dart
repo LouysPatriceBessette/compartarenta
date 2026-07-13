@@ -2163,6 +2163,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String housingDueDayJournalCardBody(String lineTitle, String amount) {
+    return 'Recordatorio del vencimiento de hoy\n$lineTitle - $amount';
+  }
+
+  @override
   String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
       'El servidor de relevo no está disponible temporalmente.';
 

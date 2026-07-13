@@ -1,0 +1,9 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# OS shade only (before_due due day). Product title only — no QA "#N" prefix.
+- extendedWaitUntil:
+    visible: ".*Rappel de paiement.*"
+    timeout: 30000
+- takeScreenshot: phase3_due_day_notification_shade
+- tapOn: ".*Rappel de paiement.*"
+- takeScreenshot: phase3_due_day_after_notification_tap

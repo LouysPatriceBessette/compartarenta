@@ -8,7 +8,7 @@ Notifications **not** fired directly by a peer envelope arriving in the inbox (t
 
 | # | Source change | Notification | Intended recipients | Send condition | Lead / cadence | Scheduler location |
 |---|---------------|--------------|---------------------|----------------|----------------|-------------------|
-| 1 | … | **Before-date** | … | … | Tiered: W&lt;20 → J−2; 20–40 → J−4,J−2; W&gt;40 → J−6,J−2; all **14:00** local | **Relay cron** |
+| 1 | … | **Before-date** | … | … | Tiered: W&lt;20 → J−2,**J**; 20–40 → J−4,J−2,**J**; W&gt;40 → J−6,J−2,**J**; all **14:00** local | **Relay cron** |
 | 2 | `housing-unified-expense-entry` design | **Overdue** payment reminder | Per payment-responsible rules | Uncovered after due date | **14:00** local, day after due | **Relay cron** |
 | 3 | `housing-plan-proposal-offer-and-responses` tasks **1.4b** | Proposal **response deadline** reminder | Open `revisionId`: recipients and/or author per product table | Before `expiresAt` | **Indéfini** — product table | **Relay cron** (replaces local; author registers on dispatch) |
 | 4 | `contacts-module` tasks **3.7** | **Invitation expiry** reminder (outgoing pending) | Inviter | Before invitation `expiresAt` | **Indéfini** | **Relay cron** (replaces local; inviter registers on create) |
@@ -81,15 +81,15 @@ Add `reminder_cron` (or extend `sweeper.Loop` with a second ticker) on a documen
 
 **J** = due calendar date (`period_due_at` in recipient IANA tz). **W** = sliding-window length in days for the line.
 
-**Before-date** (always 14:00:00 local on J−k; never midnight):
+**Before-date** (always 14:00:00 local on J−k; never midnight; **k = 0** is due day J):
 
 | W | Fires |
 |---|--------|
-| W < 20 | J−2 |
-| 20 ≤ W ≤ 40 | J−4, J−2 |
-| W > 40 | J−6, J−2 |
+| W < 20 | J−2, **J** |
+| 20 ≤ W ≤ 40 | J−4, J−2, **J** |
+| W > 40 | J−6, J−2, **J** |
 
-Example: J = 2026-07-20 → J−4 + 14h = 2026-07-16 14:00 local.
+Example: J = 2026-07-20 → J−4 + 14h = 2026-07-16 14:00 local; due-day = 2026-07-20 14:00 local.
 
 Skip any fire whose local instant is already in the past when materialized.
 
@@ -251,7 +251,7 @@ Used to compute **14:00 local** fire instants per recipient. IANA id only — no
 | # | Status |
 |---|--------|
 | 1 | **Resolved** — relay replaces local for payment, proposal deadline, invitation expiry |
-| 2 | **Resolved** — tiered before-date (W&lt;20 / 20–40 / &gt;40); **14:00** local; relay IANA timezone |
+| 2 | **Resolved** — tiered before-date (W&lt;20 / 20–40 / &gt;40) **including due day J**; **14:00** local; relay IANA timezone |
 | 3 | **Resolved** — overdue at **14:00** local, day after due |
 | 4 | **Resolved** — fifth category; timestamps allowed without amounts/labels |
 | 5 | **Resolved** — web out of scope |

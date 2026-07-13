@@ -1,0 +1,90 @@
+---
+description: >-
+  Count user prompts per agent session; warn from prompt 16 to prepare a new
+  session; on handoff request, write dev-ideas/YYYY-MM-DD-HH-MM-handoff.md.
+alwaysApply: true
+---
+
+# Session prompt count and handoff document
+
+## Scope
+
+`alwaysApply: true` for every chat in this repository.
+
+## Count user prompts
+
+Maintain a **running count of user prompts** in the **current Cursor agent session** (one chat / one agent transcript id).
+
+| Count as one prompt | Do **not** count |
+| --- | --- |
+| Each user message that advances the conversation (including short commands, handoff requests, `Question seulement:`, etc.) | System / tool / assistant messages |
+
+**How to obtain the count (prefer in order):**
+
+1. Count `"role":"user"` lines in this session’s mirror under `dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl`, **plus 1** for the current user message if it is not yet appended.
+2. Else count user turns visible in the live thread (including the current message).
+3. Else ask the user once for an approximate turn number; do not invent a low count to skip the warning.
+
+Keep the count in session memory across turns. After compaction, **re-derive** it from the transcript file before deciding whether to warn.
+
+## Warning from prompt 16
+
+**From the 16th user prompt inclusive**, and on **every subsequent** user prompt in the same session until the user confirms they opened a new agent session:
+
+Include a **short, visible notice** in the assistant reply (own line or short paragraph; French if the user writes in French), telling them to **prepare to switch to a new agent session soon**.
+
+Example (adapt wording, keep the meaning):
+
+> Prompt 16/… — Prépare-toi à changer de session d’agent bientôt (contexte long; un handoff aidera la continuité).
+
+Do **not** block work or refuse the task because of the count. Do **not** spam a long lecture—one clear reminder per qualifying turn is enough.
+
+**Before prompt 16:** do not mention session switching for this reason.
+
+## Handoff document (on request)
+
+### Triggers
+
+When the user asks for a handoff — case-insensitive, accents optional — including close variants such as:
+
+- « Donne-moi un handoff » / « Donnes-moi un handoff »
+- « Produit le document de handoff »
+- « Fais un handoff »
+- « Handoff » / « handoff please » / « write a handoff »
+
+Treat that turn as an **explicit authorization** to create **one** new file under `dev-ideas/` (exception to `untracked-files-discipline` for that handoff write only). Do **not** auto-write a handoff solely because the prompt count hit 16.
+
+### Filename
+
+```
+dev-ideas/YYYY-MM-DD-HH-MM-handoff.md
+```
+
+- `YYYY-MM-DD-HH-MM`: local date and time **of the handoff turn** (24h clock, zero-padded). Use the session’s authoritative “today” date and the current clock time at write.
+- If that exact filename already exists, append `-2`, `-3`, … before `.md`.
+
+### File body (required sections)
+
+Write in the **user’s language** for the session (typically French). Markdown:
+
+1. `# Handoff` — title
+2. **Session** — date/time, approximate prompt count, session id if known, one-line topic
+3. **Goal** — what the user is trying to achieve
+4. **Done** — completed work this session (bullets; cite key paths)
+5. **In progress** — unfinished work and current branch of the diagnosis/implementation
+6. **Open bugs / hypotheses** — numbered, falsifiable where possible; note what was **ruled out**
+7. **Key files** — paths that matter for the next agent
+8. **Commands / topology** — relevant melos/QA/deploy facts already established in-thread (do not invent)
+9. **Do not redo** — failed approaches and user corrections to preserve
+10. **Next steps** — concrete recommended actions for the new session
+
+Omit empty fluff sections only if truly N/A; prefer short bullets over essays. No secrets (tokens, `.env` values)—use `[REDACTED]`.
+
+### Chat reply after writing
+
+Give the path to the file (e.g. `` `dev-ideas/2026-07-13-18-17-handoff.md` ``). If the same message also asks for other work, do that work and still include the path. Do not dump the full handoff body into chat unless the user asks.
+
+## Relation to other rules
+
+- Complements `agent-transcript-incremental-log.mdc` (count source of truth) and `conversation-test-context-discipline.mdc` (handoff must reflect the real thread, not a reset narrative).
+- Does not replace reading the live thread or Cursor transcript when continuing work.

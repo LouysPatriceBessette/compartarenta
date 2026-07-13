@@ -393,6 +393,26 @@ qa_collapse_notification_shade_on_serial() {
   adb -s "${serial}" shell cmd statusbar collapse >/dev/null 2>&1 || true
 }
 
+# Capture PNG via adb screencap; print md5 hex to stdout; write file to out_path.
+qa_screencap_md5_on_serial() {
+  local serial="$1"
+  local out_path="$2"
+  if [[ -z "${serial}" || -z "${out_path}" ]]; then
+    echo "qa_screencap_md5_on_serial: serial and out_path required" >&2
+    return 1
+  fi
+  mkdir -p "$(dirname "${out_path}")"
+  if ! adb -s "${serial}" exec-out screencap -p >"${out_path}"; then
+    echo "qa_screencap_md5_on_serial: screencap failed on ${serial}" >&2
+    return 1
+  fi
+  if [[ ! -s "${out_path}" ]]; then
+    echo "qa_screencap_md5_on_serial: empty screencap ${out_path}" >&2
+    return 1
+  fi
+  md5sum "${out_path}" | awk '{print $1}'
+}
+
 # Write a one-shot post-action marker (no pm clear). Consumed on next cold start.
 # Args: serial kind(before_due|overdue) due_ms_utc [plan_id]
 qa_schedule_payment_reminder_post_action_on_serial() {

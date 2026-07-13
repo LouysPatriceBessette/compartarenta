@@ -1,0 +1,18 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Journal checks after before_due J−2.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 1
+    timeout: 30000
+- takeScreenshot: phase2_two_before_due_journal_cards

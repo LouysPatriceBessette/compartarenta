@@ -2134,6 +2134,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String housingDueDayJournalCardBody(String lineTitle, String amount) {
+    return 'Reminder: due today\n$lineTitle - $amount';
+  }
+
+  @override
   String get pushNotificationHousingResponseFailureRelayUnavailableBody =>
       'The relay server is temporarily unavailable.';
 

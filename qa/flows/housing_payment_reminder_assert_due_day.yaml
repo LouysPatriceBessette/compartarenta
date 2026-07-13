@@ -1,0 +1,28 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Journal checks after before_due due day J → August card; July still has J−4 and J−2.
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- assertNotVisible:
+    id: "qa-housing-overdue-journal-card"
+- takeScreenshot: phase3_due_day_journal_card
+- tapOn:
+    id: "qa-housing-expenses-month-prev"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 0
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-before-due-journal-card"
+      index: 1
+    timeout: 30000
+- takeScreenshot: phase3_july_before_due_persisted

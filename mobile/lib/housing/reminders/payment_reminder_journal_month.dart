@@ -3,8 +3,8 @@ import '../../db/app_database.dart';
 /// Calendar month where a payment-reminder journal card is shown.
 ///
 /// - `before_due` (#10): month of [HousingPaymentOverdueJournalEntry.recordedAt]
-///   (notification day, e.g. 28 Jul for a J−4 fire).
-/// - `overdue` (#11) and due-day reminders: month of
+///   (notification day, e.g. 28 Jul for a J−4 fire, or 1 Aug for the due-day fire).
+/// - `overdue` (#11): month of
 ///   [HousingPaymentOverdueJournalEntry.periodDueAt] (e.g. August).
 DateTime journalMonthForHousingPaymentReminder(
   HousingPaymentOverdueJournalEntry entry,

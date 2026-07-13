@@ -5,8 +5,8 @@
 #   ./tool/run_housing_payment_reminder_scenario.sh
 #   ./tool/run_housing_payment_reminder_scenario.sh --skip-build --skip-install
 #
-# Seed once on J−4, then one phase per fire (J−4, J−2, overdue) without pm clear
-# so journal rows accumulate.
+# Seed once on J−4, then one phase per fire (J−4, J−2, due day J, overdue)
+# without pm clear so journal rows accumulate.
 
 set -euo pipefail
 
@@ -89,16 +89,24 @@ DATES_PY=(python3 "${ROOT}/tool/qa_housing_payment_reminder_dates.py"
 DUE_MS="$("${DATES_PY[@]}" --field due_ms)"
 FIRE_J4="$("${DATES_PY[@]}" --field before_due_0)"
 FIRE_J2="$("${DATES_PY[@]}" --field before_due_1)"
+FIRE_DUE_DAY="$("${DATES_PY[@]}" --field before_due_2)"
 FIRE_OVERDUE="$("${DATES_PY[@]}" --field overdue)"
 
 FLOW_LAUNCH="${ROOT}/qa/flows/housing_payment_reminder_launch.yaml"
 FLOW_TAP_J4="${ROOT}/qa/flows/housing_payment_reminder_tap_before_due_first.yaml"
 FLOW_TAP_J2="${ROOT}/qa/flows/housing_payment_reminder_tap_before_due_second.yaml"
+FLOW_TAP_DUE_DAY="${ROOT}/qa/flows/housing_payment_reminder_tap_due_day.yaml"
 FLOW_TAP_OVERDUE="${ROOT}/qa/flows/housing_payment_reminder_tap_overdue.yaml"
+FLOW_PROBE="${ROOT}/qa/flows/housing_payment_reminder_probe_monthly_expenses.yaml"
+FLOW_OPEN_JOURNAL="${ROOT}/qa/flows/housing_payment_reminder_open_monthly_expenses.yaml"
+FLOW_ASSERT_J4="${ROOT}/qa/flows/housing_payment_reminder_assert_before_due_first.yaml"
+FLOW_ASSERT_J2="${ROOT}/qa/flows/housing_payment_reminder_assert_before_due_second.yaml"
+FLOW_ASSERT_DUE_DAY="${ROOT}/qa/flows/housing_payment_reminder_assert_due_day.yaml"
+FLOW_ASSERT_OVERDUE="${ROOT}/qa/flows/housing_payment_reminder_assert_overdue.yaml"
 
 echo "Calendar anchor: ${ANCHOR_DATE} (${TIMEZONE})"
 echo "Due ms: ${DUE_MS}"
-echo "Fires: J-4=${FIRE_J4} | J-2=${FIRE_J2} | overdue=${FIRE_OVERDUE}"
+echo "Fires: J-4=${FIRE_J4} | J-2=${FIRE_J2} | due-day=${FIRE_DUE_DAY} | overdue=${FIRE_OVERDUE}"
 
 COORDINATOR_SCRIPT="${ROOT}/tool/coordinators/housing_payment_reminder.sh"
 chmod +x "${COORDINATOR_SCRIPT}"
@@ -130,15 +138,26 @@ export COMPARTARENTA_PAYMENT_REMINDER_ANCHOR_DATE="${ANCHOR_DATE}"
 export COMPARTARENTA_PAYMENT_REMINDER_DUE_MS="${DUE_MS}"
 export COMPARTARENTA_PAYMENT_REMINDER_FIRE_J4="${FIRE_J4}"
 export COMPARTARENTA_PAYMENT_REMINDER_FIRE_J2="${FIRE_J2}"
+export COMPARTARENTA_PAYMENT_REMINDER_FIRE_DUE_DAY="${FIRE_DUE_DAY}"
 export COMPARTARENTA_PAYMENT_REMINDER_FIRE_OVERDUE="${FIRE_OVERDUE}"
 export COMPARTARENTA_PAYMENT_REMINDER_FLOW_LAUNCH="${FLOW_LAUNCH}"
 export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_J4="${FLOW_TAP_J4}"
 export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_J2="${FLOW_TAP_J2}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_DUE_DAY="${FLOW_TAP_DUE_DAY}"
 export COMPARTARENTA_PAYMENT_REMINDER_FLOW_TAP_OVERDUE="${FLOW_TAP_OVERDUE}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_PROBE="${FLOW_PROBE}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_OPEN_JOURNAL="${FLOW_OPEN_JOURNAL}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_ASSERT_J4="${FLOW_ASSERT_J4}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_ASSERT_J2="${FLOW_ASSERT_J2}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_ASSERT_DUE_DAY="${FLOW_ASSERT_DUE_DAY}"
+export COMPARTARENTA_PAYMENT_REMINDER_FLOW_ASSERT_OVERDUE="${FLOW_ASSERT_OVERDUE}"
 
 # shellcheck disable=SC1090
 source "${ROOT}/tool/qa_env.sh"
 export -f qa_maestro_artifact_dir 2>/dev/null || true
+export -f qa_screencap_md5_on_serial 2>/dev/null || true
+export -f qa_open_notification_shade_on_serial 2>/dev/null || true
+export -f qa_collapse_notification_shade_on_serial 2>/dev/null || true
 
 "${COORDINATOR_SCRIPT}"
 

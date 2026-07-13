@@ -49,9 +49,9 @@ For `domain = housing_payment`, the relay SHALL compute `fire_at` in UTC from:
 - `period_due_at` → calendar due date **J** in recipient IANA timezone,
 - `recurrence_period_days` (**W**) on the target row,
 - **Before-date** per tier (all at 14:00:00 local, never midnight):
-  - W < 20 → J−2
-  - 20 ≤ W ≤ 40 → J−4 and J−2
-  - W > 40 → J−6 and J−2
+  - W < 20 → J−2 and **J** (due day)
+  - 20 ≤ W ≤ 40 → J−4, J−2, and **J**
+  - W > 40 → J−6, J−2, and **J**
 - **Overdue:** 14:00:00 local on J+1.
 
 Fires whose local instant is already past when materialized SHALL be omitted.
@@ -60,15 +60,15 @@ When `iana_timezone` is missing for a recipient, the relay SHALL defer creating 
 
 When `iana_timezone` is updated, the relay SHALL recompute all **pending** housing payment fire rows for that recipient.
 
-#### Scenario: W=30 schedules J−4 and J−2 at 14:00
+#### Scenario: W=30 schedules J−4, J−2, and due-day J at 14:00
 
 - **WHEN** J = 2026-07-20, W = 30, timezone `America/Toronto`
-- **THEN** before-date fires are 2026-07-16 14:00 and 2026-07-18 14:00 Toronto (UTC stored)
+- **THEN** before-date fires are 2026-07-16 14:00, 2026-07-18 14:00, and 2026-07-20 14:00 Toronto (UTC stored)
 
-#### Scenario: W=14 schedules J−2 only
+#### Scenario: W=14 schedules J−2 and due-day J
 
 - **WHEN** J = 2026-07-20, W = 14
-- **THEN** exactly one before-date fire at 2026-07-18 14:00 local
+- **THEN** before-date fires at 2026-07-18 14:00 and 2026-07-20 14:00 local
 
 #### Scenario: Timezone change shifts pending fires
 

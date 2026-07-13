@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../debug/qa_housing_proposal_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../widgets/balanced_text.dart';
@@ -34,6 +36,8 @@ class HousingJournalsScreen extends StatelessWidget {
           _JournalMenuTile(
             icon: Icons.check_circle_outline,
             label: l10n.housingMonthlyExpensesTitle,
+            semanticsIdentifier:
+                kDebugMode ? kQaHousingJournalsMonthlyExpenses : null,
             onTap: () {
               navigateToChildRoute<void>(context, 
                 MaterialPageRoute<void>(
@@ -99,15 +103,17 @@ class _JournalMenuTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.semanticsIdentifier,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? semanticsIdentifier;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final tile = Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon),
@@ -115,6 +121,15 @@ class _JournalMenuTile extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
+    );
+    if (semanticsIdentifier == null) return tile;
+    return Semantics(
+      identifier: semanticsIdentifier,
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: tile,
     );
   }
 }

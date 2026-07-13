@@ -22,8 +22,12 @@ const kQaHousingInviteParticipantLouysQaAccepted =
     'qa-housing-invite-participant-louys-qa-accepted';
 const kQaHousingActiveHub = 'qa-housing-active-hub';
 const kQaHousingHubBack = 'qa-housing-hub-back';
+const kQaHousingHubJournals = 'qa-housing-hub-journals';
+const kQaHousingJournalsMonthlyExpenses =
+    'qa-housing-journals-monthly-expenses';
 const kQaHousingBeforeDueJournalCard = 'qa-housing-before-due-journal-card';
 const kQaHousingOverdueJournalCard = 'qa-housing-overdue-journal-card';
+/// AppBar title « Dépenses acceptées » / Accepted expenses on monthly journal.
 const kQaHousingMonthlyExpensesScreen = 'qa-housing-monthly-expenses-screen';
 const kQaHousingExpensesMonthPrev = 'qa-housing-expenses-month-prev';
 const kQaHousingExpensesMonthNext = 'qa-housing-expenses-month-next';

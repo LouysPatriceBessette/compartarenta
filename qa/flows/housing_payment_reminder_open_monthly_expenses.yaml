@@ -1,0 +1,28 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Fallback when notification tap left shade closed but journal screen not open.
+# Does not stopApp — journal DB must persist across payment-reminder phases.
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 45000
+- tapOn:
+    id: "qa-home-housing"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-active-hub"
+    timeout: 45000
+- tapOn:
+    id: "qa-housing-hub-journals"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-journals-monthly-expenses"
+    timeout: 30000
+- tapOn:
+    id: "qa-housing-journals-monthly-expenses"
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-monthly-expenses-screen"
+    timeout: 30000

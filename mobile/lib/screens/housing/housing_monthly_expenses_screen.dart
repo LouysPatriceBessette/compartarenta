@@ -106,78 +106,80 @@ class _HousingMonthlyExpensesScreenState
     final ledger = RealizedExpenseLedgerService(AppDatabase.processScope);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.housingMonthlyExpensesTitle)),
-      body: Semantics(
-        identifier: kDebugMode ? kQaHousingMonthlyExpensesScreen : null,
-        container: true,
-        explicitChildNodes: true,
-        child: FutureBuilder<HousingAgreementMonthWindow?>(
-          future: _windowFuture,
-          builder: (context, windowSnap) {
-            if (windowSnap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final window = windowSnap.data;
-            if (window == null) {
-              return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
-            }
-            final currentMonth = window.clamp(_month);
-            final year = currentMonth.year;
-            final month = currentMonth.month;
+      appBar: AppBar(
+        title: Semantics(
+          identifier: kDebugMode ? kQaHousingMonthlyExpensesScreen : null,
+          container: true,
+          child: Text(l10n.housingMonthlyExpensesTitle),
+        ),
+      ),
+      body: FutureBuilder<HousingAgreementMonthWindow?>(
+        future: _windowFuture,
+        builder: (context, windowSnap) {
+          if (windowSnap.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final window = windowSnap.data;
+          if (window == null) {
+            return Center(child: Text(l10n.housingRealizedExpenseLoadFailed));
+          }
+          final currentMonth = window.clamp(_month);
+          final year = currentMonth.year;
+          final month = currentMonth.month;
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    children: [
-                      Semantics(
-                        identifier:
-                            kDebugMode ? kQaHousingExpensesMonthPrev : null,
-                        button: true,
-                        onTap: currentMonth.isAfter(window.firstMonth)
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    Semantics(
+                      identifier:
+                          kDebugMode ? kQaHousingExpensesMonthPrev : null,
+                      button: true,
+                      onTap: currentMonth.isAfter(window.firstMonth)
+                          ? () => _shiftMonth(window, -1)
+                          : null,
+                      excludeSemantics: true,
+                      child: IconButton(
+                        onPressed: currentMonth.isAfter(window.firstMonth)
                             ? () => _shiftMonth(window, -1)
                             : null,
-                        excludeSemantics: true,
-                        child: IconButton(
-                          onPressed: currentMonth.isAfter(window.firstMonth)
-                              ? () => _shiftMonth(window, -1)
-                              : null,
-                          icon: const Icon(Icons.chevron_left),
-                        ),
+                        icon: const Icon(Icons.chevron_left),
                       ),
-                      Expanded(
-                        child: Text(
-                          l10n.housingMonthlyExpensesMonthLabel(year, month),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        l10n.housingMonthlyExpensesMonthLabel(year, month),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      Semantics(
-                        identifier:
-                            kDebugMode ? kQaHousingExpensesMonthNext : null,
-                        button: true,
-                        onTap: currentMonth.isBefore(window.lastMonth)
+                    ),
+                    Semantics(
+                      identifier:
+                          kDebugMode ? kQaHousingExpensesMonthNext : null,
+                      button: true,
+                      onTap: currentMonth.isBefore(window.lastMonth)
+                          ? () => _shiftMonth(window, 1)
+                          : null,
+                      excludeSemantics: true,
+                      child: IconButton(
+                        onPressed: currentMonth.isBefore(window.lastMonth)
                             ? () => _shiftMonth(window, 1)
                             : null,
-                        excludeSemantics: true,
-                        child: IconButton(
-                          onPressed: currentMonth.isBefore(window.lastMonth)
-                              ? () => _shiftMonth(window, 1)
-                              : null,
-                          icon: const Icon(Icons.chevron_right),
-                        ),
+                        icon: const Icon(Icons.chevron_right),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: FutureBuilder<_MonthExpenseLists>(
-                    future: _loadMonthExpenseLists(
-                      ledger: ledger,
-                      packageId: widget.packageId,
-                      planId: widget.planId,
-                      year: year,
+              ),
+              Expanded(
+                child: FutureBuilder<_MonthExpenseLists>(
+                  future: _loadMonthExpenseLists(
+                    ledger: ledger,
+                    packageId: widget.packageId,
+                    planId: widget.planId,
+                    year: year,
                       month: month,
                     ),
                     builder: (context, snap) {
@@ -241,7 +243,6 @@ class _HousingMonthlyExpensesScreenState
             );
           },
         ),
-      ),
     );
   }
 
@@ -290,11 +291,13 @@ class _HousingMonthlyExpensesScreenState
       final amountMinor = line?.amountMinor ?? 0;
       final currency = line?.currency ?? 'CAD';
       final amount = formatMinorAsMoney(context, amountMinor, currency);
-      final titleText = l10n.housingBeforeDueJournalCardBody(
-        dueDate,
-        lineTitle,
-        amount,
-      );
+      final titleText = _isDueDayBeforeDueJournal(entry)
+          ? l10n.housingDueDayJournalCardBody(lineTitle, amount)
+          : l10n.housingBeforeDueJournalCardBody(
+              dueDate,
+              lineTitle,
+              amount,
+            );
       return Semantics(
         identifier: kDebugMode ? kQaHousingBeforeDueJournalCard : null,
         container: true,
@@ -338,6 +341,15 @@ class _HousingMonthlyExpensesScreenState
           '${local.day.toString().padLeft(2, '0')}';
     }
     return formatPreferenceDate(local, dateFmt);
+  }
+
+  /// Due-day (#10 on J) journal: reception local calendar day equals due date J.
+  bool _isDueDayBeforeDueJournal(HousingPaymentOverdueJournalEntry entry) {
+    final received = entry.recordedAt.toLocal();
+    final due = entry.periodDueAt.toLocal();
+    return received.year == due.year &&
+        received.month == due.month &&
+        received.day == due.day;
   }
 
   Widget _buildPublishedExpenseCard(

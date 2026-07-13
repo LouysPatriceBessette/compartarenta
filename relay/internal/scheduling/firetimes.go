@@ -6,14 +6,15 @@ import "time"
 const localFireHour = 14
 
 // BeforeDateDayOffsets returns calendar-day offsets k for J−k at 14:00 local.
+// Offset 0 is the due date J itself (due-day reminder), always included.
 func BeforeDateDayOffsets(recurrencePeriodDays int) []int {
 	switch {
 	case recurrencePeriodDays < 20:
-		return []int{2}
+		return []int{2, 0}
 	case recurrencePeriodDays <= 40:
-		return []int{4, 2}
+		return []int{4, 2, 0}
 	default:
-		return []int{6, 2}
+		return []int{6, 2, 0}
 	}
 }
 

@@ -127,7 +127,7 @@ class QaHousingPaymentReminderDatesTest(unittest.TestCase):
         )
         self.assertTrue(fire.startswith("2026-07-28T14:05:00"))
 
-    def test_schedule_includes_j2_and_overdue(self) -> None:
+    def test_schedule_includes_j2_due_day_and_overdue(self) -> None:
         schedule = schedule_for_anchor(
             anchor_iso="2026-07-13T09:00:00",
             timezone="America/Toronto",
@@ -135,9 +135,10 @@ class QaHousingPaymentReminderDatesTest(unittest.TestCase):
         )
         fires = schedule["before_due"]
         assert isinstance(fires, list)
-        self.assertEqual(len(fires), 2)
+        self.assertEqual(len(fires), 3)
         self.assertTrue(str(fires[0]).startswith("2026-07-28T14:05:00"))
         self.assertTrue(str(fires[1]).startswith("2026-07-30T14:05:00"))
+        self.assertTrue(str(fires[2]).startswith("2026-08-01T14:05:00"))
         self.assertTrue(str(schedule["overdue"]).startswith("2026-08-02T14:05:00"))
         self.assertTrue(str(schedule["due"]).startswith("2026-08-01T00:00:00"))
 

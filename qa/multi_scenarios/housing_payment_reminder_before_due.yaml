@@ -1,5 +1,5 @@
 id: housing_payment_reminder_before_due
-description: Housing payment reminders #10 (J-4, J-2) and #11 overdue — simulated notifications + tap; journal persists across phases (no relay)
+description: Housing payment reminders #10 (J-4, J-2, due day) and #11 overdue — simulated notifications + tap; journal persists across phases (no relay)
 device_date: current
 timezone: America/Toronto
 coordinator: housing_payment_reminder

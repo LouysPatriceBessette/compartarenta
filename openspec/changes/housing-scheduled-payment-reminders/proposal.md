@@ -44,7 +44,7 @@ This change defines a **relay cron** that materializes fire times server-side, d
 | # | Decision |
 |---|----------|
 | 1 | Relay cron **replaces** local scheduling for payment reminders, proposal deadlines, and invitation expiry |
-| 2 | Tiered before-date: W&lt;20 → J−2; 20≤W≤40 → J−4,J−2; W&gt;40 → J−6,J−2; all at **14:00** local; relay **IANA timezone** |
+| 2 | Tiered before-date: W&lt;20 → J−2,**J**; 20≤W≤40 → J−4,J−2,**J**; W&gt;40 → J−6,J−2,**J**; all at **14:00** local; relay **IANA timezone** |
 | 3 | **Overdue** at **14:00** local on day after due |
 | 4 | Scheduling **dates/timestamps** on relay acceptable without amounts or labels |
 | 5 | **Web** out of scope |

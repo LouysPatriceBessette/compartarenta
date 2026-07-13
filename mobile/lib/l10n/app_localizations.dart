@@ -3657,6 +3657,12 @@ abstract class AppLocalizations {
     String amount,
   );
 
+  /// No description provided for @housingDueDayJournalCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder: due today\n{lineTitle} - {amount}'**
+  String housingDueDayJournalCardBody(String lineTitle, String amount);
+
   /// No description provided for @pushNotificationHousingResponseFailureRelayUnavailableBody.
   ///
   /// In en, this message translates to:

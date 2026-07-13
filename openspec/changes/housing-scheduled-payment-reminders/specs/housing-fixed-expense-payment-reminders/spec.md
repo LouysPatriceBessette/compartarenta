@@ -147,34 +147,34 @@ Let **J** be the calendar **due date** of the next recurrence (`period_due_at`) 
 
 Let **W** be the recurrence **sliding-window length** in calendar days for the plan line (e.g. `n` for `everyNDays`; nominal month length for monthly / nth-weekday kinds — same source as period computation in the recurrence spec).
 
-Each before-date fire is at **14:00:00 local** on **(J − k calendar days)** — never at 00:00 midnight.
+Each before-date fire is at **14:00:00 local** on **(J − k calendar days)** — never at 00:00 midnight. Offset **k = 0** is the **due date J** itself (due-day reminder).
 
 | Window length W | Before-date fires (all at 14:00 local) |
 |-----------------|----------------------------------------|
-| **W < 20** | J−2 |
-| **20 ≤ W ≤ 40** | J−4, J−2 |
-| **W > 40** | J−6, J−2 |
+| **W < 20** | J−2, **J** |
+| **20 ≤ W ≤ 40** | J−4, J−2, **J** |
+| **W > 40** | J−6, J−2, **J** |
 
-Example: J = 2026-07-20 → J−4 at 14:00 = **2026-07-16 14:00** local.
+Example: J = 2026-07-20 → J−4 at 14:00 = **2026-07-16 14:00** local; due-day fire = **2026-07-20 14:00** local.
 
 The relay SHALL compute all `fire_at` (UTC) values from J, W, the recipient's stored IANA timezone, and this table. Clients SHALL NOT send precomputed `fire_at` for housing payment before-date rows.
 
 If a computed fire instant is **before** the moment the schedule was materialized (e.g. J−6 already passed), that fire SHALL be **skipped** (not backdated).
 
-#### Scenario: Short period gets one reminder
+#### Scenario: Short period gets J−2 and due-day J
 
 - **WHEN** line L has W = 14 and J = 2026-07-20 local
-- **THEN** exactly one before-date fire exists at 2026-07-18 14:00 local
+- **THEN** before-date fires exist at 2026-07-18 14:00 and 2026-07-20 14:00 local
 
-#### Scenario: Medium period gets two reminders
+#### Scenario: Medium period gets J−4, J−2, and due-day J
 
 - **WHEN** line L has W = 30 and J = 2026-07-20 local
-- **THEN** before-date fires exist at 2026-07-16 14:00 and 2026-07-18 14:00 local
+- **THEN** before-date fires exist at 2026-07-16 14:00, 2026-07-18 14:00, and 2026-07-20 14:00 local
 
-#### Scenario: Long period gets J−6 and J−2
+#### Scenario: Long period gets J−6, J−2, and due-day J
 
 - **WHEN** line L has W = 45 and J = 2026-07-20 local
-- **THEN** before-date fires exist at 2026-07-14 14:00 and 2026-07-18 14:00 local
+- **THEN** before-date fires exist at 2026-07-14 14:00, 2026-07-18 14:00, and 2026-07-20 14:00 local
 
 #### Scenario: Not midnight on calendar roll
 

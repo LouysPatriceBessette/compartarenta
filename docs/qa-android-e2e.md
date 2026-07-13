@@ -228,18 +228,20 @@ Pipeline:
 Manifest: `qa/multi_scenarios/fcm_wake_push_emulator_physical.yaml`. Coordinator:
 `tool/coordinators/fcm_wake_push.sh`.
 
-### Housing payment reminders (#10 before-due ×2 + #11 overdue, simulated)
+### Housing payment reminders (#10 before-due ×3 + #11 overdue, simulated)
 
 Single **Monica-QA** emulator — **no relay** (client notification display + tap only).
 
 1. Compute monthly Loyer schedule from `device_date: current`
-   (`tool/qa_housing_payment_reminder_dates.py`: J−4, J−2, overdue = J+1 @ 14:00 local).
+   (`tool/qa_housing_payment_reminder_dates.py`: J−4, J−2, **due day J**, overdue = J+1 @ 14:00 local).
 2. **Seed once** (active plan) on J−4 — do **not** `pm clear` between phases so journal
    rows accumulate.
-3. **Phase 1** — schedule `#10` (J−4), cold start, shade tap → one before-due journal card.
-4. **Phase 2** — advance clock to J−2, schedule another `#10` → two before-due cards.
-5. **Phase 3** — advance to overdue day, schedule `#11` → red overdue card; month-prev still
-   shows both before-due cards.
+3. **Phase 1** — before_due J−4 → one before-due journal card (July).
+4. **Phase 2** — before_due J−2 → two before-due cards (July).
+5. **Phase 3** — before_due due day J → before-due card (August); month-prev still has both July cards.
+6. **Phase 4** — overdue → red overdue card (+ due-day card on August); July cards persist.
+
+Per phase: `KEYCODE_HOME` → shade-closed screencap MD5 baseline → `expand-notifications` → Maestro tap on **product** shade title (`Rappel de paiement` / `Paiement en retard`, not `#N`) → probe `qa-housing-monthly-expenses-screen`. If missing and MD5 still matches shade-closed → open app and navigate by id (`qa-housing-hub-journals` → `qa-housing-journals-monthly-expenses`). If missing and MD5 differs → fail (shade still open / unknown UI).
 
 **Run:**
 
@@ -535,6 +537,9 @@ from flows as:
 | --- | --- |
 | `qa-home-housing` | Home → Logement tile |
 | `qa-housing-active-hub` | Active agreement hub screen |
+| `qa-housing-hub-journals` | Active hub → Journals tile |
+| `qa-housing-journals-monthly-expenses` | Journals menu → Accepted expenses |
+| `qa-housing-monthly-expenses-screen` | Accepted expenses AppBar title |
 | `qa-housing-hub-settlement-due` | Settlement-due expense tile |
 | `qa-housing-hub-enter-expense` | Active-period expense entry tile |
 | `qa-housing-hub-expense-disabled` | Disabled expense tile |

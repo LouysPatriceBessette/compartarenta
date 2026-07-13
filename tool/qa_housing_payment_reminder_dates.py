@@ -10,11 +10,12 @@ from zoneinfo import ZoneInfo
 
 
 def before_date_offsets(recurrence_period_days: int) -> list[int]:
+    """Offsets k for J−k @ 14:00 local; 0 = due day J (always included)."""
     if recurrence_period_days < 20:
-        return [2]
+        return [2, 0]
     if recurrence_period_days <= 40:
-        return [4, 2]
-    return [6, 2]
+        return [4, 2, 0]
+    return [6, 2, 0]
 
 
 def monthly_due_at_local(at_local: datetime, recurrence_day: int) -> datetime:
@@ -150,7 +151,14 @@ def main() -> int:
     )
     parser.add_argument(
         "--field",
-        choices=("due", "due_ms", "before_due_0", "before_due_1", "overdue"),
+        choices=(
+            "due",
+            "due_ms",
+            "before_due_0",
+            "before_due_1",
+            "before_due_2",
+            "overdue",
+        ),
         help="Print a single schedule field",
     )
     args = parser.parse_args()
@@ -179,6 +187,13 @@ def main() -> int:
         if len(fires) < 2:
             raise SystemExit("schedule has only one before_due fire")
         print(fires[1])
+        return 0
+    if args.field == "before_due_2":
+        fires = schedule["before_due"]
+        assert isinstance(fires, list)
+        if len(fires) < 3:
+            raise SystemExit("schedule has fewer than three before_due fires")
+        print(fires[2])
         return 0
     if args.field == "overdue":
         print(schedule["overdue"])

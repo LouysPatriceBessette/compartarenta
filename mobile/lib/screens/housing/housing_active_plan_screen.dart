@@ -145,6 +145,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       _openPendingReviewIfAny();
       _openPendingAmendmentFromNotificationIfAny();
       _openSettledAmendmentFromNotificationIfAny();
+      _openAcceptedExpensesFromNotificationIfAny();
     });
   }
 
@@ -904,6 +905,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                             _HubTile(
                               icon: Icons.menu_book_outlined,
                               label: l10n.housingActiveHubJournals,
+                              semanticsIdentifier:
+                                  kDebugMode ? kQaHousingHubJournals : null,
                               onTap: () => _openJournals(context),
                             ),
                           ],
