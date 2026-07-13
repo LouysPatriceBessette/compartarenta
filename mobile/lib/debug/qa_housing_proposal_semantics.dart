@@ -20,6 +20,8 @@ const kQaHousingInviteRecipientAccept = 'qa-housing-invite-recipient-accept';
 const kQaHousingWorkbenchPendingRow = 'qa-housing-workbench-pending-row';
 const kQaHousingInviteParticipantLouysQaAccepted =
     'qa-housing-invite-participant-louys-qa-accepted';
+const kQaHousingActiveHub = 'qa-housing-active-hub';
+const kQaHousingHubBack = 'qa-housing-hub-back';
 
 /// Stable chip id when [displayName] has accepted (invitation status row).
 String qaHousingInviteParticipantAcceptedSemanticsId(String displayName) {

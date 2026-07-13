@@ -2,6 +2,8 @@ appId: com.compartarenta.compartarenta.dev
 ---
 # Inviter-only: reach main contacts list from housing hub, invite flows, or home.
 # Never back past qa-home-contacts (that exits the app to the launcher).
+# From housing active hub, tap qa-housing-hub-back — system back races PopScope.
+# Maestro re-evaluates `when` after each step: branches must be mutually exclusive.
 - repeat:
     times: 6
     commands:
@@ -13,6 +15,17 @@ appId: com.compartarenta.compartarenta.dev
             - runFlow:
                 when:
                   visible:
+                    id: "qa-housing-active-hub"
+                commands:
+                  - tapOn:
+                      id: "qa-housing-hub-back"
+                  - waitForAnimationToEnd:
+                      timeout: 2000
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "qa-housing-active-hub"
+                  visible:
                     id: "qa-home-contacts"
                 commands:
                   - tapOn:
@@ -22,11 +35,21 @@ appId: com.compartarenta.compartarenta.dev
             - runFlow:
                 when:
                   notVisible:
-                    id: "qa-home-contacts"
+                    id: "qa-housing-active-hub"
                 commands:
-                  - back
-                  - waitForAnimationToEnd:
-                      timeout: 2000
+                  - runFlow:
+                      when:
+                        notVisible:
+                          id: "qa-home-contacts"
+                      commands:
+                        - runFlow:
+                            when:
+                              notVisible:
+                                id: "qa-contacts-redeem-open"
+                            commands:
+                              - back
+                              - waitForAnimationToEnd:
+                                  timeout: 2000
 - extendedWaitUntil:
     visible:
       id: "qa-contacts-invite-fab"

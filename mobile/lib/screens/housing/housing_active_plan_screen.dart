@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
+import '../../debug/qa_housing_proposal_semantics.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../housing/amendment/housing_amendment_ui_gates.dart';
 import '../../housing/amendment/housing_amendment_navigation.dart';
@@ -585,7 +586,12 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: BackButton(onPressed: () => _handleHubBack(context)),
+          leading: qaHousingProposalSemantics(
+            identifier: kQaHousingHubBack,
+            button: true,
+            onTap: () => _handleHubBack(context),
+            child: BackButton(onPressed: () => _handleHubBack(context)),
+          ),
           title: FutureBuilder<_HubHeader?>(
             future: _headerFuture,
             builder: (context, snap) {
@@ -864,7 +870,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
 
     if (!kDebugMode) return hub;
     return Semantics(
-      identifier: 'qa-housing-active-hub',
+      identifier: kQaHousingActiveHub,
       container: true,
       child: hub,
     );
