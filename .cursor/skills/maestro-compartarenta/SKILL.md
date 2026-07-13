@@ -15,12 +15,15 @@ This repository uses **Maestro YAML + shell coordinators**, not Patrol (`patrol_
 
 ## Before any edit (mandatory)
 
-1. Read **`docs/qa-android-e2e.md`** (Maestro section + semantics table).
-2. Read the **reference coordinator** and manifest for the scenario you extend
+1. Read **`.cursor/skills/maestro-scenario-avoid-carpet-tripping/SKILL.md`**
+   — mandatory for **any** new or extended scenario (code-first workflow,
+   anti-improvisation, no vandalizing shared flows).
+2. Read **`docs/qa-android-e2e.md`** (Maestro section + semantics table).
+3. Read the **reference coordinator** and manifest for the scenario you extend
    (e.g. `tool/coordinators/housing_proposal.sh` + `qa/multi_scenarios/*.yaml`).
-3. **Grep** existing flows for the same surface — reuse `_*.yaml` helpers; do not
+4. **Grep** existing flows for the same surface — reuse `_*.yaml` helpers; do not
    invent parallel patterns.
-4. State in one sentence: **symptom**, **role/device**, **repro vs fixed** (see
+5. State in one sentence: **symptom**, **role/device**, **repro vs fixed** (see
    `.cursor/rules/qa-scenario-reference-and-objective-discipline.mdc`).
 
 ## Maestro MCP (when emulators are running)
