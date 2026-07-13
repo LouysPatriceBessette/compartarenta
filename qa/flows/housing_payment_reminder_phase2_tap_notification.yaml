@@ -1,0 +1,15 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Phase 2b — notification shade already open (coordinator: adb expand-notifications).
+# Title is "#10 Rappel de paiement" — use regex, not exact "#10".
+- extendedWaitUntil:
+    visible: ".*#10 Rappel de paiement.*"
+    timeout: 30000
+- takeScreenshot: phase2_notification_shade
+- tapOn: ".*#10 Rappel de paiement.*"
+- takeScreenshot: phase2_after_notification_tap
+- extendedWaitUntil:
+    visible:
+      id: "qa-housing-active-hub"
+    timeout: 90000
+- takeScreenshot: phase2_housing_destination

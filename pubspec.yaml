@@ -190,3 +190,9 @@ melos:
         with app closed. Sequential steps; operator confirms notification visually.
         Example: ./tool/melosw run qa:run-fcm-wake-push -- --skip-build
       run: chmod +x ./tool/run_fcm_wake_push_scenario.sh && ./tool/run_fcm_wake_push_scenario.sh "$@"
+
+    qa:run-payment-reminder:
+      description: |
+        Housing payment reminder #10 — single Monica emulator (simulated notification + tap, no relay).
+        Example: ./tool/melosw run qa:run-payment-reminder -- --skip-build
+      run: chmod +x ./tool/run_housing_payment_reminder_scenario.sh && ./tool/run_housing_payment_reminder_scenario.sh "$@"

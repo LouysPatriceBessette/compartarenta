@@ -1,0 +1,12 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Phase 2a — cold start (simulated #10 post-seed); wait until home is ready.
+- launchApp:
+    stopApp: true
+- runFlow:
+    file: _accept_notification_prompt.yaml
+- extendedWaitUntil:
+    visible:
+      id: "qa-home-housing"
+    timeout: 90000
+- takeScreenshot: phase2_app_ready

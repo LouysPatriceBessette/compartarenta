@@ -383,6 +383,16 @@ qa_wait_for_logcat_on_serial() {
   return 1
 }
 
+qa_open_notification_shade_on_serial() {
+  local serial="$1"
+  adb -s "${serial}" shell cmd statusbar expand-notifications
+}
+
+qa_collapse_notification_shade_on_serial() {
+  local serial="$1"
+  adb -s "${serial}" shell cmd statusbar collapse >/dev/null 2>&1 || true
+}
+
 qa_maestro_test_on_serial() {
   local serial="$1"
   local flow_path="$2"

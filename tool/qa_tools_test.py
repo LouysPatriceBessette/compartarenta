@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from qa_housing_payment_reminder_dates import first_before_due_fire_iso
 from qa_run_report import render_html
 from qa_scenario_manifest import list_scenario_ids, parse_manifest, validate_scenarios
 from verify_qa_semantics import collect_dart_ids, collect_maestro_ids, verify_semantics
@@ -111,6 +112,17 @@ class VerifyQaSemanticsTest(unittest.TestCase):
             )
             errors, _warnings = verify_semantics(root, warn_orphans=False)
             self.assertTrue(any("qa-vehicle-only" in err for err in errors))
+
+
+class QaHousingPaymentReminderDatesTest(unittest.TestCase):
+    def test_first_before_due_july_anchor(self) -> None:
+        # Anchor 2026-07-13 → due 2026-08-01 → J−4 @ 14:00 Toronto + 5 min margin
+        fire = first_before_due_fire_iso(
+            anchor_iso="2026-07-13T09:00:00",
+            timezone="America/Toronto",
+            recurrence_day=1,
+        )
+        self.assertTrue(fire.startswith("2026-07-28T14:05:00"))
 
 
 class QaRunReportTest(unittest.TestCase):

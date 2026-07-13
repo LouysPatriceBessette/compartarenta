@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../db/repositories/vehicles_repository.dart';
 import '../prefs/app_preferences.dart';
+import '../prefs/time_zone_policy_field.dart';
 import '../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
@@ -21,6 +22,7 @@ import '../housing/settlement/housing_settlement_window.dart';
 import 'qa_e2e_environment.dart';
 import 'qa_e2e_meter_photo.dart';
 import 'qa_fcm_wake_push_seed.dart';
+import 'qa_payment_reminder_seed.dart';
 import 'qa_scenario_seed_helpers.dart';
 import 'qa_vehicle_consumption_seed.dart';
 import 'qa_vehicle_seed_helpers.dart';
@@ -56,6 +58,7 @@ const kQaScenarioIds = <String>{
   'contact_handshake_invitee',
   'fcm_wake_push_proposer',
   'fcm_wake_push_recipient',
+  'housing_payment_reminder_simulate_before_due',
 };
 
 /// Reads the adb-pushed marker on Android debug builds, seeds Drift + prefs, then
@@ -120,6 +123,7 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
   await prefs.setNotificationsEnabled(
     _qaNotificationsEnabledForScenario(scenarioId),
   );
+  await _applyQaPaymentReminderPrefs(prefs, scenarioId);
   await prefs.setHousingDefaultPlanSummaryReached(
     scenarioId != 'proposal_wizard_expenses',
   );
@@ -128,11 +132,35 @@ Future<void> applyQaSharedPreferences(String scenarioId) async {
   final rawPrefs = await SharedPreferences.getInstance();
   await rawPrefs.setBool(kQaE2eMeterPhotoOptionalPrefKey, true);
   QaE2eFlags.setMeterPhotoOptional(true);
-  await persistQaE2eEnvironment(scenarioId: scenarioId);
+  await _persistQaE2eForScenario(scenarioId);
 }
 
 bool _qaNotificationsEnabledForScenario(String scenarioId) {
-  return scenarioId == 'fcm_wake_push_recipient';
+  return scenarioId == 'fcm_wake_push_recipient' ||
+      scenarioId == 'housing_payment_reminder_simulate_before_due';
+}
+
+Future<void> _applyQaPaymentReminderPrefs(
+  AppPreferences prefs,
+  String scenarioId,
+) async {
+  if (!scenarioId.startsWith('housing_payment_reminder_')) return;
+  await prefs.setTimeZonePolicy(kTimeZonePolicyExplicit);
+  await prefs.setTimeZoneId('America/Toronto');
+  await prefs.setNotificationHousingPaymentReminders(true);
+}
+
+Future<void> _persistQaE2eForScenario(String scenarioId) async {
+  switch (scenarioId) {
+    case 'housing_payment_reminder_simulate_before_due':
+      await persistQaE2eEnvironment(
+        scenarioId: scenarioId,
+        postSeedAction: 'payment_reminder_simulate_before_due',
+        paymentReminderPlanId: kQaPaymentReminderPlanId,
+      );
+    default:
+      await persistQaE2eEnvironment(scenarioId: scenarioId);
+  }
 }
 
 ({String displayName, String avatarId}) _qaPersonaForScenario(
@@ -192,6 +220,8 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
       await seedQaFcmWakePushProposer(db);
     case 'fcm_wake_push_recipient':
       await seedQaFcmWakePushRecipient(db);
+    case 'housing_payment_reminder_simulate_before_due':
+      await seedQaPaymentReminderActivePlan(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }

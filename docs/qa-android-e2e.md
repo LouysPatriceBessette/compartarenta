@@ -228,6 +228,23 @@ Pipeline:
 Manifest: `qa/multi_scenarios/fcm_wake_push_emulator_physical.yaml`. Coordinator:
 `tool/coordinators/fcm_wake_push.sh`.
 
+### Housing payment reminder (#10 before-due, simulated)
+
+Single **Monica-QA** emulator — **no relay** (client notification display + tap only):
+
+1. Emulator date set to the first before-due fire (J−4 @ 14:00 local for monthly Loyer day 1),
+   computed from `device_date: current` via `tool/qa_housing_payment_reminder_dates.py`.
+2. Seed in-force plan + debug hook simulating `#10`; open notification shade; tap; assert active hub.
+
+**Run:**
+
+```bash
+./tool/melosw run qa:run-payment-reminder
+```
+
+Manifest: `qa/multi_scenarios/housing_payment_reminder_before_due.yaml`. Coordinator:
+`tool/coordinators/housing_payment_reminder.sh`.
+
 ## Repository layout
 
 ```
@@ -246,6 +263,7 @@ tool/
   run_scenario.sh        One scenario end-to-end
   run_multi_device_scenario.sh  Multi-emulator orchestrator entry point
   run_fcm_wake_push_scenario.sh Emulator + physical FCM wake manual scenario
+  run_housing_payment_reminder_scenario.sh Housing payment reminder #10 (simulated, no relay)
   coordinators/          Per-domain coordination scripts (contact handshake, …)
   run_all_scenarios.sh   All manifests + aggregated report
   seed_qa_scenario.sh    Seed only (used by run_scenario)
@@ -336,6 +354,7 @@ Prefer `./tool/melosw` over `dart run melos` (avoids redundant `pub get`).
 | `qa:run-scenario` | One full scenario (`-- <id> [options]`) |
 | `qa:run-all-scenarios` | All scenarios + `index.html` |
 | `qa:run-fcm-wake-push` | FCM wake manual (Monica emulator + physical phone) |
+| `qa:run-payment-reminder` | Housing payment reminder #10 — single emulator, simulated delivery |
 
 Examples:
 

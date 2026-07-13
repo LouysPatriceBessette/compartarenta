@@ -194,6 +194,12 @@ class HousingPaymentReminderService {
       generation: revisionId.hashCode,
       targets: targets,
     );
+    if (kDebugMode) {
+      debugPrint(
+        'housingPaymentReminder: reconcile posted ${targets.length} target(s) '
+        'for planId=$planId revisionId=$revisionId',
+      );
+    }
   }
 
   /// Cancels before/overdue targets for a covered period (coverage update B).
@@ -289,6 +295,13 @@ class HousingPaymentReminderService {
       reminderKind: d.reminderKind,
       planId: planId,
     );
+    if (kDebugMode) {
+      final qaNumber = d.reminderKind == 'overdue' ? 11 : 10;
+      debugPrint(
+        'housingPaymentReminder: delivered kind=${d.reminderKind} qa=#$qaNumber '
+        'line=${line.title} planId=$planId',
+      );
+    }
     return true;
   }
 

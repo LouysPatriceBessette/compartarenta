@@ -1,0 +1,12 @@
+id: housing_payment_reminder_before_due
+description: Housing payment reminder #10 — simulated before-due notification + tap (no relay)
+device_date: current
+timezone: America/Toronto
+coordinator: housing_payment_reminder
+mode: before_due_simulated_v1
+flow_launch: qa/flows/housing_payment_reminder_phase2_launch.yaml
+flow_tap: qa/flows/housing_payment_reminder_phase2_tap_notification.yaml
+role_monica:
+  avd: Monica-QA
+  seed: housing_payment_reminder_simulate_before_due
+  flow: qa/flows/housing_payment_reminder_phase2_launch.yaml

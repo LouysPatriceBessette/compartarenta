@@ -21,16 +21,27 @@ class QaE2eEnvironmentSnapshot {
     required this.scenarioId,
     required this.languageCode,
     required this.meterPhotoOptional,
+    this.postSeedAction,
+    this.paymentReminderPlanId,
   });
 
   final String scenarioId;
   final String languageCode;
   final bool meterPhotoOptional;
 
+  /// Debug QA hook run after [HandshakeOrchestrator] install (see [runQaPostSeedActionsIfNeeded]).
+  final String? postSeedAction;
+
+  /// Plan id for payment-reminder QA post-seed actions.
+  final String? paymentReminderPlanId;
+
   Map<String, Object?> toJson() => {
         'scenarioId': scenarioId,
         'languageCode': languageCode,
         'meterPhotoOptional': meterPhotoOptional,
+        if (postSeedAction != null) 'postSeedAction': postSeedAction,
+        if (paymentReminderPlanId != null)
+          'paymentReminderPlanId': paymentReminderPlanId,
       };
 
   static QaE2eEnvironmentSnapshot? fromJson(Object? raw) {
@@ -45,11 +56,34 @@ class QaE2eEnvironmentSnapshot {
         meterPhotoOptional is! bool) {
       return null;
     }
+    final postSeedAction = raw['postSeedAction'];
+    final paymentReminderPlanId = raw['paymentReminderPlanId'];
+    if (postSeedAction != null && postSeedAction is! String) return null;
+    if (paymentReminderPlanId != null && paymentReminderPlanId is! String) {
+      return null;
+    }
     return QaE2eEnvironmentSnapshot(
       scenarioId: scenarioId,
       languageCode: languageCode,
       meterPhotoOptional: meterPhotoOptional,
+      postSeedAction: postSeedAction as String?,
+      paymentReminderPlanId: paymentReminderPlanId as String?,
     );
+  }
+}
+
+/// Reads the persisted QA E2E snapshot when present.
+Future<QaE2eEnvironmentSnapshot?> readQaE2eEnvironmentSnapshot() async {
+  if (!kDebugMode || kIsWeb) return null;
+  final file = await _qaE2eEnvFile();
+  if (file == null || !await file.exists()) return null;
+  try {
+    return QaE2eEnvironmentSnapshot.fromJson(
+      jsonDecode(await file.readAsString()),
+    );
+  } catch (e) {
+    debugPrint('qa e2e env: read failed: $e');
+    return null;
   }
 }
 
@@ -83,12 +117,16 @@ Future<void> persistQaE2eEnvironment({
   required String scenarioId,
   String languageCode = 'fr',
   bool meterPhotoOptional = true,
+  String? postSeedAction,
+  String? paymentReminderPlanId,
 }) async {
   if (!kDebugMode || kIsWeb) return;
   final snapshot = QaE2eEnvironmentSnapshot(
     scenarioId: scenarioId,
     languageCode: languageCode,
     meterPhotoOptional: meterPhotoOptional,
+    postSeedAction: postSeedAction,
+    paymentReminderPlanId: paymentReminderPlanId,
   );
   await applyQaE2eEnvironmentSnapshot(snapshot);
   final file = await _qaE2eEnvFile();
