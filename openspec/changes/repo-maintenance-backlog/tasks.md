@@ -5,15 +5,6 @@ Deferred engineering chores. Pick these up when convenient; they are
 
 ## Backlog
 
-- [ ] **License vhost — remove dev CORS for `http://localhost:5001`** (ops, before production web).  
-  Dev QA added CORS on `license.incoherences.org` so Flutter web (`run:dev:web`)
-  can call `registerInstallation` / `reportPlanRoster` from the browser. **Remove
-  or replace** the `<LocationMatch "^/v1/">` CORS block in the deployed license
-  Apache vhost when shipping a real web origin (or when dev web no longer targets
-  prod license). Template:
-  `entitlement/deploy/apache2/license-vhost.conf.template`. **VPS scope:** virtual
-  host only — no entitlement container or relay release required.
-
 - [ ] **Relay `/healthz` — human-readable on mobile** (ops / QA prerequisite).  
   Today `GET /healthz` returns raw JSON only; on a phone browser it is tiny, top-left,
   and unusable for quick “is the relay up?” checks during multi-device manual QA
@@ -22,9 +13,15 @@ Deferred engineering chores. Pick these up when convenient; they are
   static Apache page, or both. **Do before inviting non-developers to manual relay QA.**
 
 - [ ] **Housing balance chart — roster SVG overflow with inactive participants** (bug, minor).  
-  Active roster is capped at **8** participants because only eight due-split SVG layouts exist. When **inactive participants** retain non-zero balances, the UI may need to show **more than eight** balance rows; relying on the active-roster cap alone can overflow or hide labels. Inactive settlement tiles landed on the balances screen (2026); chart/legend layout still needs a pass.
+  Active roster is capped at **8** participants because only eight due-split SVG layouts exist. When **inactive participants** retain non-zero balances, the UI may need to show **more than eight** balance rows; relying on the active-roster cap alone can overflow or hide labels. Inactive settlement tiles landed on the balances screen (2026); chart/legend layout still needs a pass.  
+  **Must ship in the same pass as** *Housing balance chart — visual SVG upgrade* (below).
 
-- [ ] **Rich text editor for multiline agreement fields** — Housing and car-sharing agreement rules (custom rule body, building rules, suggestion templates, withdrawal notes). Replace plain `TextField` with a lightweight rich editor (bold, lists optional later) so authors are not steered toward manual bullet characters in copy.
+- [ ] **Housing balance chart — visual SVG upgrade** (UX).  
+  The current due-split SVG is summary-quality / rudimentary. Improve visual
+  presentation (node/link layouts, legend, label readability, polish) on the
+  balances screen.  
+  **Must ship in the same pass as** the inactive-participant overflow bug above
+  (low-probability layout bug + visual upgrade are one delivery).
 
 - [ ] **Housing — differential impact report on participant removal** (deferred — future release).  
   Before/after projected-obligation report only (cases: unpaid license, voluntary withdrawal, ejection).  
@@ -40,6 +37,12 @@ Deferred engineering chores. Pick these up when convenient; they are
   `go_router`, `flutter_secure_storage`, `app_links`, … as features need them.  
   **Mobile-only**; relay wake stays on `closed-app-push-delivery`.  
   **Scope:** `mobile/` + workspace `pubspec.lock` only.
+
+## Done / removed (decisions)
+
+- ~~**License vhost — remove dev CORS for `http://localhost:5001`** (ops, before production web)~~ — **Removed (2026-07-13).** Flutter web is **not** and has **never** been a product surface (dev-only multi-instance QA via `run:dev:web`). There is no “before production web” gate. Dev CORS for localhost on the license vhost remains an ops convenience for that tooling only — not an OpenSpec product backlog item. Template note may stay in `entitlement/deploy/apache2/license-vhost.conf.template` / `docs/stack-deployment.md`.
+
+- ~~**Rich text editor for multiline agreement fields**~~ — **Won't implement (2026-07-13).** Never planned for shipping; recorded on wish list as permanently rejected. Plain `TextField` remains for agreement multiline copy.
 
 ## Done
 

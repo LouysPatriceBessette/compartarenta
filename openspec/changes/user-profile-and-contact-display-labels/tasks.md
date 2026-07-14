@@ -1,4 +1,6 @@
-> **Status:** Client-side implementation largely complete (Sections 1–3, 5). Relay appearance-notice envelopes (Section 6) and peer-appearance matrix UI (4.1) remain open.
+> **Status:** Client-side implementation complete for Sections 1–5 (including
+> peer-appearance matrix **4.1**, already manually tested). Relay
+> appearance-notice envelopes (Section 6) remain open as deferred follow-up.
 
 ## 1. Data model
 
@@ -22,7 +24,7 @@
 
 ## 4. Profile — peer view matrix
 
-- [ ] 4.1 Profile screen: **How I appear to others** compact table (columns: contact, their label for me).
+- [x] 4.1 Profile screen: **How others label you** compact table (columns: contact, their label for me). *(Product copy: EN `settingsProfileAppearancesTitle` / FR « Comment les autres vous nomment » — not “how I appear to others”.) **Won't do further (2026-07-13):** already implemented and manually tested.*
 - [x] 4.2 Ingest appearance notices (or equivalent) to populate the matrix; handle offline / TTL drops gracefully. _(Placeholder copy only until relay notices land.)_
 
 ## 5. Notifications — canonical name changes

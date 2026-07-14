@@ -14,4 +14,4 @@
 
 - [x] 3.1 Identify and replace hard-coded user-facing strings with localized keys across existing screens
 - [x] 3.2 Add translations for EN/FR/ES for the migrated strings
-- [ ] 3.3 Add basic tests/checks to ensure locale switching works and missing keys fall back predictably
+- [x] 3.3 Add basic tests/checks to ensure locale switching works and missing keys fall back predictably. **Won't do (2026-07-13):** already tested manually — sufficient; no further automated locale-switch harness required.

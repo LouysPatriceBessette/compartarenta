@@ -34,8 +34,10 @@ When user **G** sets or changes a **local display label** for user **F**, **F** 
 - **THEN** F’s profile includes an entry that G currently sees them as “Éric”
 - **THEN** F’s own canonical name is unchanged unless F edits it in Settings
 
-### Requirement: “How I appear to others” is a concise matrix (E)
+### Requirement: “How others label you” is a concise matrix (E)
 The local user’s profile (or a dedicated sub-screen) SHALL include a **table-style summary**: one row per **other contact** for which the app knows an effective label, columns at minimum: **Contact (canonical or stable id)** and **Their label for me**. Multiple rows reflect multiple contacts labeling the user differently.
+
+User-facing title copy MUST follow product l10n (EN: “How others label you”; FR: “Comment les autres vous nomment”) — not awkward calques such as “how I appear to others” / “comment je apparais aux autres”.
 
 #### Scenario: Fafoin sees Gilles and Monica
 - **WHEN** Gilles labels Fafoin “Éric” and Monica labels Fafoin “Erik”

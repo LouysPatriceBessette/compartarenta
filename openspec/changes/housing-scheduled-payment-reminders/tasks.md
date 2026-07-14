@@ -6,9 +6,9 @@
 > EN/FR/ES copy, Settings timezone → relay upsert **2.2b**, operator docs **1.5**)
 > are **implemented** for native (Android) paths. Maestro QA for inventory **#10**
 > (before_due ×3) and **#11** (overdue) is **done** via simulated client display +
-> tap (**3.4**). End-to-end relay path (activation → cron fire → FCM wake →
-> notification) (**3.3**) and relay cron claim integration test (**3.1**) remain
-> **open**.
+> tap (**3.4**). End-to-end relay path **3.3** is **won't do** (wake push and
+> in-app payment-reminder notifications already proven). Relay cron claim
+> integration test (**3.1**) remains **open**.
 
 ## 0. Product decisions
 
@@ -43,7 +43,7 @@
 
 - [ ] 3.1 Relay: cron claim, tiered before-date table, timezone reschedule, skip past fires, 14:00-not-midnight. *(Tiered 14:00 table covered in `firetimes_test.go`; cron claim integration tests still open.)*
 - [x] 3.2 Client: coverage + carry; before-date vs overdue recipient rules; overdue journal card. *(See `payment_period_coverage_test.dart`, `housing_payment_reminder_recipients_test.dart`, `housing_ready_specs_tasks_test.dart`; overdue journal card UI in `housing_monthly_expenses_screen.dart` — widget test still open.)*
-- [ ] 3.3 Integration: activation → fire → wake → notification (native). *(Relay cron → FCM wake path — not covered by 3.4.)*
+- [x] 3.3 Integration: activation → fire → wake → notification (native). **Won't do (2026-07-13):** wake push is already proven functional; housing payment-reminder notifications on the app side are too. Nothing further to demonstrate for this chain.
 - [x] 3.4 **Android E2E QA (Maestro):** inventory **#10** before_due (J−4, J−2, due day J) + **#11** overdue — simulated local notification display + shade tap + Accepted expenses journal asserts; no relay. *(Manifest `qa/multi_scenarios/housing_payment_reminder_before_due.yaml`; `./tool/melosw run qa:run-payment-reminder`; QA’ed 2026-07-13.)*
 
 ## 4. Invitation expiry (deferred)

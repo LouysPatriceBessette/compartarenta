@@ -34,3 +34,32 @@ work only affects the Flutter client (and vice versa).
 - **THEN** it is listed only under this maintenance change, not in
   `docs/relay-deployment.md` or other relay-only runbooks unless it
   genuinely affects relay deployment.
+
+### Requirement: Housing balances SVG overflow and visual upgrade are one delivery
+
+When the housing balances chart needs work for **inactive participants** that
+push beyond the eight active-roster due-split layouts (overflow / clipped
+labels), the same implementation pass SHALL also improve the currently
+summary-quality / rudimentary SVG presentation (layout, legend, readability).
+Neither item SHALL be closed alone while the other remains open.
+
+#### Scenario: Overflow fix ships with visual polish
+
+- **WHEN** contributors address the inactive-participant balance-chart overflow
+  bug (or the visual SVG upgrade)
+- **THEN** both the overflow/layout fix and the visual upgrade land in the same
+  delivery (linked tasks in `tasks.md`)
+
+### Requirement: Flutter web is never a product backlog target
+
+Flutter web is a **developer-only** multi-instance QA convenience. OpenSpec
+backlog and product specs SHALL NOT carry **pending** tasks that assume a
+production web app, production web origin, or “before shipping web” gates.
+Dev-only notes (CORS for `localhost` QA, etc.) MAY remain in ops docs without
+a pending product task.
+
+#### Scenario: No pending “production web” chores
+
+- **WHEN** a backlog or product task is framed as prep for shipping a web
+  product surface
+- **THEN** it is removed or rewritten so it does not depend on web-as-product

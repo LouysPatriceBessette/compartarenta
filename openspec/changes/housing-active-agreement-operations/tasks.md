@@ -54,7 +54,7 @@
 - [x] Q.4.1 Proposer sends amendment (web) → invitee notification + amendment detail (Android).
 - [x] Q.4.2 Invitee accepts → proposer hub applies change (relay + poll); web browser notification on decision.
 - [x] Q.4.3 Invitee hub banner/navigation after accept (snackbar, no stale “new request” form).
-- [ ] Q.4.4 Web hub live refresh without user interaction (Chrome may still throttle timers until tab focus).
+- ~~Q.4.4 Web hub live refresh without user interaction~~ — **Removed (2026-07-13).** Flutter web is **never** a production product surface (dev-only multi-instance QA). No product requirement to keep a web hub live without interaction.
 
 ## Pass 5 — Portability (superseded by `device-data-import-restore`)
 

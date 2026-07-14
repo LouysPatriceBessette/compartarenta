@@ -1,6 +1,6 @@
 ## Implementation status (2026-07-01)
 
-Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today), legacy odometer-photo migration. **Boat kind and horometer UX deferred** from initial release (§10.5, §15).
+Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today). Legacy odometer-photo migration (**7.3b**) **won't do** — no shipped user base / no valuable legacy paths to migrate. **Boat kind and horometer UX deferred** from initial release (§10.5, §15).
 
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
@@ -51,7 +51,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 - [x] 7.1 Vehicle sharing hub shell (`vehicle-sharing-hub-ui`) wired to same quick-action forms (forward routing)
 - [x] 7.2 Remove prototype: `/car` route, `CarSharingPlanScreen`, `CarSharingPlanDraft` prefs (`vehicle-legacy-code-removal`)
 - [x] 7.3a Enforce `user-owned-media-storage` on all new odometer and gallery writes (`storeVehicleMeterPhotoFromSource`, `storeVehicleGalleryPhotoFromSource` → public `Documents/Compartarenta/Car/…`)
-- [ ] 7.3b Migrate legacy app-private `vehicle_meter_photos/` references to public storage keys (read fallback remains)
+- [x] 7.3b Migrate legacy app-private `vehicle_meter_photos/` references to public storage keys. **Won't do (2026-07-13):** there is **no** legacy corpus to migrate — the app is still early pre-release and has never been used except by the developer with disposable test data. Read fallback for old private paths may remain defensive; no migration job.
 
 ## 8. Consumption estimate validation & correction (fuel purchase anchors)
 

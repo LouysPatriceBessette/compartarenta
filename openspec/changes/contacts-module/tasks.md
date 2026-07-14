@@ -2,9 +2,10 @@
 > no relay, no crypto primitives) has landed. Wave B (handshake on the
 > relay, disconnect envelopes, profile updates) has now landed on the
 > client side: see `lib/relay/*`, `HandshakeOrchestrator`, and the
-> updated invite/redeem/contact-detail screens. End-to-end integration
-> tests against a live relay (tasks 7.3–7.6) remain pending until the
-> relay deployment is reachable from CI.
+> updated invite/redeem/contact-detail screens. Formal integration tasks
+> **7.3–7.6** are **won't do (2026-07-13):** Maestro happy path covers
+> **7.3**; rejection / delete / disconnect already validated manually;
+> plaintext-metadata proof is owned by tasks **6.1 / 6.3** (backlog #36).
 
 ## 1. Data model and migration
 
@@ -97,10 +98,10 @@
 
 - [x] 7.1 Unit tests for code generation, checksum validation, expiry, single-use nonce consumption, and revocation. *(See `test/invitation_code_test.dart` and `test/contacts_repository_test.dart`.)*
 - [x] 7.2 Unit tests for de-duplication policy in the migration (identical name+avatar unify; otherwise distinct). *(See `test/contacts_migration_test.dart`.)*
-- [ ] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected). *(Wave B.)* **Partial:** Android multi-device Maestro `contact_handshake_happy_path` (`./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path`).
-- [ ] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact). *(Wave B.)*
-- [ ] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect. *(Wave A delete-only path can be covered now; full disconnect path is Wave B.)*
-- [ ] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests). *(Wave B.)*
+- [x] 7.3 Integration test for full happy-path handshake (inviter accepts; both sides become connected). **Won't do further (2026-07-13):** happy path already demonstrated via Android multi-device Maestro `contact_handshake_happy_path` (`./tool/melosw run qa:run-multi-scenario -- contact_handshake_happy_path`).
+- [x] 7.4 Integration test for handshake rejection (no `ack`; invitee receives the documented signal; neither side persists a connected Contact). **Won't do (2026-07-13):** rejection path already functional and validated manually — sufficient.
+- [x] 7.5 Integration test for delete and disconnect: ledger snapshots remain readable; peer is unaffected by delete; peer is informed by disconnect. **Won't do (2026-07-13):** delete/disconnect already functional and validated manually — sufficient.
+- [x] 7.6 Integration test confirming no relay request contains plaintext contact metadata (snapshot-style assertion on outbound requests). **Won't do (2026-07-13):** covered by privacy audit tasks **6.1 / 6.3** (backlog #36), not a separate integration harness here.
 
 ## 8. Relay: static contact-invite landing (`relay/deploy/landing/contact/invite/`)
 

@@ -59,7 +59,7 @@ The app MUST NOT copy user media to app-private paths such as `app_flutter/vehic
 
 Pre-save staging (image picker cache, in-memory crop buffers) is allowed only until the public write completes or the user cancels.
 
-Legacy private paths MAY remain readable for migration reads but MUST NOT receive new writes after this spec is implemented.
+Legacy private paths MAY remain readable as a defensive fallback, but **no migration job is required**: the app is still early pre-release and has never shipped user data that would need rewriting from `vehicle_meter_photos/` into public storage. New writes MUST NOT target private paths after this spec is implemented.
 
 #### Scenario: Legacy private odometer folder is not written on new save
 - **WHEN** a user saves a new odometer photo on a build that implements this spec
