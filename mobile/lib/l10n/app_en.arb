@@ -1547,6 +1547,18 @@
   "vehicleQuickActionsTitle": "Quick actions",
   "vehicleMyVehiclesTitle": "My vehicles",
   "vehicleMyVehiclesEmpty": "No vehicles yet. Tap + to add one.",
+  "vehicleOwnedActiveLimitReached": "Limit reached: at most 3 active vehicles.",
+  "vehicleDeactivatedLabel": "Deactivated {date}",
+  "@vehicleDeactivatedLabel": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "vehicleDeactivateAction": "Deactivate this vehicle",
+  "vehicleDeactivateDialogTitle": "Deactivate this vehicle?",
+  "vehicleDeactivateDialogBody": "This cannot be undone. You can still view the history, but no new entries or use sessions will be allowed for this vehicle.",
+  "vehicleDeactivateConfirm": "Deactivate",
+  "vehicleDeactivateBlockedOpenSession": "End the open use session first.",
   "vehicleAddVehicle": "Add vehicle",
   "vehicleAddFirst": "Add a vehicle first.",
   "vehicleFieldLabel": "Display name",

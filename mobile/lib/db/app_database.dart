@@ -722,7 +722,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 34;
+  int get schemaVersion => 35;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1084,6 +1084,9 @@ class AppDatabase extends _$AppDatabase {
           housingPaymentOverdueJournalEntries,
           housingPaymentOverdueJournalEntries.reminderKind,
         );
+      }
+      if (from < 35) {
+        await _migrateAddColumn(m, vehicles, vehicles.deactivatedAt);
       }
     },
     beforeOpen: (details) async {

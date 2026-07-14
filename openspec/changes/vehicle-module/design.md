@@ -79,6 +79,10 @@ Constraints:
   - **Decision (Propriétaire self-maintain)**: after **Maintain current reading, investigate later**, the **journal entry** (negative-gap acknowledgment) is **sufficient** for the current release. A dedicated in-app or push reminder for the Propriétaire is **deferred to a future release**.
   - **Rationale**: avoid self-notification and unfinished local reminder UX; journal remains the audit trail and review surface.
 
+- **Active-owned vehicle cap and irreversible deactivation (2026-07-14)**
+  - **Decision**: at most **three active** owned vehicles. Deactivation (not delete) is irreversible, leaves the vehicle read-only for consultation, lists deactivated tiles at the bottom with deactivation date, and **frees** an active slot. Hub add FAB is disabled at three active with short limit copy. Cap applies to UI and QA/seed paths alike. Deactivation is refused while a use session is open on that vehicle.
+  - **Rationale**: sale/export may come later; owners need a way to free a slot without destroying history.
+
 ## Risks / Trade-offs
 
 - **[Odometer conflicts when owner and borrower both log]** → Mitigation: monotonic validation with explicit correction flag; attribution on each reading (owner vs borrower session).

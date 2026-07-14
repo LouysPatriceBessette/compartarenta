@@ -1387,6 +1387,18 @@
   "vehicleQuickActionsTitle": "Actions rapides",
   "vehicleMyVehiclesTitle": "Mes véhicules",
   "vehicleMyVehiclesEmpty": "Aucun véhicule. Appuyez sur + pour en ajouter un.",
+  "vehicleOwnedActiveLimitReached": "Limite atteinte : 3 véhicules actifs maximum.",
+  "vehicleDeactivatedLabel": "Désactivé {date}",
+  "@vehicleDeactivatedLabel": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "vehicleDeactivateAction": "Désactiver ce véhicule",
+  "vehicleDeactivateDialogTitle": "Désactiver ce véhicule ?",
+  "vehicleDeactivateDialogBody": "Cette action est définitive. Vous pourrez encore consulter l'historique, mais plus rien ne pourra être saisi pour ce véhicule.",
+  "vehicleDeactivateConfirm": "Désactiver",
+  "vehicleDeactivateBlockedOpenSession": "Terminez d'abord la session d'utilisation en cours.",
   "vehicleAddVehicle": "Ajouter un véhicule",
   "vehicleAddFirst": "Ajoutez d'abord un véhicule.",
   "vehicleFieldLabel": "Nom affiché",

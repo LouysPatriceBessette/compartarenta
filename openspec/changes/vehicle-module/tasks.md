@@ -8,8 +8,9 @@ Owner-side **`vehicle`** module: **substantially implemented** on-device (local 
 - **11.2 Emprunteur** path (notify Propriétaire) → tracked with **`vehicle-sharing-module`** / Emprunteur work (not current owner-module scope).
 - **11.2 Propriétaire** in-app reminder after “Maintain reading, investigate later” → **deferred**; **journal entry alone** is acceptable for the current release.
 
-**Still open for current release (non-relay):** cap of three owned vehicles (**1.3b**); sale export/import (**5.1–5.2**). Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**.
+**Still open for current release (non-relay):** sale export/import (**5.1–5.2**). Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**.
 
+**Active cap + deactivation (2026-07-14):** at most three **active** owned vehicles; irreversible deactivate frees a slot; FAB disabled at cap; same cap for QA seeds.
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
 ## 1. Domain model & storage
@@ -17,7 +18,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 - [x] 1.1 Define Vehicle, VehicleUse, FuelPurchase, MaintenanceEvent, TrafficViolation entities with fixed owner
 - [x] 1.2 Support vehicle kinds car, truck, motorcycle at initial release (`vehicle-domain-model`); **boat deferred** (§15)
 - [x] 1.3 Implement local persistence scoped by owner; multi-vehicle per owner
-- [ ] 1.3b Enforce cap of three owned vehicles per Propriétaire (`vehicle-domain-model`)
+- [x] 1.3b Enforce cap of three **active** owned vehicles per Propriétaire; irreversible deactivation frees a slot (`vehicle-domain-model`, 2026-07-14)
 - [x] 1.4 Implement audit-friendly odometer correction (flag + note)
 
 ## 2. Odometer & distance

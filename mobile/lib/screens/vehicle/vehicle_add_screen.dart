@@ -13,6 +13,7 @@ import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_oil_change_interval.dart';
+import '../../vehicle/vehicle_owned_active_cap.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../widgets/vehicle_meter_photo_button.dart';
@@ -180,25 +181,41 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     final tankLiters = _parsedTankCapacityLiters!;
     final repo = VehiclesRepository(AppDatabase.processScope);
     final photoPath = qaE2eEffectiveMeterPhotoPath(_meterPhotoPath);
-    if (photoPath == null) return;
-    await repo.createVehicle(
-      kind: _kind,
-      displayLabel: _label.text.trim(),
-      make: _make.text.trim(),
-      model: _model.text.trim(),
-      color: _color.text.trim(),
-      modelYear: int.parse(_year.text.trim()),
-      licensePlate: _licensePlate.text.trim(),
-      vin: _vin.text.trim(),
-      fuelTankCapacityLiters: tankLiters,
-      oilChangeIntervalAmount: _parsedOilChangeInterval!,
-      initialMeterValue: _parsedMeter!,
-      initialMeterPhotoPath: photoPath,
-      consumptionEstimationMode: _kind.usesHorometer
-          ? VehicleConsumptionEstimationMode.simple
-          : _consumptionMode,
-      galleries: _galleries.where((g) => g.photos.isNotEmpty).toList(),
-    );
+    if (photoPath == null) {
+      setState(() => _saving = false);
+      return;
+    }
+    try {
+      await repo.createVehicle(
+        kind: _kind,
+        displayLabel: _label.text.trim(),
+        make: _make.text.trim(),
+        model: _model.text.trim(),
+        color: _color.text.trim(),
+        modelYear: int.parse(_year.text.trim()),
+        licensePlate: _licensePlate.text.trim(),
+        vin: _vin.text.trim(),
+        fuelTankCapacityLiters: tankLiters,
+        oilChangeIntervalAmount: _parsedOilChangeInterval!,
+        initialMeterValue: _parsedMeter!,
+        initialMeterPhotoPath: photoPath,
+        consumptionEstimationMode: _kind.usesHorometer
+            ? VehicleConsumptionEstimationMode.simple
+            : _consumptionMode,
+        galleries: _galleries.where((g) => g.photos.isNotEmpty).toList(),
+      );
+    } on VehicleActiveCapExceededException {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).vehicleOwnedActiveLimitReached,
+          ),
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
     context.pop(true);
   }

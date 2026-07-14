@@ -14,8 +14,11 @@ import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_meter_journal_sort.dart';
 import '../../vehicle/vehicle_meter_reading_effective.dart';
 import '../../vehicle/vehicle_owner_contact.dart';
+import '../../vehicle/vehicle_owned_active_cap.dart';
 
 const String kVehicleGapAttributionUnknown = 'unknown';
+
+bool vehicleIsActive(Vehicle vehicle) => vehicle.deactivatedAt == null;
 
 class VehicleGalleryPhotoDraft {
   VehicleGalleryPhotoDraft({
@@ -82,16 +85,78 @@ class VehiclesRepository {
 
   final AppDatabase _db;
 
-  Future<List<Vehicle>> listOwnedVehicles() {
-    return (_db.select(_db.vehicles)
-          ..where((t) => t.ownerContactId.equals(kVehicleOwnerSelfContactId))
-          ..orderBy([(t) => drift.OrderingTerm.asc(t.displayLabel)]))
+  Future<List<Vehicle>> listOwnedVehicles() async {
+    final rows = await (_db.select(_db.vehicles)
+          ..where((t) => t.ownerContactId.equals(kVehicleOwnerSelfContactId)))
         .get();
+    rows.sort((a, b) {
+      final aInactive = a.deactivatedAt != null;
+      final bInactive = b.deactivatedAt != null;
+      if (aInactive != bInactive) {
+        return aInactive ? 1 : -1;
+      }
+      return a.displayLabel.toLowerCase().compareTo(b.displayLabel.toLowerCase());
+    });
+    return rows;
+  }
+
+  Future<List<Vehicle>> listActiveOwnedVehicles() async {
+    final rows = await listOwnedVehicles();
+    return rows.where(vehicleIsActive).toList();
+  }
+
+  Future<int> countActiveOwnedVehicles() async {
+    final rows = await (_db.select(_db.vehicles)
+          ..where(
+            (t) =>
+                t.ownerContactId.equals(kVehicleOwnerSelfContactId) &
+                t.deactivatedAt.isNull(),
+          ))
+        .get();
+    return rows.length;
   }
 
   Future<Vehicle?> getVehicle(String id) =>
       (_db.select(_db.vehicles)..where((t) => t.id.equals(id)))
           .getSingleOrNull();
+
+  Future<void> ensureVehicleActiveForWrite(String vehicleId) async {
+    final vehicle = await getVehicle(vehicleId);
+    if (vehicle == null) {
+      throw StateError('vehicle missing: $vehicleId');
+    }
+    if (!vehicleIsActive(vehicle)) {
+      throw VehicleDeactivatedException(vehicleId);
+    }
+  }
+
+  /// Permanently deactivates an owned vehicle (read-only thereafter).
+  Future<Vehicle> deactivateOwnedVehicle(String vehicleId) async {
+    final vehicle = await getVehicle(vehicleId);
+    if (vehicle == null) {
+      throw StateError('vehicle missing: $vehicleId');
+    }
+    if (vehicle.ownerContactId != kVehicleOwnerSelfContactId) {
+      throw StateError('only the owner may deactivate this vehicle');
+    }
+    if (!vehicleIsActive(vehicle)) {
+      return vehicle;
+    }
+    final open = await openUseForVehicle(vehicleId);
+    if (open != null) {
+      throw VehicleHasOpenUseException(vehicleId);
+    }
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId)))
+        .write(
+      VehiclesCompanion(
+        deactivatedAt: drift.Value(now),
+        updatedAt: drift.Value(now),
+      ),
+    );
+    return (await getVehicle(vehicleId)) ??
+        (throw StateError('vehicle missing after deactivate'));
+  }
 
   Future<Vehicle> createVehicle({
     required VehicleKind kind,
@@ -111,6 +176,10 @@ class VehiclesRepository {
     bool requireDetailedDrivingMixForBorrowers = false,
     List<VehicleGalleryDraft> galleries = const [],
   }) async {
+    final activeCount = await countActiveOwnedVehicles();
+    if (activeCount >= kMaxActiveOwnedVehicles) {
+      throw const VehicleActiveCapExceededException();
+    }
     final now = DateTime.now().toUtc();
     final id = _newVehicleId('vehicle:');
     await _db.into(_db.vehicles).insert(
@@ -215,7 +284,8 @@ class VehiclesRepository {
   Future<void> addGalleryDrafts(
     String vehicleId,
     List<VehicleGalleryDraft> galleries,
-  ) {
+  ) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     return _persistGalleryDrafts(vehicleId, galleries);
   }
 
@@ -228,6 +298,7 @@ class VehiclesRepository {
     VehicleConsumptionEstimationMode? consumptionEstimationMode,
     bool? requireDetailedDrivingMixForBorrowers,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final now = DateTime.now().toUtc();
     await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId))).write(
           VehiclesCompanion(
@@ -557,6 +628,7 @@ class VehiclesRepository {
     int? tankFillFraction,
     DateTime? recordedAt,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('meter:');
     final now = recordedAt ?? await _nextMeterRecordedAt(vehicleId);
     await _db.into(_db.vehicleMeterReadings).insert(
@@ -623,6 +695,7 @@ class VehiclesRepository {
     String? previousReadingId,
     String? triggerReadingId,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('gap:');
     final now = DateTime.now().toUtc();
     final gap = startAfter - latestBefore;
@@ -681,6 +754,7 @@ class VehiclesRepository {
     int? tankFillFraction,
     required GapResolutionKind kind,
   }) async {
+    await ensureVehicleActiveForWrite(superseded.vehicleId);
     final id = _newVehicleId('meter:');
     final note = encodeMeterReadingReplacementNote(kind: kind);
     await _db.into(_db.vehicleMeterReadings).insert(
@@ -870,6 +944,7 @@ class VehiclesRepository {
     required String attributedContactId,
     required String startReadingId,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final existing = await openUseForVehicle(vehicleId);
     if (existing != null) {
       return existing;
@@ -962,6 +1037,7 @@ class VehiclesRepository {
     int? drivingTrafficPercent,
     VehicleConsumptionEstimationMode? sessionConsumptionMode,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final start = await (_db.select(_db.vehicleMeterReadings)
           ..where((t) => t.id.equals(startReadingId)))
         .getSingle();
@@ -1001,6 +1077,7 @@ class VehiclesRepository {
     String? meterPhotoPath,
     int? tankFillFraction,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('fuel:');
     await _db.into(_db.fuelPurchases).insert(
           FuelPurchasesCompanion.insert(
@@ -1035,6 +1112,7 @@ class VehiclesRepository {
     String? attachmentPath,
     int? meterAtService,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('maint:');
     await _db.into(_db.maintenanceEvents).insert(
           MaintenanceEventsCompanion.insert(
@@ -1065,6 +1143,7 @@ class VehiclesRepository {
     String? responsibilityContactId,
     String notes = '',
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('violation:');
     await _db.into(_db.trafficViolations).insert(
           TrafficViolationsCompanion.insert(
@@ -1159,6 +1238,7 @@ class VehiclesRepository {
     required String vehicleId,
     required String borrowerContactId,
   }) async {
+    await ensureVehicleActiveForWrite(vehicleId);
     final id = _newVehicleId('vshare:');
     final now = DateTime.now().toUtc();
     await _db.into(_db.vehicleSharingLinks).insert(

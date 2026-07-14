@@ -13811,6 +13811,18 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deactivatedAtMeta = const VerificationMeta(
+    'deactivatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deactivatedAt =
+      GeneratedColumn<DateTime>(
+        'deactivated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -13828,6 +13840,7 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     requireDetailedDrivingMixForBorrowers,
     createdAt,
     updatedAt,
+    deactivatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -13961,6 +13974,15 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('deactivated_at')) {
+      context.handle(
+        _deactivatedAtMeta,
+        deactivatedAt.isAcceptableOrUnknown(
+          data['deactivated_at']!,
+          _deactivatedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14030,6 +14052,10 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deactivatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deactivated_at'],
+      ),
     );
   }
 
@@ -14059,6 +14085,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
   final bool requireDetailedDrivingMixForBorrowers;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// When set, the vehicle is deactivated (read-only). Null = active.
+  final DateTime? deactivatedAt;
   const Vehicle({
     required this.id,
     required this.ownerContactId,
@@ -14075,6 +14104,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     required this.requireDetailedDrivingMixForBorrowers,
     required this.createdAt,
     required this.updatedAt,
+    this.deactivatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14104,6 +14134,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     );
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deactivatedAt != null) {
+      map['deactivated_at'] = Variable<DateTime>(deactivatedAt);
+    }
     return map;
   }
 
@@ -14130,6 +14163,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       ),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deactivatedAt: deactivatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deactivatedAt),
     );
   }
 
@@ -14160,6 +14196,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deactivatedAt: serializer.fromJson<DateTime?>(json['deactivatedAt']),
     );
   }
   @override
@@ -14187,6 +14224,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deactivatedAt': serializer.toJson<DateTime?>(deactivatedAt),
     };
   }
 
@@ -14206,6 +14244,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     bool? requireDetailedDrivingMixForBorrowers,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deactivatedAt = const Value.absent(),
   }) => Vehicle(
     id: id ?? this.id,
     ownerContactId: ownerContactId ?? this.ownerContactId,
@@ -14227,6 +14266,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
         this.requireDetailedDrivingMixForBorrowers,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deactivatedAt: deactivatedAt.present
+        ? deactivatedAt.value
+        : this.deactivatedAt,
   );
   Vehicle copyWithCompanion(VehiclesCompanion data) {
     return Vehicle(
@@ -14260,6 +14302,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           : this.requireDetailedDrivingMixForBorrowers,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deactivatedAt: data.deactivatedAt.present
+          ? data.deactivatedAt.value
+          : this.deactivatedAt,
     );
   }
 
@@ -14282,7 +14327,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
             'requireDetailedDrivingMixForBorrowers: $requireDetailedDrivingMixForBorrowers, ',
           )
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deactivatedAt: $deactivatedAt')
           ..write(')'))
         .toString();
   }
@@ -14304,6 +14350,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     requireDetailedDrivingMixForBorrowers,
     createdAt,
     updatedAt,
+    deactivatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -14324,7 +14371,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           other.requireDetailedDrivingMixForBorrowers ==
               this.requireDetailedDrivingMixForBorrowers &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deactivatedAt == this.deactivatedAt);
 }
 
 class VehiclesCompanion extends UpdateCompanion<Vehicle> {
@@ -14343,6 +14391,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<bool> requireDetailedDrivingMixForBorrowers;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deactivatedAt;
   final Value<int> rowid;
   const VehiclesCompanion({
     this.id = const Value.absent(),
@@ -14360,6 +14409,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.requireDetailedDrivingMixForBorrowers = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deactivatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehiclesCompanion.insert({
@@ -14378,6 +14428,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.requireDetailedDrivingMixForBorrowers = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deactivatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        ownerContactId = Value(ownerContactId),
@@ -14401,6 +14452,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<bool>? requireDetailedDrivingMixForBorrowers,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deactivatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -14423,6 +14475,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
             requireDetailedDrivingMixForBorrowers,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deactivatedAt != null) 'deactivated_at': deactivatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -14443,6 +14496,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<bool>? requireDetailedDrivingMixForBorrowers,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deactivatedAt,
     Value<int>? rowid,
   }) {
     return VehiclesCompanion(
@@ -14465,6 +14519,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           this.requireDetailedDrivingMixForBorrowers,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deactivatedAt: deactivatedAt ?? this.deactivatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -14523,6 +14578,9 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deactivatedAt.present) {
+      map['deactivated_at'] = Variable<DateTime>(deactivatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -14549,6 +14607,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deactivatedAt: $deactivatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -28377,6 +28436,7 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       Value<bool> requireDetailedDrivingMixForBorrowers,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deactivatedAt,
       Value<int> rowid,
     });
 typedef $$VehiclesTableUpdateCompanionBuilder =
@@ -28396,6 +28456,7 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<bool> requireDetailedDrivingMixForBorrowers,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deactivatedAt,
       Value<int> rowid,
     });
 
@@ -28481,6 +28542,11 @@ class $$VehiclesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deactivatedAt => $composableBuilder(
+    column: $table.deactivatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -28569,6 +28635,11 @@ class $$VehiclesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deactivatedAt => $composableBuilder(
+    column: $table.deactivatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehiclesTableAnnotationComposer
@@ -28639,6 +28710,11 @@ class $$VehiclesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deactivatedAt => $composableBuilder(
+    column: $table.deactivatedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$VehiclesTableTableManager
@@ -28685,6 +28761,7 @@ class $$VehiclesTableTableManager
                     const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deactivatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehiclesCompanion(
                 id: id,
@@ -28703,6 +28780,7 @@ class $$VehiclesTableTableManager
                     requireDetailedDrivingMixForBorrowers,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deactivatedAt: deactivatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -28723,6 +28801,7 @@ class $$VehiclesTableTableManager
                     const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deactivatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehiclesCompanion.insert(
                 id: id,
@@ -28741,6 +28820,7 @@ class $$VehiclesTableTableManager
                     requireDetailedDrivingMixForBorrowers,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deactivatedAt: deactivatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

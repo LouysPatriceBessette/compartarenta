@@ -5767,6 +5767,48 @@ abstract class AppLocalizations {
   /// **'No vehicles yet. Tap + to add one.'**
   String get vehicleMyVehiclesEmpty;
 
+  /// No description provided for @vehicleOwnedActiveLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit reached: at most 3 active vehicles.'**
+  String get vehicleOwnedActiveLimitReached;
+
+  /// No description provided for @vehicleDeactivatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivated {date}'**
+  String vehicleDeactivatedLabel(String date);
+
+  /// No description provided for @vehicleDeactivateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate this vehicle'**
+  String get vehicleDeactivateAction;
+
+  /// No description provided for @vehicleDeactivateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate this vehicle?'**
+  String get vehicleDeactivateDialogTitle;
+
+  /// No description provided for @vehicleDeactivateDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. You can still view the history, but no new entries or use sessions will be allowed for this vehicle.'**
+  String get vehicleDeactivateDialogBody;
+
+  /// No description provided for @vehicleDeactivateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate'**
+  String get vehicleDeactivateConfirm;
+
+  /// No description provided for @vehicleDeactivateBlockedOpenSession.
+  ///
+  /// In en, this message translates to:
+  /// **'End the open use session first.'**
+  String get vehicleDeactivateBlockedOpenSession;
+
   /// No description provided for @vehicleAddVehicle.
   ///
   /// In en, this message translates to:

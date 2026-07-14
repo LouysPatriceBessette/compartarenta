@@ -3427,6 +3427,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleMyVehiclesEmpty => 'No vehicles yet. Tap + to add one.';
 
   @override
+  String get vehicleOwnedActiveLimitReached =>
+      'Limit reached: at most 3 active vehicles.';
+
+  @override
+  String vehicleDeactivatedLabel(String date) {
+    return 'Deactivated $date';
+  }
+
+  @override
+  String get vehicleDeactivateAction => 'Deactivate this vehicle';
+
+  @override
+  String get vehicleDeactivateDialogTitle => 'Deactivate this vehicle?';
+
+  @override
+  String get vehicleDeactivateDialogBody =>
+      'This cannot be undone. You can still view the history, but no new entries or use sessions will be allowed for this vehicle.';
+
+  @override
+  String get vehicleDeactivateConfirm => 'Deactivate';
+
+  @override
+  String get vehicleDeactivateBlockedOpenSession =>
+      'End the open use session first.';
+
+  @override
   String get vehicleAddVehicle => 'Add vehicle';
 
   @override

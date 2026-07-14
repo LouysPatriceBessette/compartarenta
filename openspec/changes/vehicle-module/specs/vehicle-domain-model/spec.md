@@ -24,19 +24,28 @@ Each vehicle record SHALL name exactly one owner for its entire lifetime in the 
 - **THEN** the vehicle's owner field remains the original owner Contact
 - **THEN** the borrower is not listed as owner
 
-### Requirement: An owner may register up to three vehicles
-The system SHALL allow one owner to create and maintain at most **three** vehicle records independently. The system MUST NOT allow creating a fourth owned vehicle until the owner removes an existing one.
+### Requirement: An owner may have up to three active vehicles
+The system SHALL allow one owner to have at most **three active** owned vehicle records at a time. The system MUST NOT allow creating another owned vehicle while three **active** owned vehicles already exist.
 
-#### Scenario: Owner with two vehicles
+**Deactivation (2026-07-14):** the owner MAY permanently **deactivate** an owned vehicle (not delete). A deactivated vehicle is **read-only** (consultation of existing data only): no new meter readings, fuel, maintenance, violations, gallery adds, detail edits, or use sessions. Deactivation is **irreversible**. Deactivated vehicles MUST appear at the **bottom** of the owned-vehicle list with a label that includes the deactivation date. Deactivating a vehicle **frees** an active slot under the three-active cap.
+
+Deactivation MUST be refused while that vehicle has an **open** use session. The same active-vehicle cap applies to all creation paths (UI and debug/QA seeds).
+
+#### Scenario: Owner with two active vehicles
 - **WHEN** an owner registers a car and later registers a motorcycle
 - **THEN** both vehicles appear in the owner's vehicle list
 - **THEN** odometer, fuel, and maintenance data are scoped per vehicle
 
-#### Scenario: Owner cannot register a fourth vehicle
-- **WHEN** an owner already has three registered vehicles
+#### Scenario: Owner cannot register a fourth active vehicle
+- **WHEN** an owner already has three **active** owned vehicles
 - **AND** they attempt to add another vehicle
 - **THEN** the system blocks creation
-- **THEN** the user sees clear guidance that the limit is three vehicles per Propriétaire
+- **THEN** the add affordance is unavailable with guidance that the limit is three **active** vehicles
+
+#### Scenario: Deactivation frees an active slot
+- **WHEN** an owner has three active vehicles and deactivates one
+- **THEN** that vehicle remains listed as deactivated (read-only)
+- **THEN** the owner MAY register a new active vehicle (still at most three active)
 
 ### Requirement: Initial-release vehicle kinds use odometer
 At **initial release**, the system SHALL support **car**, **truck**, and **motorcycle** kinds. Each uses **odometer** readings (km or mi) for usage, monotonic validation, and distance derivation.

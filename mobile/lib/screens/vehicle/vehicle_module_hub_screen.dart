@@ -19,9 +19,9 @@ import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
 import '../../vehicle/vehicle_module_exit.dart';
+import '../../vehicle/vehicle_owned_active_cap.dart';
 import '../help/help_faq_screen.dart';
 import '../../widgets/screen_body_padding.dart';
-
 class VehicleModuleHubScreen extends StatefulWidget {
   const VehicleModuleHubScreen({super.key, required this.prefs});
 
@@ -74,6 +74,9 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
         : l10n.vehicleUseSessionStartedOn(
             formatPreferenceDateTime(_openUse!.startedAt, dateFmt),
           );
+    final activeCount =
+        _vehicles.where(vehicleIsActive).length;
+    final atActiveCap = activeCount >= kMaxActiveOwnedVehicles;
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => exitVehicleModule(context)),
@@ -86,17 +89,19 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
           ),
         ],
       ),
-      floatingActionButton: qaVehicleSemantics(
-        identifier: kQaVehicleAddFab,
-        child: FloatingActionButton.extended(
-          onPressed: () async {
-            final created = await context.push<bool>('/vehicle/add');
-            if (created == true) _reload();
-          },
-          icon: const Icon(Icons.add),
-          label: Text(l10n.vehicleAddVehicle),
-        ),
-      ),
+      floatingActionButton: atActiveCap
+          ? null
+          : qaVehicleSemantics(
+              identifier: kQaVehicleAddFab,
+              child: FloatingActionButton.extended(
+                onPressed: () async {
+                  final created = await context.push<bool>('/vehicle/add');
+                  if (created == true) _reload();
+                },
+                icon: const Icon(Icons.add),
+                label: Text(l10n.vehicleAddVehicle),
+              ),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -152,7 +157,8 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
   }
 
   Future<void> _launchQuickAction(String kind) async {
-    if (_vehicles.isEmpty) {
+    final active = _vehicles.where(vehicleIsActive).toList();
+    if (active.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).vehicleAddFirst)),
       );
@@ -169,7 +175,6 @@ class _VehicleModuleHubScreenState extends State<VehicleModuleHubScreen> {
     _reload();
   }
 }
-
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow({
     required this.sessionOpen,
@@ -290,6 +295,20 @@ class _VehicleCardState extends State<_VehicleCard> {
                     widget.vehicle.displayLabel,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  if (!vehicleIsActive(widget.vehicle)) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.vehicleDeactivatedLabel(
+                        formatPreferenceDate(
+                          widget.vehicle.deactivatedAt!,
+                          effectiveDateFormat(widget.prefs),
+                        ),
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   if (snap.hasError)
                     const SizedBox.shrink()

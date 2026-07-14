@@ -20,6 +20,8 @@ class Vehicles extends Table {
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  /// When set, the vehicle is deactivated (read-only). Null = active.
+  DateTimeColumn get deactivatedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

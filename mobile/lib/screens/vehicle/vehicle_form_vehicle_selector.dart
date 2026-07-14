@@ -40,4 +40,4 @@ class VehicleFormVehicleSelector extends StatelessWidget {
 }
 
 Future<List<Vehicle>> loadOwnedVehiclesForForms() =>
-    VehiclesRepository(AppDatabase.processScope).listOwnedVehicles();
+    VehiclesRepository(AppDatabase.processScope).listActiveOwnedVehicles();

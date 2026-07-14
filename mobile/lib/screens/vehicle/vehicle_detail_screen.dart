@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../vehicle/vehicle_kind.dart';
+import '../../vehicle/vehicle_owned_active_cap.dart';
 import '../../widgets/screen_body_padding.dart';
 import 'vehicle_detail_gallery.dart';
 
@@ -61,6 +62,40 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     }
   }
 
+  Future<void> _confirmDeactivate() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.vehicleDeactivateDialogTitle),
+        content: Text(l10n.vehicleDeactivateDialogBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.vehicleDeactivateConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final repo = VehiclesRepository(AppDatabase.processScope);
+    try {
+      await repo.deactivateOwnedVehicle(widget.vehicleId);
+    } on VehicleHasOpenUseException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleDeactivateBlockedOpenSession)),
+      );
+      return;
+    }
+    if (!mounted) return;
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -75,6 +110,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final dateFmt = effectiveDateFormat(widget.prefs);
     final usesHorometer =
         VehicleKind.fromWire(v.vehicleKind)?.usesHorometer ?? false;
+    final active = vehicleIsActive(v);
     return Scaffold(
       appBar: AppBar(title: Text(v.displayLabel)),
       body: qaVehicleSemantics(
@@ -82,6 +118,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         child: ListView(
           padding: screenBodyScrollPadding(context),
           children: [
+          if (!active)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                l10n.vehicleDeactivatedLabel(
+                  formatPreferenceDate(v.deactivatedAt, dateFmt),
+                ),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
           if (summary.isNotEmpty)
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -92,14 +140,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                IconButton(
-                  onPressed: _openEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: l10n.vehicleEditDetailsTitle,
-                ),
+                if (active)
+                  IconButton(
+                    onPressed: _openEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: l10n.vehicleEditDetailsTitle,
+                  ),
               ],
             )
-          else
+          else if (active)
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
@@ -108,32 +157,34 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 tooltip: l10n.vehicleEditDetailsTitle,
               ),
             ),
-          qaVehicleSemantics(
-            identifier: kQaVehicleDetailOdometerReading,
-            child: ListTile(
-              leading: const Icon(Icons.speed_outlined),
-              title: Text(l10n.vehicleQuickActionOdometer),
-              onTap: () => context.push('/vehicle/${v.id}/meter-reading'),
+          if (active) ...[
+            qaVehicleSemantics(
+              identifier: kQaVehicleDetailOdometerReading,
+              child: ListTile(
+                leading: const Icon(Icons.speed_outlined),
+                title: Text(l10n.vehicleQuickActionOdometer),
+                onTap: () => context.push('/vehicle/${v.id}/meter-reading'),
+              ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.build_outlined),
-            title: Text(l10n.vehicleQuickActionMaintenance),
-            onTap: () => context.push('/vehicle/${v.id}/maintenance'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.report_outlined),
-            title: Text(l10n.vehicleQuickActionViolation),
-            onTap: () => context.push('/vehicle/${v.id}/violation'),
-          ),
-          const Divider(),
+            ListTile(
+              leading: const Icon(Icons.build_outlined),
+              title: Text(l10n.vehicleQuickActionMaintenance),
+              onTap: () => context.push('/vehicle/${v.id}/maintenance'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.report_outlined),
+              title: Text(l10n.vehicleQuickActionViolation),
+              onTap: () => context.push('/vehicle/${v.id}/violation'),
+            ),
+            const Divider(),
+          ],
           ListTile(
             leading: const Icon(Icons.menu_book_outlined),
             title: Text(l10n.vehicleJournalsTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/vehicle/${v.id}/journals'),
           ),
-          if (!usesHorometer)
+          if (active && !usesHorometer)
             ListTile(
               leading: const Icon(Icons.fact_check_outlined),
               title: Text(l10n.vehiclePendingCorrectionsTitle),
@@ -154,6 +205,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             vehicleId: v.id,
             dateFormat: dateFmt,
           ),
+          if (active) ...[
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: _confirmDeactivate,
+              child: Text(l10n.vehicleDeactivateAction),
+            ),
+          ],
         ],
         ),
       ),
