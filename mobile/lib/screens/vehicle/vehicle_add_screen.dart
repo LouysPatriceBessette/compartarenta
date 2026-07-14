@@ -13,6 +13,7 @@ import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/portability/vehicle_sale_bundle.dart';
 import '../../vehicle/portability/vehicle_sale_import_service.dart';
+import '../../vehicle/portability/vehicle_sale_import_undo_service.dart';
 import '../../vehicle/portability/vehicle_sale_portability_dialogs.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
@@ -54,11 +55,14 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   final _galleries = <VehicleGalleryDraft>[];
   bool _saving = false;
   bool _importing = false;
+  bool _undoingImport = false;
   bool _oilChangeIntervalBlurred = false;
+  Vehicle? _undoableImport;
 
   @override
   void initState() {
     super.initState();
+    _loadUndoableImport();
     _oilChangeIntervalFocus.addListener(_onOilChangeIntervalFocus);
     for (final c in [
       _label,
@@ -83,6 +87,53 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   }
 
   void _refresh() => setState(() {});
+
+  Future<void> _loadUndoableImport() async {
+    final vehicle =
+        await VehicleSaleImportUndoService(AppDatabase.processScope)
+            .latestOwnedUndoableImport();
+    if (!mounted) return;
+    setState(() => _undoableImport = vehicle);
+  }
+
+  Future<void> _confirmUndoImport() async {
+    final target = _undoableImport;
+    if (target == null || _undoingImport) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(
+          l10n.vehicleSaleImportUndoConfirmBody(target.displayLabel),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.vehicleSaleImportUndoAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _undoingImport = true);
+    try {
+      await VehicleSaleImportUndoService(AppDatabase.processScope)
+          .undoImport(target.id);
+      if (!mounted) return;
+      await _loadUndoableImport();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleImportFailOther)),
+      );
+    } finally {
+      if (mounted) setState(() => _undoingImport = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -325,10 +376,22 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: (_saving || _importing) ? null : _confirmImport,
+              onPressed: (_saving || _importing || _undoingImport)
+                  ? null
+                  : _confirmImport,
               child: Text(l10n.vehicleImportAction),
             ),
           ),
+          if (_undoableImport != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: (_saving || _importing || _undoingImport)
+                    ? null
+                    : _confirmUndoImport,
+                child: Text(l10n.vehicleSaleImportUndoAction),
+              ),
+            ),
           qaVehicleSemantics(
             identifier: kQaVehicleFieldLabel,
             child: AppTextField(

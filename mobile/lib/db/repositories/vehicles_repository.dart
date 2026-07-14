@@ -120,6 +120,15 @@ class VehiclesRepository {
       (_db.select(_db.vehicles)..where((t) => t.id.equals(id)))
           .getSingleOrNull();
 
+  Future<void> clearSaleImportUndoAvailable(String vehicleId) async {
+    await (_db.update(_db.vehicles)..where((t) => t.id.equals(vehicleId)))
+        .write(
+      VehiclesCompanion(
+        saleImportUndoAvailable: const drift.Value(false),
+      ),
+    );
+  }
+
   Future<void> ensureVehicleActiveForWrite(String vehicleId) async {
     final vehicle = await getVehicle(vehicleId);
     if (vehicle == null) {

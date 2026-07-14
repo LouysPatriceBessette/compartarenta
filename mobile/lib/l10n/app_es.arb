@@ -1402,6 +1402,17 @@
   "vehicleImportFailInvalid": "Este archivo no es una exportación de vehículo válida.",
   "vehicleImportFailCorrupt": "La importación ha fallado. El archivo parece estar corrupto. Inténtelo de nuevo con otra copia.",
   "vehicleImportFailOther": "La importación ha fallado. Inténtelo de nuevo.",
+  "vehicleSaleImportUndoAction": "Deshacer la importación",
+  "vehicleSaleImportUndoConfirmBody": "Los datos importados de « {label} » se eliminarán de forma permanente.",
+  "@vehicleSaleImportUndoConfirmBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleSaleImportConfirmActionBody": "Esta acción confirma la importación de este vehículo. Ya no podrá deshacer la importación.",
+  "vehicleSaleImportConfirmActionConfirm": "Confirmar",
   "vehicleAddVehicle": "Añadir vehículo",
   "vehicleAddFirst": "Añada primero un vehículo.",
   "vehicleFieldLabel": "Nombre",

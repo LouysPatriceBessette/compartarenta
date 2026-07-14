@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../vehicle/portability/vehicle_sale_export_service.dart';
+import '../../vehicle/portability/vehicle_sale_import_confirm.dart';
 import '../../vehicle/portability/vehicle_sale_portability_dialogs.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_owned_active_cap.dart';
@@ -84,6 +85,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
+    final importOk = await confirmSaleImportCommitmentIfNeeded(
+      context,
+      vehicleId: widget.vehicleId,
+    );
+    if (!importOk || !mounted) return;
     final repo = VehiclesRepository(AppDatabase.processScope);
     try {
       await repo.deactivateOwnedVehicle(widget.vehicleId);

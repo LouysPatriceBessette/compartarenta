@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/display_units.dart';
+import '../../vehicle/portability/vehicle_sale_import_confirm.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_oil_change_interval.dart';
 import '../../widgets/app_text_field.dart';
@@ -43,6 +44,12 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
   bool _oilChangeIntervalBlurred = false;
   bool _usesHorometer = false;
   VehicleConsumptionEstimationMode _consumptionMode =
+      VehicleConsumptionEstimationMode.detailed;
+  String _originalLabel = '';
+  String _originalColor = '';
+  String _originalLicensePlate = '';
+  int? _originalOilInterval;
+  VehicleConsumptionEstimationMode _originalConsumptionMode =
       VehicleConsumptionEstimationMode.detailed;
 
   @override
@@ -85,14 +92,20 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
     final kind = VehicleKind.fromWire(vehicle?.vehicleKind);
     final usesHorometer = kind?.usesHorometer ?? false;
     final distanceUnit = resolveDistanceUnit(widget.prefs);
+    final mode = VehicleConsumptionEstimationMode.fromWire(
+      vehicle?.consumptionEstimationMode,
+    );
     setState(() {
       _displayLabel.text = vehicle?.displayLabel ?? '';
       _color.text = vehicle?.color ?? '';
       _licensePlate.text = vehicle?.licensePlate ?? '';
       _usesHorometer = usesHorometer;
-      _consumptionMode = VehicleConsumptionEstimationMode.fromWire(
-        vehicle?.consumptionEstimationMode,
-      );
+      _consumptionMode = mode;
+      _originalLabel = _displayLabel.text;
+      _originalColor = _color.text;
+      _originalLicensePlate = _licensePlate.text;
+      _originalOilInterval = interval;
+      _originalConsumptionMode = mode;
       if (interval != null) {
         _oilChangeInterval.text = formatOilChangeIntervalForDisplay(
           storedTenths: interval,
@@ -102,6 +115,28 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
       }
       _loading = false;
     });
+  }
+
+  bool get _othersUnchangedForRenameOnly {
+    final oil = _parsedOilChangeInterval;
+    final galleriesEmpty =
+        _newGalleries.every((g) => g.photos.isEmpty);
+    return _color.text.trim() == _originalColor.trim() &&
+        _licensePlate.text.trim() == _originalLicensePlate.trim() &&
+        oil == _originalOilInterval &&
+        (_usesHorometer || _consumptionMode == _originalConsumptionMode) &&
+        galleriesEmpty;
+  }
+
+  bool get _hasAnyEdit {
+    return _displayLabel.text.trim() != _originalLabel.trim() ||
+        !_othersUnchangedForRenameOnly;
+  }
+
+  /// Only the display label changed — allowed without confirming the import.
+  bool get _isRenameOnlyEdit {
+    return _displayLabel.text.trim() != _originalLabel.trim() &&
+        _othersUnchangedForRenameOnly;
   }
 
   int? get _parsedOilChangeInterval => parseOilChangeIntervalToStoredTenths(
@@ -149,6 +184,16 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
   Future<void> _save() async {
     if (!_canSave) return;
     setState(() => _saving = true);
+    if (_hasAnyEdit && !_isRenameOnlyEdit) {
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: widget.vehicleId,
+      );
+      if (!ok) {
+        if (mounted) setState(() => _saving = false);
+        return;
+      }
+    }
     final repo = VehiclesRepository(AppDatabase.processScope);
     await repo.updateVehicleEditableDetails(
       vehicleId: widget.vehicleId,

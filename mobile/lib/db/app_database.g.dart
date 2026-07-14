@@ -13823,6 +13823,21 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _saleImportUndoAvailableMeta =
+      const VerificationMeta('saleImportUndoAvailable');
+  @override
+  late final GeneratedColumn<bool> saleImportUndoAvailable =
+      GeneratedColumn<bool>(
+        'sale_import_undo_available',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("sale_import_undo_available" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -13841,6 +13856,7 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
     createdAt,
     updatedAt,
     deactivatedAt,
+    saleImportUndoAvailable,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -13983,6 +13999,15 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         ),
       );
     }
+    if (data.containsKey('sale_import_undo_available')) {
+      context.handle(
+        _saleImportUndoAvailableMeta,
+        saleImportUndoAvailable.isAcceptableOrUnknown(
+          data['sale_import_undo_available']!,
+          _saleImportUndoAvailableMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14056,6 +14081,10 @@ class $VehiclesTable extends Vehicles with TableInfo<$VehiclesTable, Vehicle> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}deactivated_at'],
       ),
+      saleImportUndoAvailable: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sale_import_undo_available'],
+      )!,
     );
   }
 
@@ -14088,6 +14117,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
 
   /// When set, the vehicle is deactivated (read-only). Null = active.
   final DateTime? deactivatedAt;
+
+  /// Sale-import undo still available (rename/consult only so far).
+  final bool saleImportUndoAvailable;
   const Vehicle({
     required this.id,
     required this.ownerContactId,
@@ -14105,6 +14137,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     required this.createdAt,
     required this.updatedAt,
     this.deactivatedAt,
+    required this.saleImportUndoAvailable,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14137,6 +14170,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     if (!nullToAbsent || deactivatedAt != null) {
       map['deactivated_at'] = Variable<DateTime>(deactivatedAt);
     }
+    map['sale_import_undo_available'] = Variable<bool>(saleImportUndoAvailable);
     return map;
   }
 
@@ -14166,6 +14200,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       deactivatedAt: deactivatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deactivatedAt),
+      saleImportUndoAvailable: Value(saleImportUndoAvailable),
     );
   }
 
@@ -14197,6 +14232,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deactivatedAt: serializer.fromJson<DateTime?>(json['deactivatedAt']),
+      saleImportUndoAvailable: serializer.fromJson<bool>(
+        json['saleImportUndoAvailable'],
+      ),
     );
   }
   @override
@@ -14225,6 +14263,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deactivatedAt': serializer.toJson<DateTime?>(deactivatedAt),
+      'saleImportUndoAvailable': serializer.toJson<bool>(
+        saleImportUndoAvailable,
+      ),
     };
   }
 
@@ -14245,6 +14286,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deactivatedAt = const Value.absent(),
+    bool? saleImportUndoAvailable,
   }) => Vehicle(
     id: id ?? this.id,
     ownerContactId: ownerContactId ?? this.ownerContactId,
@@ -14269,6 +14311,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     deactivatedAt: deactivatedAt.present
         ? deactivatedAt.value
         : this.deactivatedAt,
+    saleImportUndoAvailable:
+        saleImportUndoAvailable ?? this.saleImportUndoAvailable,
   );
   Vehicle copyWithCompanion(VehiclesCompanion data) {
     return Vehicle(
@@ -14305,6 +14349,9 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
       deactivatedAt: data.deactivatedAt.present
           ? data.deactivatedAt.value
           : this.deactivatedAt,
+      saleImportUndoAvailable: data.saleImportUndoAvailable.present
+          ? data.saleImportUndoAvailable.value
+          : this.saleImportUndoAvailable,
     );
   }
 
@@ -14328,7 +14375,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
           )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deactivatedAt: $deactivatedAt')
+          ..write('deactivatedAt: $deactivatedAt, ')
+          ..write('saleImportUndoAvailable: $saleImportUndoAvailable')
           ..write(')'))
         .toString();
   }
@@ -14351,6 +14399,7 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
     createdAt,
     updatedAt,
     deactivatedAt,
+    saleImportUndoAvailable,
   );
   @override
   bool operator ==(Object other) =>
@@ -14372,7 +14421,8 @@ class Vehicle extends DataClass implements Insertable<Vehicle> {
               this.requireDetailedDrivingMixForBorrowers &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.deactivatedAt == this.deactivatedAt);
+          other.deactivatedAt == this.deactivatedAt &&
+          other.saleImportUndoAvailable == this.saleImportUndoAvailable);
 }
 
 class VehiclesCompanion extends UpdateCompanion<Vehicle> {
@@ -14392,6 +14442,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deactivatedAt;
+  final Value<bool> saleImportUndoAvailable;
   final Value<int> rowid;
   const VehiclesCompanion({
     this.id = const Value.absent(),
@@ -14410,6 +14461,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deactivatedAt = const Value.absent(),
+    this.saleImportUndoAvailable = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VehiclesCompanion.insert({
@@ -14429,6 +14481,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deactivatedAt = const Value.absent(),
+    this.saleImportUndoAvailable = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        ownerContactId = Value(ownerContactId),
@@ -14453,6 +14506,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deactivatedAt,
+    Expression<bool>? saleImportUndoAvailable,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -14476,6 +14530,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deactivatedAt != null) 'deactivated_at': deactivatedAt,
+      if (saleImportUndoAvailable != null)
+        'sale_import_undo_available': saleImportUndoAvailable,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -14497,6 +14553,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deactivatedAt,
+    Value<bool>? saleImportUndoAvailable,
     Value<int>? rowid,
   }) {
     return VehiclesCompanion(
@@ -14520,6 +14577,8 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deactivatedAt: deactivatedAt ?? this.deactivatedAt,
+      saleImportUndoAvailable:
+          saleImportUndoAvailable ?? this.saleImportUndoAvailable,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -14581,6 +14640,11 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
     if (deactivatedAt.present) {
       map['deactivated_at'] = Variable<DateTime>(deactivatedAt.value);
     }
+    if (saleImportUndoAvailable.present) {
+      map['sale_import_undo_available'] = Variable<bool>(
+        saleImportUndoAvailable.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -14608,6 +14672,7 @@ class VehiclesCompanion extends UpdateCompanion<Vehicle> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deactivatedAt: $deactivatedAt, ')
+          ..write('saleImportUndoAvailable: $saleImportUndoAvailable, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -28437,6 +28502,7 @@ typedef $$VehiclesTableCreateCompanionBuilder =
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deactivatedAt,
+      Value<bool> saleImportUndoAvailable,
       Value<int> rowid,
     });
 typedef $$VehiclesTableUpdateCompanionBuilder =
@@ -28457,6 +28523,7 @@ typedef $$VehiclesTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deactivatedAt,
+      Value<bool> saleImportUndoAvailable,
       Value<int> rowid,
     });
 
@@ -28547,6 +28614,11 @@ class $$VehiclesTableFilterComposer
 
   ColumnFilters<DateTime> get deactivatedAt => $composableBuilder(
     column: $table.deactivatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get saleImportUndoAvailable => $composableBuilder(
+    column: $table.saleImportUndoAvailable,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -28640,6 +28712,11 @@ class $$VehiclesTableOrderingComposer
     column: $table.deactivatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get saleImportUndoAvailable => $composableBuilder(
+    column: $table.saleImportUndoAvailable,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VehiclesTableAnnotationComposer
@@ -28715,6 +28792,11 @@ class $$VehiclesTableAnnotationComposer
     column: $table.deactivatedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get saleImportUndoAvailable => $composableBuilder(
+    column: $table.saleImportUndoAvailable,
+    builder: (column) => column,
+  );
 }
 
 class $$VehiclesTableTableManager
@@ -28762,6 +28844,7 @@ class $$VehiclesTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deactivatedAt = const Value.absent(),
+                Value<bool> saleImportUndoAvailable = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehiclesCompanion(
                 id: id,
@@ -28781,6 +28864,7 @@ class $$VehiclesTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deactivatedAt: deactivatedAt,
+                saleImportUndoAvailable: saleImportUndoAvailable,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -28802,6 +28886,7 @@ class $$VehiclesTableTableManager
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deactivatedAt = const Value.absent(),
+                Value<bool> saleImportUndoAvailable = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VehiclesCompanion.insert(
                 id: id,
@@ -28821,6 +28906,7 @@ class $$VehiclesTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deactivatedAt: deactivatedAt,
+                saleImportUndoAvailable: saleImportUndoAvailable,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

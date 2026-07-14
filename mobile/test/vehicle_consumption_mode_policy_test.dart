@@ -29,6 +29,7 @@ void main() {
         requireDetailedDrivingMixForBorrowers: false,
         createdAt: DateTime.utc(2026, 1, 1),
         updatedAt: DateTime.utc(2026, 1, 1),
+        saleImportUndoAvailable: false,
       );
       simpleOwnerVehicle = Vehicle(
         id: detailedOwnerVehicle.id,
@@ -47,6 +48,7 @@ void main() {
         requireDetailedDrivingMixForBorrowers: false,
         createdAt: detailedOwnerVehicle.createdAt,
         updatedAt: detailedOwnerVehicle.updatedAt,
+        saleImportUndoAvailable: false,
       );
     });
 
@@ -88,6 +90,7 @@ void main() {
         requireDetailedDrivingMixForBorrowers: true,
         createdAt: detailedOwnerVehicle.createdAt,
         updatedAt: detailedOwnerVehicle.updatedAt,
+        saleImportUndoAvailable: false,
       );
       const borrower = VehicleUsageContext.borrower(
         actingContactId: 'contact:borrower',
@@ -126,6 +129,7 @@ void main() {
         requireDetailedDrivingMixForBorrowers: true,
         createdAt: simpleOwnerVehicle.createdAt,
         updatedAt: simpleOwnerVehicle.updatedAt,
+        saleImportUndoAvailable: false,
       );
       expect(
         shouldCollectDetailedDrivingMix(

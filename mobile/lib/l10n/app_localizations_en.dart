@@ -3498,6 +3498,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleImportFailOther => 'Import failed. Please try again.';
 
   @override
+  String get vehicleSaleImportUndoAction => 'Undo import';
+
+  @override
+  String vehicleSaleImportUndoConfirmBody(String label) {
+    return 'Imported data for “$label” will be permanently deleted.';
+  }
+
+  @override
+  String get vehicleSaleImportConfirmActionBody =>
+      'This action confirms the import of this vehicle. You will no longer be able to undo the import.';
+
+  @override
+  String get vehicleSaleImportConfirmActionConfirm => 'Confirm';
+
+  @override
   String get vehicleAddVehicle => 'Add vehicle';
 
   @override

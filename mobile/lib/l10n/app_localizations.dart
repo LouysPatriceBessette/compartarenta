@@ -5887,6 +5887,30 @@ abstract class AppLocalizations {
   /// **'Import failed. Please try again.'**
   String get vehicleImportFailOther;
 
+  /// No description provided for @vehicleSaleImportUndoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo import'**
+  String get vehicleSaleImportUndoAction;
+
+  /// No description provided for @vehicleSaleImportUndoConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported data for “{label}” will be permanently deleted.'**
+  String vehicleSaleImportUndoConfirmBody(String label);
+
+  /// No description provided for @vehicleSaleImportConfirmActionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This action confirms the import of this vehicle. You will no longer be able to undo the import.'**
+  String get vehicleSaleImportConfirmActionBody;
+
+  /// No description provided for @vehicleSaleImportConfirmActionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get vehicleSaleImportConfirmActionConfirm;
+
   /// No description provided for @vehicleAddVehicle.
   ///
   /// In en, this message translates to:

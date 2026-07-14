@@ -10,6 +10,7 @@ import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/format_money.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/portability/vehicle_sale_import_confirm.dart';
 import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
@@ -159,6 +160,11 @@ class _VehicleFuelPurchaseScreenState extends State<VehicleFuelPurchaseScreen> {
 
     setState(() => _saving = true);
     try {
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: vehicleId,
+      );
+      if (!ok || !mounted) return;
       final openUse = await repo.openUseForVehicle(vehicleId);
       if (!mounted) return;
       final gapResult = await confirmMeterGapsBeforeSave(
@@ -410,6 +416,11 @@ class _VehicleStandaloneMeterReadingScreenState
     setState(() => _saving = true);
     final repo = VehiclesRepository(AppDatabase.processScope);
     try {
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: v.id,
+      );
+      if (!ok || !mounted) return;
       final kind = VehicleKind.fromWire(v.vehicleKind);
       final usesHorometer = kind?.usesHorometer ?? false;
       final distanceUnit = resolveDistanceUnit(widget.prefs);
@@ -615,6 +626,11 @@ class _VehicleMaintenanceFormScreenState
             distanceUnit: resolveDistanceUnit(widget.prefs),
           )
         : null;
+    final ok = await confirmSaleImportCommitmentIfNeeded(
+      context,
+      vehicleId: widget.vehicleId,
+    );
+    if (!ok || !mounted) return;
     final repo = VehiclesRepository(AppDatabase.processScope);
     await repo.saveMaintenanceEvent(
       vehicleId: widget.vehicleId,
@@ -770,6 +786,11 @@ class _VehicleViolationFormScreenState extends State<VehicleViolationFormScreen>
     if (_denial != null) return;
     final amountMajor = double.tryParse(_amount.text.replaceAll(',', '.'));
     if (amountMajor == null || _type.text.trim().isEmpty) return;
+    final ok = await confirmSaleImportCommitmentIfNeeded(
+      context,
+      vehicleId: widget.vehicleId,
+    );
+    if (!ok || !mounted) return;
     final repo = VehiclesRepository(AppDatabase.processScope);
     await repo.saveTrafficViolation(
       vehicleId: widget.vehicleId,

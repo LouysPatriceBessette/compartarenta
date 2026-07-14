@@ -22,6 +22,9 @@ class Vehicles extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   /// When set, the vehicle is deactivated (read-only). Null = active.
   DateTimeColumn get deactivatedAt => dateTime().nullable()();
+  /// Sale-import undo still available (rename/consult only so far).
+  BoolColumn get saleImportUndoAvailable =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

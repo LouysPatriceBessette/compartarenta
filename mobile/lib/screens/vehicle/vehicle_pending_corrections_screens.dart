@@ -10,6 +10,7 @@ import '../../util/display_date.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../util/week_start_calendar.dart';
+import '../../vehicle/portability/vehicle_sale_import_confirm.dart';
 import '../../vehicle/vehicle_fuel_log_display.dart';
 import '../../vehicle/vehicle_gap_correction.dart';
 import '../../vehicle/vehicle_gap_resolution_service.dart';
@@ -633,6 +634,11 @@ class _VehiclePendingCorrectionDetailScreenState
     if (parsed == null) return;
     setState(() => _saving = true);
     try {
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: widget.vehicleId,
+      );
+      if (!ok) return;
       final service = VehicleGapResolutionService(
         VehiclesRepository(AppDatabase.processScope),
       );
@@ -691,6 +697,11 @@ class _VehiclePendingCorrectionDetailScreenState
     }
     setState(() => _saving = true);
     try {
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: widget.vehicleId,
+      );
+      if (!ok) return;
       final service = VehicleGapResolutionService(
         VehiclesRepository(AppDatabase.processScope),
       );

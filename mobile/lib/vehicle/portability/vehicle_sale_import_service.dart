@@ -139,6 +139,7 @@ class VehicleSaleImportService {
                     const drift.Value(false),
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                saleImportUndoAvailable: const drift.Value(true),
               ),
             );
 

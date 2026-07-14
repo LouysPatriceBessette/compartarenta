@@ -722,7 +722,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1087,6 +1087,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 35) {
         await _migrateAddColumn(m, vehicles, vehicles.deactivatedAt);
+      }
+      if (from < 36) {
+        await _migrateAddColumn(
+          m,
+          vehicles,
+          vehicles.saleImportUndoAvailable,
+        );
       }
     },
     beforeOpen: (details) async {

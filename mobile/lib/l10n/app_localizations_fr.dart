@@ -3535,6 +3535,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get vehicleImportFailOther => 'L\'importation a échoué. Réessayez.';
 
   @override
+  String get vehicleSaleImportUndoAction => 'Défaire l\'importation';
+
+  @override
+  String vehicleSaleImportUndoConfirmBody(String label) {
+    return 'Les données importées de « $label » seront définitivement supprimées.';
+  }
+
+  @override
+  String get vehicleSaleImportConfirmActionBody =>
+      'Cette action confirme l\'importation de ce véhicule. Vous ne pourrez plus défaire l\'importation.';
+
+  @override
+  String get vehicleSaleImportConfirmActionConfirm => 'Confirmer';
+
+  @override
   String get vehicleAddVehicle => 'Ajouter un véhicule';
 
   @override

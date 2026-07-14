@@ -1579,6 +1579,17 @@
   "vehicleImportFailInvalid": "This file is not a valid vehicle export.",
   "vehicleImportFailCorrupt": "Import failed. The file appears to be corrupted. Try again with another copy.",
   "vehicleImportFailOther": "Import failed. Please try again.",
+  "vehicleSaleImportUndoAction": "Undo import",
+  "vehicleSaleImportUndoConfirmBody": "Imported data for “{label}” will be permanently deleted.",
+  "@vehicleSaleImportUndoConfirmBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleSaleImportConfirmActionBody": "This action confirms the import of this vehicle. You will no longer be able to undo the import.",
+  "vehicleSaleImportConfirmActionConfirm": "Confirm",
   "vehicleAddVehicle": "Add vehicle",
   "vehicleAddFirst": "Add a vehicle first.",
   "vehicleFieldLabel": "Display name",

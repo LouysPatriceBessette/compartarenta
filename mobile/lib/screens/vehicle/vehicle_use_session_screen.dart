@@ -14,6 +14,7 @@ import '../../vehicle/vehicle_known_tank_state.dart';
 import '../../vehicle/vehicle_consumption_mode_policy.dart';
 import '../../vehicle/vehicle_tank_session_flow.dart';
 import '../../vehicle/vehicle_gap_correction.dart';
+import '../../vehicle/portability/vehicle_sale_import_confirm.dart';
 import '../../vehicle/vehicle_gap_flow.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
@@ -286,6 +287,13 @@ class _VehicleUseSessionScreenState extends State<VehicleUseSessionScreen> {
     final repo = VehiclesRepository(AppDatabase.processScope);
     try {
       final openUse = await repo.openUseForVehicle(v.id);
+      if (!mounted) return;
+      // Starting a session (or ending one with other writes) confirms import.
+      final ok = await confirmSaleImportCommitmentIfNeeded(
+        context,
+        vehicleId: v.id,
+      );
+      if (!ok) return;
       if (!mounted) return;
       final unit = repo.meterUnitForVehicle(v);
       final kind = VehicleKind.fromWire(v.vehicleKind);

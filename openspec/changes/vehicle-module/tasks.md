@@ -46,6 +46,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 - [x] 5.1 Single-vehicle export (factual zip+JSON snapshot, module manifest) (2026-07-14)
 - [x] 5.2 Import as new owned vehicle on buyer device (2026-07-14)
+- [x] 5.3 Undo sale import while only rename/consult (revert DB + media; confirm dialog before other actions) (2026-07-14)
 
 ## 6. Navigation, hubs & licensing
 

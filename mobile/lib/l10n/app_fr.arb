@@ -1419,6 +1419,17 @@
   "vehicleImportFailInvalid": "Ce fichier n'est pas un export véhicule valide.",
   "vehicleImportFailCorrupt": "L'importation a échoué. Le fichier semble corrompu. Réessayez avec une autre copie.",
   "vehicleImportFailOther": "L'importation a échoué. Réessayez.",
+  "vehicleSaleImportUndoAction": "Défaire l'importation",
+  "vehicleSaleImportUndoConfirmBody": "Les données importées de « {label} » seront définitivement supprimées.",
+  "@vehicleSaleImportUndoConfirmBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleSaleImportConfirmActionBody": "Cette action confirme l'importation de ce véhicule. Vous ne pourrez plus défaire l'importation.",
+  "vehicleSaleImportConfirmActionConfirm": "Confirmer",
   "vehicleAddVehicle": "Ajouter un véhicule",
   "vehicleAddFirst": "Ajoutez d'abord un véhicule.",
   "vehicleFieldLabel": "Nom affiché",
