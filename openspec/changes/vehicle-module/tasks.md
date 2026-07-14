@@ -1,6 +1,14 @@
-## Implementation status (2026-07-01)
+## Implementation status (2026-07-14)
 
-Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01). Remaining: relay notification + remote sync, export/import, consumption-overflow correction (§8), notifications (§11), real entitlement (debug stub today). Legacy odometer-photo migration (**7.3b**) **won't do** — no shipped user base / no valuable legacy paths to migrate. **Boat kind and horometer UX deferred** from initial release (§10.5, §15).
+Owner-side **`vehicle`** module: **substantially implemented** on-device (local persistence, hubs, quick actions, consumption metrics, Maestro E2E on Android debug). **Gap resolution (owner):** pending corrections list, superseding replacement readings (journal preserves originals), retroactive session insert, applied journal entry (2026-07-01).
+
+**Decisions (2026-07-14)** — see `design.md` § Decisions:
+- **§8** auto-detection / auto-correction of incoherent tank-volume declarations → **deferred to a future release**; current release **trusts** user-declared tank/fuel volumes.
+- **3.3** stale full-tank suggestion → **deferred to a future release**.
+- **11.2 Emprunteur** path (notify Propriétaire) → tracked with **`vehicle-sharing-module`** / Emprunteur work (not current owner-module scope).
+- **11.2 Propriétaire** in-app reminder after “Maintain reading, investigate later” → **deferred**; **journal entry alone** is acceptable for the current release.
+
+**Still open for current release (non-relay):** cap of three owned vehicles (**1.3b**); sale export/import (**5.1–5.2**). Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**.
 
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
@@ -25,7 +33,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 - [x] 3.1 Owner fuel purchase UI (full-tank flag, volume, odometer)
 - [x] 3.2 Owner lifetime and windowed consumption per km (full-tank anchors)
-- [ ] 3.3 Owner-only stale full-tank suggestion notification
+- [ ] 3.3 Owner-only stale full-tank suggestion notification — **Deferred to a future release (2026-07-14)** (`vehicle-consumption-metrics`); not in current-release scope
 
 ## 4. Maintenance & violations
 
@@ -55,22 +63,22 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 ## 8. Consumption estimate validation & correction (fuel purchase anchors)
 
-Deferred implementation — validate partial-tank fuel purchases against the consumption estimate from full-tank anchors.
+**Deferred to a future release (2026-07-14).** Current release **trusts** user-declared tank and fuel volumes: no auto-detection and no auto-correction of “incoherent” residual / after-fill declarations on fuel purchase save. Consumption metrics continue to use declared facts and full-tank anchors as entered.
 
-**Product rules (confirmed):**
+**Future-release product rules (kept for when this ships):**
 
 - **Correction + journal entry (immediate on save)** when the user’s declared **after-fill** level implies `before_fill + volume_purchased > tank_capacity` (physical overflow / impossible fill).
-- **Owner notification (to implement)** when estimated remaining volume before purchase vs. user-implied before-fill differs by **more than 10 L** — without necessarily triggering a consumption correction (e.g. close match like 22.5 L estimated vs. 20 L implied stays silent).
+- **Owner notification** when estimated remaining volume before purchase vs. user-implied before-fill differs by **more than 10 L** — without necessarily triggering a consumption correction (e.g. close match like 22.5 L estimated vs. 20 L implied stays silent).
 - **Journal placement:** merged **Odomètre et carburant** list (same sort-by-date stream as fuel purchases and meter readings).
 
-- [ ] 8.1 **Detection on fuel purchase save**: compute estimated remaining before purchase; derive `before_fill_declared` from post-fill tank state (`isFullTank`, `tankFillFraction`, `volumeLiters`, `fuelTankCapacityLiters`). **Overflow** → correction path; **|estimate − before_fill_declared| > 10 L** → schedule owner notification only (no correction unless overflow).
-- [ ] 8.2 **Odometer declaration**: use fuel purchase `meterReadingValue` and latest canonical odometer for distance since last anchor when estimating remaining fuel.
-- [ ] 8.3 **Tank state declaration**: partial fill is **after** refill; `before_fill_declared = level_after − volume_added`.
-- [ ] 8.4 **Consumption recalculation**: on overflow correction, re-anchor using corrected purchase for subsequent `VehicleConsumptionMetrics`.
-- [ ] 8.5 **Journal entry** in **Odomètre et carburant**: card line 1 « Estimation de la consommation corrigée », line 2 date/time; detail with before/after narrative (distance window, total fuel in window, estimated vs. declared improbability, corrected consumption).
-- [ ] 8.6 **Schema & persistence**: table or typed record for consumption correction events (vehicle id, purchase id, anchors, volumes, rates before/after).
-- [ ] 8.7 **Owner notification**: push/local when gap > 10 L (Propriétaire only); wire after notification infrastructure for vehicle module.
-- [ ] 8.8 **Tests**: overflow → correction + journal; 22.5 L vs 20 L implied (¾ on 80 L after 40 L) → no correction; >10 L gap without overflow → notification only (mock).
+- [ ] 8.1 **Detection on fuel purchase save**: compute estimated remaining before purchase; derive `before_fill_declared` from post-fill tank state (`isFullTank`, `tankFillFraction`, `volumeLiters`, `fuelTankCapacityLiters`). **Overflow** → correction path; **|estimate − before_fill_declared| > 10 L** → schedule owner notification only (no correction unless overflow). **(future release)**
+- [ ] 8.2 **Odometer declaration**: use fuel purchase `meterReadingValue` and latest canonical odometer for distance since last anchor when estimating remaining fuel. **(future release)**
+- [ ] 8.3 **Tank state declaration**: partial fill is **after** refill; `before_fill_declared = level_after − volume_added`. **(future release)**
+- [ ] 8.4 **Consumption recalculation**: on overflow correction, re-anchor using corrected purchase for subsequent `VehicleConsumptionMetrics`. **(future release)**
+- [ ] 8.5 **Journal entry** in **Odomètre et carburant**: card line 1 « Estimation de la consommation corrigée », line 2 date/time; detail with before/after narrative (distance window, total fuel in window, estimated vs. declared improbability, corrected consumption). **(future release)**
+- [ ] 8.6 **Schema & persistence**: table or typed record for consumption correction events (vehicle id, purchase id, anchors, volumes, rates before/after). **(future release)**
+- [ ] 8.7 **Owner notification**: push/local when gap > 10 L (Propriétaire only); wire after notification infrastructure for vehicle module. **(future release)**
+- [ ] 8.8 **Tests**: overflow → correction + journal; 22.5 L vs 20 L implied (¾ on 80 L after 40 L) → no correction; >10 L gap without overflow → notification only (mock). **(future release)**
 
 ## 9. Oil change interval (vehicle-specific)
 
@@ -86,8 +94,9 @@ Deferred implementation — validate partial-tank fuel purchases against the con
 
 ## 11. Vehicle notifications (deferred)
 
-- [ ] 11.1 **Suspicious session-end tank (borrower)**: when an Emprunteur ends a session with the highest declared tank level after high mileage since the last fuel purchase and confirms the declaration anyway, notify the Propriétaire (relay/push when vehicle notification infrastructure ships).
-- [ ] 11.2 **Negative-gap reading maintained**: when a user confirms a lower odometer reading (**Maintain reading, investigate later** on the negative-gap dialog), notify the **Propriétaire** so they can verify the prior reading and correct it in the journal (Emprunteur path is specified in `vehicle-odometer-gap-attribution`; Propriétaire self-maintain still needs an in-app/reminder path to review earlier readings — wire when vehicle notification infrastructure ships).
+- [ ] 11.1 **Suspicious session-end tank (borrower)**: when an Emprunteur ends a session with the highest declared tank level after high mileage since the last fuel purchase and confirms the declaration anyway, notify the Propriétaire (relay/push when vehicle notification infrastructure ships). Tracked with Emprunteur / sharing work.
+- [ ] 11.2a **Negative-gap maintained — Emprunteur path**: when an Emprunteur confirms a lower odometer reading, notify the **Propriétaire** (photos / investigate). **Out of current `vehicle` owner-module scope (2026-07-14)** — implement when working the **Emprunteur** path in `vehicle-sharing-module` (see tasks sharing §2.2 / gap attribution notifs).
+- [x] 11.2b **Negative-gap maintained — Propriétaire path (current release)**: when the Propriétaire chooses **Maintain reading, investigate later**, persist the reading with negative-gap acknowledgment and the existing **journal entry**. **No dedicated in-app/push reminder** in the current release — reminder **deferred to a future release (2026-07-14)**; journal alone is acceptable.
 
 ## 12. Session-end distance plausibility guard
 

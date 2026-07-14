@@ -1,6 +1,6 @@
-## Implementation status (2026-07-01)
+## Implementation status (2026-07-14)
 
-**`vehicle-sharing`**: hub shell, invite/accept APIs, borrower-path UI with owner-path guards per `vehicle-usage-role-separation`. **Relay sync not shipped** — cross-installation sharing is incomplete until §5.2 lands.
+**`vehicle-sharing`**: hub shell, invite/accept APIs, borrower-path UI with owner-path guards per `vehicle-usage-role-separation`. **Relay sync not shipped** — cross-installation sharing is incomplete until §5.2 lands. **2026-07-14:** owner-module defers Emprunteur→Propriétaire gap-notify (**11.2a**) into this change’s Emprunteur delivery (see §2.2).
 
 ## 1. Sharing domain
 
@@ -14,7 +14,7 @@
 ## 2. Borrower usage
 
 - [x] 2.1 Borrower use session UI on shared vehicles (start/end readings)
-- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`) — not wired (`vehicleGapOwnerNotified` l10n only); relay/push deferred
+- [ ] 2.2 Gap attribution notifications to attributed Emprunteur/Propriétaire (`vehicle-odometer-gap-attribution`) — not wired (`vehicleGapOwnerNotified` l10n only); relay/push deferred. **Includes 11.2 Emprunteur→Propriétaire notify path** deferred from owner-module (2026-07-14 decision); implement with Emprunteur delivery, not current `vehicle` owner scope.
 - [ ] 2.3 Borrower-path quick actions (odometer, fuel, maintenance report, damage/violation) per `vehicle-quick-actions-ui` and `vehicle-usage-role-separation` — UI + guards shipped; **relay forward** deferred (§5.2)
 - [x] 2.4 Emprunteur hub does not show Propriétaire-only alert tiles or lifetime owner metrics
 

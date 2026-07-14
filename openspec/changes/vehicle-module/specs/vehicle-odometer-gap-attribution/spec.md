@@ -34,11 +34,11 @@ If `gap` is zero, no attribution prompt is required.
 ### Requirement: Negative gap handling with photo verification
 When a new meter reading is **lower than** the vehicle's latest stored reading, the system SHALL treat this as a **negative gap** (reading decreased). The new reading MUST follow the meter photo rules in `odometer-logging` (photo file required when the value changed; session end always requires a photo). Negative-gap handling relies on those photos for visual verification when a photo file is present.
 
-If the acting user is **not** the Propriétaire, the app SHALL **notify the Propriétaire** so they can visually verify the odometer photos for the new reading and the prior reading. The notification MUST NOT be sent when the Propriétaire is the acting user (**no self-notification**).
+If the acting user is **not** the Propriétaire, the app SHALL **notify the Propriétaire** so they can visually verify the odometer photos for the new reading and the prior reading. **Current release note (2026-07-14):** Emprunteur→Propriétaire notification for this path is **deferred** to **Emprunteur / `vehicle-sharing-module`** work (not required for owner-module delivery). The notification MUST NOT be sent when the Propriétaire is the acting user (**no self-notification**).
 
 If the acting user **is** the Propriétaire, the app SHALL show a dialog stating the negative gap amount and offering exactly two choices before finalizing the save:
 
-1. **Maintain current reading, investigate later** — persist the new reading with a negative-gap acknowledgment; the Propriétaire may correct prior readings or gap records later.
+1. **Maintain current reading, investigate later** — persist the new reading with a negative-gap acknowledgment and a **journal entry**; the Propriétaire may correct prior readings or gap records later. **Current release (2026-07-14):** the journal entry alone is **acceptable**; a dedicated in-app or push **reminder** after maintain is **deferred** to a future release.
 2. **Cancel current entry** — discard the in-progress reading so the Propriétaire can verify the prior reading and correct it first.
 
 The app MUST NOT provide an in-app contestation workflow; participants resolve discrepancies offline. Only the **Propriétaire** MAY later correct readings or gap attributions.
@@ -46,14 +46,15 @@ The app MUST NOT provide an in-app contestation workflow; participants resolve d
 #### Scenario: Emprunteur enters lower reading
 - **WHEN** an Emprunteur saves a session reading lower than the latest stored reading
 - **THEN** the reading is saved with a photo file per `odometer-logging` (value changed from baseline)
-- **THEN** the Propriétaire is notified to verify the photos for the new and prior readings
+- **THEN** (when Emprunteur/sharing notification work ships) the Propriétaire is notified to verify the photos for the new and prior readings
 
 #### Scenario: Propriétaire chooses to maintain lower reading
 - **WHEN** the Propriétaire saves a reading lower than the latest stored reading
 - **THEN** the app shows the negative-gap dialog
 - **WHEN** the Propriétaire chooses **Maintain current reading, investigate later**
-- **THEN** the new reading is persisted with negative-gap acknowledgment
+- **THEN** the new reading is persisted with negative-gap acknowledgment and journal entry
 - **THEN** no self-notification is sent
+- **THEN** (current release) no dedicated reminder beyond the journal entry is required
 
 #### Scenario: Propriétaire cancels to verify prior reading
 - **WHEN** the Propriétaire chooses **Cancel current entry** on the negative-gap dialog

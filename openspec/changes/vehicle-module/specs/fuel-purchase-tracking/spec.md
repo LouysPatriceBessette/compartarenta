@@ -32,3 +32,12 @@ The system SHALL treat full-tank entries as anchors for consumption per km acros
 #### Scenario: Consumption uses the last two full-tank anchors
 - **WHEN** a vehicle has at least two fuel purchases marked full tank
 - **THEN** consumption can be computed for the interval between the last two full-tank entries
+
+### Requirement: Trust user-declared tank volumes (current release); defer residual auto-detection
+**Current release (2026-07-14):** the system SHALL **accept** user-declared fuel volume and tank fill state as given. The system MUST NOT auto-detect “incoherent” residual tank volume relative to estimated consumption, and MUST NOT auto-correct consumption metrics from such detection on fuel purchase save (tasks §8 deferred to a future release).
+
+**Future release:** when shipped, the system MAY validate partial-tank purchases against the consumption estimate from full-tank anchors (physical overflow correction + journal; optional owner notify when estimated vs declared residual differs by more than 10 L), per `vehicle-module` tasks §8.
+
+#### Scenario (current): Fuel purchase saves without residual auto-correction
+- **WHEN** the Propriétaire saves a fuel purchase with volume and after-fill tank state
+- **THEN** the system stores the declared facts without requiring overflow correction or residual-discrepancy notification

@@ -65,11 +65,26 @@ Constraints:
   - **Rationale**: aligns public product copy (marketing site lists land kinds only); land-vehicle flows are the v1 shipping scope; boat adds horometer UX, marine consumption patterns, and hour-based rules not yet product-complete.
   - **Implementation note**: the domain model MAY retain an extensible `vehicleKind` value for `boat` for forward compatibility; **v1 product surfaces MUST NOT offer boat registration** until the deferred work ships (tasks §15).
 
+- **Trust user-declared tank volumes (2026-07-14); defer auto-detection / auto-correction**
+  - **Decision**: for the **current release**, the app **trusts** user-declared fuel volumes and tank fill state. Auto-detection of “incoherent” residual tank volume and auto-correction of consumption from such detection (tasks §8) are **deferred to a future release**.
+  - **Rationale**: owner land-vehicle flows can ship without this integrity layer; avoids false positives and UI complexity before shared notification/sync infrastructure.
+  - **Implication**: current-release fuel purchase save MUST NOT require overflow correction, >10 L discrepancy notifications, or consumption re-anchor from estimated vs declared residual.
+
+- **Defer stale full-tank suggestion (2026-07-14)**
+  - **Decision**: owner-only reminder when recording a non-full purchase while the last full-tank anchor is older than one month (tasks **3.3**, `vehicle-consumption-metrics`) is **deferred to a future release**.
+  - **Rationale**: soft accuracy nudge; not required for factual logging or displayed metrics in the current release.
+
+- **Negative-gap “maintain reading” reminders (2026-07-14)**
+  - **Decision (Emprunteur → Propriétaire notify)**: when an Emprunteur maintains a lower reading (or otherwise requires Propriétaire verify/notify), that notification path is **out of current owner-module delivery** and will be specified/implemented with **Emprunteur / `vehicle-sharing-module`** work (including relay when required).
+  - **Decision (Propriétaire self-maintain)**: after **Maintain current reading, investigate later**, the **journal entry** (negative-gap acknowledgment) is **sufficient** for the current release. A dedicated in-app or push reminder for the Propriétaire is **deferred to a future release**.
+  - **Rationale**: avoid self-notification and unfinished local reminder UX; journal remains the audit trail and review surface.
+
 ## Risks / Trade-offs
 
 - **[Odometer conflicts when owner and borrower both log]** → Mitigation: monotonic validation with explicit correction flag; attribution on each reading (owner vs borrower session).
 - **[Large export on old vehicles]** → Mitigation: export is explicit user action; format documented in `vehicle-data-portability`.
 - **[Buyer import without seller relay history]** → Mitigation: export is factual snapshot; sharing relationships are not assumed to transfer unless specified in sharing module.
+- **[Trusting declared tank volumes (current release)]** → Acceptance: incoherent residual / overflow cases may skew consumption until future §8 ships; users can still revise facts manually via journal correction flows.
 
 ## UI architecture (first-pass guide)
 

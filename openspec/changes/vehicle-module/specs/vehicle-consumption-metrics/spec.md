@@ -20,13 +20,20 @@ The system MUST display the date of the last full-tank entry used as the start a
 - **WHEN** the owner views consumption between full-tank entries
 - **THEN** the system shows the date/time of the last full-tank entry used
 
-### Requirement: Suggest full tank after long gaps (owner only)
-If the last full-tank anchor is older than one month, the system SHOULD suggest a full-tank refill the next time the **owner** records a non-full fuel purchase.
+### Requirement: Suggest full tank after long gaps (owner only) — deferred
+**Deferred to a future release (2026-07-14).** When implemented, if the last full-tank anchor is older than one month, the system SHOULD suggest a full-tank refill the next time the **owner** records a non-full fuel purchase.
 
-#### Scenario: Owner notification after non-full entry when last full is stale
-- **WHEN** the owner records a fuel purchase with full tank = false
+**Current release:** the system MUST NOT require this suggestion or notification; fuel purchases save without a stale-anchor prompt.
+
+#### Scenario (future): Owner notification after non-full entry when last full is stale
+- **WHEN** (future release) the owner records a fuel purchase with full tank = false
 - **AND** the last full-tank entry for the vehicle is older than one month
 - **THEN** the system shows or schedules a reminder suggesting a full-tank refill to improve consumption accuracy
+
+#### Scenario (current): No stale full-tank gate on save
+- **WHEN** the owner records a fuel purchase with full tank = false
+- **AND** the last full-tank entry is older than one month
+- **THEN** the purchase is saved without a mandatory stale-anchor suggestion
 
 ### Requirement: Handle insufficient data gracefully
 The system MUST NOT present misleading metrics when data is insufficient (e.g., division by zero).
