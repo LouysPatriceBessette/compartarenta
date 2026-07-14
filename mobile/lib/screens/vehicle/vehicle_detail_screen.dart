@@ -7,6 +7,8 @@ import '../../db/repositories/vehicles_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
+import '../../vehicle/portability/vehicle_sale_export_service.dart';
+import '../../vehicle/portability/vehicle_sale_portability_dialogs.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_owned_active_cap.dart';
 import '../../widgets/screen_body_padding.dart';
@@ -94,6 +96,35 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     }
     if (!mounted) return;
     await _load();
+  }
+
+  Future<void> _confirmExport() async {
+    final l10n = AppLocalizations.of(context);
+    if (!vehicleSalePortabilitySupportedOnPlatform()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleExportFailed)),
+      );
+      return;
+    }
+    final confirmed = await showVehicleSaleExportConfirmDialog(context);
+    if (!confirmed || !mounted) return;
+    try {
+      final result = await VehicleSaleExportService(AppDatabase.processScope)
+          .exportToDocuments(
+        vehicleId: widget.vehicleId,
+        dataOfSegment: l10n.vehicleExportFileDataOfSegment,
+      );
+      if (!mounted) return;
+      await showVehicleSaleExportSuccessDialog(
+        context,
+        zipFileName: result.zipFileName,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleExportFailed)),
+      );
+    }
   }
 
   @override
@@ -205,8 +236,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             vehicleId: v.id,
             dateFormat: dateFmt,
           ),
+          const SizedBox(height: 24),
+          OutlinedButton(
+            onPressed: _confirmExport,
+            child: Text(l10n.vehicleExportDataAction),
+          ),
           if (active) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             OutlinedButton(
               onPressed: _confirmDeactivate,
               child: Text(l10n.vehicleDeactivateAction),

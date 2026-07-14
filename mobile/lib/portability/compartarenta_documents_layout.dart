@@ -31,6 +31,16 @@ class CompartarentaDocumentsLayout {
     return '$rootFolderName/$carModuleFolderName/$vehicleId/$folder';
   }
 
+  /// `Compartarenta/Car/<vehicleId>/Maintenance`
+  static String vehicleMaintenanceAttachmentsRelativeSubDir({
+    required String vehicleId,
+  }) {
+    return '$rootFolderName/$carModuleFolderName/$vehicleId/Maintenance';
+  }
+
+  /// Sale export zip / JSON sit directly under `Compartarenta/`.
+  static String moduleRootRelativeSubDir() => rootFolderName;
+
   /// Future: car-sharing module (split from legacy car module spec).
   static const String carSharingModuleFolderName = 'Car_sharing';
 

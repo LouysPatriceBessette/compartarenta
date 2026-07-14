@@ -5809,6 +5809,84 @@ abstract class AppLocalizations {
   /// **'End the open use session first.'**
   String get vehicleDeactivateBlockedOpenSession;
 
+  /// No description provided for @vehicleExportDataAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get vehicleExportDataAction;
+
+  /// No description provided for @vehicleExportConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Export of factual vehicle data only.\n\nUse case: provide the data to another user during a transfer of ownership.'**
+  String get vehicleExportConfirmBody;
+
+  /// No description provided for @vehicleExportConfirmExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get vehicleExportConfirmExport;
+
+  /// No description provided for @vehicleExportSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export complete'**
+  String get vehicleExportSuccessTitle;
+
+  /// No description provided for @vehicleExportSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'File saved in Documents/Compartarenta/\n{fileName}'**
+  String vehicleExportSuccessBody(String fileName);
+
+  /// No description provided for @vehicleExportFileDataOfSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Data-of'**
+  String get vehicleExportFileDataOfSegment;
+
+  /// No description provided for @vehicleExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed. Please try again.'**
+  String get vehicleExportFailed;
+
+  /// No description provided for @vehicleImportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get vehicleImportAction;
+
+  /// No description provided for @vehicleImportConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can import vehicle data exported by another user here.\n\nYou need the export file copied locally onto this device.'**
+  String get vehicleImportConfirmBody;
+
+  /// No description provided for @vehicleImportConfirmImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get vehicleImportConfirmImport;
+
+  /// No description provided for @vehicleImportFailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a valid vehicle export.'**
+  String get vehicleImportFailInvalid;
+
+  /// No description provided for @vehicleImportFailCorrupt.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed. The file appears to be corrupted. Try again with another copy.'**
+  String get vehicleImportFailCorrupt;
+
+  /// No description provided for @vehicleImportFailOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed. Please try again.'**
+  String get vehicleImportFailOther;
+
   /// No description provided for @vehicleAddVehicle.
   ///
   /// In en, this message translates to:

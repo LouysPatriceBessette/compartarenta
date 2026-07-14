@@ -8,7 +8,7 @@ Owner-side **`vehicle`** module: **substantially implemented** on-device (local 
 - **11.2 Emprunteur** path (notify Propriétaire) → tracked with **`vehicle-sharing-module`** / Emprunteur work (not current owner-module scope).
 - **11.2 Propriétaire** in-app reminder after “Maintain reading, investigate later” → **deferred**; **journal entry alone** is acceptable for the current release.
 
-**Still open for current release (non-relay):** sale export/import (**5.1–5.2**). Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**.
+**Still open for current release (non-relay):** Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**. Sale export/import (**5.1–5.2**) shipped 2026-07-14.
 
 **Active cap + deactivation (2026-07-14):** at most three **active** owned vehicles; irreversible deactivate frees a slot; FAB disabled at cap; same cap for QA seeds.
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
@@ -44,8 +44,8 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 ## 5. Data portability
 
-- [ ] 5.1 Single-vehicle export (factual snapshot, module manifest)
-- [ ] 5.2 Import as new owned vehicle on buyer device
+- [x] 5.1 Single-vehicle export (factual zip+JSON snapshot, module manifest) (2026-07-14)
+- [x] 5.2 Import as new owned vehicle on buyer device (2026-07-14)
 
 ## 6. Navigation, hubs & licensing
 

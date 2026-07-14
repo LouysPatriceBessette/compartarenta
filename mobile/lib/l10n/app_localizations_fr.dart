@@ -3490,6 +3490,51 @@ class AppLocalizationsFr extends AppLocalizations {
       'Terminez d\'abord la session d\'utilisation en cours.';
 
   @override
+  String get vehicleExportDataAction => 'Exporter les données';
+
+  @override
+  String get vehicleExportConfirmBody =>
+      'Export de données factuelles du véhicule seulement.\n\nCas d\'utilisation: fournir les données à un autre utilisateur lors d\'un transfert de propriété.';
+
+  @override
+  String get vehicleExportConfirmExport => 'Exporter';
+
+  @override
+  String get vehicleExportSuccessTitle => 'Export terminé';
+
+  @override
+  String vehicleExportSuccessBody(String fileName) {
+    return 'Fichier enregistré dans Documents/Compartarenta/\n$fileName';
+  }
+
+  @override
+  String get vehicleExportFileDataOfSegment => 'Données-de';
+
+  @override
+  String get vehicleExportFailed => 'L\'exportation a échoué. Réessayez.';
+
+  @override
+  String get vehicleImportAction => 'Importer';
+
+  @override
+  String get vehicleImportConfirmBody =>
+      'L\'importation des données d\'un véhicule qui ont été exportées par un autre utilisateur est possible ici.\n\nIl vous faut avoir obtenu le fichier d\'export et l\'avoir copié localement sur cet appareil.';
+
+  @override
+  String get vehicleImportConfirmImport => 'Importer';
+
+  @override
+  String get vehicleImportFailInvalid =>
+      'Ce fichier n\'est pas un export véhicule valide.';
+
+  @override
+  String get vehicleImportFailCorrupt =>
+      'L\'importation a échoué. Le fichier semble corrompu. Réessayez avec une autre copie.';
+
+  @override
+  String get vehicleImportFailOther => 'L\'importation a échoué. Réessayez.';
+
+  @override
   String get vehicleAddVehicle => 'Ajouter un véhicule';
 
   @override

@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,9 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
+import '../../vehicle/portability/vehicle_sale_bundle.dart';
+import '../../vehicle/portability/vehicle_sale_import_service.dart';
+import '../../vehicle/portability/vehicle_sale_portability_dialogs.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
 import '../../vehicle/vehicle_oil_change_interval.dart';
@@ -49,6 +53,7 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   String? _meterPhotoPath;
   final _galleries = <VehicleGalleryDraft>[];
   bool _saving = false;
+  bool _importing = false;
   bool _oilChangeIntervalBlurred = false;
 
   @override
@@ -175,6 +180,82 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     if (path != null && mounted) setState(() => _meterPhotoPath = path);
   }
 
+  Future<void> _confirmImport() async {
+    final l10n = AppLocalizations.of(context);
+    if (!vehicleSalePortabilitySupportedOnPlatform()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleImportFailOther)),
+      );
+      return;
+    }
+    final confirmed = await showVehicleSaleImportConfirmDialog(context);
+    if (!confirmed || !mounted) return;
+
+    final pick = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['zip'],
+      withData: true,
+    );
+    if (pick == null || pick.files.isEmpty || !mounted) return;
+    final bytes = pick.files.single.bytes;
+    if (bytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleImportFailCorrupt)),
+      );
+      return;
+    }
+
+    setState(() => _importing = true);
+    try {
+      await VehicleSaleImportService(AppDatabase.processScope)
+          .importZipBytes(bytes);
+      if (!mounted) return;
+      context.pop(true);
+    } on VehicleActiveCapExceededException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.vehicleOwnedActiveLimitReached)),
+      );
+    } on VehicleSaleImportException catch (e) {
+      if (!mounted) return;
+      final message = switch (e.kind) {
+        VehicleSaleImportFailureKind.invalidBundle =>
+          l10n.vehicleImportFailInvalid,
+        VehicleSaleImportFailureKind.corruptArchive =>
+          l10n.vehicleImportFailCorrupt,
+        VehicleSaleImportFailureKind.other => l10n.vehicleImportFailOther,
+      };
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(message),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.commonDone),
+            ),
+          ],
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(l10n.vehicleImportFailOther),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.commonDone),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
   Future<void> _save() async {
     if (!_canSave) return;
     setState(() => _saving = true);
@@ -241,6 +322,13 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       body: ListView(
         padding: screenBodyScrollPadding(context),
         children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: (_saving || _importing) ? null : _confirmImport,
+              child: Text(l10n.vehicleImportAction),
+            ),
+          ),
           qaVehicleSemantics(
             identifier: kQaVehicleFieldLabel,
             child: AppTextField(

@@ -22,3 +22,13 @@ Uri contactDuplicateFaqUrlForLocale(Locale locale) {
   };
   return Uri.parse('$_legalSiteOrigin$path');
 }
+
+/// Vehicle module FAQ (sale export / import transfer of ownership).
+Uri vehicleModuleFaqUrlForLocale(Locale locale) {
+  final path = switch (locale.languageCode) {
+    'fr' => '/fr/modules/vehicule/faq/',
+    'es' => '/es/modules/vehicule/faq/',
+    _ => '/en/modules/vehicule/faq/',
+  };
+  return Uri.parse('$_legalSiteOrigin$path');
+}

@@ -1382,6 +1382,26 @@
   "vehicleDeactivateDialogBody": "Esta acción es definitiva. Podrá consultar el historial, pero ya no se podrá registrar nada para este vehículo.",
   "vehicleDeactivateConfirm": "Desactivar",
   "vehicleDeactivateBlockedOpenSession": "Termine primero la sesión de uso en curso.",
+  "vehicleExportDataAction": "Exportar datos",
+  "vehicleExportConfirmBody": "Exportación solo de datos factuales del vehículo.\n\nCaso de uso: proporcionar los datos a otro usuario en una transferencia de propiedad.",
+  "vehicleExportConfirmExport": "Exportar",
+  "vehicleExportSuccessTitle": "Exportación terminada",
+  "vehicleExportSuccessBody": "Archivo guardado en Documents/Compartarenta/\n{fileName}",
+  "@vehicleExportSuccessBody": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleExportFileDataOfSegment": "Datos-de",
+  "vehicleExportFailed": "La exportación ha fallado. Inténtelo de nuevo.",
+  "vehicleImportAction": "Importar",
+  "vehicleImportConfirmBody": "Aquí puede importar datos de un vehículo exportados por otro usuario.\n\nNecesita haber obtenido el archivo de exportación y haberlo copiado localmente en este aparato.",
+  "vehicleImportConfirmImport": "Importar",
+  "vehicleImportFailInvalid": "Este archivo no es una exportación de vehículo válida.",
+  "vehicleImportFailCorrupt": "La importación ha fallado. El archivo parece estar corrupto. Inténtelo de nuevo con otra copia.",
+  "vehicleImportFailOther": "La importación ha fallado. Inténtelo de nuevo.",
   "vehicleAddVehicle": "Añadir vehículo",
   "vehicleAddFirst": "Añada primero un vehículo.",
   "vehicleFieldLabel": "Nombre",

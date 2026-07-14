@@ -3453,6 +3453,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'End the open use session first.';
 
   @override
+  String get vehicleExportDataAction => 'Export data';
+
+  @override
+  String get vehicleExportConfirmBody =>
+      'Export of factual vehicle data only.\n\nUse case: provide the data to another user during a transfer of ownership.';
+
+  @override
+  String get vehicleExportConfirmExport => 'Export';
+
+  @override
+  String get vehicleExportSuccessTitle => 'Export complete';
+
+  @override
+  String vehicleExportSuccessBody(String fileName) {
+    return 'File saved in Documents/Compartarenta/\n$fileName';
+  }
+
+  @override
+  String get vehicleExportFileDataOfSegment => 'Data-of';
+
+  @override
+  String get vehicleExportFailed => 'Export failed. Please try again.';
+
+  @override
+  String get vehicleImportAction => 'Import';
+
+  @override
+  String get vehicleImportConfirmBody =>
+      'You can import vehicle data exported by another user here.\n\nYou need the export file copied locally onto this device.';
+
+  @override
+  String get vehicleImportConfirmImport => 'Import';
+
+  @override
+  String get vehicleImportFailInvalid =>
+      'This file is not a valid vehicle export.';
+
+  @override
+  String get vehicleImportFailCorrupt =>
+      'Import failed. The file appears to be corrupted. Try again with another copy.';
+
+  @override
+  String get vehicleImportFailOther => 'Import failed. Please try again.';
+
+  @override
   String get vehicleAddVehicle => 'Add vehicle';
 
   @override

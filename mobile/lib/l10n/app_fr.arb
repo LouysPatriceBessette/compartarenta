@@ -1399,6 +1399,26 @@
   "vehicleDeactivateDialogBody": "Cette action est définitive. Vous pourrez encore consulter l'historique, mais plus rien ne pourra être saisi pour ce véhicule.",
   "vehicleDeactivateConfirm": "Désactiver",
   "vehicleDeactivateBlockedOpenSession": "Terminez d'abord la session d'utilisation en cours.",
+  "vehicleExportDataAction": "Exporter les données",
+  "vehicleExportConfirmBody": "Export de données factuelles du véhicule seulement.\n\nCas d'utilisation: fournir les données à un autre utilisateur lors d'un transfert de propriété.",
+  "vehicleExportConfirmExport": "Exporter",
+  "vehicleExportSuccessTitle": "Export terminé",
+  "vehicleExportSuccessBody": "Fichier enregistré dans Documents/Compartarenta/\n{fileName}",
+  "@vehicleExportSuccessBody": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleExportFileDataOfSegment": "Données-de",
+  "vehicleExportFailed": "L'exportation a échoué. Réessayez.",
+  "vehicleImportAction": "Importer",
+  "vehicleImportConfirmBody": "L'importation des données d'un véhicule qui ont été exportées par un autre utilisateur est possible ici.\n\nIl vous faut avoir obtenu le fichier d'export et l'avoir copié localement sur cet appareil.",
+  "vehicleImportConfirmImport": "Importer",
+  "vehicleImportFailInvalid": "Ce fichier n'est pas un export véhicule valide.",
+  "vehicleImportFailCorrupt": "L'importation a échoué. Le fichier semble corrompu. Réessayez avec une autre copie.",
+  "vehicleImportFailOther": "L'importation a échoué. Réessayez.",
   "vehicleAddVehicle": "Ajouter un véhicule",
   "vehicleAddFirst": "Ajoutez d'abord un véhicule.",
   "vehicleFieldLabel": "Nom affiché",

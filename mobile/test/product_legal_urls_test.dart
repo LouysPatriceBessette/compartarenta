@@ -33,4 +33,25 @@ void main() {
       ),
     );
   });
+
+  test('vehicleModuleFaqUrlForLocale uses FR / EN / ES paths', () {
+    expect(
+      vehicleModuleFaqUrlForLocale(const Locale('fr')),
+      Uri.parse(
+        'https://compartarenta.incoherences.org/fr/modules/vehicule/faq/',
+      ),
+    );
+    expect(
+      vehicleModuleFaqUrlForLocale(const Locale('en')),
+      Uri.parse(
+        'https://compartarenta.incoherences.org/en/modules/vehicule/faq/',
+      ),
+    );
+    expect(
+      vehicleModuleFaqUrlForLocale(const Locale('es')),
+      Uri.parse(
+        'https://compartarenta.incoherences.org/es/modules/vehicule/faq/',
+      ),
+    );
+  });
 }

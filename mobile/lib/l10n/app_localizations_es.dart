@@ -3492,6 +3492,53 @@ class AppLocalizationsEs extends AppLocalizations {
       'Termine primero la sesión de uso en curso.';
 
   @override
+  String get vehicleExportDataAction => 'Exportar datos';
+
+  @override
+  String get vehicleExportConfirmBody =>
+      'Exportación solo de datos factuales del vehículo.\n\nCaso de uso: proporcionar los datos a otro usuario en una transferencia de propiedad.';
+
+  @override
+  String get vehicleExportConfirmExport => 'Exportar';
+
+  @override
+  String get vehicleExportSuccessTitle => 'Exportación terminada';
+
+  @override
+  String vehicleExportSuccessBody(String fileName) {
+    return 'Archivo guardado en Documents/Compartarenta/\n$fileName';
+  }
+
+  @override
+  String get vehicleExportFileDataOfSegment => 'Datos-de';
+
+  @override
+  String get vehicleExportFailed =>
+      'La exportación ha fallado. Inténtelo de nuevo.';
+
+  @override
+  String get vehicleImportAction => 'Importar';
+
+  @override
+  String get vehicleImportConfirmBody =>
+      'Aquí puede importar datos de un vehículo exportados por otro usuario.\n\nNecesita haber obtenido el archivo de exportación y haberlo copiado localmente en este aparato.';
+
+  @override
+  String get vehicleImportConfirmImport => 'Importar';
+
+  @override
+  String get vehicleImportFailInvalid =>
+      'Este archivo no es una exportación de vehículo válida.';
+
+  @override
+  String get vehicleImportFailCorrupt =>
+      'La importación ha fallado. El archivo parece estar corrupto. Inténtelo de nuevo con otra copia.';
+
+  @override
+  String get vehicleImportFailOther =>
+      'La importación ha fallado. Inténtelo de nuevo.';
+
+  @override
   String get vehicleAddVehicle => 'Añadir vehículo';
 
   @override
