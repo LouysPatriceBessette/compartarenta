@@ -10,6 +10,10 @@ void main() {
       'qa-vehicle-card-qa-civic',
     );
     expect(
+      qaVehicleCardSemanticsId('QA Maserati'),
+      kQaVehicleCardQaMaserati,
+    );
+    expect(
       qaVehicleCardMeterSemanticsId(kQaVehicleE2eDisplayLabel),
       'qa-vehicle-card-qa-civic-meter',
     );

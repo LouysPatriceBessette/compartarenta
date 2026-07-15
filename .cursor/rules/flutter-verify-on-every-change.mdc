@@ -1,5 +1,5 @@
 ---
-description: Run flutter analyze and flutter test after every code change; deliver only when fully green
+description: Run flutter analyze after mobile changes; run flutter test unless the change clearly cannot affect test results
 alwaysApply: true
 ---
 
@@ -13,9 +13,9 @@ After **any** edit under `mobile/` (or shared packages consumed by the mobile ap
    cd mobile && ./tool/flutterw analyze --fatal-infos .
    ```
 
-   Prefer `./tool/flutterw` over a global `flutter` binary.
+   Prefer `./tool/flutterw` over a global `flutter` binary. For a one-file tweak, analyzing that path (or package) is enough when the change cannot affect other packages.
 
-2. **Test** (full suite must pass):
+2. **Test** (full suite must pass) — **unless the skip rule below applies**:
 
    ```bash
    cd mobile && ./tool/flutterw test
@@ -23,13 +23,25 @@ After **any** edit under `mobile/` (or shared packages consumed by the mobile ap
 
    When the change is scoped, you may run a targeted file first for speed, then the full suite before delivery.
 
-3. **Iterate** until both commands are fully green. Do not hand off with a failing or skipped verification step.
+3. **Iterate** until required commands are fully green. Do not hand off with a failing or (when still required) skipped verification step.
+
+## Skip `flutter test` when it cannot matter
+
+**Do not** run `flutter test` when it is **obvious** that the change cannot affect test outcomes — for example:
+
+- Pure layout swap with no logic, routing, or widget identity change that tests assert (e.g. moving an existing link from left to right on the same row)
+- Comments, docs-only wording in Dart comments, or formatting/whitespace-only edits
+- Debug/QA copy that no unit/widget test reads
+
+Still run **analyze** on touched Dart. If there is any reasonable doubt that a test could fail, run the suite (or a targeted file). Prefer skipping a useless full suite over burning minutes after a trivial UI tweak.
+
+This skip does **not** apply to Maestro / `qa:run-*` (separate policy in Maestro skills).
 
 ## If an existing test fails
 
 - If the failure is **clearly caused by your change**, fix the product code or update the test as appropriate and re-run until green.
-- If the failure appears **unrelated** to your change, **stop** and tell the user which test failed (name + file + short error). Do **not** change that test unless they explicitly allow it. After they respond, continue iterating until analyze and test are green.
+- If the failure appears **unrelated** to your change, **stop** and tell the user which test failed (name + file + short error). Do **not** change that test unless they explicitly allow it. After they respond, continue iterating until analyze and (when required) test are green.
 
 ## Delivery bar
 
-Only report completion when `flutter analyze --fatal-infos` and `flutter test` both succeed with no remaining issues.
+Only report completion when `flutter analyze --fatal-infos` succeeds with no remaining issues, and either `flutter test` succeeded or the **skip rule** above clearly applied (state that briefly when skipping).

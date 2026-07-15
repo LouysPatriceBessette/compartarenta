@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
@@ -232,10 +233,13 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
       body: ListView(
         padding: screenBodyScrollPadding(context),
         children: [
-          AppTextField(
-            controller: _displayLabel,
-            decoration: InputDecoration(labelText: l10n.vehicleFieldLabel),
-            onChanged: (_) => _refresh(),
+          qaVehicleSemantics(
+            identifier: kQaVehicleFieldLabel,
+            child: AppTextField(
+              controller: _displayLabel,
+              decoration: InputDecoration(labelText: l10n.vehicleFieldLabel),
+              onChanged: (_) => _refresh(),
+            ),
           ),
           const SizedBox(height: 12),
           AppTextField(
@@ -280,9 +284,12 @@ class _VehicleEditDetailsScreenState extends State<VehicleEditDetailsScreen> {
             onChanged: () => setState(() {}),
           ),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _canSave ? _save : null,
-            child: Text(l10n.commonSave),
+          qaVehicleSemantics(
+            identifier: kQaVehicleSave,
+            child: FilledButton(
+              onPressed: _canSave ? _save : null,
+              child: Text(l10n.commonSave),
+            ),
           ),
         ],
       ),

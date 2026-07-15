@@ -89,6 +89,34 @@ This single command:
 
 Artifacts: `qa/artifacts/settlement_open/<UTC-timestamp>/`
 
+### Vehicle sale export → import (single emulator)
+
+Local-only portability path (no relay). Mid-run reseed, so it is **not** under
+`qa/scenarios/` / `qa:run-all-scenarios`.
+
+```bash
+./tool/melosw run qa:run-vehicle-sale-export-import
+```
+
+Phases: seed seller history → Maestro export → pull debug zip → **full emulator
+stop + cold boot** → seed empty buyer → push import zip → Maestro import → assert
+`qa-vehicle-card-qa-civic`.
+
+(The mid-run reseed needs a full AVD restart: a second `pm clear` on the same
+running emulator often hangs bootstrap / System UI and never writes
+`seed_applied`.)
+
+Artifacts: `qa/artifacts/vehicle_sale_export_import/<UTC-timestamp>/`
+
+Same phases 1–6, then import until « Défaire l'importation » is visible and
+tapped (observe undo; no rename / import-confirm path):
+
+```bash
+./tool/melosw run qa:run-vehicle-sale-export-import-undo
+```
+
+Artifacts: `qa/artifacts/vehicle_sale_export_import_undo/<UTC-timestamp>/`
+
 ### Run every scenario + HTML report
 
 ```bash
@@ -309,6 +337,11 @@ screenshot_prefix: settlement_open
 emulator → build/install APK → set clock → seed (pm clear + marker + cold start)
 → Maestro test → restore clock → write artifacts
 ```
+
+On success the orchestrator prints an explicit final line containing **`PASSED`**
+and the scenario id (e.g. `Scenario PASSED | <id>. Artifacts: …`). Multi-device
+entry points use `Test PASSED | <id>`. Do not treat a bare `complete` / `Done`
+line as the pass verdict.
 
 **Seeding** (debug builds only):
 

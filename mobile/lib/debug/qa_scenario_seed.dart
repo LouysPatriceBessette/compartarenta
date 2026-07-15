@@ -9,6 +9,7 @@ import '../db/repositories/vehicles_repository.dart';
 import '../prefs/app_preferences.dart';
 import '../prefs/time_zone_policy_field.dart';
 import '../vehicle/vehicle_consumption_estimation_mode.dart';
+import '../vehicle/vehicle_maintenance_categories.dart';
 import '../housing/amendment/housing_active_agreement_service.dart';
 import '../housing/participation/housing_participation_change_kind.dart';
 import '../housing/participation/housing_participation_change_service.dart';
@@ -25,6 +26,7 @@ import 'qa_fcm_wake_push_seed.dart';
 import 'qa_payment_reminder_seed.dart';
 import 'qa_scenario_seed_helpers.dart';
 import 'qa_vehicle_consumption_seed.dart';
+import 'qa_vehicle_sale_portability_seed.dart';
 import 'qa_vehicle_seed_helpers.dart';
 import 'web_dev_db_snapshot.dart';
 
@@ -54,6 +56,8 @@ const kQaScenarioIds = <String>{
   'vehicle_session_start_gap',
   'vehicle_standalone_meter_gap',
   'vehicle_consumption',
+  'vehicle_sale_export_import_seller',
+  'vehicle_sale_export_import_buyer',
   'contact_handshake_inviter',
   'contact_handshake_invitee',
   'fcm_wake_push_proposer',
@@ -170,6 +174,10 @@ Future<void> _persistQaE2eForScenario(String scenarioId) async {
       displayName: 'Louys QA',
       avatarId: 'a02',
     ),
+    'vehicle_sale_export_import_buyer' => (
+      displayName: 'Louys QA',
+      avatarId: 'a02',
+    ),
     'fcm_wake_push_recipient' => (
       displayName: 'Louys QA',
       avatarId: 'a02',
@@ -212,6 +220,10 @@ Future<void> applyQaScenario(AppDatabase db, String scenarioId) async {
       await qaSeedE2eVehicle(db);
     case 'vehicle_consumption':
       await qaSeedVehicleConsumptionScenario(db);
+    case 'vehicle_sale_export_import_seller':
+      await qaSeedVehicleSalePortabilitySeller(db);
+    case 'vehicle_sale_export_import_buyer':
+      break;
     case 'contact_handshake_inviter':
     case 'contact_handshake_invitee':
       break;
@@ -359,6 +371,10 @@ Future<void> assertQaScenarioPostconditions({
       await _assertVehicleGapAttributionSeed(db);
     case 'vehicle_consumption':
       await _assertVehicleConsumptionSeed(db);
+    case 'vehicle_sale_export_import_seller':
+      await _assertVehicleSalePortabilitySellerSeed(db);
+    case 'vehicle_sale_export_import_buyer':
+      await _assertVehicleAdd(db);
     case _:
       throw ArgumentError('Unknown QA scenario: $scenarioId');
   }
@@ -423,7 +439,9 @@ Future<void> _assertPastHubTitleWhenPeriodClosed(
       scenarioId == 'vehicle_use_session' ||
       scenarioId == 'vehicle_session_start_gap' ||
       scenarioId == 'vehicle_standalone_meter_gap' ||
-      scenarioId == 'vehicle_consumption') {
+      scenarioId == 'vehicle_consumption' ||
+      scenarioId == 'vehicle_sale_export_import_seller' ||
+      scenarioId == 'vehicle_sale_export_import_buyer') {
     return;
   }
   final planId = qaPlanIdForScenario(scenarioId);
@@ -726,6 +744,49 @@ Future<void> _assertVehicleConsumptionSeed(AppDatabase db) async {
   );
   if (mode != VehicleConsumptionEstimationMode.detailed) {
     throw StateError('vehicle_consumption: expected detailed consumption mode');
+  }
+}
+
+Future<void> _assertVehicleSalePortabilitySellerSeed(AppDatabase db) async {
+  await _assertVehicleE2eSeedVehicle(db);
+  final open = await VehiclesRepository(db).findAnyOpenUse();
+  if (open != null) {
+    throw StateError(
+      'vehicle_sale_export_import_seller: seed must not have an open use',
+    );
+  }
+  final uses = await (db.select(db.vehicleUses)).get();
+  if (uses.length != kQaVehicleSalePortabilitySessionCount) {
+    throw StateError(
+      'vehicle_sale_export_import_seller: expected '
+      '$kQaVehicleSalePortabilitySessionCount closed sessions, '
+      'got ${uses.length}',
+    );
+  }
+  final purchases = await (db.select(db.fuelPurchases)).get();
+  if (purchases.length != kQaVehicleSalePortabilityFuelPurchaseCount) {
+    throw StateError(
+      'vehicle_sale_export_import_seller: expected '
+      '$kQaVehicleSalePortabilityFuelPurchaseCount fuel purchases, '
+      'got ${purchases.length}',
+    );
+  }
+  final oil = await (db.select(db.maintenanceEvents)
+        ..where(
+          (t) => t.category.equals(VehicleMaintenanceCategoryWire.oil.wire),
+        ))
+      .get();
+  if (oil.length != kQaVehicleSalePortabilityOilChangeCount) {
+    throw StateError(
+      'vehicle_sale_export_import_seller: expected '
+      '$kQaVehicleSalePortabilityOilChangeCount oil change, got ${oil.length}',
+    );
+  }
+  if (oil.single.costMinor != kQaVehicleSalePortabilityOilChangeCostMinor) {
+    throw StateError(
+      'vehicle_sale_export_import_seller: expected oil cost '
+      '$kQaVehicleSalePortabilityOilChangeCostMinor, got ${oil.single.costMinor}',
+    );
   }
 }
 

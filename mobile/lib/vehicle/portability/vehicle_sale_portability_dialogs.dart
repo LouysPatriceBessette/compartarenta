@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/product_legal_urls.dart';
 
@@ -14,6 +15,8 @@ Future<bool> showVehicleSaleExportConfirmDialog(BuildContext context) async {
     context: context,
     body: l10n.vehicleExportConfirmBody,
     confirmLabel: l10n.vehicleExportConfirmExport,
+    confirmSemanticsId: kQaVehicleExportConfirm,
+    cancelSemanticsId: kQaVehicleExportCancel,
   );
 }
 
@@ -23,6 +26,8 @@ Future<bool> showVehicleSaleImportConfirmDialog(BuildContext context) async {
     context: context,
     body: l10n.vehicleImportConfirmBody,
     confirmLabel: l10n.vehicleImportConfirmImport,
+    confirmSemanticsId: kQaVehicleImportConfirm,
+    cancelSemanticsId: kQaVehicleImportCancel,
   );
 }
 
@@ -37,9 +42,20 @@ Future<void> showVehicleSaleExportSuccessDialog(
       title: Text(l10n.vehicleExportSuccessTitle),
       content: Text(l10n.vehicleExportSuccessBody(zipFileName)),
       actions: [
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(l10n.commonDone),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              identifier: kDebugMode ? kQaVehicleExportSuccessDone : null,
+              button: true,
+              onTap: () => Navigator.of(ctx).pop(),
+              excludeSemantics: true,
+              child: FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.commonDone),
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -50,6 +66,8 @@ Future<bool> _showPortabilityConfirmDialog({
   required BuildContext context,
   required String body,
   required String confirmLabel,
+  required String confirmSemanticsId,
+  required String cancelSemanticsId,
 }) async {
   final l10n = AppLocalizations.of(context);
   final locale = Localizations.localeOf(context);
@@ -82,13 +100,35 @@ Future<bool> _showPortabilityConfirmDialog({
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                identifier: kDebugMode ? cancelSemanticsId : null,
+                button: true,
+                onTap: () => Navigator.of(ctx).pop(false),
+                excludeSemantics: true,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.commonCancel),
+                ),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(confirmLabel),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                identifier: kDebugMode ? confirmSemanticsId : null,
+                button: true,
+                onTap: () => Navigator.of(ctx).pop(true),
+                excludeSemantics: true,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(confirmLabel),
+                ),
+              ),
+            ],
           ),
         ],
       );

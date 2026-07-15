@@ -197,3 +197,18 @@ melos:
         (simulated notifications + journal persistence, no relay).
         Example: ./tool/melosw run qa:run-payment-reminder -- --skip-build
       run: chmod +x ./tool/run_housing_payment_reminder_scenario.sh && ./tool/run_housing_payment_reminder_scenario.sh "$@"
+
+    qa:run-vehicle-sale-export-import:
+      description: |
+        Vehicle sale export → full emulator stop/cold boot → reseed buyer → import
+        (single emulator). Seller seed (32 sessions / 8 fuel / 1 oil), Maestro export,
+        debug zip pin, empty Louys buyer, Maestro import, assert qa-vehicle-card-qa-civic.
+        Example: ./tool/melosw run qa:run-vehicle-sale-export-import -- --skip-build
+      run: chmod +x ./tool/run_vehicle_sale_export_import_scenario.sh && ./tool/run_vehicle_sale_export_import_scenario.sh "$@"
+
+    qa:run-vehicle-sale-export-import-undo:
+      description: |
+        Same phases 1–6 as qa:run-vehicle-sale-export-import, then import flow taps
+        Défaire l'importation (observe current undo behavior; no rename/confirm path).
+        Example: ./tool/melosw run qa:run-vehicle-sale-export-import-undo -- --skip-build
+      run: chmod +x ./tool/run_vehicle_sale_export_import_undo_scenario.sh && ./tool/run_vehicle_sale_export_import_undo_scenario.sh "$@"

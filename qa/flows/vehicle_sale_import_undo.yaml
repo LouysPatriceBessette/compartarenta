@@ -1,0 +1,67 @@
+appId: com.compartarenta.compartarenta.dev
+---
+# Same import path as vehicle_sale_import through undo control visible,
+# then tap Défaire l'importation (observe current product behavior).
+- runFlow:
+    file: _enter_vehicle_hub.yaml
+- takeScreenshot: 01_buyer_vehicle_hub_empty
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-add-fab"
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-add-fab"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-import-action"
+    timeout: 30000
+- takeScreenshot: 02_buyer_add_vehicle
+- tapOn:
+    id: "qa-vehicle-import-action"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-import-confirm"
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-import-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-hub"
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      id: "qa-vehicle-card-qa-civic"
+    direction: DOWN
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-card-qa-civic"
+    timeout: 30000
+- takeScreenshot: 03_buyer_imported_vehicle
+- tapOn:
+    id: "qa-vehicle-card-qa-civic"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-detail"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-import-undo"
+    timeout: 30000
+- takeScreenshot: 04_buyer_detail_undo_visible
+- tapOn:
+    id: "qa-vehicle-import-undo"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-import-undo-confirm"
+    timeout: 30000
+- takeScreenshot: 05_undo_confirm_dialog
+- tapOn:
+    id: "qa-vehicle-import-undo-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-hub"
+    timeout: 60000
+- assertNotVisible:
+    id: "qa-vehicle-card-qa-civic"
+- takeScreenshot: 06_after_undo_confirmed

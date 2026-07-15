@@ -24,6 +24,9 @@ const kQaVehicleCardMonQa = 'qa-vehicle-card-mon-qa';
 /// Card id for seeded E2E vehicle [kQaVehicleE2eDisplayLabel].
 const kQaVehicleCardQaCivic = 'qa-vehicle-card-qa-civic';
 
+/// Hub card after rename in [vehicle_sale_import] (displayLabel: QA Maserati).
+const kQaVehicleCardQaMaserati = 'qa-vehicle-card-qa-maserati';
+
 /// Latest meter reading on [kQaVehicleCardQaCivic] (hub card body).
 const kQaVehicleCardQaCivicMeter = 'qa-vehicle-card-qa-civic-meter';
 
@@ -47,6 +50,19 @@ const kQaVehicleFieldStandaloneMeter = 'qa-vehicle-field-standalone-meter';
 
 const kQaVehicleDetail = 'qa-vehicle-detail';
 const kQaVehicleDetailOdometerReading = 'qa-vehicle-detail-odometer-reading';
+const kQaVehicleDetailEdit = 'qa-vehicle-detail-edit';
+const kQaVehicleDetailExport = 'qa-vehicle-detail-export';
+const kQaVehicleExportConfirm = 'qa-vehicle-export-confirm';
+const kQaVehicleExportCancel = 'qa-vehicle-export-cancel';
+const kQaVehicleExportSuccessDone = 'qa-vehicle-export-success-done';
+const kQaVehicleImportAction = 'qa-vehicle-import-action';
+const kQaVehicleImportConfirm = 'qa-vehicle-import-confirm';
+const kQaVehicleImportCancel = 'qa-vehicle-import-cancel';
+const kQaVehicleImportUndo = 'qa-vehicle-import-undo';
+const kQaVehicleImportUndoConfirm = 'qa-vehicle-import-undo-confirm';
+const kQaVehicleImportUndoCancel = 'qa-vehicle-import-undo-cancel';
+const kQaVehicleImportCommitConfirm = 'qa-vehicle-import-commit-confirm';
+const kQaVehicleImportCommitCancel = 'qa-vehicle-import-commit-cancel';
 
 /// Positive-gap dialog: confirm the differential.
 const kQaVehicleGapConfirmYes = 'qa-vehicle-gap-confirm-yes';

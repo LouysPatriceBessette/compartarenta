@@ -1,9 +1,11 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../debug/qa_e2e_meter_photo.dart';
+import '../../debug/qa_vehicle_sale_portability_io.dart';
 import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
@@ -13,7 +15,6 @@ import '../../util/display_units.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/portability/vehicle_sale_bundle.dart';
 import '../../vehicle/portability/vehicle_sale_import_service.dart';
-import '../../vehicle/portability/vehicle_sale_import_undo_service.dart';
 import '../../vehicle/portability/vehicle_sale_portability_dialogs.dart';
 import '../../vehicle/vehicle_kind.dart';
 import '../../vehicle/vehicle_meter_photo_picker.dart';
@@ -55,14 +56,11 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   final _galleries = <VehicleGalleryDraft>[];
   bool _saving = false;
   bool _importing = false;
-  bool _undoingImport = false;
   bool _oilChangeIntervalBlurred = false;
-  Vehicle? _undoableImport;
 
   @override
   void initState() {
     super.initState();
-    _loadUndoableImport();
     _oilChangeIntervalFocus.addListener(_onOilChangeIntervalFocus);
     for (final c in [
       _label,
@@ -87,53 +85,6 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
   }
 
   void _refresh() => setState(() {});
-
-  Future<void> _loadUndoableImport() async {
-    final vehicle =
-        await VehicleSaleImportUndoService(AppDatabase.processScope)
-            .latestOwnedUndoableImport();
-    if (!mounted) return;
-    setState(() => _undoableImport = vehicle);
-  }
-
-  Future<void> _confirmUndoImport() async {
-    final target = _undoableImport;
-    if (target == null || _undoingImport) return;
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        content: Text(
-          l10n.vehicleSaleImportUndoConfirmBody(target.displayLabel),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.vehicleSaleImportUndoAction),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    setState(() => _undoingImport = true);
-    try {
-      await VehicleSaleImportUndoService(AppDatabase.processScope)
-          .undoImport(target.id);
-      if (!mounted) return;
-      await _loadUndoableImport();
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vehicleImportFailOther)),
-      );
-    } finally {
-      if (mounted) setState(() => _undoingImport = false);
-    }
-  }
 
   @override
   void dispose() {
@@ -242,18 +193,22 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
     final confirmed = await showVehicleSaleImportConfirmDialog(context);
     if (!confirmed || !mounted) return;
 
-    final pick = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['zip'],
-      withData: true,
-    );
-    if (pick == null || pick.files.isEmpty || !mounted) return;
-    final bytes = pick.files.single.bytes;
+    final qaBytes = await qaReadVehicleSaleImportZipBytes();
+    List<int>? bytes = qaBytes;
     if (bytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vehicleImportFailCorrupt)),
+      final pick = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['zip'],
+        withData: true,
       );
-      return;
+      if (pick == null || pick.files.isEmpty || !mounted) return;
+      bytes = pick.files.single.bytes;
+      if (bytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.vehicleImportFailCorrupt)),
+        );
+        return;
+      }
     }
 
     setState(() => _importing = true);
@@ -369,29 +324,28 @@ class _VehicleAddScreenState extends State<VehicleAddScreen> {
       distanceUnit: distanceUnit,
     );
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.vehicleAddVehicle)),
-      body: ListView(
-        padding: screenBodyScrollPadding(context),
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
+      appBar: AppBar(
+        title: Text(l10n.vehicleAddVehicle),
+        actions: [
+          // Outside the body ListView/ScrollView: Maestro taps on a full-width
+          // Semantics child of a scrollable often COMPLETE without firing the
+          // action (parent wins / bounds stay max-width). AppBar.actions sizes
+          // to the TextButton (2026-07-14 hierarchy: ScrollView ancestor).
+          Semantics(
+            identifier: kDebugMode ? kQaVehicleImportAction : null,
+            button: true,
+            onTap: (_saving || _importing) ? null : _confirmImport,
+            excludeSemantics: true,
             child: TextButton(
-              onPressed: (_saving || _importing || _undoingImport)
-                  ? null
-                  : _confirmImport,
+              onPressed: (_saving || _importing) ? null : _confirmImport,
               child: Text(l10n.vehicleImportAction),
             ),
           ),
-          if (_undoableImport != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: (_saving || _importing || _undoingImport)
-                    ? null
-                    : _confirmUndoImport,
-                child: Text(l10n.vehicleSaleImportUndoAction),
-              ),
-            ),
+        ],
+      ),
+      body: ListView(
+        padding: screenBodyScrollPadding(context),
+        children: [
           qaVehicleSemantics(
             identifier: kQaVehicleFieldLabel,
             child: AppTextField(

@@ -1,0 +1,37 @@
+appId: com.compartarenta.compartarenta.dev
+---
+- runFlow:
+    file: _enter_vehicle_hub.yaml
+- takeScreenshot: 01_seller_vehicle_hub
+- scrollUntilVisible:
+    element:
+      id: "qa-vehicle-card-qa-civic"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-card-qa-civic"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-detail"
+    timeout: 30000
+- takeScreenshot: 02_seller_vehicle_detail
+- scrollUntilVisible:
+    element:
+      id: "qa-vehicle-detail-export"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-detail-export"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-export-confirm"
+    timeout: 30000
+- tapOn:
+    id: "qa-vehicle-export-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "qa-vehicle-export-success-done"
+    timeout: 60000
+- takeScreenshot: 03_seller_export_success
+- tapOn:
+    id: "qa-vehicle-export-success-done"

@@ -107,4 +107,4 @@ if [[ "${SKIP_RESTORE}" -eq 0 ]]; then
 fi
 
 cp "${MANIFEST}" "${ARTIFACT_DIR}/scenario.yaml"
-echo "Scenario ${SCENARIO_ID} complete. Artifacts: ${ARTIFACT_DIR}"
+echo "Scenario PASSED | ${SCENARIO_ID}. Artifacts: ${ARTIFACT_DIR}"

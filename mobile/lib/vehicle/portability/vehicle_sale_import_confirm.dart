@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
+import '../../debug/qa_vehicle_semantics.dart';
 import '../../l10n/app_localizations.dart';
 
 /// If [vehicleId] is still sale-import undoable, asks the user to confirm that
@@ -24,13 +26,25 @@ Future<bool> confirmSaleImportCommitmentIfNeeded(
     builder: (ctx) => AlertDialog(
       content: Text(l10n.vehicleSaleImportConfirmActionBody),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(l10n.commonCancel),
+        Semantics(
+          identifier: kDebugMode ? kQaVehicleImportCommitCancel : null,
+          button: true,
+          onTap: () => Navigator.of(ctx).pop(false),
+          excludeSemantics: true,
+          child: TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
         ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text(l10n.vehicleSaleImportConfirmActionConfirm),
+        Semantics(
+          identifier: kDebugMode ? kQaVehicleImportCommitConfirm : null,
+          button: true,
+          onTap: () => Navigator.of(ctx).pop(true),
+          excludeSemantics: true,
+          child: FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.vehicleSaleImportConfirmActionConfirm),
+          ),
         ),
       ],
     ),

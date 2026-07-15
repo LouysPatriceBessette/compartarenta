@@ -15,7 +15,7 @@ description: >-
 
 **Budget target:** ~**3 hours** for a scenario comparable in scope to existing ones (handshake pair, housing wizard, settlement probe). Not 24.
 
-**What a Maestro scenario IS here:** a **click script** on buttons and fields that **already exist** in the Flutter app, identified by `qa-*` semantics. Your job is to **compose** YAML from code and repo helpers — not to improvise UX, theorize about sync, or rewrite the app until you have proof.
+**What a Maestro scenario IS here:** a **click script** on buttons and fields that **already exist** in the Flutter app, identified by `qa-*` semantics. Your job is to **compose** YAML from code and repo helpers — not to invent UX, theorize about sync, or rewrite the app until you have a **démonstration** (see `no-probability-coding.mdc` lexicon).
 
 ---
 
@@ -25,7 +25,7 @@ These failures happened across **many** agents and turns; they are **not** tied 
 
 | Failure mode | What agents did instead of the right thing |
 |--------------|---------------------------------------------|
-| **Improvisation** | Patched YAML/coordinator from habit without reading the screen’s Dart or the failing artifact |
+| **Patch sans artefact** | Patched YAML/coordinator from habit without reading the screen’s Dart or the failing artifact |
 | **Théorisation** | Blamed relay, race, stale data — without log line, screenshot, or Maestro hierarchy |
 | **Code à l’aveugle** | Added `tapOn id:` without checking `Semantics` (`clickable`, `onTap`, `excludeSemantics`) in source |
 | **Vandalisme** | Reverted or rewrote working code from minutes earlier; edited **shared** `_*.yaml` for one broken path |
@@ -33,10 +33,12 @@ These failures happened across **many** agents and turns; they are **not** tied 
 | **Scope creep** | After user PASSED: refactored wizard, IDs everywhere, orchestrator, seed — broke what worked |
 | **Masquage QA** | Removed assertions, added tolerances, or skipped steps so a **bug** would not fail the run |
 | **Parallel multi-device** | `inviter-standby &` + invitee foreground → races and hour-long flakes |
-| **`tapOn` COMPLETED ≠ action** | Assumed tap worked; sheet/dialog never opened (`excludeSemantics` without `onTap`) |
+| **`tapOn` COMPLETED ≠ action** | Treated tap as success; sheet/dialog never opened (`excludeSemantics` without `onTap`) |
 | **No validation loop** | Claimed fixed / « almost done » without green run + artifact |
 
 **User installed skills precisely to stop blind YAML.** If you skip Step 0 below, you repeat the same 24 h disaster on the next scenario.
+
+Skill lessons and bans for premature “success” claims: `no-probability-coding.mdc` (lexicon) + `I-am-learning-Maestro-autonomously.mdc`.
 
 ---
 
@@ -62,6 +64,26 @@ Write **one sentence** each:
 1. **User path** — who taps what, in what order (which device if multi).
 2. **Pass observable** — which `qa-*` id(s) or logcat line proves success.
 3. **Reference** — closest existing scenario id to **copy structure from** (not reinvent).
+
+### Orchestrator success line (mandatory)
+
+Every Maestro orchestrator / coordinator success path **must** print an explicit
+final status line that contains the substring **`PASSED`** (and the scenario id),
+for example:
+
+```bash
+echo "Scenario PASSED | ${SCENARIO_ID}. Artifacts: ${ARTIFACT_DIR}"
+# multi-device coordinators already use:
+# echo "Test PASSED | ${SCENARIO_ID}"
+```
+
+Do **not** end a green run with only wording such as `complete` / `Done` without
+**`PASSED`**. Agents and the developer treat the log’s last success line as the
+verdict; ambiguous “complete” is insufficient when the emulator still shows OS
+dialogs (e.g. System UI) after the script exits.
+
+Failure paths should keep a clear non-zero exit; optional explicit `FAILED |`
+lines are fine but **`PASSED` on success is required**.
 
 If the request mixes several behaviors, ask which to do **first** (chat text, not Question UI).
 
@@ -170,19 +192,21 @@ Single-device scenarios skip this step — use manifest + `qa:run-scenario`.
 | Order | Command | Purpose |
 |-------|---------|---------|
 | 1 | `python3 tool/verify_qa_semantics.py` | ids ↔ Dart |
-| 2 | Smallest failing flow on one `--udid` | Fast iteration |
-| 3 | MCP hierarchy if tap “succeeds” but UI unchanged | Prove `clickable: true` |
-| 4 | Full scenario | Only when slices green |
+| 2 | User runs smallest failing flow on one `--udid` | Fast iteration — **agent does not launch** |
+| 3 | MCP hierarchy if tap “succeeds” but UI unchanged | Prove `clickable: true` (when user has devices up) |
+| 4 | User runs full scenario | Only when slices green — **agent does not launch** |
+
+**Who runs Maestro:** the **user**, never the agent — see Non-negotiable → *Who runs the scenario*.
 
 **On FAIL:** open `qa/artifacts/.../` screenshot + hierarchy — **then** one fix. Not three hypotheses in one diff.
 
 **On PASS:** do not touch unrelated files. User satisfied with step N → **lock** step N; next edit is step N+1 only.
 
 ```bash
-# Single device
+# Single device (USER runs)
 ./tool/melosw run qa:run-scenario -- <scenario_id> [--skip-build]
 
-# Multi device
+# Multi device (USER runs)
 ./tool/melosw run qa:run-multi-scenario -- <scenario_id> [--skip-build]
 ```
 
@@ -210,6 +234,9 @@ Rebuild APK when `mobile/` changed; `--skip-build` only for YAML/bash-only edits
   - Manifest `device_date` for period/scenario logic is OK; for **default** runs prefer today.
   - If TLS fails with `certificate is not yet valid`: emulator clock is outside cert `notBefore` — fix date, not Maestro steps.
 - **Ne jamais seeder un émulateur deux fois de suite inutilement.**
+- **Full-stop before every non-first seed on the same AVD instance (proven 2026-07-14):** when a scenario needs a **second** (or later) `seed_qa_scenario` / `pm clear` on the same emulator process, **fully stop the emulator** (`adb emu kill` / `qa_kill_emulator`) and **cold-boot** before that seed. A second `pm clear` + cold-start on a still-running AVD after Maestro (or after System UI stress) often never writes `seed_applied` (`poll … applied=<empty>` then seed timeout). First seed after a fresh AVD start is fine; mid-run reseeds are not. Reference orchestrator: `tool/run_vehicle_sale_export_import_scenario.sh` phases 4→5.
+- **Right-aligned control + full-width Semantics hitbox (demonstrated 2026-07-14):** `Align(alignment: centerRight)` wrapping `Semantics(excludeSemantics: true, …)` can report a **full-row** `bounds` in Maestro hierarchy while the visible `TextButton` sits on the right. `tapOn id:` then COMPLETED (center of bounds) without firing `onPressed` — dialog never opens. Hierarchy proof: `qa-vehicle-import-action` bounds `[42,325][1038,451]` with visual « Importer » on the right edge. **Fix (situational):** size the Semantics to the control (`Row` + `MainAxisAlignment.end`, or equivalent intrinsic width), not the full cross-axis of the list. (`Row`+`end` alone did **not** shrink bounds under `ListView` — still `[42,325][1038,451]` as child of `ScrollView` after rebuild; see next bullet.)
+  - **Alternative (demonstrated 2026-07-14, `mobile/terminal.log` run `20260714T224815Z`):** same id still full-width under ancestor `android.widget.ScrollView` after `Row`+`end`. Situation difference: list max cross-axis + scrollable parent. **Fix that recovered:** move the Maestro target to `AppBar.actions` (outside the scrollable body). Demonstration: Maestro steps `qa-vehicle-import-action` → `qa-vehicle-import-confirm` → `qa-vehicle-card-qa-civic` all COMPLETED; orchestrator then printed `Scenario vehicle_sale_export_import complete` (that run predates the mandatory `PASSED` log line). Do **not** delete the Align/`Row` lessons.
 - **Ne jamais utiliser des timeout exagérément long** (ex: 120 secondes pour attendre la fin d'une animation de 800ms).
 
 ### QA integrity
@@ -217,10 +244,26 @@ Rebuild APK when `mobile/` changed; `--skip-build` only for YAML/bash-only edits
 - **Ne JAMAIS corriger un mauvais comportement de l'application par des patch dans le scénario.** Il est FOUTREMENT évident qu'un test de QA qui révèle des bug à corriger NE DOIT PAS les supprimer. C'est un comportement IDIOT ET IMBÉCILE — **ne plus jamais faire ça.**
 - **TOUJOURS vérifier si un bug identifié peut se répéter à d'autres endroits** et, si c'est le cas, **DEMANDER LA CONFIRMATION** avant de corriger.
 
+### Who runs the scenario (user binding — never the agent)
+
+**NEVER** launch Maestro / melos QA scenarios yourself (`qa:run-scenario`,
+`qa:run-multi-scenario`, `qa:run-vehicle-sale-export-import`, coordinators,
+direct `maestro test`, etc.). Prepare flows/code, give the user the exact
+command, and wait for **their** log / artifacts. Reasons:
+
+1. Silent hangs are common (Gradle stuck, `seed_applied` empty, System UI,
+   Maestro waits) — the agent burns long wall-clock with no useful signal.
+2. The user does **not** see the agent’s emulator instance, so they cannot
+   interrupt a stuck run when the agent also fails to detect the hang.
+
+After delivering a change: give the run command; do **not** start it in a
+background terminal. Claim PASS only from the user’s green log (with
+**`PASSED`**) or explicit user confirmation.
+
 ### Agent responsibility
 
-- **You** close the validation loop — never « nobody verified », « previous agent », « instruction half-applied ».
-- Do not claim PASS without a green run and artifact evidence.
+- Close the validation loop **with the user’s run evidence** — never « nobody verified », « previous agent », « instruction half-applied ».
+- Do not claim PASS without a green run, artifact evidence, **and** an orchestrator log line containing **`PASSED`**.
 
 ---
 
@@ -228,6 +271,7 @@ Rebuild APK when `mobile/` changed; `--skip-build` only for YAML/bash-only edits
 
 | Evidence | Change | Do not change |
 |----------|--------|----------------|
+| Hierarchy: id present, `clickable: true`, but `tapOn` COMPLETED and UI unchanged; bounds far wider than the visible control | Shrink Semantics to control width (e.g. `Row`+`end` / intrinsic); if still max-width under `ScrollView`, move id outside scrollable (`AppBar.actions`) | Longer timeout / `text:` tap |
 | Hierarchy: id missing | Add minimal `qa-*` in Dart | Random `text:` tap in YAML |
 | Hierarchy: `clickable: false` on intended button | `button: true` + `onTap` mirror `onPressed` | Longer timeout |
 | Wrong screen after tap | YAML order / `runFlow` helper / navigation subflow | Product business logic |
@@ -280,6 +324,7 @@ New scenario checklist: manifest fields (`id`, `device_date`, `seed`, `flow`) ma
 - [ ] Maestro failure stops the attempt (`|| return 1`)
 - [ ] No double seed
 - [ ] No stdout hidden so user cannot see steps
+- [ ] Success ends with a log line containing **`PASSED`** and the scenario id (not only `complete`)
 
 **Process**
 
@@ -287,7 +332,8 @@ New scenario checklist: manifest fields (`id`, `device_date`, `seed`, `flow`) ma
 - [ ] One change per failed run
 - [ ] No app patch to hide test failure; no test patch to hide app bug
 - [ ] Confirm with user before fixing same bug class in multiple modules
-- [ ] No claim PASS without run proof
+- [ ] Agent **never** launches the scenario — user runs it (silent hang + no visible emulator)
+- [ ] No claim PASS without **user** run proof **and** a `PASSED` orchestrator line
 
 ---
 
@@ -304,7 +350,7 @@ Ask in chat (plain Markdown) when product scope is ambiguous.
 ## Delivery bar
 
 - [ ] `verify_qa_semantics.py` → 0
-- [ ] Scenario run green (single or multi) with artifacts
+- [ ] Scenario green **from the user’s run** (single or multi) with artifacts — agent did not launch it
 - [ ] Logs show device serial per Maestro block
 - [ ] `flutter analyze` + `flutter test` if `mobile/` touched
 - [ ] Diff scope = what was requested — no drive-by refactors

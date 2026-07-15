@@ -17,7 +17,7 @@ This repository uses **Maestro YAML + shell coordinators**, not Patrol (`patrol_
 
 1. Read **`.cursor/skills/maestro-scenario-avoid-carpet-tripping/SKILL.md`**
    — mandatory for **any** new or extended scenario (code-first workflow,
-   anti-improvisation, no vandalizing shared flows).
+   anti-blind-YAML, no vandalizing shared flows).
 2. Read **`docs/qa-android-e2e.md`** (Maestro section + semantics table).
 3. Read the **reference coordinator** and manifest for the scenario you extend
    (e.g. `tool/coordinators/housing_proposal.sh` + `qa/multi_scenarios/*.yaml`).
@@ -97,6 +97,14 @@ WARNED steps when permission is already granted.
 - Clean: `assertNotVisible` on `index: 1` + banner absent.
 - Probe flow **expects** symptom visible (maestro fails → coordinator: symptom absent).
 
+### Orchestrator final status (single- and multi-device)
+
+On a **successful** end-to-end run, the shell entry point **must** echo a final
+line that contains **`PASSED`** and the scenario id (e.g.
+`Scenario PASSED | <id>` or `Test PASSED | <id>`). Do not use only `complete` /
+`Done` without `PASSED`. See
+`maestro-scenario-avoid-carpet-tripping/SKILL.md` (orchestrator success line).
+
 ### Multi-device coordinators
 
 - **Sequential handshake only**: inviter `generate` → export code → invitee `redeem`.
@@ -159,6 +167,7 @@ Do not generate `patrol_test/` or `patrolTest` when the task is Maestro/coordina
 - [ ] No duplicate-row assert without `index: 1` when testing duplicates
 - [ ] Inviter post-handshake navigation uses `_return_to_contacts_list` when needed
 - [ ] `verify_qa_semantics.py` passes
+- [ ] Success path prints an explicit **`PASSED | <scenario-id>`** (or equivalent containing `PASSED`) log line
 - [ ] No Patrol artifacts introduced
 
 See [reference.md](reference.md) for helper catalog and common flows.

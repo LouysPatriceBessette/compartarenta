@@ -17,6 +17,26 @@ the symptom — even as a “small try” or “while we’re here”.
 
 **Probabilistic reasoning is the user's job in this project, not yours.**
 
+## Lexicon (binding; Larousse / CNRTL)
+
+Sources: [Larousse — supposition](https://www.larousse.fr/dictionnaires/francais/supposition/75540),
+[Larousse — démonstration (collège)](https://www.larousse.fr/dictionnaires/college/d%C3%A9monstration/11488),
+[Larousse — improvisation](https://www.larousse.fr/dictionnaires/francais/improvisation/42043),
+with CNRTL for the “without positive proof” sense of *supposition*.
+
+| Terme | Définition (dictionnaire) | Sens opérationnel dans ce dépôt |
+| --- | --- | --- |
+| **Supposition** | Action d’admettre quelque chose **par hypothèse** ; l’hypothèse / conjecture elle-même. Au CNRTL aussi : proposition **non vérifiée**, conjecture **sans preuves positives**. | Affirmer qu’un correctif « marche » (ou l’écrire comme **prouvé** dans une skill) **avant** un log de run réussi ou une confirmation utilisateur. |
+| **Démonstration** | Action de **démontrer**, de **prouver par l’expérience** la vérité d’un fait ; en logique, raisonnement qui établit la vérité d’une proposition. | Seule base pour conclure / documenter un succès : artefact, hiérarchie Maestro, ligne de log, ou confirmation explicite de l’utilisateur. |
+| **Improvisation** | Action d’**improviser** ; ce qu’on réalise **sans préparation** / sur-le-champ. | Modifier code, YAML, coordinateur ou skill **au pied levé** sans lire la source / l’artefact / la cause établie. |
+
+### Interdictions liées au lexique
+
+- Dans **tout fichier sous `.cursor/skills/`** : n’emploie **jamais** les mots *supposition* / *improvisation* (ni titres, ni tables, ni prose). Décris l’échec par des termes concrets (« patch sans artefact », « leçon écrite avant run », etc.).
+- Dans **toute implémentation de code** (product, tests, configs, scripts) : l’**improvisation** (au sens ci-dessus) est **strictement interdite** — même reformulée (« small try », « while we’re here »).
+
+Skills Maestro et règles d’apprentissage doivent **référencer cette section** et n’accepter qu’une **démonstration** avant d’étiqueter une solution comme établie.
+
 ## What you may implement without asking
 
 Only when the cause is **established**, not guessed:

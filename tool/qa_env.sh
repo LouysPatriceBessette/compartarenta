@@ -245,6 +245,33 @@ qa_prepare_for_maestro() {
   sleep 1
 }
 
+# Fully stop an emulator process (adb emu kill). Used before a mid-scenario reseed
+# when repeated pm clear leaves System UI / bootstrap unable to write seed_applied.
+qa_kill_emulator() {
+  local serial="${1:-}"
+  if [[ -z "${serial}" ]]; then
+    serial="$(adb devices | awk '/^emulator-[0-9]+\t/{print $1; exit}')"
+  fi
+  if [[ -z "${serial}" ]]; then
+    echo "qa_kill_emulator: no emulator serial to kill" >&2
+    return 0
+  fi
+  echo "Killing emulator ${serial} (full stop before reseed)..."
+  adb -s "${serial}" emu kill >/dev/null 2>&1 || true
+  local i
+  for i in $(seq 1 90); do
+    if ! adb devices 2>/dev/null | awk -v s="${serial}" '$1 == s { found=1 } END { exit !found }'; then
+      # Brief settle so the next cold boot does not attach to a dying process.
+      sleep 2
+      echo "Emulator ${serial} stopped."
+      return 0
+    fi
+    sleep 1
+  done
+  echo "qa_kill_emulator: timed out waiting for ${serial} to disappear" >&2
+  return 1
+}
+
 # --- Multi-device QA helpers --------------------------------------------------
 
 qa_write_avd_serials_map() {
@@ -332,6 +359,53 @@ qa_pull_handshake_invitation_code() {
   adb -s "${serial}" shell \
     "run-as ${COMPARTARENTA_QA_APP_ID} cat app_flutter/compartarenta_qa_handshake_code.txt" \
     2>/dev/null | tr -d '\r' || true
+}
+
+# Pull sale-export zip written by debug QA after a successful UI export.
+# Writes host path given as $2. Returns 0 only when the file is non-empty.
+qa_pull_vehicle_sale_export_zip() {
+  local serial="$1"
+  local host_path="$2"
+  local app_id="${COMPARTARENTA_QA_APP_ID}"
+  mkdir -p "$(dirname "${host_path}")"
+  if ! adb -s "${serial}" shell \
+    "run-as ${app_id} cat app_flutter/compartarenta_qa_vehicle_sale_export.zip" \
+    >"${host_path}" 2>/dev/null; then
+    rm -f "${host_path}"
+    return 1
+  fi
+  if [[ ! -s "${host_path}" ]]; then
+    rm -f "${host_path}"
+    return 1
+  fi
+  return 0
+}
+
+# Push a host zip into app_flutter for debug import (bypasses FilePicker).
+qa_push_vehicle_sale_import_zip() {
+  local serial="$1"
+  local host_path="$2"
+  local app_id="${COMPARTARENTA_QA_APP_ID}"
+  if [[ ! -s "${host_path}" ]]; then
+    echo "qa_push_vehicle_sale_import_zip: missing or empty ${host_path}" >&2
+    return 1
+  fi
+  adb -s "${serial}" shell "run-as ${app_id} mkdir app_flutter" >/dev/null 2>&1 || true
+  # Binary-safe transfer via base64 (run-as cannot read arbitrary host push paths).
+  if ! base64 -w0 "${host_path}" | adb -s "${serial}" shell \
+    "run-as ${app_id} sh -c 'base64 -d > app_flutter/compartarenta_qa_vehicle_sale_import.zip'"; then
+    echo "qa_push_vehicle_sale_import_zip: failed to write import zip" >&2
+    return 1
+  fi
+  local size
+  size="$(adb -s "${serial}" shell \
+    "run-as ${app_id} sh -c 'wc -c < app_flutter/compartarenta_qa_vehicle_sale_import.zip'" \
+    2>/dev/null | tr -d '\r' || true)"
+  if [[ -z "${size}" || "${size}" -le 0 ]]; then
+    echo "qa_push_vehicle_sale_import_zip: import zip empty on device" >&2
+    return 1
+  fi
+  return 0
 }
 
 qa_pull_qa_seed_applied_id() {

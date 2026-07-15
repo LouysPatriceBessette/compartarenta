@@ -8,9 +8,14 @@ Owner-side **`vehicle`** module: **substantially implemented** on-device (local 
 - **11.2 Emprunteur** path (notify Propriétaire) → tracked with **`vehicle-sharing-module`** / Emprunteur work (not current owner-module scope).
 - **11.2 Propriétaire** in-app reminder after “Maintain reading, investigate later” → **deferred**; **journal entry alone** is acceptable for the current release.
 
-**Still open for current release (non-relay):** Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**. Sale export/import (**5.1–5.2**) shipped 2026-07-14.
+**Still open for current release (non-relay):** Entitlement (**6.5**) waits on Google Play / StoreKit. Relay sync, cross-device notifications, and **boat** (§10.5 / §15) remain deferred as before. Legacy odometer-photo migration (**7.3b**) **won't do**.
 
-**Active cap + deactivation (2026-07-14):** at most three **active** owned vehicles; irreversible deactivate frees a slot; FAB disabled at cap; same cap for QA seeds.
+**QA’ed (2026-07-14, Android Maestro / unit):**
+- **1.3b** active-vehicle cap (unit: `vehicle_owned_active_cap_test.dart`; hub FAB hide at three active).
+- **5.1–5.2** sale export / import — `./tool/melosw run qa:run-vehicle-sale-export-import` (`Scenario PASSED | vehicle_sale_export_import`).
+- **5.3 Undo import** (full DB + public media revert; confirm dialog on detail) — `./tool/melosw run qa:run-vehicle-sale-export-import-undo` (`Scenario PASSED | vehicle_sale_export_import_undo`, artifacts `20260715T021251Z`).
+
+**Active cap + deactivation (2026-07-14):** at most three **active** owned vehicles; irreversible deactivate frees a slot; FAB hidden at cap; same cap for QA seeds.
 See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, expense sharing, and **`vehicle-usage-role-separation`** (owner vs borrower path; forbid self-borrow).
 
 ## 1. Domain model & storage
@@ -18,7 +23,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 - [x] 1.1 Define Vehicle, VehicleUse, FuelPurchase, MaintenanceEvent, TrafficViolation entities with fixed owner
 - [x] 1.2 Support vehicle kinds car, truck, motorcycle at initial release (`vehicle-domain-model`); **boat deferred** (§15)
 - [x] 1.3 Implement local persistence scoped by owner; multi-vehicle per owner
-- [x] 1.3b Enforce cap of three **active** owned vehicles per Propriétaire; irreversible deactivation frees a slot (`vehicle-domain-model`, 2026-07-14)
+- [x] 1.3b Enforce cap of three **active** owned vehicles per Propriétaire; irreversible deactivation frees a slot (`vehicle-domain-model`, implemented + QA’ed 2026-07-14)
 - [x] 1.4 Implement audit-friendly odometer correction (flag + note)
 
 ## 2. Odometer & distance
@@ -44,9 +49,9 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 ## 5. Data portability
 
-- [x] 5.1 Single-vehicle export (factual zip+JSON snapshot, module manifest) (2026-07-14)
-- [x] 5.2 Import as new owned vehicle on buyer device (2026-07-14)
-- [x] 5.3 Undo sale import while only rename/consult (revert DB + media; confirm dialog before other actions) (2026-07-14)
+- [x] 5.1 Single-vehicle export (factual zip+JSON snapshot, module manifest) (implemented + QA’ed 2026-07-14, `qa:run-vehicle-sale-export-import`)
+- [x] 5.2 Import as new owned vehicle on buyer device (implemented + QA’ed 2026-07-14, `qa:run-vehicle-sale-export-import`)
+- [x] 5.3 Undo sale import while only rename/consult (revert DB + media; confirm dialog; affordance on vehicle detail) (implemented + QA’ed 2026-07-14, `qa:run-vehicle-sale-export-import-undo`)
 
 ## 6. Navigation, hubs & licensing
 
@@ -120,6 +125,8 @@ Single-device scenarios after programmatic seed + clock push (`docs/qa-android-e
 - [x] 14.1 Scenario manifests + flows: `vehicle_add`, `vehicle_fuel_purchase`, `vehicle_use_session`, `vehicle_session_start_gap`, `vehicle_standalone_meter_gap`, `vehicle_consumption` (`qa/scenarios/`, `qa/flows/`).
 - [x] 14.2 Vehicle seed helpers + postconditions (`qa_vehicle_seed_helpers.dart`, `qa_vehicle_consumption_seed.dart`, `qa_scenario_seed.dart`, matching tests).
 - [x] 14.3 Hub semantics for consumption reliability and per-condition breakdown (`qa_vehicle_semantics.dart`, `vehicle_module_hub_screen.dart`).
+- [x] 14.3b Sale export → import Maestro (`qa:run-vehicle-sale-export-import`; QA’ed 2026-07-14).
+- [x] 14.3c Sale import undo Maestro (`qa:run-vehicle-sale-export-import-undo`; QA’ed 2026-07-14, `PASSED` `20260715T021251Z`).
 - [ ] 14.4 Sharing-hub and multi-role scenarios (invite, accept, borrower session, gap notify).
 
 ## 15. Boat vehicles (deferred from initial release)

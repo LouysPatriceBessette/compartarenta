@@ -14,9 +14,13 @@ import 'vehicle_sale_bundle.dart';
 import 'vehicle_sale_export_file_name.dart';
 
 class VehicleSaleExportWriteResult {
-  const VehicleSaleExportWriteResult({required this.zipFileName});
+  const VehicleSaleExportWriteResult({
+    required this.zipFileName,
+    required this.zipBytes,
+  });
 
   final String zipFileName;
+  final List<int> zipBytes;
 }
 
 /// Builds a sale/transfer zip (JSON + selected media) for one owned vehicle.
@@ -42,7 +46,10 @@ class VehicleSaleExportService {
       bytes: built.zipBytes,
       mimeType: 'application/zip',
     );
-    return VehicleSaleExportWriteResult(zipFileName: built.zipFileName);
+    return VehicleSaleExportWriteResult(
+      zipFileName: built.zipFileName,
+      zipBytes: built.zipBytes,
+    );
   }
 
   Future<({List<int> zipBytes, String zipFileName, String jsonFileName})>
