@@ -16,6 +16,8 @@ import '../../housing/realized_expense/realized_expense_status.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../sandbox/peer_simulator.dart';
+import '../../sandbox/sandbox_mode.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/fullscreen_image_viewer_screen.dart';
@@ -62,12 +64,7 @@ class _ParticipantReviewStatus {
   final DateTime? decidedAt;
 }
 
-enum _ReviewDecisionDisplay {
-  accepted,
-  rejected,
-  pending,
-  unknown,
-}
+enum _ReviewDecisionDisplay { accepted, rejected, pending, unknown }
 
 class _FinalDecisionStatus {
   const _FinalDecisionStatus({required this.accepted});
@@ -156,19 +153,19 @@ class _HousingRealizedExpenseReviewScreenState
     }
     _openingPendingReview = true;
     unawaited(
-      navigateToRoute<void>(context, 
-            MaterialPageRoute<void>(
-              builder: (_) => HousingRealizedExpenseReviewScreen(
-                expenseId: expenseId,
-                planId: widget.planId,
-                packageId: widget.packageId,
-                prefs: widget.prefs,
-              ),
-            ),
-          )
-          .catchError((_) {
-            _openingPendingReview = false;
-          }),
+      navigateToRoute<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => HousingRealizedExpenseReviewScreen(
+            expenseId: expenseId,
+            planId: widget.planId,
+            packageId: widget.packageId,
+            prefs: widget.prefs,
+          ),
+        ),
+      ).catchError((_) {
+        _openingPendingReview = false;
+      }),
     );
   }
 
@@ -215,8 +212,8 @@ class _HousingRealizedExpenseReviewScreenState
       acceptances: acceptances,
       roster: roster,
     );
-    final decisiveRejectionJustification = expense.status ==
-            RealizedExpenseStatus.rejected
+    final decisiveRejectionJustification =
+        expense.status == RealizedExpenseStatus.rejected
         ? _decisiveRejectionJustification(acceptances)
         : null;
 
@@ -237,14 +234,15 @@ class _HousingRealizedExpenseReviewScreenState
   String? _decisiveRejectionJustification(
     List<RealizedExpenseAcceptance> acceptances,
   ) {
-    final rejections = acceptances
-        .where(
-          (a) =>
-              a.decision == RealizedExpenseDecision.rejected &&
-              a.decidedAt != null,
-        )
-        .toList(growable: false)
-      ..sort((a, b) => a.decidedAt!.compareTo(b.decidedAt!));
+    final rejections =
+        acceptances
+            .where(
+              (a) =>
+                  a.decision == RealizedExpenseDecision.rejected &&
+                  a.decidedAt != null,
+            )
+            .toList(growable: false)
+          ..sort((a, b) => a.decidedAt!.compareTo(b.decidedAt!));
     if (rejections.isEmpty) return null;
     final text = (rejections.first.rejectionJustification ?? '').trim();
     return text.isEmpty ? null : text;
@@ -275,9 +273,10 @@ class _HousingRealizedExpenseReviewScreenState
           isRejected
               ? _ReviewDecisionDisplay.unknown
               : _ReviewDecisionDisplay.pending,
-        _ => isRejected
-            ? _ReviewDecisionDisplay.unknown
-            : _ReviewDecisionDisplay.pending,
+        _ =>
+          isRejected
+              ? _ReviewDecisionDisplay.unknown
+              : _ReviewDecisionDisplay.pending,
       };
       out.add(
         _ParticipantReviewStatus(
@@ -473,6 +472,7 @@ class _HousingRealizedExpenseReviewScreenState
         _reload();
       }
       if (!mounted) return;
+      _scheduleSandboxBotExpenseReviews();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -536,16 +536,30 @@ class _HousingRealizedExpenseReviewScreenState
       justification: justification,
     );
     if (!mounted) return;
+    _scheduleSandboxBotExpenseReviews();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.housingRealizedExpenseRejected)),
     );
     _reload();
   }
 
+  void _scheduleSandboxBotExpenseReviews() {
+    final prefs = widget.prefs;
+    if (prefs == null || !SandboxMode.isActive(prefs)) return;
+    final sim = PeerSimulator.maybeInstance;
+    if (sim == null || sim.bots.isEmpty) return;
+    unawaited(
+      sim.acceptPendingRealizedExpenseReviewsAfterHumanDecision(
+        expenseId: widget.expenseId,
+      ),
+    );
+  }
+
   Future<void> _resubmit(_ReviewContext ctx) async {
     final draft = await _repo.createResubmitDraftFromRejected(widget.expenseId);
     if (!mounted) return;
-    await navigateToRoute<void>(context, 
+    await navigateToRoute<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingRealizedExpenseFormScreen(
           planId: widget.planId,
@@ -621,7 +635,9 @@ class _HousingRealizedExpenseReviewScreenState
   Widget _buildProofPreview(BuildContext context, _ReviewContext ctx) {
     const previewSize = 148.0;
     final attachment = ctx.proofAttachment;
-    final previewAttachment = _isPreviewableImage(attachment) ? attachment : null;
+    final previewAttachment = _isPreviewableImage(attachment)
+        ? attachment
+        : null;
     final provider = previewAttachment == null
         ? null
         : localFileImageProvider(previewAttachment.filePath);
@@ -641,7 +657,8 @@ class _HousingRealizedExpenseReviewScreenState
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          navigateToRoute<void>(context, 
+          navigateToRoute<void>(
+            context,
             MaterialPageRoute<void>(
               builder: (_) => FullscreenImageViewerScreen(
                 image: provider,

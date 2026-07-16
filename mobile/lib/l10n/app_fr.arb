@@ -1777,6 +1777,7 @@
   "sandboxInvitingBot": "Invitation du participant simulé…",
   "sandboxBotExpenseTitle": "Simuler une dépense d'un Bot",
   "sandboxBotExpenseSubtitle": "Mode simulation",
+  "sandboxBotExpenseDescription": "Dépense simulée",
   "sandboxEightHourNudgeTitle": "Mode simulation",
   "sandboxEightHourNudgeBody": "Vous êtes en mode simulation depuis 8 heures. Envisagez de revenir en mode réel pour ne pas manquer une invitation d'un partenaire.",
   "sandboxPortabilityBlocked": "Export et import sont indisponibles en mode simulation.",

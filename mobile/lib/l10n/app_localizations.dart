@@ -7251,6 +7251,12 @@ abstract class AppLocalizations {
   /// **'Simulation mode'**
   String get sandboxBotExpenseSubtitle;
 
+  /// No description provided for @sandboxBotExpenseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated expense'**
+  String get sandboxBotExpenseDescription;
+
   /// No description provided for @sandboxEightHourNudgeTitle.
   ///
   /// In en, this message translates to:

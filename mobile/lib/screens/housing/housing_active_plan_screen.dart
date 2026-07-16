@@ -954,7 +954,6 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
     try {
       await SandboxBotExpense.simulateRandomBotExpense(
         planId: widget.planId,
-        packageId: widget.packageId,
         prefs: prefs,
       );
       if (!context.mounted) return;

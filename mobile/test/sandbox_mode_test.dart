@@ -1,4 +1,5 @@
 import 'package:compartarenta/sandbox/sandbox_bot_catalog.dart';
+import 'package:compartarenta/sandbox/sandbox_bot_expense.dart';
 import 'package:compartarenta/sandbox/sandbox_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,5 +25,13 @@ void main() {
     expect(prefs.sandboxEnteredAt, isNotNull);
     await prefs.clearSandboxLifecyclePrefs();
     expect(prefs.sandboxMode, isFalse);
+  });
+
+  test('bot expense maps housing hub plan id to received bot plan id', () {
+    const uuid = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+    expect(
+      SandboxBotExpense.localBotPlanId('housing:$uuid'),
+      'received:$uuid',
+    );
   });
 }

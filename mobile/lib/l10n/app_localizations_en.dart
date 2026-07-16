@@ -4285,6 +4285,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sandboxBotExpenseSubtitle => 'Simulation mode';
 
   @override
+  String get sandboxBotExpenseDescription => 'Simulated expense';
+
+  @override
   String get sandboxEightHourNudgeTitle => 'Simulation mode';
 
   @override
