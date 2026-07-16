@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
+import '../prefs/app_preferences.dart';
 import 'entitlement_client.dart';
 import 'entitlement_gate.dart';
 import 'entitlement_plan_id.dart';
@@ -177,6 +178,10 @@ class EntitlementCoordinator {
 
   Future<void> reportActiveUse({required String planId}) async {
     if (!httpEnabled) return;
+    try {
+      final prefs = await AppPreferences.load();
+      if (prefs.sandboxMode) return;
+    } catch (_) {}
     final entitlementPlanId = entitlementPlanIdForLocalPlan(planId);
     try {
       await _client!.reportActiveUse(planId: entitlementPlanId);

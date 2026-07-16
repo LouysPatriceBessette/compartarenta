@@ -53,6 +53,8 @@ import 'widgets/connectivity_banner.dart';
 import 'widgets/profile_label_conflict_host.dart';
 import 'theme/app_theme.dart';
 import 'util/native_plugin_link_error.dart';
+import 'sandbox/sandbox_eight_hour_nudge.dart';
+import 'sandbox/simulation_ribbon.dart';
 
 class CompartarentaApp extends StatefulWidget {
   const CompartarentaApp({super.key, required this.config});
@@ -389,10 +391,16 @@ class _CompartarentaAppState extends State<CompartarentaApp>
                 child: ContactInviteDeepLinkListener(
                   router: router,
                   prefs: prefs,
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: child ?? const SizedBox.shrink(),
+                  child: SimulationRibbonHost(
+                    prefs: prefs,
+                    child: SandboxEightHourNudgeHost(
+                      prefs: prefs,
+                      child: SafeArea(
+                        top: false,
+                        bottom: false,
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 ),
               ),

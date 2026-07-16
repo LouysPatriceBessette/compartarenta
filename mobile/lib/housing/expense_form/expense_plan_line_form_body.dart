@@ -532,7 +532,8 @@ class _PaymentResponsibleField extends StatelessWidget {
           initialSelection: resolved,
           width: double.infinity,
           menuHeight: 240,
-          requestFocusOnTap: true,
+          // Selector only — focusing opens the OS keyboard and covers entries.
+          requestFocusOnTap: false,
           enableFilter: false,
           dropdownMenuEntries: [
             DropdownMenuEntry<String?>(value: null, label: allLabel),

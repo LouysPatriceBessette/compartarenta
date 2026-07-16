@@ -1745,6 +1745,25 @@
   "vehicleUsageBlockedOwnOnBorrowerPath": "Este vehículo es suyo. Use el módulo Vehículo para registrar su uso — no Uso compartido.",
   "vehicleUsageBlockedNotOwnedOnOwnerPath": "Este vehículo no está en su lista de vehículos propios. Use Uso compartido para un vehículo compartido con usted.",
   "vehicleUsageBlockedMissingBorrowerIdentity": "Falta la identidad del prestatario para este formulario.",
-  "vehicleUsageBlockedVehicleNotFound": "Vehículo no encontrado."
+  "vehicleUsageBlockedVehicleNotFound": "Vehículo no encontrado.",
+
+  "commonOk": "Ok",
+  "sandboxRibbonLabel": "Modo simulación",
+  "sandboxModeButton": "Modo simulación",
+  "sandboxEnterDialogBody": "Puede simular un plan con participantes ficticios. Esto le da una excelente vista previa de la aplicación.\n\nPara usar la aplicación «real», debe volver al modo real. Para ello, toque la cinta roja en la parte superior de la aplicación. Se le recordará hacerlo en 8 horas.",
+  "sandboxEnterConfirm": "Simular",
+  "sandboxEnterRestartMessage": "La aplicación se cerrará ahora. Vuelva a abrirla para continuar.",
+  "sandboxHomeWelcomeBody": "Los módulos de vehículo no pueden simularse.\n\nEmpiece explorando el módulo Contactos. El proceso de añadir contactos está simplificado para esta simulación. Puede renombrar estos contactos ficticios.\n\n",
+  "sandboxExitDialogTitle": "¿Salir del modo simulación?",
+  "sandboxRestartRequiredMessage": "Cierre completamente la aplicación y vuelva a abrirla para continuar.",
+  "sandboxBotsExhausted": "Ha invitado a todos los bots.",
+  "sandboxInvitingBot": "Invitando al participante simulado…",
+  "sandboxBotExpenseTitle": "Simular un gasto de un bot",
+  "sandboxBotExpenseSubtitle": "Modo simulación",
+  "sandboxEightHourNudgeTitle": "Modo simulación",
+  "sandboxEightHourNudgeBody": "Lleva 8 horas en modo simulación. Considere volver al modo real para no perder una invitación de un socio.",
+  "sandboxPortabilityBlocked": "La exportación e importación no están disponibles en modo simulación.",
+  "sandboxEnterFailed": "No se pudo entrar en modo simulación (falló la verificación del punto de restauración).",
+  "sandboxModuleDisabled": "Este módulo no está disponible en modo simulación."
 }
 

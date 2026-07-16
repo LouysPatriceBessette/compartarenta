@@ -8,6 +8,7 @@ import '../../db/app_database.dart';
 import '../../entitlement/participant_installation_store.dart';
 import '../../housing/portability/housing_export_file_sink.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
 import '../../portability/device_data_export_file_sink_io.dart'
     if (dart.library.html) '../../portability/device_data_export_file_sink_web.dart'
     as export_sink;
@@ -17,6 +18,7 @@ import '../../portability/device_data_snapshot_codec.dart';
 import '../../portability/pending_installation_migration_store.dart';
 import '../../portability/store_import_gate.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../sandbox/sandbox_mode.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class DeviceDataExportImportScreen extends StatefulWidget {
@@ -242,6 +244,25 @@ class _DeviceDataExportImportScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    return FutureBuilder<AppPreferences>(
+      future: AppPreferences.load(),
+      builder: (context, snap) {
+        final prefs = snap.data;
+        if (prefs != null && SandboxMode.isActive(prefs)) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.settingsExportImportTitle)),
+            body: Padding(
+              padding: screenBodyScrollPadding(context),
+              child: Text(l10n.sandboxPortabilityBlocked),
+            ),
+          );
+        }
+        return _buildPortabilityBody(context, l10n);
+      },
+    );
+  }
+
+  Widget _buildPortabilityBody(BuildContext context, AppLocalizations l10n) {
     final busy = _exporting || _importing || _migrating;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsExportImportTitle)),

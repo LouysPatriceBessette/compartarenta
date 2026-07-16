@@ -7172,6 +7172,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vehicle not found.'**
   String get vehicleUsageBlockedVehicleNotFound;
+
+  /// No description provided for @commonOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ok'**
+  String get commonOk;
+
+  /// No description provided for @sandboxRibbonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation mode'**
+  String get sandboxRibbonLabel;
+
+  /// No description provided for @sandboxModeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation mode'**
+  String get sandboxModeButton;
+
+  /// No description provided for @sandboxEnterDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can simulate a plan with fake participants. This gives you an excellent preview of the app.\n\nTo use the “real” app, return to real mode. Tap the red banner at the top of the app to do so. You will be reminded after 8 hours.'**
+  String get sandboxEnterDialogBody;
+
+  /// No description provided for @sandboxEnterConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate'**
+  String get sandboxEnterConfirm;
+
+  /// No description provided for @sandboxEnterRestartMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The app will close now. Reopen it to continue.'**
+  String get sandboxEnterRestartMessage;
+
+  /// No description provided for @sandboxHomeWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle modules cannot be simulated.\n\nStart by exploring the Contacts module. Adding contacts is simplified for this simulation. You can rename these fake contacts.\n\n'**
+  String get sandboxHomeWelcomeBody;
+
+  /// No description provided for @sandboxExitDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave simulation mode?'**
+  String get sandboxExitDialogTitle;
+
+  /// No description provided for @sandboxRestartRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully quit the app, then reopen it to continue.'**
+  String get sandboxRestartRequiredMessage;
+
+  /// No description provided for @sandboxBotsExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'You have invited all the bots.'**
+  String get sandboxBotsExhausted;
+
+  /// No description provided for @sandboxInvitingBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Inviting simulated participant…'**
+  String get sandboxInvitingBot;
+
+  /// No description provided for @sandboxBotExpenseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate a bot expense'**
+  String get sandboxBotExpenseTitle;
+
+  /// No description provided for @sandboxBotExpenseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation mode'**
+  String get sandboxBotExpenseSubtitle;
+
+  /// No description provided for @sandboxEightHourNudgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation mode'**
+  String get sandboxEightHourNudgeTitle;
+
+  /// No description provided for @sandboxEightHourNudgeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been in simulation mode for 8 hours. Consider returning to real mode so you do not miss a partner invitation.'**
+  String get sandboxEightHourNudgeBody;
+
+  /// No description provided for @sandboxPortabilityBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Export and import are unavailable in simulation mode.'**
+  String get sandboxPortabilityBlocked;
+
+  /// No description provided for @sandboxEnterFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enter simulation mode (checkpoint verification failed).'**
+  String get sandboxEnterFailed;
+
+  /// No description provided for @sandboxModuleDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This module is not available in simulation mode.'**
+  String get sandboxModuleDisabled;
 }
 
 class _AppLocalizationsDelegate

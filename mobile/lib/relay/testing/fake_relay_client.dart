@@ -20,7 +20,11 @@ import '../routing.dart';
 ///   * Optional [networkErrorOnce] / [timeoutOnce] toggles let tests
 ///     exercise retry paths.
 class FakeRelayClient implements RelayClient {
-  FakeRelayClient();
+  FakeRelayClient({this.onEnvelopeStored});
+
+  /// Invoked after a new envelope is stored (not on idempotent replay).
+  /// Used by sandbox [PeerSimulator] to auto-react without a UI timer loop.
+  void Function()? onEnvelopeStored;
 
   final List<FakeRelayRoutingPair> _routings = <FakeRelayRoutingPair>[];
   final List<FakeRelayStoredEnvelope> _envelopes = <FakeRelayStoredEnvelope>[];
@@ -162,6 +166,7 @@ class FakeRelayClient implements RelayClient {
       ttlExpiresAt: now.add(ttl),
     ));
     _idempotentPostEnvelopeIds[idempotencyMapKey] = id;
+    onEnvelopeStored?.call();
     if (timeoutAfterPostOnce) {
       timeoutAfterPostOnce = false;
       throw TimeoutException('injected after post');

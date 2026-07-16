@@ -22,6 +22,8 @@ import '../../housing/realized_expense/realized_expense_ledger_service.dart';
 import '../../housing/realized_expense/realized_expense_participants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
+import '../../sandbox/sandbox_bot_expense.dart';
+import '../../sandbox/sandbox_mode.dart';
 import '../../util/display_date.dart';
 import 'housing_active_plan_read_only_screen.dart';
 import 'housing_agreement_renewal_screen.dart';
@@ -76,6 +78,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   bool _openingSettledAmendment = false;
   bool _openingParticipationChange = false;
   bool _openingAcceptedExpenses = false;
+  HandshakeOrchestrator? _steadyInboxOrchestrator;
 
   @override
   void initState() {
@@ -89,7 +92,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       _openAcceptedExpensesFromNotificationIfAny();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.addListener(
+      _steadyInboxOrchestrator = HandshakeOrchestrator.maybeInstance;
+      _steadyInboxOrchestrator?.steadyStateInboxTick.addListener(
         _onSteadyInboxTick,
       );
       HousingNavigationIntent.reviewRequestTick.addListener(
@@ -115,9 +119,10 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    HandshakeOrchestrator.maybeInstance?.steadyStateInboxTick.removeListener(
+    _steadyInboxOrchestrator?.steadyStateInboxTick.removeListener(
       _onSteadyInboxTick,
     );
+    _steadyInboxOrchestrator = null;
     HousingNavigationIntent.reviewRequestTick.removeListener(
       _onPendingReviewIntent,
     );
@@ -266,13 +271,15 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
 
   /// Updates amendment / expense banners only — does not reset the hub header.
   void _refreshPendingBanners() {
+    final db = AppDatabase.maybeProcessScope;
+    if (db == null) return;
     setState(() {
       _pendingExpenseFuture = RealizedExpenseLedgerService(
-        AppDatabase.processScope,
+        db,
       ).pendingSummary(packageId: widget.packageId, planId: widget.planId);
       final generation = ++_amendmentBannerGeneration;
       final amendmentBannerFuture = HousingProposalTransportService(
-        AppDatabase.processScope,
+        db,
       ).shouldShowPendingAmendmentHubBanner(widget.planId);
       _pendingAmendmentFuture = amendmentBannerFuture;
       _hubGatesFuture = _loadHubGates();
@@ -783,6 +790,15 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               },
                             ),
                             const _HubSectionDivider(),
+                            if (widget.prefs != null &&
+                                SandboxMode.isActive(widget.prefs!))
+                              _HubTile(
+                                icon: Icons.smart_toy_outlined,
+                                label: l10n.sandboxBotExpenseTitle,
+                                subtitle: l10n.sandboxBotExpenseSubtitle,
+                                enabled: true,
+                                onTap: () => _onSandboxBotExpense(context),
+                              ),
                             FutureBuilder<HousingHubExpenseEntry>(
                               future: _hubExpenseEntryFuture,
                               builder: (context, expenseEntrySnap) {
@@ -896,7 +912,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                               label: l10n.housingAmendmentRosterChangeTitle,
                               enabled:
                                   HousingAmendmentUiGates.rosterChangeEnabled &&
-                                  gates.majorChangeEnabled,
+                                  gates.majorChangeEnabled &&
+                                  !(widget.prefs != null &&
+                                      SandboxMode.isActive(widget.prefs!)),
                               subtitle: ejectionCandidateSubtitle,
                               subtitleColor: Colors.red.shade700,
                               onTap: () => _openMajorChange(context),
@@ -928,6 +946,32 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
       container: true,
       child: hub,
     );
+  }
+
+  Future<void> _onSandboxBotExpense(BuildContext context) async {
+    final prefs = widget.prefs ?? await AppPreferences.load();
+    if (!context.mounted) return;
+    try {
+      await SandboxBotExpense.simulateRandomBotExpense(
+        planId: widget.planId,
+        packageId: widget.packageId,
+        prefs: prefs,
+      );
+      if (!context.mounted) return;
+      setState(() {
+        _pendingExpenseFuture = RealizedExpenseLedgerService(
+          AppDatabase.processScope,
+        ).pendingSummary(
+          packageId: widget.packageId,
+          planId: widget.planId,
+        );
+      });
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    }
   }
 }
 

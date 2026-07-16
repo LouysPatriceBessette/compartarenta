@@ -35,6 +35,7 @@ import '../housing/realized_expense/realized_expense_sync_service.dart';
 import '../notifications/contact_notification_service.dart';
 import '../notifications/push_notification_service.dart';
 import '../prefs/app_preferences.dart';
+import '../sandbox/peer_simulator.dart';
 import 'envelopes.dart';
 import 'identity_keystore.dart';
 import 'relay_client.dart';
@@ -224,6 +225,19 @@ class HandshakeOrchestrator {
   Future<({String displayName, String avatarId})> Function()?
   ackProfileForAutoAccept;
 
+  /// Only the bootstrap [maybeInstance] posts housing notifications to the OS.
+  /// Sandbox bot orchestrators poll the same FakeRelay but share one device.
+  bool get _ownsDeviceHousingNotifications =>
+      identical(this, HandshakeOrchestrator.maybeInstance);
+
+  /// PeerSimulator / sandbox bots: keep inviter auto-accept and pin ack profile.
+  void enableSandboxPeerAutoAccept({
+    required Future<({String displayName, String avatarId})> Function() profile,
+  }) {
+    autoAcceptIncomingHandshakes = true;
+    ackProfileForAutoAccept = profile;
+  }
+
   final AppDatabase _db;
   final IdentityKeystore _identity;
   final RelayClient _relay;
@@ -292,6 +306,11 @@ class HandshakeOrchestrator {
 
   bool _pollLoopActive = false;
   bool _processing = false;
+  bool _steadyInboxPolling = false;
+  bool _steadyInboxPollNeededAgain = false;
+
+  /// In-process claim so concurrent inbox applies cannot double-post #7.
+  final Set<String> _housingDecisionNotifiedResponseIds = <String>{};
 
   /// Exposes the list of incoming handshakes awaiting accept / reject on
   /// the inviter side. UI binds to this to show the confirmation card.
@@ -353,6 +372,7 @@ class HandshakeOrchestrator {
   /// on-disk SQLite files can be removed (development-only local DB reset).
   Future<void> releaseLocalDatabaseConnectionForDevReset() async {
     stopPolling();
+    _housingDecisionNotifiedResponseIds.clear();
     await _db.close();
     AppDatabase.clearProcessScopeIfReferencing(_db);
   }
@@ -996,14 +1016,29 @@ class HandshakeOrchestrator {
   /// Polls the relay steady-state inbox once per known peer public key for
   /// inbound steady envelopes (profile, disconnect, housing proposal, …).
   ///
+  /// Concurrent callers (hub, PeerSimulator, periodic poll) are serialized so
+  /// the same envelope cannot be applied twice before ack.
+  ///
   /// UIs should listen to [steadyStateInboxTick] and refresh contact rows.
   /// Scheduled housing payment reminders are polled via
   /// [pollHousingPaymentReminders] (wake / foreground resume), not here.
   Future<void> pollSteadyStateInboxes() async {
+    if (_steadyInboxPolling) {
+      _steadyInboxPollNeededAgain = true;
+      return;
+    }
+    _steadyInboxPolling = true;
     try {
-      await _pollSteadyStateInboxesBody();
-    } catch (e, st) {
-      debugPrint('pollSteadyStateInboxes failed: $e\n$st');
+      do {
+        _steadyInboxPollNeededAgain = false;
+        try {
+          await _pollSteadyStateInboxesBody();
+        } catch (e, st) {
+          debugPrint('pollSteadyStateInboxes failed: $e\n$st');
+        }
+      } while (_steadyInboxPollNeededAgain);
+    } finally {
+      _steadyInboxPolling = false;
     }
   }
 
@@ -1507,11 +1542,13 @@ class HandshakeOrchestrator {
       recipient: myListenAddr,
     );
     steadyStateInboxTick.value = steadyStateInboxTick.value + 1;
-    await PushNotificationService.showLocalHousingProposalNotification(
-      senderDisplayName: senderContact.displayName,
-      planId: imported.planId,
-      isInForceAmendment: imported.isInForceAmendment,
-    );
+    if (_ownsDeviceHousingNotifications) {
+      await PushNotificationService.showLocalHousingProposalNotification(
+        senderDisplayName: senderContact.displayName,
+        planId: imported.planId,
+        isInForceAmendment: imported.isInForceAmendment,
+      );
+    }
     startPolling();
     requestClosedAppPushRegistrationSync();
   }
@@ -1636,7 +1673,7 @@ class HandshakeOrchestrator {
           'pendingYou=${summary.waitingForYouCount} '
           'pendingOthers=${summary.waitingForOthersCount}',
         );
-        if (shouldNotify) {
+        if (shouldNotify && _ownsDeviceHousingNotifications) {
           await PushNotificationService.showLocalHousingRealizedExpenseNotification(
             senderDisplayName: senderContact.displayName,
             expenseId: expenseId,
@@ -1726,7 +1763,7 @@ class HandshakeOrchestrator {
         expense: expense,
         selfParticipantId: selfParticipantId,
       );
-      if (shouldNotify) {
+      if (shouldNotify && _ownsDeviceHousingNotifications) {
         await PushNotificationService.showLocalHousingRealizedExpenseRejectedNotification(
           senderDisplayName: senderContact.displayName,
           expenseId: expenseId,
@@ -1739,7 +1776,7 @@ class HandshakeOrchestrator {
         expense: expense,
         selfParticipantId: selfParticipantId,
       );
-      if (shouldNotify) {
+      if (shouldNotify && _ownsDeviceHousingNotifications) {
         await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
           senderDisplayName: senderContact.displayName,
           expenseId: expenseId,
@@ -1864,7 +1901,7 @@ class HandshakeOrchestrator {
         planId: planId,
         kind: changeKind,
       );
-      if (shouldNotify) {
+      if (shouldNotify && _ownsDeviceHousingNotifications) {
         await PushNotificationService
             .showLocalHousingParticipationChangeNotification(
           senderDisplayName: senderContact.displayName,
@@ -2640,6 +2677,22 @@ class HandshakeOrchestrator {
   }
 
   Future<HousingProposalSendResult> sendHousingProposalToPlanParticipants({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final sandboxSim = PeerSimulator.maybeInstance;
+    sandboxSim?.pauseReactions();
+    try {
+      return await _sendHousingProposalToPlanParticipantsBody(
+        planId: planId,
+        revisionId: revisionId,
+      );
+    } finally {
+      sandboxSim?.resumeReactions();
+    }
+  }
+
+  Future<HousingProposalSendResult> _sendHousingProposalToPlanParticipantsBody({
     required String planId,
     required String revisionId,
   }) async {
@@ -3606,6 +3659,11 @@ class HandshakeOrchestrator {
       sourceParticipantId: response.sourceParticipantId,
     );
     if (participantId == null) return;
+    final responseRowId = 'resp:${revision.id}:$participantId';
+    final priorResponse = await (_db.select(
+      _db.proposalResponses,
+    )..where((t) => t.id.equals(responseRowId))).getSingleOrNull();
+    final alreadyRecordedSameStatus = priorResponse?.status == status.name;
     final planId = pkgEarly?.planId;
     final responderInstallationId = response.participantInstallationId;
     if (planId != null &&
@@ -3626,6 +3684,7 @@ class HandshakeOrchestrator {
     final pkg = await (_db.select(
       _db.proposalPackages,
     )..where((t) => t.id.equals(revision.packageId))).getSingleOrNull();
+    String? activatedPlanId;
     if (pkg != null) {
       if (status == ProposalResponseStatus.accepted) {
         final outcome = await transport.tryActivatePlanIfUnanimous(
@@ -3633,15 +3692,12 @@ class HandshakeOrchestrator {
           revisionId: revision.id,
         );
         if (outcome == ProposalActivationOutcome.activated) {
+          activatedPlanId = pkg.planId;
           await _reportEntitlementRosterAfterActivation(
             planId: pkg.planId,
             revisionId: revision.id,
           );
           await _reconcileHousingPaymentRemindersAfterActivation(
-            planId: pkg.planId,
-            revisionId: revision.id,
-          );
-          await transport.notifyAgreementActivatedIfNeeded(
             planId: pkg.planId,
             revisionId: revision.id,
           );
@@ -3657,11 +3713,24 @@ class HandshakeOrchestrator {
       }
       await transport.reconcileStalePackagePending(pkg.planId);
     }
-    await PushNotificationService.showLocalHousingDecisionNotification(
-      senderDisplayName: senderDisplayName,
-      planId: pkg?.planId,
-      revisionId: revision.id,
-    );
+    // Decision (#7) before activation (#9) so OS shade order matches causality.
+    // Claim response row id so concurrent polls cannot double-notify.
+    final shouldNotifyDecision = !alreadyRecordedSameStatus &&
+        _ownsDeviceHousingNotifications &&
+        _housingDecisionNotifiedResponseIds.add(responseRowId);
+    if (shouldNotifyDecision) {
+      await PushNotificationService.showLocalHousingDecisionNotification(
+        senderDisplayName: senderDisplayName,
+        planId: pkg?.planId,
+        revisionId: revision.id,
+      );
+    }
+    if (activatedPlanId != null) {
+      await transport.notifyAgreementActivatedIfNeeded(
+        planId: activatedPlanId,
+        revisionId: revision.id,
+      );
+    }
   }
 
   Future<ProposalRevision?> _matchingHousingRevision(

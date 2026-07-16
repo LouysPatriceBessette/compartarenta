@@ -4288,4 +4288,66 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vehicleUsageBlockedVehicleNotFound => 'Véhicule introuvable.';
+
+  @override
+  String get commonOk => 'Ok';
+
+  @override
+  String get sandboxRibbonLabel => 'Mode simulation';
+
+  @override
+  String get sandboxModeButton => 'Mode simulation';
+
+  @override
+  String get sandboxEnterDialogBody =>
+      'Il est possible de simuler un plan avec de faux participants. Ceci vous permettra d\'avoir un excellent aperçu de l\'application.\n\nPour utiliser la « vraie » application, vous devez retourner en mode réel. Pour le faire, touchez le bandeau rouge au haut de l\'application. Il y aura un rappel dans 8 heures.';
+
+  @override
+  String get sandboxEnterConfirm => 'Simuler';
+
+  @override
+  String get sandboxEnterRestartMessage =>
+      'L\'application va se fermer maintenant. Rouvrez-là de nouveau pour continuer.';
+
+  @override
+  String get sandboxHomeWelcomeBody =>
+      'Les modules de véhicule ne peuvent être simulés.\n\nCommencez par explorer le module Contacts. Le processus d\'ajout de contact est simplifié pour cette simulation. Vous pouvez renommer ces faux contacts.\n\n';
+
+  @override
+  String get sandboxExitDialogTitle => 'Sortir du mode simulation?';
+
+  @override
+  String get sandboxRestartRequiredMessage =>
+      'Fermez complètement l\'application, puis rouvrez-la pour continuer.';
+
+  @override
+  String get sandboxBotsExhausted => 'Vous avez invité tous les bots.';
+
+  @override
+  String get sandboxInvitingBot => 'Invitation du participant simulé…';
+
+  @override
+  String get sandboxBotExpenseTitle => 'Simuler une dépense d\'un Bot';
+
+  @override
+  String get sandboxBotExpenseSubtitle => 'Mode simulation';
+
+  @override
+  String get sandboxEightHourNudgeTitle => 'Mode simulation';
+
+  @override
+  String get sandboxEightHourNudgeBody =>
+      'Vous êtes en mode simulation depuis 8 heures. Envisagez de revenir en mode réel pour ne pas manquer une invitation d\'un partenaire.';
+
+  @override
+  String get sandboxPortabilityBlocked =>
+      'Export et import sont indisponibles en mode simulation.';
+
+  @override
+  String get sandboxEnterFailed =>
+      'Impossible d\'entrer en mode simulation (vérification du point de reprise).';
+
+  @override
+  String get sandboxModuleDisabled =>
+      'Ce module n\'est pas disponible en mode simulation.';
 }

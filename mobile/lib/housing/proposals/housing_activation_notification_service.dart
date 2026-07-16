@@ -11,6 +11,9 @@ class HousingActivationNotificationService {
 
   static const _prefsKey = 'housing.activationNotifiedRevisionIds';
 
+  /// In-process claims so concurrent activate paths cannot both show #9.
+  static final Set<String> _inFlightRevisionIds = <String>{};
+
   final AppDatabase _db;
 
   bool get _canPersistDedupe {
@@ -43,10 +46,15 @@ class HousingActivationNotificationService {
     required String revisionId,
     String? packageId,
   }) async {
+    // Sandbox bot peers share the process but must not post OS notifications.
+    if (!identical(_db, AppDatabase.maybeProcessScope)) return;
     if (!_canPersistDedupe) return;
+    if (_inFlightRevisionIds.contains(revisionId)) return;
     if (await alreadyNotified(revisionId)) return;
-    await markNotified(revisionId);
+    _inFlightRevisionIds.add(revisionId);
     try {
+      // Claim before show so a concurrent caller skips.
+      await markNotified(revisionId);
       await PushNotificationService.showLocalHousingAgreementActivatedNotification(
         planId: planId,
       );
@@ -59,6 +67,8 @@ class HousingActivationNotificationService {
       );
     } catch (e, st) {
       debugPrint('housing: activation notification failed: $e\n$st');
+    } finally {
+      _inFlightRevisionIds.remove(revisionId);
     }
   }
 }

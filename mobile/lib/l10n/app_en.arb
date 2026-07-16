@@ -1956,6 +1956,25 @@
   "vehicleUsageBlockedOwnOnBorrowerPath": "This vehicle is yours. Use the Vehicle module to record owner usage — not Vehicle sharing.",
   "vehicleUsageBlockedNotOwnedOnOwnerPath": "This vehicle is not in your owned list. Use Vehicle sharing for a vehicle shared with you.",
   "vehicleUsageBlockedMissingBorrowerIdentity": "Borrower identity is missing for this form.",
-  "vehicleUsageBlockedVehicleNotFound": "Vehicle not found."
+  "vehicleUsageBlockedVehicleNotFound": "Vehicle not found.",
+
+  "commonOk": "Ok",
+  "sandboxRibbonLabel": "Simulation mode",
+  "sandboxModeButton": "Simulation mode",
+  "sandboxEnterDialogBody": "You can simulate a plan with fake participants. This gives you an excellent preview of the app.\n\nTo use the “real” app, return to real mode. Tap the red banner at the top of the app to do so. You will be reminded after 8 hours.",
+  "sandboxEnterConfirm": "Simulate",
+  "sandboxEnterRestartMessage": "The app will close now. Reopen it to continue.",
+  "sandboxHomeWelcomeBody": "Vehicle modules cannot be simulated.\n\nStart by exploring the Contacts module. Adding contacts is simplified for this simulation. You can rename these fake contacts.\n\n",
+  "sandboxExitDialogTitle": "Leave simulation mode?",
+  "sandboxRestartRequiredMessage": "Fully quit the app, then reopen it to continue.",
+  "sandboxBotsExhausted": "You have invited all the bots.",
+  "sandboxInvitingBot": "Inviting simulated participant…",
+  "sandboxBotExpenseTitle": "Simulate a bot expense",
+  "sandboxBotExpenseSubtitle": "Simulation mode",
+  "sandboxEightHourNudgeTitle": "Simulation mode",
+  "sandboxEightHourNudgeBody": "You have been in simulation mode for 8 hours. Consider returning to real mode so you do not miss a partner invitation.",
+  "sandboxPortabilityBlocked": "Export and import are unavailable in simulation mode.",
+  "sandboxEnterFailed": "Could not enter simulation mode (checkpoint verification failed).",
+  "sandboxModuleDisabled": "This module is not available in simulation mode."
 }
 

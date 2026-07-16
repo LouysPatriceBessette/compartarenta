@@ -67,6 +67,13 @@ class AppPreferences extends ChangeNotifier {
   static const _kHousingDefaultSummaryReached =
       'housing.default.summaryReached';
 
+  static const _kSandboxMode = 'sandbox.mode';
+  static const _kSandboxEnteredAtMs = 'sandbox.enteredAtMs';
+  static const _kSandboxInvitedBotCount = 'sandbox.invitedBotCount';
+  static const _kSandboxEightHourNudgeShownForEntryMs =
+      'sandbox.eightHourNudgeShownForEntryMs';
+  static const _kSandboxShowHomeWelcome = 'sandbox.showHomeWelcome';
+
   /// Legacy single-plan backup key (v1); migrated on read for [housing:default].
   static const _kHousingDefaultPlanDraftBackupLegacy =
       'housing.default.planDraftBackupJson';
@@ -149,6 +156,68 @@ class AppPreferences extends ChangeNotifier {
   String get avatarId => _prefs.getString(_kAvatarId) ?? '';
   Future<void> setAvatarId(String value) async {
     await _prefs.setString(_kAvatarId, value);
+    notifyListeners();
+  }
+
+  bool get sandboxMode => _prefs.getBool(_kSandboxMode) ?? false;
+
+  Future<void> setSandboxMode(bool value) async {
+    await _prefs.setBool(_kSandboxMode, value);
+    notifyListeners();
+  }
+
+  DateTime? get sandboxEnteredAt {
+    final ms = _prefs.getInt(_kSandboxEnteredAtMs);
+    if (ms == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+  }
+
+  Future<void> setSandboxEnteredAt(DateTime? value) async {
+    if (value == null) {
+      await _prefs.remove(_kSandboxEnteredAtMs);
+    } else {
+      await _prefs.setInt(
+        _kSandboxEnteredAtMs,
+        value.toUtc().millisecondsSinceEpoch,
+      );
+    }
+    notifyListeners();
+  }
+
+  int get sandboxInvitedBotCount =>
+      _prefs.getInt(_kSandboxInvitedBotCount) ?? 0;
+
+  Future<void> setSandboxInvitedBotCount(int value) async {
+    await _prefs.setInt(_kSandboxInvitedBotCount, value);
+    notifyListeners();
+  }
+
+  int? get sandboxEightHourNudgeShownForEntryMs =>
+      _prefs.getInt(_kSandboxEightHourNudgeShownForEntryMs);
+
+  Future<void> setSandboxEightHourNudgeShownForEntryMs(int? value) async {
+    if (value == null) {
+      await _prefs.remove(_kSandboxEightHourNudgeShownForEntryMs);
+    } else {
+      await _prefs.setInt(_kSandboxEightHourNudgeShownForEntryMs, value);
+    }
+    notifyListeners();
+  }
+
+  bool get sandboxShowHomeWelcome =>
+      _prefs.getBool(_kSandboxShowHomeWelcome) ?? false;
+
+  Future<void> setSandboxShowHomeWelcome(bool value) async {
+    await _prefs.setBool(_kSandboxShowHomeWelcome, value);
+    notifyListeners();
+  }
+
+  Future<void> clearSandboxLifecyclePrefs() async {
+    await _prefs.remove(_kSandboxMode);
+    await _prefs.remove(_kSandboxEnteredAtMs);
+    await _prefs.remove(_kSandboxInvitedBotCount);
+    await _prefs.remove(_kSandboxEightHourNudgeShownForEntryMs);
+    await _prefs.remove(_kSandboxShowHomeWelcome);
     notifyListeners();
   }
 

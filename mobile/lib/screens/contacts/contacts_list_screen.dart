@@ -12,7 +12,11 @@ import '../../debug/qa_contact_semantics.dart';
 import '../../db/app_database.dart';
 import '../../db/repositories/contacts_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../sandbox/peer_simulator.dart';
+import '../../sandbox/sandbox_bot_catalog.dart';
+import '../../sandbox/sandbox_mode.dart';
 import 'package:compartarenta/navigation/app_navigation.dart';
 
 /// Connected contacts first (A–Z), then other non-invitation rows (A–Z).
@@ -173,6 +177,72 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
   }
 
   void _openInviteContact() {
+    unawaited(_openInviteContactAsync());
+  }
+
+  Future<void> _openInviteContactAsync() async {
+    final prefs = await AppPreferences.load();
+    if (!mounted) return;
+    if (SandboxMode.isActive(prefs)) {
+      final l10n = AppLocalizations.of(context);
+      final sim = PeerSimulator.maybeInstance;
+      if (sim == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.sandboxEnterFailed)),
+        );
+        return;
+      }
+      if (sim.invitedCount >= SandboxBotCatalog.maxBots) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            content: Text(l10n.sandboxBotsExhausted),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.commonOk),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      final orch = _orchestrator;
+      if (orch == null) return;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Expanded(child: Text(l10n.sandboxInvitingBot)),
+              ],
+            ),
+          ),
+        ),
+      );
+      try {
+        await sim.inviteNextBot(
+          humanOrchestrator: orch,
+          humanDisplayName: prefs.displayName,
+          humanAvatarId: prefs.avatarId.isEmpty ? 'mdi:0' : prefs.avatarId,
+        );
+        if (!mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+        _reload();
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e')),
+        );
+      }
+      return;
+    }
     navigateTo(context, '/contacts/invitations/new');
   }
 

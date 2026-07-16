@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../sandbox/sandbox_mode.dart';
 import '../../util/deadline_remaining.dart';
 import '../../widgets/screen_body_padding.dart';
 import '../../util/display_date.dart';
@@ -56,12 +57,22 @@ class _GenerateInvitationScreenState extends State<GenerateInvitationScreen> {
   @override
   void initState() {
     super.initState();
-    final viewId = widget.viewInvitationId?.trim();
-    if (viewId != null && viewId.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final prefs = await AppPreferences.load();
+      if (!mounted) return;
+      if (SandboxMode.isActive(prefs)) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.sandboxModuleDisabled)),
+        );
+        Navigator.of(context).maybePop();
+        return;
+      }
+      final viewId = widget.viewInvitationId?.trim();
+      if (viewId != null && viewId.isNotEmpty) {
         unawaited(_loadExistingInvitation(viewId));
-      });
-    }
+      }
+    });
   }
 
   Future<void> _loadExistingInvitation(String invitationId) async {

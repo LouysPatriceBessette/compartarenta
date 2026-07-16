@@ -638,6 +638,8 @@ class AppDatabase extends _$AppDatabase {
     _processScope = db;
   }
 
+  static AppDatabase? get maybeProcessScope => _processScope;
+
   static AppDatabase get processScope {
     final s = _processScope;
     if (s == null) {

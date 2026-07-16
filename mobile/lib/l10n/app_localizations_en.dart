@@ -4240,4 +4240,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleUsageBlockedVehicleNotFound => 'Vehicle not found.';
+
+  @override
+  String get commonOk => 'Ok';
+
+  @override
+  String get sandboxRibbonLabel => 'Simulation mode';
+
+  @override
+  String get sandboxModeButton => 'Simulation mode';
+
+  @override
+  String get sandboxEnterDialogBody =>
+      'You can simulate a plan with fake participants. This gives you an excellent preview of the app.\n\nTo use the “real” app, return to real mode. Tap the red banner at the top of the app to do so. You will be reminded after 8 hours.';
+
+  @override
+  String get sandboxEnterConfirm => 'Simulate';
+
+  @override
+  String get sandboxEnterRestartMessage =>
+      'The app will close now. Reopen it to continue.';
+
+  @override
+  String get sandboxHomeWelcomeBody =>
+      'Vehicle modules cannot be simulated.\n\nStart by exploring the Contacts module. Adding contacts is simplified for this simulation. You can rename these fake contacts.\n\n';
+
+  @override
+  String get sandboxExitDialogTitle => 'Leave simulation mode?';
+
+  @override
+  String get sandboxRestartRequiredMessage =>
+      'Fully quit the app, then reopen it to continue.';
+
+  @override
+  String get sandboxBotsExhausted => 'You have invited all the bots.';
+
+  @override
+  String get sandboxInvitingBot => 'Inviting simulated participant…';
+
+  @override
+  String get sandboxBotExpenseTitle => 'Simulate a bot expense';
+
+  @override
+  String get sandboxBotExpenseSubtitle => 'Simulation mode';
+
+  @override
+  String get sandboxEightHourNudgeTitle => 'Simulation mode';
+
+  @override
+  String get sandboxEightHourNudgeBody =>
+      'You have been in simulation mode for 8 hours. Consider returning to real mode so you do not miss a partner invitation.';
+
+  @override
+  String get sandboxPortabilityBlocked =>
+      'Export and import are unavailable in simulation mode.';
+
+  @override
+  String get sandboxEnterFailed =>
+      'Could not enter simulation mode (checkpoint verification failed).';
+
+  @override
+  String get sandboxModuleDisabled =>
+      'This module is not available in simulation mode.';
 }

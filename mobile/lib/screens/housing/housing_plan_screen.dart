@@ -39,6 +39,10 @@ import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../prefs/app_preferences.dart';
 import '../../prefs/regional_unit_choices.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../sandbox/sandbox_dialogs.dart';
+import '../../sandbox/sandbox_lifecycle.dart';
+import '../../sandbox/sandbox_mode.dart';
+import '../../entitlement/participant_installation_store.dart';
 import '../../util/display_date.dart';
 import '../../util/week_start_calendar.dart';
 import '../../util/format_money.dart';
@@ -386,6 +390,102 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _avatarIds[index] = selected.avatarId;
     });
     unawaited(_autosavePlanDraftToDb());
+  }
+
+  Widget _wizardFooterRow(BuildContext context, AppLocalizations l10n) {
+    final next = qaHousingProposalSemantics(
+      identifier: kQaHousingWizardNext,
+      button: true,
+      enabled: _wizardNextEnabled,
+      onTap: _wizardNextEnabled ? _onWizardNextPressed : null,
+      child: FilledButton(
+        onPressed: _wizardNextEnabled ? _onWizardNextPressed : null,
+        child: Text(
+          _stepIndex == 3
+              ? (widget.amendmentSubmitToGroup
+                  ? l10n.housingAmendmentSubmitToGroup
+                  : l10n.housingPlanFinish)
+              : l10n.housingPlanNext,
+        ),
+      ),
+    );
+
+    if (_stepIndex != 0) {
+      return Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          OutlinedButton(
+            onPressed: _agreementRulesStepFooterLocked
+                ? null
+                : () => setState(() => _stepIndex--),
+            child: Text(l10n.housingPlanBack),
+          ),
+          next,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        FutureBuilder<bool>(
+          future: SandboxLifecycle.hasBlockingRealHousingPlan(_db),
+          builder: (context, snap) {
+            final blocked = snap.data ?? true;
+            if (SandboxMode.isActive(widget.prefs) || blocked) {
+              return const SizedBox.shrink();
+            }
+            return TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFF57C00),
+              ),
+              onPressed: () => _onSandboxModePressed(context),
+              child: Text(l10n.sandboxModeButton),
+            );
+          },
+        ),
+        const Spacer(),
+        next,
+      ],
+    );
+  }
+
+  Future<void> _onSandboxModePressed(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.sandboxEnterDialogBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.sandboxEnterConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      final installationId =
+          await ParticipantInstallationStore.secureStorage().loadOrCreateId();
+      await SandboxLifecycle.enterSimulation(
+        prefs: widget.prefs,
+        db: _db,
+        participantInstallationId: installationId,
+      );
+      if (!context.mounted) return;
+      await showSandboxEnterRestartDialog();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.sandboxEnterFailed)),
+      );
+    }
   }
 
   bool get _wizardNextEnabled =>
@@ -1705,36 +1805,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                   ),
                                 ),
                               )
-                            : Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 12,
-                        runSpacing: 8,
-                        children: [
-                          if (_stepIndex > 0)
-                            OutlinedButton(
-                              onPressed: _agreementRulesStepFooterLocked
-                                  ? null
-                                  : () => setState(() => _stepIndex--),
-                              child: Text(l10n.housingPlanBack),
-                            ),
-                          qaHousingProposalSemantics(
-                            identifier: kQaHousingWizardNext,
-                            button: true,
-                            enabled: _wizardNextEnabled,
-                            onTap: _wizardNextEnabled ? _onWizardNextPressed : null,
-                            child: FilledButton(
-                            onPressed: _wizardNextEnabled ? _onWizardNextPressed : null,
-                            child: Text(
-                              _stepIndex == 3
-                                  ? (widget.amendmentSubmitToGroup
-                                      ? l10n.housingAmendmentSubmitToGroup
-                                      : l10n.housingPlanFinish)
-                                  : l10n.housingPlanNext,
-                            ),
-                          ),
-                          ),
-                        ],
-                      ),
+                            : _wizardFooterRow(context, l10n),
                       ),
                     ),
                   ],

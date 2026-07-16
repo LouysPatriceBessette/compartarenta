@@ -28,9 +28,14 @@ import 'notifications/push_background_registration_stub.dart'
     if (dart.library.io) 'notifications/push_background_registration_io.dart';
 import 'notifications/closed_app_push_workmanager_stub.dart'
     if (dart.library.io) 'notifications/closed_app_push_workmanager_io.dart';
+import 'prefs/app_preferences.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'relay/identity_keystore.dart';
 import 'relay/relay_client.dart';
+import 'sandbox/peer_simulator.dart';
+import 'sandbox/sandbox_lifecycle.dart';
+import 'sandbox/sandbox_mode.dart';
+import 'sandbox/sandbox_relay.dart';
 
 Future<void> bootstrap() async {
   final config = AppConfig.fromDartDefines();
@@ -59,8 +64,14 @@ Future<void> bootstrap() async {
         debugWebDbWriteHook = () => scheduleDevHostSessionSave(appDb);
       }
       installWebStorageFlushOnPageHide();
+      AppPreferences? earlyPrefs;
       try {
         await appDb.warmUpStorage();
+        earlyPrefs = await AppPreferences.load();
+        await SandboxLifecycle.maybeRestoreCheckpointOnRealBoot(
+          prefs: earlyPrefs,
+          db: appDb,
+        );
         if (kDebugMode && !kIsWeb) {
           await restoreQaE2eEnvironmentIfPresent();
           await maybeApplyQaAndroidSeed(appDb);
@@ -79,18 +90,22 @@ Future<void> bootstrap() async {
         );
       }
 
-      unawaited(_initializePushIfAlreadyAuthorized());
-      if (!kIsWeb) {
-        unawaited(
-          scheduleClosedAppPushKeepAlive().catchError((
-            Object error,
-            StackTrace stack,
-          ) {
-            debugPrint(
-              'Closed-app push WorkManager schedule failed: $error\n$stack',
-            );
-          }),
-        );
+      final early = earlyPrefs;
+      final sandboxActive = early != null && SandboxMode.isActive(early);
+      if (!sandboxActive) {
+        unawaited(_initializePushIfAlreadyAuthorized());
+        if (!kIsWeb) {
+          unawaited(
+            scheduleClosedAppPushKeepAlive().catchError((
+              Object error,
+              StackTrace stack,
+            ) {
+              debugPrint(
+                'Closed-app push WorkManager schedule failed: $error\n$stack',
+              );
+            }),
+          );
+        }
       }
 
       FlutterError.onError = (details) {
@@ -107,12 +122,46 @@ Future<void> bootstrap() async {
         return false;
       };
 
-      // Wire the relay / Contacts handshake plumbing once per process so any
-      // screen can reach it through [HandshakeOrchestrator.instance]. We
-      // skip the install when no relay base URL is configured (default
-      // `https://example.invalid` in dart-defines) so test/dev runs that
-      // do not target a live relay don't accidentally spam HTTP requests.
-      if (config.apiBaseUrl.host != 'example.invalid') {
+      if (early != null && SandboxMode.isActive(early)) {
+        try {
+          final prefs = early;
+          final identity = IdentityKeystore.secureStorage();
+          final relay = SandboxRelay.ensureFresh();
+          final orchestrator = HandshakeOrchestrator(
+            db: appDb,
+            identity: identity,
+            relay: relay,
+            contacts: ContactsRepository(appDb),
+            invitations: ContactInvitationsRepository(appDb),
+            entitlement: null,
+            deviceBinding: DeviceBindingService(),
+          );
+          HandshakeOrchestrator.install(orchestrator);
+          PeerSimulator.install(relay: relay, prefs: prefs);
+          if (kDebugMode) {
+            RelayDiagnostics.steadyInboxPollLogging = true;
+          }
+          unawaited(
+            orchestrator.processAllPendingHandshakes().catchError((
+              Object error,
+              StackTrace stack,
+            ) {
+              debugPrint('Initial handshake polling failed: $error\n$stack');
+            }),
+          );
+          unawaited(
+            orchestrator.pollSteadyStateInboxes().catchError((
+              Object error,
+              StackTrace stack,
+            ) {
+              debugPrint('Initial steady inbox poll failed: $error\n$stack');
+            }),
+          );
+          orchestrator.startPolling();
+        } catch (error, stack) {
+          debugPrint('Sandbox relay bootstrap failed: $error\n$stack');
+        }
+      } else if (config.apiBaseUrl.host != 'example.invalid') {
         try {
           final identity = IdentityKeystore.secureStorage();
           final relay = HttpRelayClient(baseUrl: config.apiBaseUrl);
