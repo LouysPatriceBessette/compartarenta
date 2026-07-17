@@ -177,9 +177,8 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           ProposalResponseStatus.pending.name;
 
       bool? settledAccepted;
-      String? settledActorName;
-      DateTime? settledAt;
       String? settledRefusalMessage;
+      var voterDecisions = const <_ParticipantDecisionStatus>[];
       if (widget.readOnlySettled) {
         final rev = await (widget.db.select(widget.db.proposalRevisions)
               ..where((t) => t.id.equals(summary.revisionId)))
@@ -196,31 +195,15 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
             proposerParticipantId: summary.proposerParticipantId,
             archivedPayload: payload,
           );
-          settledActorName = actorId == null || actorId.isEmpty
-              ? summary.proposerDisplayName
-              : displayNameForParticipant(actorId, roster);
-          var settledWhen = rev.createdAt;
-          if (settledAccepted) {
-            final responses = await (widget.db.select(
-              widget.db.proposalResponses,
-            )..where((t) => t.revisionId.equals(rev.id))).get();
-            for (final r in responses) {
-              if (r.status != ProposalResponseStatus.accepted.name) {
-                continue;
-              }
-              final at = r.respondedAt;
-              if (at != null && at.isAfter(settledWhen)) settledWhen = at;
-            }
-          } else {
-            final response = actorId == null || actorId.isEmpty
-                ? null
-                : await (widget.db.select(widget.db.proposalResponses)
-                      ..where((t) => t.revisionId.equals(rev.id))
-                      ..where((t) => t.participantId.equals(actorId)))
-                    .getSingleOrNull();
-            settledWhen = response?.respondedAt ?? rev.createdAt;
-          }
-          settledAt = settledWhen;
+          final revisionResponses = await (widget.db.select(
+            widget.db.proposalResponses,
+          )..where((t) => t.revisionId.equals(rev.id))).get();
+          voterDecisions = _voterDecisionStatuses(
+            proposerParticipantId: summary.proposerParticipantId,
+            responses: revisionResponses,
+            roster: roster,
+            amendmentAccepted: settledAccepted == true,
+          );
           if (settledAccepted == false &&
               actorId != null &&
               actorId.isNotEmpty) {
@@ -246,9 +229,8 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
           selfStatus: selfStatus,
           missingPeerContacts: missingPeerContacts,
           settledAccepted: settledAccepted,
-          settledActorName: settledActorName,
-          settledAt: settledAt,
           settledRefusalMessage: settledRefusalMessage,
+          voterDecisions: voterDecisions,
         );
         _loading = false;
         _loadFailed = false;
@@ -485,71 +467,62 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                     proposedLabel: l10n.housingAmendmentDetailProposed,
                   ),
                   if (widget.readOnlySettled &&
-                      data.settledAccepted != null &&
-                      data.settledActorName != null &&
-                      data.settledAt != null) ...[
+                      data.settledAccepted != null) ...[
                     const SizedBox(height: 48),
                     Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            data.settledAccepted!
-                                ? l10n.housingRealizedExpenseReviewAcceptedWord
-                                : l10n.housingRealizedExpenseReviewRejectedWord,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontSize:
-                                  (theme.textTheme.bodyLarge?.fontSize ?? 16) *
-                                      1.8,
-                              fontWeight: FontWeight.w700,
-                              color: data.settledAccepted!
-                                  ? Colors.green.shade700
-                                  : theme.colorScheme.error,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.housingRealizedExpenseReviewByName(
-                              data.settledActorName!,
-                            ),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: data.settledAccepted!
-                                  ? Colors.green.shade700
-                                  : theme.colorScheme.error,
-                            ),
-                          ),
-                          Text(
-                            formatPreferenceDateTime(
-                              data.settledAt!,
-                              dateFmt,
-                            ),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: data.settledAccepted!
-                                  ? Colors.green.shade700
-                                  : theme.colorScheme.error,
-                            ),
-                          ),
-                          if (!data.settledAccepted! &&
-                              data.settledRefusalMessage != null &&
-                              data.settledRefusalMessage!.trim().isNotEmpty) ...[
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.housingAmendmentRefusalMessageLabel,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              data.settledRefusalMessage!.trim(),
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyLarge,
-                            ),
-                          ],
-                        ],
+                      child: Text(
+                        data.settledAccepted!
+                            ? l10n.housingRealizedExpenseReviewAcceptedWord
+                            : l10n.housingRealizedExpenseReviewRejectedWord,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontSize:
+                              (theme.textTheme.bodyLarge?.fontSize ?? 16) *
+                                  1.8,
+                          fontWeight: FontWeight.w700,
+                          color: data.settledAccepted!
+                              ? Colors.green.shade700
+                              : theme.colorScheme.error,
+                        ),
                       ),
                     ),
+                    if (!data.settledAccepted! &&
+                        data.settledRefusalMessage != null &&
+                        data.settledRefusalMessage!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.housingAmendmentRefusalMessageLabel,
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(data.settledRefusalMessage!.trim()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (data.voterDecisions.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      _buildDecisionTable(
+                        context,
+                        l10n,
+                        data.voterDecisions,
+                        dateFmt,
+                      ),
+                    ],
                   ],
                   if (!isProposer && canRespond) ...[
                     const SizedBox(height: 32),
@@ -662,6 +635,181 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
     }
     return l10n.housingAmendmentDetailCurrent;
   }
+
+  List<_ParticipantDecisionStatus> _voterDecisionStatuses({
+    required String proposerParticipantId,
+    required List<ProposalResponse> responses,
+    required List<Participant> roster,
+    required bool amendmentAccepted,
+  }) {
+    final byParticipant = {
+      for (final r in responses) r.participantId: r,
+    };
+    final out = <_ParticipantDecisionStatus>[];
+    for (final p in roster) {
+      if (p.id == proposerParticipantId) continue;
+      final row = byParticipant[p.id];
+      final status = row?.status ?? ProposalResponseStatus.pending.name;
+      final display = switch (status) {
+        final s when s == ProposalResponseStatus.accepted.name =>
+          _DecisionDisplay.accepted,
+        final s when s == ProposalResponseStatus.rejected.name =>
+          _DecisionDisplay.rejected,
+        _ => amendmentAccepted
+            ? _DecisionDisplay.pending
+            : _DecisionDisplay.unknown,
+      };
+      out.add(
+        _ParticipantDecisionStatus(
+          participantName: p.displayName,
+          display: display,
+          decidedAt: row?.respondedAt,
+        ),
+      );
+    }
+    return _sortParticipantDecisionStatuses(out);
+  }
+
+  List<_ParticipantDecisionStatus> _sortParticipantDecisionStatuses(
+    List<_ParticipantDecisionStatus> rows,
+  ) {
+    final responded = rows.where((r) => r.decidedAt != null).toList()
+      ..sort((a, b) => a.decidedAt!.compareTo(b.decidedAt!));
+    final unanswered = rows.where((r) => r.decidedAt == null).toList()
+      ..sort((a, b) => a.participantName.compareTo(b.participantName));
+    return [...responded, ...unanswered];
+  }
+
+  Color _decisionIconColor(BuildContext context, _DecisionDisplay display) {
+    return switch (display) {
+      _DecisionDisplay.accepted => Colors.green.shade700,
+      _DecisionDisplay.rejected => Theme.of(context).colorScheme.error,
+      _DecisionDisplay.pending => Colors.orange.shade800,
+      _DecisionDisplay.unknown => Colors.orange.shade800,
+    };
+  }
+
+  Widget _buildDecisionIndicator(
+    BuildContext context,
+    _DecisionDisplay display,
+  ) {
+    final color = _decisionIconColor(context, display);
+    return switch (display) {
+      _DecisionDisplay.accepted => Icon(Icons.check, color: color, size: 20),
+      _DecisionDisplay.rejected => Icon(Icons.close, color: color, size: 20),
+      _ => Text(
+          '?',
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            height: 1,
+          ),
+        ),
+    };
+  }
+
+  Widget _buildDecisionTable(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<_ParticipantDecisionStatus> rows,
+    String dateFmt,
+  ) {
+    if (rows.isEmpty) return const SizedBox.shrink();
+    final borderColor = Theme.of(context).colorScheme.outlineVariant;
+    final headerStyle = Theme.of(context).textTheme.titleSmall;
+    final cellStyle = Theme.of(context).textTheme.bodyLarge;
+
+    TableRow tableRow(List<Widget> cells) => TableRow(
+          children: [
+            for (final cell in cells)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: cell,
+              ),
+          ],
+        );
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.housingRealizedExpenseReviewDecisionsTitle,
+            style: headerStyle,
+          ),
+          const SizedBox(height: 8),
+          Table(
+            border: TableBorder.all(color: borderColor),
+            columnWidths: const {
+              0: FlexColumnWidth(1.2),
+              1: FlexColumnWidth(1),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              tableRow([
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.housingRealizedExpenseReviewDecisionTableNameColumn,
+                    style: headerStyle,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.housingRealizedExpenseReviewDecisionTableDateColumn,
+                    style: headerStyle,
+                  ),
+                ),
+              ]),
+              for (final row in rows)
+                tableRow([
+                  Row(
+                    children: [
+                      _buildDecisionIndicator(context, row.display),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(row.participantName, style: cellStyle),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      row.decidedAt == null
+                          ? ''
+                          : formatPreferenceDateTimeWithSeconds(
+                              row.decidedAt!,
+                              dateFmt,
+                            ),
+                      style: cellStyle,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ]),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _DecisionDisplay { accepted, rejected, pending, unknown }
+
+class _ParticipantDecisionStatus {
+  const _ParticipantDecisionStatus({
+    required this.participantName,
+    required this.display,
+    this.decidedAt,
+  });
+
+  final String participantName;
+  final _DecisionDisplay display;
+  final DateTime? decidedAt;
 }
 
 class _AmendmentDetailPayload {
@@ -671,9 +819,8 @@ class _AmendmentDetailPayload {
     required this.selfStatus,
     required this.missingPeerContacts,
     this.settledAccepted,
-    this.settledActorName,
-    this.settledAt,
     this.settledRefusalMessage,
+    this.voterDecisions = const [],
   });
 
   final HousingAmendmentSummary summary;
@@ -681,7 +828,6 @@ class _AmendmentDetailPayload {
   final String selfStatus;
   final List<Participant> missingPeerContacts;
   final bool? settledAccepted;
-  final String? settledActorName;
-  final DateTime? settledAt;
   final String? settledRefusalMessage;
+  final List<_ParticipantDecisionStatus> voterDecisions;
 }

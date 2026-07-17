@@ -26,15 +26,38 @@ dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl
 Each Cursor agent chat has one UUID. The mirror file must use **that** UUID so
 turns from chat A never go into chat B’s log.
 
-**How to get the UUID:**
+### Step 0 — is this a new session?
+
+On the **first turn of this agent chat** (and whenever the session id is
+unknown), **verify** whether this is a new session before choosing a UUID.
+Use the same criteria as `session-prompt-count-and-handoff.mdc`:
+
+| Situation | Session |
+| --- | --- |
+| First user message points at / attaches a handoff (`dev-ideas/*-handoff.md`) | **New** |
+| New Cursor chat / no remembered `session-id` for this chat | **New** |
+| Same chat continuing; you already have this chat’s `session-id` | **Continue** — reuse it |
+
+Do **not** ask the user for the UUID. Do **not** block the product task on
+logging identity.
+
+### How to get the UUID
 
 1. Prefer **`transcript_location`** in the system/context block (path contains
    `agent-transcripts/<uuid>/…`). Use that `<uuid>`.
-2. If it is missing: **ask the user once** for the session id (or confirm which
-   chat this is). Do not guess.
-3. Do **not** pick a UUID by sorting folders by modification time and taking the
-   latest. That folder may be a **previous** chat that just got a background
-   write; appending there would mix two sessions in one file.
+2. Else, on a **new** session: look under
+   `~/.cursor/projects/home-bvii-repos-Compartarenta/agent-transcripts/<uuid>/`
+   for a Cursor JSONL whose **first user message** matches this chat’s first
+   user prompt (verbatim or clear prefix). If found, use that `<uuid>`.
+3. Else, on a **new** session with no recoverable Cursor id: **create** a fresh
+   UUID (`uuidgen` / equivalent lowercase) and use it for the mirror for the
+   rest of this chat.
+4. If **continuing** and the id was lost: recover only by matching this chat’s
+   known first user prompt (or later unique turns) against Cursor JSONL or
+   today’s `dev-ideas/agent-transcripts/` mirrors — never by “newest mtime”
+   alone.
+5. Do **not** pick a UUID solely by sorting folders by modification time. A
+   previous chat may have just received a background write.
 
 **Then write only to:**
 
