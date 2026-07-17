@@ -480,15 +480,19 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
       ),
     );
     if (saved != true || !context.mounted) return;
+    // Capture before _openPreview: navigateToRoute uses pushReplacement and
+    // disposes this screen's context before submit runs patchRevisionPayload.
+    final suggestionDefaults = agreementSuggestionDefaultsFromL10n(
+      AppLocalizations.of(context),
+    );
     await _openPreview(
       context,
       type: HousingAmendmentType.ruleChange,
       patchRevisionPayload: (payload) {
-        final l10n = AppLocalizations.of(context);
         HousingRulesAmendmentPendingStore.applyToPayload(
           widget.planId,
           payload,
-          suggestionDefaults: agreementSuggestionDefaultsFromL10n(l10n),
+          suggestionDefaults: suggestionDefaults,
         );
       },
     );

@@ -112,7 +112,8 @@ class HousingAmendmentProposalFlow {
             },
           );
         }
-      } catch (e) {
+      } catch (e, st) {
+        debugPrint('housing_amendment: create/update revision failed: $e\n$st');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.housingPlanCouldNotContinue('$e'))),
