@@ -5302,8 +5302,14 @@ abstract class AppLocalizations {
   /// No description provided for @contactsLabelEditorTitle.
   ///
   /// In en, this message translates to:
-  /// **'How you see this contact'**
+  /// **'Rename locally'**
   String get contactsLabelEditorTitle;
+
+  /// No description provided for @contactsLabelEditorScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename locally?'**
+  String get contactsLabelEditorScreenTitle;
 
   /// No description provided for @contactsLabelEditorHint.
   ///

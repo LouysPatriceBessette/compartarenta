@@ -3127,7 +3127,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactsReconnectAction => 'Request reconnection';
 
   @override
-  String get contactsLabelEditorTitle => 'How you see this contact';
+  String get contactsLabelEditorTitle => 'Rename locally';
+
+  @override
+  String get contactsLabelEditorScreenTitle => 'Rename locally?';
 
   @override
   String get contactsLabelEditorHint =>

@@ -1251,7 +1251,8 @@
   "contactsDisconnectSent": "Aviso de desconexión enviado. El contacto ahora es solo local.",
 
   "contactsReconnectAction": "Solicitar reconexión",
-  "contactsLabelEditorTitle": "Cómo ves a este contacto",
+  "contactsLabelEditorTitle": "Renombrar localmente",
+  "contactsLabelEditorScreenTitle": "¿Renombrar localmente?",
   "contactsLabelEditorHint": "En blanco para conservar el nombre original",
   "contactsFieldTheirNameLabel": "Su nombre",
   "settingsProfileIdentityTitle": "Tu perfil",

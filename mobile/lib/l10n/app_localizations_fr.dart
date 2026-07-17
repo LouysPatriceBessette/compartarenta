@@ -3161,7 +3161,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactsReconnectAction => 'Demander une reconnexion';
 
   @override
-  String get contactsLabelEditorTitle => 'Comment vous voyez ce contact';
+  String get contactsLabelEditorTitle => 'Renommer locallement';
+
+  @override
+  String get contactsLabelEditorScreenTitle => 'Renommer locallement?';
 
   @override
   String get contactsLabelEditorHint => 'Vide pour garder le nom original';

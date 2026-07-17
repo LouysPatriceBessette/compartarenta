@@ -1268,7 +1268,8 @@
   "contactsDisconnectSent": "Avis de déconnexion envoyé. Le contact est maintenant local uniquement.",
 
   "contactsReconnectAction": "Demander une reconnexion",
-  "contactsLabelEditorTitle": "Comment vous voyez ce contact",
+  "contactsLabelEditorTitle": "Renommer locallement",
+  "contactsLabelEditorScreenTitle": "Renommer locallement?",
   "contactsLabelEditorHint": "Vide pour garder le nom original",
   "contactsFieldTheirNameLabel": "Son nom",
   "settingsProfileIdentityTitle": "Votre profil",

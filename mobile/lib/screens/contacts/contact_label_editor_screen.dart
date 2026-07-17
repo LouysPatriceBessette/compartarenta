@@ -60,9 +60,14 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
     super.dispose();
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   Future<void> _save() async {
     final c = _contact;
     if (c == null || _saving) return;
+    _dismissKeyboard();
     setState(() => _saving = true);
     await _repo.setLocalDisplayLabel(c.id, _labelController.text);
     await _repo.setNotes(c.id, _notesController.text);
@@ -80,98 +85,108 @@ class _ContactLabelEditorScreenState extends State<ContactLabelEditorScreen> {
     final l10n = AppLocalizations.of(context);
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.contactsLabelEditorTitle)),
+        appBar: AppBar(title: Text(l10n.contactsLabelEditorScreenTitle)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     final c = _contact;
     if (c == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.contactsLabelEditorTitle)),
+        appBar: AppBar(title: Text(l10n.contactsLabelEditorScreenTitle)),
         body: Center(child: Text(l10n.contactsDetailMissing)),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.contactsLabelEditorTitle)),
-      body: SafeArea(
-        child: ListView(
-          padding: screenBodyScrollPadding(context),
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    AvatarPalette.iconFor(c.avatarId),
-                    size: 32,
-                  ),
-                ),
-                if (c.showsDistinctPeerCanonicalForDisplay) ...[
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.contactsFieldTheirNameLabel,
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                        Text(
-                          c.displayName,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
+      appBar: AppBar(title: Text(l10n.contactsLabelEditorScreenTitle)),
+      body: GestureDetector(
+        onTap: _dismissKeyboard,
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: screenBodyScrollPadding(context),
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    child: Icon(
+                      AvatarPalette.iconFor(c.avatarId),
+                      size: 32,
                     ),
                   ),
+                  if (c.showsDistinctPeerCanonicalForDisplay) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.contactsFieldTheirNameLabel,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                          Text(
+                            c.displayName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppTextField(
-              controller: _labelController,
-              decoration: InputDecoration(
-                labelText: l10n.contactsFieldNameLabel,
-                hintText: l10n.contactsLabelEditorHint,
               ),
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.contactsFieldAvatarReadOnlyFootnote,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: _notesController,
-              decoration: InputDecoration(
-                labelText: l10n.contactsFieldNotesLabel,
+              const SizedBox(height: 20),
+              AppTextField(
+                controller: _labelController,
+                decoration: InputDecoration(
+                  labelText: l10n.contactsFieldNameLabel,
+                  hintText: l10n.contactsLabelEditorHint,
+                ),
+                textInputAction: TextInputAction.next,
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.contactsFieldNotesFootnote,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _saving ? null : () => context.pop(),
-                  child: Text(l10n.commonCancel),
+              const SizedBox(height: 8),
+              Text(
+                l10n.contactsFieldAvatarReadOnlyFootnote,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                controller: _notesController,
+                decoration: InputDecoration(
+                  labelText: l10n.contactsFieldNotesLabel,
                 ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Text(l10n.commonSave),
-                ),
-              ],
-            ),
-          ],
+                maxLines: 3,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.contactsFieldNotesFootnote,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _saving
+                        ? null
+                        : () {
+                            _dismissKeyboard();
+                            context.pop();
+                          },
+                    child: Text(l10n.commonCancel),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: Text(l10n.commonSave),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

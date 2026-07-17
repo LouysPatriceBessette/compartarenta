@@ -1423,7 +1423,8 @@
   "contactsDisconnectSent": "Disconnect notice sent. Contact is now local-only.",
 
   "contactsReconnectAction": "Request reconnection",
-  "contactsLabelEditorTitle": "How you see this contact",
+  "contactsLabelEditorTitle": "Rename locally",
+  "contactsLabelEditorScreenTitle": "Rename locally?",
   "contactsLabelEditorHint": "Leave blank to keep their original name",
   "contactsFieldTheirNameLabel": "Their name",
   "settingsProfileIdentityTitle": "Your profile",

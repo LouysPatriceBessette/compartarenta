@@ -73,8 +73,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                 onRejectIncoming: incomingSnapshot.data == null
                     ? null
                     : () => _rejectIncoming(incomingSnapshot.data!),
-                onEdit: () =>
-                    navigateTo(context, '/contacts/${contact.id}/edit'),
+                onEdit: () async {
+                  await context.push('/contacts/${contact.id}/edit');
+                  if (mounted) _reload();
+                },
                 onReconnect: contact.showsDisconnectedStatus
                     ? () => navigateTo(
                           context,

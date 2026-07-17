@@ -3162,7 +3162,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get contactsReconnectAction => 'Solicitar reconexión';
 
   @override
-  String get contactsLabelEditorTitle => 'Cómo ves a este contacto';
+  String get contactsLabelEditorTitle => 'Renombrar localmente';
+
+  @override
+  String get contactsLabelEditorScreenTitle => '¿Renombrar localmente?';
 
   @override
   String get contactsLabelEditorHint =>
