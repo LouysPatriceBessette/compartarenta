@@ -1,7 +1,7 @@
 ---
 description: >-
-  Count user prompts per agent session; warn from prompt 16 to prepare a new
-  session; on handoff request, write dev-ideas/YYYY-MM-DD-HH-MM-handoff.md.
+  Count user prompts per agent session (reset when a handoff opens a new
+  session); warn from prompt 16; on handoff request, write a handoff file.
 alwaysApply: true
 ---
 
@@ -11,35 +11,67 @@ alwaysApply: true
 
 `alwaysApply: true` for every chat in this repository.
 
-## Count user prompts
+## What “session” means for the prompt count
 
-Maintain a **running count of user prompts** in the **current Cursor agent session** (one chat / one agent transcript id).
+The prompt count tracks **how long this agent chat has been running**, so the
+user knows when to switch. It must **keep growing** for as long as the user
+stays in the **same** chat without starting a new one.
+
+| Situation | Prompt count |
+| --- | --- |
+| User opens a **new** agent chat and the **first** user message points at / attaches / quotes a **handoff** file (`dev-ideas/*-handoff.md` or equivalent) | **New session.** Count starts at **1**. Ignore the old session’s count written inside that handoff. |
+| User opens a **new** agent chat (new Cursor transcript UUID) without a handoff | **New session.** Count starts at **1**. |
+| User keeps sending prompts in the **same** chat (no new chat, no handoff-as-first-message) | **Same session.** Count continues: 2, 3, … 16, 17, … Warnings from 16 **must keep appearing**. |
+| User asks for a handoff **inside** the current chat | Still the **same** session for counting until they open a **new** chat. Writing the handoff does **not** reset the count in *this* chat. |
+
+### Binding deduction (do not miss this)
+
+If the **first user prompt of this agent chat** references a handoff document,
+treat that as proof of a **new session**. Start the count at **1**. Do **not**
+resume the previous session’s “Prompt 16/18/…” number from the handoff, from a
+summary, or from an old transcript file.
+
+Wrong (forbidden): first reply after `@…-handoff.md` says « Prompt 18/… ».  
+Right: first reply is prompt **1** of the new session (no switch warning yet).
+
+## Count user prompts
 
 | Count as one prompt | Do **not** count |
 | --- | --- |
-| Each user message that advances the conversation (including short commands, handoff requests, `Question seulement:`, etc.) | System / tool / assistant messages |
+| Each user message in **this** chat (including short commands, handoff requests, `Question seulement:`, etc.) | System / tool / assistant messages |
 
-**How to obtain the count (prefer in order):**
+**How to obtain the count:**
 
-1. Count `"role":"user"` lines in this session’s mirror under `dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl`, **plus 1** for the current user message if it is not yet appended.
-2. Else count user turns visible in the live thread (including the current message).
-3. Else ask the user once for an approximate turn number; do not invent a low count to skip the warning.
+1. Decide whether this is a **new** session (table above). If yes → count = **1**
+   for the current message (or = number of user turns **already in this new
+   chat’s** live thread, including the current one — usually 1).
+2. Otherwise (same session continuing): count `"role":"user"` lines in **this
+   chat’s** mirror `dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<this-session-id>.jsonl`,
+   **plus 1** if the current user message is not yet appended; or count user
+   turns visible in **this** live thread if the mirror does not exist yet.
+3. The number “Prompts: ~N” **inside a handoff file** describes the **previous**
+   session only. Use it for context in the handoff body when writing one; **never**
+   use it as the running count for the chat that just opened with that handoff.
 
-Keep the count in session memory across turns. After compaction, **re-derive** it from the transcript file before deciding whether to warn.
+After compaction in the **same** chat: re-count from this chat’s mirror / live
+thread. Compaction does **not** reset the count and does **not** cancel warnings
+once prompt 16 was reached.
 
 ## Warning from prompt 16
 
-**From the 16th user prompt inclusive**, and on **every subsequent** user prompt in the same session until the user confirms they opened a new agent session:
+**From the 16th user prompt inclusive** of **this** session, and on **every
+subsequent** user prompt in **this same session** (whether or not the user asked
+for a handoff, as long as they did not open a new chat):
 
-Include a **short, visible notice** in the assistant reply (own line or short paragraph; French if the user writes in French), telling them to **prepare to switch to a new agent session soon**.
-
-Example (adapt wording, keep the meaning):
+Include a **short, visible notice** in the assistant reply (French if the user
+writes in French), e.g.:
 
 > Prompt 16/… — Prépare-toi à changer de session d’agent bientôt (contexte long; un handoff aidera la continuité).
 
-Do **not** block work or refuse the task because of the count. Do **not** spam a long lecture—one clear reminder per qualifying turn is enough.
-
-**Before prompt 16:** do not mention session switching for this reason.
+- Do **not** stop warning just because the user did not ask for a handoff.
+- Do **not** stop warning just because the thread “looks short” after summary.
+- Do **not** block work — one short reminder per turn is enough.
+- **Before** prompt 16 of this session: do not mention session switching for this reason.
 
 ## Handoff document (on request)
 
@@ -68,7 +100,7 @@ dev-ideas/YYYY-MM-DD-HH-MM-handoff.md
 Write in the **user’s language** for the session (typically French). Markdown:
 
 1. `# Handoff` — title
-2. **Session** — date/time, approximate prompt count, session id if known, one-line topic
+2. **Session** — date/time, approximate prompt count **of the session being closed**, session id if known, one-line topic
 3. **Goal** — what the user is trying to achieve
 4. **Done** — completed work this session (bullets; cite key paths)
 5. **In progress** — unfinished work and current branch of the diagnosis/implementation
@@ -86,5 +118,7 @@ Give the path to the file (e.g. `` `dev-ideas/2026-07-13-18-17-handoff.md` ``). 
 
 ## Relation to other rules
 
-- Complements `agent-transcript-incremental-log.mdc` (count source of truth) and `conversation-test-context-discipline.mdc` (handoff must reflect the real thread, not a reset narrative).
-- Does not replace reading the live thread or Cursor transcript when continuing work.
+- Complements `agent-transcript-incremental-log.mdc` (log this chat under **its**
+  session id only).
+- Complements `conversation-test-context-discipline.mdc` (handoff must reflect
+  the real thread).

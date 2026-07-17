@@ -1025,4 +1025,292 @@ void main() {
       if (humanFile.existsSync()) humanFile.deleteSync();
     },
   );
+
+  test(
+    'realized expense review backfills from human payer then bots accept',
+    () async {
+      SharedPreferences.setMockInitialValues({'sandbox.mode': true});
+      final prefs = await AppPreferences.load();
+      final relay = SandboxRelay.ensureFresh();
+      final humanFile = File(
+        '${Directory.systemTemp.path}/sandbox_peer_human_expense_payer.sqlite',
+      );
+      if (humanFile.existsSync()) humanFile.deleteSync();
+      final humanDb = _Db(NativeDatabase(humanFile));
+      AppDatabase.bindProcessScope(humanDb);
+      final humanOrch = HandshakeOrchestrator(
+        db: humanDb,
+        identity: InMemoryIdentityKeystore(
+          seed: Uint8List.fromList(List<int>.generate(32, (i) => i + 31)),
+        ),
+        relay: relay,
+        contacts: ContactsRepository(humanDb),
+        invitations: ContactInvitationsRepository(humanDb),
+        pollInterval: const Duration(days: 1),
+        deviceBinding: DeviceBindingService.forTesting(
+          'sandbox-human-expense-payer',
+        ),
+      );
+      humanOrch.enableSandboxPeerAutoAccept(
+        profile: () async => (displayName: 'Human', avatarId: 'mdi:0'),
+      );
+      HandshakeOrchestrator.install(humanOrch);
+      final sim = PeerSimulator.install(relay: relay, prefs: prefs);
+
+      final peerBot = await sim.inviteNextBot(
+        humanOrchestrator: humanOrch,
+        humanDisplayName: 'Human',
+        humanAvatarId: 'mdi:0',
+      );
+      expect(peerBot, isNotNull);
+
+      const bare = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+      const housingPlanId = 'housing:$bare';
+      const receivedPlanId = 'received:$bare';
+      const expenseId = 'realized:expense-human-payer';
+      const revisionId = 'rev:expense-human-payer';
+      final now = DateTime.utc(2026, 7, 16, 19);
+
+      Future<void> seedHumanPlan() async {
+        await humanDb
+            .into(humanDb.plans)
+            .insert(
+              PlansCompanion.insert(
+                id: housingPlanId,
+                type: 'housing',
+                createdAt: now,
+              ),
+            );
+        await humanDb
+            .into(humanDb.participants)
+            .insert(
+              ParticipantsCompanion.insert(
+                id: '$housingPlanId:self',
+                displayName: 'Human',
+                avatarId: 'mdi:0',
+                createdAt: now,
+              ),
+            );
+        await humanDb
+            .into(humanDb.participants)
+            .insert(
+              ParticipantsCompanion.insert(
+                id: '$housingPlanId:p0',
+                displayName: peerBot!.displayName,
+                avatarId: peerBot.avatarId,
+                createdAt: now,
+              ),
+            );
+        await humanDb
+            .into(humanDb.proposalPackages)
+            .insert(
+              ProposalPackagesCompanion.insert(
+                id: 'pkg:$housingPlanId',
+                planId: housingPlanId,
+                createdAt: now,
+                activeRevisionId: const drift.Value(revisionId),
+              ),
+            );
+        await humanDb
+            .into(humanDb.proposalRevisions)
+            .insert(
+              ProposalRevisionsCompanion.insert(
+                id: revisionId,
+                packageId: 'pkg:$housingPlanId',
+                contentHash: 'hash:$revisionId',
+                proposerParticipantId: '$housingPlanId:self',
+                payloadJson: jsonEncode({
+                  'kind': PlanAgreementProposalService.kind,
+                  'lifecycleState': 'archived',
+                  'agreement': {
+                    'periodStart': '2026-07-16',
+                    'periodEnd': '2027-01-12',
+                  },
+                  'plan': {
+                    'lines': [
+                      {
+                        'id': 'line:$housingPlanId:rent',
+                        'title': 'Loyer',
+                        'isRecurring': true,
+                        'currency': 'CAD',
+                      },
+                    ],
+                  },
+                }),
+                createdAt: now,
+              ),
+            );
+        await humanDb
+            .into(humanDb.planLines)
+            .insert(
+              PlanLinesCompanion.insert(
+                id: 'line:$housingPlanId:rent',
+                planId: housingPlanId,
+                isRecurring: true,
+                title: 'Loyer',
+                currency: 'CAD',
+                createdAt: now,
+              ),
+            );
+      }
+
+      Future<void> seedBotPlan(SandboxBotPeer bot) async {
+        await bot.db
+            .into(bot.db.plans)
+            .insert(
+              PlansCompanion.insert(
+                id: receivedPlanId,
+                type: 'housing',
+                createdAt: now,
+              ),
+            );
+        await bot.db
+            .into(bot.db.participants)
+            .insert(
+              ParticipantsCompanion.insert(
+                id: '$receivedPlanId:self',
+                displayName: bot.displayName,
+                avatarId: bot.avatarId,
+                createdAt: now,
+              ),
+            );
+        await bot.db
+            .into(bot.db.participants)
+            .insert(
+              ParticipantsCompanion.insert(
+                id: '$receivedPlanId:p0',
+                displayName: 'Human',
+                avatarId: 'mdi:0',
+                createdAt: now,
+              ),
+            );
+        await bot.db
+            .into(bot.db.proposalPackages)
+            .insert(
+              ProposalPackagesCompanion.insert(
+                id: 'pkg:$receivedPlanId',
+                planId: receivedPlanId,
+                createdAt: now,
+                activeRevisionId: const drift.Value(revisionId),
+              ),
+            );
+        await bot.db
+            .into(bot.db.proposalRevisions)
+            .insert(
+              ProposalRevisionsCompanion.insert(
+                id: revisionId,
+                packageId: 'pkg:$receivedPlanId',
+                contentHash: 'hash:$revisionId',
+                proposerParticipantId: '$receivedPlanId:p0',
+                payloadJson: jsonEncode({
+                  'kind': PlanAgreementProposalService.kind,
+                  'lifecycleState': 'archived',
+                  'agreement': {
+                    'periodStart': '2026-07-16',
+                    'periodEnd': '2027-01-12',
+                  },
+                  'plan': {
+                    'lines': [
+                      {
+                        'id': 'line:$receivedPlanId:rent',
+                        'title': 'Loyer',
+                        'isRecurring': true,
+                        'currency': 'CAD',
+                      },
+                    ],
+                  },
+                }),
+                createdAt: now,
+              ),
+            );
+        await bot.db
+            .into(bot.db.planLines)
+            .insert(
+              PlanLinesCompanion.insert(
+                id: 'line:$receivedPlanId:rent',
+                planId: receivedPlanId,
+                isRecurring: true,
+                title: 'Loyer',
+                currency: 'CAD',
+                createdAt: now,
+              ),
+            );
+      }
+
+      await seedHumanPlan();
+      await seedBotPlan(peerBot!);
+
+      await humanDb
+          .into(humanDb.realizedExpenses)
+          .insert(
+            RealizedExpensesCompanion.insert(
+              id: expenseId,
+              packageId: 'pkg:$housingPlanId',
+              planId: housingPlanId,
+              planLineId: 'line:$housingPlanId:rent',
+              status: RealizedExpenseStatus.proposed,
+              amountMinor: 1000,
+              currency: 'CAD',
+              paymentDate: now,
+              payerParticipantId: '$housingPlanId:self',
+              kind: RealizedExpenseKind.normal,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await humanDb
+          .into(humanDb.realizedExpenseAcceptances)
+          .insert(
+            RealizedExpenseAcceptancesCompanion.insert(
+              expenseId: expenseId,
+              participantId: '$housingPlanId:self',
+              decision: RealizedExpenseDecision.accepted,
+              decidedAt: drift.Value(now),
+            ),
+          );
+      await humanDb
+          .into(humanDb.realizedExpenseAcceptances)
+          .insert(
+            RealizedExpenseAcceptancesCompanion.insert(
+              expenseId: expenseId,
+              participantId: '$housingPlanId:p0',
+              decision: RealizedExpenseDecision.pending,
+            ),
+          );
+
+      expect(
+        await RealizedExpenseRepository(peerBot.db).getById(expenseId),
+        isNull,
+      );
+
+      await sim.acceptPendingRealizedExpenseReviewsAfterHumanDecision(
+        expenseId: expenseId,
+        initialDelay: Duration.zero,
+        betweenBotDelay: Duration.zero,
+      );
+
+      expect(
+        await RealizedExpenseRepository(peerBot.db).getById(expenseId),
+        isNotNull,
+        reason: 'bot must backfill propose from human payer',
+      );
+      final peerAcceptances = await RealizedExpenseRepository(
+        peerBot.db,
+      ).acceptancesFor(expenseId);
+      expect(
+        peerAcceptances
+            .where((a) => a.participantId == '$receivedPlanId:self')
+            .single
+            .decision,
+        RealizedExpenseDecision.accepted,
+      );
+
+      PeerSimulator.clearInstalled();
+      SandboxRelay.clear();
+      HandshakeOrchestrator.clearInstalledInstanceAfterDevDatabaseReset();
+      AppDatabase.clearProcessScopeIfReferencing(humanDb);
+      await humanDb.close();
+      if (humanFile.existsSync()) humanFile.deleteSync();
+    },
+  );
 }

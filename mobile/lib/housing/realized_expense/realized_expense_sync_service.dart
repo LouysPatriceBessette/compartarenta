@@ -424,7 +424,24 @@ class RealizedExpenseSyncService {
       return false;
     }
 
-    await RealizedExpenseRepository(_db).applyPeerDecision(
+    final repo = RealizedExpenseRepository(_db);
+    RealizedExpenseAcceptance? existing;
+    for (final row in await repo.acceptancesFor(expenseId)) {
+      if (row.participantId == localParticipantId) {
+        existing = row;
+        break;
+      }
+    }
+    if (existing != null && existing.decision == decision) {
+      // Same decision may arrive twice when a peer fan-out posts to this
+      // device via multiple contact targets that share one listen address.
+      _log(
+        'decision skip: already $decision on $expenseId by $localParticipantId',
+      );
+      return false;
+    }
+
+    await repo.applyPeerDecision(
       expenseId: expenseId,
       participantId: localParticipantId,
       decision: decision,

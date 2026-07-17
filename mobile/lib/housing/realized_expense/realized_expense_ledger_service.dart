@@ -175,10 +175,7 @@ class RealizedExpenseLedgerService {
   Future<bool> shouldNotifyAcceptedDecision({
     required RealizedExpense expense,
     required String selfParticipantId,
-  }) => Future.value(
-    expense.payerParticipantId == selfParticipantId &&
-        expense.status == RealizedExpenseStatus.published,
-  );
+  }) => Future.value(expense.payerParticipantId == selfParticipantId);
 
   Future<int> countWaitingForYou({
     required String packageId,

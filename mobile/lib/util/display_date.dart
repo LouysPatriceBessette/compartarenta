@@ -37,6 +37,16 @@ String formatPreferenceDateTime(DateTime utc, String dateFormat) {
   return '$date $h:$m';
 }
 
+/// Like [formatPreferenceDateTime] but includes seconds (`HH:MM:SS`).
+String formatPreferenceDateTimeWithSeconds(DateTime utc, String dateFormat) {
+  final date = formatPreferenceDate(utc, dateFormat);
+  final local = utc.toLocal();
+  final h = local.hour.toString().padLeft(2, '0');
+  final m = local.minute.toString().padLeft(2, '0');
+  final s = local.second.toString().padLeft(2, '0');
+  return '$date $h:$m:$s';
+}
+
 bool isStrictlyBeforeCalendarDate(DateTime a, DateTime b) {
   final da = DateUtils.dateOnly(a.toLocal());
   final db = DateUtils.dateOnly(b.toLocal());

@@ -8,11 +8,13 @@ import 'package:compartarenta/prefs/app_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('bot catalog is seven fixed names', () {
-    expect(SandboxBotCatalog.displayNames, hasLength(7));
+  test('bot catalog is five fixed names', () {
+    expect(SandboxBotCatalog.displayNames, hasLength(5));
     expect(SandboxBotCatalog.displayNames.first, 'Louys');
-    expect(SandboxBotCatalog.displayNames.last, 'Youkie');
-    expect(SandboxBotCatalog.maxBots, 7);
+    expect(SandboxBotCatalog.displayNames.last, 'Leo');
+    expect(SandboxBotCatalog.maxBots, 5);
+    expect(SandboxBotCatalog.displayNames, isNot(contains('Germaine')));
+    expect(SandboxBotCatalog.displayNames, isNot(contains('Youkie')));
   });
 
   test('sandbox prefs survive conceptual wipe keys', () async {

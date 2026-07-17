@@ -493,4 +493,100 @@ void main() {
       expect(acceptances, hasLength(2));
     },
   );
+
+  test('importDecisionFromPeer is idempotent for same accept', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    const planId = 'housing:idem';
+    const packageId = 'pkg:idem';
+    const expenseId = 'realized:idem';
+    const louysContact = 'contact:louys';
+
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:self',
+            displayName: 'Solo',
+            avatarId: '0',
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.participants).insert(
+          ParticipantsCompanion.insert(
+            id: '$planId:p0',
+            displayName: 'Louys',
+            avatarId: '1',
+            contactId: Value(louysContact),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.proposalPackages).insert(
+          ProposalPackagesCompanion.insert(
+            id: packageId,
+            planId: planId,
+            activeRevisionId: const Value('rev:active'),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+    await db.into(db.realizedExpenses).insert(
+          RealizedExpensesCompanion.insert(
+            id: expenseId,
+            packageId: packageId,
+            planId: planId,
+            planLineId: 'line:rent',
+            status: RealizedExpenseStatus.proposed,
+            amountMinor: 1000,
+            currency: 'CAD',
+            paymentDate: DateTime.utc(2026, 7, 16),
+            payerParticipantId: '$planId:self',
+            kind: RealizedExpenseKind.normal,
+            createdAt: DateTime.utc(2026, 7, 16),
+            updatedAt: DateTime.utc(2026, 7, 16),
+          ),
+        );
+    await db.into(db.realizedExpenseAcceptances).insert(
+          RealizedExpenseAcceptancesCompanion.insert(
+            expenseId: expenseId,
+            participantId: '$planId:self',
+            decision: RealizedExpenseDecision.accepted,
+          ),
+        );
+    await db.into(db.realizedExpenseAcceptances).insert(
+          RealizedExpenseAcceptancesCompanion.insert(
+            expenseId: expenseId,
+            participantId: '$planId:p0',
+            decision: RealizedExpenseDecision.pending,
+          ),
+        );
+
+    final decisionJson = '''
+{
+  "expense_id": "$expenseId",
+  "package_id": "$packageId",
+  "decision": "accepted",
+  "participant_id": "$planId:self",
+  "participant_snapshots": [
+    {"id": "$planId:self", "displayName": "Louys", "contactId": "$louysContact"},
+    {"id": "$planId:p0", "displayName": "Solo"}
+  ]
+}
+''';
+
+    final sync = RealizedExpenseSyncService(db);
+    expect(
+      await sync.importDecisionFromPeer(
+        decisionJson: decisionJson,
+        senderContactId: louysContact,
+      ),
+      isTrue,
+    );
+    expect(
+      await sync.importDecisionFromPeer(
+        decisionJson: decisionJson,
+        senderContactId: louysContact,
+      ),
+      isFalse,
+      reason: 'duplicate envelope must not re-apply',
+    );
+  });
 }

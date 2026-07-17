@@ -12,6 +12,7 @@ import '../contacts/invitation_code.dart';
 import '../db/app_database.dart';
 import '../db/repositories/contacts_repository.dart';
 import '../device/device_binding_service.dart';
+import '../housing/housing_plan_id.dart';
 import '../housing/realized_expense/realized_expense_participants.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
 import '../housing/realized_expense/realized_expense_status.dart';
@@ -96,6 +97,7 @@ class PeerSimulator {
   final AppPreferences _prefs;
   final List<SandboxBotPeer> _bots = <SandboxBotPeer>[];
   final Random _rng = Random();
+  final Set<String> _realizedExpenseReviewSequencesInFlight = <String>{};
   Timer? _reactDebounceTimer;
   bool _reactRunning = false;
   bool _reactNeededAfterRun = false;
@@ -210,11 +212,40 @@ class PeerSimulator {
     debugPrint('PeerSimulator react end ${sw.elapsedMilliseconds}ms');
   }
 
-  /// After the human reviews a bot expense, each remaining bot accepts in order.
+  /// After a realized expense needs peer reviews, each bot that still must
+  /// accept does so in order (1s after trigger, then 1s between bots).
+  ///
+  /// Used both when the human reviews a bot expense and when the human
+  /// proposes an expense that bots must accept.
   Future<void> acceptPendingRealizedExpenseReviewsAfterHumanDecision({
     required String expenseId,
     Duration initialDelay = _realizedExpenseBotDecisionDelay,
     Duration betweenBotDelay = _realizedExpenseBotDecisionDelay,
+  }) async {
+    if (_disposed) return;
+    if (!_realizedExpenseReviewSequencesInFlight.add(expenseId)) {
+      debugPrint(
+        'PeerSimulator realized-expense review $expenseId already in flight',
+      );
+      return;
+    }
+    pauseReactions();
+    try {
+      await _acceptPendingRealizedExpenseReviewsBody(
+        expenseId: expenseId,
+        initialDelay: initialDelay,
+        betweenBotDelay: betweenBotDelay,
+      );
+    } finally {
+      resumeReactions();
+      _realizedExpenseReviewSequencesInFlight.remove(expenseId);
+    }
+  }
+
+  Future<void> _acceptPendingRealizedExpenseReviewsBody({
+    required String expenseId,
+    required Duration initialDelay,
+    required Duration betweenBotDelay,
   }) async {
     if (_disposed) return;
     if (initialDelay > Duration.zero) {
@@ -225,13 +256,14 @@ class PeerSimulator {
       await Future<void>.delayed(initialDelay);
     }
 
+    final humanIsPayer = await _humanIsPayerOfExpense(expenseId);
     var acceptedAnyBot = false;
     for (final bot in List<SandboxBotPeer>.from(_bots)) {
       if (_disposed) return;
       try {
         await bot.orchestrator.pollSteadyStateInboxes();
-        // Bot↔bot propose delivery can miss a peer; backfill from the payer
-        // bot's local copy so every pending reviewer can still accept.
+        // Propose delivery can miss a peer; backfill from the payer's local
+        // copy (bot or human) so every pending reviewer can still accept.
         await _ensureBotHasRealizedExpense(bot, expenseId: expenseId);
         final needsAccept = await _botStillNeedsToAcceptRealizedExpense(
           bot,
@@ -257,19 +289,21 @@ class PeerSimulator {
         acceptedAnyBot = true;
         final human = HandshakeOrchestrator.maybeInstance;
         await human?.pollSteadyStateInboxes();
-        // The human is a reviewer (not the payer) for a bot expense, so the
-        // inbound accept handler's payer-gated notification never fires here.
-        // Surface each bot acceptance so the human sees it, like a real peer.
-        try {
-          await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
-            senderDisplayName: bot.displayName,
-            expenseId: expenseId,
-          );
-        } catch (e, st) {
-          debugPrint(
-            'PeerSimulator bot ${bot.displayName} accept notification '
-            'failed for $expenseId: $e\n$st',
-          );
+        // When the human is the payer, the inbound accept handler already
+        // notifies. When the human is only a reviewer (bot expense), that
+        // payer gate never fires — surface each bot accept explicitly.
+        if (!humanIsPayer) {
+          try {
+            await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
+              senderDisplayName: bot.displayName,
+              expenseId: expenseId,
+            );
+          } catch (e, st) {
+            debugPrint(
+              'PeerSimulator bot ${bot.displayName} accept notification '
+              'failed for $expenseId: $e\n$st',
+            );
+          }
         }
       } catch (e, st) {
         debugPrint(
@@ -280,8 +314,17 @@ class PeerSimulator {
     }
   }
 
-  /// Imports [expenseId] onto [bot] from the payer bot when inbox delivery
-  /// did not leave a local row (sandbox mesh gap).
+  Future<bool> _humanIsPayerOfExpense(String expenseId) async {
+    final humanDb = AppDatabase.maybeProcessScope;
+    if (humanDb == null) return false;
+    final expense = await RealizedExpenseRepository(humanDb).getById(expenseId);
+    if (expense == null) return false;
+    final selfId = selfParticipantIdForPlan(expense.planId);
+    return expense.payerParticipantId == selfId;
+  }
+
+  /// Imports [expenseId] onto [bot] from the payer (bot or human) when inbox
+  /// delivery did not leave a local row (sandbox mesh gap).
   Future<bool> _ensureBotHasRealizedExpense(
     SandboxBotPeer bot, {
     required String expenseId,
@@ -292,40 +335,43 @@ class PeerSimulator {
     await bot.orchestrator.pollSteadyStateInboxes();
     if (await repo.getById(expenseId) != null) return true;
 
-    final source = await _botHoldingExpenseAsPayer(expenseId);
-    if (source == null || identical(source, bot)) {
+    final source = await _expenseProposeSource(expenseId);
+    if (source == null) {
       debugPrint(
         'PeerSimulator cannot backfill expense $expenseId for '
-        '${bot.displayName}: no payer bot source',
+        '${bot.displayName}: no payer source',
       );
       return false;
     }
+    if (identical(source.db, bot.db)) return true;
 
     final sourceRepo = RealizedExpenseRepository(source.db);
     final expense = await sourceRepo.getById(expenseId);
     if (expense == null) return false;
 
-    // importProposedFromPeer requires activeRevisionId on the bot package.
-    await _ensureBotHousingPlanActive(bot, planId: expense.planId);
+    // Bots store the agreement as received:<uuid>; human uses housing:<uuid>.
+    final botPlanId = expense.planId.startsWith(kReceivedPlanIdPrefix)
+        ? expense.planId
+        : receivedPlanIdForAuthorPlan(expense.planId);
+    await _ensureBotHousingPlanActive(bot, planId: botPlanId);
 
     final attachments = await sourceRepo.attachmentsFor(expenseId);
     final expenseJson = await RealizedExpenseSyncService(
       source.db,
     ).buildProposeJson(expense: expense, attachments: attachments);
 
-    final sourcePub = await source.identity.publicKeyB64();
     final contacts = await bot.contacts.list();
     final senderContact = contacts
         .where(
           (c) =>
               c.kind == 'connected' &&
-              (c.peerPublicMaterial ?? '') == sourcePub,
+              (c.peerPublicMaterial ?? '') == source.publicKeyB64,
         )
         .firstOrNull;
     if (senderContact == null) {
       debugPrint(
         'PeerSimulator ${bot.displayName} has no connected contact for '
-        'payer ${source.displayName}; cannot backfill $expenseId',
+        'payer ${source.label}; cannot backfill $expenseId',
       );
       return false;
     }
@@ -338,9 +384,41 @@ class PeerSimulator {
     final hasExpense = await repo.getById(expenseId) != null;
     debugPrint(
       'PeerSimulator backfill expense $expenseId for ${bot.displayName} '
-      'from ${source.displayName} imported=$imported hasExpense=$hasExpense',
+      'from ${source.label} imported=$imported hasExpense=$hasExpense',
     );
     return hasExpense;
+  }
+
+  Future<({AppDatabase db, String publicKeyB64, String label})?>
+  _expenseProposeSource(String expenseId) async {
+    for (final bot in List<SandboxBotPeer>.from(_bots)) {
+      final expense = await RealizedExpenseRepository(
+        bot.db,
+      ).getById(expenseId);
+      if (expense == null) continue;
+      final selfId = selfParticipantIdForPlan(expense.planId);
+      if (expense.payerParticipantId != selfId) continue;
+      return (
+        db: bot.db,
+        publicKeyB64: await bot.identity.publicKeyB64(),
+        label: bot.displayName,
+      );
+    }
+
+    final human = HandshakeOrchestrator.maybeInstance;
+    if (human == null) return null;
+    final humanDb = AppDatabase.maybeProcessScope;
+    if (humanDb == null) return null;
+    final expense = await RealizedExpenseRepository(humanDb).getById(expenseId);
+    if (expense == null) return null;
+    final selfId = selfParticipantIdForPlan(expense.planId);
+    if (expense.payerParticipantId != selfId) return null;
+    final pub = await human.selfLongTermPublicKey();
+    return (
+      db: humanDb,
+      publicKeyB64: base64Url.encode(pub).replaceAll('=', ''),
+      label: 'human',
+    );
   }
 
   Future<void> _ensureBotPendingHousingPlansActivated(SandboxBotPeer bot) async {
@@ -447,20 +525,6 @@ class PeerSimulator {
     SandboxBotPeer bot, {
     required String planId,
   }) => _ensureBotHousingPlanActive(bot, planId: planId);
-
-  Future<SandboxBotPeer?> _botHoldingExpenseAsPayer(String expenseId) async {
-    SandboxBotPeer? anyHolder;
-    for (final bot in List<SandboxBotPeer>.from(_bots)) {
-      final expense = await RealizedExpenseRepository(
-        bot.db,
-      ).getById(expenseId);
-      if (expense == null) continue;
-      anyHolder ??= bot;
-      final selfId = selfParticipantIdForPlan(expense.planId);
-      if (expense.payerParticipantId == selfId) return bot;
-    }
-    return anyHolder;
-  }
 
   Future<void> _acceptPendingRealizedExpense(
     SandboxBotPeer bot, {

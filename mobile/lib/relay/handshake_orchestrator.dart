@@ -308,6 +308,7 @@ class HandshakeOrchestrator {
   bool _processing = false;
   bool _steadyInboxPolling = false;
   bool _steadyInboxPollNeededAgain = false;
+  Completer<void>? _steadyInboxPollCompleter;
 
   /// In-process claim so concurrent inbox applies cannot double-post #7.
   final Set<String> _housingDecisionNotifiedResponseIds = <String>{};
@@ -1025,8 +1026,13 @@ class HandshakeOrchestrator {
   Future<void> pollSteadyStateInboxes() async {
     if (_steadyInboxPolling) {
       _steadyInboxPollNeededAgain = true;
+      final wait = _steadyInboxPollCompleter?.future;
+      if (wait != null) {
+        await wait;
+      }
       return;
     }
+    _steadyInboxPollCompleter = Completer<void>();
     _steadyInboxPolling = true;
     try {
       do {
@@ -1039,6 +1045,11 @@ class HandshakeOrchestrator {
       } while (_steadyInboxPollNeededAgain);
     } finally {
       _steadyInboxPolling = false;
+      final completer = _steadyInboxPollCompleter;
+      _steadyInboxPollCompleter = null;
+      if (completer != null && !completer.isCompleted) {
+        completer.complete();
+      }
     }
   }
 
@@ -3324,6 +3335,10 @@ class HandshakeOrchestrator {
       '${decisionCandidateContacts.length}',
     );
 
+    // Decision JSON is identical for every recipient. Post once per peer
+    // pubkey (sandbox fan-out can map several plan slots onto the same peer).
+    final postedPeerMaterial = <String>{};
+
     for (final participant in participants) {
       final contactId = participant.contactId;
       final contact = contactId == null ? null : await _contacts.get(contactId);
@@ -3343,6 +3358,7 @@ class HandshakeOrchestrator {
       for (final target in targets) {
         final peerPubB64 = target.peerPublicMaterial;
         if (peerPubB64 == null || peerPubB64.isEmpty) continue;
+        if (!postedPeerMaterial.add(peerPubB64)) continue;
         try {
           final peerPub = RelayRouting.unb64(peerPubB64);
           final frame =

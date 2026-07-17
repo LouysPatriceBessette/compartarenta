@@ -2,7 +2,7 @@ import 'dart:math';
 
 import '../contacts/avatar_palette.dart';
 
-/// Fixed ordered catalog of simulation bots (max 7).
+/// Fixed ordered catalog of simulation bots (max 5).
 class SandboxBotCatalog {
   SandboxBotCatalog._();
 
@@ -12,11 +12,9 @@ class SandboxBotCatalog {
     'Ròberr',
     'Liuva',
     'Leo',
-    'Germaine',
-    'Youkie',
   ];
 
-  static const int maxBots = 7;
+  static const int maxBots = 5;
 
   static String randomAvatarId([Random? random]) {
     final rng = random ?? Random();

@@ -108,6 +108,9 @@ class _HousingRealizedExpenseReviewScreenState
     HousingNavigationIntent.reviewRequestTick.addListener(
       _onPendingReviewIntent,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleSandboxBotReviewsOnOpenIfHumanPayer();
+    });
   }
 
   @override
@@ -410,7 +413,10 @@ class _HousingRealizedExpenseReviewScreenState
                     child: Text(
                       row.decidedAt == null
                           ? ''
-                          : formatPreferenceDateTime(row.decidedAt!, dateFmt),
+                          : formatPreferenceDateTimeWithSeconds(
+                              row.decidedAt!,
+                              dateFmt,
+                            ),
                       style: cellStyle,
                       textAlign: TextAlign.right,
                     ),
@@ -553,6 +559,26 @@ class _HousingRealizedExpenseReviewScreenState
         expenseId: widget.expenseId,
       ),
     );
+  }
+
+  /// Human-proposed expense: bots accept only once the payer opens this review
+  /// screen (hub tile → detail), so the user can watch the sequential updates.
+  void _scheduleSandboxBotReviewsOnOpenIfHumanPayer() {
+    final prefs = widget.prefs;
+    if (prefs == null || !SandboxMode.isActive(prefs)) return;
+    final sim = PeerSimulator.maybeInstance;
+    if (sim == null || sim.bots.isEmpty) return;
+    unawaited(() async {
+      final expense = await _repo.getById(widget.expenseId);
+      if (expense == null || !mounted) return;
+      final selfId = selfParticipantIdForPlan(expense.planId);
+      if (expense.payerParticipantId != selfId) return;
+      await sim.reactOnce();
+      if (!mounted) return;
+      await sim.acceptPendingRealizedExpenseReviewsAfterHumanDecision(
+        expenseId: widget.expenseId,
+      );
+    }());
   }
 
   Future<void> _resubmit(_ReviewContext ctx) async {

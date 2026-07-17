@@ -23,9 +23,26 @@ dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<session-id>.jsonl
 
 ## Resolve session id (first turn, or if unknown)
 
-1. **`transcript_location`** in the system/context block → UUID in that path.
-2. Else **Read** the newest folder under `~/.cursor/projects/home-bvii-repos-Compartarenta/agent-transcripts/` if it matches this chat.
-3. Else **ask the user** once; store the id for the rest of the session.
+Each Cursor agent chat has one UUID. The mirror file must use **that** UUID so
+turns from chat A never go into chat B’s log.
+
+**How to get the UUID:**
+
+1. Prefer **`transcript_location`** in the system/context block (path contains
+   `agent-transcripts/<uuid>/…`). Use that `<uuid>`.
+2. If it is missing: **ask the user once** for the session id (or confirm which
+   chat this is). Do not guess.
+3. Do **not** pick a UUID by sorting folders by modification time and taking the
+   latest. That folder may be a **previous** chat that just got a background
+   write; appending there would mix two sessions in one file.
+
+**Then write only to:**
+
+`dev-ideas/agent-transcripts/YYYY-MM-DD/NNN_<this-chat-uuid>.jsonl`
+
+If that file does not exist yet for today’s date, allocate a new `NNN` (see
+below) and create it. Never append this chat’s lines to a file whose UUID is
+not this chat’s.
 
 ## Allocate `NNN` (first turn only)
 
