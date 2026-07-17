@@ -214,21 +214,14 @@ class _HousingModuleEntryScreenState extends State<HousingModuleEntryScreen> {
       _reloadEntry();
       return;
     }
-    final pkg = await (db.select(db.proposalPackages)
-          ..where((t) => t.planId.equals(planId)))
-        .getSingleOrNull();
-    if (pkg == null || !mounted) return;
-    await navigateToRoute<void>(
-      context,
-      MaterialPageRoute<void>(
-        builder:
-            (_) => HousingActivePlanScreen(
-              planId: planId,
-              packageId: pkg.id,
-              prefs: widget.prefs,
-            ),
-      ),
-    );
+    if (!mounted) return;
+    // Drop amendment/proposal overlays so the entry body's hub is visible.
+    // Do not pushReplacement another [HousingActivePlanScreen] (duplicate hub
+    // left "Modifier le plan" under the stack → extra Back).
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      nav.popUntil((route) => route.isFirst);
+    }
     if (mounted) _reloadEntry();
   }
 

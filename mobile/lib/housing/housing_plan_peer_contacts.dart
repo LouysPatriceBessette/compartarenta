@@ -37,15 +37,92 @@ Contact? relayReachableContactForParticipant(
   }
   final name = participant.displayName.trim().toLowerCase();
   final avatar = participant.avatarId.trim();
+  Contact? uniqueAvatarMatch;
   for (final c in contacts) {
     if (!isRelayReachableContact(c)) continue;
     final nameMatches =
         name.isNotEmpty &&
         c.effectiveDisplayName.trim().toLowerCase() == name;
+    if (nameMatches) return c;
     final avatarMatches = avatar.isNotEmpty && c.avatarId == avatar;
-    if (nameMatches || avatarMatches) return c;
+    if (avatarMatches) {
+      if (uniqueAvatarMatch != null) {
+        // Two peers share this avatar — do not guess.
+        return null;
+      }
+      uniqueAvatarMatch = c;
+    }
   }
-  return null;
+  return uniqueAvatarMatch;
+}
+
+/// Relay contacts that should receive a housing proposal / response for one
+/// roster slot.
+///
+/// When [selectedContact] is relay-reachable, returns only that contact.
+/// Avatar-only expansion to every peer with the same icon is forbidden: it
+/// delivers the same [Participant.id] as `targetParticipantId` to multiple
+/// devices (sandbox avatar collisions → one invitee stays pending).
+List<Contact> housingProposalDeliveryTargets({
+  required Participant participant,
+  required Contact? selectedContact,
+  required List<Contact> relayReachableContacts,
+}) {
+  final targets = <Contact>[];
+  final seenPeerMaterial = <String>{};
+
+  void add(Contact? contact) {
+    if (contact == null) return;
+    if (contact.id.startsWith('contact:local:')) return;
+    final peer = contact.peerPublicMaterial;
+    if (peer == null || peer.isEmpty || !seenPeerMaterial.add(peer)) return;
+    targets.add(contact);
+  }
+
+  if (selectedContact != null && isRelayReachableContact(selectedContact)) {
+    add(selectedContact);
+    return targets;
+  }
+
+  final participantName = participant.displayName.trim().toLowerCase();
+  final participantAvatar = participant.avatarId.trim();
+  final nameMatches = <Contact>[];
+  final avatarMatches = <Contact>[];
+  for (final contact in relayReachableContacts) {
+    if (!isRelayReachableContact(contact)) continue;
+    final nameOk =
+        participantName.isNotEmpty &&
+        contact.effectiveDisplayName.trim().toLowerCase() == participantName;
+    final avatarOk =
+        participantAvatar.isNotEmpty &&
+        contact.avatarId == participantAvatar;
+    if (nameOk) nameMatches.add(contact);
+    if (avatarOk) avatarMatches.add(contact);
+  }
+
+  if (nameMatches.isNotEmpty) {
+    for (final contact in nameMatches) {
+      add(contact);
+    }
+    return targets;
+  }
+
+  if (avatarMatches.length == 1) {
+    add(avatarMatches.single);
+    return targets;
+  }
+  if (avatarMatches.length > 1) {
+    // Ambiguous avatar collision — do not fan out one targetParticipantId.
+    return targets;
+  }
+
+  // No bound contact / name / unique avatar: last-resort mesh delivery.
+  if (relayReachableContacts.isNotEmpty) {
+    for (final contact in relayReachableContacts) {
+      add(contact);
+    }
+  }
+  return targets;
 }
 
 /// Relay contacts for participation changes limited to active members.

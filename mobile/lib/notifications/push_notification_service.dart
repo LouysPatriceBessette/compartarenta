@@ -812,17 +812,26 @@ class PushNotificationService {
     required String senderDisplayName,
     String? planId,
     String? revisionId,
+    bool isAmendment = false,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
-    final title = l10n.pushNotificationHousingDecisionTitle;
+    final title = isAmendment
+        ? l10n.pushNotificationHousingAmendmentDecisionTitle
+        : l10n.pushNotificationHousingDecisionTitle;
     final body = senderDisplayName.trim().isEmpty
-        ? l10n.pushNotificationHousingDecisionBody
-        : l10n.pushNotificationHousingDecisionBodyFrom(
-            senderDisplayName.trim(),
-          );
+        ? (isAmendment
+            ? l10n.pushNotificationHousingAmendmentDecisionBody
+            : l10n.pushNotificationHousingDecisionBody)
+        : (isAmendment
+            ? l10n.pushNotificationHousingAmendmentDecisionBodyFrom(
+                senderDisplayName.trim(),
+              )
+            : l10n.pushNotificationHousingDecisionBodyFrom(
+                senderDisplayName.trim(),
+              ));
 
     final hasSettledRevision = planId != null &&
         planId.isNotEmpty &&

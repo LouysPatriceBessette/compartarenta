@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' show ClientException;
 
 import '../activity/relay_activity_log_service.dart';
-import '../contacts/contact_display.dart';
 import '../contacts/contact_duplicate_handshake_dialog_state.dart';
 import '../contacts/contact_duplicate_module_anchor.dart';
 import '../contacts/contact_invitations_repository.dart';
@@ -21,6 +20,7 @@ import '../housing/housing_navigation_intent.dart';
 import '../housing/housing_participant_profile_sync.dart';
 import '../housing/housing_plan_peer_contacts.dart';
 import '../housing/housing_plan_peer_identity_reconcile.dart';
+import '../housing/amendment/housing_amendment_type.dart';
 import '../housing/plan_peer_establishment_service.dart';
 import '../housing/proposals/housing_proposal_transport_service.dart';
 import '../housing/proposals/plan_agreement_proposal_service.dart';
@@ -2740,7 +2740,6 @@ class HandshakeOrchestrator {
         participant: participant,
         selectedContact: contact,
         relayReachableContacts: relayReachableContacts,
-        planParticipantCount: participants.length,
       );
       if (targets.isEmpty) {
         debugPrint(
@@ -2830,43 +2829,12 @@ class HandshakeOrchestrator {
     required Participant participant,
     required Contact? selectedContact,
     required List<Contact> relayReachableContacts,
-    required int planParticipantCount,
   }) {
-    final targets = <Contact>[];
-    final seenPeerMaterial = <String>{};
-
-    void add(Contact? contact) {
-      if (contact == null) return;
-      if (contact.id.startsWith('contact:local:')) return;
-      final peer = contact.peerPublicMaterial;
-      if (peer == null || peer.isEmpty || !seenPeerMaterial.add(peer)) return;
-      targets.add(contact);
-    }
-
-    add(selectedContact);
-
-    final participantName = participant.displayName.trim().toLowerCase();
-    final participantAvatar = participant.avatarId.trim();
-    for (final contact in relayReachableContacts) {
-      final nameMatches =
-          participantName.isNotEmpty &&
-          contact.effectiveDisplayName.trim().toLowerCase() == participantName;
-      final avatarMatches =
-          participantAvatar.isNotEmpty && contact.avatarId == participantAvatar;
-      if (nameMatches || avatarMatches) {
-        add(contact);
-      }
-    }
-
-    if (targets.isEmpty && relayReachableContacts.isNotEmpty) {
-      // Participant row may lack contactId or name drift across devices;
-      // deliver to every relay-connected peer (deduped by peer material).
-      for (final contact in relayReachableContacts) {
-        add(contact);
-      }
-    }
-
-    return targets;
+    return housingProposalDeliveryTargets(
+      participant: participant,
+      selectedContact: selectedContact,
+      relayReachableContacts: relayReachableContacts,
+    );
   }
 
   Future<void> _postGatedEnvelope({
@@ -3069,7 +3037,6 @@ class HandshakeOrchestrator {
         participant: participant,
         selectedContact: contact,
         relayReachableContacts: relayReachableContacts,
-        planParticipantCount: participants.length,
       );
       if (targets.isEmpty) {
         debugPrint(
@@ -3346,7 +3313,6 @@ class HandshakeOrchestrator {
         participant: participant,
         selectedContact: contact,
         relayReachableContacts: decisionCandidateContacts,
-        planParticipantCount: participants.length,
       );
       if (targets.isEmpty) {
         debugPrint(
@@ -3735,10 +3701,20 @@ class HandshakeOrchestrator {
         _ownsDeviceHousingNotifications &&
         _housingDecisionNotifiedResponseIds.add(responseRowId);
     if (shouldNotifyDecision) {
+      final isAmendment = HousingAmendmentTypeWire.parse(
+            revisionPayload['amendmentType'] as String?,
+          ) !=
+          null;
+      debugPrint(
+        'housing_proposal_response notify #7 sender=$senderDisplayName '
+        'participant=$participantId revision=${revision.id} '
+        'amendment=$isAmendment',
+      );
       await PushNotificationService.showLocalHousingDecisionNotification(
         senderDisplayName: senderDisplayName,
         planId: pkg?.planId,
         revisionId: revision.id,
+        isAmendment: isAmendment,
       );
     }
     if (activatedPlanId != null) {

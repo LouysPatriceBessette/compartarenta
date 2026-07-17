@@ -2127,6 +2127,19 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationHousingAmendmentDecisionTitle =>
+      'Respuesta a una solicitud de cambio';
+
+  @override
+  String get pushNotificationHousingAmendmentDecisionBody =>
+      'Un participante respondió a una solicitud de cambio del acuerdo.';
+
+  @override
+  String pushNotificationHousingAmendmentDecisionBodyFrom(String name) {
+    return '$name respondió a una solicitud de cambio del acuerdo.';
+  }
+
+  @override
   String get pushNotificationHousingPaymentReminderBeforeDueTitle =>
       'Recordatorio de pago';
 

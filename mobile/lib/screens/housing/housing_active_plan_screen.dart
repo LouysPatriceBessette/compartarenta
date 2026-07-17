@@ -282,6 +282,7 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
         db,
       ).shouldShowPendingAmendmentHubBanner(widget.planId);
       _pendingAmendmentFuture = amendmentBannerFuture;
+      _hubShowsPendingAmendment = false;
       _hubGatesFuture = _loadHubGates();
       _hubExpenseEntryFuture = _loadHubExpenseEntry();
       _hubRenewalForkFuture = _loadRenewalForkAvailable();

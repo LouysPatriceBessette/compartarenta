@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
@@ -96,7 +95,6 @@ class PeerSimulator {
   final FakeRelayClient _relay;
   final AppPreferences _prefs;
   final List<SandboxBotPeer> _bots = <SandboxBotPeer>[];
-  final Random _rng = Random();
   final Set<String> _realizedExpenseReviewSequencesInFlight = <String>{};
   Timer? _reactDebounceTimer;
   bool _reactRunning = false;
@@ -660,7 +658,7 @@ class PeerSimulator {
     }
     final index = _bots.length;
     final name = SandboxBotCatalog.displayNames[index];
-    final avatar = SandboxBotCatalog.randomAvatarId(_rng);
+    final avatar = SandboxBotCatalog.avatarIdForCatalogIndex(index);
     final bot = await _spawnBot(displayName: name, avatarId: avatar);
     final priorBots = List<SandboxBotPeer>.from(_bots);
     _bots.add(bot);

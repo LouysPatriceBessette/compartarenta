@@ -831,6 +831,12 @@
   "pushNotificationHousingDecisionTitle": "Réponse à une proposition de logement",
   "pushNotificationHousingDecisionBody": "Un participant a répondu à une proposition de logement.",
   "pushNotificationHousingDecisionBodyFrom": "{name} a répondu à une proposition de logement.",
+  "pushNotificationHousingAmendmentDecisionTitle": "Réponse à une demande de changement",
+  "pushNotificationHousingAmendmentDecisionBody": "Un participant a répondu à une demande de changement de l'entente.",
+  "pushNotificationHousingAmendmentDecisionBodyFrom": "{name} a répondu à une demande de changement de l'entente.",
+  "@pushNotificationHousingAmendmentDecisionBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationHousingPaymentReminderBeforeDueTitle": "Rappel de paiement",
   "pushNotificationHousingPaymentReminderBeforeDueBody": "L'échéance de {lineTitle} approche.",
   "@pushNotificationHousingPaymentReminderBeforeDueBody": {

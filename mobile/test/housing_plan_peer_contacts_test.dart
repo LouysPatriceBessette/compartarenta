@@ -191,4 +191,93 @@ void main() {
       expect(targets.map((c) => c.id), ['contact:louys']);
     },
   );
+
+  test(
+    'housingProposalDeliveryTargets uses bound contact only (no avatar fan-out)',
+    () async {
+      await seedContact(
+        id: 'contact:leo',
+        displayName: 'Leo',
+        peerPublicMaterial: 'peer-leo',
+        avatarId: 'mdi:7',
+      );
+      await seedContact(
+        id: 'contact:roberr',
+        displayName: 'Ròberr',
+        peerPublicMaterial: 'peer-roberr',
+        avatarId: 'mdi:7',
+      );
+      final contacts = await db.listContacts();
+      final leo = contacts.firstWhere((c) => c.id == 'contact:leo');
+      final reachable = contacts.where(isRelayReachableContact).toList();
+
+      const planId = 'plan:avatar-collision';
+      final participant = Participant(
+        id: '$planId:p0',
+        displayName: 'Leo',
+        avatarId: 'mdi:7',
+        contactId: 'contact:leo',
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+
+      final targets = housingProposalDeliveryTargets(
+        participant: participant,
+        selectedContact: leo,
+        relayReachableContacts: reachable,
+      );
+
+      expect(targets.map((c) => c.id), ['contact:leo']);
+    },
+  );
+
+  test(
+    'housingProposalDeliveryTargets refuses ambiguous avatar-only matches',
+    () async {
+      await seedContact(
+        id: 'contact:leo',
+        displayName: 'Leo',
+        peerPublicMaterial: 'peer-leo',
+        avatarId: 'mdi:7',
+      );
+      await seedContact(
+        id: 'contact:roberr',
+        displayName: 'Ròberr',
+        peerPublicMaterial: 'peer-roberr',
+        avatarId: 'mdi:7',
+      );
+      final reachable = (await db.listContacts())
+          .where(isRelayReachableContact)
+          .toList();
+
+      const planId = 'plan:avatar-collision';
+      final participant = Participant(
+        id: '$planId:p0',
+        displayName: 'Leo',
+        avatarId: 'mdi:7',
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+
+      final targets = housingProposalDeliveryTargets(
+        participant: participant,
+        selectedContact: null,
+        relayReachableContacts: reachable,
+      );
+
+      // Name still unique for Leo — prefer name over ambiguous avatar.
+      expect(targets.map((c) => c.id), ['contact:leo']);
+
+      final nameless = Participant(
+        id: '$planId:p1',
+        displayName: '',
+        avatarId: 'mdi:7',
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+      final ambiguous = housingProposalDeliveryTargets(
+        participant: nameless,
+        selectedContact: null,
+        relayReachableContacts: reachable,
+      );
+      expect(ambiguous, isEmpty);
+    },
+  );
 }

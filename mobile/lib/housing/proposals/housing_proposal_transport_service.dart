@@ -512,10 +512,7 @@ class HousingProposalTransportService {
           'housing: repaired unanimous activation for pending $pendingId '
           'on $planId',
         );
-        await notifyAgreementActivatedIfNeeded(
-          planId: planId,
-          revisionId: pendingId,
-        );
+        // Amendments must not fire #9 (first-agreement only).
       }
     }
   }

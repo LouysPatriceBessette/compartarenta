@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../db/app_database.dart';
 import '../../prefs/app_preferences.dart';
-import '../../screens/housing/housing_active_plan_screen.dart';
 import '../../screens/housing/housing_amendment_detail_screen.dart';
 import '../../screens/housing/housing_amendment_journal_screen.dart';
 import '../../screens/housing/housing_invite_proposal_screen.dart';
@@ -10,9 +9,13 @@ import '../proposals/housing_proposal_transport_service.dart';
 import 'housing_amendment_summary.dart';
 import 'package:compartarenta/navigation/app_navigation.dart';
 
-/// Replaces the current route with the active-plan hub when [planId] is in force.
+/// Returns to the housing module hub when [planId] is in force.
 ///
-/// Returns true when navigation ran.
+/// When overlay routes sit above the housing module entry (e.g. Modifier le plan
+/// → détail), pops back to that entry instead of [pushReplacement] a second hub
+/// (which forced an extra Back through the amendment menu).
+///
+/// Returns true when the plan is active (navigation or already at root).
 Future<bool> openHousingActivePlanHubIfActive(
   BuildContext context, {
   required AppDatabase db,
@@ -21,17 +24,16 @@ Future<bool> openHousingActivePlanHubIfActive(
 }) async {
   final transport = HousingProposalTransportService(db);
   if (!await transport.hasActiveRevision(planId)) return false;
-  final packageId = await transport.primaryPackageIdForPlan(planId);
-  if (packageId == null || !context.mounted) return false;
-  await navigateToRoute<void>(context, 
-    MaterialPageRoute<void>(
-      builder: (_) => HousingActivePlanScreen(
-        planId: planId,
-        packageId: packageId,
-        prefs: prefs,
-      ),
-    ),
-  );
+  if (!context.mounted) return false;
+
+  final nav = Navigator.of(context);
+  if (nav.canPop()) {
+    nav.popUntil((route) => route.isFirst);
+    return true;
+  }
+
+  // Housing root already shows the active hub as entry body — do not stack
+  // another [HousingActivePlanScreen] via pushReplacement.
   return true;
 }
 

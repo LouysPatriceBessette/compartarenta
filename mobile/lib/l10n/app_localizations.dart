@@ -3611,6 +3611,24 @@ abstract class AppLocalizations {
   /// **'{name} responded to a housing proposal.'**
   String pushNotificationHousingDecisionBodyFrom(String name);
 
+  /// No description provided for @pushNotificationHousingAmendmentDecisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement change response'**
+  String get pushNotificationHousingAmendmentDecisionTitle;
+
+  /// No description provided for @pushNotificationHousingAmendmentDecisionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant responded to an agreement change request.'**
+  String get pushNotificationHousingAmendmentDecisionBody;
+
+  /// No description provided for @pushNotificationHousingAmendmentDecisionBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} responded to an agreement change request.'**
+  String pushNotificationHousingAmendmentDecisionBodyFrom(String name);
+
   /// No description provided for @pushNotificationHousingPaymentReminderBeforeDueTitle.
   ///
   /// In en, this message translates to:

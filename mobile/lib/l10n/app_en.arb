@@ -965,6 +965,12 @@
   "pushNotificationHousingDecisionTitle": "Housing proposal response",
   "pushNotificationHousingDecisionBody": "A participant responded to a housing proposal.",
   "pushNotificationHousingDecisionBodyFrom": "{name} responded to a housing proposal.",
+  "pushNotificationHousingAmendmentDecisionTitle": "Agreement change response",
+  "pushNotificationHousingAmendmentDecisionBody": "A participant responded to an agreement change request.",
+  "pushNotificationHousingAmendmentDecisionBodyFrom": "{name} responded to an agreement change request.",
+  "@pushNotificationHousingAmendmentDecisionBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "pushNotificationHousingPaymentReminderBeforeDueTitle": "Payment reminder",
   "pushNotificationHousingPaymentReminderBeforeDueBody": "{lineTitle} is due soon.",
   "@pushNotificationHousingPaymentReminderBeforeDueBody": {

@@ -16,6 +16,7 @@ Future<void> showHousingInvitationStatusDialog(
   required String planId,
   required AppPreferences prefs,
   String? revisionId,
+  String? dialogTitle,
 }) async {
   await DialogTapGuard.run<void>(
     DialogTapGuard.key('housingInvitationStatus', planId),
@@ -111,7 +112,7 @@ Future<void> showHousingInvitationStatusDialog(
               : l10n.housingInviteStatusDeadlineNotSet;
 
           return AlertDialog(
-            title: Text(l10n.housingInviteStatusDialogTitle),
+            title: Text(dialogTitle ?? l10n.housingInviteStatusDialogTitle),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

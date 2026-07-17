@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../activity/relay_activity_log_service.dart';
 import '../../db/app_database.dart';
 import '../../notifications/push_notification_service.dart';
+import '../amendment/housing_amendment_type.dart';
 
 /// Task 1.23 — unanimous activation local notification (deduped per [revisionId]).
 class HousingActivationNotificationService {
@@ -41,15 +44,24 @@ class HousingActivationNotificationService {
   }
 
   /// Shows activation notification once per [revisionId] on this device.
+  ///
+  /// Skips in-force amendments: #9 is only for the first unanimous agreement,
+  /// not for later plan-change activations.
   Future<void> maybeNotifyAgreementActivated({
     required String planId,
     required String revisionId,
     String? packageId,
   }) async {
-    // Sandbox bot peers share the process but must not post OS notifications.
-    if (!identical(_db, AppDatabase.maybeProcessScope)) return;
     if (!_canPersistDedupe) return;
     if (_inFlightRevisionIds.contains(revisionId)) return;
+    if (await _revisionIsInForceAmendment(revisionId)) {
+      debugPrint(
+        'housing: skip #9 activation notify for amendment revision=$revisionId',
+      );
+      return;
+    }
+    // Sandbox bot peers share the process but must not post OS notifications.
+    if (!identical(_db, AppDatabase.maybeProcessScope)) return;
     if (await alreadyNotified(revisionId)) return;
     _inFlightRevisionIds.add(revisionId);
     try {
@@ -69,6 +81,22 @@ class HousingActivationNotificationService {
       debugPrint('housing: activation notification failed: $e\n$st');
     } finally {
       _inFlightRevisionIds.remove(revisionId);
+    }
+  }
+
+  Future<bool> _revisionIsInForceAmendment(String revisionId) async {
+    final rev = await (_db.select(
+      _db.proposalRevisions,
+    )..where((t) => t.id.equals(revisionId))).getSingleOrNull();
+    if (rev == null) return false;
+    try {
+      final payload = jsonDecode(rev.payloadJson) as Map<String, dynamic>;
+      return HousingAmendmentTypeWire.parse(
+            payload['amendmentType'] as String?,
+          ) !=
+          null;
+    } catch (_) {
+      return false;
     }
   }
 }

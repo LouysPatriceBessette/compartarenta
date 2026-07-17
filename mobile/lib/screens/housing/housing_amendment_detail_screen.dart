@@ -600,6 +600,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                           planId: widget.planId,
                           prefs: widget.prefs,
                           revisionId: summary.revisionId,
+                          dialogTitle: l10n.housingAmendmentRequestStatusAction,
                         ),
                         child: Text(l10n.housingAmendmentRequestStatusAction),
                       ),

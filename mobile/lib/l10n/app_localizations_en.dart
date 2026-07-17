@@ -2099,6 +2099,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pushNotificationHousingAmendmentDecisionTitle =>
+      'Agreement change response';
+
+  @override
+  String get pushNotificationHousingAmendmentDecisionBody =>
+      'A participant responded to an agreement change request.';
+
+  @override
+  String pushNotificationHousingAmendmentDecisionBodyFrom(String name) {
+    return '$name responded to an agreement change request.';
+  }
+
+  @override
   String get pushNotificationHousingPaymentReminderBeforeDueTitle =>
       'Payment reminder';
 
