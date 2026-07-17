@@ -510,9 +510,11 @@ Wizard expense rows: `qa-housing-wizard-expense-<slug>` (e.g. `…-loyer`,
 
 Recurrence date range (debug builds): `showAppDateRangePicker` uses a Maestro-aware
 picker with one semantics id per day (`qa-housing-expense-recurrence-day-YYYY-MM-DD`)
-so day numbers are unambiguous when several months are visible. Flow: start day,
-end day, then **`qa-housing-expense-recurrence-range-save`** (`enabled: true`) —
-the picker does not auto-close after the end date.
+so day numbers are unambiguous when several months are visible. Turning
+**`qa-housing-expense-recurring-switch`** ON opens that picker immediately (no
+separate “Définir la récurrence” tap). Flow after the switch: start day, end day,
+then **`qa-housing-expense-recurrence-range-save`** (`enabled: true`) — the picker
+does not auto-close after the end date.
 
 ### Shared subflow
 

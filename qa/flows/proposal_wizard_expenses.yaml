@@ -75,11 +75,7 @@ appId: com.compartarenta.compartarenta.dev
 - tapOn:
     id: "qa-housing-expense-recurring-switch"
     checked: false
-- scrollUntilVisible:
-    element: "Définir la récurrence"
-    direction: DOWN
-    timeout: 30000
-- tapOn: "Définir la récurrence"
+# Switch ON opens the recurrence date-range picker immediately (no "Définir la récurrence" tap).
 - extendedWaitUntil:
     visible:
       id: "qa-housing-expense-recurrence-day-2027-06-15"
@@ -165,9 +161,12 @@ appId: com.compartarenta.compartarenta.dev
     timeout: 30000
 - takeScreenshot: 04_summary
 # --- Submit plan opens response deadline (payload build path) ---
-- tapOn: "Soumettre mon plan"
+# Prefer id: summary submit Text is not always exposed to Maestro (visible on screen).
+- tapOn:
+    id: "qa-housing-wizard-summary-submit"
 - extendedWaitUntil:
-    visible: "Délai de réponse"
+    visible:
+      id: "qa-housing-invite-response-deadline-dialog"
     timeout: 30000
 - takeScreenshot: 05_response_deadline
 - tapOn: "Annuler"

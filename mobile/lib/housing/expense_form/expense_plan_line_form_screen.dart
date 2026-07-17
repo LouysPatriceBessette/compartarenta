@@ -487,10 +487,35 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
             descriptionController: _descCtrl,
             amountController: _amountCtrl,
             isRecurring: _isRecurring,
-            onRecurringChanged: (v) => setState(() {
-              _isRecurring = v;
-              if (!v) _recurrence = null;
-            }),
+            onRecurringChanged: (v) async {
+              if (!v) {
+                setState(() {
+                  _isRecurring = false;
+                  _recurrence = null;
+                });
+                _notifyFormChanged();
+                return;
+              }
+              setState(() => _isRecurring = true);
+              final spec = await showExpenseRecurrenceFlow(
+                context: context,
+                prefs: widget.prefs,
+                periodEnd: widget.periodEnd,
+                initial: _recurrence,
+                dateFormat: widget.dateFormat,
+              );
+              if (!mounted) return;
+              if (spec == null) {
+                // Cancelled calendar: leave recurring off (same as never toggled).
+                setState(() {
+                  _isRecurring = false;
+                  _recurrence = null;
+                });
+              } else {
+                setState(() => _recurrence = spec);
+              }
+              _notifyFormChanged();
+            },
             recurrenceSummary: _recurrence == null
                 ? null
                 : formatRecurrenceSpecSummary(
