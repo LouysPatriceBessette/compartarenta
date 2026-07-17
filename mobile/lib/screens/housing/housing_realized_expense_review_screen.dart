@@ -773,14 +773,6 @@ class _HousingRealizedExpenseReviewScreenState
           return ListView(
             padding: screenBodyScrollPadding(context),
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 24),
-                child: Text(
-                  l10n.housingRealizedExpenseReviewSubmittedBy(ctx.payerName),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-              const SizedBox(height: 16),
               Text(
                 formatMinorAsMoney(
                   context,
@@ -803,6 +795,13 @@ class _HousingRealizedExpenseReviewScreenState
                             context,
                             label: l10n.housingRealizedExpenseReviewTypeLabel,
                             value: _kindLabel(l10n, expense.kind),
+                          ),
+                          const SizedBox(height: 8),
+                          _detailLine(
+                            context,
+                            label:
+                                l10n.housingRealizedExpenseReviewMadeByLabel,
+                            value: ctx.payerName,
                           ),
                           if (ctx.lineTitle.isNotEmpty) ...[
                             const SizedBox(height: 8),

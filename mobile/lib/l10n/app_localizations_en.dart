@@ -1047,6 +1047,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingRealizedExpenseReviewTypeLabel => 'Type';
 
   @override
+  String get housingRealizedExpenseReviewMadeByLabel => 'Made by';
+
+  @override
   String get housingRealizedExpenseReviewPlanLineLabel => 'Plan line';
 
   @override
@@ -1123,11 +1126,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get housingRealizedExpenseTransferReviewHint =>
       'Make sure you have received the transfer before accepting. There is no deadline.';
-
-  @override
-  String housingRealizedExpenseReviewSubmittedBy(String name) {
-    return 'Expense submitted by: $name';
-  }
 
   @override
   String housingRealizedExpenseReviewPayer(String name) {

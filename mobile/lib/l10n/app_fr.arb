@@ -380,6 +380,7 @@
   "housingRealizedExpenseReviewRejected": "Refusée",
   "housingRealizedExpenseReviewTitle": "Révision de dépense",
   "housingRealizedExpenseReviewTypeLabel": "Type",
+  "housingRealizedExpenseReviewMadeByLabel": "Faite par",
   "housingRealizedExpenseReviewPlanLineLabel": "Ligne du plan",
   "housingRealizedExpenseReviewDescriptionLabel": "Description / commentaire",
   "housingRealizedExpenseTransferToYouBy": "Viré à vous par: {name}",
@@ -427,12 +428,6 @@
     }
   },
   "housingRealizedExpenseTransferReviewHint": "Vérifiez que vous avez bien reçu le virement avant d'accepter. Il n'y a pas de délai limite.",
-  "housingRealizedExpenseReviewSubmittedBy": "Dépense faite par : {name}",
-  "@housingRealizedExpenseReviewSubmittedBy": {
-    "placeholders": {
-      "name": { "type": "String" }
-    }
-  },
   "housingRealizedExpenseReviewPayer": "Payée par {name}",
   "housingRealizedExpenseReviewRejections": "Refus",
   "housingRealizedExpenseAccept": "Accepter",

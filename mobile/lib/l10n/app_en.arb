@@ -420,6 +420,7 @@
   "housingRealizedExpenseReviewRejected": "Rejected",
   "housingRealizedExpenseReviewTitle": "Expense review",
   "housingRealizedExpenseReviewTypeLabel": "Type",
+  "housingRealizedExpenseReviewMadeByLabel": "Made by",
   "housingRealizedExpenseReviewPlanLineLabel": "Plan line",
   "housingRealizedExpenseReviewDescriptionLabel": "Description / comment",
   "housingRealizedExpenseTransferToYouBy": "Transferred to you by: {name}",
@@ -476,12 +477,6 @@
     }
   },
   "housingRealizedExpenseTransferReviewHint": "Make sure you have received the transfer before accepting. There is no deadline.",
-  "housingRealizedExpenseReviewSubmittedBy": "Expense submitted by: {name}",
-  "@housingRealizedExpenseReviewSubmittedBy": {
-    "placeholders": {
-      "name": { "type": "String" }
-    }
-  },
   "housingRealizedExpenseReviewPayer": "Paid by {name}",
   "@housingRealizedExpenseReviewPayer": {
     "placeholders": {

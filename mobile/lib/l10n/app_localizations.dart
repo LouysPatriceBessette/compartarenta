@@ -1936,6 +1936,12 @@ abstract class AppLocalizations {
   /// **'Type'**
   String get housingRealizedExpenseReviewTypeLabel;
 
+  /// No description provided for @housingRealizedExpenseReviewMadeByLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Made by'**
+  String get housingRealizedExpenseReviewMadeByLabel;
+
   /// No description provided for @housingRealizedExpenseReviewPlanLineLabel.
   ///
   /// In en, this message translates to:
@@ -2055,12 +2061,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make sure you have received the transfer before accepting. There is no deadline.'**
   String get housingRealizedExpenseTransferReviewHint;
-
-  /// No description provided for @housingRealizedExpenseReviewSubmittedBy.
-  ///
-  /// In en, this message translates to:
-  /// **'Expense submitted by: {name}'**
-  String housingRealizedExpenseReviewSubmittedBy(String name);
 
   /// No description provided for @housingRealizedExpenseReviewPayer.
   ///
