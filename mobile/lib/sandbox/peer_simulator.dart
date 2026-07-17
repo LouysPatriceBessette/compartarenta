@@ -183,11 +183,22 @@ class PeerSimulator {
     if (_disposed) return;
     final sw = Stopwatch()..start();
     debugPrint('PeerSimulator react start bots=${_bots.length}');
+    var acceptedAnyProposal = false;
     for (final bot in List<SandboxBotPeer>.from(_bots)) {
       try {
         await bot.orchestrator.processAllPendingHandshakes();
         await bot.orchestrator.pollSteadyStateInboxes();
-        await _autoAcceptPendingProposals(bot);
+        if (acceptedAnyProposal &&
+            _realizedExpenseBotDecisionDelay > Duration.zero) {
+          debugPrint(
+            'PeerSimulator proposal/amendment betweenBotDelay='
+            '${_realizedExpenseBotDecisionDelay.inMilliseconds}ms '
+            'before ${bot.displayName}',
+          );
+          await Future<void>.delayed(_realizedExpenseBotDecisionDelay);
+        }
+        final accepted = await _autoAcceptPendingProposals(bot);
+        if (accepted) acceptedAnyProposal = true;
         // Expense propose import requires activeRevisionId; sandbox mesh can
         // leave a bot pending-only after peers already activated.
         await _ensureBotPendingHousingPlansActivated(bot);
@@ -292,9 +303,31 @@ class PeerSimulator {
         // payer gate never fires — surface each bot accept explicitly.
         if (!humanIsPayer) {
           try {
+            final humanDb = AppDatabase.maybeProcessScope;
+            String expenseKind = RealizedExpenseKind.normal;
+            String? payerDisplayName;
+            if (humanDb != null) {
+              final humanExpense = await RealizedExpenseRepository(
+                humanDb,
+              ).getById(expenseId);
+              if (humanExpense != null) {
+                expenseKind = humanExpense.kind;
+                final roster = await participantsForPlan(
+                  humanDb,
+                  humanExpense.planId,
+                );
+                payerDisplayName = displayNameForParticipant(
+                  humanExpense.payerParticipantId,
+                  roster,
+                );
+              }
+            }
             await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
               senderDisplayName: bot.displayName,
               expenseId: expenseId,
+              expenseKind: expenseKind,
+              localUserIsPayer: false,
+              payerDisplayName: payerDisplayName,
             );
           } catch (e, st) {
             debugPrint(
@@ -572,9 +605,11 @@ class PeerSimulator {
     required String expenseId,
   }) => _ensureBotHasRealizedExpense(bot, expenseId: expenseId);
 
-  Future<void> _autoAcceptPendingProposals(SandboxBotPeer bot) async {
+  /// Returns true when this bot newly accepted at least one pending proposal.
+  Future<bool> _autoAcceptPendingProposals(SandboxBotPeer bot) async {
     final transport = HousingProposalTransportService(bot.db);
     final plans = await bot.db.listPlans();
+    var acceptedAny = false;
     for (final plan in plans) {
       if (plan.type != 'housing') continue;
       final revisionId = await transport.pendingRevisionIdForPlan(plan.id);
@@ -595,6 +630,7 @@ class PeerSimulator {
           status: ProposalResponseStatus.accepted,
           revisionId: revisionId,
         );
+        acceptedAny = true;
         debugPrint(
           'PeerSimulator ${bot.displayName} accepted proposal ${plan.id} '
           'rev=$revisionId',
@@ -606,6 +642,7 @@ class PeerSimulator {
         );
       }
     }
+    return acceptedAny;
   }
 
   /// True when this bot's `:self` row may still Accept (status pending).

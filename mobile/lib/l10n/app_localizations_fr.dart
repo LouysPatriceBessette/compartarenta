@@ -2098,6 +2098,35 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  ) {
+    return '$name a accepté la dépense de $payer.';
+  }
+
+  @override
+  String get pushNotificationHousingRealizedTransferAcceptedTitle =>
+      'Virement accepté';
+
+  @override
+  String get pushNotificationHousingRealizedTransferAcceptedBody =>
+      'Un participant a accepté votre virement.';
+
+  @override
+  String pushNotificationHousingRealizedTransferAcceptedBodyFrom(String name) {
+    return '$name a accepté votre virement.';
+  }
+
+  @override
+  String pushNotificationHousingRealizedTransferAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  ) {
+    return '$name a accepté le virement de $payer.';
+  }
+
+  @override
   String get pushNotificationHousingRealizedExpenseRejectedTitle =>
       'Dépense refusée';
 

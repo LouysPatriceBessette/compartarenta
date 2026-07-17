@@ -21,6 +21,7 @@ import 'housing_browser_notification_stub.dart'
     if (dart.library.html) 'housing_browser_notification_web.dart'
     as housing_browser;
 import 'wake_inbox_background_poll.dart';
+import '../housing/realized_expense/realized_expense_status.dart';
 
 /// FCM + local notifications for housing proposals (and future message types).
 ///
@@ -645,17 +646,51 @@ class PushNotificationService {
   static Future<void> showLocalHousingRealizedExpenseAcceptedNotification({
     required String senderDisplayName,
     String? expenseId,
+    String expenseKind = 'normal',
+    bool localUserIsPayer = true,
+    String? payerDisplayName,
   }) async {
     final prefs = await AppPreferences.load();
     if (!shouldDisplayHousingDecisionNotification(prefs)) return;
 
     final l10n = l10nForNotificationLocale(prefs: prefs);
-    final title = l10n.pushNotificationHousingRealizedExpenseAcceptedTitle;
-    final body = senderDisplayName.trim().isEmpty
-        ? l10n.pushNotificationHousingRealizedExpenseAcceptedBody
-        : l10n.pushNotificationHousingRealizedExpenseAcceptedBodyFrom(
-            senderDisplayName.trim(),
-          );
+    final isTransfer = expenseKind == RealizedExpenseKind.transfer ||
+        expenseKind == RealizedExpenseKind.reimbursement ||
+        expenseKind == RealizedExpenseKind.advance;
+    final sender = senderDisplayName.trim();
+    final payer = (payerDisplayName ?? '').trim();
+    final usePeerPayerCopy = !localUserIsPayer && payer.isNotEmpty && sender.isNotEmpty;
+    final String title;
+    final String body;
+    if (isTransfer) {
+      title = l10n.pushNotificationHousingRealizedTransferAcceptedTitle;
+      if (usePeerPayerCopy) {
+        body = l10n.pushNotificationHousingRealizedTransferAcceptedBodyFromPeer(
+          sender,
+          payer,
+        );
+      } else if (sender.isEmpty) {
+        body = l10n.pushNotificationHousingRealizedTransferAcceptedBody;
+      } else {
+        body = l10n.pushNotificationHousingRealizedTransferAcceptedBodyFrom(
+          sender,
+        );
+      }
+    } else {
+      title = l10n.pushNotificationHousingRealizedExpenseAcceptedTitle;
+      if (usePeerPayerCopy) {
+        body = l10n.pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer(
+          sender,
+          payer,
+        );
+      } else if (sender.isEmpty) {
+        body = l10n.pushNotificationHousingRealizedExpenseAcceptedBody;
+      } else {
+        body = l10n.pushNotificationHousingRealizedExpenseAcceptedBodyFrom(
+          sender,
+        );
+      }
+    }
     const qaNumber = 6;
     final displayTitle = notificationQaPrefix(qaNumber, title);
     final displayBody = notificationQaPrefix(qaNumber, body);

@@ -2073,6 +2073,35 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  ) {
+    return '$name accepted $payer\'s expense.';
+  }
+
+  @override
+  String get pushNotificationHousingRealizedTransferAcceptedTitle =>
+      'Transfer accepted';
+
+  @override
+  String get pushNotificationHousingRealizedTransferAcceptedBody =>
+      'A participant accepted your transfer.';
+
+  @override
+  String pushNotificationHousingRealizedTransferAcceptedBodyFrom(String name) {
+    return '$name accepted your transfer.';
+  }
+
+  @override
+  String pushNotificationHousingRealizedTransferAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  ) {
+    return '$name accepted $payer\'s transfer.';
+  }
+
+  @override
   String get pushNotificationHousingRealizedExpenseRejectedTitle =>
       'Expense rejected';
 

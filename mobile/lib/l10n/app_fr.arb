@@ -822,6 +822,26 @@
   "@pushNotificationHousingRealizedExpenseAcceptedBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": "{name} a accepté la dépense de {payer}.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedTitle": "Virement accepté",
+  "pushNotificationHousingRealizedTransferAcceptedBody": "Un participant a accepté votre virement.",
+  "pushNotificationHousingRealizedTransferAcceptedBodyFrom": "{name} a accepté votre virement.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": "{name} a accepté le virement de {payer}.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Dépense refusée",
   "pushNotificationHousingRealizedExpenseRejectedBody": "Un participant a refusé votre dépense.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} a refusé votre dépense.",

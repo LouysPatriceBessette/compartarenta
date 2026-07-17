@@ -946,6 +946,26 @@
   "pushNotificationHousingRealizedExpenseAcceptedTitle": "Expense accepted",
   "pushNotificationHousingRealizedExpenseAcceptedBody": "A participant accepted your expense.",
   "pushNotificationHousingRealizedExpenseAcceptedBodyFrom": "{name} accepted your expense.",
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": "{name} accepted {payer}'s expense.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedTitle": "Transfer accepted",
+  "pushNotificationHousingRealizedTransferAcceptedBody": "A participant accepted your transfer.",
+  "pushNotificationHousingRealizedTransferAcceptedBodyFrom": "{name} accepted your transfer.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": "{name} accepted {payer}'s transfer.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Expense rejected",
   "pushNotificationHousingRealizedExpenseRejectedBody": "A participant rejected your expense.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} rejected your expense.",

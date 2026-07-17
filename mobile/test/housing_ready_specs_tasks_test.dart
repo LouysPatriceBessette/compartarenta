@@ -58,6 +58,34 @@ void main() {
         isFalse,
       );
     });
+
+    test(
+      'planHasPublishedRealizedExpense true with multiple published rows',
+      () async {
+        final db = _DbForTesting(NativeDatabase.memory());
+        addTearDown(db.close);
+        const planId = 'plan:multi';
+        for (var i = 1; i <= 2; i++) {
+          await db.into(db.realizedExpenses).insert(
+            RealizedExpensesCompanion.insert(
+              id: 'exp:$i',
+              packageId: 'pkg:a',
+              planId: planId,
+              planLineId: '$planId:line:$i',
+              amountMinor: 1000 * i,
+              currency: 'CAD',
+              paymentDate: DateTime.utc(2026, 2, i),
+              payerParticipantId: '$planId:self',
+              kind: 'normal',
+              status: RealizedExpenseStatus.published,
+              createdAt: DateTime.utc(2026, 2, i),
+              updatedAt: DateTime.utc(2026, 2, i),
+            ),
+          );
+        }
+        expect(await planHasPublishedRealizedExpense(db, planId), isTrue);
+      },
+    );
   });
 
   group('housing_export_file_name', () {

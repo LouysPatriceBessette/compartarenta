@@ -29,6 +29,7 @@ import '../housing/participation/housing_participation_change_service.dart';
 import '../housing/participation/housing_participation_change_sync_service.dart';
 import '../housing/reminders/housing_payment_reminder_service.dart';
 import '../housing/realized_expense/realized_expense_ledger_service.dart';
+import '../housing/realized_expense/realized_expense_participants.dart';
 import '../housing/realized_expense/realized_expense_repository.dart';
 import '../housing/realized_expense/realized_expense_status.dart';
 import '../housing/realized_expense/realized_expense_sync_service.dart';
@@ -1788,9 +1789,22 @@ class HandshakeOrchestrator {
         selfParticipantId: selfParticipantId,
       );
       if (shouldNotify && _ownsDeviceHousingNotifications) {
+        final localUserIsPayer =
+            expense.payerParticipantId == selfParticipantId;
+        String? payerDisplayName;
+        if (!localUserIsPayer) {
+          final roster = await participantsForPlan(_db, expense.planId);
+          payerDisplayName = displayNameForParticipant(
+            expense.payerParticipantId,
+            roster,
+          );
+        }
         await PushNotificationService.showLocalHousingRealizedExpenseAcceptedNotification(
           senderDisplayName: senderContact.displayName,
           expenseId: expenseId,
+          expenseKind: expense.kind,
+          localUserIsPayer: localUserIsPayer,
+          payerDisplayName: payerDisplayName,
         );
       }
     }

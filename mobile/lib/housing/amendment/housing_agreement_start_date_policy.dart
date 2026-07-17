@@ -8,11 +8,14 @@ Future<bool> planHasPublishedRealizedExpense(
   AppDatabase db,
   String planId,
 ) async {
-  final row = await (db.select(db.realizedExpenses)
+  // Existence only: a plan may have many published expenses (cumulative QA).
+  // Do not use getSingleOrNull — that throws Bad state: Too many elements.
+  final rows = await (db.select(db.realizedExpenses)
         ..where((t) => t.planId.equals(planId))
-        ..where((t) => t.status.equals(RealizedExpenseStatus.published)))
-      .getSingleOrNull();
-  return row != null;
+        ..where((t) => t.status.equals(RealizedExpenseStatus.published))
+        ..limit(1))
+      .get();
+  return rows.isNotEmpty;
 }
 
 bool agreementStartDateWouldChange({

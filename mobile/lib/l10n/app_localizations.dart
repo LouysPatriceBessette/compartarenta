@@ -3575,6 +3575,42 @@ abstract class AppLocalizations {
   /// **'{name} accepted your expense.'**
   String pushNotificationHousingRealizedExpenseAcceptedBodyFrom(String name);
 
+  /// No description provided for @pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted {payer}\'s expense.'**
+  String pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  );
+
+  /// No description provided for @pushNotificationHousingRealizedTransferAcceptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer accepted'**
+  String get pushNotificationHousingRealizedTransferAcceptedTitle;
+
+  /// No description provided for @pushNotificationHousingRealizedTransferAcceptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A participant accepted your transfer.'**
+  String get pushNotificationHousingRealizedTransferAcceptedBody;
+
+  /// No description provided for @pushNotificationHousingRealizedTransferAcceptedBodyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your transfer.'**
+  String pushNotificationHousingRealizedTransferAcceptedBodyFrom(String name);
+
+  /// No description provided for @pushNotificationHousingRealizedTransferAcceptedBodyFromPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted {payer}\'s transfer.'**
+  String pushNotificationHousingRealizedTransferAcceptedBodyFromPeer(
+    String name,
+    String payer,
+  );
+
   /// No description provided for @pushNotificationHousingRealizedExpenseRejectedTitle.
   ///
   /// In en, this message translates to:

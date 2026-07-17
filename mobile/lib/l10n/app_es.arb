@@ -805,6 +805,26 @@
   "@pushNotificationHousingRealizedExpenseAcceptedBodyFrom": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": "{name} aceptó el gasto de {payer}.",
+  "@pushNotificationHousingRealizedExpenseAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedTitle": "Transferencia aceptada",
+  "pushNotificationHousingRealizedTransferAcceptedBody": "Un participante aceptó su transferencia.",
+  "pushNotificationHousingRealizedTransferAcceptedBodyFrom": "{name} aceptó su transferencia.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFrom": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": "{name} aceptó la transferencia de {payer}.",
+  "@pushNotificationHousingRealizedTransferAcceptedBodyFromPeer": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "payer": { "type": "String" }
+    }
+  },
   "pushNotificationHousingRealizedExpenseRejectedTitle": "Gasto rechazado",
   "pushNotificationHousingRealizedExpenseRejectedBody": "Un participante rechazó su gasto.",
   "pushNotificationHousingRealizedExpenseRejectedBodyFrom": "{name} rechazó su gasto.",
