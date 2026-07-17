@@ -315,7 +315,8 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
     );
 
     if (!mounted) return;
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,
@@ -353,7 +354,8 @@ class _ExpensePlanLineFormScreenState extends State<ExpensePlanLineFormScreen> {
       ),
     );
 
-    await navigateToRoute<void>(context, 
+    await navigateToChildRoute<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,

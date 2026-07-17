@@ -317,7 +317,9 @@ class _HousingAmendmentRequestScreenState extends State<HousingAmendmentRequestS
     void Function(Map<String, dynamic> payload)? patchRevisionPayload,
   }) async {
     if (!context.mounted) return;
-    await navigateToRoute<void>(context, 
+    // push (not pushReplacement): Back from Aperçu must return to Modifier le plan.
+    await navigateToChildRoute<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentSubmitPreviewScreen(
           planId: widget.planId,

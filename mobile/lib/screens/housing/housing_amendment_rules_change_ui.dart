@@ -65,8 +65,10 @@ class HousingAmendmentRulesChangeSection extends StatelessWidget {
     required AgreementRulesAmendmentComparison comparison,
     required int firstDayOfWeekIndex,
   }) {
+    // push (not pushReplacement): Back must return to Aperçu, not the hub.
     if (category == AgreementRulesChangeCategory.modified) {
-      navigateToRoute<void>(context, 
+      navigateToChildRoute<void>(
+        context,
         MaterialPageRoute<void>(
           builder: (_) => HousingAmendmentRulesModifiedGroupScreen(
             comparison: comparison,
@@ -76,7 +78,8 @@ class HousingAmendmentRulesChangeSection extends StatelessWidget {
       );
       return;
     }
-    navigateToRoute<void>(context, 
+    navigateToChildRoute<void>(
+      context,
       MaterialPageRoute<void>(
         builder: (_) => HousingAmendmentRulesListGroupScreen(
           category: category,

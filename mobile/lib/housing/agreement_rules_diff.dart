@@ -144,6 +144,13 @@ class AgreementRulesChangeBuckets {
   bool get hasMeaningfulChange =>
       added.isNotEmpty || modified.isNotEmpty || removed.isNotEmpty;
 
+  /// True when a rule's detail changed while it stayed disabled (forgot to enable).
+  bool get hasModifiedRuleDetailWhileDisabled => modified.any(
+        (e) =>
+            !e.enabledForAmendmentSide(useBefore: false) &&
+            !e.enabledForAmendmentSide(useBefore: true),
+      );
+
   List<AgreementRuleChangeEntry> entriesFor(AgreementRulesChangeCategory category) =>
       switch (category) {
         AgreementRulesChangeCategory.added => added,

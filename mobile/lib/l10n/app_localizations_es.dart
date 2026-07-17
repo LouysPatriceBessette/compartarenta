@@ -550,7 +550,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingAgreementRuleBuildingHint =>
-      'Sugerencias que puedes copiar o adaptar:\n• No fumadores\n• Sin mascotas\n• Nada en los pasillos\n• …';
+      'Sugerencias que puedes copiar o adaptar:\nNo fumadores\nSin mascotas\nNada en los pasillos\n…';
 
   @override
   String get housingAgreementRuleEdit => 'Editar';
@@ -1514,6 +1514,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get housingAmendmentRulesContinue => 'Continuar';
+
+  @override
+  String get housingAmendmentRulesModifiedWhileDisabledBody =>
+      'Ha modificado una regla sin activarla. ¿Está seguro de no haber olvidado nada?';
+
+  @override
+  String get housingAmendmentRulesModifiedWhileDisabledReview =>
+      'Quiero verificar';
+
+  @override
+  String get housingAmendmentRulesModifiedWhileDisabledContinue =>
+      'Continuar de todos modos';
 
   @override
   String get housingAgreementRuleStatusEnabled => 'Activada';

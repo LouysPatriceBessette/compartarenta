@@ -1183,9 +1183,9 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     );
   }
 
-  bool get _amendmentRulesHasMeaningfulChange {
+  AgreementRulesChangeBuckets? _amendmentRulesChangeBucketsOrNull() {
     if (!widget.amendmentRulesOnly || _amendmentBaselineRulesJson == null) {
-      return false;
+      return null;
     }
     final l10n = _lookupAppLocalizationsSync();
     final proposed = normalizeAgreementRulesForComparison(
@@ -1202,14 +1202,46 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       ),
       l10n,
     );
-    final buckets = computeAgreementRulesChangeBuckets(
+    return computeAgreementRulesChangeBuckets(
       baselineRules: baseline,
       baselineAgreement: _amendmentBaselineAgreement!,
       proposedRules: proposed,
       proposedAgreement: _agreementSliceFromWithdrawalForm(),
       l10n: l10n,
     );
-    return buckets.hasMeaningfulChange;
+  }
+
+  bool get _amendmentRulesHasMeaningfulChange {
+    return _amendmentRulesChangeBucketsOrNull()?.hasMeaningfulChange ?? false;
+  }
+
+  Future<bool> _confirmContinueWithDisabledModifiedRules(
+    AppLocalizations l10n,
+  ) async {
+    final buckets = _amendmentRulesChangeBucketsOrNull();
+    if (buckets == null || !buckets.hasModifiedRuleDetailWhileDisabled) {
+      return true;
+    }
+    final proceed = await showAppDialog<bool>(
+      context: context,
+      guardKey: 'housingAmendmentRules.modifiedWhileDisabled',
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.housingAmendmentRulesModifiedWhileDisabledBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.housingAmendmentRulesModifiedWhileDisabledReview),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.housingAmendmentRulesModifiedWhileDisabledContinue,
+            ),
+          ),
+        ],
+      ),
+    );
+    return proceed == true;
   }
 
   Future<void> _sanitizeAndPersistAgreementRulesForBindingSubmission(
@@ -1767,6 +1799,14 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
                                                 context,
                                               );
                                               try {
+                                                if (!await _confirmContinueWithDisabledModifiedRules(
+                                                  l10n,
+                                                )) {
+                                                  return;
+                                                }
+                                                if (!context.mounted) {
+                                                  return;
+                                                }
                                                 HousingRulesAmendmentPendingStore
                                                     .set(
                                                   _planId,
@@ -2979,7 +3019,15 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           l10n: l10n,
           pencilEnabled: !_buildingRulesEditing,
           onPencil: () => setState(() {
+            final hint = l10n.housingAgreementRuleBuildingHint;
             _buildingEditSnapshot = _buildingRulesBody.text;
+            // First edit of the install-time example: start from an empty field.
+            if (isAgreementBuildingRulesExampleText(
+              _buildingRulesBody.text,
+              hint,
+            )) {
+              _buildingRulesBody.clear();
+            }
             _buildingRulesEditing = true;
             _buildingExpanded = true;
           }),

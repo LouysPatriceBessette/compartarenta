@@ -1057,7 +1057,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingAgreementRuleBuildingHint.
   ///
   /// In en, this message translates to:
-  /// **'Suggested topics you can copy or adapt:\n• Non-smoking\n• No pets\n• Nothing stored in hallways\n• …'**
+  /// **'Suggested topics you can copy or adapt:\nNon-smoking\nNo pets\nNothing stored in hallways\n…'**
   String get housingAgreementRuleBuildingHint;
 
   /// No description provided for @housingAgreementRuleEdit.
@@ -2674,6 +2674,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get housingAmendmentRulesContinue;
+
+  /// No description provided for @housingAmendmentRulesModifiedWhileDisabledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You changed a rule without turning it on. Are you sure you did not forget something?'**
+  String get housingAmendmentRulesModifiedWhileDisabledBody;
+
+  /// No description provided for @housingAmendmentRulesModifiedWhileDisabledReview.
+  ///
+  /// In en, this message translates to:
+  /// **'I want to check'**
+  String get housingAmendmentRulesModifiedWhileDisabledReview;
+
+  /// No description provided for @housingAmendmentRulesModifiedWhileDisabledContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get housingAmendmentRulesModifiedWhileDisabledContinue;
 
   /// No description provided for @housingAgreementRuleStatusEnabled.
   ///

@@ -22,6 +22,14 @@ String agreementRuleBodyPlain(String body) {
       .join('\n');
 }
 
+/// True when [text] is still the install-time building-rules example hint
+/// (with or without legacy list bullets).
+bool isAgreementBuildingRulesExampleText(String text, String hint) {
+  final plainText = agreementRuleBodyPlain(text);
+  if (plainText.isEmpty) return false;
+  return plainText == agreementRuleBodyPlain(hint);
+}
+
 String agreementRuleEnabledStatusLabel(AppLocalizations l10n, bool enabled) =>
     enabled
         ? l10n.housingAgreementRuleStatusEnabled

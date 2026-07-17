@@ -221,4 +221,56 @@ void main() {
     expect(titles.length, titles.toSet().length);
     expect(buckets.added, hasLength(1));
   });
+
+  test('hasModifiedRuleDetailWhileDisabled when text changes while off', () {
+    final baseline = AgreementRulesDraft(
+      buildingRulesEnabled: false,
+      buildingRulesText: '',
+    );
+    final proposed = AgreementRulesDraft(
+      buildingRulesEnabled: false,
+      buildingRulesText: 'Pas de bugs!',
+    );
+    final proposedAgreement = AgreementRulesAgreementSlice(
+      clauses: 'Pas de bugs!',
+      minNoticeDays: 30,
+      penaltyMinor: 0,
+      withdrawalSameForAll: 'true',
+      withdrawalPerParticipantJson: '{}',
+    );
+    final buckets = computeAgreementRulesChangeBuckets(
+      baselineRules: baseline,
+      baselineAgreement: emptyAgreement,
+      proposedRules: proposed,
+      proposedAgreement: proposedAgreement,
+      l10n: l10n,
+    );
+    expect(buckets.hasModifiedRuleDetailWhileDisabled, isTrue);
+  });
+
+  test('hasModifiedRuleDetailWhileDisabled false when only disabling', () {
+    final baseline = AgreementRulesDraft(
+      buildingRulesEnabled: true,
+      buildingRulesText: 'Texte',
+    );
+    final proposed = AgreementRulesDraft(
+      buildingRulesEnabled: false,
+      buildingRulesText: 'Texte',
+    );
+    final agreement = AgreementRulesAgreementSlice(
+      clauses: 'Texte',
+      minNoticeDays: 30,
+      penaltyMinor: 0,
+      withdrawalSameForAll: 'true',
+      withdrawalPerParticipantJson: '{}',
+    );
+    final buckets = computeAgreementRulesChangeBuckets(
+      baselineRules: baseline,
+      baselineAgreement: agreement,
+      proposedRules: proposed,
+      proposedAgreement: agreement,
+      l10n: l10n,
+    );
+    expect(buckets.hasModifiedRuleDetailWhileDisabled, isFalse);
+  });
 }
