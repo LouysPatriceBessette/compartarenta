@@ -257,6 +257,7 @@
   "housingPlanParticipantNameLabel": "Name",
   "housingPlanChooseContactAction": "Choose contact",
   "housingPlanChangeContactAction": "Change contact",
+  "housingPlanRemoveParticipantHint": "Drag and drop a contact here to remove it.",
   "housingPlanContactRequired": "Choose a contact for each participant before continuing.",
   "housingPlanParticipantsMustBeConnected": "Each co-participant must be a connected contact (they use the app on their own account). Invite them from Contacts first, then select them here.",
   "housingPlanParticipantsPlaceholderNote": "Co-participants must be connected contacts. The plan keeps a name and avatar snapshot for historical readability.",

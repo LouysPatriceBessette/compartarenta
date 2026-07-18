@@ -653,6 +653,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get housingPlanChangeContactAction => 'Change contact';
 
   @override
+  String get housingPlanRemoveParticipantHint =>
+      'Drag and drop a contact here to remove it.';
+
+  @override
   String get housingPlanContactRequired =>
       'Choose a contact for each participant before continuing.';
 

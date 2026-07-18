@@ -143,8 +143,11 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   /// Other people on the plan (not including the signed-in profile).
   int _otherParticipantCount = 1;
 
-  /// Which co-participant form is shown when [_otherParticipantCount] > 1.
-  int _coEditorIndex = 0;
+  /// Visual roster order for step 1 (self + co indices). DnD reorders this list.
+  List<_ParticipantSlot> _slotOrder = const [
+    _ParticipantSlot.self(),
+    _ParticipantSlot.co(0),
+  ];
 
   final List<TextEditingController> _nameControllers = [];
   final List<String> _avatarIds = [];
@@ -218,6 +221,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }());
     _resizeCoParticipantEditors(_otherParticipantCount);
     _resizeWithdrawalEditors(1 + _otherParticipantCount);
+    _ensureDefaultSlotOrder();
     _boot = _loadFromDb();
   }
 
@@ -335,9 +339,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
       _avatarIds.removeLast();
       _contactIds.removeLast();
     }
-    if (_coEditorIndex >= n) {
-      _coEditorIndex = n > 0 ? n - 1 : 0;
-    }
   }
 
   void _resizeWithdrawalEditors(int total) {
@@ -356,6 +357,220 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     _resizeWithdrawalEditors(1 + n);
   }
 
+  void _ensureDefaultSlotOrder() {
+    _slotOrder = [
+      const _ParticipantSlot.self(),
+      for (var i = 0; i < _otherParticipantCount; i++) _ParticipantSlot.co(i),
+    ];
+  }
+
+  /// Keeps relative visual order when the co-participant count changes.
+  void _rebuildSlotOrderAfterCountChange(int newCount) {
+    final kept = <_ParticipantSlot>[];
+    var sawSelf = false;
+    for (final slot in _slotOrder) {
+      if (slot.isSelf) {
+        kept.add(slot);
+        sawSelf = true;
+      } else if (slot.coIndex < newCount) {
+        kept.add(slot);
+      }
+    }
+    if (!sawSelf) {
+      kept.insert(0, const _ParticipantSlot.self());
+    }
+    final presentCos = {
+      for (final slot in kept)
+        if (!slot.isSelf) slot.coIndex,
+    };
+    for (var i = 0; i < newCount; i++) {
+      if (!presentCos.contains(i)) {
+        kept.add(_ParticipantSlot.co(i));
+      }
+    }
+    _slotOrder = kept;
+  }
+
+  /// Projects visual co-sequence onto parallel arrays so `:p0` is first co in
+  /// [_slotOrder], then remaps co indices in [_slotOrder] to `0..n-1`.
+  void _syncCoArraysFromSlotOrder() {
+    final visualCoIndices = [
+      for (final slot in _slotOrder)
+        if (!slot.isSelf) slot.coIndex,
+    ];
+    if (visualCoIndices.length != _otherParticipantCount) {
+      return;
+    }
+    var alreadyIdentity = true;
+    for (var i = 0; i < visualCoIndices.length; i++) {
+      if (visualCoIndices[i] != i) {
+        alreadyIdentity = false;
+        break;
+      }
+    }
+    if (alreadyIdentity) {
+      return;
+    }
+
+    final names = [
+      for (final i in visualCoIndices) _nameControllers[i].text,
+    ];
+    final contacts = [
+      for (final i in visualCoIndices) _contactIds[i],
+    ];
+    final avatars = [
+      for (final i in visualCoIndices) _avatarIds[i],
+    ];
+    for (var i = 0; i < names.length; i++) {
+      _nameControllers[i].text = names[i];
+      _contactIds[i] = contacts[i];
+      _avatarIds[i] = avatars[i];
+    }
+
+    var nextCo = 0;
+    _slotOrder = [
+      for (final slot in _slotOrder)
+        if (slot.isSelf) slot else _ParticipantSlot.co(nextCo++),
+    ];
+  }
+
+  int? _firstEmptyCoIndexInVisualOrder() {
+    for (final slot in _slotOrder) {
+      if (slot.isSelf) continue;
+      if (_contactIds[slot.coIndex] == null) return slot.coIndex;
+    }
+    return null;
+  }
+
+  void _reorderParticipantSlot(int fromIndex, int toIndex) {
+    if (fromIndex == toIndex) return;
+    setState(() {
+      // Insert-before semantics (same as [ReorderableListView.onReorder]).
+      final item = _slotOrder.removeAt(fromIndex);
+      var newIndex = toIndex;
+      if (newIndex > fromIndex) {
+        newIndex -= 1;
+      }
+      _slotOrder.insert(newIndex, item);
+      _syncCoArraysFromSlotOrder();
+    });
+    unawaited(_autosavePlanDraftToDb());
+  }
+
+  /// Removes a co-participant dropped on the trash target. Self is never removed.
+  /// Keeps at least one co-participant (total participants ≥ 2).
+  void _removeParticipantSlotAt(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= _slotOrder.length) return;
+    final slot = _slotOrder[slotIndex];
+    if (slot.isSelf) return;
+    if (_otherParticipantCount <= 1) return;
+
+    setState(() {
+      final removeCo = slot.coIndex;
+      final remainingVisualCos = [
+        for (final s in _slotOrder)
+          if (!s.isSelf && s.coIndex != removeCo) s.coIndex,
+      ];
+      final names = [
+        for (final i in remainingVisualCos) _nameControllers[i].text,
+      ];
+      final contacts = [
+        for (final i in remainingVisualCos) _contactIds[i],
+      ];
+      final avatars = [
+        for (final i in remainingVisualCos) _avatarIds[i],
+      ];
+
+      final newSlots = <_ParticipantSlot>[];
+      var nextCo = 0;
+      for (final s in _slotOrder) {
+        if (s.isSelf) {
+          newSlots.add(s);
+        } else if (s.coIndex != removeCo) {
+          newSlots.add(_ParticipantSlot.co(nextCo++));
+        }
+      }
+
+      _otherParticipantCount = remainingVisualCos.length;
+      while (_nameControllers.length > _otherParticipantCount) {
+        _nameControllers.removeLast().dispose();
+        _avatarIds.removeLast();
+        _contactIds.removeLast();
+      }
+      while (_nameControllers.length < _otherParticipantCount) {
+        _nameControllers.add(TextEditingController());
+        _avatarIds.add('mdi:0');
+        _contactIds.add(null);
+      }
+      for (var i = 0; i < names.length; i++) {
+        _nameControllers[i].text = names[i];
+        _contactIds[i] = contacts[i];
+        _avatarIds[i] = avatars[i];
+      }
+      _slotOrder = newSlots;
+      _resizeWithdrawalEditors(1 + _otherParticipantCount);
+      _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(
+        0,
+        _otherParticipantCount,
+      );
+    });
+    unawaited(_autosavePlanDraftToDb());
+  }
+
+  bool _canAcceptTrashDrop(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= _slotOrder.length) return false;
+    if (_slotOrder[slotIndex].isSelf) return false;
+    return _otherParticipantCount > 1;
+  }
+
+  Future<void> _showRemoveParticipantTrashHint() async {
+    final l10n = AppLocalizations.of(context);
+    await showAppDialog<void>(
+      context: context,
+      guardKey: 'housingPlan.removeParticipantTrashHint',
+      builder: (dialogContext) {
+        return AlertDialog(
+          content: Text(l10n.housingPlanRemoveParticipantHint),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.commonOk),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _participantTrashDropTarget(AppLocalizations l10n) {
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (details) => _canAcceptTrashDrop(details.data),
+      onAcceptWithDetails: (details) {
+        _removeParticipantSlotAt(details.data);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty;
+        final theme = Theme.of(context);
+        return Material(
+          color: highlighted
+              ? theme.colorScheme.errorContainer
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: IconButton(
+            tooltip: l10n.housingPlanRemoveParticipantHint,
+            onPressed: _showRemoveParticipantTrashHint,
+            icon: Icon(
+              MdiIcons.trashCan,
+              color: highlighted
+                  ? theme.colorScheme.onErrorContainer
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   String _ratioParticipantLabel(AppLocalizations l10n, int index) {
     if (index == 0) {
       final selfName = widget.prefs.displayName.trim();
@@ -363,14 +578,6 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     }
     final nm = _nameControllers[index - 1].text.trim();
     return nm.isEmpty ? l10n.housingPlanCoParticipantUnnamed(index) : nm;
-  }
-
-  IconData _avatarIconFor(String avatarId) {
-    final idx = int.tryParse(avatarId.split(':').last);
-    if (idx == null || idx < 0 || idx >= _avatarIcons.length) {
-      return MdiIcons.account;
-    }
-    return _avatarIcons[idx];
   }
 
   Future<void> _chooseContactForParticipant(int index) async {
@@ -429,6 +636,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
 
     return Row(
       children: [
+        _participantTrashDropTarget(l10n),
         FutureBuilder<bool>(
           future: SandboxLifecycle.hasBlockingRealHousingPlan(_db),
           builder: (context, snap) {
@@ -495,6 +703,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
     if (_stepIndex == 0) {
+      _syncCoArraysFromSlotOrder();
       for (var j = 0; j < _otherParticipantCount; j++) {
         final id = _contactIds[j]!;
         final c = await _db.getContact(id);
@@ -664,8 +873,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   /// participants, dates, or step progress from before [deletePlanRelatedData].
   void _resetWizardInMemoryState() {
     _otherParticipantCount = 1;
-    _coEditorIndex = 0;
     _resizeParticipantEditors(1);
+    _ensureDefaultSlotOrder();
     for (var i = 0; i < _nameControllers.length; i++) {
       _nameControllers[i].clear();
       _avatarIds[i] = 'mdi:0';
@@ -724,6 +933,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
     if (coRows.isNotEmpty) {
       _otherParticipantCount = coRows.length.clamp(1, 7);
       _resizeParticipantEditors(_otherParticipantCount);
+      _ensureDefaultSlotOrder();
       for (var i = 0; i < coRows.length; i++) {
         final loadedContactId = coRows[i].contactId;
         Contact? loadedContact;
@@ -743,6 +953,8 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           _avatarIds[i] = 'mdi:0';
         }
       }
+    } else {
+      _ensureDefaultSlotOrder();
     }
 
     final agr = await _db.getAgreementForPlan(_planId);
@@ -967,6 +1179,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   }
 
   Future<void> _persistParticipants() async {
+    _syncCoArraysFromSlotOrder();
     final selfName = widget.prefs.displayName.trim();
     final selfAvatar = widget.prefs.avatarId.trim();
     await _db.upsertParticipant(
@@ -1894,20 +2107,30 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   void _applyOtherParticipantCount(int next) {
     final v = next.clamp(1, 7);
     setState(() {
+      _syncCoArraysFromSlotOrder();
       _otherParticipantCount = v;
       _resizeParticipantEditors(v);
-      _coEditorIndex = _coEditorIndex.clamp(0, v - 1);
+      _rebuildSlotOrderAfterCountChange(v);
+      _syncCoArraysFromSlotOrder();
       final maxPid = v;
       _withdrawalParticipantIndex = _withdrawalParticipantIndex.clamp(
         0,
         maxPid,
       );
     });
+    unawaited(_autosavePlanDraftToDb());
   }
 
   Widget _stepParticipants() {
     final l10n = AppLocalizations.of(context);
-    final i = _otherParticipantCount > 1 ? _coEditorIndex : 0;
+    final theme = Theme.of(context);
+    final tileColor = theme.colorScheme.primaryContainer;
+    final emptyCoIndex = _firstEmptyCoIndexInVisualOrder();
+    final selfName = () {
+      final n = widget.prefs.displayName.trim();
+      return n.isEmpty ? l10n.housingPlanYou : n;
+    }();
+
     return ListView(
       padding: screenBodyScrollPadding(context),
       children: [
@@ -1918,35 +2141,99 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
           header: true,
           child: const SizedBox(width: 1, height: 1),
         ),
-        if (_otherParticipantCount > 1) ...[
-          Row(
-            children: [
-              OutlinedButton(
-                onPressed: _coEditorIndex > 0
-                    ? () => setState(() => _coEditorIndex--)
-                    : null,
-                child: Text(l10n.housingPlanPreviousPerson),
-              ),
-              const Spacer(),
-              OutlinedButton(
-                onPressed: _coEditorIndex < _otherParticipantCount - 1
-                    ? () => setState(() => _coEditorIndex++)
-                    : null,
-                child: Text(l10n.housingPlanNextPerson),
-              ),
-            ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const crossAxisCount = 2;
+            const spacing = 8.0;
+            final tileWidth =
+                (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+                    crossAxisCount;
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                for (var index = 0; index < _slotOrder.length; index++)
+                  SizedBox(
+                    width: tileWidth,
+                    child: _buildParticipantSlotCell(
+                      index: index,
+                      tileColor: tileColor,
+                      selfName: selfName,
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        qaHousingProposalSemantics(
+          identifier: kQaHousingWizardChooseContact,
+          button: true,
+          enabled: emptyCoIndex != null,
+          onTap: emptyCoIndex == null
+              ? null
+              : () => _chooseContactForParticipant(emptyCoIndex),
+          child: FilledButton.icon(
+            icon: const Icon(Icons.contacts),
+            label: Text(l10n.housingPlanChooseContactAction),
+            onPressed: emptyCoIndex == null
+                ? null
+                : () => _chooseContactForParticipant(emptyCoIndex),
           ),
-          const SizedBox(height: 12),
-        ],
-        _HousingContactParticipantCard(
-          title: l10n.housingPlanCoParticipantUnnamed(i + 1),
-          displayName: _nameControllers[i].text.trim(),
-          avatarId: _avatarIds[i],
-          hasContact: _contactIds[i] != null,
-          avatarIconFor: _avatarIconFor,
-          onChooseContact: () => _chooseContactForParticipant(i),
         ),
       ],
+    );
+  }
+
+  Widget _buildParticipantSlotCell({
+    required int index,
+    required Color tileColor,
+    required String selfName,
+  }) {
+    final slot = _slotOrder[index];
+    final label = slot.isSelf
+        ? selfName
+        : () {
+            final name = _nameControllers[slot.coIndex].text.trim();
+            return name.isEmpty ? '?' : name;
+          }();
+    final tile = _ParticipantRosterTile(
+      label: label,
+      color: tileColor,
+    );
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (details) => details.data != index,
+      onAcceptWithDetails: (details) {
+        _reorderParticipantSlot(details.data, index);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final highlighted = candidateData.isNotEmpty;
+        return LongPressDraggable<int>(
+          data: index,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: MediaQuery.sizeOf(context).width * 0.4,
+              child: Opacity(opacity: 0.9, child: tile),
+            ),
+          ),
+          childWhenDragging: Opacity(opacity: 0.35, child: tile),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            decoration: highlighted
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  )
+                : null,
+            child: tile,
+          ),
+        );
+      },
     );
   }
 
@@ -3460,68 +3747,47 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
   }
 }
 
-class _HousingContactParticipantCard extends StatelessWidget {
-  const _HousingContactParticipantCard({
-    required this.title,
-    required this.displayName,
-    required this.avatarId,
-    required this.hasContact,
-    required this.avatarIconFor,
-    required this.onChooseContact,
+/// One cell in the step-1 participant roster (self or a co-participant index).
+class _ParticipantSlot {
+  const _ParticipantSlot.self() : coIndex = -1;
+  const _ParticipantSlot.co(this.coIndex);
+
+  /// `-1` means the local user (`:self`); otherwise index into co arrays.
+  final int coIndex;
+
+  bool get isSelf => coIndex < 0;
+}
+
+class _ParticipantRosterTile extends StatelessWidget {
+  const _ParticipantRosterTile({
+    required this.label,
+    required this.color,
   });
 
-  final String title;
-  final String displayName;
-  final String avatarId;
-  final bool hasContact;
-  final IconData Function(String avatarId) avatarIconFor;
-  final VoidCallback onChooseContact;
+  final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Card(
-      child: Semantics(
-        explicitChildNodes: true,
-        container: true,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(title, style: theme.textTheme.titleSmall),
-              const SizedBox(height: 12),
-              if (hasContact) ...[
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(child: Icon(avatarIconFor(avatarId))),
-                  title: Text(displayName),
-                  subtitle: Text(l10n.contactsTitle),
-                ),
-                const SizedBox(height: 8),
-              ] else
-                Text(
-                  l10n.housingPlanContactRequired,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-              qaHousingProposalSemantics(
-                identifier: kQaHousingWizardChooseContact,
-                button: true,
-                onTap: onChooseContact,
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.contacts),
-                  label: Text(
-                    hasContact
-                        ? l10n.housingPlanChangeContactAction
-                        : l10n.housingPlanChooseContactAction,
-                  ),
-                  onPressed: onChooseContact,
-                ),
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 56,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
           ),
         ),
       ),

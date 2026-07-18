@@ -1252,6 +1252,12 @@ abstract class AppLocalizations {
   /// **'Change contact'**
   String get housingPlanChangeContactAction;
 
+  /// No description provided for @housingPlanRemoveParticipantHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag and drop a contact here to remove it.'**
+  String get housingPlanRemoveParticipantHint;
+
   /// No description provided for @housingPlanContactRequired.
   ///
   /// In en, this message translates to:
