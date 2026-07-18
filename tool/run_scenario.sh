@@ -56,8 +56,12 @@ if [[ ! -f "${MANIFEST}" ]]; then
   exit 1
 fi
 
-DEVICE_DATE="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" device_date)"
+DEVICE_DATE_RAW="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" device_date)"
 TIMEZONE="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" timezone)"
+DEVICE_DATE="$(qa_resolve_device_date "${DEVICE_DATE_RAW}" "${TIMEZONE}")"
+if [[ "${DEVICE_DATE_RAW}" == "current" ]]; then
+  echo "device_date=current resolved to ${DEVICE_DATE} (${TIMEZONE})"
+fi
 FLOW_REL="$(python3 "${ROOT}/tool/qa_scenario_manifest.py" "${MANIFEST}" flow)"
 FLOW_PATH="${ROOT}/${FLOW_REL}"
 if [[ ! -f "${FLOW_PATH}" ]]; then

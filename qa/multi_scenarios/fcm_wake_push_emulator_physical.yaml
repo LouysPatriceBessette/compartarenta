@@ -1,6 +1,6 @@
 id: fcm_wake_push_emulator_physical
 description: FCM wake manual — seeded contacts + plan; kill recipient process; proposer submit; operator confirms notification
-device_date: "2026-07-08T12:00:00"
+device_date: current
 timezone: America/Toronto
 coordinator: fcm_wake_push
 mode: manual_wake

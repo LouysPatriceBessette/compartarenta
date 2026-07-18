@@ -1,6 +1,6 @@
 id: vehicle_session_start_gap
 description: Début de session avec différentiel positif — confirmation « Oui », retour hub et odomètre 50 100 km
-device_date: "2027-06-15T09:00:00"
+device_date: current
 timezone: America/Toronto
 seed: vehicle_session_start_gap
 flow: qa/flows/vehicle_session_start_gap.yaml

@@ -85,8 +85,12 @@ fi
 
 COORDINATOR="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" coordinator)"
 MODE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" mode 2>/dev/null || true)"
-DEVICE_DATE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" device_date)"
+DEVICE_DATE_RAW="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" device_date)"
 TIMEZONE="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" timezone)"
+DEVICE_DATE="$(qa_resolve_device_date "${DEVICE_DATE_RAW}" "${TIMEZONE}")"
+if [[ "${DEVICE_DATE_RAW}" == "current" ]]; then
+  echo "device_date=current resolved to ${DEVICE_DATE} (${TIMEZONE})"
+fi
 PROPOSER_SEED="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" role.proposer.seed)"
 RECIPIENT_SEED="$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" role.recipient.seed)"
 PROPOSER_FLOW="${ROOT}/$(python3 "${ROOT}/tool/qa_multi_scenario_manifest.py" "${MANIFEST}" role.proposer.flow)"

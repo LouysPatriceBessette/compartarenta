@@ -1,6 +1,6 @@
 id: vehicle_use_session
 description: Session d'utilisation — début 50 %, essence plein, garde-fous, fin 50 700 km / 25 %
-device_date: "2027-06-15T09:00:00"
+device_date: current
 timezone: America/Toronto
 seed: vehicle_use_session
 flow: qa/flows/vehicle_use_session.yaml

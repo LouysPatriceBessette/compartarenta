@@ -219,7 +219,16 @@ Regression guard and duplicate-handshake outcomes after device-binding merge (co
 
 Manifests live under `qa/multi_scenarios/`. Each declares `role_*` blocks (AVD, seed, flow) and a `coordinator` script in `tool/coordinators/`. The inviter exports the invitation short code to `app_flutter/compartarenta_qa_handshake_code.txt` for the orchestrator to pass to the invitee Maestro flow (`INVITE_CODE`).
 
-**Relay / TLS note:** scenarios that hit the production relay (`https://sync.incoherences.org`) must keep `device_date` **inside the relay certificate validity window**. Housing settlement scenarios use 2027-08-11 for hub gating; contact-handshake manifests use the current calendar date instead — pushing the emulator past the cert `notAfter` yields `CERTIFICATE_VERIFY_FAILED: certificate has expired` on `establishRouting`, and Maestro will hang waiting for the invitation short code.
+**Relay / TLS note:** scenarios that hit the production relay
+(`https://sync.incoherences.org`) must keep `device_date` **inside the relay
+certificate validity window**. Prefer `device_date: current` for contact
+handshake, housing proposal, FCM wake, and any other flow that calls the relay.
+Pinned past dates (e.g. an old calendar day before the cert `notBefore`) yield
+`CERTIFICATE_VERIFY_FAILED: certificate is not yet valid`; dates past
+`notAfter` yield `certificate has expired`. Housing settlement / period / renewal
+/ withdrawal / `proposal_response_expired` scenarios keep fixed **2027-** dates
+aligned with seeded `periodEnd` (hub gating only — they do not establish relay
+routing during the Maestro run).
 
 Artifacts: `qa/artifacts/multi-<scenario-id>/<UTC-timestamp>/`.
 
@@ -368,7 +377,7 @@ Ten manifests ship today (housing hub + plan-draft wizard). Anchor agreement
 | `voluntary_withdrawal_ack_j5` | 2027-08-11 | Participation banner (last ack day) |
 | `voluntary_withdrawal_effective` | 2027-08-11 | Withdrawal applied; no banner |
 | `proposal_response_expired` | 2027-08-11 | Archive list shows expired proposal |
-| `proposal_wizard_expenses` | 2027-06-15 | Plan-draft wizard: 3 expenses (equal / custom / Like), summary + response deadline |
+| `proposal_wizard_expenses` | current | Plan-draft wizard: 3 expenses (equal / custom / Like), summary + response deadline |
 
 List manifests from the shell:
 

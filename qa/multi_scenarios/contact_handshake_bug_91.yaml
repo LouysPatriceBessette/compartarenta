@@ -1,6 +1,6 @@
 id: contact_handshake_bug_91
 description: Probe for bug 9.1 — asymmetric handshake (inviter connected, invitee relay error)
-device_date: "2026-07-06T09:00:00"
+device_date: current
 timezone: America/Toronto
 coordinator: contact_handshake
 mode: bug_91_probe

@@ -1,6 +1,6 @@
 id: contact_handshake_happy_path
 description: Contact handshake happy path — inviter (Monica) + invitee (Louys), both Android
-device_date: "2026-07-06T09:00:00"
+device_date: current
 timezone: America/Toronto
 coordinator: contact_handshake
 mode: happy_path

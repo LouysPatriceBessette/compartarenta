@@ -1,6 +1,6 @@
 id: vehicle_standalone_meter_gap
 description: Lecture d'odomètre ponctuelle avec différentiel positif (+100 km) — confirmation « Oui », retour détail
-device_date: "2027-06-15T09:00:00"
+device_date: current
 timezone: America/Toronto
 seed: vehicle_standalone_meter_gap
 flow: qa/flows/vehicle_standalone_meter_gap.yaml

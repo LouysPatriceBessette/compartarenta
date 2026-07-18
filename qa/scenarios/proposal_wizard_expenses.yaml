@@ -1,6 +1,6 @@
 id: proposal_wizard_expenses
 description: Wizard ébauche — 3 dépenses (égal, custom, Comme pour), récurrence, résumé + délai de réponse
-device_date: "2027-06-15T09:00:00"
+device_date: current
 timezone: America/Toronto
 seed: proposal_wizard_expenses
 flow: qa/flows/proposal_wizard_expenses.yaml

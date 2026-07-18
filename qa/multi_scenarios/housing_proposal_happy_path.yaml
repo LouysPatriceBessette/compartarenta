@@ -1,6 +1,6 @@
 id: housing_proposal_happy_path
 description: Housing proposal happy path — Monica sends, Louys accepts, both land on active agreement hub (Android)
-device_date: "2026-07-07T09:00:00"
+device_date: current
 timezone: America/Toronto
 coordinator: housing_proposal
 mode: happy_path
