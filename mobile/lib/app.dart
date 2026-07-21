@@ -403,6 +403,10 @@ class _CompartarentaAppState extends State<CompartarentaApp>
                   prefs: prefs,
                   child: SimulationRibbonHost(
                     prefs: prefs,
+                    hideWhenActive:
+                        widget.config.screenshotMode &&
+                        !kIsWeb &&
+                        defaultTargetPlatform == TargetPlatform.android,
                     child: SandboxEightHourNudgeHost(
                       prefs: prefs,
                       child: SafeArea(

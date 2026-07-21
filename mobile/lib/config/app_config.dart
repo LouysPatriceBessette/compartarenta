@@ -6,7 +6,8 @@ class AppConfig {
     required this.apiBaseUrl,
     this.entitlementBaseUrl,
     this.gitSha = '',
-  });
+    bool screenshotMode = false,
+  }) : screenshotMode = environment == AppEnvironment.dev && screenshotMode;
 
   final AppEnvironment environment;
   final Uri apiBaseUrl;
@@ -26,6 +27,12 @@ class AppConfig {
   /// `--dart-define=GIT_SHA=...` by `mobile/tool/compute_version.sh`. Empty
   /// string for unstamped `flutter run` development builds.
   final String gitSha;
+
+  /// Hides the Simulation ribbon for Android screenshot capture.
+  ///
+  /// The constructor gates this to the dev environment. The UI additionally
+  /// restricts it to native Android.
+  final bool screenshotMode;
 
   static AppEnvironment _parseEnv(String value) {
     switch (value.trim().toLowerCase()) {
@@ -47,6 +54,10 @@ class AppConfig {
     const entitlementBaseUrlRaw =
         String.fromEnvironment('ENTITLEMENT_BASE_URL', defaultValue: '');
     const gitSha = String.fromEnvironment('GIT_SHA', defaultValue: '');
+    const screenshotMode = bool.fromEnvironment(
+      'SCREENSHOT',
+      defaultValue: false,
+    );
 
     Uri? entitlementBaseUrl;
     if (entitlementBaseUrlRaw.trim().isNotEmpty) {
@@ -58,6 +69,7 @@ class AppConfig {
       apiBaseUrl: Uri.parse(apiBaseUrl),
       entitlementBaseUrl: entitlementBaseUrl,
       gitSha: gitSha,
+      screenshotMode: screenshotMode,
     );
   }
 }

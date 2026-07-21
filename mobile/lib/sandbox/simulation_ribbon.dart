@@ -13,10 +13,12 @@ class SimulationRibbonHost extends StatelessWidget {
     super.key,
     required this.prefs,
     required this.child,
+    this.hideWhenActive = false,
   });
 
   final AppPreferences prefs;
   final Widget child;
+  final bool hideWhenActive;
 
   /// Previous diagonal label used 11; horizontal banner is 10% larger.
   static const double _labelFontSize = 11 * 1.10;
@@ -34,7 +36,7 @@ class SimulationRibbonHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!SandboxMode.isActive(prefs)) return child;
+    if (!SandboxMode.isActive(prefs) || hideWhenActive) return child;
     final label = AppLocalizations.of(context).sandboxRibbonLabel;
     final topInset = MediaQuery.paddingOf(context).top;
 

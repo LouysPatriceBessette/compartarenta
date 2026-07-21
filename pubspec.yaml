@@ -52,6 +52,8 @@ melos:
         Run the app (dev flavor) from mobile. Defaults to the real relay
         (https://sync.incoherences.org); override with the API_BASE_URL
         env var. Extra args go through (e.g. -d chrome, -d linux).
+        Add --screenshot on Android to hide the Simulation ribbon while
+        capturing app screenshots; the Simulation mode remains active.
       run: cd mobile && ./tool/run_dev.sh
 
     run:dev:web:

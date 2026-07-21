@@ -13,7 +13,17 @@ ensure_workspace_pub_get "${ROOT}"
 # Extra args (e.g. -d linux) come from the command line, or from FLUTTER_DEVICE when unset.
 # Example: dart run melos run run:dev -- -d chrome
 # Example: FLUTTER_DEVICE=linux dart run melos run run:dev
-extra=("$@")
+# Android screenshots without the Simulation ribbon:
+#   ./tool/melosw run run:dev -- -d <deviceId> --screenshot
+screenshot_mode=false
+extra=()
+for arg in "$@"; do
+  if [[ "${arg}" == "--screenshot" ]]; then
+    screenshot_mode=true
+  else
+    extra+=("${arg}")
+  fi
+done
 if [[ ${#extra[@]} -eq 0 && -n "${FLUTTER_DEVICE:-}" ]]; then
   extra=(-d "${FLUTTER_DEVICE}")
 fi
@@ -38,6 +48,10 @@ for ((i = 0; i < ${#extra[@]}; i++)); do
     esac
   fi
 done
+if [[ "${screenshot_mode}" == "true" && "${install_mobile_target}" != "true" ]]; then
+  echo "--screenshot is available only for the Android dev APK." >&2
+  exit 2
+fi
 
 run_args=(
   run
@@ -46,6 +60,9 @@ run_args=(
   --dart-define=ENV=dev
   --dart-define="API_BASE_URL=${API_BASE_URL_VALUE}"
 )
+if [[ "${screenshot_mode}" == "true" ]]; then
+  run_args+=(--dart-define=SCREENSHOT=true)
+fi
 if [[ -n "${ENTITLEMENT_BASE_URL_VALUE}" ]]; then
   run_args+=(--dart-define="ENTITLEMENT_BASE_URL=${ENTITLEMENT_BASE_URL_VALUE}")
 fi
