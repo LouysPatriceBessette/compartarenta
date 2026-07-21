@@ -126,7 +126,7 @@ Future<void> bootstrap() async {
         try {
           final prefs = early;
           final identity = IdentityKeystore.secureStorage();
-          final relay = SandboxRelay.ensureFresh();
+          final relay = SandboxRelay.instance;
           final orchestrator = HandshakeOrchestrator(
             db: appDb,
             identity: identity,
@@ -137,7 +137,15 @@ Future<void> bootstrap() async {
             deviceBinding: DeviceBindingService(),
           );
           HandshakeOrchestrator.install(orchestrator);
-          PeerSimulator.install(relay: relay, prefs: prefs);
+          final peerSimulator = PeerSimulator.ensureInstalled(
+            relay: relay,
+            prefs: prefs,
+          );
+          // Bot peers are process-local; prefs + human contacts survive cold
+          // start. Rebuild bots before the first proposal/amendment react.
+          await peerSimulator.restoreInvitedBotsIfNeeded(
+            humanOrchestrator: orchestrator,
+          );
           if (kDebugMode) {
             RelayDiagnostics.steadyInboxPollLogging = true;
           }

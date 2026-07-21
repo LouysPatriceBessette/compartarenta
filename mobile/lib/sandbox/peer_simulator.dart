@@ -23,6 +23,7 @@ import '../notifications/push_notification_service.dart';
 import '../prefs/app_preferences.dart';
 import '../relay/handshake_orchestrator.dart';
 import '../relay/identity_keystore.dart';
+import '../relay/routing.dart';
 import '../relay/testing/fake_relay_client.dart';
 import 'sandbox_bot_catalog.dart';
 import 'sandbox_mode.dart';
@@ -84,6 +85,17 @@ class PeerSimulator {
     return sim;
   }
 
+  static PeerSimulator ensureInstalled({
+    required FakeRelayClient relay,
+    required AppPreferences prefs,
+  }) {
+    final current = _instance;
+    if (current != null && identical(current._relay, relay)) {
+      return current;
+    }
+    return install(relay: relay, prefs: prefs);
+  }
+
   static void clearInstalled() {
     _instance?.dispose();
     _instance = null;
@@ -110,6 +122,90 @@ class PeerSimulator {
   List<SandboxBotPeer> get bots => List.unmodifiable(_bots);
 
   int get invitedCount => _bots.length;
+
+  /// Rebuild in-memory bot peers after a process cold start.
+  ///
+  /// Human SQLite + [AppPreferences.sandboxInvitedBotCount] survive APK
+  /// reinstall / process death; [SandboxRelay] and bot DBs do not. Catalog
+  /// bots use deterministic identity seeds, so respawning indices `0..n-1`
+  /// restores the same long-term keys as the persisted human contacts.
+  Future<int> restoreInvitedBotsIfNeeded({
+    required HandshakeOrchestrator humanOrchestrator,
+  }) async {
+    if (_disposed) return 0;
+    if (!SandboxMode.isActive(_prefs)) return 0;
+    if (_bots.isNotEmpty) return _bots.length;
+
+    final target = _prefs.sandboxInvitedBotCount.clamp(
+      0,
+      SandboxBotCatalog.maxBots,
+    );
+    if (target <= 0) return 0;
+
+    final humanDb = AppDatabase.maybeProcessScope;
+    if (humanDb == null) {
+      debugPrint('PeerSimulator restore skipped: no human AppDatabase');
+      return 0;
+    }
+    final humanContacts = ContactsRepository(humanDb);
+    final humanRows = await humanContacts.list();
+    final humanPub = await humanOrchestrator.selfLongTermPublicKey();
+    final humanPubB64 = RelayRouting.b64(humanPub);
+    final humanName = _prefs.displayName.trim().isEmpty
+        ? 'Human'
+        : _prefs.displayName.trim();
+    final humanAvatar = _prefs.avatarId.trim().isEmpty
+        ? 'mdi:0'
+        : _prefs.avatarId.trim();
+
+    debugPrint('PeerSimulator restore start target=$target');
+    pauseReactions();
+    try {
+      for (var i = 0; i < target; i++) {
+        final name = SandboxBotCatalog.displayNames[i];
+        final avatar = SandboxBotCatalog.avatarIdForCatalogIndex(i);
+        final bot = await _spawnBot(displayName: name, avatarId: avatar);
+        final botPubB64 = await bot.identity.publicKeyB64();
+        final matched = humanRows.any(
+          (c) =>
+              c.kind == 'connected' &&
+              (c.peerPublicMaterial ?? '') == botPubB64,
+        );
+        if (!matched) {
+          debugPrint(
+            'PeerSimulator restore: no human contact for $name '
+            '(pubkey mismatch) — aborting bot teardown',
+          );
+          await _disposeBotPeer(bot);
+          for (final prior in List<SandboxBotPeer>.from(_bots)) {
+            await _disposeBotPeer(prior);
+          }
+          _bots.clear();
+          return 0;
+        }
+        await _injectConnectedPeer(
+          owner: bot,
+          contactId: 'contact:sandbox:restored:human',
+          peerPublicKey: humanPub,
+          peerPublicB64: humanPubB64,
+          displayName: humanName,
+          avatarId: humanAvatar,
+        );
+        _bots.add(bot);
+      }
+
+      for (var i = 0; i < _bots.length; i++) {
+        for (var j = i + 1; j < _bots.length; j++) {
+          await _rebindBotPair(a: _bots[i], b: _bots[j]);
+        }
+      }
+    } finally {
+      resumeReactions();
+    }
+
+    debugPrint('PeerSimulator restore end bots=${_bots.length}');
+    return _bots.length;
+  }
 
   /// Suppress inbox reactions while the human send path posts envelopes.
   void pauseReactions() {
@@ -759,6 +855,82 @@ class PeerSimulator {
     await invitee.orchestrator.processAllPendingHandshakes();
     await inviter.orchestrator.processAllPendingHandshakes();
     await invitee.orchestrator.processAllPendingHandshakes();
+  }
+
+  /// Cold-start mesh: inject contacts + FakeRelay routing without handshake.
+  Future<void> _rebindBotPair({
+    required SandboxBotPeer a,
+    required SandboxBotPeer b,
+  }) async {
+    botPairConnectAttempts++;
+    final aPub = await a.identity.publicKey();
+    final bPub = await b.identity.publicKey();
+    final aPubB64 = RelayRouting.b64(aPub);
+    final bPubB64 = RelayRouting.b64(bPub);
+    await _injectConnectedPeer(
+      owner: a,
+      contactId: 'contact:sandbox:restored:${b.displayName}',
+      peerPublicKey: bPub,
+      peerPublicB64: bPubB64,
+      displayName: b.displayName,
+      avatarId: b.avatarId,
+    );
+    await _injectConnectedPeer(
+      owner: b,
+      contactId: 'contact:sandbox:restored:${a.displayName}',
+      peerPublicKey: aPub,
+      peerPublicB64: aPubB64,
+      displayName: a.displayName,
+      avatarId: a.avatarId,
+    );
+  }
+
+  Future<void> _injectConnectedPeer({
+    required SandboxBotPeer owner,
+    required String contactId,
+    required Uint8List peerPublicKey,
+    required String peerPublicB64,
+    required String displayName,
+    required String avatarId,
+  }) async {
+    final selfPub = await owner.identity.publicKey();
+    final selfListen = await RelayRouting.steadyStateAddress(
+      firstPub: selfPub,
+      secondPub: peerPublicKey,
+    );
+    final peerListen = await RelayRouting.steadyStateAddress(
+      firstPub: peerPublicKey,
+      secondPub: selfPub,
+    );
+    await _relay.establishRouting(
+      selfIdentity: selfListen,
+      peerIdentity: peerListen,
+    );
+    await _relay.establishRouting(
+      selfIdentity: peerListen,
+      peerIdentity: selfListen,
+    );
+    final now = DateTime.now().toUtc();
+    await owner.db.upsertContact(
+      ContactsCompanion.insert(
+        id: contactId,
+        kind: 'connected',
+        displayName: displayName,
+        avatarId: avatarId,
+        relayRoutingId: drift.Value(RelayRouting.b64(peerListen)),
+        peerPublicMaterial: drift.Value(peerPublicB64),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
+  Future<void> _disposeBotPeer(SandboxBotPeer bot) async {
+    bot.orchestrator.stopPolling();
+    await bot.db.close();
+    try {
+      if (bot.dbFile.existsSync()) bot.dbFile.deleteSync();
+    } catch (_) {}
   }
 
   @visibleForTesting

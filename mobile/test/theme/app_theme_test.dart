@@ -33,5 +33,7 @@ void main() {
     expect(scheme.onSurfaceVariant, AppBrandColors.peach);
     expect(scheme.outlineVariant, AppBrandColors.clay);
     expect(theme.cardTheme.color, AppBrandColors.darkCard);
+    expect(AppBrandColors.darkCard, AppBrandColors.clay);
+    expect(AppBrandColors.darkCard, isNot(AppBrandColors.darkBackground));
   });
 }

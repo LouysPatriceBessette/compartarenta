@@ -13,6 +13,7 @@ import 'package:compartarenta/housing/proposals/plan_agreement_proposal_service.
 import 'package:compartarenta/prefs/app_preferences.dart';
 import 'package:compartarenta/relay/handshake_orchestrator.dart';
 import 'package:compartarenta/relay/identity_keystore.dart';
+import 'package:compartarenta/relay/routing.dart';
 import 'package:compartarenta/sandbox/peer_simulator.dart';
 import 'package:compartarenta/sandbox/sandbox_relay.dart';
 import 'package:drift/drift.dart' as drift;
@@ -72,6 +73,12 @@ void main() {
       );
       expect(bot2, isNotNull);
       expect(bot2!.displayName, 'Monica');
+      final afterEngineRestart = PeerSimulator.ensureInstalled(
+        relay: SandboxRelay.instance,
+        prefs: prefs,
+      );
+      expect(afterEngineRestart, same(sim));
+      expect(afterEngineRestart.invitedCount, 2);
       final bot2Pub = await bot2.identity.publicKeyB64();
       final bot1Contacts = await bot.contacts.list();
       expect(
@@ -118,6 +125,127 @@ void main() {
       PeerSimulator.clearInstalled();
       SandboxRelay.clear();
       HandshakeOrchestrator.clearInstalledInstanceAfterDevDatabaseReset();
+      await humanDb.close();
+      if (humanFile.existsSync()) humanFile.deleteSync();
+    },
+  );
+
+  test(
+    'restoreInvitedBotsIfNeeded rebuilds catalog bots after process cold start',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'sandbox.mode': true,
+        'profile.displayName': 'Human',
+        'profile.avatarId': 'mdi:0',
+      });
+      final prefs = await AppPreferences.load();
+      final relay = SandboxRelay.ensureFresh();
+      final humanFile = File(
+        '${Directory.systemTemp.path}/sandbox_peer_human_cold_restore.sqlite',
+      );
+      if (humanFile.existsSync()) humanFile.deleteSync();
+      final humanDb = _Db(NativeDatabase(humanFile));
+      AppDatabase.bindProcessScope(humanDb);
+      final humanSeed = Uint8List.fromList(
+        List<int>.generate(32, (i) => i + 11),
+      );
+      final humanOrch = HandshakeOrchestrator(
+        db: humanDb,
+        identity: InMemoryIdentityKeystore(seed: humanSeed),
+        relay: relay,
+        contacts: ContactsRepository(humanDb),
+        invitations: ContactInvitationsRepository(humanDb),
+        pollInterval: const Duration(days: 1),
+        deviceBinding: DeviceBindingService.forTesting(
+          'sandbox-human-cold-restore',
+        ),
+      );
+      humanOrch.enableSandboxPeerAutoAccept(
+        profile: () async => (displayName: 'Human', avatarId: 'mdi:0'),
+      );
+      HandshakeOrchestrator.install(humanOrch);
+      final sim = PeerSimulator.install(relay: relay, prefs: prefs);
+
+      final bot = await sim.inviteNextBot(
+        humanOrchestrator: humanOrch,
+        humanDisplayName: 'Human',
+        humanAvatarId: 'mdi:0',
+      );
+      final bot2 = await sim.inviteNextBot(
+        humanOrchestrator: humanOrch,
+        humanDisplayName: 'Human',
+        humanAvatarId: 'mdi:0',
+      );
+      expect(bot, isNotNull);
+      expect(bot2, isNotNull);
+      expect(prefs.sandboxInvitedBotCount, 2);
+
+      // Process death: bots + FakeRelay gone; human DB + prefs remain.
+      PeerSimulator.clearInstalled();
+      HandshakeOrchestrator.clearInstalledInstanceAfterDevDatabaseReset();
+      final coldRelay = SandboxRelay.ensureFresh();
+      final coldHumanOrch = HandshakeOrchestrator(
+        db: humanDb,
+        identity: InMemoryIdentityKeystore(seed: humanSeed),
+        relay: coldRelay,
+        contacts: ContactsRepository(humanDb),
+        invitations: ContactInvitationsRepository(humanDb),
+        pollInterval: const Duration(days: 1),
+        deviceBinding: DeviceBindingService.forTesting(
+          'sandbox-human-cold-restore',
+        ),
+      );
+      coldHumanOrch.enableSandboxPeerAutoAccept(
+        profile: () async => (displayName: 'Human', avatarId: 'mdi:0'),
+      );
+      HandshakeOrchestrator.install(coldHumanOrch);
+      final coldSim = PeerSimulator.ensureInstalled(
+        relay: coldRelay,
+        prefs: prefs,
+      );
+      expect(coldSim.invitedCount, 0);
+
+      final restored = await coldSim.restoreInvitedBotsIfNeeded(
+        humanOrchestrator: coldHumanOrch,
+      );
+      expect(restored, 2);
+      expect(coldSim.invitedCount, 2);
+      expect(coldSim.bots[0].displayName, 'Louys');
+      expect(coldSim.bots[1].displayName, 'Monica');
+      expect(
+        await coldSim.botsAreConnectedForTest(
+          coldSim.bots[0],
+          coldSim.bots[1],
+        ),
+        isTrue,
+      );
+
+      final humanPubB64 = RelayRouting.b64(
+        await coldHumanOrch.selfLongTermPublicKey(),
+      );
+      final louysContacts = await coldSim.bots[0].contacts.list();
+      expect(
+        louysContacts.any(
+          (c) =>
+              c.kind == 'connected' &&
+              (c.peerPublicMaterial ?? '') == humanPubB64,
+        ),
+        isTrue,
+        reason: 'restored bot must have the human as a connected contact',
+      );
+
+      // Idempotent when bots already live (engine-restart path).
+      expect(
+        await coldSim.restoreInvitedBotsIfNeeded(
+          humanOrchestrator: coldHumanOrch,
+        ),
+        2,
+      );
+
+      PeerSimulator.clearInstalled();
+      SandboxRelay.clear();
+      HandshakeOrchestrator.clearInstalledInstanceAfterDevDatabaseReset();
+      AppDatabase.clearProcessScopeIfReferencing(humanDb);
       await humanDb.close();
       if (humanFile.existsSync()) humanFile.deleteSync();
     },

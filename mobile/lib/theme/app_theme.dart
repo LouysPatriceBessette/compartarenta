@@ -25,8 +25,9 @@ abstract final class AppBrandColors {
   /// Website dark `--bg`: 32% clay mixed with #2A211C.
   static const Color darkBackground = Color(0xFF442519);
 
-  /// Website dark `--card`: 36% clay mixed with #2A211C.
-  static const Color darkCard = Color(0xFF482518);
+  /// Elevated dark card surface. Palette [clay] — paler than [darkBackground]
+  /// so hub tiles and other Cards remain visible.
+  static const Color darkCard = clay;
 }
 
 ColorScheme _lightColorScheme() {
@@ -94,8 +95,8 @@ ColorScheme _darkColorScheme() {
     surfaceContainerLowest: const Color(0xFF2A211C),
     surfaceContainerLow: AppBrandColors.darkCard,
     surfaceContainer: AppBrandColors.darkCard,
-    surfaceContainerHigh: AppBrandColors.clay,
-    surfaceContainerHighest: AppBrandColors.rust,
+    surfaceContainerHigh: AppBrandColors.rust,
+    surfaceContainerHighest: AppBrandColors.tornadoAmber,
   );
 }
 

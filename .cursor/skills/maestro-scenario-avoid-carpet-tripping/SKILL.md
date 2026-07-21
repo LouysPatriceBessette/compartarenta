@@ -244,6 +244,19 @@ Rebuild APK when `mobile/` changed; `--skip-build` only for YAML/bash-only edits
 - **Ne JAMAIS corriger un mauvais comportement de l'application par des patch dans le scénario.** Il est FOUTREMENT évident qu'un test de QA qui révèle des bug à corriger NE DOIT PAS les supprimer. C'est un comportement IDIOT ET IMBÉCILE — **ne plus jamais faire ça.**
 - **TOUJOURS vérifier si un bug identifié peut se répéter à d'autres endroits** et, si c'est le cas, **DEMANDER LA CONFIRMATION** avant de corriger.
 
+### Simulation QA — keep live bot peers across an engine restart
+
+- **Symptom:** persisted simulated contacts remain connected, proposal envelopes
+  are posted, but `PeerSimulator react start bots=0` means no simulated
+  participant can respond.
+- **Action:** reuse the process-local `SandboxRelay` and `PeerSimulator` when a
+  new Flutter engine bootstraps in the same Android process; do not replace and
+  dispose the populated simulator.
+- **Evidence:** Android log on 2026-07-21 showed three delivered proposal
+  envelopes followed by `bots=0`; the preservation regression in
+  `mobile/test/sandbox_peer_simulator_test.dart` and the full 587-test suite
+  passed after the fix.
+
 ### Who runs the scenario (user binding — never the agent)
 
 **NEVER** launch Maestro / melos QA scenarios yourself (`qa:run-scenario`,
