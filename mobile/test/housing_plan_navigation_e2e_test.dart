@@ -24,6 +24,7 @@ void main() {
       'after unanimous acceptance, housing entry shows the active hub',
       (tester) async {
         await tester.pumpWidget(CompartarentaApp(config: ctx.config));
+        await tester.pump(const Duration(seconds: 6));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Housing'));
@@ -51,6 +52,7 @@ void main() {
       'after rejection, housing entry shows the archive list',
       (tester) async {
         await tester.pumpWidget(CompartarentaApp(config: ctx.config));
+        await tester.pump(const Duration(seconds: 6));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Housing'));
@@ -79,6 +81,7 @@ void main() {
       'after rejection, create new plan opens the wizard at participants',
       (tester) async {
         await tester.pumpWidget(CompartarentaApp(config: ctx.config));
+        await tester.pump(const Duration(seconds: 6));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Housing'));

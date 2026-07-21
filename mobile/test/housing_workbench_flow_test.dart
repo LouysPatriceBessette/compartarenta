@@ -57,6 +57,7 @@ void main() {
     );
 
     await tester.pumpWidget(CompartarentaApp(config: config));
+    await tester.pump(const Duration(seconds: 6));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Housing'));

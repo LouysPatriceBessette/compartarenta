@@ -48,6 +48,7 @@ import 'screens/contacts/redeem_invitation_screen.dart';
 import 'relay/handshake_orchestrator.dart';
 import 'notifications/closed_app_push_registration_service.dart';
 import 'widgets/app_error_boundary.dart';
+import 'widgets/cold_start_splash.dart';
 import 'widgets/contact_invite_deep_link_listener.dart';
 import 'widgets/connectivity_banner.dart';
 import 'widgets/profile_label_conflict_host.dart';
@@ -286,7 +287,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    final app = FutureBuilder(
       key: ValueKey(_prefsLoadGeneration),
       future: _prefs,
       builder: (context, snapshot) {
@@ -418,6 +419,7 @@ class _CompartarentaAppState extends State<CompartarentaApp>
         );
       },
     );
+    return ColdStartSplash(child: app);
   }
 }
 

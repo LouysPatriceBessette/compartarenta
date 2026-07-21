@@ -48,6 +48,8 @@ void main() {
         break;
       }
     }
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
