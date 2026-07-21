@@ -419,7 +419,9 @@ class _VehicleCardState extends State<_VehicleCard> {
                                     ? Theme.of(context)
                                         .colorScheme
                                         .errorContainer
-                                    : Colors.orange.shade100,
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .secondaryContainer,
                                 label: Text(
                                   l10n.vehicleMaintenanceAlertTile(
                                     vehicleMaintenanceCategoryLabel(

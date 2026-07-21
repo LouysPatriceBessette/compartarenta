@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../housing/realized_expense/realized_expense_balance.dart';
+import '../../../theme/app_theme.dart';
 import 'housing_chart_palette.dart';
 
 final class HousingBalancesGraphPainter extends CustomPainter {
@@ -30,7 +31,7 @@ final class HousingBalancesGraphPainter extends CustomPainter {
     };
 
     final skeletonPaint = Paint()
-      ..color = const Color(0xFFB8C1CC).withValues(alpha: 0.15)
+      ..color = AppBrandColors.stone.withValues(alpha: 0.15)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -94,7 +95,7 @@ final class HousingBalancesGraphPainter extends CustomPainter {
         end,
         [
           fromColor,
-          const Color(0xFFB8C1CC).withValues(alpha: 0.15),
+          AppBrandColors.stone.withValues(alpha: 0.15),
         ],
         const [0.0, 0.9],
       );

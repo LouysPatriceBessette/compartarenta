@@ -18,6 +18,7 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../sandbox/peer_simulator.dart';
 import '../../sandbox/sandbox_mode.dart';
+import '../../theme/app_theme.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
 import '../../widgets/fullscreen_image_viewer_screen.dart';
@@ -307,10 +308,10 @@ class _HousingRealizedExpenseReviewScreenState
     _ReviewDecisionDisplay display,
   ) {
     return switch (display) {
-      _ReviewDecisionDisplay.accepted => Colors.green.shade700,
+      _ReviewDecisionDisplay.accepted => AppBrandColors.moneyGreen,
       _ReviewDecisionDisplay.rejected => Theme.of(context).colorScheme.error,
-      _ReviewDecisionDisplay.pending => Colors.orange.shade800,
-      _ReviewDecisionDisplay.unknown => Colors.orange.shade800,
+      _ReviewDecisionDisplay.pending => Theme.of(context).colorScheme.secondary,
+      _ReviewDecisionDisplay.unknown => Theme.of(context).colorScheme.secondary,
     };
   }
 
@@ -650,7 +651,7 @@ class _HousingRealizedExpenseReviewScreenState
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.outlineVariant),
       ),
@@ -917,7 +918,7 @@ class _HousingRealizedExpenseReviewScreenState
                           1.8,
                       fontWeight: FontWeight.w700,
                       color: finalDecisionStatus.accepted
-                          ? Colors.green.shade700
+                          ? AppBrandColors.moneyGreen
                           : Theme.of(context).colorScheme.error,
                     ),
                   ),

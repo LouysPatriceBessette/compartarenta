@@ -16,8 +16,8 @@ enum HousingAmendmentLineEditHighlightField {
   likeTemplate,
 }
 
-/// Semi-transparent yellow used for changed values in line-edit detail cards.
-const housingAmendmentLineEditHighlightColor = Color(0x66FFEB3B);
+/// Semi-transparent Bojairũ tornado yellow for changed values.
+const housingAmendmentLineEditHighlightColor = Color(0x66FCD34D);
 
 Set<HousingAmendmentLineEditHighlightField> diffLineEditHighlightFields({
   required ExpensePlanLineViewData baseline,

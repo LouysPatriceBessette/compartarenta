@@ -837,7 +837,9 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                     settlementSubtitle != null
                                         ? null
                                         : (ejectionCandidateSubtitle != null
-                                            ? Colors.red.shade700
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .error
                                             : null);
                                 return _HubTile(
                                   icon: Icons.add_card_outlined,
@@ -905,7 +907,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                       : l10n.housingActiveHubRequestAmendment,
                               enabled: gates.requestAmendmentEnabled,
                               subtitle: ejectionCandidateSubtitle,
-                              subtitleColor: Colors.red.shade700,
+                              subtitleColor:
+                                  Theme.of(context).colorScheme.error,
                               onTap: () => _onAmendmentHubTap(context),
                             ),
                             _HubTile(
@@ -917,7 +920,8 @@ class _HousingActivePlanScreenState extends State<HousingActivePlanScreen>
                                   !(widget.prefs != null &&
                                       SandboxMode.isActive(widget.prefs!)),
                               subtitle: ejectionCandidateSubtitle,
-                              subtitleColor: Colors.red.shade700,
+                              subtitleColor:
+                                  Theme.of(context).colorScheme.error,
                               onTap: () => _openMajorChange(context),
                             ),
                             const _HubSectionDivider(),

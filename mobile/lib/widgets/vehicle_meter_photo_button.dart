@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// Odometer / horometer photo picker control: green and disabled once attached.
 class VehicleMeterPhotoButton extends StatelessWidget {
   const VehicleMeterPhotoButton({
@@ -15,22 +17,26 @@ class VehicleMeterPhotoButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool enabled;
 
-  static const Color _attachedBackground = Color(0xFFE8F5E9);
-  static const Color _attachedForeground = Color(0xFF1B5E20);
-
   @override
   Widget build(BuildContext context) {
     final canPress = enabled && !attached && onPressed != null;
+    final scheme = Theme.of(context).colorScheme;
+    final attachedBackground = Color.alphaBlend(
+      AppBrandColors.moneyGreen.withValues(
+        alpha: scheme.brightness == Brightness.dark ? 0.24 : 0.12,
+      ),
+      scheme.surface,
+    );
     return Center(
       child: OutlinedButton.icon(
         onPressed: canPress ? onPressed : null,
         style: attached
             ? OutlinedButton.styleFrom(
-                backgroundColor: _attachedBackground,
-                foregroundColor: _attachedForeground,
-                disabledBackgroundColor: _attachedBackground,
-                disabledForegroundColor: _attachedForeground,
-                side: const BorderSide(color: _attachedForeground),
+                backgroundColor: attachedBackground,
+                foregroundColor: AppBrandColors.moneyGreen,
+                disabledBackgroundColor: attachedBackground,
+                disabledForegroundColor: AppBrandColors.moneyGreen,
+                side: const BorderSide(color: AppBrandColors.moneyGreen),
               )
             : null,
         icon: const Icon(Icons.photo_camera_outlined),

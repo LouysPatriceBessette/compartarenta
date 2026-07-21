@@ -422,8 +422,14 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
     final showRange = span > 1;
     final rawH = rowHeight * span;
     final blockHeight = showRange ? math.max(rawH, 40.0) : rawH;
-    final fill = seg.state == 1 ? const Color(0xFFFFEBEE) : const Color(0xFFFFFDE7);
-    final border = seg.state == 1 ? const Color(0xFFC62828) : const Color(0xFFF9A825);
+    final scheme = Theme.of(context).colorScheme;
+    final fill = seg.state == 1
+        ? scheme.errorContainer
+        : scheme.secondaryContainer;
+    final border = seg.state == 1 ? scheme.error : scheme.secondary;
+    final foreground = seg.state == 1
+        ? scheme.onErrorContainer
+        : scheme.onSecondaryContainer;
     final timeLabel = _formatHm24(seg.startRow * 30);
     final textTheme = Theme.of(context).textTheme;
 
@@ -469,9 +475,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
                             style: textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                               height: 1.0,
-                              color: seg.state == 1
-                                  ? const Color(0xFFB71C1C)
-                                  : const Color(0xFFF57F17),
+                              color: foreground,
                             ),
                           ),
                         )
@@ -483,9 +487,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
                           style: textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                             height: 1.1,
-                            color: seg.state == 1
-                                ? const Color(0xFFB71C1C)
-                                : const Color(0xFFF57F17),
+                            color: foreground,
                           ),
                         ),
                       if (showRange)
@@ -538,8 +540,16 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
           final showRange = span > 1;
           final rawH = rowHeight * span;
           final blockHeight = showRange ? math.max(rawH, 40.0) : rawH;
-          final fill = segStart.state == 1 ? const Color(0xFFFFEBEE) : const Color(0xFFFFFDE7);
-          final border = segStart.state == 1 ? const Color(0xFFC62828) : const Color(0xFFF9A825);
+          final scheme = Theme.of(context).colorScheme;
+          final fill = segStart.state == 1
+              ? scheme.errorContainer
+              : scheme.secondaryContainer;
+          final border = segStart.state == 1
+              ? scheme.error
+              : scheme.secondary;
+          final foreground = segStart.state == 1
+              ? scheme.onErrorContainer
+              : scheme.onSecondaryContainer;
           final startRow = segStart.startRow;
           rightCell = Material(
             color: fill,
@@ -597,9 +607,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
                                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         height: 1.0,
-                                        color: segStart.state == 1
-                                            ? const Color(0xFFB71C1C)
-                                            : const Color(0xFFF57F17),
+                                        color: foreground,
                                       ),
                                 ),
                               )
@@ -611,9 +619,7 @@ class QuietHoursWeekDayEditor extends StatelessWidget {
                                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       height: 1.1,
-                                      color: segStart.state == 1
-                                          ? const Color(0xFFB71C1C)
-                                          : const Color(0xFFF57F17),
+                                      color: foreground,
                                     ),
                               ),
                             if (showRange)

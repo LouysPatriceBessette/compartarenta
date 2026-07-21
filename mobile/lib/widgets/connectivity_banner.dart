@@ -37,6 +37,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         widget.child,
@@ -46,26 +47,26 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
             right: 0,
             bottom: 0,
             child: Material(
-              color: Colors.amber.shade800,
+              color: scheme.secondary,
               child: SafeArea(
                 top: false,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off, color: Colors.white),
+                      Icon(Icons.wifi_off, color: scheme.onSecondary),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'You are offline',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: scheme.onSecondary),
                         ),
                       ),
                       TextButton(
                         onPressed: () {},
-                        child: const Text(
+                        child: Text(
                           'OK',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: scheme.onSecondary),
                         ),
                       ),
                     ],

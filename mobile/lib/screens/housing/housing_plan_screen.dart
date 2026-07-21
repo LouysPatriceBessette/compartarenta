@@ -646,7 +646,7 @@ class _HousingPlanScreenState extends State<HousingPlanScreen>
             }
             return TextButton(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFF57C00),
+                foregroundColor: Theme.of(context).colorScheme.secondary,
               ),
               onPressed: () => _onSandboxModePressed(context),
               child: Text(l10n.sandboxModeButton),

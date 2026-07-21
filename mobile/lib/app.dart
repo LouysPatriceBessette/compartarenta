@@ -298,56 +298,61 @@ class _CompartarentaAppState extends State<CompartarentaApp>
               .languageCode;
           final pluginLink = isNativePluginLinkError(error);
           final errorTheme = buildAppTheme();
+          final errorDarkTheme = buildAppDarkTheme();
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: errorTheme,
+            darkTheme: errorDarkTheme,
+            themeMode: ThemeMode.system,
             home: Scaffold(
-              body: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          lang == 'fr'
-                              ? 'Démarrage impossible'
-                              : 'Startup failed',
-                          style: errorTheme.textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 16),
-                        SelectableText(
-                          pluginLink
-                              ? nativePluginLinkErrorRecoveryMessage(
-                                  languageCode: lang,
-                                )
-                              : '$error',
-                        ),
-                        if (pluginLink && stack != null) ...[
-                          const SizedBox(height: 16),
+              body: Builder(
+                builder: (context) => SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           Text(
                             lang == 'fr'
-                                ? 'Détail technique'
-                                : 'Technical detail',
-                            style: errorTheme.textTheme.labelLarge,
+                                ? 'Démarrage impossible'
+                                : 'Startup failed',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           SelectableText(
-                            '$error\n\n$stack',
-                            style: errorTheme.textTheme.bodySmall,
+                            pluginLink
+                                ? nativePluginLinkErrorRecoveryMessage(
+                                    languageCode: lang,
+                                  )
+                                : '$error',
                           ),
-                        ] else if (!pluginLink && stack != null) ...[
-                          const SizedBox(height: 16),
-                          SelectableText('$stack'),
+                          if (pluginLink && stack != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              lang == 'fr'
+                                  ? 'Détail technique'
+                                  : 'Technical detail',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            SelectableText(
+                              '$error\n\n$stack',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ] else if (!pluginLink && stack != null) ...[
+                            const SizedBox(height: 16),
+                            SelectableText('$stack'),
+                          ],
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            onPressed: _retryPrefsLoad,
+                            child: Text(
+                              lang == 'fr' ? 'Réessayer' : 'Retry',
+                            ),
+                          ),
                         ],
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _retryPrefsLoad,
-                          child: Text(
-                            lang == 'fr' ? 'Réessayer' : 'Retry',
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -359,6 +364,8 @@ class _CompartarentaAppState extends State<CompartarentaApp>
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: buildAppTheme(),
+            darkTheme: buildAppDarkTheme(),
+            themeMode: ThemeMode.system,
             home: const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             ),
@@ -376,6 +383,8 @@ class _CompartarentaAppState extends State<CompartarentaApp>
           debugShowCheckedModeBanner: false,
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           theme: buildAppTheme(),
+          darkTheme: buildAppDarkTheme(),
+          themeMode: ThemeMode.system,
           locale: locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: const [

@@ -433,7 +433,10 @@ class _HousingInviteProposalScreenState
           theme.colorScheme.onSecondaryContainer,
         );
       case HousingInviteParticipantUiStatus.negotiating:
-        return (const Color(0xFFFFF9C4), const Color(0xFFF57F17));
+        return (
+          theme.colorScheme.tertiaryContainer,
+          theme.colorScheme.onTertiaryContainer,
+        );
       case HousingInviteParticipantUiStatus.rejected:
         return (
           theme.colorScheme.errorContainer,
@@ -481,7 +484,7 @@ class _HousingInviteProposalScreenState
             }
           : null,
       selectedColor: isAuthorRoster
-          ? Colors.white
+          ? theme.colorScheme.surfaceContainerLowest
           : theme.colorScheme.primaryContainer,
       backgroundColor: chipBg,
       label: ConstrainedBox(

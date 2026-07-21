@@ -1,66 +1,116 @@
 import 'package:flutter/material.dart';
 
-/// Brand palette derived from the piggy-bank / savings illustration (sky blues,
-/// deep blue accents, warm sand, ink outlines).
+/// Bojairũ brand palette shared with the public website.
 abstract final class AppBrandColors {
-  /// Deep blue — primary actions, AppBar contrast, emphasis.
-  static const Color primaryBlue = Color(0xFF2E5984);
+  static const Color sand = Color(0xFFFFF7ED);
+  static const Color peach = Color(0xFFFED7AA);
+  static const Color rust = Color(0xFF9A3412);
+  static const Color clay = Color(0xFF7C2D12);
+  static const Color stone = Color(0xFF78716C);
+  static const Color tornadoBase = Color(0xFFFDBA74);
+  static const Color tornadoYellow = Color(0xFFFCD34D);
 
-  /// Soft sky — containers, primary backgrounds.
-  static const Color primaryBlueLight = Color(0xFFAED6F1);
+  /// Darker tornado tone used for AA contrast on light backgrounds.
+  static const Color tornadoAmber = Color(0xFFB45309);
 
-  /// Mid sky blue — secondary / accents (piggy tone).
-  static const Color accentSky = Color(0xFF7FB3D5);
+  static const Color tornadoOrange = Color(0xFFFB923C);
+  static const Color vehicleBlue = Color(0xFF0284C7);
+  static const Color housingOrange = Color(0xFFEA580C);
+  static const Color moneyGreen = Color(0xFF16A34A);
+  static const Color calendarViolet = Color(0xFF7C3AED);
 
-  /// Warm sand — supportive surfaces / secondary containers.
-  static const Color warmSand = Color(0xFFE5C39E);
+  /// Website `--card`: 35% sand mixed with white.
+  static const Color lightCard = Color(0xFFFFFCF9);
 
-  /// Near-black — body text, icons on light surfaces.
-  static const Color ink = Color(0xFF1A1A1B);
+  /// Website dark `--bg`: 32% clay mixed with #2A211C.
+  static const Color darkBackground = Color(0xFF442519);
 
-  /// Subtle AppBar / surface tint toward the accent.
-  static const Color surfaceTint = accentSky;
+  /// Website dark `--card`: 36% clay mixed with #2A211C.
+  static const Color darkCard = Color(0xFF482518);
 }
 
 ColorScheme _lightColorScheme() {
   final base = ColorScheme.fromSeed(
-    seedColor: AppBrandColors.primaryBlue,
+    seedColor: AppBrandColors.rust,
     brightness: Brightness.light,
   );
   return base.copyWith(
-    primary: AppBrandColors.primaryBlue,
-    onPrimary: Colors.white,
-    primaryContainer: AppBrandColors.primaryBlueLight,
-    onPrimaryContainer: AppBrandColors.primaryBlue,
-    secondary: AppBrandColors.accentSky,
-    onSecondary: AppBrandColors.ink,
-    secondaryContainer: AppBrandColors.warmSand,
-    onSecondaryContainer: AppBrandColors.ink,
-    tertiary: AppBrandColors.accentSky,
-    onTertiary: AppBrandColors.ink,
-    surface: Colors.white,
-    onSurface: AppBrandColors.ink,
-    onSurfaceVariant: AppBrandColors.primaryBlue,
-    surfaceContainerLow: const Color(0xFFF5FAFD),
-    surfaceContainer: const Color(0xFFE8F2FA),
-    surfaceContainerHigh: const Color(0xFFDDEAF4),
-    surfaceContainerHighest: const Color(0xFFD0E2EF),
+    primary: AppBrandColors.rust,
+    onPrimary: AppBrandColors.sand,
+    primaryContainer: AppBrandColors.peach,
+    onPrimaryContainer: AppBrandColors.clay,
+    secondary: AppBrandColors.tornadoAmber,
+    onSecondary: AppBrandColors.sand,
+    secondaryContainer: AppBrandColors.tornadoYellow,
+    onSecondaryContainer: AppBrandColors.clay,
+    tertiary: AppBrandColors.calendarViolet,
+    onTertiary: AppBrandColors.sand,
+    tertiaryContainer: AppBrandColors.peach,
+    onTertiaryContainer: AppBrandColors.clay,
+    error: AppBrandColors.rust,
+    onError: AppBrandColors.sand,
+    errorContainer: AppBrandColors.peach,
+    onErrorContainer: AppBrandColors.clay,
+    surface: AppBrandColors.sand,
+    onSurface: AppBrandColors.clay,
+    onSurfaceVariant: AppBrandColors.stone,
+    outline: AppBrandColors.stone,
+    outlineVariant: AppBrandColors.peach,
+    surfaceContainerLowest: Colors.white,
+    surfaceContainerLow: AppBrandColors.lightCard,
+    surfaceContainer: AppBrandColors.sand,
+    surfaceContainerHigh: const Color(0xFFFFEAD7),
+    surfaceContainerHighest: AppBrandColors.peach,
   );
 }
 
-/// Application-wide light theme (dark mode not configured yet).
-ThemeData buildAppTheme() {
-  final scheme = _lightColorScheme();
+ColorScheme _darkColorScheme() {
+  final base = ColorScheme.fromSeed(
+    seedColor: AppBrandColors.tornadoBase,
+    brightness: Brightness.dark,
+  );
+  return base.copyWith(
+    primary: AppBrandColors.tornadoBase,
+    onPrimary: AppBrandColors.clay,
+    primaryContainer: AppBrandColors.clay,
+    onPrimaryContainer: AppBrandColors.sand,
+    secondary: AppBrandColors.tornadoYellow,
+    onSecondary: AppBrandColors.clay,
+    secondaryContainer: AppBrandColors.rust,
+    onSecondaryContainer: AppBrandColors.sand,
+    tertiary: AppBrandColors.peach,
+    onTertiary: AppBrandColors.clay,
+    tertiaryContainer: AppBrandColors.calendarViolet,
+    onTertiaryContainer: AppBrandColors.sand,
+    error: AppBrandColors.tornadoOrange,
+    onError: AppBrandColors.clay,
+    errorContainer: AppBrandColors.rust,
+    onErrorContainer: AppBrandColors.sand,
+    surface: AppBrandColors.darkBackground,
+    onSurface: AppBrandColors.sand,
+    onSurfaceVariant: AppBrandColors.peach,
+    outline: AppBrandColors.peach,
+    outlineVariant: AppBrandColors.clay,
+    surfaceContainerLowest: const Color(0xFF2A211C),
+    surfaceContainerLow: AppBrandColors.darkCard,
+    surfaceContainer: AppBrandColors.darkCard,
+    surfaceContainerHigh: AppBrandColors.clay,
+    surfaceContainerHighest: AppBrandColors.rust,
+  );
+}
+
+ThemeData _buildTheme(ColorScheme scheme) {
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
+    scaffoldBackgroundColor: scheme.surface,
     appBarTheme: AppBarTheme(
       centerTitle: false,
       elevation: 0,
       scrolledUnderElevation: 0.5,
       backgroundColor: scheme.surface,
       foregroundColor: scheme.onSurface,
-      surfaceTintColor: AppBrandColors.surfaceTint.withValues(alpha: 0.22),
+      surfaceTintColor: scheme.primary.withValues(alpha: 0.12),
       iconTheme: IconThemeData(color: scheme.onSurface),
       titleTextStyle: TextStyle(
         color: scheme.onSurface,
@@ -70,8 +120,8 @@ ThemeData buildAppTheme() {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      color: scheme.surfaceContainerHighest,
-      surfaceTintColor: AppBrandColors.surfaceTint.withValues(alpha: 0.12),
+      color: scheme.surfaceContainerLow,
+      surfaceTintColor: scheme.primary.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -89,3 +139,9 @@ ThemeData buildAppTheme() {
     ),
   );
 }
+
+/// Application-wide Bojairũ light theme.
+ThemeData buildAppTheme() => _buildTheme(_lightColorScheme());
+
+/// Application-wide Bojairũ dark theme matching the public website.
+ThemeData buildAppDarkTheme() => _buildTheme(_darkColorScheme());

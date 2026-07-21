@@ -5,6 +5,7 @@ import '../../db/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../util/display_date.dart';
 import '../../prefs/app_preferences.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/screen_body_padding.dart';
 
 class ActivityLogSettingsScreen extends StatefulWidget {
@@ -229,7 +230,7 @@ class _ActivityLogSettingsScreenState extends State<ActivityLogSettingsScreen> {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.check_circle,
-                    color: Colors.green.shade600,
+                    color: AppBrandColors.moneyGreen,
                     size: 20,
                     semanticLabel: l10n.activityLogFiltersTitle,
                   ),

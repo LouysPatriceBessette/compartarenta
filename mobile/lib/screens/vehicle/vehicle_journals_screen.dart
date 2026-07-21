@@ -218,7 +218,9 @@ class _MeterFuelJournalList extends StatelessWidget {
     bool highlight = false,
   }) {
     return ColoredBox(
-      color: highlight ? Colors.orange.shade50 : Colors.transparent,
+      color: highlight
+          ? Theme.of(context).colorScheme.secondaryContainer
+          : Colors.transparent,
       child: ListTile(
         title: Text(line1),
         subtitle: Column(

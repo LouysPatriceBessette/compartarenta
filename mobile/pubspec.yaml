@@ -97,7 +97,7 @@ flutter_launcher_icons:
   web:
     generate: true
   image_path: assets/brand/app_logo.png
-  adaptive_icon_background: "#AED6F1"
+  adaptive_icon_background: "#FED7AA"
   adaptive_icon_foreground: assets/brand/app_logo.png
   remove_alpha_ios: true
 

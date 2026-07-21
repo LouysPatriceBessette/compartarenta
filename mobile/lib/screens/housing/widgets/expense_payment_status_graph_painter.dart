@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../housing/realized_expense/expense_payment_status.dart';
+import '../../../theme/app_theme.dart';
 
 class ExpensePaymentStatusGraphPainter extends CustomPainter {
   const ExpensePaymentStatusGraphPainter({required this.bars});
@@ -23,13 +24,13 @@ class ExpensePaymentStatusGraphPainter extends CustomPainter {
     }
 
     final scalePaint = Paint()
-      ..color = const Color(0xFF9AA5B1)
+      ..color = AppBrandColors.stone
       ..strokeWidth = scaleStrokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final tickPaint = Paint()
-      ..color = const Color(0xFF9AA5B1)
+      ..color = AppBrandColors.stone
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.butt;

@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../housing/projection/plan_projection.dart';
 import '../../housing/split_minor_by_weights.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme/app_theme.dart';
 import '../../util/display_numbers.dart';
 import '../../util/format_money.dart';
 
@@ -64,7 +65,7 @@ class HousingInviteSunburstMonthlyFootnote extends StatelessWidget {
             TextSpan(
               text: '* ',
               style: base?.copyWith(
-                color: Colors.red.shade700,
+                color: Theme.of(context).colorScheme.error,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -107,14 +108,14 @@ List<InviteSunburstSlice> buildInviteSunburstSlices({
   required String displayCurrency,
 }) {
   const palette = <Color>[
-    Color(0xFF1E88E5),
-    Color(0xFF00897B),
-    Color(0xFF3949AB),
-    Color(0xFF039BE5),
-    Color(0xFF00838F),
-    Color(0xFF5E35B1),
-    Color(0xFF0277BD),
-    Color(0xFF00695C),
+    AppBrandColors.vehicleBlue,
+    AppBrandColors.moneyGreen,
+    AppBrandColors.housingOrange,
+    AppBrandColors.calendarViolet,
+    AppBrandColors.rust,
+    AppBrandColors.tornadoAmber,
+    AppBrandColors.stone,
+    AppBrandColors.tornadoOrange,
   ];
 
   var colorIdx = 0;
@@ -447,7 +448,7 @@ class HousingInviteSunburstChart extends StatelessWidget {
                               TextSpan(
                                 text: '* ',
                                 style: TextStyle(
-                                  color: Colors.red.shade700,
+                                  color: Theme.of(context).colorScheme.error,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

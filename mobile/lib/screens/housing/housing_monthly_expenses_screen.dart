@@ -302,12 +302,14 @@ class _HousingMonthlyExpensesScreenState
         identifier: kDebugMode ? kQaHousingBeforeDueJournalCard : null,
         container: true,
         child: Card(
-          color: Colors.orange.shade50,
+          color: Theme.of(context).colorScheme.secondaryContainer,
           child: ListTile(
             enabled: false,
             title: Text(
               titleText,
-              style: TextStyle(color: Colors.orange.shade900),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
             ),
             subtitle: Text(receivedDate),
           ),
@@ -320,12 +322,14 @@ class _HousingMonthlyExpensesScreenState
       identifier: kDebugMode ? kQaHousingOverdueJournalCard : null,
       container: true,
       child: Card(
-        color: Colors.red.shade50,
+        color: Theme.of(context).colorScheme.errorContainer,
         child: ListTile(
           enabled: false,
           title: Text(
             l10n.housingOverdueJournalCardBody(lineTitle),
-            style: TextStyle(color: Colors.red.shade900),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
           ),
           subtitle: Text(receivedDate),
         ),

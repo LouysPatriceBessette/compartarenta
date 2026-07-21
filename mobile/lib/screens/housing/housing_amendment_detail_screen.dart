@@ -23,6 +23,7 @@ import '../../notifications/notification_flow_permission_trigger.dart';
 import '../../notifications/push_notification_service.dart';
 import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
+import '../../theme/app_theme.dart';
 import '../../util/display_date.dart';
 import 'housing_invitation_status_dialog.dart';
 import 'housing_invite_proposal_screen.dart';
@@ -481,7 +482,7 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
                                   1.8,
                           fontWeight: FontWeight.w700,
                           color: data.settledAccepted!
-                              ? Colors.green.shade700
+                              ? AppBrandColors.moneyGreen
                               : theme.colorScheme.error,
                         ),
                       ),
@@ -682,10 +683,10 @@ class _HousingAmendmentDetailScreenState extends State<HousingAmendmentDetailScr
 
   Color _decisionIconColor(BuildContext context, _DecisionDisplay display) {
     return switch (display) {
-      _DecisionDisplay.accepted => Colors.green.shade700,
+      _DecisionDisplay.accepted => AppBrandColors.moneyGreen,
       _DecisionDisplay.rejected => Theme.of(context).colorScheme.error,
-      _DecisionDisplay.pending => Colors.orange.shade800,
-      _DecisionDisplay.unknown => Colors.orange.shade800,
+      _DecisionDisplay.pending => Theme.of(context).colorScheme.secondary,
+      _DecisionDisplay.unknown => Theme.of(context).colorScheme.secondary,
     };
   }
 

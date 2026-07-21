@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Dark red banner for pending participation changes (distinct from amendment/expense).
+/// Error-colored banner for pending participation changes.
 class HousingParticipationChangeBanner extends StatelessWidget {
   const HousingParticipationChangeBanner({
     super.key,
@@ -9,25 +9,24 @@ class HousingParticipationChangeBanner extends StatelessWidget {
     this.onTap,
   });
 
-  static const Color bannerColor = Color(0xFF8B0000);
-
   final String text;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final card = Card(
-      color: bannerColor,
+      color: scheme.error,
       margin: const EdgeInsets.only(bottom: 16),
       child: ListTile(
-        leading: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+        leading: Icon(Icons.warning_amber_rounded, color: scheme.onError),
         title: Text(
           text,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: scheme.onError),
         ),
         trailing:
             onTap != null
-                ? const Icon(Icons.chevron_right, color: Colors.white)
+                ? Icon(Icons.chevron_right, color: scheme.onError)
                 : null,
         onTap: onTap,
       ),
