@@ -5,7 +5,7 @@ The system SHALL allow recording a **start** and **end** **odometer** reading fo
 
 Meter readings are **odometer** values (distance). Land vehicles use **odomètre** / odometer per existing product terminology.
 
-Meter reading **photos** MUST be persisted under `Documents/Compartarenta/Car/<vehicleId>/Odometer/` per `user-owned-media-storage` when a photo file is captured.
+Meter reading **photos** MUST be persisted under `Documents/Bojairũ/Car/<vehicleId>/Odometer/` per `user-owned-media-storage` when a photo file is captured.
 
 ### Requirement: Meter photo when the reading changes (known-unchanged exception at session start)
 The system SHALL require a **photo of the odometer display** when saving a meter reading whose **value differs** from the applicable baseline, and in the cases listed below. The photo acts as visual proof at capture time.

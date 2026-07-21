@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Compartarenta'**
+  /// **'Bojairũ'**
   String get appTitle;
 
   /// No description provided for @commonContinue.
@@ -397,7 +397,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceDataExportSavedLocation.
   ///
   /// In en, this message translates to:
-  /// **'Documents/Compartarenta/{fileName}'**
+  /// **'Documents/Bojairũ/{fileName}'**
   String deviceDataExportSavedLocation(String fileName);
 
   /// No description provided for @deviceDataExportFailed.
@@ -739,7 +739,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeIntro.
   ///
   /// In en, this message translates to:
-  /// **'Compartarenta is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.'**
+  /// **'Bojairũ is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.'**
   String get onboardingWelcomeIntro;
 
   /// No description provided for @onboardingWelcomeConfidentialTitle.
@@ -1597,7 +1597,7 @@ abstract class AppLocalizations {
   /// No description provided for @housingExportSavedLocation.
   ///
   /// In en, this message translates to:
-  /// **'Internal storage/Documents/Compartarenta/{fileName}'**
+  /// **'Internal storage/Documents/Bojairũ/{fileName}'**
   String housingExportSavedLocation(String fileName);
 
   /// No description provided for @housingExportFailed.
@@ -4836,7 +4836,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsInviteShareText.
   ///
   /// In en, this message translates to:
-  /// **'You\'re invited to connect on Compartarenta.\n\nOne-time code:\n{code}\n\nTo use it: open the Compartarenta app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: {link}'**
+  /// **'You\'re invited to connect on Bojairũ.\n\nOne-time code:\n{code}\n\nTo use it: open the Bojairũ app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: {link}'**
   String contactsInviteShareText(String link, String code);
 
   /// No description provided for @contactsInviteExpiresAt.
@@ -4932,7 +4932,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsEnterInviteCodeScanQrHint.
   ///
   /// In en, this message translates to:
-  /// **'Point the camera at a Compartarenta invitation QR code.'**
+  /// **'Point the camera at a Bojairũ invitation QR code.'**
   String get contactsEnterInviteCodeScanQrHint;
 
   /// No description provided for @contactsEnterInviteCodeSubmit.
@@ -5470,7 +5470,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpFaqIntro.
   ///
   /// In en, this message translates to:
-  /// **'Answers to common questions about how Compartarenta works.'**
+  /// **'Answers to common questions about how Bojairũ works.'**
   String get helpFaqIntro;
 
   /// No description provided for @helpFaqHousingInviteParticipantTitle.
@@ -5920,7 +5920,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleExportSuccessBody.
   ///
   /// In en, this message translates to:
-  /// **'File saved in Documents/Compartarenta/\n{fileName}'**
+  /// **'File saved in Documents/Bojairũ/\n{fileName}'**
   String vehicleExportSuccessBody(String fileName);
 
   /// No description provided for @vehicleExportFileDataOfSegment.

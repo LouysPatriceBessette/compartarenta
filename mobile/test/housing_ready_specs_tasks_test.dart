@@ -93,15 +93,15 @@ void main() {
       final when = DateTime(2026, 6, 22, 10, 31, 13);
       expect(
         housingExportFileName(languageCode: 'fr', now: when),
-        '2026-06-22_10:31_Compartarenta-logement.json',
+        '2026-06-22_10:31_Bojairũ-logement.json',
       );
       expect(
         housingExportFileName(languageCode: 'en', now: when),
-        '2026-06-22_10:31_Compartarenta-housing.json',
+        '2026-06-22_10:31_Bojairũ-housing.json',
       );
       expect(
         housingExportFileName(languageCode: 'es', now: when),
-        '2026-06-22_10:31_Compartarenta-renta.json',
+        '2026-06-22_10:31_Bojairũ-renta.json',
       );
     });
   });

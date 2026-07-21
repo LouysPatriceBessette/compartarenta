@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 116 20" role="img" aria-label="Compartarenta">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 116 20" role="img" aria-label="Bojairũ">
   <style>
     text {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -13,6 +13,6 @@
     }
   </style>
   <text x="0" y="16">
-    <tspan class="prefix">Comparta</tspan><tspan class="suffix">renta</tspan>
+    <tspan class="prefix">Bojairũ</tspan>
   </text>
 </svg>

@@ -40,7 +40,7 @@ String _mimeTypeForExtension(String extension) {
   }
 }
 
-/// Writes a gallery photo under public `Documents/Compartarenta/Car/…`.
+/// Writes a gallery photo under public `Documents/Bojairũ/Car/…`.
 Future<String> storeVehicleGalleryPhotoFromSource({
   required String vehicleId,
   required int galleryIndex,

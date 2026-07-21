@@ -1,4 +1,4 @@
-/// User-visible folder layout under `<Documents>/Compartarenta/`.
+/// User-visible folder layout under `<Documents>/Bojairũ/`.
 ///
 /// **Policy:** all durable user-captured images MUST be written here via
 /// [public_documents_file_sink_io.dart] — see OpenSpec
@@ -7,7 +7,7 @@
 class CompartarentaDocumentsLayout {
   CompartarentaDocumentsLayout._();
 
-  static const String rootFolderName = 'Compartarenta';
+  static const String rootFolderName = 'Bojairũ';
   static const String housingModuleFolderName = 'Housing';
   static const String expenseProofsFolderName = 'ExpenseProofs';
   static const String backupsFolderName = 'Backups';
@@ -15,14 +15,14 @@ class CompartarentaDocumentsLayout {
   /// Single-vehicle module artifacts (galleries, future exports).
   static const String carModuleFolderName = 'Car';
 
-  /// `Compartarenta/Car/<vehicleId>/Odometer`
+  /// `Bojairũ/Car/<vehicleId>/Odometer`
   static String vehicleOdometerPhotosRelativeSubDir({
     required String vehicleId,
   }) {
     return '$rootFolderName/$carModuleFolderName/$vehicleId/Odometer';
   }
 
-  /// `Compartarenta/Car/<vehicleId>/Gallery_<nnn>`
+  /// `Bojairũ/Car/<vehicleId>/Gallery_<nnn>`
   static String vehicleGalleryRelativeSubDir({
     required String vehicleId,
     required int galleryIndex,
@@ -31,24 +31,24 @@ class CompartarentaDocumentsLayout {
     return '$rootFolderName/$carModuleFolderName/$vehicleId/$folder';
   }
 
-  /// `Compartarenta/Car/<vehicleId>/Maintenance`
+  /// `Bojairũ/Car/<vehicleId>/Maintenance`
   static String vehicleMaintenanceAttachmentsRelativeSubDir({
     required String vehicleId,
   }) {
     return '$rootFolderName/$carModuleFolderName/$vehicleId/Maintenance';
   }
 
-  /// Sale export zip / JSON sit directly under `Compartarenta/`.
+  /// Sale export zip / JSON sit directly under `Bojairũ/`.
   static String moduleRootRelativeSubDir() => rootFolderName;
 
   /// Future: car-sharing module (split from legacy car module spec).
   static const String carSharingModuleFolderName = 'Car_sharing';
 
-  /// `Compartarenta/Backups` — JSON export files (housing + device backup).
+  /// `Bojairũ/Backups` — JSON export files (housing + device backup).
   static String backupsRelativeSubDir() =>
       '$rootFolderName/$backupsFolderName';
 
-  /// `Compartarenta/Housing/<start>_<end>/ExpenseProofs`
+  /// `Bojairũ/Housing/<start>_<end>/ExpenseProofs`
   static String housingExpenseProofsRelativeSubDir({
     required DateTime agreementPeriodStart,
     required DateTime agreementPeriodEnd,

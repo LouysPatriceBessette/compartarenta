@@ -31,7 +31,7 @@ Future<String?> pickVehicleMeterPhotoSource(BuildContext context) async {
   return file.path;
 }
 
-/// Writes under public `Documents/Compartarenta/Car/<vehicleId>/Odometer/`.
+/// Writes under public `Documents/Bojairũ/Car/<vehicleId>/Odometer/`.
 Future<String> storeVehicleMeterPhotoFromSource({
   required String vehicleId,
   required String sourcePath,

@@ -1,6 +1,6 @@
 # Development roadmap
 
-This document records the **current sequencing decision** for Compartarenta development. It supersedes any earlier informal ordering and is the source of truth for the order in which the OpenSpec changes are intended to be implemented.
+This document records the **current sequencing decision** for Bojairũ development. It supersedes any earlier informal ordering and is the source of truth for the order in which the OpenSpec changes are intended to be implemented.
 
 It is a planning document, not a capability specification. Capability rules live in `openspec/changes/<change-name>/` and (after archival) in `openspec/specs/<capability>/`.
 

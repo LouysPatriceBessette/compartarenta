@@ -65,7 +65,7 @@ See `vehicle-sharing-module` for collaboration, relay sync, borrower metrics, ex
 
 - [x] 7.1 Vehicle sharing hub shell (`vehicle-sharing-hub-ui`) wired to same quick-action forms (forward routing)
 - [x] 7.2 Remove prototype: `/car` route, `CarSharingPlanScreen`, `CarSharingPlanDraft` prefs (`vehicle-legacy-code-removal`)
-- [x] 7.3a Enforce `user-owned-media-storage` on all new odometer and gallery writes (`storeVehicleMeterPhotoFromSource`, `storeVehicleGalleryPhotoFromSource` → public `Documents/Compartarenta/Car/…`)
+- [x] 7.3a Enforce `user-owned-media-storage` on all new odometer and gallery writes (`storeVehicleMeterPhotoFromSource`, `storeVehicleGalleryPhotoFromSource` → public `Documents/Bojairũ/Car/…`)
 - [x] 7.3b Migrate legacy app-private `vehicle_meter_photos/` references to public storage keys. **Won't do (2026-07-13):** there is **no** legacy corpus to migrate — the app is still early pre-release and has never been used except by the developer with disposable test data. Read fallback for old private paths may remain defensive; no migration job.
 
 ## 8. Consumption estimate validation & correction (fuel purchase anchors)

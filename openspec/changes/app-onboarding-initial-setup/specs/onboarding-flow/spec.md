@@ -79,7 +79,7 @@ The onboarding flow SHALL NOT request sensitive OS permissions (e.g., notificati
 ### Requirement: Welcome message draft copy (initial, concise)
 The app SHALL use the following initial draft copy (English) for the welcome screen, which may be refined later:
 
-“Thanks for trying Compartarenta.
+“Thanks for trying Bojairũ.
 In the next steps, you'll configure your sharing setup (shared housing, owned vehicles, vehicle sharing, or a combination) and start a 2‑week real‑mode trial.
 Your data stays on your device—this app does not collect it.
 If these conditions don’t work for you, you can uninstall at any time.”

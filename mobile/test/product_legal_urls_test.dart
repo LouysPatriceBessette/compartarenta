@@ -8,19 +8,19 @@ void main() {
     expect(
       privacyPolicyUrlForLocale(const Locale('fr')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/fr/legal/confidentialite/',
+        'https://bojairu.app/fr/legal/confidentialite/',
       ),
     );
     expect(
       privacyPolicyUrlForLocale(const Locale('en')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/en/legal/confidentialite/',
+        'https://bojairu.app/en/legal/confidentialite/',
       ),
     );
     expect(
       privacyPolicyUrlForLocale(const Locale('es')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/es/legal/confidentialite/',
+        'https://bojairu.app/es/legal/confidentialite/',
       ),
     );
   });
@@ -29,7 +29,7 @@ void main() {
     expect(
       privacyPolicyUrlForLocale(const Locale('de')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/en/legal/confidentialite/',
+        'https://bojairu.app/en/legal/confidentialite/',
       ),
     );
   });
@@ -38,19 +38,19 @@ void main() {
     expect(
       vehicleModuleFaqUrlForLocale(const Locale('fr')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/fr/modules/vehicule/faq/',
+        'https://bojairu.app/fr/modules/vehicule/faq/',
       ),
     );
     expect(
       vehicleModuleFaqUrlForLocale(const Locale('en')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/en/modules/vehicule/faq/',
+        'https://bojairu.app/en/modules/vehicule/faq/',
       ),
     );
     expect(
       vehicleModuleFaqUrlForLocale(const Locale('es')),
       Uri.parse(
-        'https://compartarenta.incoherences.org/es/modules/vehicule/faq/',
+        'https://bojairu.app/es/modules/vehicule/faq/',
       ),
     );
   });

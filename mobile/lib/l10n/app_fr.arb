@@ -1,7 +1,7 @@
 {
   "@@locale": "fr",
 
-  "appTitle": "Compartarenta",
+  "appTitle": "Bojairũ",
 
   "commonContinue": "Continuer",
   "commonFinishSetup": "Terminer la configuration",
@@ -53,7 +53,7 @@
   "deviceDataImportAction": "Importer une sauvegarde",
   "deviceDataExportCopiedToClipboard": "JSON de sauvegarde copié dans le presse-papiers.",
   "deviceDataExportLastSavedTitle": "Fichier enregistré",
-  "deviceDataExportSavedLocation": "Documents/Compartarenta/{fileName}",
+  "deviceDataExportSavedLocation": "Documents/Bojairũ/{fileName}",
   "deviceDataExportFailed": "Échec de l'export : {error}",
   "deviceDataImportDisabledNoSubscription": "L'import exige un abonnement logement actif et payé sur cet appareil.",
   "deviceDataImportDisabledWeb": "L'import n'est pas disponible sur le web (développement seulement).",
@@ -111,7 +111,7 @@
   "onboardingLanguageTitle": "Langue",
   "onboardingLanguageBody": "Choisissez la langue de l’application. Vous pourrez la changer en tout temps dans les paramètres.",
   "onboardingWelcomeTitle": "Bienvenue",
-  "onboardingWelcomeIntro": "Compartarenta est une application développée dans le but d'aider les colocataires à mieux s'entendre.\n\nEn utilisant cette application, vous éviterez des malentendus, des oublis et des erreurs de calculs qui sont souvent source de conflits. Pour en tirer le maximum, il faut entrer les données au fur et à mesure qu'elles sont connues.",
+  "onboardingWelcomeIntro": "Bojairũ est une application développée dans le but d'aider les colocataires à mieux s'entendre.\n\nEn utilisant cette application, vous éviterez des malentendus, des oublis et des erreurs de calculs qui sont souvent source de conflits. Pour en tirer le maximum, il faut entrer les données au fur et à mesure qu'elles sont connues.",
   "onboardingWelcomeConfidentialTitle": "Confidentiel",
   "onboardingWelcomeConfidentialBody": "Enfin une véritable confidentialité. Vous pouvez entrer vos données sans aucune crainte. Personne d'autre que vous et vos colocataires n'y auront accès. Cette affirmation n'est pas une simple promesse, c'est un fait démontrable. Tout le code de l'application est public et peut être inspecté et audité.\n\nCeci implique toutefois un compromis important: Il n'y a aucune manière de récupérer vos données si vous les perdez (perte, vol ou bris de votre appareil). L'application inclut une fonctionnalité d'import/export de données qu'il est fortement suggéré d'utiliser périodiquement afin de conserver une sauvegarde. Libre à vous de placer le fichier exporté où vous voulez. Le stockage sécuritaire de cette sauvegarde sera de votre responsabilité.",
   "onboardingOk": "Ok",
@@ -299,7 +299,7 @@
   "housingExportAction": "Exporter les données de l'entente",
   "housingExportCopiedToClipboard": "JSON exporté copié dans le presse-papiers.",
   "housingExportLastSavedTitle": "Fichier enregistré",
-  "housingExportSavedLocation": "Stockage interne/Documents/Compartarenta/{fileName}",
+  "housingExportSavedLocation": "Stockage interne/Documents/Bojairũ/{fileName}",
   "@housingExportSavedLocation": {
     "placeholders": {
       "fileName": {
@@ -1144,7 +1144,7 @@
   "contactsInviteShortCodeLabel": "Code",
   "contactsInviteCopyDeepLink": "Copier le lien",
   "contactsInviteCopyShareText": "Copier l’invitation",
-  "contactsInviteShareText": "Vous êtes invité à vous connecter sur Compartarenta.\n\nCode à usage unique :\n{code}\n\nPour l’utiliser : ouvrez l’app Compartarenta, allez dans Contacts, touchez l’icône scanner/saisir un code dans le haut de l’écran et collez ce code. Depuis l’appareil où l’app est installée vous pouvez aussi ouvrir : {link}",
+  "contactsInviteShareText": "Vous êtes invité à vous connecter sur Bojairũ.\n\nCode à usage unique :\n{code}\n\nPour l’utiliser : ouvrez l’app Bojairũ, allez dans Contacts, touchez l’icône scanner/saisir un code dans le haut de l’écran et collez ce code. Depuis l’appareil où l’app est installée vous pouvez aussi ouvrir : {link}",
   "@contactsInviteShareText": {
     "placeholders": {
       "link": { "type": "String" },
@@ -1172,7 +1172,7 @@
   "contactsEnterInviteCodeIntro": "Collez ou tapez le code reçu d’un contact.",
   "contactsEnterInviteCodeFieldLabel": "Code d’invitation",
   "contactsEnterInviteCodeScanQr": "Scanner le code QR",
-  "contactsEnterInviteCodeScanQrHint": "Pointez la caméra vers un code QR d’invitation Compartarenta.",
+  "contactsEnterInviteCodeScanQrHint": "Pointez la caméra vers un code QR d’invitation Bojairũ.",
   "contactsEnterInviteCodeSubmit": "Se connecter",
   "contactsEnterInviteCodeValid": "Le format du code est valide",
   "contactsEnterInviteCodeInvitationId": "Identifiant d’invitation : {id}",
@@ -1302,7 +1302,7 @@
   "housingParticipationChangeInviteParticipantBody": "Ajouter quelqu'un à une entente active exige de terminer le plan actuel et d'en négocier un nouveau avec le consentement de tous. Consultez la FAQ pour le pourquoi.",
   "housingParticipationChangeInviteParticipantFaqLink": "Consulter la FAQ",
   "helpFaqTitle": "Foire aux questions",
-  "helpFaqIntro": "Réponses aux questions fréquentes sur le fonctionnement de Compartarenta.",
+  "helpFaqIntro": "Réponses aux questions fréquentes sur le fonctionnement de Bojairũ.",
   "helpFaqHousingInviteParticipantTitle": "Pourquoi ne puis-je pas inviter quelqu'un au plan actuel ?",
   "helpFaqHousingInviteParticipantBody": "Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D'ici là, l'application conserve une entente stable pour tous.",
   "helpFaqVehicleFuelTankTitle": "Essence dans le réservoir",
@@ -1429,7 +1429,7 @@
   "vehicleExportConfirmBody": "Export de données factuelles du véhicule seulement.\n\nCas d'utilisation: fournir les données à un autre utilisateur lors d'un transfert de propriété.",
   "vehicleExportConfirmExport": "Exporter",
   "vehicleExportSuccessTitle": "Export terminé",
-  "vehicleExportSuccessBody": "Fichier enregistré dans Documents/Compartarenta/\n{fileName}",
+  "vehicleExportSuccessBody": "Fichier enregistré dans Documents/Bojairũ/\n{fileName}",
   "@vehicleExportSuccessBody": {
     "placeholders": {
       "fileName": {

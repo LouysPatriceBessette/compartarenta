@@ -9,7 +9,7 @@ String housingExportModuleSlug(String languageCode) {
 
 /// User-facing housing agreement export file name (short, no internal ids).
 ///
-/// Format: `[YYYY-MM-DD_HH:MM]_Compartarenta-[logement|housing|renta].json`
+/// Format: `[YYYY-MM-DD_HH:MM]_Bojairũ-[logement|housing|renta].json`
 String housingExportFileName({
   required String languageCode,
   DateTime? now,
@@ -23,5 +23,5 @@ String housingExportFileName({
       '${t.hour.toString().padLeft(2, '0')}:'
       '${t.minute.toString().padLeft(2, '0')}';
   final slug = housingExportModuleSlug(languageCode);
-  return '${date}_${time}_Compartarenta-$slug.json';
+  return '${date}_${time}_Bojairũ-$slug.json';
 }

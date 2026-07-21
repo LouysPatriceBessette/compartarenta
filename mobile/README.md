@@ -1,4 +1,4 @@
-# Compartarenta Mobile (Flutter)
+# Bojairũ Mobile (Flutter)
 
 This is the Flutter app workspace for the `mobile-app-store-release` change.
 
@@ -41,7 +41,7 @@ dart run melos run run:dev
    attached.
 
 4. If the error persists: `dart run melos run clean`, then `get`, `codegen`,
-   `web:assets`, and `run:dev` again. Prefer uninstalling “Compartarenta (Dev)”
+   `web:assets`, and `run:dev` again. Prefer uninstalling “Bojairũ (Dev)”
    manually (Android Settings → Apps) if `--uninstall-first` did not run.
 
 `run_dev.sh` passes `--uninstall-first` on mobile targets so reinstall clears

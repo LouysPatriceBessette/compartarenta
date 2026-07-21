@@ -37,7 +37,7 @@ The system SHALL support importing a sale zip export by creating a **new** vehic
 - **WHEN** a user imports a valid sale zip from the add-vehicle form
 - **THEN** the system creates a new vehicle owned by the importing user
 - **THEN** factual records from the export are available on that new vehicle without prior sharing metadata
-- **THEN** media extracted from the zip are stored under `Documents/Compartarenta` using the local vehicle path layout
+- **THEN** media extracted from the zip are stored under `Documents/Bojairũ` using the local vehicle path layout
 - **THEN** the vehicle remains eligible for undo-import until a confirming action occurs
 
 ### Requirement: Undo import while only rename and consult have occurred
@@ -68,7 +68,7 @@ Before completing any user-submitted action that would end undo eligibility, the
 - **WHEN** the user confirms — **THEN** the action proceeds and Undo import is no longer available
 
 ### Requirement: Undo import reverts database and imported media
-Undo import SHALL completely revert the import for that vehicle: remove the vehicle and its imported/local rows for that vehicle from the database, and delete media files that were placed under `Documents/Compartarenta` for that vehicle from the sale zip. The affordance SHALL be placed under the Import control on the Add-vehicle screen and SHALL disappear when the vehicle is no longer undo-eligible.
+Undo import SHALL completely revert the import for that vehicle: remove the vehicle and its imported/local rows for that vehicle from the database, and delete media files that were placed under `Documents/Bojairũ` for that vehicle from the sale zip. The affordance SHALL be placed under the Import control on the Add-vehicle screen and SHALL disappear when the vehicle is no longer undo-eligible.
 
 #### Scenario: Buyer undoes a curiosity import
 - **WHEN** the user chooses Undo import for an undo-eligible imported vehicle

@@ -13,14 +13,14 @@ void main() {
           agreementPeriodStart: start,
           agreementPeriodEnd: end,
         ),
-        'Compartarenta/Housing/2024-03-01_2025-12-31/ExpenseProofs',
+        'Bojairũ/Housing/2024-03-01_2025-12-31/ExpenseProofs',
       );
     });
 
     test('backups subdir', () {
       expect(
         CompartarentaDocumentsLayout.backupsRelativeSubDir(),
-        'Compartarenta/Backups',
+        'Bojairũ/Backups',
       );
     });
   });

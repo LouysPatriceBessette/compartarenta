@@ -1,14 +1,14 @@
-# Compartarenta
+# Bojairũ
 
 **[Español](#es)** · **[English](#en)**
 
 <a id="fr"></a>
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ est une application mobile qui aide les colocataires à modéliser une entente, négocier à l'unanimité chaque détail et tenir les comptes par la suite. Le site web descriptif de l'application est <a href="https://compartarenta.incoherences.org" target="_blank">https://compartarenta.incoherences.org</a>.
+**Bojairũ** est une application mobile qui aide les colocataires à modéliser une entente, négocier à l'unanimité chaque détail et tenir les comptes par la suite. Le site web descriptif de l'application est <a href="https://bojairu.app" target="_blank">https://bojairu.app</a>.
 
 ## Architecture
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ est **local-first** : l'entente, les dépenses et les comptes vivent d'abord sur le téléphone de chaque participant. Rien n'est « centralisé dans le cloud » au sens d'une base de données partagée que le serveur pourrait lire.
+**Bojairũ** est **local-first** : l'entente, les dépenses et les comptes vivent d'abord sur le téléphone de chaque participant. Rien n'est « centralisé dans le cloud » au sens d'une base de données partagée que le serveur pourrait lire.
 
 Quand les participants doivent se mettre d'accord ou se tenir à jour, leurs applications échangent des **messages chiffrés** via un **relais** sur Internet. Le relais fait office de boîte aux lettres : il achemine les enveloppes sans en lire le contenu, puis les efface une fois livrées.
 
@@ -38,9 +38,9 @@ Voir [`legal-and-disputes.md`](./docs/legal-and-disputes.md) (anglais seulement)
 
 Pour plus de détails **mis à jour plus régulièrement**, consultez les liens suivants :
 
-- [Divulgations produit](https://compartarenta.incoherences.org/fr/legal/divulgations/)
-- [Politique de confidentialité](https://compartarenta.incoherences.org/fr/legal/confidentialite/)
-- [Conditions d'utilisation](https://compartarenta.incoherences.org/fr/legal/conditions/)
+- [Divulgations produit](https://bojairu.app/fr/legal/divulgations/)
+- [Politique de confidentialité](https://bojairu.app/fr/legal/confidentialite/)
+- [Conditions d'utilisation](https://bojairu.app/fr/legal/conditions/)
 
 ## Développeurs
 
@@ -54,11 +54,11 @@ Voir [`getting-started.md`](./getting-started.md) pour la structure du dépôt e
 
 **[Français](#fr)** · **[English](#en)**
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ es una aplicación móvil que ayuda a los compañeros de piso a modelar un acuerdo, negociar cada detalle por unanimidad y llevar las cuentas después. El sitio web descriptivo de la aplicación es <a href="https://compartarenta.incoherences.org/es/" target="_blank">https://compartarenta.incoherences.org</a>.
+**Bojairũ** es una aplicación móvil que ayuda a los compañeros de piso a modelar un acuerdo, negociar cada detalle por unanimidad y llevar las cuentas después. El sitio web descriptivo de la aplicación es <a href="https://bojairu.app/es/" target="_blank">https://bojairu.app</a>.
 
 ## Arquitectura
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ es **local-first**: el acuerdo, los gastos y las cuentas viven primero en el teléfono de cada participante. Nada está « centralizado en la nube » en el sentido de una base de datos compartida que el servidor pudiera leer.
+**Bojairũ** es **local-first**: el acuerdo, los gastos y las cuentas viven primero en el teléfono de cada participante. Nada está « centralizado en la nube » en el sentido de una base de datos compartida que el servidor pudiera leer.
 
 Cuando los participantes deben ponerse de acuerdo o mantenerse al día, sus aplicaciones intercambian **mensajes cifrados** a través de un **relé** en Internet. El relé hace de buzón: reenvía los sobres sin leer su contenido y los borra una vez entregados.
 
@@ -88,9 +88,9 @@ Consulte [`legal-and-disputes.md`](./docs/legal-and-disputes.md) (solo en inglé
 
 Para más detalles, **actualizados con mayor frecuencia**, consulte:
 
-- [Divulgaciones del producto](https://compartarenta.incoherences.org/es/legal/divulgations/)
-- [Política de privacidad](https://compartarenta.incoherences.org/es/legal/confidentialite/)
-- [Condiciones de uso](https://compartarenta.incoherences.org/es/legal/conditions/)
+- [Divulgaciones del producto](https://bojairu.app/es/legal/divulgaciones/)
+- [Política de privacidad](https://bojairu.app/es/legal/confidentialite/)
+- [Condiciones de uso](https://bojairu.app/es/legal/condiciones/)
 
 ## Desarrolladores
 
@@ -104,11 +104,11 @@ Consulte [`getting-started.md`](./getting-started.md) para la estructura del rep
 
 **[Français](#fr)** · **[Español](#es)**
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://compartarenta.incoherences.org/en/" target="_blank">https://compartarenta.incoherences.org</a>.
+**Bojairũ** is a mobile app that helps roommates model an agreement, negotiate every detail by unanimous consent, and keep the books afterward. The descriptive website for the app is <a href="https://bojairu.app/en/" target="_blank">https://bojairu.app</a>.
 
 ## Architecture
 
-$\textsf{\textbf{Comparta}\color{#35a0dd}{\textbf{renta}}}$ is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
+**Bojairũ** is **local-first**: the agreement, expenses, and accounts live first on each participant's phone. Nothing is « centralized in the cloud » in the sense of a shared database the server could read.
 
 When participants need to agree or stay in sync, their apps exchange **encrypted messages** through an Internet **relay**. The relay acts as a mailbox: it forwards envelopes without reading their contents, then deletes them once delivered.
 
@@ -138,9 +138,9 @@ See [`legal-and-disputes.md`](./docs/legal-and-disputes.md) for transparency on 
 
 For more detail, **updated more regularly**, see:
 
-- [Product disclosures](https://compartarenta.incoherences.org/en/legal/divulgations/)
-- [Privacy policy](https://compartarenta.incoherences.org/en/legal/confidentialite/)
-- [Terms of use](https://compartarenta.incoherences.org/en/legal/conditions/)
+- [Product disclosures](https://bojairu.app/en/legal/disclosures/)
+- [Privacy policy](https://bojairu.app/en/legal/confidentialite/)
+- [Terms of use](https://bojairu.app/en/legal/terms/)
 
 ## Developers
 

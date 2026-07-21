@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-/// Public legal pages on `compartarenta.incoherences.org`.
-const _legalSiteOrigin = 'https://compartarenta.incoherences.org';
+/// Public legal pages on `bojairu.app`.
+const _legalSiteOrigin = 'https://bojairu.app';
 
 /// Locale-aware privacy policy URL (FR / EN / ES paths on the marketing site).
 Uri privacyPolicyUrlForLocale(Locale locale) {

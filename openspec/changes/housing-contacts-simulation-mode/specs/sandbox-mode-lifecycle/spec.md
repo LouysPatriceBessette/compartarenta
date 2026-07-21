@@ -42,7 +42,7 @@ The Mode simulation control SHALL be unavailable when a real housing plan draft 
 
 ### Requirement: Enter protocol uses dual-verified checkpoint before wipe
 
-When the user confirms Simulate and the device has preservable operational data, the application SHALL: (1) export using the existing full-device export path; (2) verify integrity by decoding the export as in the import pre-check; (3) write a second copy to a fixed private application path outside the shared Documents/Compartarenta tree; (4) verify that second copy; (5) wipe the local database only if both copies verify. The preference `sandboxMode` SHALL be set true and `sandboxEnteredAt` recorded such that the next cold start boots sandbox. Wipe SHALL NOT be exposed as a user-facing “Reset local database” product action. After wipe, a full process restart SHALL be required (auto-relaunch if reliable; otherwise instruct the user to reopen the app).
+When the user confirms Simulate and the device has preservable operational data, the application SHALL: (1) export using the existing full-device export path; (2) verify integrity by decoding the export as in the import pre-check; (3) write a second copy to a fixed private application path outside the shared Documents/Bojairũ tree; (4) verify that second copy; (5) wipe the local database only if both copies verify. The preference `sandboxMode` SHALL be set true and `sandboxEnteredAt` recorded such that the next cold start boots sandbox. Wipe SHALL NOT be exposed as a user-facing “Reset local database” product action. After wipe, a full process restart SHALL be required (auto-relaunch if reliable; otherwise instruct the user to reopen the app).
 
 #### Scenario: Wipe only after dual verify
 - **WHEN** either export copy fails integrity verification

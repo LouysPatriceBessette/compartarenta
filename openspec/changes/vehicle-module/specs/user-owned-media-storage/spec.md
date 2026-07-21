@@ -4,7 +4,7 @@
 Any image captured or chosen by the user through the app (camera or gallery) and **persisted** as product data MUST be written under the user-visible tree:
 
 ```
-Documents/Compartarenta/
+Documents/Bojairũ/
 ```
 
 On Android this MUST use the existing public-documents channel (`writePublicDocumentBytes` / MediaStore `RELATIVE_PATH`), not the app-private `getApplicationDocumentsDirectory()` tree.
@@ -13,32 +13,32 @@ Implementation MUST NOT leave durable user media only in app-private storage.
 
 #### Scenario: Odometer photo is user-visible after save
 - **WHEN** a meter reading photo is saved for vehicle `V123`
-- **THEN** the file is stored under `Documents/Compartarenta/Car/V123/Odometer/`
+- **THEN** the file is stored under `Documents/Bojairũ/Car/V123/Odometer/`
 - **THEN** the user can browse and delete that file with the device file manager
 
 #### Scenario: Vehicle gallery photo is user-visible after save
 - **WHEN** a gallery photo is saved for vehicle `V123` in gallery index `2`
-- **THEN** the file is stored under `Documents/Compartarenta/Car/V123/Gallery_002/`
+- **THEN** the file is stored under `Documents/Bojairũ/Car/V123/Gallery_002/`
 
 #### Scenario: Housing expense proof is user-visible after save
 - **WHEN** a realized expense proof image is persisted for an agreement period
-- **THEN** the file is stored under `Documents/Compartarenta/Housing/<period>/ExpenseProofs/`
+- **THEN** the file is stored under `Documents/Bojairũ/Housing/<period>/ExpenseProofs/`
 
 ### Requirement: Canonical folder layout
-Module roots under `Documents/Compartarenta/` MUST follow `CompartarentaDocumentsLayout`:
+Module roots under `Documents/Bojairũ/` MUST follow `CompartarentaDocumentsLayout`:
 
 | Module | Relative path pattern | Content |
 | --- | --- | --- |
-| Backups | `Compartarenta/Backups/` | JSON export files (not images) |
-| Housing | `Compartarenta/Housing/<start>_<end>/ExpenseProofs/` | Expense proof images |
-| Vehicle | `Compartarenta/Car/<vehicleId>/Odometer/` | Odometer / horometer photos |
-| Vehicle | `Compartarenta/Car/<vehicleId>/Gallery_<nnn>/` | Vehicle condition gallery photos |
+| Backups | `Bojairũ/Backups/` | JSON export files (not images) |
+| Housing | `Bojairũ/Housing/<start>_<end>/ExpenseProofs/` | Expense proof images |
+| Vehicle | `Bojairũ/Car/<vehicleId>/Odometer/` | Odometer / horometer photos |
+| Vehicle | `Bojairũ/Car/<vehicleId>/Gallery_<nnn>/` | Vehicle condition gallery photos |
 
-Future modules (e.g. `Car_sharing`) MUST add a named subfolder under `Compartarenta/` before writing user media.
+Future modules (e.g. `Car_sharing`) MUST add a named subfolder under `Bojairũ/` before writing user media.
 
 #### Scenario: New module adds a folder before first write
 - **WHEN** a new feature persists a user-captured image
-- **THEN** it declares a `Compartarenta/<Module>/…` path in `CompartarentaDocumentsLayout` (or successor)
+- **THEN** it declares a `Bojairũ/<Module>/…` path in `CompartarentaDocumentsLayout` (or successor)
 - **THEN** it writes through the public-documents API
 
 ### Requirement: Timestamp file names for vehicle media
@@ -64,7 +64,7 @@ Legacy private paths MAY remain readable as a defensive fallback, but **no migra
 #### Scenario: Legacy private odometer folder is not written on new save
 - **WHEN** a user saves a new odometer photo on a build that implements this spec
 - **THEN** no new file appears under app-private `vehicle_meter_photos/`
-- **THEN** the file appears under `Documents/Compartarenta/Car/<vehicleId>/Odometer/`
+- **THEN** the file appears under `Documents/Bojairũ/Car/<vehicleId>/Odometer/`
 
 ### Requirement: Database stores public storage keys
 Persisted photo references in the local database MUST store the public `storageKey` returned by `writePublicDocumentBytes` (e.g. Android `content://…` URI), not a relative app-private path.

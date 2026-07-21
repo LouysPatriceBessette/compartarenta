@@ -39,7 +39,7 @@ class StoredProof {
   final String? contentHash;
 }
 
-/// Writes proofs under public Documents/Compartarenta/Housing/…/ExpenseProofs.
+/// Writes proofs under public Documents/Bojairũ/Housing/…/ExpenseProofs.
 class ProofAttachmentStorage {
   // Keep proof images comfortably below relay request limits after base64 + envelope overhead.
   static const int _targetCompressedImageBytes = 120 * 1024;

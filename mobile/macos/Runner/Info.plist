@@ -25,7 +25,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Compartarenta uses the camera to scan contact invitation QR codes.</string>
+	<string>Bojairũ uses the camera to scan contact invitation QR codes.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

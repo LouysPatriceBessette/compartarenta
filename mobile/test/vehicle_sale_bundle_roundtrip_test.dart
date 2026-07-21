@@ -6,7 +6,7 @@ import 'package:compartarenta/vehicle/portability/vehicle_sale_bundle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('sale zip contains JSON under Compartarenta/ and media paths', () {
+  test('sale zip contains JSON under Bojairũ/ and media paths', () {
     final jsonName = '2026-07-14-Data-of-Test.json';
     final jsonPath =
         '${CompartarentaDocumentsLayout.rootFolderName}/$jsonName';

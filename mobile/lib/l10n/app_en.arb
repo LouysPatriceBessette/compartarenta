@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appTitle": "Compartarenta",
+  "appTitle": "Bojairũ",
 
   "commonContinue": "Continue",
   "commonFinishSetup": "Finish setup",
@@ -53,7 +53,7 @@
   "deviceDataImportAction": "Import backup",
   "deviceDataExportCopiedToClipboard": "Backup JSON copied to clipboard.",
   "deviceDataExportLastSavedTitle": "Saved file",
-  "deviceDataExportSavedLocation": "Documents/Compartarenta/{fileName}",
+  "deviceDataExportSavedLocation": "Documents/Bojairũ/{fileName}",
   "@deviceDataExportSavedLocation": {
     "placeholders": {
       "fileName": {
@@ -146,7 +146,7 @@
   "onboardingLanguageTitle": "Language",
   "onboardingLanguageBody": "Choose the app language. You can change it anytime in Settings.",
   "onboardingWelcomeTitle": "Welcome",
-  "onboardingWelcomeIntro": "Compartarenta is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.",
+  "onboardingWelcomeIntro": "Bojairũ is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.",
   "onboardingWelcomeConfidentialTitle": "Confidential",
   "onboardingWelcomeConfidentialBody": "Finally, real privacy. You can enter your data without any worry. No one other than you and your roommates will have access. This is not just a promise—it is a demonstrable fact. All of the app’s code is public and can be inspected and audited.\n\nThis does imply an important trade-off: there is no way to recover your data if you lose it (loss, theft, or breakage of your device). The app includes an import/export feature that is strongly suggested to use periodically to keep a backup. You are free to put the exported file wherever you want. Securing that backup is your responsibility.",
   "onboardingOk": "OK",
@@ -334,7 +334,7 @@
   "housingExportAction": "Export agreement data",
   "housingExportCopiedToClipboard": "Export JSON copied to clipboard.",
   "housingExportLastSavedTitle": "Saved file",
-  "housingExportSavedLocation": "Internal storage/Documents/Compartarenta/{fileName}",
+  "housingExportSavedLocation": "Internal storage/Documents/Bojairũ/{fileName}",
   "@housingExportSavedLocation": {
     "placeholders": {
       "fileName": {
@@ -1299,7 +1299,7 @@
   "contactsInviteShortCodeLabel": "Code",
   "contactsInviteCopyDeepLink": "Copy link",
   "contactsInviteCopyShareText": "Copy invitation",
-  "contactsInviteShareText": "You're invited to connect on Compartarenta.\n\nOne-time code:\n{code}\n\nTo use it: open the Compartarenta app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: {link}",
+  "contactsInviteShareText": "You're invited to connect on Bojairũ.\n\nOne-time code:\n{code}\n\nTo use it: open the Bojairũ app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: {link}",
   "@contactsInviteShareText": {
     "placeholders": {
       "link": { "type": "String" },
@@ -1327,7 +1327,7 @@
   "contactsEnterInviteCodeIntro": "Paste or type the code you received from a contact.",
   "contactsEnterInviteCodeFieldLabel": "Invitation code",
   "contactsEnterInviteCodeScanQr": "Scan QR code",
-  "contactsEnterInviteCodeScanQrHint": "Point the camera at a Compartarenta invitation QR code.",
+  "contactsEnterInviteCodeScanQrHint": "Point the camera at a Bojairũ invitation QR code.",
   "contactsEnterInviteCodeSubmit": "Connect",
   "contactsEnterInviteCodeValid": "Code format is valid",
   "contactsEnterInviteCodeInvitationId": "Invitation id: {id}",
@@ -1457,7 +1457,7 @@
   "housingParticipationChangeInviteParticipantBody": "Adding someone to an active agreement requires ending the current plan and starting a new one with everyone’s consent. Read why in the FAQ.",
   "housingParticipationChangeInviteParticipantFaqLink": "Read the FAQ",
   "helpFaqTitle": "Frequently asked questions",
-  "helpFaqIntro": "Answers to common questions about how Compartarenta works.",
+  "helpFaqIntro": "Answers to common questions about how Bojairũ works.",
   "helpFaqHousingInviteParticipantTitle": "Why can’t I invite someone to the current plan?",
   "helpFaqHousingInviteParticipantBody": "An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.",
   "housingVoteRefusedByAgreementExpiration": "Refused — agreement expired",
@@ -1589,7 +1589,7 @@
   "vehicleExportConfirmBody": "Export of factual vehicle data only.\n\nUse case: provide the data to another user during a transfer of ownership.",
   "vehicleExportConfirmExport": "Export",
   "vehicleExportSuccessTitle": "Export complete",
-  "vehicleExportSuccessBody": "File saved in Documents/Compartarenta/\n{fileName}",
+  "vehicleExportSuccessBody": "File saved in Documents/Bojairũ/\n{fileName}",
   "@vehicleExportSuccessBody": {
     "placeholders": {
       "fileName": {

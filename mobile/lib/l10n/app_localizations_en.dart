@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Compartarenta';
+  String get appTitle => 'Bojairũ';
 
   @override
   String get commonContinue => 'Continue';
@@ -161,7 +161,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deviceDataExportSavedLocation(String fileName) {
-    return 'Documents/Compartarenta/$fileName';
+    return 'Documents/Bojairũ/$fileName';
   }
 
   @override
@@ -374,7 +374,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWelcomeIntro =>
-      'Compartarenta is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.';
+      'Bojairũ is an app developed to help roommates get along better.\n\nBy using this app, you will avoid misunderstandings, oversights, and calculation errors that often lead to conflict. To get the most out of it, enter data as it becomes known.';
 
   @override
   String get onboardingWelcomeConfidentialTitle => 'Confidential';
@@ -847,7 +847,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String housingExportSavedLocation(String fileName) {
-    return 'Internal storage/Documents/Compartarenta/$fileName';
+    return 'Internal storage/Documents/Bojairũ/$fileName';
   }
 
   @override
@@ -2840,7 +2840,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String contactsInviteShareText(String link, String code) {
-    return 'You\'re invited to connect on Compartarenta.\n\nOne-time code:\n$code\n\nTo use it: open the Compartarenta app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: $link';
+    return 'You\'re invited to connect on Bojairũ.\n\nOne-time code:\n$code\n\nTo use it: open the Bojairũ app, go to Contacts, tap the scan/enter-code icon at the top of the screen, then paste this code. From the device that has the app installed you can also open: $link';
   }
 
   @override
@@ -2895,7 +2895,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsEnterInviteCodeScanQrHint =>
-      'Point the camera at a Compartarenta invitation QR code.';
+      'Point the camera at a Bojairũ invitation QR code.';
 
   @override
   String get contactsEnterInviteCodeSubmit => 'Connect';
@@ -3229,7 +3229,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFaqIntro =>
-      'Answers to common questions about how Compartarenta works.';
+      'Answers to common questions about how Bojairũ works.';
 
   @override
   String get helpFaqHousingInviteParticipantTitle =>
@@ -3526,7 +3526,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String vehicleExportSuccessBody(String fileName) {
-    return 'File saved in Documents/Compartarenta/\n$fileName';
+    return 'File saved in Documents/Bojairũ/\n$fileName';
   }
 
   @override
