@@ -30,9 +30,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final privacyPolicyUrl = privacyPolicyUrlForLocale(
-      Localizations.localeOf(context),
-    );
+    final locale = Localizations.localeOf(context);
+    final privacyPolicyUrl = privacyPolicyUrlForLocale(locale);
+    final faqIndexUrl = faqIndexUrlForLocale(locale);
     final showDevTools = widget.config.environment != AppEnvironment.prod;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -100,8 +100,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             title: Text(l10n.helpFaqTitle),
             subtitle: Text(l10n.helpFaqIntro),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => navigateToChild(context, '/help/faq'),
+            onTap: () async {
+              await launchUrl(
+                faqIndexUrl,
+                mode: LaunchMode.externalApplication,
+              );
+            },
           ),
           ListTile(
             title: Text(l10n.settingsPrivacyPolicyTitle),

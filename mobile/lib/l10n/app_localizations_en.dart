@@ -3232,14 +3232,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Answers to common questions about how Bojairũ works.';
 
   @override
-  String get helpFaqHousingInviteParticipantTitle =>
-      'Why can’t I invite someone to the current plan?';
-
-  @override
-  String get helpFaqHousingInviteParticipantBody =>
-      'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.';
-
-  @override
   String get housingVoteRefusedByAgreementExpiration =>
       'Refused — agreement expired';
 
@@ -4124,21 +4116,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleFuelTankInfoTooltip => 'About fuel tank estimate';
-
-  @override
-  String get helpFaqVehicleFuelTankTitle => 'Fuel in the tank';
-
-  @override
-  String get helpFaqVehicleFuelTankBody =>
-      'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationTitle =>
-      'Fuel consumption estimation';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationBody =>
-      'Displayed consumption is calculated from your full-tank fuel purchases and, depending on the selected mode, from your end-of-session declarations.\n\nSimple mode: a single L/100 km value with no highway / city / traffic split.\n\nDetailed mode: a split by driving condition when enough detailed sessions between full tanks have been recorded.\n\nReliability counts only full-tank periods recorded in the same mode as the one currently selected.\n\nIf the owner does not require detailed mode for borrowers, they may end a session without entering highway / city / traffic percentages; their distance is then treated like the owner\'s driving profile for the detailed estimate, which may reduce accuracy when drivers do not share the same usage.\n\nSwitching modes may temporarily show an estimate carried over from the other mode until enough new full-tank periods are available in the chosen mode.';
 
   @override
   String get vehicleMaintenanceCategory => 'Category';

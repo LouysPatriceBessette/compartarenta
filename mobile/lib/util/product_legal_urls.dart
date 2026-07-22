@@ -34,6 +34,16 @@ Uri privacyPolicyUrlForLocale(Locale locale) {
   return Uri.parse('$_legalSiteOrigin$path');
 }
 
+/// Locale-aware FAQ hub URL (module FAQ index on the marketing site).
+Uri faqIndexUrlForLocale(Locale locale) {
+  final path = switch (locale.languageCode) {
+    'fr' => '/fr/faq/',
+    'es' => '/es/faq/',
+    _ => '/en/faq/',
+  };
+  return Uri.parse('$_legalSiteOrigin$path');
+}
+
 Uri _moduleFaqUrl({
   required Locale locale,
   required String frPath,

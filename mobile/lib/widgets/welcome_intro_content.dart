@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 
-/// Shared welcome + confidentiality copy for onboarding and FAQ.
+/// Shared welcome + confidentiality copy for onboarding.
 class WelcomeIntroContent extends StatelessWidget {
   const WelcomeIntroContent({super.key});
 

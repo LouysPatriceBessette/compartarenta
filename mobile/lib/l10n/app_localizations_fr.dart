@@ -3266,14 +3266,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Réponses aux questions fréquentes sur le fonctionnement de Bojairũ.';
 
   @override
-  String get helpFaqHousingInviteParticipantTitle =>
-      'Pourquoi ne puis-je pas inviter quelqu\'un au plan actuel ?';
-
-  @override
-  String get helpFaqHousingInviteParticipantBody =>
-      'Une entente de logement active lie tous les participants au même roster et aux mêmes règles de dépenses. Ajouter un colocataire change qui doit quoi pour toute la période, y compris les dépenses passées et en cours. C\'est une nouvelle entente, pas une petite modification.\n\nPour ajouter quelqu\'un, un participant doit mettre fin au plan actuel (Changement majeur → retrait volontaire ou terminaison, selon le cas), puis le groupe peut négocier et accepter un nouveau plan incluant la nouvelle personne. D\'ici là, l\'application conserve une entente stable pour tous.';
-
-  @override
   String get housingVoteRefusedByAgreementExpiration =>
       'Refusé par expiration de l\'entente';
 
@@ -4169,21 +4161,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get vehicleFuelTankInfoTooltip =>
       'À propos de l\'estimation du réservoir';
-
-  @override
-  String get helpFaqVehicleFuelTankTitle => 'Essence dans le réservoir';
-
-  @override
-  String get helpFaqVehicleFuelTankBody =>
-      'La quantité d\'essence affichée pour un véhicule provient du niveau de réservoir le plus récent que vous déclarez à la fin d\'une session d\'utilisation ou lors d\'un achat d\'essence.\n\nSans déclaration de niveau, aucune quantité n\'est affichée.\n\nIl s\'agit de votre déclaration, pas d\'une mesure réelle.';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationTitle =>
-      'Estimation de la consommation d\'essence';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationBody =>
-      'La consommation affichée est calculée à partir de vos pleins d\'essence et, selon le mode choisi, de vos déclarations en fin de session.\n\nMode simple : une seule valeur en L/100 km, sans répartition route / ville / trafic.\n\nMode détaillé : répartition par type de conduite lorsque suffisamment de sessions détaillées ont été enregistrées entre deux pleins.\n\nLa fiabilité ne tient compte que des périodes entre pleins enregistrées dans le même mode que celui actuellement sélectionné.\n\nSi le propriétaire n\'impose pas le mode détaillé à ses emprunteurs, ceux-ci peuvent terminer une session sans saisir les pourcentages route / ville / trafic ; leurs kilomètres sont alors assimilés au profil de conduite du propriétaire pour l\'estimation détaillée, ce qui peut réduire la précision si tous les conducteurs n\'ont pas le même usage.\n\nChanger de mode peut temporairement afficher une estimation héritée de l\'autre mode jusqu\'à ce qu\'assez de nouvelles périodes entre pleins soient disponibles dans le mode choisi.';
 
   @override
   String get vehicleMaintenanceCategory => 'Catégorie';

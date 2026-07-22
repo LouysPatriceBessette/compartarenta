@@ -19,7 +19,6 @@ import 'screens/settings/notification_settings_screen.dart';
 import 'screens/settings/profile_identity_settings_screen.dart';
 import 'screens/settings/units_settings_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/help/help_faq_route.dart';
 import 'screens/onboarding/onboarding_shell.dart';
 import 'screens/housing/housing_module_entry_screen.dart';
 import 'screens/vehicle/vehicle_module_hub_screen.dart';
@@ -477,7 +476,6 @@ GoRouter _createRouter(AppConfig config, AppPreferences prefs) {
         path: '/settings/export-import',
         builder: (context, state) => const DeviceDataExportImportScreen(),
       ),
-      helpFaqRoute(),
       GoRoute(
         path: '/housing',
         builder: (context, state) => HousingModuleEntryScreen(prefs: prefs),

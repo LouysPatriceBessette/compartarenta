@@ -5473,18 +5473,6 @@ abstract class AppLocalizations {
   /// **'Answers to common questions about how Bojairũ works.'**
   String get helpFaqIntro;
 
-  /// No description provided for @helpFaqHousingInviteParticipantTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Why can’t I invite someone to the current plan?'**
-  String get helpFaqHousingInviteParticipantTitle;
-
-  /// No description provided for @helpFaqHousingInviteParticipantBody.
-  ///
-  /// In en, this message translates to:
-  /// **'An active housing agreement binds every participant to the same roster and expense rules. Adding a roommate changes who owes what for the whole period, including past and ongoing expenses. That is a new agreement, not a small edit.\n\nTo add someone, a participant must end the current plan (Major change → voluntary withdrawal, as appropriate), then the group can negotiate and accept a new plan that includes the new person. Until then, the app keeps one stable agreement for everyone.'**
-  String get helpFaqHousingInviteParticipantBody;
-
   /// No description provided for @housingVoteRefusedByAgreementExpiration.
   ///
   /// In en, this message translates to:
@@ -6950,30 +6938,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About fuel tank estimate'**
   String get vehicleFuelTankInfoTooltip;
-
-  /// No description provided for @helpFaqVehicleFuelTankTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Fuel in the tank'**
-  String get helpFaqVehicleFuelTankTitle;
-
-  /// No description provided for @helpFaqVehicleFuelTankBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The fuel quantity shown for a vehicle comes from the most recent tank level you declared when ending a use session or recording a fuel purchase.\n\nIf no tank level has been declared yet, no quantity is shown.\n\nThis reflects your declaration, not a measured value.'**
-  String get helpFaqVehicleFuelTankBody;
-
-  /// No description provided for @helpFaqVehicleConsumptionEstimationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Fuel consumption estimation'**
-  String get helpFaqVehicleConsumptionEstimationTitle;
-
-  /// No description provided for @helpFaqVehicleConsumptionEstimationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Displayed consumption is calculated from your full-tank fuel purchases and, depending on the selected mode, from your end-of-session declarations.\n\nSimple mode: a single L/100 km value with no highway / city / traffic split.\n\nDetailed mode: a split by driving condition when enough detailed sessions between full tanks have been recorded.\n\nReliability counts only full-tank periods recorded in the same mode as the one currently selected.\n\nIf the owner does not require detailed mode for borrowers, they may end a session without entering highway / city / traffic percentages; their distance is then treated like the owner\'s driving profile for the detailed estimate, which may reduce accuracy when drivers do not share the same usage.\n\nSwitching modes may temporarily show an estimate carried over from the other mode until enough new full-tank periods are available in the chosen mode.'**
-  String get helpFaqVehicleConsumptionEstimationBody;
 
   /// No description provided for @vehicleMaintenanceCategory.
   ///

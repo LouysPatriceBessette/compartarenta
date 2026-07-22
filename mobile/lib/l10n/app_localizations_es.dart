@@ -3267,14 +3267,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Respuestas a preguntas habituales sobre el funcionamiento de Bojairũ.';
 
   @override
-  String get helpFaqHousingInviteParticipantTitle =>
-      '¿Por qué no puedo invitar a alguien al plan actual?';
-
-  @override
-  String get helpFaqHousingInviteParticipantBody =>
-      'Un acuerdo de vivienda activo vincula a todos los participantes al mismo roster y a las mismas reglas de gastos. Añadir un compañero cambia quién debe qué durante todo el periodo, incluidos gastos pasados y en curso. Es un acuerdo nuevo, no un pequeño cambio.\n\nPara añadir a alguien, un participante debe terminar el plan actual (Cambio importante → retiro voluntario o terminación, según corresponda); luego el grupo puede negociar y aceptar un plan nuevo que incluya a la nueva persona. Hasta entonces, la aplicación mantiene un acuerdo estable para todos.';
-
-  @override
   String get housingVoteRefusedByAgreementExpiration =>
       'Rechazado por vencimiento del acuerdo';
 
@@ -4171,21 +4163,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get vehicleFuelTankInfoTooltip =>
       'Acerca de la estimación del depósito';
-
-  @override
-  String get helpFaqVehicleFuelTankTitle => 'Combustible en el depósito';
-
-  @override
-  String get helpFaqVehicleFuelTankBody =>
-      'La cantidad de combustible mostrada para un vehículo proviene del nivel de depósito más reciente que declare al finalizar una sesión de uso o al registrar una compra de combustible.\n\nSin una declaración de nivel, no se muestra cantidad.\n\nRefleja su declaración, no una medición real.';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationTitle =>
-      'Estimación del consumo de combustible';
-
-  @override
-  String get helpFaqVehicleConsumptionEstimationBody =>
-      'El consumo mostrado se calcula a partir de sus repostajes completos y, según el modo elegido, de sus declaraciones al finalizar una sesión.\n\nModo simple: un solo valor en L/100 km, sin desglose carretera / ciudad / tráfico.\n\nModo detallado: desglose por tipo de conducción cuando hay suficientes sesiones detalladas entre dos repostajes completos.\n\nLa fiabilidad solo cuenta los períodos entre repostajes completos registrados en el mismo modo que el seleccionado actualmente.\n\nSi el propietario no impone el modo detallado a los prestatarios, estos pueden terminar una sesión sin introducir los porcentajes carretera / ciudad / tráfico; sus kilómetros se asimilan entonces al perfil de conducción del propietario para la estimación detallada, lo que puede reducir la precisión si no todos los conductores tienen el mismo uso.\n\nCambiar de modo puede mostrar temporalmente una estimación heredada del otro modo hasta que haya suficientes períodos nuevos entre repostajes completos en el modo elegido.';
 
   @override
   String get vehicleMaintenanceCategory => 'Categoría';

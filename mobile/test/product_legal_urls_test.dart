@@ -34,6 +34,28 @@ void main() {
     );
   });
 
+  test('faqIndexUrlForLocale uses FR / EN / ES paths', () {
+    expect(
+      faqIndexUrlForLocale(const Locale('fr')),
+      Uri.parse('https://bojairu.app/fr/faq/'),
+    );
+    expect(
+      faqIndexUrlForLocale(const Locale('en')),
+      Uri.parse('https://bojairu.app/en/faq/'),
+    );
+    expect(
+      faqIndexUrlForLocale(const Locale('es')),
+      Uri.parse('https://bojairu.app/es/faq/'),
+    );
+  });
+
+  test('faqIndexUrlForLocale falls back to EN', () {
+    expect(
+      faqIndexUrlForLocale(const Locale('de')),
+      Uri.parse('https://bojairu.app/en/faq/'),
+    );
+  });
+
   test('contactDuplicateFaqUrlForLocale uses #reject', () {
     expect(
       contactDuplicateFaqUrlForLocale(const Locale('fr')),
