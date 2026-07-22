@@ -19,13 +19,14 @@ abstract final class AppBrandColors {
   static const Color moneyGreen = Color(0xFF16A34A);
   static const Color calendarViolet = Color(0xFF7C3AED);
 
-  /// Website `--card`: 35% sand mixed with white.
-  static const Color lightCard = Color(0xFFFFFCF9);
+  /// Elevated light card surface. Palette [peach] — stronger than [sand]
+  /// so hub tiles and other Cards remain visible against the scaffold.
+  static const Color lightCard = peach;
 
   /// Website dark `--bg`: 32% clay mixed with #2A211C.
   static const Color darkBackground = Color(0xFF442519);
 
-  /// Elevated dark card surface. Palette [clay] — paler than [darkBackground]
+  /// Elevated dark card surface. Palette [clay] — stronger than [darkBackground]
   /// so hub tiles and other Cards remain visible.
   static const Color darkCard = clay;
 }

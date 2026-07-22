@@ -17,6 +17,8 @@ void main() {
     expect(scheme.onSurfaceVariant, AppBrandColors.stone);
     expect(scheme.outlineVariant, AppBrandColors.peach);
     expect(theme.cardTheme.color, AppBrandColors.lightCard);
+    expect(AppBrandColors.lightCard, AppBrandColors.peach);
+    expect(AppBrandColors.lightCard, isNot(AppBrandColors.sand));
   });
 
   test('dark theme uses the Bojairũ website roles', () {
