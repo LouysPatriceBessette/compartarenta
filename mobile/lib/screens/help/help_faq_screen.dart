@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
-
-import '../../l10n/app_localizations.dart';
-import '../../widgets/screen_body_padding.dart';
-import '../../widgets/welcome_intro_content.dart';
 import 'package:compartarenta/navigation/app_navigation.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../util/product_legal_urls.dart';
+import '../../widgets/screen_body_padding.dart';
+import '../../widgets/welcome_intro_content.dart';
+
 /// FAQ anchor ids used by in-app links (fragment after `#`).
+/// Keep values aligned with [ProductFaqAnchors] / marketing site `<details id>`.
 abstract final class HelpFaqAnchors {
-  static const housingInviteParticipant = 'housing-invite-participant';
-  static const vehicleFuelTank = 'vehicle-fuel-tank';
-  static const vehicleConsumptionEstimation = 'vehicle-consumption-estimation';
+  static const housingInviteParticipant =
+      ProductFaqAnchors.housingInviteParticipant;
+  static const vehicleFuelTank = ProductFaqAnchors.vehicleFuelTank;
+  static const vehicleConsumptionEstimation =
+      ProductFaqAnchors.vehicleConsumptionEstimation;
 }
 
 /// One FAQ accordion section. Add entries in [_buildFaqSections] only.

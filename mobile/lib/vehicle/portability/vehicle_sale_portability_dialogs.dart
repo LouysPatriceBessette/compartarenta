@@ -17,6 +17,7 @@ Future<bool> showVehicleSaleExportConfirmDialog(BuildContext context) async {
     confirmLabel: l10n.vehicleExportConfirmExport,
     confirmSemanticsId: kQaVehicleExportConfirm,
     cancelSemanticsId: kQaVehicleExportCancel,
+    faqFragment: ProductFaqAnchors.vehicleOwnershipExport,
   );
 }
 
@@ -28,6 +29,7 @@ Future<bool> showVehicleSaleImportConfirmDialog(BuildContext context) async {
     confirmLabel: l10n.vehicleImportConfirmImport,
     confirmSemanticsId: kQaVehicleImportConfirm,
     cancelSemanticsId: kQaVehicleImportCancel,
+    faqFragment: ProductFaqAnchors.vehicleOwnershipImport,
   );
 }
 
@@ -68,10 +70,11 @@ Future<bool> _showPortabilityConfirmDialog({
   required String confirmLabel,
   required String confirmSemanticsId,
   required String cancelSemanticsId,
+  required String faqFragment,
 }) async {
   final l10n = AppLocalizations.of(context);
   final locale = Localizations.localeOf(context);
-  final faqUrl = vehicleModuleFaqUrlForLocale(locale);
+  final faqUrl = vehicleModuleFaqUrlForLocale(locale, fragment: faqFragment);
   final recognizer = TapGestureRecognizer()
     ..onTap = () {
       unawaited(launchUrl(faqUrl, mode: LaunchMode.externalApplication));

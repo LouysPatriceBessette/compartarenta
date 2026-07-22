@@ -34,23 +34,62 @@ void main() {
     );
   });
 
-  test('vehicleModuleFaqUrlForLocale uses FR / EN / ES paths', () {
+  test('contactDuplicateFaqUrlForLocale uses #reject', () {
     expect(
-      vehicleModuleFaqUrlForLocale(const Locale('fr')),
+      contactDuplicateFaqUrlForLocale(const Locale('fr')),
       Uri.parse(
-        'https://bojairu.app/fr/modules/vehicule/faq/',
+        'https://bojairu.app/fr/modules/contacts/faq/#reject',
       ),
     );
     expect(
-      vehicleModuleFaqUrlForLocale(const Locale('en')),
+      contactDuplicateFaqUrlForLocale(const Locale('en')),
       Uri.parse(
-        'https://bojairu.app/en/modules/vehicule/faq/',
+        'https://bojairu.app/en/modules/contacts/faq/#reject',
+      ),
+    );
+  });
+
+  test('housingModuleFaqUrlForLocale uses #housing-invite-participant', () {
+    expect(
+      housingModuleFaqUrlForLocale(const Locale('fr')),
+      Uri.parse(
+        'https://bojairu.app/fr/modules/logement/faq/#housing-invite-participant',
       ),
     );
     expect(
-      vehicleModuleFaqUrlForLocale(const Locale('es')),
+      housingModuleFaqUrlForLocale(const Locale('es')),
       Uri.parse(
-        'https://bojairu.app/es/modules/vehicule/faq/',
+        'https://bojairu.app/es/modules/logement/faq/#housing-invite-participant',
+      ),
+    );
+  });
+
+  test('vehicleModuleFaqUrlForLocale appends the requested fragment', () {
+    expect(
+      vehicleModuleFaqUrlForLocale(
+        const Locale('fr'),
+        fragment: ProductFaqAnchors.vehicleOwnershipExport,
+      ),
+      Uri.parse(
+        'https://bojairu.app/fr/modules/vehicule/faq/#vehicle-ownership-export',
+      ),
+    );
+    expect(
+      vehicleModuleFaqUrlForLocale(
+        const Locale('en'),
+        fragment: ProductFaqAnchors.vehicleOwnershipImport,
+      ),
+      Uri.parse(
+        'https://bojairu.app/en/modules/vehicule/faq/#vehicle-ownership-import',
+      ),
+    );
+    expect(
+      vehicleModuleFaqUrlForLocale(
+        const Locale('es'),
+        fragment: ProductFaqAnchors.vehicleFuelTank,
+      ),
+      Uri.parse(
+        'https://bojairu.app/es/modules/vehicule/faq/#vehicle-fuel-tank',
       ),
     );
   });

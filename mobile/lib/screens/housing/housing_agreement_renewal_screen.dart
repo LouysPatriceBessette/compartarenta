@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/app_dialog.dart';
 import '../../db/app_database.dart';
@@ -10,8 +13,8 @@ import '../../prefs/app_preferences.dart';
 import '../../relay/handshake_orchestrator.dart';
 import '../../util/display_date.dart';
 import '../../util/format_money.dart';
+import '../../util/product_legal_urls.dart';
 import '../../widgets/screen_body_padding.dart';
-import '../help/help_faq_screen.dart';
 
 /// Major change: voluntary withdrawal, ejection, or invite-participant guidance.
 class HousingAgreementRenewalScreen extends StatefulWidget {
@@ -177,9 +180,12 @@ class _HousingAgreementRenewalScreenState
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              openHelpFaq(
-                context,
-                anchor: HelpFaqAnchors.housingInviteParticipant,
+              final locale = Localizations.localeOf(context);
+              unawaited(
+                launchUrl(
+                  housingModuleFaqUrlForLocale(locale),
+                  mode: LaunchMode.externalApplication,
+                ),
               );
             },
             child: Text(l10n.housingParticipationChangeInviteParticipantFaqLink),

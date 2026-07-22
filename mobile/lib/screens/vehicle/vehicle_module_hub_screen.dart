@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../debug/qa_vehicle_semantics.dart';
 import '../../db/app_database.dart';
@@ -8,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../prefs/app_preferences.dart';
 import '../../util/display_date.dart';
 import '../../util/display_units.dart';
+import '../../util/product_legal_urls.dart';
 import '../../util/vehicle_meter_display.dart';
 import '../../vehicle/vehicle_consumption_metrics.dart';
 import '../../vehicle/vehicle_consumption_estimation_mode.dart';
@@ -20,8 +24,8 @@ import '../../vehicle/vehicle_maintenance_alerts.dart';
 import '../../vehicle/vehicle_module_access.dart';
 import '../../vehicle/vehicle_module_exit.dart';
 import '../../vehicle/vehicle_owned_active_cap.dart';
-import '../help/help_faq_screen.dart';
 import '../../widgets/screen_body_padding.dart';
+
 class VehicleModuleHubScreen extends StatefulWidget {
   const VehicleModuleHubScreen({super.key, required this.prefs});
 
@@ -361,10 +365,18 @@ class _VehicleCardState extends State<_VehicleCard> {
                           IconButton(
                             icon: const Icon(Icons.info_outline),
                             tooltip: l10n.vehicleFuelTankInfoTooltip,
-                            onPressed: () => openHelpFaq(
-                              context,
-                              anchor: HelpFaqAnchors.vehicleFuelTank,
-                            ),
+                            onPressed: () {
+                              final locale = Localizations.localeOf(context);
+                              unawaited(
+                                launchUrl(
+                                  vehicleModuleFaqUrlForLocale(
+                                    locale,
+                                    fragment: ProductFaqAnchors.vehicleFuelTank,
+                                  ),
+                                  mode: LaunchMode.externalApplication,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
