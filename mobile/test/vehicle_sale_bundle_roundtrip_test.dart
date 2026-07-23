@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:archive/archive.dart';
-import 'package:compartarenta/portability/compartarenta_documents_layout.dart';
+import 'package:compartarenta/portability/bojairu_documents_layout.dart';
 import 'package:compartarenta/vehicle/portability/vehicle_sale_bundle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,7 +9,7 @@ void main() {
   test('sale zip contains JSON under Bojairũ/ and media paths', () {
     final jsonName = '2026-07-14-Data-of-Test.json';
     final jsonPath =
-        '${CompartarentaDocumentsLayout.rootFolderName}/$jsonName';
+        '${BojairuDocumentsLayout.rootFolderName}/$jsonName';
     final payload = <String, Object?>{
       'formatVersion': VehicleSaleBundle.formatVersion,
       'bundleKind': VehicleSaleBundle.bundleKind,
@@ -28,8 +28,8 @@ void main() {
     };
     final jsonBytes = utf8.encode(jsonEncode(payload));
     final mediaPath =
-        '${CompartarentaDocumentsLayout.rootFolderName}/'
-        '${CompartarentaDocumentsLayout.carModuleFolderName}/'
+        '${BojairuDocumentsLayout.rootFolderName}/'
+        '${BojairuDocumentsLayout.carModuleFolderName}/'
         'vehicle:src/Odometer/photo.jpg';
     final archive = Archive()
       ..addFile(ArchiveFile(jsonPath, jsonBytes.length, jsonBytes))

@@ -1,6 +1,6 @@
 ## Why
 
-Compartarenta needs to be usable by people in different languages and regions. Adding first-class UI localization now prevents hard-coding copy and enables scaling to additional languages later.
+Bojairũ needs to be usable by people in different languages and regions. Adding first-class UI localization now prevents hard-coding copy and enables scaling to additional languages later.
 
 ## What Changes
 

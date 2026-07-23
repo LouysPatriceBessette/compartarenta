@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
-import '../../portability/compartarenta_documents_layout.dart';
+import '../../portability/bojairu_documents_layout.dart';
 import '../../portability/public_documents_file_sink.dart';
 import '../../vehicle/vehicle_meter_photo_path.dart';
 import '../../vehicle/vehicle_owned_active_cap.dart';
@@ -273,7 +273,7 @@ class VehicleSaleImportService {
           final gallery = Map<String, Object?>.from(galleryRaw);
           final galleryIndex = gallery['galleryIndex'] as int? ?? 1;
           final relativeDirectory =
-              CompartarentaDocumentsLayout.vehicleGalleryRelativeSubDir(
+              BojairuDocumentsLayout.vehicleGalleryRelativeSubDir(
             vehicleId: newVehicleId,
             galleryIndex: galleryIndex,
           );
@@ -325,7 +325,7 @@ class VehicleSaleImportService {
       if (!file.isFile) continue;
       final name = file.name.replaceAll('\\', '/');
       if (!name.toLowerCase().endsWith('.json')) continue;
-      if (name.startsWith('${CompartarentaDocumentsLayout.rootFolderName}/')) {
+      if (name.startsWith('${BojairuDocumentsLayout.rootFolderName}/')) {
         return file;
       }
       fallback ??= file;
@@ -349,13 +349,13 @@ class VehicleSaleImportService {
   }) {
     final normalized = archivePath.replaceAll('\\', '/');
     final marker =
-        '${CompartarentaDocumentsLayout.rootFolderName}/'
-        '${CompartarentaDocumentsLayout.carModuleFolderName}/'
+        '${BojairuDocumentsLayout.rootFolderName}/'
+        '${BojairuDocumentsLayout.carModuleFolderName}/'
         '$sourceVehicleId/';
     if (!normalized.startsWith(marker)) return null;
     final rest = normalized.substring(marker.length);
-    return '${CompartarentaDocumentsLayout.rootFolderName}/'
-        '${CompartarentaDocumentsLayout.carModuleFolderName}/'
+    return '${BojairuDocumentsLayout.rootFolderName}/'
+        '${BojairuDocumentsLayout.carModuleFolderName}/'
         '$newVehicleId/$rest';
   }
 

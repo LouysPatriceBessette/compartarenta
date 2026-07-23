@@ -56,16 +56,16 @@ import 'util/native_plugin_link_error.dart';
 import 'sandbox/sandbox_eight_hour_nudge.dart';
 import 'sandbox/simulation_ribbon.dart';
 
-class CompartarentaApp extends StatefulWidget {
-  const CompartarentaApp({super.key, required this.config});
+class BojairuApp extends StatefulWidget {
+  const BojairuApp({super.key, required this.config});
 
   final AppConfig config;
 
   @override
-  State<CompartarentaApp> createState() => _CompartarentaAppState();
+  State<BojairuApp> createState() => _BojairuAppState();
 }
 
-class _CompartarentaAppState extends State<CompartarentaApp>
+class _BojairuAppState extends State<BojairuApp>
     with WidgetsBindingObserver {
   late Future<AppPreferences> _prefs = _loadPrefs();
   int _prefsLoadGeneration = 0;

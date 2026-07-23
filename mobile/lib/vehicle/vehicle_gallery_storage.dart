@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
 import '../l10n/app_localizations.dart';
-import '../portability/compartarenta_documents_layout.dart';
+import '../portability/bojairu_documents_layout.dart';
 import '../portability/public_documents_file_sink.dart';
 import '../widgets/app_dialog.dart';
 
@@ -21,7 +21,7 @@ String vehicleGalleryRelativeSubDir({
   required String vehicleId,
   required int galleryIndex,
 }) {
-  return CompartarentaDocumentsLayout.vehicleGalleryRelativeSubDir(
+  return BojairuDocumentsLayout.vehicleGalleryRelativeSubDir(
     vehicleId: vehicleId,
     galleryIndex: galleryIndex,
   );

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 
-import '../../portability/compartarenta_documents_layout.dart';
+import '../../portability/bojairu_documents_layout.dart';
 import '../../portability/public_documents_file_sink.dart';
 import 'proof_expense_file_name.dart';
 
@@ -20,7 +20,7 @@ class HousingProofStorageScope {
   final DateTime agreementPeriodEnd;
 
   String get relativeSubDir =>
-      CompartarentaDocumentsLayout.housingExpenseProofsRelativeSubDir(
+      BojairuDocumentsLayout.housingExpenseProofsRelativeSubDir(
         agreementPeriodStart: agreementPeriodStart,
         agreementPeriodEnd: agreementPeriodEnd,
       );

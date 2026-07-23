@@ -1,7 +1,7 @@
 ---
 name: patrol-e2e-testing
 description: >-
-  Create Patrol 4.x integration tests (patrol_test/). NOT used for Compartarenta
+  Create Patrol 4.x integration tests (patrol_test/). NOT used for Bojairũ
   Android QA — that toolchain is Maestro YAML under qa/flows (see skill
   maestro-compartarenta). Use Patrol only when the user explicitly asks for
   Patrol, not for qa:run-scenario or multi-device Maestro coordinators.
@@ -9,7 +9,7 @@ description: >-
 
 # Patrol E2E Testing Skill
 
-> **Compartarenta:** Production Android QA is **Maestro** (`qa/flows/`, `tool/coordinators/`).
+> **Bojairũ:** Production Android QA is **Maestro** (`qa/flows/`, `tool/coordinators/`).
 > Use skill **`maestro-compartarenta`** + **`maestro-e2e`** for scenario work here.
 > Use this Patrol skill only for Patrol-specific tasks.
 

@@ -232,7 +232,7 @@ Future<void> bootstrap() async {
       }
 
       if (sentryDsn.isEmpty) {
-        runApp(CompartarentaApp(config: config));
+        runApp(BojairuApp(config: config));
         return;
       }
 
@@ -240,7 +240,7 @@ Future<void> bootstrap() async {
         options.dsn = sentryDsn;
         options.environment = config.environment.name;
         options.tracesSampleRate = kDebugMode ? 1.0 : 0.1;
-      }, appRunner: () => runApp(CompartarentaApp(config: config)));
+      }, appRunner: () => runApp(BojairuApp(config: config)));
     },
     (error, stack) async {
       if (sentryDsn.isNotEmpty) {

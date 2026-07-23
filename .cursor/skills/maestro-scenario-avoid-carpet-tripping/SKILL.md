@@ -1,7 +1,7 @@
 ---
 name: maestro-scenario-avoid-carpet-tripping
 description: >-
-  Mandatory workflow for creating or extending ANY Compartarenta Maestro scenario
+  Mandatory workflow for creating or extending ANY Bojairũ Maestro scenario
   (single-device qa/scenarios or multi-device coordinators). Use on every new
   scenario request, Maestro flow edit, coordinator change, or qa-* semantics
   work. Enforces code-first automation (tap existing buttons by id), skills +

@@ -1,6 +1,6 @@
 # Manual Android QA / E2E
 
-This document is the **user guide** for Compartarenta's local Android QA toolchain:
+This document is the **user guide** for Bojairũ's local Android QA toolchain:
 a pinned emulator, programmable clock, programmatic database seeding, and Maestro
 UI flows with screenshots.
 
@@ -11,7 +11,7 @@ toolchain.
 
 | Layer | Role |
 | --- | --- |
-| **Emulator** | Fixed AVD `Compartarenta-QA` (API 34, Pixel 7 profile) |
+| **Emulator** | Fixed AVD `Bojairu-QA` (API 34, Pixel 7 profile) |
 | **Clock** | Push a scenario date on the emulator only (`set_android_date.sh`) |
 | **Seed** | Populate Drift + prefs from Dart (`qa_scenario_seed.dart`, debug Android) |
 | **Maestro** | Navigate the app, assert UI, capture screenshots |
@@ -59,7 +59,7 @@ validates all scenario manifests, and verifies Maestro `qa-*` ids against Dart
 
 | Variable | Default |
 | --- | --- |
-| `COMPARTARENTA_QA_AVD_NAME` | `Compartarenta-QA` |
+| `COMPARTARENTA_QA_AVD_NAME` | `Bojairu-QA` |
 | `COMPARTARENTA_QA_APP_ID` | `com.compartarenta.compartarenta.dev` |
 | `COMPARTARENTA_QA_SYSTEM_IMAGE` | `system-images;android-34;google_apis;x86_64` |
 | `COMPARTARENTA_QA_DEVICE_PROFILE` | `pixel_7` |
@@ -166,7 +166,7 @@ Faster emulator resume (snapshot): `./tool/start_qa_emulator.sh --quick`
 
 Some flows (e.g. contact handshake) need **two Android emulators** coordinated by a shell orchestrator.
 
-**One-time:** create persona AVDs (in addition to `Compartarenta-QA`):
+**One-time:** create persona AVDs (in addition to `Bojairu-QA`):
 
 ```bash
 COMPARTARENTA_QA_AVD_NAME=Louys-QA ./tool/melosw run qa:create-avd
@@ -391,7 +391,7 @@ Prefer `./tool/melosw` over `dart run melos` (avoids redundant `pub get`).
 
 | Command | Action |
 | --- | --- |
-| `qa:create-avd` | Create `Compartarenta-QA` AVD |
+| `qa:create-avd` | Create `Bojairu-QA` AVD |
 | `qa:start-emulator` | Start emulator (cold boot) |
 | `qa:install-maestro` | Install Maestro CLI |
 | `qa:build-apk` | Build `app-dev-debug.apk` |

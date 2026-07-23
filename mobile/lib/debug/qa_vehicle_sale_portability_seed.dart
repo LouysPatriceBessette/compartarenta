@@ -1,6 +1,6 @@
 import '../db/app_database.dart';
 import '../db/repositories/vehicles_repository.dart';
-import '../portability/compartarenta_documents_layout.dart';
+import '../portability/bojairu_documents_layout.dart';
 import '../portability/public_documents_file_sink.dart';
 import '../vehicle/vehicle_consumption_estimation_mode.dart';
 import '../vehicle/vehicle_kind.dart';
@@ -50,7 +50,7 @@ Future<String> qaWriteSalePortabilityPlaceholderMeterPhoto(
   try {
     final written = await writePublicDocumentBytes(
       relativeSubDir:
-          CompartarentaDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
+          BojairuDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
         vehicleId: vehicleId,
       ),
       fileName: 'qa_sale_placeholder.jpg',

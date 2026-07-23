@@ -4,8 +4,8 @@
 /// [public_documents_file_sink_io.dart] — see OpenSpec
 /// `user-owned-media-storage`. App-private paths (e.g. legacy
 /// `vehicle_meter_photos/`) MUST NOT receive new media writes.
-class CompartarentaDocumentsLayout {
-  CompartarentaDocumentsLayout._();
+class BojairuDocumentsLayout {
+  BojairuDocumentsLayout._();
 
   static const String rootFolderName = 'Bojairũ';
   static const String housingModuleFolderName = 'Housing';

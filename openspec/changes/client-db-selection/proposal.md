@@ -1,6 +1,6 @@
 ## Why
 
-Compartarenta is a local-first app: operational data must live on-device, and the app will evolve over time. We need an explicit, reviewable decision for the client database that prioritizes disk footprint, exportability, and safe schema migrations.
+Bojairũ is a local-first app: operational data must live on-device, and the app will evolve over time. We need an explicit, reviewable decision for the client database that prioritizes disk footprint, exportability, and safe schema migrations.
 
 ## What Changes
 

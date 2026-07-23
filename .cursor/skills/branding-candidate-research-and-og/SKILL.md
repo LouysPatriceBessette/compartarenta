@@ -1,7 +1,7 @@
 ---
 name: branding-candidate-research-and-og
 description: >-
-  Research a proposed Compartarenta rebrand name and, only when explicitly
+  Research a proposed Bojairũ rebrand name and, only when explicitly
   requested, create a matching editable SVG plus 1200x630 French OG image. Use
   when the user proposes a branding option, asks to test another app name,
   requests the same branding methodology, or explicitly requests a visual

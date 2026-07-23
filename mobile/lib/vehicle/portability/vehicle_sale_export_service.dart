@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../../db/app_database.dart';
 import '../../db/repositories/vehicles_repository.dart';
-import '../../portability/compartarenta_documents_layout.dart';
+import '../../portability/bojairu_documents_layout.dart';
 import '../../portability/public_documents_file_sink.dart';
 import '../../vehicle/vehicle_maintenance_categories.dart';
 import '../../vehicle/vehicle_meter_photo_path.dart';
@@ -41,7 +41,7 @@ class VehicleSaleExportService {
       now: when,
     );
     await writePublicDocumentBytes(
-      relativeSubDir: CompartarentaDocumentsLayout.moduleRootRelativeSubDir(),
+      relativeSubDir: BojairuDocumentsLayout.moduleRootRelativeSubDir(),
       fileName: built.zipFileName,
       bytes: built.zipBytes,
       mimeType: 'application/zip',
@@ -90,7 +90,7 @@ class VehicleSaleExportService {
     final jsonBytes = utf8.encode(jsonText);
     final archive = Archive();
     final jsonArchivePath =
-        '${CompartarentaDocumentsLayout.rootFolderName}/$jsonFileName';
+        '${BojairuDocumentsLayout.rootFolderName}/$jsonFileName';
     archive.addFile(
       ArchiveFile(jsonArchivePath, jsonBytes.length, jsonBytes),
     );
@@ -138,7 +138,7 @@ class VehicleSaleExportService {
       lastOdometerArchivePath = await _packBytes(
         storageKey: r.photoPath,
         archiveRelativePath: p.join(
-          CompartarentaDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
+          BojairuDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
             vehicleId: vehicleId,
           ),
           _fileNameForKey(r.photoPath, 'odometer_${r.id}.jpg'),
@@ -201,7 +201,7 @@ class VehicleSaleExportService {
         attachmentArchivePath = await _packBytes(
           storageKey: attachment,
           archiveRelativePath: p.join(
-            CompartarentaDocumentsLayout
+            BojairuDocumentsLayout
                 .vehicleMaintenanceAttachmentsRelativeSubDir(
               vehicleId: vehicleId,
             ),

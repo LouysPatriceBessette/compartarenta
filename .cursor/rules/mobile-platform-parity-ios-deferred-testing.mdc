@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Product scope
 
-- Compartarenta is **mobile-only in production** (Android + iOS). There is **no** production web app, web deployment, or web store target.
+- Bojairũ is **mobile-only in production** (Android + iOS). There is **no** production web app, web deployment, or web store target.
 - Flutter **web exists only as a developer convenience** for local multi-device QA (`run:dev:web` on a dev machine). It was **never** planned for end-user production use.
 - Specs, OpenSpec requirements, and agent answers MUST describe **the same application behavior on Android and iOS** unless a platform literally cannot support a capability (document that exception once, in implementation notes — not as a permanent spec fork).
 

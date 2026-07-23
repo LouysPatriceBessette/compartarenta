@@ -90,7 +90,7 @@ def render_html(run_dir: Path, data: dict) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Compartarenta QA run {run_id}</title>
+  <title>Bojairu QA run {run_id}</title>
   <style>
     body {{ font-family: system-ui, sans-serif; margin: 24px; color: #111; }}
     h1 {{ margin-bottom: 0.2em; }}
@@ -112,7 +112,7 @@ def render_html(run_dir: Path, data: dict) -> str:
   </style>
 </head>
 <body>
-  <h1>Compartarenta QA run</h1>
+  <h1>Bojairu QA run</h1>
   <p class="meta">Run id: <code>{run_id}</code><br>
   Started: {started or "—"}<br>
   Finished: {finished or "—"}</p>

@@ -25,7 +25,7 @@ Implementation MUST NOT leave durable user media only in app-private storage.
 - **THEN** the file is stored under `Documents/Bojairũ/Housing/<period>/ExpenseProofs/`
 
 ### Requirement: Canonical folder layout
-Module roots under `Documents/Bojairũ/` MUST follow `CompartarentaDocumentsLayout`:
+Module roots under `Documents/Bojairũ/` MUST follow `BojairuDocumentsLayout`:
 
 | Module | Relative path pattern | Content |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ Future modules (e.g. `Car_sharing`) MUST add a named subfolder under `Bojairũ/`
 
 #### Scenario: New module adds a folder before first write
 - **WHEN** a new feature persists a user-captured image
-- **THEN** it declares a `Bojairũ/<Module>/…` path in `CompartarentaDocumentsLayout` (or successor)
+- **THEN** it declares a `Bojairũ/<Module>/…` path in `BojairuDocumentsLayout` (or successor)
 - **THEN** it writes through the public-documents API
 
 ### Requirement: Timestamp file names for vehicle media

@@ -1,6 +1,6 @@
 ## Context
 
-Compartarenta production clients use `HttpRelayClient` + `HandshakeOrchestrator` for Contacts handshakes and Housing steady-state envelopes. Unit tests already exercise multi-identity flows with `FakeRelayClient` (`mobile/lib/relay/testing/fake_relay_client.dart`). Product simulation mode must reuse that seam so UI, crypto, inbox import, and review queues behave like real multi-device use — without production relay traffic or a second human.
+Bojairũ production clients use `HttpRelayClient` + `HandshakeOrchestrator` for Contacts handshakes and Housing steady-state envelopes. Unit tests already exercise multi-identity flows with `FakeRelayClient` (`mobile/lib/relay/testing/fake_relay_client.dart`). Product simulation mode must reuse that seam so UI, crypto, inbox import, and review queues behave like real multi-device use — without production relay traffic or a second human.
 
 Users need a labeled free sandbox (Play closed-test retention + unpaid preview). Real and sandbox data MUST NOT coexist in one Drift DB. Entry is gated by absence of a real housing plan (draft or active). Exit restores a fixed internal checkpoint when one was created on enter.
 

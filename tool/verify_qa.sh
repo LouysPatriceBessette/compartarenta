@@ -20,7 +20,7 @@ run_check() {
   fi
 }
 
-echo "Compartarenta QA — verification"
+echo "Bojairu QA — verification"
 echo
 
 # Phase 0 checks (non-fatal sections keep their own exit code handling).

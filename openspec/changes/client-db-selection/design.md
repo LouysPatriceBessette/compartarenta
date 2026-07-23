@@ -1,6 +1,6 @@
 ## Context
 
-Compartarenta is a local-first Flutter app where operational data (plans, participants, expenses, car usage logs, balances, proposals) must remain on-device by default. The client database is therefore a long-lived, evolving component that must support schema evolution (migrations) while keeping the app’s storage footprint small and exports understandable.
+Bojairũ is a local-first Flutter app where operational data (plans, participants, expenses, car usage logs, balances, proposals) must remain on-device by default. The client database is therefore a long-lived, evolving component that must support schema evolution (migrations) while keeping the app’s storage footprint small and exports understandable.
 
 The product’s privacy posture (see `privacy-first-sync-architecture`) makes the local database a core “source of truth” for calculations. This design document makes an explicit, reviewable choice for the client DB and explains why alternatives were not selected.
 

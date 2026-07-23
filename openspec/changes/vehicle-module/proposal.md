@@ -1,6 +1,6 @@
 ## Why
 
-Compartarenta needs a **Vehicle** module (`vehicle`) for personally owned **land conveyances** — car, truck, motorcycle — with accurate odometer, fuel, maintenance, and violation tracking. Vehicle data is **owned and maintained by one fixed owner** per vehicle. Sharing that vehicle with others is a separate licensed module (`vehicle-sharing`); this change defines owner-side capabilities only.
+Bojairũ needs a **Vehicle** module (`vehicle`) for personally owned **land conveyances** — car, truck, motorcycle — with accurate odometer, fuel, maintenance, and violation tracking. Vehicle data is **owned and maintained by one fixed owner** per vehicle. Sharing that vehicle with others is a separate licensed module (`vehicle-sharing`); this change defines owner-side capabilities only.
 
 **Boat** vehicles (engine hour meter / horomètre) are **deferred from the initial release** — see `design.md` § Decisions and tasks §10.5 / §15.
 

@@ -20,7 +20,7 @@
 #
 # Output mode (`--env`): KEY=VALUE pairs, suitable for `eval` or `source`.
 #
-# The script must run somewhere inside the Compartarenta git work tree; if it
+# The script must run somewhere inside the Bojairu git work tree; if it
 # cannot find one (e.g. shallow checkout without tags, or a CI environment
 # stripped of git metadata), it falls back to "0.0.0+0" and an empty SHA.
 

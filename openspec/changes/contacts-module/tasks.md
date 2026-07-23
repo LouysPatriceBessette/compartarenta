@@ -110,7 +110,7 @@ deploy). Tracked separately from Flutter so client work can proceed first.
 
 The mobile app now registers `compartarenta://contact/invite` on **Android and
 iOS** and routes it with **`app_links`** to the redeem screen, which covers the
-main “Open in Compartarenta” failure that was previously attributed to the
+main “Open in Bojairũ” failure that was previously attributed to the
 landing page alone. Remaining relay work is UX on the **HTTPS** page (copy,
 languages, store badge placeholders); in-app mail WebViews that block custom schemes are an environment
 limit, not something the relay HTML can fully fix without store / universal-link
@@ -126,7 +126,7 @@ work.
       official **Google Play** and **Apple App Store** badge images for invitees
       who have not installed the app. For now use **static logos only** (no
       `href`) because the app is not published. Add a short line of copy in
-      **English** next to or under the badges, e.g. *“Don’t have Compartarenta
+      **English** next to or under the badges, e.g. *“Don’t have Bojairũ
       installed yet? You’ll find it on Google Play and the App Store.”* (adjust
       for layout; follow each platform’s badge artwork guidelines). Wire real
       store URLs in a follow-up tracked with store release (see

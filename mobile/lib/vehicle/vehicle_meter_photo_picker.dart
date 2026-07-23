@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
-import '../portability/compartarenta_documents_layout.dart';
+import '../portability/bojairu_documents_layout.dart';
 import '../portability/public_documents_file_sink.dart';
 import 'vehicle_gallery_storage.dart';
 
@@ -42,7 +42,7 @@ Future<String> storeVehicleMeterPhotoFromSource({
   }
   if (kIsWeb) {
     return p.join(
-      CompartarentaDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
+      BojairuDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
         vehicleId: vehicleId,
       ),
       p.basename(sourcePath),
@@ -52,7 +52,7 @@ Future<String> storeVehicleMeterPhotoFromSource({
   final ext = p.extension(sourcePath);
   final fileName = vehicleGalleryTimestampFileName(ext.isEmpty ? '.jpg' : ext);
   final relativeSubDir =
-      CompartarentaDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
+      BojairuDocumentsLayout.vehicleOdometerPhotosRelativeSubDir(
     vehicleId: vehicleId,
   );
   final written = await writePublicDocumentBytes(

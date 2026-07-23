@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create (or verify) the Compartarenta-QA Android Virtual Device.
+# Create (or verify) the Bojairu-QA Android Virtual Device.
 #
 # Installs the pinned system image when missing, then runs avdmanager.
 # Idempotent: safe to re-run.

@@ -103,7 +103,7 @@ for avd_name in "${AVD_NAMES[@]}"; do
     echo "  OK  ${avd_name}"
   else
     echo "  CREATE  ${avd_name}"
-    # This line is to install an OS image WITHOUT Google apps (Compartarenta is NOT working)
+    # This line is to install an OS image WITHOUT Google apps (Bojairũ is NOT working)
     # COMPARTARENTA_QA_SYSTEM_IMAGE='system-images;android-34;default;x86_64'
 
     # This line is to install an OS image WITH Google apps

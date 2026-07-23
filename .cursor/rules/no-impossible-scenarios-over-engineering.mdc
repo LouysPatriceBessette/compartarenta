@@ -5,7 +5,7 @@ alwaysApply: true
 
 # No impossible-scenario over-engineering
 
-Compartarenta is in **embryonic pre-release development**. The app has **never** been shipped to production users. There is **no** installed base that requires migration from older protocol versions, envelope layouts, or database schemas beyond forward-only Drift upgrades on the developer's own devices.
+Bojairũ is in **embryonic pre-release development**. The app has **never** been shipped to production users. There is **no** installed base that requires migration from older protocol versions, envelope layouts, or database schemas beyond forward-only Drift upgrades on the developer's own devices.
 
 ## Hard rule
 

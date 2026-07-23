@@ -24,7 +24,7 @@ check() {
   fi
 }
 
-echo "Compartarenta QA — phase 0 verification"
+echo "Bojairu QA — phase 0 verification"
 echo "  AVD name : ${COMPARTARENTA_QA_AVD_NAME}"
 echo "  App id   : ${COMPARTARENTA_QA_APP_ID}"
 echo

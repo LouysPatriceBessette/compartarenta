@@ -1,6 +1,6 @@
 ## Context
 
-Compartarenta is a local-first Flutter application intended to help multiple people share expenses equitably with minimal manual errors. The existing context focuses on shared-apartment expenses. This change introduces a second domain: sharing a car among participants, which has vehicle-specific data (odometer readings, reservations) and derived metrics (distance, consumption per km, usage ratios) that influence cost allocation.
+Bojairũ is a local-first Flutter application intended to help multiple people share expenses equitably with minimal manual errors. The existing context focuses on shared-apartment expenses. This change introduces a second domain: sharing a car among participants, which has vehicle-specific data (odometer readings, reservations) and derived metrics (distance, consumption per km, usage ratios) that influence cost allocation.
 
 Constraints and assumptions for this design:
 - Mobile-first UX; data storage is local and query-driven.

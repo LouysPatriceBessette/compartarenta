@@ -22,7 +22,7 @@ void main() {
       apiBaseUrl: Uri.parse('https://example.invalid'),
     );
 
-    await tester.pumpWidget(CompartarentaApp(config: config));
+    await tester.pumpWidget(BojairuApp(config: config));
     // Loading uses [CircularProgressIndicator] (non-terminating ticker);
     // avoid [pumpAndSettle] until prefs have loaded and the router is built.
     for (var i = 0; i < 80; i++) {
@@ -41,7 +41,7 @@ void main() {
       apiBaseUrl: Uri.parse('https://example.invalid'),
     );
 
-    await tester.pumpWidget(CompartarentaApp(config: config));
+    await tester.pumpWidget(BojairuApp(config: config));
     for (var i = 0; i < 80; i++) {
       await tester.pump(const Duration(milliseconds: 50));
       if (find.byType(HomeScreen).evaluate().isNotEmpty) {

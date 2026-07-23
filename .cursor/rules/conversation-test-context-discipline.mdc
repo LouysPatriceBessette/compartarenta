@@ -64,10 +64,10 @@ After shipping a transport fix, default guidance: **forward behavior** is what t
 - Prefer: “With the fix, the next acceptance/response should reach all connected co-participants; your current DB may still lack R’s earlier accept on L’s device—fresh DBs confirm end-to-end.”
 - Avoid: numbered steps that assume buttons exist when the user already closed that branch.
 
-## Practical default (Compartarenta housing QA)
+## Practical default (Bojairũ housing QA)
 
 On **fresh data** in this thread: prioritize routing, amendment detection, relay delivery, and UI entry; use duplicate-plan hypotheses only when **this run** shows two meaningful plans—not as a default excuse.
 
 ## Production platform scope (binding)
 
-Compartarenta ships **Android + iOS** in production. Flutter **web is dev-only** (local multi-instance QA via `run:dev:web`); it was **never** intended for production. When the user discusses product behavior, device binding, sync, or bugs without naming web, reason and propose solutions **for mobile only** — do not re-introduce web fingerprinting, web storage, or web-as-production assumptions from QA topology docs.
+Bojairũ ships **Android + iOS** in production. Flutter **web is dev-only** (local multi-instance QA via `run:dev:web`); it was **never** intended for production. When the user discusses product behavior, device binding, sync, or bugs without naming web, reason and propose solutions **for mobile only** — do not re-introduce web fingerprinting, web storage, or web-as-production assumptions from QA topology docs.

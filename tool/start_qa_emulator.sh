@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the Compartarenta-QA emulator (cold boot by default).
+# Start the Bojairu-QA emulator (cold boot by default).
 #
 # Usage:
 #   ./tool/start_qa_emulator.sh          # cold boot (-no-snapshot-load)

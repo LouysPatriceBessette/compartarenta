@@ -1,6 +1,6 @@
 ## Context
 
-Compartarenta is a Flutter app that must support multiple UI languages and allow users to switch language at any time. The localization approach must support FR/EN/ES initially and be extensible for additional languages later, without rewriting UI code.
+Bojairũ is a Flutter app that must support multiple UI languages and allow users to switch language at any time. The localization approach must support FR/EN/ES initially and be extensible for additional languages later, without rewriting UI code.
 
 Constraints:
 - Must work across platforms supported by Flutter.

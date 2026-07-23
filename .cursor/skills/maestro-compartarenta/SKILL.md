@@ -1,7 +1,7 @@
 ---
 name: maestro-compartarenta
 description: >-
-  Write and maintain Compartarenta Android Maestro YAML flows, multi-device
+  Write and maintain Bojairũ Android Maestro YAML flows, multi-device
   coordinators, and qa-* semantics. Use when editing qa/flows, qa/multi_scenarios,
   tool/coordinators, housing_proposal or contact_handshake scenarios, Maestro
   probes, or docs/qa-android-e2e.md. Do NOT use Patrol for this repo's QA
@@ -9,7 +9,7 @@ description: >-
   for live emulator inspection.
 ---
 
-# Maestro QA — Compartarenta
+# Maestro QA — Bojairũ
 
 This repository uses **Maestro YAML + shell coordinators**, not Patrol (`patrol_test/`).
 
@@ -38,7 +38,7 @@ Project MCP: `.cursor/mcp.json` → `tool/maestro_mcp.sh` → `maestro mcp`.
 
 MCP validates **single-device** flows. Multi-device timing stays in bash coordinators.
 
-## Compartarenta conventions (high error rate — do not skip)
+## Bojairũ conventions (high error rate — do not skip)
 
 ### Semantics (`qa-*`)
 
@@ -157,7 +157,7 @@ permissions, Flutter `Semantics.identifier` patterns.
 
 ## Patrol
 
-**Out of scope** for Compartarenta QA unless the user explicitly migrates to Patrol.
+**Out of scope** for Bojairũ QA unless the user explicitly migrates to Patrol.
 Do not generate `patrol_test/` or `patrolTest` when the task is Maestro/coordinator work.
 
 ## Delivery checklist

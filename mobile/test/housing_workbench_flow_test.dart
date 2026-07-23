@@ -56,7 +56,7 @@ void main() {
       apiBaseUrl: Uri.parse('https://example.invalid'),
     );
 
-    await tester.pumpWidget(CompartarentaApp(config: config));
+    await tester.pumpWidget(BojairuApp(config: config));
     await tester.pump(const Duration(seconds: 6));
     await tester.pumpAndSettle();
 

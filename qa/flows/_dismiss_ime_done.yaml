@@ -1,6 +1,6 @@
 appId: com.compartarenta.compartarenta.dev
 ---
-# Gboard IME checkmark (bottom-right) on Compartarenta-QA / Pixel 7.
+# Gboard IME checkmark (bottom-right) on Bojairu-QA / Pixel 7.
 - runFlow:
     when:
       visible:

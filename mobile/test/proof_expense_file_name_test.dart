@@ -1,15 +1,15 @@
 import 'package:compartarenta/housing/expense_form/expense_amount_parse.dart';
 import 'package:compartarenta/housing/realized_expense/proof_expense_file_name.dart';
-import 'package:compartarenta/portability/compartarenta_documents_layout.dart';
+import 'package:compartarenta/portability/bojairu_documents_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('CompartarentaDocumentsLayout', () {
+  group('BojairuDocumentsLayout', () {
     test('housing expense proofs subdir uses plan period', () {
       final start = DateTime(2024, 3, 1);
       final end = DateTime(2025, 12, 31);
       expect(
-        CompartarentaDocumentsLayout.housingExpenseProofsRelativeSubDir(
+        BojairuDocumentsLayout.housingExpenseProofsRelativeSubDir(
           agreementPeriodStart: start,
           agreementPeriodEnd: end,
         ),
@@ -19,7 +19,7 @@ void main() {
 
     test('backups subdir', () {
       expect(
-        CompartarentaDocumentsLayout.backupsRelativeSubDir(),
+        BojairuDocumentsLayout.backupsRelativeSubDir(),
         'Bojairũ/Backups',
       );
     });

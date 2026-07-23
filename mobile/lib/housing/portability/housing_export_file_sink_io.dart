@@ -1,4 +1,4 @@
-import '../../portability/compartarenta_documents_layout.dart';
+import '../../portability/bojairu_documents_layout.dart';
 import '../../portability/public_documents_file_sink.dart';
 import 'housing_export_file_name.dart';
 import 'housing_export_file_sink.dart';
@@ -10,7 +10,7 @@ Future<HousingExportWriteResult> writeHousingExportJson({
 }) async {
   final fileName = housingExportFileName(languageCode: languageCode);
   await writePublicDocumentText(
-    relativeSubDir: CompartarentaDocumentsLayout.backupsRelativeSubDir(),
+    relativeSubDir: BojairuDocumentsLayout.backupsRelativeSubDir(),
     fileName: fileName,
     content: json,
   );

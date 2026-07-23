@@ -2,13 +2,13 @@
 name: maestro-e2e
 description: >-
   Generic Maestro E2E UI testing (YAML, Flutter Semantics.identifier, iOS,
-  Android). For Compartarenta repo flows and coordinators, also load skill
+  Android). For Bojairũ repo flows and coordinators, also load skill
   maestro-compartarenta. Use Maestro MCP (maestro mcp) when emulators are up.
 metadata:
   tags: maestro, e2e, testing, ui, automation, flutter, react-native, ios, android, web
 ---
 
-> **Compartarenta:** Project-specific rules (qa-* ids, multi-device coordinators,
+> **Bojairũ:** Project-specific rules (qa-* ids, multi-device coordinators,
 > handshake navigation) live in **`.cursor/skills/maestro-compartarenta/`**.
 
 ## When to use

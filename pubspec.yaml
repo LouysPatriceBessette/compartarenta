@@ -123,13 +123,13 @@ melos:
 
     qa:create-avd:
       description: |
-        Create the Compartarenta-QA Android emulator (phase 0). Installs the
+        Create the Bojairu-QA Android emulator (phase 0). Installs the
         pinned system image when missing. Idempotent.
       run: chmod +x ./tool/create_qa_avd.sh && ./tool/create_qa_avd.sh
 
     qa:start-emulator:
       description: |
-        Start the Compartarenta-QA emulator (cold boot). Pass -- --quick to
+        Start the Bojairu-QA emulator (cold boot). Pass -- --quick to
         resume from a snapshot instead of -no-snapshot-load.
       run: chmod +x ./tool/start_qa_emulator.sh && ./tool/start_qa_emulator.sh
 

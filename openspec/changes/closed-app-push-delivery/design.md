@@ -1,6 +1,6 @@
 ## Context
 
-Notifications are core infrastructure for every existing and future Compartarenta module. The current architecture decodes peer events only after the client receives an envelope through polling, which leaves any "killed app" use case effectively broken on both Android and iOS. The product owner has accepted that closed-app delivery requires a server-driven wake mechanism and has accepted the privacy trade-off this entails, scoped tightly to transport routing material.
+Notifications are core infrastructure for every existing and future Bojairũ module. The current architecture decodes peer events only after the client receives an envelope through polling, which leaves any "killed app" use case effectively broken on both Android and iOS. The product owner has accepted that closed-app delivery requires a server-driven wake mechanism and has accepted the privacy trade-off this entails, scoped tightly to transport routing material.
 
 Relevant constraints:
 
@@ -143,7 +143,7 @@ iOS caveat: a pure data-only push (`content-available: 1`, no `alert`) is delive
 
 The relay fans out to every active `(routing-id, provider, push_token)` row matching the envelope recipient. Per-row dispatch failures are individually logged with no message context, and rows whose providers report a permanent token error are purged eagerly. No "last device wins" logic.
 
-**Product note:** Compartarenta assumes **one active installation per user identity** (`data-locality-and-client-storage`). Multiple tokens per routing id are for transport overlap (refresh, reinstall), not simultaneous multi-device sync.
+**Product note:** Bojairũ assumes **one active installation per user identity** (`data-locality-and-client-storage`). Multiple tokens per routing id are for transport overlap (refresh, reinstall), not simultaneous multi-device sync.
 
 ### 6. V1 functional scope: Contacts add requests only
 
